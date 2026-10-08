@@ -51,3 +51,8 @@
 - Pacchetto Android firmato pubblicato su Vercel (codice 1011).
 - SHA-256: `c3ed391916479052c16e8172f518e9aa65bbef31b30ebb45ab5905fa3af744e9`.
 - APK: `/apk/overmind-zero-1011-c3ed39191647.apk`.
+
+## OTA 0.3.7-ota.12 — 2026-10-08T22:54:46.140624+00:00
+- Pacchetto Android firmato pubblicato su Vercel (codice 1012).
+- SHA-256: `4e2a741614d0b81ef22738bc1998a35806d9a01054731eab2a39ebf7277bc2c2`.
+- APK: `/apk/overmind-zero-1012-4e2a741614d0.apk`.
