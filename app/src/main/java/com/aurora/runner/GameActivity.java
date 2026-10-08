@@ -51,6 +51,7 @@ public final class GameActivity extends Activity {
       super(GameActivity.this);
       setFocusable(true);
       reset();
+      status=MENU;
     }
     void reset() {
       status=PLAYING;hp=3;jumps=0;score=0;worldIndex=0;
