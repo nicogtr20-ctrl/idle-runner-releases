@@ -33,6 +33,7 @@ public final class GameActivity extends Activity {
         MotorBrain.Trainer trainer;
         UnknownWorld.Mind mind=new UnknownWorld.Mind();
         UpdateClient updater;
+        String installedVersion="0.3.7";
         String updaterStatus="";
         float updaterStatusUntil=0;
         ArrayList<UnknownWorld.Entity> environment=new ArrayList<>();
@@ -60,6 +61,10 @@ public final class GameActivity extends Activity {
             super(c);setLayerType(View.LAYER_TYPE_HARDWARE,null);setFocusable(true);
             prefs=c.getSharedPreferences("zero_motorbrain_001",Context.MODE_PRIVATE);
             load();
+            try {
+                installedVersion=GameActivity.this.getPackageManager().getPackageInfo(
+                    GameActivity.this.getPackageName(),0).versionName;
+            }catch(Exception ignored){}
             updater=new UpdateClient(GameActivity.this,(status)->{
                 updaterStatus=status;
                 updaterStatusUntil=uiTime+8.0f;
@@ -352,7 +357,7 @@ public final class GameActivity extends Activity {
             rounded(c,339,104,459,138,0xff20444a,11);
             text(c,"AGGIORNA",399,127,12,TEAL,true);
             text(c,"NESSUNA CONOSCENZA DEGLI OGGETTI",27,99,12,MUTED,false);
-            text(c,"MEMORIA LOCALE • APP INDIPENDENTE",27,120,10,0xff708d9d,false);
+            text(c,"VERSIONE "+installedVersion+"  •  OTA",27,120,10,0xff708d9d,false);
             text(c,"TENTATIVI",377,34,11,MUTED,false);
             text(c,String.valueOf(trainer.attempts),380,71,22,GOLD,false);
             rounded(c,13,158,467,232,0xca0e1a25,17);
