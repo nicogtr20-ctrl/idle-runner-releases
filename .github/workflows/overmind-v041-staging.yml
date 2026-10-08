@@ -34,7 +34,9 @@ jobs:
           assert "phase>=26f" not in a and "Math.hypot(creature.cx,creature.cy)>520" not in a
           assert "if(phase>=13f)" in a and "extendHabitat();" in a
           assert "if(object.everCollided && !object.countedAsMoved && shift>=12f)" in a
-          assert "objects_displaced_v041" in a and "physical_pushes_v04" in a
+          assert "objects_displaced_v041" in a and "collisions_v041" in a
+          assert '.putInt("physical_pushes_v04"' not in a
+          assert "if(object.everCollided && !object.countedAsMoved && shift>=12f)" in a
           assert "return newHabitat(episode,0,0)" in b
           print("ZERO-004 regression tests passed: no timer teleport, real displacement counted only after actual position change")
           PY
