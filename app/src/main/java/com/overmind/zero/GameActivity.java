@@ -31,6 +31,13 @@ public final class GameActivity extends Activity {
         final int TEAL=0xff80f7e2,GOLD=0xfff7c67a,MUTED=0xff95b1bb;
         final float W=480f;
         MotorBrain.Trainer trainer;
+        UnknownWorld.Mind mind=new UnknownWorld.Mind();
+        ArrayList<UnknownWorld.Entity> environment=new ArrayList<>();
+        UnknownWorld.Entity chosenObject;
+        float reserve=57,goalTimer=0,worldTime=0;
+        int contactsThisLife=0;
+        String lastEvent="ZERO NON CONOSCE QUESTO MONDO";
+        float eventTime=7;
         MotorBrain.Body creature=new MotorBrain.Body();
         float[] virgin;
         volatile boolean learning=true,enabled=true;
@@ -61,6 +68,8 @@ public final class GameActivity extends Activity {
             trainer.attempts=prefs.getInt("attempts",0);
             trainer.accepted=prefs.getInt("accepted",0);
             trainer.initialFitness=prefs.getFloat("original",MotorBrain.fitness(virgin));
+            mind.deserialize(prefs.getString("world_knowledge_v03",""));
+            reserve=prefs.getFloat("zero_energy_v03",57f);
             speed=1;learning=true;simulationRunning=true;
             resetEpisode();
             save();
@@ -93,6 +102,8 @@ public final class GameActivity extends Activity {
               .putInt("attempts",trainer.attempts)
               .putInt("accepted",trainer.accepted)
               .putFloat("original",trainer.initialFitness)
+              .putString("world_knowledge_v03",mind.serialize())
+              .putFloat("zero_energy_v03",reserve)
               .apply();
         }
         void resume(){
@@ -125,7 +136,52 @@ public final class GameActivity extends Activity {
         }
         void resetEpisode(){
             creature.reset();episode++;phase=0;trailCount=0;clock=0;
-            heading=(episode%4==0)?0:episode%4==1?1.5707963f:episode%4==2?3.1415926f:4.712389f;
+            environment=UnknownWorld.newHabitat(episode);
+            chosenObject=null;goalTimer=0;contactsThisLife=0;worldTime=0;
+            reserve=Math.max(42,Math.min(92,reserve));
+            heading=episode*.31f;
+        }
+        void updateHabitat(float dt){
+            worldTime+=dt;goalTimer-=dt;
+            reserve=Math.max(0,reserve-.14f*dt);
+            for(UnknownWorld.Entity object:environment)object.tick(dt);
+            if(chosenObject==null||!chosenObject.ready()||goalTimer<=0){
+                chosenObject=mind.choose(environment,creature.cx,creature.cy,reserve);
+                goalTimer=2.8f;
+            }
+            if(chosenObject!=null){
+                heading=(float)Math.atan2(chosenObject.y-creature.cy,chosenObject.x-creature.cx);
+            }else{
+                heading+=dt*.7f;
+            }
+            for(UnknownWorld.Entity object:environment){
+                if(!object.ready())continue;
+                float dx=object.x-creature.cx,dy=object.y-creature.cy;
+                float distance=(float)Math.hypot(dx,dy);
+                float nearest=distance;
+                for(int j=0;j<MotorBrain.N;j++){
+                    float d=(float)Math.hypot(object.x-creature.x[j],object.y-creature.y[j]);
+                    if(d<nearest)nearest=d;
+                }
+                if(nearest<18+object.radius){
+                    float nx=dx/Math.max(1,distance),ny=dy/Math.max(1,distance);
+                    float delta=object.touch(nx,ny);
+                    reserve=Math.max(0,Math.min(100,reserve+delta));
+                    mind.observe(object.signature,delta,object.displacementEffect());
+                    contactsThisLife++;chosenObject=null;goalTimer=0;
+                    lastEvent="STIMOLO "+(object.signature+1)+"   ENERGIA "+(delta>=0?"+":"")+(int)delta;
+                    eventTime=4;
+                    if(delta<0) {
+                        creature.cvx*=.6f;creature.cvy*=.6f;
+                    }
+                    save();
+                }
+            }
+            eventTime=Math.max(0,eventTime-dt);
+            if(reserve<=0){
+                reserve=45;lastEvent="CORPO ESAUSTO • MEMORIA CONSERVATA";eventTime=6;
+                resetEpisode();save();
+            }
         }
         @Override protected void onSizeChanged(int w,int h,int ow,int oh){
             super.onSizeChanged(w,h,ow,oh);
@@ -142,9 +198,10 @@ public final class GameActivity extends Activity {
             if(simulationRunning){
                 for(int i=0;i<speed;i++){
                     float slice=Math.min(dt,.035f);
+                    updateHabitat(slice);
                     creature.step(trainer.best,(float)Math.cos(heading),(float)Math.sin(heading),slice);
                     phase+=slice;
-                    if(phase>=9f||Math.hypot(creature.cx,creature.cy)>500){
+                    if(phase>=26f||Math.hypot(creature.cx,creature.cy)>520){
                         resetEpisode();break;
                     }
                     trailClock+=slice;
@@ -204,12 +261,22 @@ public final class GameActivity extends Activity {
                 paint.setColor(Math.abs(hash)%3==0?0x39307879:0x272e5d68);
                 c.drawCircle(xx+((i*j)%17),yy,rr,paint);
             }
-            float gx=(float)Math.cos(heading)*137;
-            float gy=(float)Math.sin(heading)*137;
-            paint.setShader(new RadialGradient(gx,gy,56,new int[]{0x65edc885,0x1ce2aa6a,0x00c9a16a},null,Shader.TileMode.CLAMP));
-            c.drawCircle(gx,gy,56,paint);paint.setShader(null);
-            ring(c,gx,gy,17+3*(float)Math.sin(uiTime*2),0x88f9c78b,1.1f);
-            paint.setColor(GOLD);c.drawCircle(gx,gy,4.4f,paint);
+            int[] colors={0xff64d8ca,0xffcc7da4,0xffd2b889};
+            for(UnknownWorld.Entity object:environment){
+                float x=object.x,y=object.y;
+                paint.setShader(new RadialGradient(x,y,35,new int[]{(object.ready()?0x2248dfc4:0x113d7377),0x003d7377},null,Shader.TileMode.CLAMP));
+                c.drawCircle(x,y,35,paint);paint.setShader(null);
+                paint.setColor(0xff151c26);
+                c.drawCircle(x,y,object.radius,paint);
+                paint.setColor(colors[object.signature]);
+                c.drawCircle(x,y,object.radius*.63f,paint);
+                paint.setColor(0x66ffffff);
+                c.drawCircle(x-object.radius*.25f,y-object.radius*.22f,object.radius*.17f,paint);
+                if(object==chosenObject){
+                    ring(c,x,y,object.radius+6+2*(float)Math.sin(uiTime*4),0x8885fae0,1f);
+                }
+                if(!object.ready())ring(c,x,y,object.radius+3,0x44455a64,1f);
+            }
             for(int i=trailCount-1;i>=0;i--){
                 int alpha=(int)(85*(1-(float)i/trailX.length));
                 if(alpha<=0)continue;
@@ -273,9 +340,9 @@ public final class GameActivity extends Activity {
             rounded(c,12,12,468,145,0xeb0a1420,20);
             rounded(c,27,28,31,55,TEAL,2);
             text(c,"O V E R M I N D",43,39,14,TEAL,false);
-            text(c,"ZERO / ESPERIMENTO 001",26,72,21,0xffe9faf6,false);
-            text(c,"CERVELLO NON PRE-ADDESTRATO",27,99,12,MUTED,false);
-            text(c,"62 PESI • CORPO DEFORMABILE",27,120,11,0xff708d9d,false);
+            text(c,"ZERO / ESPERIMENTO 002",26,72,21,0xffe9faf6,false);
+            text(c,"NESSUNA CONOSCENZA DEGLI OGGETTI",27,99,12,MUTED,false);
+            text(c,"CERVELLO MOTORIO SALVATO • MEMORIA ATTIVA",27,120,10,0xff708d9d,false);
             text(c,"TENTATIVI",377,34,11,MUTED,false);
             text(c,String.valueOf(trainer.attempts),380,71,22,GOLD,false);
             rounded(c,13,158,467,232,0xca0e1a25,17);
@@ -285,11 +352,16 @@ public final class GameActivity extends Activity {
             float y=H-168;
             rounded(c,12,y,468,H-12,0xe00d1923,21);
             text(c,"APPRENDIMENTO DA ZERO",25,y+25,13,TEAL,false);
-            text(c,"Le contrazioni sono scelte dalla rete neurale.",25,y+45,12,0xffacc5ca,false);
+            text(c,"ZERO scopre gli effetti toccando gli oggetti.",25,y+45,12,0xffacc5ca,false);
             button(c,19,y+61,153,H-26,learning?"FERMA":"ADDESTRA",TEAL);
             button(c,165,y+61,314,H-26,"TEMPO x"+speed,0xffbfdaec);
             button(c,326,y+61,462,H-26,"CONFRONTA",GOLD);
-            text(c,simulationRunning?"CORPO IN MOVIMENTO • SIMULAZIONE ATTIVA":"SIMULAZIONE IN PAUSA",24,255,11,MUTED,false);
+            text(c,simulationRunning?"ESPLORAZIONE AUTONOMA • CONTATTI "+mind.total:"SIMULAZIONE IN PAUSA",24,255,11,MUTED,false);
+            rounded(c,25,276,456,287,0xff273746,5);
+            rounded(c,25,276,25+431*reserve/100f,287,reserve>30?TEAL:0xffdf7591,5);
+            text(c,"ENERGIA "+(int)reserve+"/100",25,307,12,0xffe0f7ed,false);
+            text(c,"EFFETTI SCOPERTI "+mind.discoveries+"/3",260,307,11,GOLD,false);
+            if(eventTime>0)text(c,lastEvent,25,329,11,0xffc4e5dc,false);
             rounded(c,402,238,464,269,0xff233944,9);
             text(c,simulationRunning?"Ⅱ":"▶",433,259,18,0xffe0f7f3,true);
             if(showBenchmark){
@@ -303,8 +375,8 @@ public final class GameActivity extends Activity {
                 text(c,"TOCCA PER CHIUDERE",240,top+185,11,MUTED,true);
             }
             if(resetNotice>0)text(c,"TOCCA DI NUOVO IL TITOLO PER AZZERARE LA MEMORIA",240,289,11,GOLD,true);
-            if(showHelp&&trainer.attempts<30)
-                text(c,"PROVA: lascia che ZERO sperimenti i movimenti",240,322,12,0xffb9cfd2,true);
+            if(showHelp&&mind.total<3)
+                text(c,"Non sa quali oggetti aiutano o danneggiano.",240,355,12,0xffb9cfd2,true);
         }
         String format(float x){return String.format(Locale.US,"%+.1f",x);}
         void button(Canvas c,float l,float t,float r,float b,String caption,int color){

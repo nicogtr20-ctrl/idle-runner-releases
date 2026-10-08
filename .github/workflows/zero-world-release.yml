@@ -1,0 +1,35 @@
+name: OVERMIND ZERO world APK
+on:
+  push:
+    branches: [experiment/overmind-zero-world-v03]
+  workflow_dispatch:
+permissions:
+  contents: write
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+      - uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: '8.11.1'
+      - name: Test motor brain and unknown-object learning
+        run: |
+          mkdir -p /tmp/zero-002-test
+          javac -d /tmp/zero-002-test app/src/main/java/com/overmind/zero/MotorBrain.java app/src/main/java/com/overmind/zero/UnknownWorld.java
+          java -cp /tmp/zero-002-test com.overmind.zero.MotorBrain
+          java -cp /tmp/zero-002-test com.overmind.zero.UnknownWorld
+      - name: Compile Android APK
+        run: gradle --no-daemon assembleDebug
+      - name: Release APK
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          cp app/build/outputs/apk/debug/app-debug.apk OVERMIND-ZERO-WORLD-v0.3.apk
+          TAG="zero-world-v0.3.${{ github.run_number }}"
+          gh release create "$TAG" OVERMIND-ZERO-WORLD-v0.3.apk --title "OVERMIND ZERO World $TAG" --notes "ZERO-002 experimental Android APK: unknown objects, physical body-object contacts, positive/negative energy consequences, small reward-driven associative memory, persistence of motor and world knowledge, independent goal selection." --target "${{ github.sha }}"
