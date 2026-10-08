@@ -18,7 +18,9 @@
 - [x] Collisioni simulate tra segmento della membrana, nucleo e oggetti (0.4.0 CI).
 - [x] Controller di 18 pesi vergini che apprende a modulare contrazioni e grip vicino agli oggetti (simulazione e CI).
 - [x] Test JVM fisica (contatto/no-contatto) e confronto di manipolazione su direzioni diverse (CI).
-- [ ] Test manuale sul Galaxy S21 dei contatti fisici e del risultato `CONFRONTA`.
+- [x] Test 0.4.0 ricevuto: urti contabilizzati, ma reale spostamento non visibile e reset dell'episodio ogni 26s riscontrato da codice.
+- [x] Fix 0.4.1 pubblicato con tracce visibili, contatori separati e mondo continuo; test CI superati.
+- [ ] Verificare sul Galaxy S21 0.4.1 con screenshot video e contatore DISCHI SPOSTATI dopo 10+ minuti.
 
 ## ZERO-004 — estensioni del corpo
 - [ ] Pseudopodi dinamici legati alla fisica e ai parametri apprenderibili.
