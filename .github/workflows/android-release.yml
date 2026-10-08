@@ -2,6 +2,11 @@ name: Android APK
 on:
   push:
     branches: [main]
+    paths:
+      - 'app/**'
+      - 'settings.gradle'
+      - 'build.gradle'
+      - 'gradle.properties'
   workflow_dispatch:
 permissions:
   contents: write

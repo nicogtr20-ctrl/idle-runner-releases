@@ -13,12 +13,9 @@ Un pulsante **Aggiorna** nell'app verifica su Vercel se esiste un APK nuovo. Se 
 - Dopo verifica installazione, la nuova app dovrebbe mantenere lo stesso package id, firma e dati persistenti.
 
 ## Firma APK: prerequisito
-Le attuali release sono DEBUG e non garantiscono certificato stabile fra run GitHub Actions. Serve **una keystore release persistente** con password/alias custoditi in **GitHub Actions Secrets**, non in repository o in Vercel pubblico.
-Esempio di secret names (NON valori):
-- `OVERMIND_KEYSTORE_B64`
-- `OVERMIND_KEYSTORE_PASSWORD`
-- `OVERMIND_KEY_ALIAS`
-- `OVERMIND_KEY_PASSWORD`
+Le release storiche ZERO-001/002 sono DEBUG e non garantiscono certificato stabile fra run GitHub Actions. Serve **una keystore release persistente** con password/alias custoditi in **GitHub Actions Secrets**, non in repository o in Vercel pubblico.
+**Un solo secret obbligatorio**: `OVERMIND_SIGNING_BUNDLE` (Base64 di un JSON contenente keystore PKCS12, password e alias). Un pacchetto di firma e il backup privato sono stati generati per il proprietario, ma non vengono inseriti nel repository. Configuralo una volta in GitHub → Settings → Secrets and variables → Actions → New repository secret. Il workflow `overmind-ota-publish.yml` legge il secret e firma sempre con lo stesso certificato.
+
 Mai rivelare, stampare o committare la chiave. Prima versione con firma nuova potrebbe richiedere una sola reinstallazione da parte del proprietario.
 
 ## Manifest scheletro in updater/public/latest.json

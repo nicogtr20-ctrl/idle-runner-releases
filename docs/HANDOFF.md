@@ -16,8 +16,8 @@ L'utente ha osservato ZERO-001: una forma nera deformabile, il nucleo spinge sul
 - Vercel **online**: https://overmind-zero-updates.vercel.app/latest.json (HTTP 200, `available:false`).
 - Vercel project `overmind-zero-updates` `prj_fremJAX6ODfjsSkoA6TMjdlWRZwg`, team `prime-1323`, root `updater/`, branch di produzione `main`.
 - Codice del pulsante e downloader: branch `feature/overmind-inapp-updater`; package della nuova app **separata** `com.overmind.zero.ota`, per conservare la precedente `com.overmind.zero.world` con i suoi dati.
-- Workflow firma/pubblicazione: `.github/workflows/overmind-ota-publish.yml`; richiede i 4 GitHub Actions Secrets documentati in `docs/UPDATES.md`. Senza secrets CI compila ma non rilascia APK.
-- La v0.4 del gameplay resta sospesa fino a prova updater Android su S21.
+- Workflow firma/pubblicazione: `.github/workflows/overmind-ota-publish.yml`; richiede il secret unico `OVERMIND_SIGNING_BUNDLE` documentato in `docs/UPDATES.md`. Senza secrets CI compila ma non rilascia APK.
+- La v0.4 del gameplay resta sospesa fino a prova updater Android su S21. Il client updater Android si trova nel branch `feature/overmind-inapp-updater`, ancora da provare sul telefono.
 
 ### Decisione attuale
 **FERMARE LA v0.4 DI GAMEPLAY. PRIMA:**
