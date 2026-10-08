@@ -342,7 +342,7 @@ public final class GameActivity extends Activity {
             text(c,"O V E R M I N D",43,39,14,TEAL,false);
             text(c,"ZERO / ESPERIMENTO 002",26,72,21,0xffe9faf6,false);
             text(c,"NESSUNA CONOSCENZA DEGLI OGGETTI",27,99,12,MUTED,false);
-            text(c,"CERVELLO MOTORIO SALVATO • MEMORIA ATTIVA",27,120,10,0xff708d9d,false);
+            text(c,"MEMORIA LOCALE • APP INDIPENDENTE",27,120,10,0xff708d9d,false);
             text(c,"TENTATIVI",377,34,11,MUTED,false);
             text(c,String.valueOf(trainer.attempts),380,71,22,GOLD,false);
             rounded(c,13,158,467,232,0xca0e1a25,17);
