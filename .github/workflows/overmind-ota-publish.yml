@@ -69,6 +69,19 @@ jobs:
       - name: Assemble stable signed APK
         if: env.signing_ready == 'true'
         run: gradle --no-daemon assembleRelease
+      - name: Verify updater permissions and APK provider in signed manifest
+        if: env.signing_ready == 'true'
+        run: |
+          set -euo pipefail
+          APK="app/build/outputs/apk/release/app-release.apk"
+          AAPT="$(find "$ANDROID_HOME/build-tools" -name aapt -type f | sort -V | tail -1)"
+          "$AAPT" dump permissions "$APK" | tee "$RUNNER_TEMP/permissions.txt"
+          grep -F "android.permission.INTERNET" "$RUNNER_TEMP/permissions.txt"
+          grep -F "android.permission.REQUEST_INSTALL_PACKAGES" "$RUNNER_TEMP/permissions.txt"
+          "$AAPT" dump xmltree "$APK" AndroidManifest.xml > "$RUNNER_TEMP/manifest.txt"
+          grep -F "com.overmind.zero.UpdateFileProvider" "$RUNNER_TEMP/manifest.txt"
+          grep -F "com.overmind.zero.ota.updates" "$RUNNER_TEMP/manifest.txt"
+          echo "Validated final signed APK: network, installer permission and update provider."
       - name: Publish signed APK to updater in main
         if: env.signing_ready == 'true'
         env:
