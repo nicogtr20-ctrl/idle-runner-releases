@@ -73,7 +73,7 @@ jobs:
           git fetch origin main
           git checkout main
           mkdir -p updater/public/apk
-          APK_FILENAME="overmind-zero-$VERSION_CODE.apk"
+          APK_FILENAME="overmind-zero-$VERSION_CODE-${APK_SHA:0:12}.apk"
           cp "$RUNNER_TEMP/signed-update.apk" "updater/public/apk/$APK_FILENAME"
           python3 - "$VERSION_CODE" "$VERSION_NAME" "$APK_FILENAME" "$APK_SHA" "$APK_SIZE" <<'PY'
           import json, sys
@@ -90,10 +90,15 @@ jobs:
           }
           with open("updater/public/latest.json","w",encoding="utf-8") as f:
             json.dump(metadata,f,indent=2)
+          with open("docs/CHANGELOG.md","a",encoding="utf-8") as f:
+            f.write("\n## OTA "+vn+" — "+metadata["publishedAt"]+"\n")
+            f.write("- Pacchetto Android firmato pubblicato su Vercel (codice "+vc+").\n")
+            f.write("- SHA-256: `"+sha+"`.\n")
+            f.write("- APK: `/apk/"+filename+"`.\n")
           PY
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add updater/public/latest.json updater/public/apk/
+          git add updater/public/latest.json updater/public/apk/ docs/CHANGELOG.md
           git diff --cached --quiet && exit 0
           git commit -m "Publish signed OVERMIND $VERSION_NAME OTA build"
           git push origin main
