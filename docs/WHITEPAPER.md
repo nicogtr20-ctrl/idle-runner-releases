@@ -1,6 +1,6 @@
 # OVERMIND: ZERO — Whitepaper di progetto
 
-**Versione:** 0.1 (documento vivo) · **Data:** 9 ottobre 2026 · **Stato:** prototipo di ricerca Android
+**Versione:** 0.2 (documento vivo) · **Data:** 9 ottobre 2026 · **Stato:** prototipo di ricerca Android
 
 ## Sintesi
 OVERMIND: ZERO è un esperimento di *artificial life* trasformato gradualmente in gioco mobile 2D. Il protagonista è una piccola massa scura dall'aspetto di ferrofluido/organismo simbionte. Il giocatore **non** controlla ZERO né le parla; è un osservatore invisibile che può modificare la simulazione, finanziare interventi con esperienza guadagnata e osservare come l'entità si comporta ed evolve.
@@ -48,10 +48,13 @@ Osservare ZERO imparare a usare il proprio corpo, scoprire elementi del mondo, s
 ## Milestone
 - M0: controller motorio vergine e apprendimento verificato (raggiunta a livello di prototipo).
 - M1: conseguenze di oggetti ignoti e memoria associativa (primo prototipo disponibile).
-- M2: oggetti spostati da forze fisiche del corpo, apprendimento di contatto/manipolazione (prossimo studio, *sospeso per aggiornamenti*).
+- M2: oggetti spostati da forze fisiche del corpo, apprendimento di contatto/manipolazione (codice e test CI nella OTA v0.4.0; verifica sul Galaxy S21 ancora pendente).
 - M3: modello predittivo dello spazio e corpo con pseudopodi dinamici.
 - M4: vera simulazione persistente con ciclo energetico, espansione e nodi.
 - M5: gioco completo con UX, grafica ferrofluid, interventi divini e XP.
 
 ## Come aggiornare questo documento
 Quando cambiano la visione, gli assunti sull'IA, i rischi o i traguardi, modificare questa pagina; aggiungere **ogni release** a `docs/CHANGELOG.md`; aggiornare il passaggio di consegne `docs/HANDOFF.md`.
+
+## Esperimento ZERO-003 (rilascio OTA v0.4.0-ota.15)
+La v0.4 implementa collisioni fisiche fra membrana deformabile e dischi mobili e un ulteriore controllore di manipolazione a 18 pesi, inizializzato a zero e addestrato mediante neuroevoluzione. L'interazione non è più una spinta programmata sul contatto: l'oggetto reagisce soltanto alla dinamica corporea del simulatore. In CI il fitness in training è migliorato da 22,301 a 101,837 su 70 tentativi; fitness heldout 50,940. I benchmark sui nuovi parametri non costituiscono prova di intelligenza generale. L'APK firmata è su Vercel; la validazione sul telefono deve ancora essere svolta.

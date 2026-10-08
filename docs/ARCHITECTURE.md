@@ -30,3 +30,12 @@
 - Persistenza con versionamento formato memoria e migrazioni.
 - Registrare in debug decisione, input sensoriali, previsione, azione, risultato; mantenere verificabile la reale esperienza.
 - Non confondere trasparenza UI dei risultati con "pensieri" narrati dal soggetto.
+
+## ZERO-003 / v0.4: fisica e apprendibilità della manipolazione
+- `ContactLearning.java` contiene collisioni con oggetti mobili mediante perimetro elastico e nucleo, impulso da velocità relativa e correzione dell'interpenetrazione.
+- `UnknownWorld.Entity.touch` non aggiunge più velocità agli oggetti mobili.
+- `MotorBrain.Body.step` accetta opzionalmente 18 nuovi pesi di controllo per contrazione e attrito, senza modificare i 62 pesi motorii salvati.
+- Neuroevoluzione di `ContactLearning.Trainer` esegue rollout fisici e confronti holdout su direzioni non usate per imparare.
+- `GameActivity` aggiunge contatore di oggetti realmente mossi e benchmark di manipolazione, conserva vecchi dati `SharedPreferences` e nuove chiavi `hand_*_v04`.
+- Solo simulazione; nessun LLM, nessun pensiero astratto, nessun ragionamento causale generale.
+- Branch firmato OTA: `feature/overmind-inapp-updater`; manifest https://overmind-zero-updates.vercel.app/latest.json. Prima prova sul dispositivo della 0.4 pendente.

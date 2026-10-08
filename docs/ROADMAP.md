@@ -14,10 +14,11 @@
 - [ ] Pipeline aggiorna questo CHANGELOG/HANDOFF ad ogni release.
 
 ## ZERO-003 — comportamento fisico reale
-- [ ] Rimuovere la spinta oggetti "magica" al semplice contatto.
-- [ ] Collisioni e forze reali fra corpo a membrana, massa centrale e oggetti.
-- [ ] ZERO scopre che alcune deformazioni spostano oggetti.
-- [ ] Test quantitativo push force / controllore vergine vs addestrato su oggetti nuovi.
+- [x] Rimuovere la spinta oggetti "magica" al semplice contatto (0.4.0 CI).
+- [x] Collisioni simulate tra segmento della membrana, nucleo e oggetti (0.4.0 CI).
+- [x] Controller di 18 pesi vergini che apprende a modulare contrazioni e grip vicino agli oggetti (simulazione e CI).
+- [x] Test JVM fisica (contatto/no-contatto) e confronto di manipolazione su direzioni diverse (CI).
+- [ ] Test manuale sul Galaxy S21 dei contatti fisici e del risultato `CONFRONTA`.
 
 ## ZERO-004 — estensioni del corpo
 - [ ] Pseudopodi dinamici legati alla fisica e ai parametri apprenderibili.

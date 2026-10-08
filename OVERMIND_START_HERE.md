@@ -21,6 +21,6 @@ Il repository `nicogtr20-ctrl/idle-runner-releases` è **privato** e contiene un
 
 **Server Vercel attivo:** https://overmind-zero-updates.vercel.app/latest.json, manifest attualmente disabilitato finché non è disponibile un APK firmato. **Branch client updater:** `feature/overmind-inapp-updater`.
 
-**Priorità attuale:** realizzare un aggiornamento Android affidabile tramite manifest su Vercel, APK con firma persistente e pulsante `Aggiorna`, poi continuare la ricerca sull'apprendimento del corpo e sul mondo sconosciuto.
+**Priorità attuale:** aggiornamento Android OTA già provato sul Galaxy S21 (v0.3.8); **v0.4.0-ota.15** con nuova fisica e controllo manipolazione pubblicata e validata in CI, ma ancora da provare su Galaxy S21. Codice più recente in `feature/overmind-inapp-updater`, APK/manifest in https://overmind-zero-updates.vercel.app/latest.json. Verificare il confronto `CONFRONTA` prima di avanzare oltre.
 
 Il codice, gli asset e i release APK restano di proprietà e sotto controllo del repository privato. Non pubblicare automaticamente codice sorgente o chiavi di firma.
