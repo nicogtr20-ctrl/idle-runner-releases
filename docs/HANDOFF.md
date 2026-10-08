@@ -32,3 +32,13 @@ Le release debug di GitHub Actions spesso usano certificati diversi. È irrealis
 
 ### Per una nuova chat
 Scrivere: «Apri su GitHub `nicogtr20-ctrl/idle-runner-releases`, leggi `OVERMIND_START_HERE.md` e `AGENTS.md`, riprendi OVERMIND dalla sezione HANDOFF e continua la priorità OTA senza modificare Idle Runner.»
+
+
+### OTA deployment verificato (2026-10-09)
+- Vercel: https://overmind-zero-updates.vercel.app/latest.json (manifest pronto, production pubblica; preview protette).
+- Base installabile: 0.3.6-ota.8 / code 1008, file: https://overmind-zero-updates.vercel.app/apk/overmind-zero-1008-118f0983c864.apk
+- Nuovo update: 0.3.7-ota.10 / code 1010, file: https://overmind-zero-updates.vercel.app/apk/overmind-zero-1010-7f012383aee3.apk
+- Firmware Android: build Release con certificato costante e numeri di versione crescenti; pipeline GitHub riuscita.
+- Branch Android: feature/overmind-inapp-updater; package com.overmind.zero.ota. Prima installazione separata dalle app storiche.
+- Test sul Galaxy S21 PENDENTE: installare 1008, premere AGGIORNA, consentire l'installazione Android, verificare codice 1010 e preservazione salvataggi. Nessuna installazione silenziosa.
+- NON procedere con v0.4 gameplay finché il test non è superato.
