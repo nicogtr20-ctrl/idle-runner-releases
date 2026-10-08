@@ -32,7 +32,9 @@ public final class GameActivity extends Activity {
         final float W=480f;
         MotorBrain.Trainer trainer;
         ContactLearning.Trainer handTrainer;
-        int pushes=0;
+        int pushes=0,physicalContacts=0;
+        float biggestDisplacement=0;
+        float recentDisplacement=0;
         volatile float handInitial=Float.NaN,handTrained=Float.NaN;
         UnknownWorld.Mind mind=new UnknownWorld.Mind();
         UpdateClient updater;
@@ -88,7 +90,11 @@ public final class GameActivity extends Activity {
             handTrainer=new ContactLearning.Trainer(savedHand);
             handTrainer.attempts=prefs.getInt("hand_attempts_v04",0);
             handTrainer.accepted=prefs.getInt("hand_successes_v04",0);
-            pushes=prefs.getInt("physical_pushes_v04",0);
+            // Do not reuse v0.4's 'physical_pushes' counter: it counted
+            // collisions, not confirmed object displacement.
+            pushes=prefs.getInt("objects_displaced_v041",0);
+            physicalContacts=prefs.getInt("collisions_v041",0);
+            biggestDisplacement=prefs.getFloat("max_displacement_v041",0);
             mind.deserialize(prefs.getString("world_knowledge_v03",""));
             reserve=prefs.getFloat("zero_energy_v03",57f);
             speed=1;learning=true;simulationRunning=true;
@@ -141,7 +147,9 @@ public final class GameActivity extends Activity {
               .putString("hand_brain_v04",encode(handTrainer.best))
               .putInt("hand_attempts_v04",handTrainer.attempts)
               .putInt("hand_successes_v04",handTrainer.accepted)
-              .putInt("physical_pushes_v04",pushes)
+              .putInt("objects_displaced_v041",pushes)
+              .putInt("collisions_v041",physicalContacts)
+              .putFloat("max_displacement_v041",biggestDisplacement)
               .apply();
         }
         void resume(){
@@ -175,11 +183,30 @@ public final class GameActivity extends Activity {
             lastFrame=0;
         }
         void resetEpisode(){
+            // Only initial boot or actual simulated death restarts the body.
             creature.reset();episode++;phase=0;trailCount=0;clock=0;
-            environment=UnknownWorld.newHabitat(episode);
+            environment=UnknownWorld.newHabitat(episode,creature.cx,creature.cy);
             chosenObject=null;goalTimer=0;contactsThisLife=0;worldTime=0;
             reserve=Math.max(42,Math.min(92,reserve));
             heading=episode*.31f;
+        }
+        void extendHabitat(){
+            // Keep the same physical body, velocity, memories and camera.
+            // Place additional objects outside the immediate viewport.
+            episode++;phase=0;
+            for(int i=environment.size()-1;i>=0;i--){
+                UnknownWorld.Entity e=environment.get(i);
+                if(Math.hypot(e.x-creature.cx,e.y-creature.cy)>600)
+                    environment.remove(i);
+            }
+            environment.addAll(UnknownWorld.newHabitat(
+                episode,creature.cx,creature.cy));
+            while(environment.size()>24)environment.remove(0);
+            if(chosenObject!=null&&!environment.contains(chosenObject)){
+                chosenObject=null;goalTimer=0;
+            }
+            lastEvent="NUOVA AREA ESPLORATA  •  ZERO NON SI AZZERA";
+            eventTime=3;
         }
         void updateHabitat(float dt){
             worldTime+=dt;goalTimer-=dt;
@@ -187,7 +214,11 @@ public final class GameActivity extends Activity {
             for(UnknownWorld.Entity object:environment)object.tick(dt);
             if(chosenObject==null||!chosenObject.ready()||goalTimer<=0){
                 chosenObject=mind.choose(environment,creature.cx,creature.cy,reserve);
-                goalTimer=2.8f;
+                if(chosenObject==null){
+                    extendHabitat();
+                    chosenObject=mind.choose(environment,creature.cx,creature.cy,reserve);
+                }
+                goalTimer=3.5f;
             }
             if(chosenObject!=null){
                 heading=(float)Math.atan2(chosenObject.y-creature.cy,chosenObject.x-creature.cx);
@@ -199,14 +230,30 @@ public final class GameActivity extends Activity {
             for(UnknownWorld.Entity object:environment){
                 if(object.isMovable()){
                     float impulse=ContactLearning.collide(creature,object,dt);
-                    if(impulse>1.2f&&object.ready()&&
-                      Math.hypot(object.vx,object.vy)>1.5f){
-                        object.touch(0,0); // cooldown only: NEVER gives velocity
-                        float motion=object.displacementEffect();
-                        mind.observe(object.signature,0,motion);
-                        pushes++;contactsThisLife++;goalTimer=0;chosenObject=null;
-                        lastEvent="ZERO SPOSTA UN OGGETTO  •  "+pushes+" VOLTE";
-                        eventTime=3.5f;save();
+                    if(impulse>.65f){
+                        object.everCollided=true;
+                        if(object.contactCooldown<=0){
+                            physicalContacts++;
+                            contactsThisLife++;
+                            object.contactCooldown=.75f;
+                            mind.observe(object.signature,0,object.displacementEffect());
+                        }
+                    }
+                    // Only report a success when an already-contacted object
+                    // has demonstrably changed world position by >= 12 units.
+                    // A mere collision or velocity spike does NOT qualify.
+                    float shift=object.displacementFromSpawn();
+                    object.peakDisplacement=Math.max(object.peakDisplacement,shift);
+                    if(object.everCollided && !object.countedAsMoved && shift>=12f){
+                        object.countedAsMoved=true;
+                        pushes++;
+                        biggestDisplacement=Math.max(biggestDisplacement,shift);
+                        recentDisplacement=shift;
+                        lastEvent="DISCO SPOSTATO "+(int)shift+" UNITA  •  TOTALE "+pushes;
+                        eventTime=4f;save();
+                    }
+                    if(object.everCollided && shift>biggestDisplacement+1f){
+                        biggestDisplacement=shift;
                     }
                     continue;
                 }
@@ -259,8 +306,9 @@ public final class GameActivity extends Activity {
                         chosenObject!=null?chosenObject.y:0);
                     resolveObjects(slice);
                     phase+=slice;
-                    if(phase>=26f||Math.hypot(creature.cx,creature.cy)>520){
-                        resetEpisode();break;
+                    if(phase>=13f){
+                        // NOT a reset: the world expands around ZERO.
+                        extendHabitat();
                     }
                     trailClock+=slice;
                     if(trailClock>.14f){
@@ -324,6 +372,25 @@ public final class GameActivity extends Activity {
                 float x=object.x,y=object.y;
                 paint.setShader(new RadialGradient(x,y,35,new int[]{(object.ready()?0x2248dfc4:0x113d7377),0x003d7377},null,Shader.TileMode.CLAMP));
                 c.drawCircle(x,y,35,paint);paint.setShader(null);
+                // Object's original position remains visible in world space.
+                // A line and an outline show actual physical displacement:
+                // this is evidence, not an animation attached to ZERO.
+                if(object.isMovable()){
+                    float shifted=object.displacementFromSpawn();
+                    if(shifted>3f){
+                        paint.setShader(null);
+                        paint.setStyle(Paint.Style.STROKE);
+                        paint.setStrokeWidth(1.05f);
+                        paint.setColor(0x7796dbcf);
+                        c.drawLine(object.spawnX,object.spawnY,x,y,paint);
+                        paint.setColor(0x66efbe76);
+                        c.drawCircle(object.spawnX,object.spawnY,object.radius*.86f,paint);
+                        paint.setStyle(Paint.Style.FILL);
+                        if(shifted>=8){
+                            text(c,(int)shifted+" U",x,y-object.radius-10,9,GOLD,true);
+                        }
+                    }
+                }
                 paint.setColor(0xff151c26);
                 c.drawCircle(x,y,object.radius,paint);
                 paint.setColor(colors[object.signature]);
@@ -401,7 +468,7 @@ public final class GameActivity extends Activity {
             text(c,"ZERO / ESPERIMENTO 003",26,72,21,0xffe9faf6,false);
             rounded(c,339,104,459,138,0xff20444a,11);
             text(c,"AGGIORNA",399,127,12,TEAL,true);
-            text(c,"OGGETTI CON FISICA REALE",27,99,12,MUTED,false);
+            text(c,"MONDO CONTINUO • MOVIMENTO VERIFICABILE",27,99,11,MUTED,false);
             text(c,"VERSIONE "+installedVersion+"  •  OTA",27,120,10,0xff708d9d,false);
             text(c,"TENTATIVI",377,34,11,MUTED,false);
             text(c,String.valueOf(trainer.attempts),380,71,22,GOLD,false);
@@ -412,7 +479,7 @@ public final class GameActivity extends Activity {
             float y=H-168;
             rounded(c,12,y,468,H-12,0xe00d1923,21);
             text(c,"APPRENDIMENTO DA ZERO",25,y+25,13,TEAL,false);
-            text(c,"Muove oggetti solo con forze del corpo.",25,y+45,12,0xffacc5ca,false);
+            text(c,"Osserva le tracce dei dischi realmente spostati.",25,y+45,11,0xffacc5ca,false);
             button(c,19,y+61,153,H-26,learning?"FERMA":"ADDESTRA",TEAL);
             button(c,165,y+61,314,H-26,"TEMPO x"+speed,0xffbfdaec);
             button(c,326,y+61,462,H-26,"CONFRONTA",GOLD);
@@ -420,8 +487,10 @@ public final class GameActivity extends Activity {
             rounded(c,25,276,456,287,0xff273746,5);
             rounded(c,25,276,25+431*reserve/100f,287,reserve>30?TEAL:0xffdf7591,5);
             text(c,"ENERGIA "+(int)reserve+"/100",25,307,12,0xffe0f7ed,false);
-            text(c,"CONTATTI FISICI "+pushes+"  •  MANIP. "+handTrainer.attempts,201,307,10,GOLD,false);
-            if(eventTime>0)text(c,lastEvent,25,329,11,0xffc4e5dc,false);
+            text(c,"DISCHI SPOSTATI "+pushes,261,307,12,GOLD,false);
+            text(c,"URTI "+physicalContacts+"  •  DISTANZA MASSIMA "+(int)biggestDisplacement+" U  •  TENTATIVI MANIP. "+handTrainer.attempts,
+                25,329,10,0xffa6c7c9,false);
+            if(eventTime>0)text(c,lastEvent,25,350,11,0xffc4e5dc,false);
             if(uiTime<updaterStatusUntil&&updaterStatus.length()>0){
                 rounded(c,13,338,467,387,0xef1f3944,13);
                 text(c,updaterStatus.length()>52?updaterStatus.substring(0,52):updaterStatus,240,368,11,0xffd5fff4,true);

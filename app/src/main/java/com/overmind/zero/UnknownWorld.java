@@ -10,22 +10,31 @@ import java.util.*;
 public final class UnknownWorld {
     public static final int SIGNATURES=3;
     public static final class Entity {
-        public float x,y,vx,vy,cooldown;
+        public float x,y,vx,vy,cooldown,contactCooldown;
+        public final float spawnX,spawnY;
+        public boolean everCollided=false, countedAsMoved=false;
+        public float peakDisplacement=0;
         public final int signature;
         private final int law;
         public float radius;
         public Entity(float x,float y,int signature,int physicalLaw) {
-            this.x=x;this.y=y;this.signature=signature;this.law=physicalLaw;
+            this.x=x;this.y=y;this.spawnX=x;this.spawnY=y;
+            this.signature=signature;this.law=physicalLaw;
             radius=physicalLaw==2?19:15;
         }
         boolean ready(){return cooldown<=0;}
         void tick(float dt){
             cooldown=Math.max(0,cooldown-dt);
+            contactCooldown=Math.max(0,contactCooldown-dt);
             if(law==2){
                 x+=vx*dt;y+=vy*dt;
                 float drag=(float)Math.exp(-2.8f*dt);
                 vx*=drag;vy*=drag;
+                peakDisplacement=Math.max(peakDisplacement,displacementFromSpawn());
             }
+        }
+        public float displacementFromSpawn(){
+            return (float)Math.hypot(x-spawnX,y-spawnY);
         }
         boolean isMovable(){return law==2;}
         float touch(float directionX,float directionY) {
@@ -61,10 +70,17 @@ public final class UnknownWorld {
                 float dist=(float)Math.hypot(e.x-x,e.y-y);
                 if(dist>620)continue; // limited sensory radius
                 int count=contacts[e.signature];
-                float novelty=13f/(float)Math.sqrt(1+count);
+                float novelty=15f/(float)Math.sqrt(1+count);
                 float preference=estimated[e.signature];
-                float urgency=energy<36&&preference>0?preference*.65f:0;
-                float candidate=preference+novelty+urgency-dist*.022f+r.nextFloat()*2.8f;
+                // With abundant energy, curiosity can compete with a
+                // familiar rewarding signal. When hungry, survival gains weight.
+                // Only observed value, unknown-signature counts and energy
+                // are used: hidden object physics is NOT accessible to ZERO.
+                float need=Math.max(0,Math.min(1,(100-energy)/75f));
+                float value=preference>=0
+                    ?preference*(.10f+.90f*need)
+                    :preference*(.55f+.45f*need);
+                float candidate=value+novelty-dist*.025f+r.nextFloat()*3.1f;
                 if(candidate>score){score=candidate;best=e;}
             }
             return best;
@@ -93,6 +109,10 @@ public final class UnknownWorld {
         }
     }
     public static ArrayList<Entity> newHabitat(int episode){
+        return newHabitat(episode,0,0);
+    }
+    /** Spawn surroundings relative to current body; never teleport the body. */
+    public static ArrayList<Entity> newHabitat(int episode,float originX,float originY){
         ArrayList<Entity> a=new ArrayList<>();
         float spin=episode*0.39f;
         float[] angles={.2f,2.5f,4.4f,-1.1f,1.7f,-2.2f};
@@ -101,7 +121,9 @@ public final class UnknownWorld {
         for(int i=0;i<angles.length;i++){
             float angle=angles[i]+spin;
             float d=130+(i%3)*44;
-            a.add(new Entity((float)Math.cos(angle)*d,(float)Math.sin(angle)*d,signals[i],effects[i]));
+            a.add(new Entity(originX+(float)Math.cos(angle)*d,
+                             originY+(float)Math.sin(angle)*d,
+                             signals[i],effects[i]));
         }
         return a;
     }
@@ -119,6 +141,18 @@ public final class UnknownWorld {
         if(m.estimated[0]<15||m.estimated[1]>-14||
            copy.contacts[2]!=15||chosen==null||chosen.signature!=0)
             throw new IllegalStateException("World-model experience-learning test failed");
+        ArrayList<Entity> translated=newHabitat(4,210,-85);
+        ArrayList<Entity> original=newHabitat(4);
+        if(translated.size()!=original.size())throw new IllegalStateException("Habitat count changed");
+        for(int i=0;i<translated.size();i++){
+            Entity e=translated.get(i),z=original.get(i);
+            if(Math.abs(e.x-z.x-210)>1e-3||Math.abs(e.y-z.y+85)>1e-3)
+                throw new IllegalStateException("Continuous-world spawn offset failed");
+        }
+        Entity marked=new Entity(0,0,2,2);
+        marked.x=19;marked.tick(.025f);
+        if(marked.peakDisplacement<18.9f||marked.spawnX!=0)
+            throw new IllegalStateException("Object displacement evidence failed");
         System.out.printf(Locale.US,
           "ZERO-002 selftest: known_types=%d contacts=%d learned_values=[%.2f, %.2f, %.2f] preferred_signature=%d%n",
           copy.discoveries,copy.total,copy.estimated[0],copy.estimated[1],copy.estimated[2],chosen.signature);
