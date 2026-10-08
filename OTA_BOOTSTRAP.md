@@ -13,11 +13,10 @@ This feature branch is the future OTA-enabled Android application. Its separate 
 
 ## Stable signing requirement (BLOCKING)
 No credible in-place update is possible until all builds of the `.ota` app use the same signing key. We do not store signing material in GitHub source.
-GitHub Actions repository **Secrets**:
-- `OVERMIND_KEYSTORE_B64` (base64 encoding of a private .jks keystore)
-- `OVERMIND_KEYSTORE_PASSWORD`
-- `OVERMIND_KEY_ALIAS`
-- `OVERMIND_KEY_PASSWORD`
+GitHub Actions repository **Secret** (one-time):
+- `OVERMIND_SIGNING_BUNDLE`: one Base64-encoded JSON object that contains the private PKCS12 keystore and its password/alias. Store only in GitHub Settings → Secrets and variables → Actions. **Do not commit this value.**
+
+A private signing bundle and keystore backup were generated separately for the owner, not stored in this repository. Never publish or share them.
 
 The signing key MUST be backed up securely; losing it prevents future updates to installed builds. Do not distribute secrets in conversations or commit to Git.
 The GitHub Action will **not publish an update** until configured. Smoke/debug builds alone cannot guarantee future installability.
