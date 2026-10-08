@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
-  <application android:label="OVERMIND ZERO WORLD"
+  <application android:label="OVERMIND ZERO"
     android:allowBackup="false"
     android:theme="@android:style/Theme.Material.NoActionBar"
     android:icon="@drawable/ic_launcher" android:supportsRtl="true">

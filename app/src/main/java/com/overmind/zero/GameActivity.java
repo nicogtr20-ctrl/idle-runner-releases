@@ -32,6 +32,9 @@ public final class GameActivity extends Activity {
         final float W=480f;
         MotorBrain.Trainer trainer;
         UnknownWorld.Mind mind=new UnknownWorld.Mind();
+        UpdateClient updater;
+        String updaterStatus="";
+        float updaterStatusUntil=0;
         ArrayList<UnknownWorld.Entity> environment=new ArrayList<>();
         UnknownWorld.Entity chosenObject;
         float reserve=57,goalTimer=0,worldTime=0;
@@ -57,6 +60,11 @@ public final class GameActivity extends Activity {
             super(c);setLayerType(View.LAYER_TYPE_HARDWARE,null);setFocusable(true);
             prefs=c.getSharedPreferences("zero_motorbrain_001",Context.MODE_PRIVATE);
             load();
+            updater=new UpdateClient(GameActivity.this,(status)->{
+                updaterStatus=status;
+                updaterStatusUntil=uiTime+8.0f;
+                invalidate();
+            });
         }
         void load(){
             String initial=prefs.getString("virgin","");
@@ -341,6 +349,8 @@ public final class GameActivity extends Activity {
             rounded(c,27,28,31,55,TEAL,2);
             text(c,"O V E R M I N D",43,39,14,TEAL,false);
             text(c,"ZERO / ESPERIMENTO 002",26,72,21,0xffe9faf6,false);
+            rounded(c,339,104,459,138,0xff20444a,11);
+            text(c,"AGGIORNA",399,127,12,TEAL,true);
             text(c,"NESSUNA CONOSCENZA DEGLI OGGETTI",27,99,12,MUTED,false);
             text(c,"MEMORIA LOCALE • APP INDIPENDENTE",27,120,10,0xff708d9d,false);
             text(c,"TENTATIVI",377,34,11,MUTED,false);
@@ -362,6 +372,10 @@ public final class GameActivity extends Activity {
             text(c,"ENERGIA "+(int)reserve+"/100",25,307,12,0xffe0f7ed,false);
             text(c,"EFFETTI SCOPERTI "+mind.discoveries+"/3",260,307,11,GOLD,false);
             if(eventTime>0)text(c,lastEvent,25,329,11,0xffc4e5dc,false);
+            if(uiTime<updaterStatusUntil&&updaterStatus.length()>0){
+                rounded(c,13,338,467,387,0xef1f3944,13);
+                text(c,updaterStatus.length()>52?updaterStatus.substring(0,52):updaterStatus,240,368,11,0xffd5fff4,true);
+            }
             rounded(c,402,238,464,269,0xff233944,9);
             text(c,simulationRunning?"Ⅱ":"▶",433,259,18,0xffe0f7f3,true);
             if(showBenchmark){
@@ -403,6 +417,10 @@ public final class GameActivity extends Activity {
                 if(x<157){learning=!learning;}
                 else if(x<319){speed=speed==1?5:speed==5?20:1;}
                 else compare();
+                return true;
+            }
+            if(y>=104&&y<145&&x>=328){
+                updater.checkAndInstall();
                 return true;
             }
             if(y<137&&x<310){

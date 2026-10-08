@@ -1,13 +1,30 @@
 plugins { id 'com.android.application' }
+def stableSigningFile = System.getenv('OVERMIND_KEYSTORE_FILE')
 android {
   namespace 'com.overmind.zero'
   compileSdk 35
   defaultConfig {
-    applicationId 'com.overmind.zero.world'
+    applicationId 'com.overmind.zero.ota'
     minSdk 24
     targetSdk 28
-    versionCode 3
-    versionName '0.3.0-experiment002'
+    versionCode 4
+    versionName '0.3.6-ota'
+  }
+  signingConfigs {
+    if (stableSigningFile) {
+      stable {
+        storeFile file(stableSigningFile)
+        storePassword System.getenv('OVERMIND_KEYSTORE_PASSWORD')
+        keyAlias System.getenv('OVERMIND_KEY_ALIAS')
+        keyPassword System.getenv('OVERMIND_KEY_PASSWORD')
+      }
+    }
+  }
+  buildTypes {
+    release {
+      minifyEnabled false
+      if (stableSigningFile) signingConfig signingConfigs.stable
+    }
   }
   compileOptions {
     sourceCompatibility JavaVersion.VERSION_17
