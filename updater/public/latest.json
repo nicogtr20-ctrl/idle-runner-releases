@@ -1,0 +1,12 @@
+{
+  "schemaVersion": 1,
+  "available": false,
+  "applicationId": "com.overmind.zero.world",
+  "versionCode": 3,
+  "versionName": "0.3.5",
+  "apkUrl": null,
+  "sha256": null,
+  "sizeBytes": null,
+  "notes": "Updater predisposto. APK di produzione con firma persistente non ancora pubblicato.",
+  "publishedAt": null
+}
