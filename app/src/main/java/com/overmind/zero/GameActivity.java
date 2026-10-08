@@ -172,8 +172,9 @@ public final class GameActivity extends Activity {
       if(energy<=0){energy=0;alive=false;vx=vy=0;message("IL NUCLEO E COLLASSATO");persist();return;}
       float dirX=goalX-zx,dirY=goalY-zy;
       float d=(float)Math.hypot(dirX,dirY);
-      if(d<25||targetLife>10||thinking<=0) {
-        if(thinking<=0||d<23||targetLife>10)chooseGoal(false);
+      if((task==0 && d<38 && energy>maxEnergy()-3) || (task==2 && d<27))thinking=0;
+      if(thinking<=0||targetLife>10) {
+        chooseGoal(false);
         dirX=goalX-zx;dirY=goalY-zy;d=(float)Math.hypot(dirX,dirY);
       }
       thinking-=dt;targetLife+=dt;
