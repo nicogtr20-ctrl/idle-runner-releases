@@ -473,7 +473,7 @@ public final class GameActivity extends Activity {
             text(c,"TENTATIVI",377,34,11,MUTED,false);
             text(c,String.valueOf(trainer.attempts),380,71,22,GOLD,false);
             rounded(c,13,158,467,232,0xca0e1a25,17);
-            text(c,"MOVIMENTO APPRESO",27,182,12,0xffb5d7d6,false);
+            text(c,"MOVIMENTO • PUNTEGGIO TRAINING",27,182,11,0xffb5d7d6,false);
             text(c,format(trainer.initialFitness)+" → "+format(trainer.bestFitness),27,210,20,0xffeffff8,false);
             text(c,"unità / episodio",283,212,11,MUTED,false);
             float y=H-168;
@@ -500,7 +500,7 @@ public final class GameActivity extends Activity {
             if(showBenchmark){
                 float top=H*.32f;
                 rounded(c,20,top,460,top+294,0xf20e222e,22);
-                text(c,"CONFRONTO SU DIREZIONI NUOVE",240,top+31,16,TEAL,true);
+                text(c,"VERIFICA SU DIREZIONI NUOVE",240,top+31,16,TEAL,true);
                 text(c,"MOVIMENTO • VERGINE  "+format(benchStart),240,top+69,14,MUTED,true);
                 text(c,"MOVIMENTO • APPRESO  "+format(benchNow),240,top+97,14,GOLD,true);
                 text(c,"MANIPOLAZIONE",240,top+146,17,TEAL,true);
