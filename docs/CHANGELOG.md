@@ -61,3 +61,8 @@
 - Pacchetto Android firmato pubblicato su Vercel (codice 1013).
 - SHA-256: `b98857c77d5a4362f3696d4dd432965287593120382fdc28f26b032dafe58777`.
 - APK: `/apk/overmind-zero-1013-b98857c77d5a.apk`.
+
+## 2026-10-09 — OTA Android provato su dispositivo
+- L'utente segnala che l'aggiornamento dalla release correttiva alla v0.3.8 **funziona** sul Galaxy S21.
+- Il problema precedente era il Manifest privo di INTERNET, REQUEST_INSTALL_PACKAGES e UpdateFileProvider; corretti e verificati sulla APK firmata da CI.
+- Release 0.3.8-ota.13 resta baseline OTA; gameplay ZERO-003 può riprendere in un ramo separato, preservando `com.overmind.zero.ota` e la firma.

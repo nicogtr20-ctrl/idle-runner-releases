@@ -53,3 +53,9 @@ Scrivere: «Apri su GitHub `nicogtr20-ctrl/idle-runner-releases`, leggi `OVERMIN
 - **Da verificare sul telefono:** dopo installazione 1012, premi AGGIORNA, autorizza "Install unknown apps" per OVERMIND se richiesto, torna nell'app, ripremi AGGIORNA e conferma la schermata Android, controlla versione 0.3.8-ota.13 e dati persistenti.
 - INTERNET è un permesso normale e non genera una richiesta runtime. L'installazione da origini esterne è invece confermata dal sistema. Gli aggiornamenti silenziosi senza conferma Android NON sono promessi.
 - v0.4 gameplay resta fermo fino a test completato.
+
+### 2026-10-09 — OTA confermato sul Galaxy S21
+- L'utente conferma esplicitamente: «Ok fatto funziona» dopo installazione correttiva 0.3.7-ota.12 e prova del pulsante **AGGIORNA** alla 0.3.8-ota.13.
+- Aggiornamento Android in-app **verificato dall'utente sul dispositivo**, compresa la procedura di installazione. Non è stata eseguita una verifica indipendente del numero di versione né della persistenza dei dati; chiedere screenshot in caso di anomalie.
+- L'utente chiede se può eliminare vecchie app: sì, quelle con applicationId distinti (v0.1, ZERO-001 `com.overmind.zero.brain`, ZERO-002 `com.overmind.zero.world`) possono essere disinstallate, **ma la disinstallazione cancella i loro dati di apprendimento**. Conservare `com.overmind.zero.ota` e aggiornarla in-place; i pesi delle app precedenti non sono migrati automaticamente.
+- **Prossimo passo prioritario:** riprendere sviluppo ZERO-003/v0.4 sul codice OTA stabile con collisioni fisiche e apprendimento di manipolazione; mantenere firma, package e salvataggi.

@@ -8,7 +8,8 @@
 - [x] Pulsante **Aggiorna**, download HTTPS e verifica SHA-256 implementati nel branch `feature/overmind-inapp-updater` (build CI riuscita).
 - [ ] Verifica effettiva del pulsante su dispositivo e installazione firmata end-to-end.
 - [x] Build firmate con applicationId invariato e versionCode crescente (1008 → 1010).
-- [ ] Verifica aggiornamento in-place e salvataggi sul Galaxy S21.
+- [x] L'utente conferma aggiornamento in-app funzionante su Galaxy S21 (0.3.7 → 0.3.8).
+- [ ] Test separato della persistenza dei dati e regressione dopo ulteriori versioni.
 - [x] Manifest su Vercel aggiornato dopo CI firmata con SHA-256.
 - [ ] Pipeline aggiorna questo CHANGELOG/HANDOFF ad ogni release.
 
