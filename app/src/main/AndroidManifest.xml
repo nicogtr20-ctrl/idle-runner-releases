@@ -1,15 +1,28 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
+
+  <!-- INTERNET is a normal permission: Android does not prompt the user. -->
+  <uses-permission android:name="android.permission.INTERNET"/>
+  <!-- Needed for the user's explicit APK-update install through the system UI. -->
+  <uses-permission android:name="android.permission.REQUEST_INSTALL_PACKAGES"/>
+
   <application android:label="OVERMIND ZERO"
     android:allowBackup="false"
     android:theme="@android:style/Theme.Material.NoActionBar"
     android:icon="@drawable/ic_launcher" android:supportsRtl="true">
+
     <activity android:name="com.overmind.zero.GameActivity"
       android:exported="true" android:screenOrientation="portrait">
       <intent-filter>
-        <action android:name="android.intent.action.MAIN" />
-        <category android:name="android.intent.category.LAUNCHER" />
+        <action android:name="android.intent.action.MAIN"/>
+        <category android:name="android.intent.category.LAUNCHER"/>
       </intent-filter>
     </activity>
+
+    <!-- Read-only temporary APK exposed only to Android's installer. -->
+    <provider android:name="com.overmind.zero.UpdateFileProvider"
+      android:authorities="${applicationId}.updates"
+      android:exported="false"
+      android:grantUriPermissions="true"/>
   </application>
 </manifest>
