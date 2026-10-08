@@ -54,6 +54,13 @@ jobs:
           src.unlink()
           PY
           fi
+      - name: Test release signing with temporary CI certificate
+        if: env.signing_ready != 'true'
+        run: |
+          keytool -genkeypair -noprompt -alias overmindtest -keyalg RSA -keysize 2048 -validity 2 -storetype PKCS12 -keystore "$RUNNER_TEMP/disposable.p12" -storepass NeverShipThisTestKey1 -keypass NeverShipThisTestKey1 -dname "CN=Disposable CI Test"
+          OVERMIND_KEYSTORE_FILE="$RUNNER_TEMP/disposable.p12" OVERMIND_KEYSTORE_PASSWORD="NeverShipThisTestKey1" OVERMIND_KEY_ALIAS="overmindtest" OVERMIND_KEY_PASSWORD="NeverShipThisTestKey1" gradle --no-daemon assembleRelease
+          test -s app/build/outputs/apk/release/app-release.apk
+          echo "Release-signing path compiled with DISPOSABLE key. APK NOT published."
       - name: Assemble stable signed APK
         if: env.signing_ready == 'true'
         run: gradle --no-daemon assembleRelease
