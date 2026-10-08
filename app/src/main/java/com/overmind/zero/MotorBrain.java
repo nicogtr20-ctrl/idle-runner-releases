@@ -71,6 +71,15 @@ public final class MotorBrain {
             }
         }
         public void step(float[] weights,float dirX,float dirY,float dt){
+            step(weights,dirX,dirY,dt,null,0,0);
+        }
+        /**
+         * Optional additional learned muscular responses near a movable disk.
+         * The motor memory is left unchanged. A separate 18-parameter brain
+         * modulates individual particle contraction/grip when a disk is sensed.
+         */
+        public void step(float[] weights,float dirX,float dirY,float dt,
+                         float[] contactWeights,float objectX,float objectY){
             time+=dt;
             for(int i=0;i<N;i++){fx[i]=0;fy[i]=0;}
             float fcx=0,fcy=0;
@@ -93,6 +102,18 @@ public final class MotorBrain {
                 float[] result=commands(weights,sensors);
                 act[i]=result[0];
                 grip[i]=(.5f+.5f*result[1]);
+                if(contactWeights!=null){
+                    float ox=objectX-cx,oy=objectY-cy;
+                    float objectDist=(float)Math.hypot(ox,oy);
+                    float near=clamp((115-objectDist)/58,0,1);
+                    if(near>0){
+                        float[] influence=ContactLearning.modulation(contactWeights,
+                          nx,ny,ox/Math.max(1,objectDist),oy/Math.max(1,objectDist),
+                          objectDist,dist-R,ph,radialVelocity);
+                        act[i]=clamp(act[i]+influence[0]*.92f*near,-1,1);
+                        grip[i]=clamp(grip[i]+influence[1]*.39f*near,0,1);
+                    }
+                }
                 float length=R+act[i]*17f;
                 float stiffness=125f;
                 float springForce=(dist-length)*stiffness+radialVelocity*8.5f;

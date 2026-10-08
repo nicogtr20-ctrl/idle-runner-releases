@@ -9,7 +9,7 @@ android {
     minSdk 24
     targetSdk 35
     versionCode(ciBuildNumber ? 1000 + ciBuildNumber.toInteger() : 4)
-    versionName(ciBuildNumber ? "0.3.8-ota.${ciBuildNumber}" : '0.3.8-ota')
+    versionName(ciBuildNumber ? "0.4.0-ota.${ciBuildNumber}" : '0.4.0-ota')
   }
   signingConfigs {
     if (stableSigningFile) {

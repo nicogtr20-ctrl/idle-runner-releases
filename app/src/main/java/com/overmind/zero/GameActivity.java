@@ -31,6 +31,9 @@ public final class GameActivity extends Activity {
         final int TEAL=0xff80f7e2,GOLD=0xfff7c67a,MUTED=0xff95b1bb;
         final float W=480f;
         MotorBrain.Trainer trainer;
+        ContactLearning.Trainer handTrainer;
+        int pushes=0;
+        volatile float handInitial=Float.NaN,handTrained=Float.NaN;
         UnknownWorld.Mind mind=new UnknownWorld.Mind();
         UpdateClient updater;
         String installedVersion="0.3.7";
@@ -81,6 +84,11 @@ public final class GameActivity extends Activity {
             trainer.attempts=prefs.getInt("attempts",0);
             trainer.accepted=prefs.getInt("accepted",0);
             trainer.initialFitness=prefs.getFloat("original",MotorBrain.fitness(virgin));
+            float[] savedHand=decodeHand(prefs.getString("hand_brain_v04",""));
+            handTrainer=new ContactLearning.Trainer(savedHand);
+            handTrainer.attempts=prefs.getInt("hand_attempts_v04",0);
+            handTrainer.accepted=prefs.getInt("hand_successes_v04",0);
+            pushes=prefs.getInt("physical_pushes_v04",0);
             mind.deserialize(prefs.getString("world_knowledge_v03",""));
             reserve=prefs.getFloat("zero_energy_v03",57f);
             speed=1;learning=true;simulationRunning=true;
@@ -100,6 +108,19 @@ public final class GameActivity extends Activity {
             }catch(Exception e){return null;}
             return out;
         }
+        float[] decodeHand(String s){
+            if(s==null||s.length()==0)return null;
+            String[] chunks=s.split(",");
+            if(chunks.length!=ContactLearning.PARAMS)return null;
+            float[] w=new float[chunks.length];
+            try{
+                for(int i=0;i<w.length;i++){
+                    w[i]=Float.parseFloat(chunks[i]);
+                    if(!Float.isFinite(w[i]))return null;
+                }
+                return w;
+            }catch(Exception ex){return null;}
+        }
         String encode(float[] values){
             StringBuilder b=new StringBuilder();
             for(int i=0;i<values.length;i++){
@@ -117,6 +138,10 @@ public final class GameActivity extends Activity {
               .putFloat("original",trainer.initialFitness)
               .putString("world_knowledge_v03",mind.serialize())
               .putFloat("zero_energy_v03",reserve)
+              .putString("hand_brain_v04",encode(handTrainer.best))
+              .putInt("hand_attempts_v04",handTrainer.attempts)
+              .putInt("hand_successes_v04",handTrainer.accepted)
+              .putInt("physical_pushes_v04",pushes)
               .apply();
         }
         void resume(){
@@ -127,10 +152,12 @@ public final class GameActivity extends Activity {
                 while(enabled){
                     if(learning){
                         try{
-                            if(trainer.attempt()){
-                                if(trainer.accepted%8==0)save();
-                            }
-                            if(++saved%140==0)save();
+                            // Preserve the motor already learned in earlier
+                            // versions; train extra manipulation muscles on
+                            // measured physical outcomes, not scripted impulses.
+                            if(saved%5==0)handTrainer.attempt(trainer.best);
+                            else trainer.attempt();
+                            if(++saved%55==0)save();
                             Thread.sleep(12);
                         }catch(Exception e){
                             learning=false;
@@ -164,29 +191,41 @@ public final class GameActivity extends Activity {
             }
             if(chosenObject!=null){
                 heading=(float)Math.atan2(chosenObject.y-creature.cy,chosenObject.x-creature.cx);
-            }else{
-                heading+=dt*.7f;
-            }
+            }else heading+=dt*.7f;
+        }
+        void resolveObjects(float dt){
+            // Called AFTER the deformable body moves, so contact impulses
+            // are consequences of its simulated physical movement.
             for(UnknownWorld.Entity object:environment){
+                if(object.isMovable()){
+                    float impulse=ContactLearning.collide(creature,object,dt);
+                    if(impulse>1.2f&&object.ready()&&
+                      Math.hypot(object.vx,object.vy)>1.5f){
+                        object.touch(0,0); // cooldown only: NEVER gives velocity
+                        float motion=object.displacementEffect();
+                        mind.observe(object.signature,0,motion);
+                        pushes++;contactsThisLife++;goalTimer=0;chosenObject=null;
+                        lastEvent="ZERO SPOSTA UN OGGETTO  •  "+pushes+" VOLTE";
+                        eventTime=3.5f;save();
+                    }
+                    continue;
+                }
                 if(!object.ready())continue;
                 float dx=object.x-creature.cx,dy=object.y-creature.cy;
-                float distance=(float)Math.hypot(dx,dy);
-                float nearest=distance;
-                for(int j=0;j<MotorBrain.N;j++){
-                    float d=(float)Math.hypot(object.x-creature.x[j],object.y-creature.y[j]);
+                float dist=(float)Math.hypot(dx,dy);
+                float nearest=dist;
+                for(int k=0;k<MotorBrain.N;k++){
+                    float d=(float)Math.hypot(object.x-creature.x[k],object.y-creature.y[k]);
                     if(d<nearest)nearest=d;
                 }
                 if(nearest<18+object.radius){
-                    float nx=dx/Math.max(1,distance),ny=dy/Math.max(1,distance);
-                    float delta=object.touch(nx,ny);
+                    float delta=object.touch(dx/Math.max(1,dist),dy/Math.max(1,dist));
                     reserve=Math.max(0,Math.min(100,reserve+delta));
-                    mind.observe(object.signature,delta,object.displacementEffect());
+                    mind.observe(object.signature,delta,0);
                     contactsThisLife++;chosenObject=null;goalTimer=0;
-                    lastEvent="STIMOLO "+(object.signature+1)+"   ENERGIA "+(delta>=0?"+":"")+(int)delta;
+                    lastEvent="STIMOLO "+(object.signature+1)+"  ENERGIA "+(delta>=0?"+":"")+(int)delta;
                     eventTime=4;
-                    if(delta<0) {
-                        creature.cvx*=.6f;creature.cvy*=.6f;
-                    }
+                    if(delta<0){creature.cvx*=.6f;creature.cvy*=.6f;}
                     save();
                 }
             }
@@ -212,7 +251,13 @@ public final class GameActivity extends Activity {
                 for(int i=0;i<speed;i++){
                     float slice=Math.min(dt,.035f);
                     updateHabitat(slice);
-                    creature.step(trainer.best,(float)Math.cos(heading),(float)Math.sin(heading),slice);
+                    float[] hand=(chosenObject!=null&&chosenObject.isMovable())
+                        ?handTrainer.best:null;
+                    creature.step(trainer.best,(float)Math.cos(heading),
+                        (float)Math.sin(heading),slice,hand,
+                        chosenObject!=null?chosenObject.x:0,
+                        chosenObject!=null?chosenObject.y:0);
+                    resolveObjects(slice);
                     phase+=slice;
                     if(phase>=26f||Math.hypot(creature.cx,creature.cy)>520){
                         resetEpisode();break;
@@ -353,21 +398,21 @@ public final class GameActivity extends Activity {
             rounded(c,12,12,468,145,0xeb0a1420,20);
             rounded(c,27,28,31,55,TEAL,2);
             text(c,"O V E R M I N D",43,39,14,TEAL,false);
-            text(c,"ZERO / ESPERIMENTO 002",26,72,21,0xffe9faf6,false);
+            text(c,"ZERO / ESPERIMENTO 003",26,72,21,0xffe9faf6,false);
             rounded(c,339,104,459,138,0xff20444a,11);
             text(c,"AGGIORNA",399,127,12,TEAL,true);
-            text(c,"NESSUNA CONOSCENZA DEGLI OGGETTI",27,99,12,MUTED,false);
+            text(c,"OGGETTI CON FISICA REALE",27,99,12,MUTED,false);
             text(c,"VERSIONE "+installedVersion+"  •  OTA",27,120,10,0xff708d9d,false);
             text(c,"TENTATIVI",377,34,11,MUTED,false);
             text(c,String.valueOf(trainer.attempts),380,71,22,GOLD,false);
             rounded(c,13,158,467,232,0xca0e1a25,17);
-            text(c,"PRESTAZIONE MISURATA",27,182,12,0xffb5d7d6,false);
+            text(c,"MOVIMENTO APPRESO",27,182,12,0xffb5d7d6,false);
             text(c,format(trainer.initialFitness)+" → "+format(trainer.bestFitness),27,210,20,0xffeffff8,false);
             text(c,"unità / episodio",283,212,11,MUTED,false);
             float y=H-168;
             rounded(c,12,y,468,H-12,0xe00d1923,21);
             text(c,"APPRENDIMENTO DA ZERO",25,y+25,13,TEAL,false);
-            text(c,"ZERO scopre gli effetti toccando gli oggetti.",25,y+45,12,0xffacc5ca,false);
+            text(c,"Muove oggetti solo con forze del corpo.",25,y+45,12,0xffacc5ca,false);
             button(c,19,y+61,153,H-26,learning?"FERMA":"ADDESTRA",TEAL);
             button(c,165,y+61,314,H-26,"TEMPO x"+speed,0xffbfdaec);
             button(c,326,y+61,462,H-26,"CONFRONTA",GOLD);
@@ -375,7 +420,7 @@ public final class GameActivity extends Activity {
             rounded(c,25,276,456,287,0xff273746,5);
             rounded(c,25,276,25+431*reserve/100f,287,reserve>30?TEAL:0xffdf7591,5);
             text(c,"ENERGIA "+(int)reserve+"/100",25,307,12,0xffe0f7ed,false);
-            text(c,"EFFETTI SCOPERTI "+mind.discoveries+"/3",260,307,11,GOLD,false);
+            text(c,"CONTATTI FISICI "+pushes+"  •  MANIP. "+handTrainer.attempts,201,307,10,GOLD,false);
             if(eventTime>0)text(c,lastEvent,25,329,11,0xffc4e5dc,false);
             if(uiTime<updaterStatusUntil&&updaterStatus.length()>0){
                 rounded(c,13,338,467,387,0xef1f3944,13);
@@ -384,14 +429,18 @@ public final class GameActivity extends Activity {
             rounded(c,402,238,464,269,0xff233944,9);
             text(c,simulationRunning?"Ⅱ":"▶",433,259,18,0xffe0f7f3,true);
             if(showBenchmark){
-                float top=H*.37f;
-                rounded(c,26,top,454,top+198,0xf20e222e,22);
-                text(c,"TEST SU DIREZIONI NUOVE",240,top+36,17,TEAL,true);
-                text(c,"ZERO VERGINE   "+format(benchStart),240,top+79,17,MUTED,true);
-                text(c,"ZERO ADDESTRATA   "+format(benchNow),240,top+117,17,0xfff6e2b3,true);
-                text(c,benchWorking?"CONFRONTO IN CORSO":Float.isFinite(benchNow)?(benchNow>benchStart?"MIGLIORAMENTO MISURATO":"NESSUN MIGLIORAMENTO DIMOSTRATO"):"IN ATTESA",
-                    240,top+157,12,benchNow>benchStart?TEAL:GOLD,true);
-                text(c,"TOCCA PER CHIUDERE",240,top+185,11,MUTED,true);
+                float top=H*.32f;
+                rounded(c,20,top,460,top+294,0xf20e222e,22);
+                text(c,"CONFRONTO SU DIREZIONI NUOVE",240,top+31,16,TEAL,true);
+                text(c,"MOVIMENTO • VERGINE  "+format(benchStart),240,top+69,14,MUTED,true);
+                text(c,"MOVIMENTO • APPRESO  "+format(benchNow),240,top+97,14,GOLD,true);
+                text(c,"MANIPOLAZIONE",240,top+146,17,TEAL,true);
+                text(c,"PESI INIZIALI    "+format(handInitial),240,top+177,15,MUTED,true);
+                text(c,"PESI APPRESI     "+format(handTrained),240,top+207,15,GOLD,true);
+                text(c,benchWorking?"TEST IN ESECUZIONE...":Float.isFinite(handTrained)
+                    ?(handTrained>handInitial?"VANTAGGIO MISURATO":"NESSUN VANTAGGIO MISURATO")
+                    :"IN ATTESA",240,top+244,12,handTrained>handInitial?TEAL:GOLD,true);
+                text(c,"TOCCA PER CHIUDERE",240,top+278,11,MUTED,true);
             }
             if(resetNotice>0)text(c,"TOCCA DI NUOVO IL TITOLO PER AZZERARE LA MEMORIA",240,289,11,GOLD,true);
             if(showHelp&&mind.total<3)
@@ -408,9 +457,15 @@ public final class GameActivity extends Activity {
             if(benchWorking)return;
             benchWorking=true;showBenchmark=true;
             float[] fresh=MotorBrain.copy(virgin),learned=MotorBrain.copy(trainer.best);
+            float[] handLearned=handTrainer.best.clone();
             new Thread(()->{
                 float a=MotorBrain.benchmark(fresh),b=MotorBrain.benchmark(learned);
-                post(()->{benchStart=a;benchNow=b;benchWorking=false;invalidate();});
+                float c=ContactLearning.heldout(learned,ContactLearning.virgin());
+                float d=ContactLearning.heldout(learned,handLearned);
+                post(()->{
+                    benchStart=a;benchNow=b;handInitial=c;handTrained=d;
+                    benchWorking=false;invalidate();
+                });
             },"zero-benchmark").start();
         }
         @Override public boolean onTouchEvent(MotionEvent ev){

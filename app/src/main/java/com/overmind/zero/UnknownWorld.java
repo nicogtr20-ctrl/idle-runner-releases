@@ -27,12 +27,14 @@ public final class UnknownWorld {
                 vx*=drag;vy*=drag;
             }
         }
+        boolean isMovable(){return law==2;}
         float touch(float directionX,float directionY) {
             if(law==0){cooldown=6;return 22;}
             if(law==1){cooldown=9;return -18;}
-            float impulse=105;
-            vx+=directionX*impulse;vy+=directionY*impulse;
-            cooldown=1.4f;return 0;
+            // NEVER set velocity on touch. The live physics collision solver is
+            // the ONLY way a movable object can receive momentum.
+            cooldown=1.4f;
+            return 0;
         }
         public float displacementEffect(){
             return law==2?(float)Math.hypot(vx,vy):0;
