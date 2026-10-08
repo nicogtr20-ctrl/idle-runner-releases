@@ -1,0 +1,42 @@
+name: OVERMIND signed APK fallback release
+on:
+  push:
+    branches: [main]
+    paths: ['.github/workflows/overmind-manual-fallback.yml']
+  workflow_dispatch:
+permissions:
+  contents: write
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Validate exact existing signed OTA artifact
+        run: |
+          python3 - <<'PY'
+          import json,hashlib,pathlib
+          m=json.load(open('updater/public/latest.json'))
+          assert m['available'] is True
+          assert m['applicationId']=='com.overmind.zero.ota'
+          apk=pathlib.Path('updater/public/apk')/m['apkUrl'].rsplit('/',1)[-1]
+          assert apk.is_file(), f'APK not found: {apk}'
+          raw=apk.read_bytes()
+          assert len(raw)==m['sizeBytes'], 'Size mismatch'
+          assert hashlib.sha256(raw).hexdigest()==m['sha256'], 'Hash mismatch'
+          assert raw[:2]==b'PK','Not an APK zip file'
+          pathlib.Path('/tmp/verified_apk_path').write_text(str(apk))
+          print('Validated signed APK archive from publishing pipeline:',m['versionName'],len(raw),'bytes')
+          PY
+      - name: Publish downloadable GitHub Release for owner
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          SRC="$(cat /tmp/verified_apk_path)"
+          TAG="overmind-zero-v0.5.0-ota.18"
+          cp "$SRC" OVERMIND-ZERO-v0.5.apk
+          if gh release view "$TAG" >/dev/null 2>&1; then
+            gh release upload "$TAG" OVERMIND-ZERO-v0.5.apk --clobber
+          else
+            gh release create "$TAG" OVERMIND-ZERO-v0.5.apk --title "OVERMIND ZERO 0.5 — cervello decisionale" --notes "APK firmata originale v0.5.0-ota.18, versionCode 1018. Stesso applicationId e certificato delle versioni OTA. Installare SOPRA la versione precedente senza disinstallarla. Fallback per limite giornaliero Vercel. In alternativa il normale Aggiorna riprenderà quando Vercel pubblicherà il manifest." --target "${{ github.sha }}"
+          fi
