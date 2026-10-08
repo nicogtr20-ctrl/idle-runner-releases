@@ -3,7 +3,7 @@ android {
   namespace 'com.overmind.zero'
   compileSdk 35
   defaultConfig {
-    applicationId 'com.overmind.zero.brain'
+    applicationId 'com.overmind.zero.world'
     minSdk 24
     targetSdk 28
     versionCode 3
