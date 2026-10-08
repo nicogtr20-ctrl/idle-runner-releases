@@ -42,3 +42,14 @@ Scrivere: «Apri su GitHub `nicogtr20-ctrl/idle-runner-releases`, leggi `OVERMIN
 - Branch Android: feature/overmind-inapp-updater; package com.overmind.zero.ota. Prima installazione separata dalle app storiche.
 - Test sul Galaxy S21 PENDENTE: installare 1008, premere AGGIORNA, consentire l'installazione Android, verificare codice 1010 e preservazione salvataggi. Nessuna installazione silenziosa.
 - NON procedere con v0.4 gameplay finché il test non è superato.
+
+
+### Fix verificato — 2026-10-09: pulsante AGGIORNA, errore Permission denied
+- Galaxy S21 screenshot su 0.3.6-ota.8: `IMPOSSIBILE AGGIORNARE: Permission denied (missing I...)`. L'app NON ha richiesto permessi perché **la Manifest Android del bootstrap mancava completamente** di `android.permission.INTERNET`, `android.permission.REQUEST_INSTALL_PACKAGES`, provider `UpdateFileProvider`.
+- Root cause verificata nel codice del branch `feature/overmind-inapp-updater`; corretto `app/src/main/AndroidManifest.xml`.
+- CI ora controlla `aapt dump permissions` per entrambe le autorizzazioni e `aapt dump xmltree` per il provider nel pacchetto Release **già compilato**; test superati.
+- **Recovery manuale una volta:** 0.3.7-ota.12 / versionCode 1012, https://overmind-zero-updates.vercel.app/apk/overmind-zero-1012-4e2a741614d0.apk (firma stabile, stesso package `com.overmind.zero.ota`, installare sopra app esistente SENZA disinstallarla per mantenere il salvataggio).
+- **OTA test pronto:** 0.3.8-ota.13 / versionCode 1013, https://overmind-zero-updates.vercel.app/apk/overmind-zero-1013-b98857c77d5a.apk. Manifest https://overmind-zero-updates.vercel.app/latest.json → 1013 HTTP 200, APK 200.
+- **Da verificare sul telefono:** dopo installazione 1012, premi AGGIORNA, autorizza "Install unknown apps" per OVERMIND se richiesto, torna nell'app, ripremi AGGIORNA e conferma la schermata Android, controlla versione 0.3.8-ota.13 e dati persistenti.
+- INTERNET è un permesso normale e non genera una richiesta runtime. L'installazione da origini esterne è invece confermata dal sistema. Gli aggiornamenti silenziosi senza conferma Android NON sono promessi.
+- v0.4 gameplay resta fermo fino a test completato.
