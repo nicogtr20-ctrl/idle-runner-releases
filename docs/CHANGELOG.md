@@ -31,3 +31,8 @@
 
 ## Prima di OVERMIND
 - Branch principale contiene ancora il progetto distinto **Idle Runner**; non mescolarlo.
+
+## OTA 0.3.6-ota.8 — 2026-10-08T22:43:28.351618+00:00
+- Pacchetto Android firmato pubblicato su Vercel (codice 1008).
+- SHA-256: `118f0983c8644aa5f628db52dea1a813b84cdd6043e11c4aced881a50fd405c2`.
+- APK: `/apk/overmind-zero-1008-118f0983c864.apk`.
