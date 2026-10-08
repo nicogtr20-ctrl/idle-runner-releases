@@ -117,7 +117,9 @@ public final class GameActivity extends Activity {
             worker.setDaemon(true);worker.start();
         }
         void suspend(){
-            enabled=false;learning=false;
+            // Stop the training worker while the app is backgrounded without
+            // forgetting whether learning was enabled by the player.
+            enabled=false;
             save();
             lastFrame=0;
         }
