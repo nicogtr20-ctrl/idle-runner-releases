@@ -19,6 +19,8 @@ Il repository `nicogtr20-ctrl/idle-runner-releases` è **privato** e contiene un
 - `experiment/overmind-zero-world-v03`: ZERO-002, oggetti ignoti e memoria degli effetti. **Base applicativa attualmente validata su telefono**.
 - `experiment/overmind-zero-physics-v04`: branch creato ma sviluppo del gameplay **sospeso** finché updater e documentazione non sono pronti.
 
+**Server Vercel attivo:** https://overmind-zero-updates.vercel.app/latest.json, manifest attualmente disabilitato finché non è disponibile un APK firmato. **Branch client updater:** `feature/overmind-inapp-updater`.
+
 **Priorità attuale:** realizzare un aggiornamento Android affidabile tramite manifest su Vercel, APK con firma persistente e pulsante `Aggiorna`, poi continuare la ricerca sull'apprendimento del corpo e sul mondo sconosciuto.
 
 Il codice, gli asset e i release APK restano di proprietà e sotto controllo del repository privato. Non pubblicare automaticamente codice sorgente o chiavi di firma.

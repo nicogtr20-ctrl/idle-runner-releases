@@ -2,7 +2,8 @@
 
 ## Priorità immediata — updater e documentazione
 - [x] Whitepaper, architettura, storico e handoff su GitHub.
-- [ ] Vercel: endpoint HTTPS stabile `/latest.json` e distribuzione APK accessibile.
+- [x] Vercel: endpoint HTTPS stabile `/latest.json` (risponde HTTP 200, manifest disabilitato finché manca signing).
+- [ ] Distribuzione APK pubblico su Vercel dopo firma stabile e test.
 - [ ] Chiave di firma Android persistente custodita in GitHub Actions Secrets, non nel repo.
 - [ ] Pulsante **Aggiorna** e download dell'APK dentro l'app, verifica SHA-256, richiesta di installazione ad Android.
 - [ ] Build firmate con stesso applicationId/versionCode crescente; verifica di aggiornamento effettivo su Galaxy S21.

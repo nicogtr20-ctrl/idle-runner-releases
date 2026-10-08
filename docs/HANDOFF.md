@@ -12,6 +12,13 @@ Repository: `nicogtr20-ctrl/idle-runner-releases` (privato).
 ### Esperienze e feedback utenti
 L'utente ha osservato ZERO-001: una forma nera deformabile, il nucleo spinge sulla membrana con un movimento arcuato, la membrana si gonfia, ZERO raggiunge effettivamente il punto stimolo. Dopo ~2.467 episodi benchmark -3,6→+179,7. ZERO-002 ha registrato 4.772 tentativi, 49 contatti, 3/3 tipi, benchmark +2,9→+204,4. Ha richiesto corpi tipo ferrofluido reale, nessuna appendice prefissata, scoperta autonoma del movimento e delle funzioni degli oggetti.
 
+### Aggiornamento infrastruttura (9 ottobre 2026)
+- Vercel **online**: https://overmind-zero-updates.vercel.app/latest.json (HTTP 200, `available:false`).
+- Vercel project `overmind-zero-updates` `prj_fremJAX6ODfjsSkoA6TMjdlWRZwg`, team `prime-1323`, root `updater/`, branch di produzione `main`.
+- Codice del pulsante e downloader: branch `feature/overmind-inapp-updater`; package della nuova app **separata** `com.overmind.zero.ota`, per conservare la precedente `com.overmind.zero.world` con i suoi dati.
+- Workflow firma/pubblicazione: `.github/workflows/overmind-ota-publish.yml`; richiede i 4 GitHub Actions Secrets documentati in `docs/UPDATES.md`. Senza secrets CI compila ma non rilascia APK.
+- La v0.4 del gameplay resta sospesa fino a prova updater Android su S21.
+
 ### Decisione attuale
 **FERMARE LA v0.4 DI GAMEPLAY. PRIMA:**
 1. Documentazione GitHub permanente.

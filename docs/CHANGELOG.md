@@ -4,7 +4,10 @@
 
 ## 2026-10-09 — Infrastruttura aggiornamenti (in preparazione)
 - Stop temporaneo al ramo gameplay `experiment/overmind-zero-physics-v04`.
-- Avviata documentazione viva e infrastruttura Vercel per controllo/delivery aggiornamenti Android.
+- Creati whitepaper permanente, architettura, changelog, handoff, AGENTS.md e roadmap.
+- Vercel attivo: `https://overmind-zero-updates.vercel.app/latest.json`, risposta 200 con `available:false`.
+- Client Android con pulsante Aggiorna, download HTTPS/SHA-256, installer con autorizzazione Android: branch `feature/overmind-inapp-updater` (build da validare).
+- Nuovo applicationId `com.overmind.zero.ota` per non toccare i dati locali delle APK sperimentali già installate.
 - **Firma persistente e installer in-app ancora da validare**; evitare di promettere aggiornamenti totalmente silenziosi.
 
 ## ZERO-002 / v0.3.5 — 2026-10-09

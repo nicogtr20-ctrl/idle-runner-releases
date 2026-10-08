@@ -1,7 +1,7 @@
 {
   "schemaVersion": 1,
   "available": false,
-  "applicationId": "com.overmind.zero.world",
+  "applicationId": "com.overmind.zero.ota",
   "versionCode": 3,
   "versionName": "0.3.5",
   "apkUrl": null,

@@ -4,7 +4,7 @@
 Un pulsante **Aggiorna** nell'app verifica su Vercel se esiste un APK nuovo. Se sì, scarica il file **dentro l'app** su HTTPS, verifica SHA-256 e avvia `PackageInstaller`/intent di installazione, richiedendo conferma di Android. Non promettere installazione silenziosa: con APK installate fuori Play Store, Android richiede autorizzazione alla fonte e consenso utente.
 
 ## Architettura
-- Manifest pubblico HTTPS Vercel: `https://<dominio-vercel>/latest.json`.
+- Manifest pubblico HTTPS Vercel: `https://overmind-zero-updates.vercel.app/latest.json`.
 - File APK HTTPS distribuito dalla stessa origine, `/apk/overmind-zero.apk`, pubblicato solo dopo CI verde e firma certificato costante.
 - `latest.json` con `schemaVersion`, `available`, `applicationId`, `versionCode`, `versionName`, `apkUrl`, `sha256`, `sizeBytes`, `notes`.
 - Il client esamina codice versione e `applicationId` prima di scaricare; calcola SHA-256 su bytes APK; richiede permessi all'installazione (Android 8+ `REQUEST_INSTALL_PACKAGES` e `canRequestPackageInstalls`).
