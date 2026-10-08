@@ -66,3 +66,8 @@
 - L'utente segnala che l'aggiornamento dalla release correttiva alla v0.3.8 **funziona** sul Galaxy S21.
 - Il problema precedente era il Manifest privo di INTERNET, REQUEST_INSTALL_PACKAGES e UpdateFileProvider; corretti e verificati sulla APK firmata da CI.
 - Release 0.3.8-ota.13 resta baseline OTA; gameplay ZERO-003 può riprendere in un ramo separato, preservando `com.overmind.zero.ota` e la firma.
+
+## OTA 0.4.0-ota.15 — 2026-10-08T23:07:12.242277+00:00
+- Pacchetto Android firmato pubblicato su Vercel (codice 1015).
+- SHA-256: `1adaf54b59b3d9a48d9f2bdbd0dc31ea0570879a82b4c75aba56fa3443d9d6fe`.
+- APK: `/apk/overmind-zero-1015-1adaf54b59b3.apk`.
