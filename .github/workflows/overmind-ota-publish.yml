@@ -26,28 +26,36 @@ jobs:
           java -cp /tmp/overmind com.overmind.zero.UnknownWorld
       - name: Compile OTA client
         run: gradle --no-daemon assembleDebug
-      - name: Validate signing secrets
+      - name: Restore private signing bundle
         env:
-          KEYSTORE_DATA: ${{ secrets.OVERMIND_KEYSTORE_B64 }}
-          KEYSTORE_PASSWORD: ${{ secrets.OVERMIND_KEYSTORE_PASSWORD }}
-          KEY_ALIAS: ${{ secrets.OVERMIND_KEY_ALIAS }}
-          KEY_PASSWORD: ${{ secrets.OVERMIND_KEY_PASSWORD }}
+          SIGNING_BUNDLE: ${{ secrets.OVERMIND_SIGNING_BUNDLE }}
         run: |
-          if [[ -z "$KEYSTORE_DATA" || -z "$KEYSTORE_PASSWORD" || -z "$KEY_ALIAS" || -z "$KEY_PASSWORD" ]]; then
-            echo "Stable signing not configured: APK compiled, publication BLOCKED."
+          if [[ -z "$SIGNING_BUNDLE" ]]; then
+            echo "Signing bundle has not been configured: compile verified, publishing disabled."
             echo "signing_ready=false" >> "$GITHUB_ENV"
           else
-            printf '%s' "$KEYSTORE_DATA" | base64 -d > "$RUNNER_TEMP/overmind.jks"
-            chmod 600 "$RUNNER_TEMP/overmind.jks"
-            echo "OVERMIND_KEYSTORE_FILE=$RUNNER_TEMP/overmind.jks" >> "$GITHUB_ENV"
-            echo "signing_ready=true" >> "$GITHUB_ENV"
+            printf '%s' "$SIGNING_BUNDLE" | base64 --decode > "$RUNNER_TEMP/overmind-signing.json"
+            python3 - <<'PY'
+          import json, base64, os, pathlib
+          src=pathlib.Path(os.environ["RUNNER_TEMP"])/"overmind-signing.json"
+          obj=json.loads(src.read_text("utf-8"))
+          key=pathlib.Path(os.environ["RUNNER_TEMP"])/"overmind-release.p12"
+          key.write_bytes(base64.b64decode(obj["keyStoreBase64"],validate=True))
+          key.chmod(0o600)
+          pwd=obj["password"]
+          alias=obj["alias"]
+          for value in [pwd,alias]:print("::add-mask::"+value)
+          with open(os.environ["GITHUB_ENV"],"a",encoding="utf-8") as fh:
+            fh.write("OVERMIND_KEYSTORE_FILE="+str(key)+"\n")
+            fh.write("OVERMIND_KEYSTORE_PASSWORD="+pwd+"\n")
+            fh.write("OVERMIND_KEY_PASSWORD="+pwd+"\n")
+            fh.write("OVERMIND_KEY_ALIAS="+alias+"\n")
+            fh.write("signing_ready=true\n")
+          src.unlink()
+          PY
           fi
       - name: Assemble stable signed APK
         if: env.signing_ready == 'true'
-        env:
-          OVERMIND_KEYSTORE_PASSWORD: ${{ secrets.OVERMIND_KEYSTORE_PASSWORD }}
-          OVERMIND_KEY_ALIAS: ${{ secrets.OVERMIND_KEY_ALIAS }}
-          OVERMIND_KEY_PASSWORD: ${{ secrets.OVERMIND_KEY_PASSWORD }}
         run: gradle --no-daemon assembleRelease
       - name: Publish signed APK to updater in main
         if: env.signing_ready == 'true'
