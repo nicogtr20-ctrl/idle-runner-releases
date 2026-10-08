@@ -1,0 +1,40 @@
+name: OVERMIND ZERO-005 neural decision tests
+on:
+  push:
+    branches: [feature/overmind-v05-learned-decisions]
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with: {distribution: temurin, java-version: '17'}
+      - uses: gradle/actions/setup-gradle@v4
+        with: {gradle-version: '8.11.1'}
+      - name: Test virgin neural decision brain and prior physics
+        run: |
+          mkdir -p /tmp/overmindv05
+          javac -d /tmp/overmindv05 app/src/main/java/com/overmind/zero/MotorBrain.java app/src/main/java/com/overmind/zero/UnknownWorld.java app/src/main/java/com/overmind/zero/ContactLearning.java app/src/main/java/com/overmind/zero/DecisionBrain.java
+          java -cp /tmp/overmindv05 com.overmind.zero.MotorBrain
+          java -cp /tmp/overmindv05 com.overmind.zero.UnknownWorld
+          java -cp /tmp/overmindv05 com.overmind.zero.ContactLearning
+          java -cp /tmp/overmindv05 com.overmind.zero.DecisionBrain
+      - name: Assert learned target policy replaces scripted picker
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          s=Path("app/src/main/java/com/overmind/zero/GameActivity.java").read_text()
+          assert "decisionBrain.choose(environment" in s
+          assert "mind.choose(environment" not in s
+          assert 'putString("decision_brain_v05"' in s
+          assert 'decisionBrain.learn(object,before,reserve,0)' in s
+          assert 'decisionBrain.learn(object,reserve,reserve,shift)' in s
+          assert 'resetEpisode();break;' not in s
+          print("ZERO-005 source invariants passed: learned selection, observed outcomes, persistent knowledge")
+          PY
+      - name: Build Android staging APK
+        run: gradle --no-daemon assembleDebug

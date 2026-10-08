@@ -37,6 +37,7 @@ public final class GameActivity extends Activity {
         float recentDisplacement=0;
         volatile float handInitial=Float.NaN,handTrained=Float.NaN;
         UnknownWorld.Mind mind=new UnknownWorld.Mind();
+        DecisionBrain decisionBrain=new DecisionBrain(90517L);
         UpdateClient updater;
         String installedVersion="0.3.7";
         String updaterStatus="";
@@ -95,7 +96,10 @@ public final class GameActivity extends Activity {
             pushes=prefs.getInt("objects_displaced_v041",0);
             physicalContacts=prefs.getInt("collisions_v041",0);
             biggestDisplacement=prefs.getFloat("max_displacement_v041",0);
+            mind=new UnknownWorld.Mind();
             mind.deserialize(prefs.getString("world_knowledge_v03",""));
+            decisionBrain=new DecisionBrain(90517L);
+            decisionBrain.restore(prefs.getString("decision_brain_v05",""));
             reserve=prefs.getFloat("zero_energy_v03",57f);
             speed=1;learning=true;simulationRunning=true;
             resetEpisode();
@@ -150,6 +154,7 @@ public final class GameActivity extends Activity {
               .putInt("objects_displaced_v041",pushes)
               .putInt("collisions_v041",physicalContacts)
               .putFloat("max_displacement_v041",biggestDisplacement)
+              .putString("decision_brain_v05",decisionBrain.serialize())
               .apply();
         }
         void resume(){
@@ -186,7 +191,8 @@ public final class GameActivity extends Activity {
             // Only initial boot or actual simulated death restarts the body.
             creature.reset();episode++;phase=0;trailCount=0;clock=0;
             environment=UnknownWorld.newHabitat(episode,creature.cx,creature.cy);
-            chosenObject=null;goalTimer=0;contactsThisLife=0;worldTime=0;
+            chosenObject=null;decisionBrain.abandon();
+            goalTimer=0;contactsThisLife=0;worldTime=0;
             reserve=Math.max(42,Math.min(92,reserve));
             heading=episode*.31f;
         }
@@ -203,6 +209,7 @@ public final class GameActivity extends Activity {
                 episode,creature.cx,creature.cy));
             while(environment.size()>24)environment.remove(0);
             if(chosenObject!=null&&!environment.contains(chosenObject)){
+                decisionBrain.abandon();
                 chosenObject=null;goalTimer=0;
             }
             lastEvent="NUOVA AREA ESPLORATA  •  ZERO NON SI AZZERA";
@@ -213,12 +220,13 @@ public final class GameActivity extends Activity {
             reserve=Math.max(0,reserve-.14f*dt);
             for(UnknownWorld.Entity object:environment)object.tick(dt);
             if(chosenObject==null||!chosenObject.ready()||goalTimer<=0){
-                chosenObject=mind.choose(environment,creature.cx,creature.cy,reserve);
+                if(chosenObject!=null&&goalTimer<=0)decisionBrain.abandon();
+                chosenObject=decisionBrain.choose(environment,creature.cx,creature.cy,reserve);
                 if(chosenObject==null){
                     extendHabitat();
-                    chosenObject=mind.choose(environment,creature.cx,creature.cy,reserve);
+                    chosenObject=decisionBrain.choose(environment,creature.cx,creature.cy,reserve);
                 }
-                goalTimer=3.5f;
+                goalTimer=9f;
             }
             if(chosenObject!=null){
                 heading=(float)Math.atan2(chosenObject.y-creature.cy,chosenObject.x-creature.cx);
@@ -247,6 +255,8 @@ public final class GameActivity extends Activity {
                     if(object.everCollided && !object.countedAsMoved && shift>=12f){
                         object.countedAsMoved=true;
                         pushes++;
+                        decisionBrain.learn(object,reserve,reserve,shift);
+                        if(chosenObject==object){chosenObject=null;goalTimer=0;}
                         biggestDisplacement=Math.max(biggestDisplacement,shift);
                         recentDisplacement=shift;
                         lastEvent="DISCO SPOSTATO "+(int)shift+" UNITA  •  TOTALE "+pushes;
@@ -266,9 +276,11 @@ public final class GameActivity extends Activity {
                     if(d<nearest)nearest=d;
                 }
                 if(nearest<18+object.radius){
+                    float before=reserve;
                     float delta=object.touch(dx/Math.max(1,dist),dy/Math.max(1,dist));
                     reserve=Math.max(0,Math.min(100,reserve+delta));
                     mind.observe(object.signature,delta,0);
+                    decisionBrain.learn(object,before,reserve,0);
                     contactsThisLife++;chosenObject=null;goalTimer=0;
                     lastEvent="STIMOLO "+(object.signature+1)+"  ENERGIA "+(delta>=0?"+":"")+(int)delta;
                     eventTime=4;
@@ -465,10 +477,10 @@ public final class GameActivity extends Activity {
             rounded(c,12,12,468,145,0xeb0a1420,20);
             rounded(c,27,28,31,55,TEAL,2);
             text(c,"O V E R M I N D",43,39,14,TEAL,false);
-            text(c,"ZERO / ESPERIMENTO 003",26,72,21,0xffe9faf6,false);
+            text(c,"ZERO / ESPERIMENTO 004",26,72,21,0xffe9faf6,false);
             rounded(c,339,104,459,138,0xff20444a,11);
             text(c,"AGGIORNA",399,127,12,TEAL,true);
-            text(c,"MONDO CONTINUO • MOVIMENTO VERIFICABILE",27,99,11,MUTED,false);
+            text(c,"SCELTE NEURALI • ESPERIENZA DIRETTA",27,99,11,MUTED,false);
             text(c,"VERSIONE "+installedVersion+"  •  OTA",27,120,10,0xff708d9d,false);
             text(c,"TENTATIVI",377,34,11,MUTED,false);
             text(c,String.valueOf(trainer.attempts),380,71,22,GOLD,false);
@@ -479,7 +491,7 @@ public final class GameActivity extends Activity {
             float y=H-168;
             rounded(c,12,y,468,H-12,0xe00d1923,21);
             text(c,"APPRENDIMENTO DA ZERO",25,y+25,13,TEAL,false);
-            text(c,"Osserva le tracce dei dischi realmente spostati.",25,y+45,11,0xffacc5ca,false);
+            text(c,"ZERO apprende anche quali stimoli investigare.",25,y+45,11,0xffacc5ca,false);
             button(c,19,y+61,153,H-26,learning?"FERMA":"ADDESTRA",TEAL);
             button(c,165,y+61,314,H-26,"TEMPO x"+speed,0xffbfdaec);
             button(c,326,y+61,462,H-26,"CONFRONTA",GOLD);
@@ -491,6 +503,14 @@ public final class GameActivity extends Activity {
             text(c,"URTI "+physicalContacts+"  •  DISTANZA MASSIMA "+(int)biggestDisplacement+" U  •  TENTATIVI MANIP. "+handTrainer.attempts,
                 25,329,10,0xffa6c7c9,false);
             if(eventTime>0)text(c,lastEvent,25,350,11,0xffc4e5dc,false);
+            text(c,"SCELTE: "+decisionBrain.decisions+"  •  ESPERIENZE: "
+                 +decisionBrain.updates+"  •  ESPLORAZIONI: "+decisionBrain.explorations,
+                 25,377,11,TEAL,false);
+            if(chosenObject!=null){
+                text(c,"SCELTO DALLA RETE: SEGNALE "+(chosenObject.signature+1)
+                    +"  •  PREVISIONE "+format(decisionBrain.lastPrediction),
+                    25,398,10,0xffaac3cb,false);
+            }
             if(uiTime<updaterStatusUntil&&updaterStatus.length()>0){
                 rounded(c,13,338,467,387,0xef1f3944,13);
                 text(c,updaterStatus.length()>52?updaterStatus.substring(0,52):updaterStatus,240,368,11,0xffd5fff4,true);
