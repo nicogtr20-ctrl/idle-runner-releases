@@ -40,3 +40,12 @@
 
 ## Definizione di "fatto"
 **Build CI + test JVM + prova APK su S21 + misure + changelog + nuovo file HANDOFF.** Distinguere sempre "realizzato", "validato CI" e "validato sul dispositivo".
+
+## ZERO-005 — Apprendimento delle scelte (v0.5)
+- [x] Rete neurale vergine per valutare quale segnale esplorare (91 pesi, senza preferenze pre-addestrate)
+- [x] Rimossa la vecchia selezione con formula fissa dal loop di gioco
+- [x] Apprendimento online su conseguenze osservate e memoria persistente
+- [x] Test CI e APK Release firmata su GitHub
+- [ ] Test reale dell'aggiornamento 0.5 sul Galaxy S21
+- [ ] Verificare che Vercel possa pubblicare nuovamente dopo esaurimento del limite giornaliero
+- [ ] Navigazione autonoma senza direzione geometrica suggerita
