@@ -1,6 +1,6 @@
 # OVERMIND ZERO / Experiment 002
 
-The independently learned locomotion from ZERO-001 is preserved and carried forward via the **same Android applicationId and SharedPreferences file**. Upgrading from v0.2 should keep motor weights.
+ZERO-002 installs as a **separate Android app** from ZERO-001, because independently signed debug APKs can have different certificates. ZERO-001 remains installed with its motor learning data. ZERO-002 starts a new randomly initialized motor brain and learns its own motor and object association models, saving both for future sessions.
 
 ## What is new
 The creature experiences initially unidentified objects with three distinct raw signatures. It can physically touch energy-changing objects or move an inert object with its body. ZERO's decision policy receives **only the observed sensor signature and position**. Hidden consequences are implemented in the simulated environment, not passed directly to the brain. After contact, an associative learner updates its preferences based on energy change and displaced-object motion. It balances novelty, current energy, previously learned value, and distance in selecting where to explore.
@@ -19,7 +19,7 @@ The environment contains two beneficial, two harmful, and two movable objects pe
 - Center control changes playback speed. Right control compares motor training on held-out directions.
 - The display shows energy, number of object contacts, and the number of raw signature classes whose effects have been encountered.
 - Double-tap the header to erase brain and learned memories.
-- The world's associative memory is persisted, together with prior motor weights.
+- The world's associative memory and motor weights acquired in ZERO-002 are persisted independently. The ZERO-001 app and its prior data are not changed.
 
 ## Testing
 The GitHub workflow runs pure-JVM tests of motor training and of the associative learner on known synthetic contacts, then compiles the Android APK and creates a GitHub Release. Real-world Android behavior needs observation on device.
