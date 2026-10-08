@@ -3,12 +3,13 @@
 ## Priorità immediata — updater e documentazione
 - [x] Whitepaper, architettura, storico e handoff su GitHub.
 - [x] Vercel: endpoint HTTPS stabile `/latest.json` (risponde HTTP 200, manifest disabilitato finché manca signing).
-- [ ] Distribuzione APK pubblico su Vercel dopo firma stabile e test.
-- [ ] Chiave di firma Android persistente da configurare in GitHub Actions Secret `OVERMIND_SIGNING_BUNDLE` (backup privato generato, setup utente richiesto).
+- [x] APK pubbliche firmate via Vercel, versioni 1008 e 1010.
+- [x] Firma Android permanente configurata nel workflow GitHub Actions.
 - [x] Pulsante **Aggiorna**, download HTTPS e verifica SHA-256 implementati nel branch `feature/overmind-inapp-updater` (build CI riuscita).
 - [ ] Verifica effettiva del pulsante su dispositivo e installazione firmata end-to-end.
-- [ ] Build firmate con stesso applicationId/versionCode crescente; verifica di aggiornamento effettivo su Galaxy S21.
-- [ ] Pubblicazione release e aggiornamento del manifest Vercel soltanto se tutti i test sono verdi.
+- [x] Build firmate con applicationId invariato e versionCode crescente (1008 → 1010).
+- [ ] Verifica aggiornamento in-place e salvataggi sul Galaxy S21.
+- [x] Manifest su Vercel aggiornato dopo CI firmata con SHA-256.
 - [ ] Pipeline aggiorna questo CHANGELOG/HANDOFF ad ogni release.
 
 ## ZERO-003 — comportamento fisico reale
