@@ -26,10 +26,22 @@ jobs:
       - name: Unit tests
         run: |
           mkdir -p /tmp/overmind
-          javac -d /tmp/overmind app/src/main/java/com/overmind/zero/MotorBrain.java app/src/main/java/com/overmind/zero/UnknownWorld.java app/src/main/java/com/overmind/zero/ContactLearning.java
+          javac -d /tmp/overmind app/src/main/java/com/overmind/zero/MotorBrain.java app/src/main/java/com/overmind/zero/UnknownWorld.java app/src/main/java/com/overmind/zero/ContactLearning.java app/src/main/java/com/overmind/zero/DecisionBrain.java
           java -cp /tmp/overmind com.overmind.zero.MotorBrain
           java -cp /tmp/overmind com.overmind.zero.UnknownWorld
           java -cp /tmp/overmind com.overmind.zero.ContactLearning
+          java -cp /tmp/overmind com.overmind.zero.DecisionBrain
+      - name: Confirm trained selection replaced scripted selector
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          s=Path("app/src/main/java/com/overmind/zero/GameActivity.java").read_text()
+          assert "decisionBrain.choose(environment" in s
+          assert "mind.choose(environment" not in s
+          assert 'putString("decision_brain_v05"' in s
+          assert 'decisionBrain.learn(object,before,reserve,0)' in s
+          print("Decisions are selected by trained brain, never the old scripted selector")
+          PY
       - name: Compile OTA client
         run: gradle --no-daemon assembleDebug
       - name: Restore private signing bundle
