@@ -39,6 +39,7 @@ public final class GameActivity extends Activity {
         volatile float handInitial=Float.NaN,handTrained=Float.NaN;
         UnknownWorld.Mind mind=new UnknownWorld.Mind();
         DecisionBrain decisionBrain=new DecisionBrain(90517L);
+        SensorimotorMind sensorMind=new SensorimotorMind();
         UpdateClient updater;
         String installedVersion="0.3.7";
         String updaterStatus="";
@@ -113,6 +114,8 @@ public final class GameActivity extends Activity {
             mind.deserialize(prefs.getString("world_knowledge_v03",""));
             decisionBrain=new DecisionBrain(90517L);
             decisionBrain.restore(prefs.getString("decision_brain_v05",""));
+            sensorMind=new SensorimotorMind();
+            sensorMind.restore(prefs.getString("sensorimotor_model_v09",""));
             reserve=prefs.getFloat("zero_energy_v03",57f);
             elapsedLife=prefs.getFloat("scarcity_elapsed_v08",0);
             scarcity=prefs.getBoolean("scarcity_active_v08",false);
@@ -188,6 +191,7 @@ public final class GameActivity extends Activity {
               .putInt("collisions_v041",physicalContacts)
               .putFloat("max_displacement_v041",biggestDisplacement)
               .putString("decision_brain_v05",decisionBrain.serialize())
+              .putString("sensorimotor_model_v09",sensorMind.serialize())
               .putString("morph_brain_v07",encode(shapeTrainer.best))
               .putInt("morph_attempts_v07",shapeTrainer.attempts)
               .putInt("morph_accepted_v07",shapeTrainer.accepted)
@@ -204,34 +208,10 @@ public final class GameActivity extends Activity {
         }
         void resume(){
             enabled=true;lastFrame=0;postInvalidateOnAnimation();
-            if(worker!=null&&worker.isAlive())return;
-            worker=new Thread(()->{
-                int saved=0;
-                while(enabled){
-                    if(learning){
-                        try{
-                            // Preserve the motor already learned in earlier
-                            // versions; train extra manipulation muscles on
-                            // measured physical outcomes, not scripted impulses.
-                            // Shape trials run on copies of the same body and
-                            // collision physics used onscreen. Prioritize them
-                            // without discarding existing motor learning.
-                            if(saved%29==0)
-                                shapeTrainer.attemptGate(trainer.best,handTrainer.best);
-                            else if(saved%7==0)
-                                shapeTrainer.attempt(trainer.best,handTrainer.best);
-                            else if(saved%5==0)
-                                handTrainer.attempt(trainer.best);
-                            else trainer.attempt();
-                            if(++saved%35==0)save();
-                            Thread.sleep(12);
-                        }catch(Exception e){
-                            learning=false;
-                        }
-                    }else try{Thread.sleep(80);}catch(InterruptedException e){break;}
-                }
-            },"zero-neuroevolution");
-            worker.setDaemon(true);worker.start();
+            // All new experience comes from the creature's lived state,
+            // not an off-screen hand-coded goal-directed trial. Preserve
+            // previously learned motor and membrane weights unchanged.
+            sensorMind.setLearning(learning);
         }
         void suspend(){
             // Stop the training worker while the app is backgrounded without
@@ -249,7 +229,9 @@ public final class GameActivity extends Activity {
             chosenObject=null;decisionBrain.abandon();
             goalTimer=0;contactsThisLife=0;worldTime=0;
             reserve=Math.max(42,Math.min(92,reserve));
-            heading=episode*.31f;
+            sensorMind.resetEpisode(SensorimotorMind.Senses.read(
+                creature,surface,chamber,environment,reserve));
+            heading=(float)Math.atan2(sensorMind.motorY(),sensorMind.motorX());
         }
         void extendHabitat(){
             // Keep the same physical body, velocity, memories and camera.
@@ -288,32 +270,24 @@ public final class GameActivity extends Activity {
             environment.add(chamber.food);
             nextChamber=elapsedLife+95f;
             chosenObject=null;goalTimer=0;
-            chamberMessage="RISORSA DIETRO LA PORTA: SERVE UNA PRESA";
+            chamberMessage="STIMOLI VISIVI • OSTACOLO FISICO";
             lastEvent="NUOVO ESPERIMENTO • STANZA E BLOCCO";
             eventTime=5;
             save();
         }
         void updateHabitat(float dt){
-            worldTime+=dt;elapsedLife+=dt;goalTimer-=dt;
+            worldTime+=dt;elapsedLife+=dt;
             if(!scarcity&&elapsedLife>=70f)scarcity=true;
-            // Scarcity is explicit, increasing metabolic urgency.
+            // Physiological requirement is part of the organism, NOT a
+            // scripted plan for solving the current room.
             reserve=Math.max(0,reserve-(scarcity?.70f:.14f)*dt);
-            if(scarcity&&elapsedLife>=nextChamber &&
+            if(scarcity&&elapsedLife>=nextChamber&&
                 (chamber==null||chamber.reachedEnergy))
                 activateChamber(false);
             for(UnknownWorld.Entity object:environment)object.tick(dt);
-            if(chosenObject==null||!chosenObject.ready()||goalTimer<=0){
-                if(chosenObject!=null&&goalTimer<=0)decisionBrain.abandon();
-                chosenObject=decisionBrain.choose(environment,creature.cx,creature.cy,reserve);
-                if(chosenObject==null){
-                    extendHabitat();
-                    chosenObject=decisionBrain.choose(environment,creature.cx,creature.cy,reserve);
-                }
-                goalTimer=9f;
-            }
-            if(chosenObject!=null){
-                heading=(float)Math.atan2(chosenObject.y-creature.cy,chosenObject.x-creature.cx);
-            }else heading+=dt*.7f;
+            if(environment.size()<3)extendHabitat();
+            // No object selector or precomputed destination heading.
+            chosenObject=null;
         }
         void resolveObjects(float dt){
             // Called AFTER the deformable body moves, so contact impulses
@@ -406,17 +380,15 @@ public final class GameActivity extends Activity {
                 for(int i=0;i<speed;i++){
                     float slice=Math.min(dt,.035f);
                     updateHabitat(slice);
-                    float[] hand=(chosenObject!=null&&chosenObject.isMovable())
-                        ?handTrainer.best:null;
-                    creature.step(trainer.best,(float)Math.cos(heading),
-                        (float)Math.sin(heading),slice,hand,
-                        chosenObject!=null?chosenObject.x:0,
-                        chosenObject!=null?chosenObject.y:0);
-                    // No preset appendages: learned local actuation of each
-                    // mass in the continuous deformable surface.
-                    surface.step(creature,shapeTrainer.best,
-                        chosenObject!=null?chosenObject.x:creature.cx,
-                        chosenObject!=null?chosenObject.y:creature.cy,slice);
+                    // ACTION is sampled from learned sensory-action
+                    // values. There is no atan2(food), target teleport or
+                    // fixed rule that pulling an opened gate is "correct".
+                    float mx=sensorMind.motorX(),my=sensorMind.motorY();
+                    heading=(float)Math.atan2(my,mx);
+                    float px=creature.cx+mx*145f,py=creature.cy+my*145f;
+                    creature.step(trainer.best,mx,my,slice,handTrainer.best,px,py);
+                    surface.step(creature,shapeTrainer.best,px,py,slice,
+                        sensorMind.adhesion());
                     if(chamber!=null){
                         chamber.constrain(creature,surface,slice);
                         farthestGate=Math.max(farthestGate,chamber.maxDoorTravel);
@@ -434,6 +406,11 @@ public final class GameActivity extends Activity {
                         nextChamber=elapsedLife+40;
                         save();
                     }
+                    // Real temporal observation AFTER collisions, hunger
+                    // and any energy actually collected.
+                    sensorMind.setLearning(learning);
+                    sensorMind.observe(SensorimotorMind.Senses.read(
+                        creature,surface,chamber,environment,reserve),slice);
                     phase+=slice;
                     if(phase>=13f){
                         // NOT a reset: the world expands around ZERO.
@@ -637,12 +614,12 @@ public final class GameActivity extends Activity {
             rounded(c,12,12,468,145,0xeb0a1420,20);
             rounded(c,27,28,31,55,TEAL,2);
             text(c,"O V E R M I N D",43,39,14,TEAL,false);
-            text(c,"ZERO / ESPERIMENTO 008",26,72,21,0xffe9faf6,false);
+            text(c,"ZERO / ESPERIMENTO 009",26,72,21,0xffe9faf6,false);
             rounded(c,339,104,459,138,0xff20444a,11);
             text(c,"AGGIORNA",399,127,12,TEAL,true);
             rounded(c,217,104,333,138,0xff283b58,11);
             text(c,"CERVELLO",275,127,12,0xffd2c4fc,true);
-            text(c,"PRESA APPRESA • DUE ADESIONI ATTIVE",27,99,11,MUTED,false);
+            text(c,"AZIONI AUTONOME • PREVISIONI APPRESE",27,99,11,MUTED,false);
             text(c,"VERSIONE "+installedVersion+"  •  OTA",27,120,10,0xff708d9d,false);
             text(c,"TENTATIVI",377,34,11,MUTED,false);
             text(c,String.valueOf(trainer.attempts),380,71,22,GOLD,false);
@@ -653,11 +630,12 @@ public final class GameActivity extends Activity {
             float y=H-168;
             rounded(c,12,y,468,H-12,0xe00d1923,21);
             text(c,"APPRENDIMENTO DA ZERO",25,y+25,13,TEAL,false);
-            text(c,"96 punti: tocca, attiva presa, poi trascina.",25,y+45,11,0xffacc5ca,false);
+            text(c,"Percepisce • prova • confronta le conseguenze.",25,y+45,11,0xffacc5ca,false);
             button(c,19,y+61,153,H-26,learning?"FERMA":"ADDESTRA",TEAL);
             button(c,165,y+61,314,H-26,"TEMPO x"+speed,0xffbfdaec);
             button(c,326,y+61,462,H-26,"CONFRONTA",GOLD);
-            text(c,simulationRunning?"ESPLORAZIONE AUTONOMA • CONTATTI "+mind.total:"SIMULAZIONE IN PAUSA",24,255,11,MUTED,false);
+            text(c,simulationRunning?"ESPERIENZE SENSORIALI "+sensorMind.experiences+
+               "  •  DECISIONI "+sensorMind.decisions:"SIMULAZIONE IN PAUSA",24,255,11,MUTED,false);
             rounded(c,25,276,456,287,0xff273746,5);
             rounded(c,25,276,25+431*reserve/100f,287,reserve>30?TEAL:0xffdf7591,5);
             text(c,"ENERGIA "+(int)reserve+"/100",25,307,12,0xffe0f7ed,false);
@@ -665,7 +643,11 @@ public final class GameActivity extends Activity {
             text(c,"URTI "+physicalContacts+"  •  DISTANZA MASSIMA "+(int)biggestDisplacement+" U  •  TENTATIVI MANIP. "+handTrainer.attempts,
                 25,329,10,0xffa6c7c9,false);
             if(eventTime>0)text(c,lastEvent,25,350,11,0xffc4e5dc,false);
-            text(c,"SCELTE: "+decisionBrain.decisions+"  •  ESPERIENZE: "
+            text(c,"AZIONE "+(sensorMind.action%8+1)+" / 8  •  PRESA "+
+                (sensorMind.adhesion()>0?"ON":"OFF")+
+                "  •  ERRORE PREVISIONE "+format(sensorMind.averagePredictionError),
+                25,402,10,TEAL,false);
+            text(c,"ASSOCIAZIONI STORICHE: "+decisionBrain.decisions+"  •  ESPERIENZE: "
                  +decisionBrain.updates+"  •  ESPLORAZIONI: "+decisionBrain.explorations,
                  25,377,11,TEAL,false);
             if(chosenObject!=null){
@@ -744,7 +726,7 @@ public final class GameActivity extends Activity {
                 invalidate();return true;
             }
             if(y>=H-108){
-                if(x<157){learning=!learning;}
+                if(x<157){learning=!learning;sensorMind.setLearning(learning);}
                 else if(x<319){speed=speed==1?5:speed==5?20:1;}
                 else compare();
                 return true;

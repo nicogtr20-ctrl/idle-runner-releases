@@ -1,0 +1,52 @@
+name: OVERMIND ZERO v0.9 online sensorimotor causal learning
+on:
+  push:
+    branches: [feature/overmind-v09-sensorimotor-causal-learning]
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 35
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with: {distribution: temurin, java-version: '17'}
+      - uses: gradle/actions/setup-gradle@v4
+        with: {gradle-version: '8.11.1'}
+      - name: Test six previous physics networks and new online world model
+        run: |
+          mkdir -p /tmp/overmindv09
+          javac -d /tmp/overmindv09 app/src/main/java/com/overmind/zero/MotorBrain.java app/src/main/java/com/overmind/zero/UnknownWorld.java app/src/main/java/com/overmind/zero/ContactLearning.java app/src/main/java/com/overmind/zero/DecisionBrain.java app/src/main/java/com/overmind/zero/Morphology.java app/src/main/java/com/overmind/zero/ScarcityLab.java app/src/main/java/com/overmind/zero/SensorimotorMind.java
+          java -cp /tmp/overmindv09 com.overmind.zero.MotorBrain
+          java -cp /tmp/overmindv09 com.overmind.zero.UnknownWorld
+          java -cp /tmp/overmindv09 com.overmind.zero.ContactLearning
+          java -cp /tmp/overmindv09 com.overmind.zero.DecisionBrain
+          java -cp /tmp/overmindv09 com.overmind.zero.Morphology
+          java -cp /tmp/overmindv09 com.overmind.zero.ScarcityLab
+          java -cp /tmp/overmindv09 com.overmind.zero.SensorimotorMind
+      - name: Verify learner autonomy and original memory preserved
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          app=Path('app/src/main/java/com/overmind/zero/GameActivity.java').read_text()
+          mind=Path('app/src/main/java/com/overmind/zero/SensorimotorMind.java').read_text()
+          morph=Path('app/src/main/java/com/overmind/zero/Morphology.java').read_text()
+          assert 'sensorMind.observe(SensorimotorMind.Senses.read(' in app
+          assert 'float mx=sensorMind.motorX(),my=sensorMind.motorY();' in app
+          assert 'sensorMind.adhesion()' in app
+          assert 'decisionBrain.choose(environment' not in app
+          assert 'Math.atan2(chosenObject.y' not in app
+          assert 'shapeTrainer.attemptGate(trainer.best,handTrainer.best)' not in app
+          assert 'sensorimotor_model_v09' in app
+          assert 'decision_brain_v05' in app and 'morph_brain_v07' in app
+          assert 'if(reserve<=0)' in app and 'resetEpisode();' in app
+          assert 'public static final int ACTIONS=16;' in mind
+          assert 'public static final int S=26;' in mind
+          assert 'skin.gripHold[i]>=Morphology.GRIP_HOLD' in Path('app/src/main/java/com/overmind/zero/ScarcityLab.java').read_text()
+          assert 'out[2]+gripDrive*touchSense[i]' in morph
+          print('Online sensory world model owns navigation and grip intention; existing physics and brain knowledge remain.')
+          PY
+      - name: Compile Android staging APK
+        run: gradle --no-daemon assembleDebug

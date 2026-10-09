@@ -34,6 +34,7 @@ public final class BrainStatsActivity extends Activity {
         final float maxGateTravel;
         final float[] choiceStart,choiceNow;
         final DecisionBrain decisions;
+        final SensorimotorMind worldMind;
         final int motorAttempts,motorAccepted,handAttempts,handAccepted;
         final int pushed,collisions,contacts;
         final float motorInitialFitness,motorNowFitness;
@@ -60,6 +61,8 @@ public final class BrainStatsActivity extends Activity {
             solved=pref.getInt("room_success_v08",0);
             energyEaten=pref.getInt("finite_energy_eaten_v08",0);
             maxGateTravel=pref.getFloat("gate_travel_v08",0);
+            worldMind=new SensorimotorMind();
+            worldMind.restore(pref.getString("sensorimotor_model_v09",""));
             decisions=new DecisionBrain(90517L);
             decisions.restore(pref.getString("decision_brain_v05",""));
             choiceStart=decisions.initialSnapshot();
@@ -182,10 +185,15 @@ public final class BrainStatsActivity extends Activity {
         }
         void drawSkills(Canvas c){
             float y=177;
-            int total=movementNow.length+handNow.length+choiceNow.length+shapeNow.length;
+            int total=movementNow.length+handNow.length+choiceNow.length+shapeNow.length+worldMind.parameterCount();
             int original=movementStart.length+handStart.length+DecisionBrain.PARAMS;
             y=hero(c,"POTENZA NEURALE / PARAMETRI",String.valueOf(total),
-                original+" PRIMA DELLA MEMBRANA  •  +"+(total-original)+" NUOVI",y);
+                original+" PRECEDENTI  •  +"+(total-original)+" DI ESPERIENZA",y);
+            y=skill(c,y,"MODELLO DEL MONDO",
+                worldMind.parameterCount()+" pesi",
+                worldMind.experiences+" esperienze reali  •  "+
+                worldMind.decisions+" azioni autonome",
+                Math.min(1f,worldMind.experiences/1000f),cyan);
             y=skill(c,y,"SCELTA DEGLI STIMOLI",
                 choiceNow.length+" pesi",decisions.updates+" esperienze  •  "+decisions.decisions+" decisioni",
                 Math.min(1f,decisions.updates/500f),cyan);

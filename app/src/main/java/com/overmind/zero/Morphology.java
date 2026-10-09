@@ -113,6 +113,11 @@ public final class Morphology {
             }
         }
         public void step(MotorBrain.Body body,float[] brain,float targetX,float targetY,float dt){
+            step(body,brain,targetX,targetY,dt,0f);
+        }
+        /** New generic motor channel; the world model selects the gain.
+            Physical adhesive traction STILL requires contact and grip hold. */
+        public void step(MotorBrain.Body body,float[] brain,float targetX,float targetY,float dt,float gripDrive){
             t+=dt;anchors(body);
             float toX=targetX-body.cx,toY=targetY-body.cy;
             float targetD=(float)Math.hypot(toX,toY);
@@ -137,7 +142,10 @@ public final class Morphology {
                 output(brain,input,touchSense[i],out);
                 // A new neural actuator at EVERY one of the 96 surface
                 // masses. Merely touching a solid NEVER implies grabbing.
-                gripCommand[i]=Math.max(0,out[2]);
+                gripCommand[i]=Math.max(0,Math.min(1.4f,
+                       out[2]+gripDrive*touchSense[i]));
+                // Only neural choice of drive can engage the extra channel;
+                // tactile sensing alone never triggers an adhesive command.
                 if(gripCommand[i]>GRIP_THRESHOLD)intentionalPoints++;
                 // One locally learned activation per membrane particle.
                 // There is no action named "grow arm" or fixed arm count.
