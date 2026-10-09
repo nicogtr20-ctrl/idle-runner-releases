@@ -199,3 +199,9 @@ Passi futuri: comparatore veri stati identici (random seed), visione di moviment
 
 ### Release ZERO 0.9.5-ota.39 — 2026-10-10
 APK firmata, versionCode 1039, 92.692 byte; SHA-256 `86caeb85b6eba94aa657d6f19ac7dff5dd0e4e8d2974bf71e8c6c12a3201c211`; CI firmata `38003676123` verde, file `updater/public/latest.json` aggiornato. Il test manuale sul Samsung Galaxy S21 resta da fare. Non attribuire retroattivamente le 111U di apertura della v0.9.4 alla nuova memoria.
+
+
+## 0.9.6: nuovo handoff tecnico / esperienze con esito positivo e negativo — 10 ottobre 2026
+**Leggi prima `docs/EXPERIMENT_0096.md`: contiene storia, prove sul telefono, modifiche, formato, test, limitazioni e piano successivo.**
+Su richiesta utente ZERO ora deve ricordare intere esperienze più lunghe e imparare sia benefici (+energia) sia pericoli (-energia). Codice: `EpisodicMemory.java` max36 step/max24 eventi, em2 con restore retrocompatibile em1, consolidamento delle ricorrenze, valore positivo/negativo, episodio dannoso mai rigiocato e penalità per l'azione prossima al danno, mantenendo azioni autonome ed esplorazione. `GameActivity` osserva la differenza energetica attribuibile al **contatto** anziché alla fame, salva danni letali prima del reset, non conosce segnali cromatici “corretti”; `SensorimotorMind` usa `episodic.bias`. ANALISI include contatori favorevoli/dannosi/conferme/lunghezza/azioni differenti. Nessun reset vecchie reti, dei pesi 11.664, del corpo, della membrana o della memoria em1. Test JVM/Android verde; esito sul Galaxy S21 ancora aperto.
+Prossimi step: misurare che in scene simili recuperi/eviti energia più spesso, e che ripeta prese fino alla soglia >115U e attraversi. Non confondere indicatori con prova causale.
