@@ -211,6 +211,7 @@ public final class EpisodicMemory {
             float d=distance(senses,step.senses);
             if(d<MATCH*1.25f){positive=selected;positiveIndex=continuation;posDist=d;}
         }
+        if(negDist+.01f<posDist)positive=null;
         if(cooldown>0){cooldown--;positive=null;}
         selected=positive;selectedIndex=positiveIndex;
         if(positive==null){continuation=0;return -1;}
