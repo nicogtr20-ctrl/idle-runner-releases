@@ -1,0 +1,46 @@
+name: OVERMIND v0.8.1 membrane collision tests
+on:
+  push:
+    branches: [fix/overmind-v08-solid-membrane-collision]
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 35
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+      - uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: '8.11.1'
+      - name: Test continuous solid collisions, energy and learning
+        run: |
+          mkdir -p /tmp/overmindv081
+          javac -d /tmp/overmindv081 app/src/main/java/com/overmind/zero/MotorBrain.java app/src/main/java/com/overmind/zero/UnknownWorld.java app/src/main/java/com/overmind/zero/ContactLearning.java app/src/main/java/com/overmind/zero/DecisionBrain.java app/src/main/java/com/overmind/zero/Morphology.java app/src/main/java/com/overmind/zero/ScarcityLab.java
+          java -cp /tmp/overmindv081 com.overmind.zero.MotorBrain
+          java -cp /tmp/overmindv081 com.overmind.zero.UnknownWorld
+          java -cp /tmp/overmindv081 com.overmind.zero.ContactLearning
+          java -cp /tmp/overmindv081 com.overmind.zero.DecisionBrain
+          java -cp /tmp/overmindv081 com.overmind.zero.Morphology
+          java -cp /tmp/overmindv081 com.overmind.zero.ScarcityLab
+      - name: Verify the genuine energy-death respawn is preserved
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          a=Path('app/src/main/java/com/overmind/zero/GameActivity.java').read_text()
+          b=Path('app/src/main/java/com/overmind/zero/ScarcityLab.java').read_text()
+          assert 'if(reserve<=0)' in a and 'CORPO ESAUSTO' in a
+          assert 'resetEpisode();' in a
+          assert 'resolveSolidLinks(skin);' in b
+          assert 'crossesInterior' in b
+          assert 'path.lineTo(xx[i],yy[i])' in a
+          assert 'decision_brain_v05' in a and 'morph_brain_v07' in a
+          print('Respawn, neural memory, physical membrane rendering verified.')
+          PY
+      - name: Compile Android staging APK
+        run: gradle --no-daemon assembleDebug
