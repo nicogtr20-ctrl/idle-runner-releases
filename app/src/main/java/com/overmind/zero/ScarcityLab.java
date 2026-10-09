@@ -323,7 +323,8 @@ public final class ScarcityLab {
     public static float trial(float[] motor,float[] hand,float[] shape,float offsetY){
         MotorBrain.Body body=new MotorBrain.Body();
         Morphology.Surface skin=new Morphology.Surface(body);
-        ScarcityLab lab=new ScarcityLab(-72,offsetY);
+        // Trial starts OUTSIDE the new freestanding gate, like the phone.
+        ScarcityLab lab=new ScarcityLab(0,offsetY);
         float minGateDistance=200;
         for(int frame=0;frame<150;frame++){
             float dt=MotorBrain.STEP;
@@ -355,6 +356,12 @@ public final class ScarcityLab {
         MotorBrain.Body body=new MotorBrain.Body();
         Morphology.Surface membrane=new Morphology.Surface(body);
         ScarcityLab chamber=new ScarcityLab(-115,0);
+        // The 10-unit channel accommodates a thin pseudopod, but NOT the
+        // 20-unit-diameter core: opening cannot simply be walked around.
+        float corridor=chamber.entranceX()-WALL_HALF_THICKNESS-
+                (chamber.gateX()+DOOR_HALF_W);
+        if(corridor>=20f||corridor<=3f)
+            throw new IllegalStateException("Wall-gate gap allows full-body bypass");
         if(!(chamber.gateX()+DOOR_HALF_W<chamber.entranceX()-WALL_HALF_THICKNESS-5))
             throw new IllegalStateException("Gate must be IN FRONT of wall, not embedded");
         if(chamber.gateTop()>=-OPEN_HALF_HEIGHT||chamber.gateBottom()<=OPEN_HALF_HEIGHT)
