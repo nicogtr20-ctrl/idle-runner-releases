@@ -1,0 +1,46 @@
+name: ZERO v0.8.1 solid gate & checkpoint tests
+on:
+  push:
+    branches: [feature/overmind-v081-solid-gate-checkpoint]
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 35
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with: {distribution: temurin, java-version: '17'}
+      - uses: gradle/actions/setup-gradle@v4
+        with: {gradle-version: '8.11.1'}
+      - name: Test all brains, finite energy and anti-tunneling physics
+        run: |
+          mkdir -p /tmp/zero081
+          javac -d /tmp/zero081 app/src/main/java/com/overmind/zero/MotorBrain.java app/src/main/java/com/overmind/zero/UnknownWorld.java app/src/main/java/com/overmind/zero/ContactLearning.java app/src/main/java/com/overmind/zero/DecisionBrain.java app/src/main/java/com/overmind/zero/Morphology.java app/src/main/java/com/overmind/zero/ScarcityLab.java
+          java -cp /tmp/zero081 com.overmind.zero.MotorBrain
+          java -cp /tmp/zero081 com.overmind.zero.UnknownWorld
+          java -cp /tmp/zero081 com.overmind.zero.ContactLearning
+          java -cp /tmp/zero081 com.overmind.zero.DecisionBrain
+          java -cp /tmp/zero081 com.overmind.zero.Morphology
+          java -cp /tmp/zero081 com.overmind.zero.ScarcityLab
+      - name: Verify no teleport at zero energy, saved chamber & real grip
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          g=Path('app/src/main/java/com/overmind/zero/GameActivity.java').read_text()
+          s=Path('app/src/main/java/com/overmind/zero/ScarcityLab.java').read_text()
+          assert 'if(reserve<=0)' in g and 'chamberExhausted=true' in g
+          assert 'simulationRunning=false;' in g and 'void retryChamber()' in g
+          assert 'room_gate_y_v081' in g and 'room_body_x_v081' in g
+          assert 'if(chamberExhausted)retryChamber();' in g
+          assert 'if(chamber==null||chamber.reachedEnergy)activateChamber(true);' in g
+          assert 'enforceMembraneSegments(skin)' in s
+          assert 'sweptProject(' in s and 'segmentIntersectsBox(' in s
+          assert s.index('enforceMembraneSegments(skin);')<s.index('solveGate(skin,dt);')
+          assert 'if(!coreEntered && !openingFree()' in s
+          print('PASS: real blocked barrier, honest exhaustion, persistent physical chamber.')
+          PY
+      - name: Compile Android staging APK
+        run: gradle --no-daemon assembleDebug

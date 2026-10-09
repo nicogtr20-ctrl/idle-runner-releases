@@ -56,6 +56,8 @@ public final class GameActivity extends Activity {
         float elapsedLife=0,nextChamber=70f;
         int chambersCleared=0,energyEaten=0,gripsEver=0;
         float farthestGate=0;
+        int exhaustedAttempts=0;
+        boolean chamberExhausted=false;
         String chamberMessage="LA FAME RENDERA' PREZIOSA L'ENERGIA";
         float[] virgin;
         volatile boolean learning=true,enabled=true;
@@ -120,8 +122,36 @@ public final class GameActivity extends Activity {
             energyEaten=prefs.getInt("finite_energy_eaten_v08",0);
             gripsEver=prefs.getInt("grip_events_v08",0);
             farthestGate=prefs.getFloat("gate_travel_v08",0);
+            exhaustedAttempts=prefs.getInt("room_exhaustions_v081",0);
+            boolean wasExhausted=prefs.getBoolean("room_exhausted_v081",false);
             speed=1;learning=true;simulationRunning=true;
             resetEpisode();
+            // v0.8 never saved live room geometry; from v0.8.1 onwards
+            // restore the actual chamber, sliding-gate displacement and
+            // organism position on app restart.
+            if(prefs.getBoolean("room_active_v081",false)){
+                chamber=new ScarcityLab(
+                    prefs.getFloat("room_x_v081",creature.cx),
+                    prefs.getFloat("room_y_v081",creature.cy));
+                chamber.doorY=ScarcityLab.clamp(
+                    prefs.getFloat("room_gate_y_v081",0),0,105);
+                chamber.maxDoorTravel=Math.max(chamber.doorY,
+                    prefs.getFloat("room_gate_max_v081",0));
+                chamber.grasps=prefs.getInt("room_current_grips_v081",0);
+                chamber.reachedEnergy=prefs.getBoolean("room_food_taken_v081",false);
+                chamber.everOpened=chamber.doorY>=77||chamber.maxDoorTravel>=77;
+                if(chamber.reachedEnergy)chamber.food.touch(0,0);
+                else environment.add(chamber.food);
+                positionBody(prefs.getFloat("room_body_x_v081",chamber.ox),
+                             prefs.getFloat("room_body_y_v081",chamber.oy));
+                nextChamber=prefs.getFloat("room_next_v081",elapsedLife+95);
+                chamberExhausted=wasExhausted;
+                if(chamberExhausted){
+                    reserve=0;simulationRunning=false;
+                    lastEvent="ZERO ESAUSTO • LA STANZA NON E' STATA CANCELLATA";
+                    eventTime=9;
+                }
+            }else nextChamber=Math.max(70,elapsedLife+12);
             save();
         }
         float[] decode(String s){
@@ -196,9 +226,21 @@ public final class GameActivity extends Activity {
               .putFloat("scarcity_elapsed_v08",elapsedLife)
               .putInt("room_success_v08",chambersCleared)
               .putInt("finite_energy_eaten_v08",energyEaten)
-              .putInt("grip_events_v08",gripsEver+(chamber!=null?chamber.grasps:0))
+              .putInt("grip_events_v08",gripsEver)
               .putFloat("gate_travel_v08",Math.max(farthestGate,
                   chamber!=null?chamber.maxDoorTravel:0))
+              .putInt("room_exhaustions_v081",exhaustedAttempts)
+              .putBoolean("room_exhausted_v081",chamberExhausted)
+              .putBoolean("room_active_v081",chamber!=null)
+              .putFloat("room_x_v081",chamber==null?0:chamber.ox)
+              .putFloat("room_y_v081",chamber==null?0:chamber.oy)
+              .putFloat("room_gate_y_v081",chamber==null?0:chamber.doorY)
+              .putFloat("room_gate_max_v081",chamber==null?0:chamber.maxDoorTravel)
+              .putInt("room_current_grips_v081",chamber==null?0:chamber.grasps)
+              .putBoolean("room_food_taken_v081",chamber!=null&&chamber.reachedEnergy)
+              .putFloat("room_body_x_v081",creature.cx)
+              .putFloat("room_body_y_v081",creature.cy)
+              .putFloat("room_next_v081",nextChamber)
               .apply();
         }
         void resume(){
@@ -238,6 +280,26 @@ public final class GameActivity extends Activity {
             enabled=false;
             save();
             lastFrame=0;
+        }
+        void positionBody(float x,float y){
+            creature.reset();
+            for(int i=0;i<MotorBrain.N;i++){
+                creature.x[i]+=x;creature.y[i]+=y;
+            }
+            creature.cx=x;creature.cy=y;
+            surface.reset(creature);
+            trailCount=0;trailClock=0;
+        }
+        /** A new attempt begins at the SAME chamber entrance. No new world. */
+        void retryChamber(){
+            if(chamber==null||!chamberExhausted)return;
+            positionBody(chamber.gateX()-80,chamber.oy);
+            reserve=53;
+            chamberExhausted=false;simulationRunning=true;
+            decisionBrain.abandon();
+            chosenObject=null;goalTimer=0;
+            lastEvent="NUOVO TENTATIVO • PORTA E MONDO CONSERVATI";
+            eventTime=8;lastFrame=0;save();
         }
         void resetEpisode(){
             // Only initial boot or actual simulated death restarts the body.
@@ -282,6 +344,7 @@ public final class GameActivity extends Activity {
                 environment.remove(chamber.food);
             }
             scarcity=true;
+            chamberExhausted=false;
             if(manual)reserve=Math.min(58,reserve);
             chamber=new ScarcityLab(creature.cx,creature.cy);
             environment.add(chamber.food);
@@ -379,13 +442,21 @@ public final class GameActivity extends Activity {
             }
             eventTime=Math.max(0,eventTime-dt);
             if(reserve<=0){
-                if(chamber!=null){
-                    gripsEver+=chamber.grasps;
-                    farthestGate=Math.max(farthestGate,chamber.maxDoorTravel);
+                reserve=0;
+                if(chamber!=null&&!chamber.reachedEnergy){
+                    // A death is NOT a level reset: freeze the whole physical
+                    // world and wait for the observer to begin a new life.
+                    chamberExhausted=true;exhaustedAttempts++;
+                    simulationRunning=false;
+                    chamberMessage="ENERGIA ESAURITA • CAMERA ANCORA ATTIVA";
+                    lastEvent="ZERO ESAUSTO • TOCCA RIPROVA, LA PORTA RESTA";
+                    eventTime=20;
+                }else{
+                    reserve=45;
+                    lastEvent="ENERGIA ESAURITA • NUOVA VITA";eventTime=9;
+                    resetEpisode();
+                    nextChamber=elapsedLife+12;
                 }
-                reserve=45;lastEvent="CORPO ESAUSTO • MEMORIA CONSERVATA";eventTime=6;
-                resetEpisode();
-                nextChamber=elapsedLife+12f;
                 save();
             }
         }
@@ -620,12 +691,12 @@ public final class GameActivity extends Activity {
             rounded(c,12,12,468,145,0xeb0a1420,20);
             rounded(c,27,28,31,55,TEAL,2);
             text(c,"O V E R M I N D",43,39,14,TEAL,false);
-            text(c,"ZERO / ESPERIMENTO 007",26,72,21,0xffe9faf6,false);
+            text(c,"ZERO / ESPERIMENTO 007.1",26,72,20,0xffe9faf6,false);
             rounded(c,339,104,459,138,0xff20444a,11);
             text(c,"AGGIORNA",399,127,12,TEAL,true);
             rounded(c,217,104,333,138,0xff283b58,11);
             text(c,"CERVELLO",275,127,12,0xffd2c4fc,true);
-            text(c,"ENERGIA FINITA • PRESA BILATERALE",27,99,11,MUTED,false);
+            text(c,"CAMERA SOLIDA • NESSUN RESET NASCOSTO",27,99,11,MUTED,false);
             text(c,"VERSIONE "+installedVersion+"  •  OTA",27,120,10,0xff708d9d,false);
             text(c,"TENTATIVI",377,34,11,MUTED,false);
             text(c,String.valueOf(trainer.attempts),380,71,22,GOLD,false);
@@ -664,9 +735,13 @@ public final class GameActivity extends Activity {
                 "  •  ENERGIE PRESE "+energyEaten+"  •  STANZE RISOLTE "+chambersCleared,
                 25,443,11,scarcity?0xffef9f91:TEAL,false);
             if(chamber!=null){
-                text(c,"PORTA "+(int)chamber.doorY+" U  •  PRESE "+
-                    (gripsEver+chamber.grasps)+"  •  DUE LATI "+
-                    chamber.opposedContactFrames,25,465,11,GOLD,false);
+                if(chamberExhausted){
+                    text(c,"ENERGIA ESAURITA • TOCCA QUI PER RIPROVARE",25,465,12,0xffff9ba3,false);
+                }else{
+                    text(c,"PORTA "+(int)chamber.doorY+" U • PRESE "+
+                        (gripsEver+chamber.grasps)+" • PASSAGGI IMPEDITI "+
+                        chamber.preventedTunnels,25,465,10,GOLD,false);
+                }
             }else text(c,"TOCCA QUI PER ATTIVARE TEST STANZA E FAME",25,465,11,GOLD,false);
             if(uiTime<updaterStatusUntil&&updaterStatus.length()>0){
                 rounded(c,13,338,467,387,0xef1f3944,13);
@@ -720,7 +795,8 @@ public final class GameActivity extends Activity {
             float x=ev.getX()/scale,y=ev.getY()/scale;
             if(showBenchmark){showBenchmark=false;return true;}
             if(y>442&&y<480&&x<380){
-                activateChamber(true);
+                if(chamberExhausted)retryChamber();
+                else if(chamber==null||chamber.reachedEnergy)activateChamber(true);
                 invalidate();return true;
             }
             if(y>=H-108){

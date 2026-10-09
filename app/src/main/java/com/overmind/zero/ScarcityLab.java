@@ -14,7 +14,8 @@ public final class ScarcityLab {
     public final UnknownWorld.Entity food;
     public float doorY=0,doorVelocity=0,dualContactTime=0;
     public int grasps=0,oneSidedContacts=0,opposedContactFrames=0;
-    public boolean reachedEnergy=false,everOpened=false;
+    public boolean reachedEnergy=false,everOpened=false,coreEntered=false;
+    public int preventedTunnels=0,blockedSegments=0;
     public float maxDoorTravel=0;
     private boolean wasGrasping=false;
     private final float[] temp=new float[4];
@@ -89,36 +90,156 @@ public final class ScarcityLab {
      * are physical obstacles, so the food cannot be reached through walls.
      */
     public void constrain(MotorBrain.Body body,Morphology.Surface skin,float dt){
-        solveGate(skin,dt);
+        // The membrane is already simulated. A local segment must not thread
+        // directly THROUGH the gate: only bending around the top/bottom edges
+        // is allowed.
+        // First reject illegal penetration, then measure legal opposite grips.
+        // A tunneled particle must never count as a second hand.
         // Gate is an actual physical barrier for the body center and old
         // motor particles, even when its movement is still locked.
         float x=gateX(),yc=gateCenterY();
         applyToCore(body,x-DOOR_HALF_W,yc-DOOR_HALF_H,
             x+DOOR_HALF_W,yc+DOOR_HALF_H,10);
+        // A closed gate fills the core-sized opening (only 9-unit gaps for
+        // narrow pseudopodia). A core of radius 10 cannot squeeze through.
+        if(!coreEntered && !openingFree() && body.cx>x-DOOR_HALF_W-10
+             && body.cx<ox+END_X+10
+             && Math.abs(body.cy-oy)<BOTTOM+11){
+            body.cx=x-DOOR_HALF_W-10;
+            body.cvx=Math.min(0,body.cvx);
+            preventedTunnels++;
+        }
+        if(openingFree() && body.cx>x+DOOR_HALF_W+10)coreEntered=true;
         for(int k=0;k<MotorBrain.N;k++){
             for(int w=0;w<6;w++){
                 boundaries(w,temp);
-                project(body.x,body.y,body.vx,body.vy,k,
-                        temp[0],temp[1],temp[2],temp[3],1.5f);
+                sweptProject(body.x,body.y,body.vx,body.vy,k,
+                        temp[0],temp[1],temp[2],temp[3],1.5f,dt);
             }
-            project(body.x,body.y,body.vx,body.vy,k,
-                x-DOOR_HALF_W,yc-DOOR_HALF_H,x+DOOR_HALF_W,yc+DOOR_HALF_H,1.5f);
+            sweptProject(body.x,body.y,body.vx,body.vy,k,
+                x-DOOR_HALF_W,yc-DOOR_HALF_H,x+DOOR_HALF_W,yc+DOOR_HALF_H,1.5f,dt);
         }
         for(int i=0;i<Morphology.POINTS;i++){
             for(int w=0;w<6;w++){
                 boundaries(w,temp);
-                project(skin.x,skin.y,skin.vx,skin.vy,i,
-                    temp[0],temp[1],temp[2],temp[3],1.5f);
+                sweptProject(skin.x,skin.y,skin.vx,skin.vy,i,
+                    temp[0],temp[1],temp[2],temp[3],1.5f,dt);
             }
             // Contact on gate edges not already resolved by grip physics
-            project(skin.x,skin.y,skin.vx,skin.vy,i,
-                x-DOOR_HALF_W,yc-DOOR_HALF_H,x+DOOR_HALF_W,yc+DOOR_HALF_H,1.5f);
+            sweptProject(skin.x,skin.y,skin.vx,skin.vy,i,
+                x-DOOR_HALF_W,yc-DOOR_HALF_H,x+DOOR_HALF_W,yc+DOOR_HALF_H,1.5f,dt);
         }
+        // A polygon can cut through a thin wall even when every vertex
+        // remains outside. Correct crossing edges, not just individual nodes.
+        enforceMembraneSegments(skin);
+        solveGate(skin,dt);
         for(int w=0;w<6;w++){
             boundaries(w,temp);
             applyToCore(body,temp[0],temp[1],temp[2],temp[3],10);
         }
+        // Reapply after all wall corrections, not only before them.
+        if(!coreEntered&&!openingFree()&&body.cx>x-DOOR_HALF_W-10
+             && body.cx<ox+END_X+10
+             && Math.abs(body.cy-oy)<BOTTOM+11){
+            body.cx=x-DOOR_HALF_W-10;body.cvx=Math.min(0,body.cvx);
+            preventedTunnels++;
+        }
     }
+
+    /** Swept AABB contact prevents high-speed particles tunneling between
+      * consecutive frames and being ejected from the wrong rectangle face. */
+    private boolean sweptProject(float[] px,float[] py,float[] vx,float[] vy,int i,
+                                 float l,float t,float r,float b,float radius,float dt){
+        float nowX=px[i],nowY=py[i];
+        float oldX=nowX-vx[i]*dt,oldY=nowY-vy[i]*dt;
+        float el=l-radius,er=r+radius,et=t-radius,eb=b+radius;
+        // Resolve horizontal plane crossing at the entry face.
+        if(oldX<=el&&nowX>el&&vx[i]>0){
+            float frac=(el-oldX)/Math.max(.00001f,nowX-oldX);
+            float crossY=oldY+(nowY-oldY)*frac;
+            if(crossY>=et&&crossY<=eb){
+                px[i]=el;py[i]=crossY;vx[i]=0;preventedTunnels++;return true;
+            }
+        }
+        if(oldX>=er&&nowX<er&&vx[i]<0){
+            float frac=(er-oldX)/Math.min(-.00001f,nowX-oldX);
+            float crossY=oldY+(nowY-oldY)*frac;
+            if(crossY>=et&&crossY<=eb){
+                px[i]=er;py[i]=crossY;vx[i]=0;preventedTunnels++;return true;
+            }
+        }
+        if(oldY<=et&&nowY>et&&vy[i]>0){
+            float frac=(et-oldY)/Math.max(.00001f,nowY-oldY);
+            float crossX=oldX+(nowX-oldX)*frac;
+            if(crossX>=el&&crossX<=er){
+                py[i]=et;px[i]=crossX;vy[i]=0;preventedTunnels++;return true;
+            }
+        }
+        if(oldY>=eb&&nowY<eb&&vy[i]<0){
+            float frac=(eb-oldY)/Math.min(-.00001f,nowY-oldY);
+            float crossX=oldX+(nowX-oldX)*frac;
+            if(crossX>=el&&crossX<=er){
+                py[i]=eb;px[i]=crossX;vy[i]=0;preventedTunnels++;return true;
+            }
+        }
+        return project(px,py,vx,vy,i,l,t,r,b,radius);
+    }
+
+    static boolean segmentIntersectsBox(float ax,float ay,float bx,float by,
+                                        float l,float t,float r,float b){
+        // Liang-Barsky clipping on solid rectangle, also catches a segment
+        // crossing a box when both endpoints are outside it.
+        float dx=bx-ax,dy=by-ay;
+        // Fast allocation-free Liang-Barsky equivalent; called hundreds
+        // of times per physics tick at 96 membrane points.
+        float enter=0f,leave=1f;
+        if(Math.abs(dx)<1e-7f){if(ax<l||ax>r)return false;}
+        else{
+            float a=(l-ax)/dx,b=(r-ax)/dx;
+            enter=Math.max(enter,Math.min(a,b));
+            leave=Math.min(leave,Math.max(a,b));
+        }
+        if(Math.abs(dy)<1e-7f){if(ay<t||ay>b)return false;}
+        else{
+            float a=(t-ay)/dy,b=(b-ay)/dy;
+            enter=Math.max(enter,Math.min(a,b));
+            leave=Math.min(leave,Math.max(a,b));
+        }
+        return enter<=leave;
+    }
+
+    private void enforceMembraneSegments(Morphology.Surface skin){
+        for(int pass=0;pass<3;pass++){
+            boolean found=false;
+            for(int i=0;i<Morphology.POINTS;i++){
+                int j=(i+1)%Morphology.POINTS;
+                // Check both gate and immutable walls.
+                for(int box=-1;box<6;box++){
+                    float l,t,r,b;
+                    if(box<0){l=gateX()-DOOR_HALF_W;t=gateTop();
+                        r=gateX()+DOOR_HALF_W;b=gateBottom();}
+                    else{boundaries(box,temp);l=temp[0];t=temp[1];
+                        r=temp[2];b=temp[3];}
+                    if(!segmentIntersectsBox(skin.x[i],skin.y[i],skin.x[j],skin.y[j],
+                                             l+.20f,t+.20f,r-.20f,b-.20f))continue;
+                    // Pull the farther segment endpoint toward the same safe
+                    // side as the body, instead of letting a straight membrane
+                    // edge pass through a solid box.
+                    int move=Math.hypot(skin.x[i]-ox,skin.y[i]-oy)
+                              >Math.hypot(skin.x[j]-ox,skin.y[j]-oy)?i:j;
+                    int stay=move==i?j:i;
+                    float sx=skin.x[stay],sy=skin.y[stay];
+                    if(sx<l){skin.x[move]=l-2.0f;skin.vx[move]=Math.min(0,skin.vx[move]);}
+                    else if(sx>r){skin.x[move]=r+2.0f;skin.vx[move]=Math.max(0,skin.vx[move]);}
+                    else if(sy<t){skin.y[move]=t-2.0f;skin.vy[move]=Math.min(0,skin.vy[move]);}
+                    else{skin.y[move]=b+2.0f;skin.vy[move]=Math.max(0,skin.vy[move]);}
+                    blockedSegments++;found=true;
+                }
+            }
+            if(!found)break;
+        }
+    }
+
     /** Wall slabs: entrance outside the opening, far wall, ceiling, floor. */
     private void boundaries(int id,float[] r){
         float l=entranceX(),right=ox+END_X;
@@ -235,7 +356,28 @@ public final class ScarcityLab {
         }
         if(chamber.grasps<1||chamber.maxDoorTravel<15)
             throw new IllegalStateException("Opposing physical contacts failed to move gate");
-        ScarcityLab unopened=new ScarcityLab(0,0);
+        // Regression: a living core is larger than both little gaps
+        // around the blocker. It cannot appear on the other side.
+        ScarcityLab solid=new ScarcityLab(-115,0);
+        MotorBrain.Body trespasser=new MotorBrain.Body();
+        trespasser.cx=30;trespasser.cy=0;trespasser.cvx=500;
+        Morphology.Surface thin=new Morphology.Surface(trespasser);
+        solid.constrain(trespasser,thin,MotorBrain.STEP);
+        if(trespasser.cx>solid.gateX()-DOOR_HALF_W-9.5f)
+            throw new IllegalStateException("Core clipped through closed doorway");
+        if(solid.doorY!=0)
+            throw new IllegalStateException("Illicit contact moved solid blocker");
+        // Another regression: two vertices can be outside the rectangle
+        // while the membrane segment between them cuts through it.
+        if(!segmentIntersectsBox(-24,0,24,0,-13,-34,13,34))
+            throw new IllegalStateException("Missed segment crossing solid blocker");
+        if(segmentIntersectsBox(-24,42,24,42,-13,-34,13,34))
+            throw new IllegalStateException("Legal route above blocker rejected");
+        // Swept collision must stop a fast particle before passing through.
+        float[] tx={-2f},ty={2f},tvx={650},tvy={0};
+        solid.sweptProject(tx,ty,tvx,tvy,0,-13,-34,13,34,1.5f,.03f);
+        if(tx[0]>-14.4f)throw new IllegalStateException("Swept particle tunneled");
+                ScarcityLab unopened=new ScarcityLab(0,0);
         if(unopened.foodTouchedByCore(new MotorBrain.Body()))
             throw new IllegalStateException("Core ate unreachable food from afar");
         float[] motor=MotorBrain.virgin(new java.util.Random(918273));
