@@ -16,6 +16,7 @@ public final class ScarcityLab {
     public int grasps=0,oneSidedContacts=0,opposedContactFrames=0;
     public boolean reachedEnergy=false,everOpened=false;
     public float maxDoorTravel=0;
+    public int solidLinkCorrections=0;
     private boolean wasGrasping=false;
     private final float[] temp=new float[4];
 
@@ -89,6 +90,10 @@ public final class ScarcityLab {
      * are physical obstacles, so the food cannot be reached through walls.
      */
     public void constrain(MotorBrain.Body body,Morphology.Surface skin,float dt){
+        // Resolve the actual edges BEFORE sensing a bilateral grasp. A
+        // membrane that has tunneled through the obstacle must not count as
+        // an appendage legitimately placed on its opposite face.
+        resolveSolidLinks(skin);
         solveGate(skin,dt);
         // Gate is an actual physical barrier for the body center and old
         // motor particles, even when its movement is still locked.
@@ -117,6 +122,84 @@ public final class ScarcityLab {
         for(int w=0;w<6;w++){
             boundaries(w,temp);
             applyToCore(body,temp[0],temp[1],temp[2],temp[3],10);
+        }
+        // A point may be outside a solid while the edge between two points
+        // cuts straight through it. Never render or simulate such a crossing.
+        resolveSolidLinks(skin);
+    }
+
+    /** Continuous segment/rectangle intersection (strict interior), using
+     * slab clipping. Does not mistake a legitimate grazing contact for a
+     * membrane passing through a physical obstruction. */
+    static boolean crossesInterior(float ax,float ay,float bx,float by,
+                                   float l,float t,float r,float b){
+        float dx=bx-ax,dy=by-ay;
+        float enter=0,leave=1;
+        if(Math.abs(dx)<.000001f){
+            if(ax<=l+.02f||ax>=r-.02f)return false;
+        }else{
+            float v0=(l+.02f-ax)/dx,v1=(r-.02f-ax)/dx;
+            enter=Math.max(enter,Math.min(v0,v1));
+            leave=Math.min(leave,Math.max(v0,v1));
+        }
+        if(Math.abs(dy)<.000001f){
+            if(ay<=t+.02f||ay>=b-.02f)return false;
+        }else{
+            float v0=(t+.02f-ay)/dy,v1=(b-.02f-ay)/dy;
+            enter=Math.max(enter,Math.min(v0,v1));
+            leave=Math.min(leave,Math.max(v0,v1));
+        }
+        return leave>enter+.00001f&&leave>=0&&enter<=1;
+    }
+    /** Repair one impossible crossing by keeping the entire connected edge
+     * outside the closest face. This works for ANY neighboring pair of the
+     * 96 masses; there are no preset arms, slots, or special joint indices. */
+    private static boolean correctLink(Morphology.Surface skin,int a,int b,
+                                       float l,float t,float r,float bottom){
+        float ax=skin.x[a],ay=skin.y[a],bx=skin.x[b],by=skin.y[b];
+        if(!crossesInterior(ax,ay,bx,by,l,t,r,bottom))return false;
+        float clearance=1.6f;
+        float left=l-clearance,right=r+clearance;
+        float top=t-clearance,low=bottom+clearance;
+        float costLeft=Math.max(0,ax-left)+Math.max(0,bx-left);
+        float costRight=Math.max(0,right-ax)+Math.max(0,right-bx);
+        float costTop=Math.max(0,ay-top)+Math.max(0,by-top);
+        float costBottom=Math.max(0,low-ay)+Math.max(0,low-by);
+        int face=0;float best=costLeft;
+        if(costRight<best){face=1;best=costRight;}
+        if(costTop<best){face=2;best=costTop;}
+        if(costBottom<best){face=3;}
+        for(int i=0;i<2;i++){
+            int idx=i==0?a:b;
+            if(face==0&&skin.x[idx]>left){
+                skin.x[idx]=left;skin.vx[idx]=Math.min(0,skin.vx[idx]);
+            }else if(face==1&&skin.x[idx]<right){
+                skin.x[idx]=right;skin.vx[idx]=Math.max(0,skin.vx[idx]);
+            }else if(face==2&&skin.y[idx]>top){
+                skin.y[idx]=top;skin.vy[idx]=Math.min(0,skin.vy[idx]);
+            }else if(face==3&&skin.y[idx]<low){
+                skin.y[idx]=low;skin.vy[idx]=Math.max(0,skin.vy[idx]);
+            }
+        }
+        return true;
+    }
+    public void resolveSolidLinks(Morphology.Surface skin){
+        // Repeat because correcting one edge can stretch its neighbor.
+        // Early-out keeps the cost low when the organism is not near walls.
+        for(int pass=0;pass<4;pass++){
+            int repairs=0;
+            for(int i=0;i<Morphology.POINTS;i++){
+                int j=(i+1)%Morphology.POINTS;
+                for(int w=0;w<6;w++){
+                    boundaries(w,temp);
+                    if(correctLink(skin,i,j,temp[0],temp[1],temp[2],temp[3]))
+                        repairs++;
+                }
+                if(correctLink(skin,i,j,gateX()-DOOR_HALF_W,gateTop(),
+                   gateX()+DOOR_HALF_W,gateBottom()))repairs++;
+            }
+            solidLinkCorrections+=repairs;
+            if(repairs==0)break;
         }
     }
     /** Wall slabs: entrance outside the opening, far wall, ceiling, floor. */
@@ -235,6 +318,34 @@ public final class ScarcityLab {
         }
         if(chamber.grasps<1||chamber.maxDoorTravel<15)
             throw new IllegalStateException("Opposing physical contacts failed to move gate");
+        // Regression: two masses separated by a solid door with no mass
+        // inside it STILL form a crossing segment. Point-only physics misses
+        // that, and the old smoothed renderer made it look like a ghost limb.
+        ScarcityLab solid=new ScarcityLab(-115,0);
+        MotorBrain.Body fixtureBody=new MotorBrain.Body();
+        Morphology.Surface fixture=new Morphology.Surface(fixtureBody);
+        for(int i=0;i<Morphology.POINTS;i++){
+            fixture.x[i]=-90;fixture.y[i]=-110;
+            fixture.vx[i]=fixture.vy[i]=0;
+        }
+        fixture.x[0]=-16;fixture.y[0]=0;
+        fixture.x[1]=16;fixture.y[1]=0;
+        if(!crossesInterior(fixture.x[0],fixture.y[0],fixture.x[1],fixture.y[1],
+                -DOOR_HALF_W,-DOOR_HALF_H,DOOR_HALF_W,DOOR_HALF_H))
+            throw new IllegalStateException("Crossing fixture is invalid");
+        solid.resolveSolidLinks(fixture);
+        for(int i=0;i<Morphology.POINTS;i++){
+            int j=(i+1)%Morphology.POINTS;
+            if(crossesInterior(fixture.x[i],fixture.y[i],fixture.x[j],fixture.y[j],
+                    -DOOR_HALF_W,-DOOR_HALF_H,DOOR_HALF_W,DOOR_HALF_H))
+                throw new IllegalStateException("Membrane passed through the rigid gate");
+        }
+        if(solid.solidLinkCorrections==0)
+            throw new IllegalStateException("Penetrating cloth segment was not corrected");
+        // A real membrane that bends around the top is allowed.
+        if(crossesInterior(-16,-43,0,-42,-13,-34,13,34)||
+           crossesInterior(0,-42,16,-43,-13,-34,13,34))
+            throw new IllegalStateException("Free path around corner falsely blocked");
         ScarcityLab unopened=new ScarcityLab(0,0);
         if(unopened.foodTouchedByCore(new MotorBrain.Body()))
             throw new IllegalStateException("Core ate unreachable food from afar");
