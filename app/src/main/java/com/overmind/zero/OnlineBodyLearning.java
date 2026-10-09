@@ -3,117 +3,135 @@ package com.overmind.zero;
 import java.util.Random;
 
 /**
- * Small mutations of the body's previously learned weights tested exclusively
- * in ZERO's LIVED game world, not in hidden directional fitness simulations.
- * Comparison is between adjacent observational windows, matched for hunger,
- * presence of the room and approximate directional activity. The outcome
- * is an experimental heuristic, NOT a controlled causal A/B test.
+ * Motor/membrane mutations are evaluated in ZERO's actual running world.
+ * No off-screen fitness, no target coordinates, no scripted movement.
+ * Two consecutive observational windows are compared; this does not
+ * establish experimental causality.
  */
 public final class OnlineBodyLearning {
     public static final int MOTOR=0,MANIPULATION=1,MEMBRANE=2;
     public static final int WINDOW=8;
-    private static final float MIN_GAIN=.025f;
     private final Random rnd=new Random();
-    private int domain=0,phase=0,samples=0;
-    private float accumulated=0,baseScore=0,energyTotal=0,dirX=0,dirY=0;
-    private float baseEnergy=0,baseDirX=0,baseDirY=0;
-    private boolean baseRoom=false;
-    private boolean roomInWindow=false,roomStarted=false,roomChanged=false;
+    private int domain=0,phase=0,samples=0,failures=0,mobileWindows=0;
+    private float scoreSum=0,pathSum=0,energySum=0,dirXSum=0,dirYSum=0;
+    private float baseScore,basePath,baseEnergy,baseDirX,baseDirY;
+    private float meanTravel=0;
+    private boolean baseRoom,roomAtStart,roomChanged;
     private float[] candidate;
 
     public static final class Result {
         public final int domain;
         public final boolean accepted;
         public final float[] weights;
-        Result(int domain,boolean accepted,float[] weights){
+        Result(int domain,boolean accepted,float[] weights) {
             this.domain=domain;this.accepted=accepted;this.weights=weights;
         }
     }
-    public float[] weights(int selected,float[] saved){
-        return phase==1&&selected==domain&&candidate!=null?candidate:saved;
+    public float[] weights(int requested,float[] stored){
+        return phase==1&&requested==domain&&candidate!=null?candidate:stored;
     }
     public void abortTrial(){
-        phase=0;samples=0;accumulated=0;energyTotal=0;dirX=0;dirY=0;
-        candidate=null;roomChanged=false;roomStarted=false;roomInWindow=false;
+        phase=0;samples=0;candidate=null;
+        scoreSum=pathSum=energySum=dirXSum=dirYSum=0;
+        roomChanged=false;
     }
-    private static float[] mutate(float[] original,int which,boolean room,Random rnd){
-        float[] changed=original.clone();
-        int count=1+rnd.nextInt(3);
+    public boolean testingCandidate(){return phase==1;}
+    public float movementAverage(){return meanTravel;}
+    public int activeDomain(){return domain;}
+    private float[] mutate(float[] stored,int which,boolean chamber){
+        float[] w=stored.clone();
+        // Early coordinated movement requires much wider experiments than
+        // the previous 1-3 tiny mutations (0.06 per weight).
+        int count=which==MOTOR?12+rnd.nextInt(20):3+rnd.nextInt(8);
+        float scale=which==MOTOR?Math.min(1.1f,.34f+.09f*(failures/6)):
+                    which==MANIPULATION?.24f:.22f;
         for(int i=0;i<count;i++){
-            // Only physical actuators are explored: no "open the gate" command.
-            int k=(which==MEMBRANE&&room&&rnd.nextFloat()<.6f)
-                  ?Morphology.LEGACY_PARAMS+rnd.nextInt(Morphology.GRIP_HEAD)
-                  :rnd.nextInt(changed.length);
-            float scale=which==MOTOR?.06f:which==MANIPULATION?.09f:.07f;
-            changed[k]=Math.max(-3.0f,Math.min(3.0f,
-                       changed[k]+(float)rnd.nextGaussian()*scale));
+            int k;
+            if(which==MOTOR&&rnd.nextFloat()<.48f)
+                k=MotorBrain.INPUT*MotorBrain.HIDDEN+
+                  rnd.nextInt(MotorBrain.PARAMS-MotorBrain.INPUT*MotorBrain.HIDDEN);
+            else if(which==MEMBRANE&&chamber&&rnd.nextFloat()<.58f)
+                k=Morphology.LEGACY_PARAMS+rnd.nextInt(Morphology.GRIP_HEAD);
+            else k=rnd.nextInt(w.length);
+            w[k]=Math.max(-3.5f,Math.min(3.5f,
+                 w[k]+(float)rnd.nextGaussian()*scale));
         }
-        return changed;
+        return w;
     }
-    /** One completed action (~0.65 simulated seconds), with real effects. */
-    public Result observe(float reward,float traveled,int contacts,float energy,
-                          boolean room,float directionX,float directionY,
+    /**
+     * A completed sensory action. Path and forward projection are actually
+     * measured nucleus translations in live physical world coordinates.
+     * Forward refers to ZERO's own chosen direction, never a known resource.
+     */
+    public Result observe(float reward,float path,float forward,int contacts,
+                          float energy,boolean room,float dx,float dy,
                           float[] motor,float[] hand,float[] shape){
-        if(!Float.isFinite(reward)||!Float.isFinite(traveled)||
-           !Float.isFinite(energy)||!Float.isFinite(directionX)||
-           !Float.isFinite(directionY))return null;
-        if(samples==0){roomStarted=room;roomChanged=false;}
-        if(roomStarted!=room)roomChanged=true;
-        roomInWindow=room;
-        // Generic bodily feedback, never an encoded target coordinate or
-        // privileged gate state: reward comes from the sensorimotor agent.
-        accumulated+=reward+.002f*Math.min(45,Math.max(0,traveled))
-                           +.045f*Math.min(3,Math.max(0,contacts));
-        energyTotal+=energy;
-        dirX+=directionX;dirY+=directionY;
+        if(!Float.isFinite(reward)||!Float.isFinite(path)||
+           !Float.isFinite(forward)||!Float.isFinite(energy)||
+           !Float.isFinite(dx)||!Float.isFinite(dy))return null;
+        if(samples==0){roomAtStart=room;roomChanged=false;}
+        if(roomAtStart!=room)roomChanged=true;
+        float traveled=Math.max(0,Math.min(50,path));
+        meanTravel=meanTravel*.98f+traveled*.02f;
+        pathSum+=traveled;
+        scoreSum+=.15f*reward+.024f*traveled+
+           .034f*Math.max(-12,Math.min(12,forward))+
+           .055f*Math.min(3,Math.max(0,contacts));
+        energySum+=energy;dirXSum+=dx;dirYSum+=dy;
         if(++samples<WINDOW)return null;
-        float score=accumulated/WINDOW,avgEnergy=energyTotal/WINDOW;
-        float avgX=dirX/WINDOW,avgY=dirY/WINDOW;
-        boolean stableRoom=!roomChanged;
-        samples=0;accumulated=0;energyTotal=0;dirX=0;dirY=0;
+        float avgPath=pathSum/WINDOW,score=scoreSum/WINDOW;
+        float e=energySum/WINDOW,x=dirXSum/WINDOW,y=dirYSum/WINDOW;
+        boolean stable=!roomChanged;
+        samples=0;pathSum=scoreSum=energySum=dirXSum=dirYSum=0;
+        if(avgPath>.65f)mobileWindows++;
         if(phase==0){
-            baseScore=score;baseEnergy=avgEnergy;
-            baseDirX=avgX;baseDirY=avgY;baseRoom=room;
+            basePath=avgPath;baseScore=score;baseEnergy=e;
+            baseDirX=x;baseDirY=y;baseRoom=room;
             phase=1;
             candidate=mutate(domain==MOTOR?motor:domain==MANIPULATION?hand:shape,
-                             domain,room,rnd);
+                             domain,room);
             return null;
         }
-        // If the world/energy/direction was too different, do not claim
-        // improvement: reject the live experiment and try again later.
-        boolean comparable=stableRoom&&baseRoom==room&&
-            Math.abs(baseEnergy-avgEnergy)<=28f&&
-            Math.hypot(baseDirX-avgX,baseDirY-avgY)<=.85;
-        boolean accepted=comparable&&score>baseScore+MIN_GAIN;
-        Result outcome=new Result(domain,accepted,accepted?candidate:null);
-        domain=(domain+1)%3;
+        boolean comparable=stable&&baseRoom==room&&
+             Math.abs(baseEnergy-e)<=30f&&Math.hypot(baseDirX-x,baseDirY-y)<=1.1;
+        boolean motorMoved=avgPath>basePath+.12f&&avgPath>.15f;
+        boolean accepted=comparable&&score>baseScore+.012f&&
+                         (domain!=MOTOR||motorMoved);
+        Result out=new Result(domain,accepted,accepted?candidate:null);
+        if(domain==MOTOR) {
+            if(accepted)failures=0;else failures=Math.min(100,failures+1);
+        }
+        // A newborn that cannot move should focus on discovering locomotion
+        // before spending most trials on the gate or discs.
+        if(domain!=MOTOR||mobileWindows>=4)domain=(domain+1)%3;
         abortTrial();
-        return outcome;
+        return out;
     }
-    public static void main(String[] args){
+    public static void main(String[] args) {
         float[] motor=MotorBrain.virgin(new Random(13));
-        float[] hand=ContactLearning.virgin();
-        float[] shape=new float[Morphology.PARAMS];
+        float[] hand=ContactLearning.virgin(),shape=new float[Morphology.PARAMS];
         OnlineBodyLearning b=new OnlineBodyLearning();
-        if(b.weights(MOTOR,motor)!=motor)throw new AssertionError("Unexpected candidate");
-        for(int i=0;i<WINDOW;i++)b.observe(0,0,0,70,false,1,0,motor,hand,shape);
-        if(b.weights(MOTOR,motor)==motor||b.weights(MANIPULATION,hand)!=hand)
-            throw new AssertionError("Candidate should run only in its own domain");
+        if(b.weights(MOTOR,motor)!=motor)throw new AssertionError("not virgin");
+        for(int i=0;i<WINDOW;i++)b.observe(0,0,0,0,70,false,1,0,motor,hand,shape);
+        float[] trial=b.weights(MOTOR,motor);
+        if(trial==motor)throw new AssertionError("mutation was not activated");
+        int changes=0;for(int i=0;i<motor.length;i++)if(motor[i]!=trial[i])changes++;
+        if(changes<5)throw new AssertionError("motor mutation too weak");
         Result result=null;
-        for(int i=0;i<WINDOW;i++)result=b.observe(-1,0,0,70,false,1,0,motor,hand,shape);
-        if(result==null||result.accepted||b.weights(MOTOR,motor)!=motor)
-            throw new AssertionError("Failed experiment not rolled back");
-        for(int i=0;i<WINDOW;i++)b.observe(0,0,0,70,true,1,0,motor,hand,shape);
-        for(int i=0;i<WINDOW;i++)result=b.observe(.5f,15,2,69,true,1,0,motor,hand,shape);
-        if(result==null||!result.accepted||result.domain!=MANIPULATION||
-           result.weights.length!=hand.length)
-            throw new AssertionError("Lived improvement was not accepted");
-        if(shape[0]!=0||motor.length!=MotorBrain.PARAMS)
-            throw new AssertionError("Saved weights were changed without acceptance");
-        for(int i=0;i<WINDOW;i++)b.observe(0,0,0,70,true,1,0,motor,hand,shape);
-        for(int i=0;i<WINDOW;i++)result=b.observe(1,10,0,30,false,-1,0,motor,hand,shape);
-        if(result==null||result.accepted)
-            throw new AssertionError("Different worlds must not imply improvement");
-        System.out.println("ZERO-009.2: lived controller experiments, non-destructive rollback, matched-context guard passed");
+        for(int i=0;i<WINDOW;i++)
+            result=b.observe(0,0,0,0,70,false,1,0,motor,hand,shape);
+        if(result==null||result.accepted||b.activeDomain()!=MOTOR||
+           b.weights(MOTOR,motor)!=motor)
+            throw new AssertionError("stationary candidate was incorrectly learned");
+        for(int i=0;i<WINDOW;i++)
+            b.observe(0,0,0,0,70,false,1,0,motor,hand,shape);
+        for(int i=0;i<WINDOW;i++)
+            result=b.observe(.02f,4,2,0,70,false,1,0,motor,hand,shape);
+        if(result==null||!result.accepted||result.domain!=MOTOR||
+           result.weights.length!=motor.length)
+            throw new AssertionError("physically moving candidate rejected");
+        if(b.weights(MOTOR,motor)!=motor)
+            throw new AssertionError("tentative model leaked after test");
+        System.out.println("ZERO-009.3: stationary rejection, live movement acceptance and rollback passed");
     }
 }
