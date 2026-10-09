@@ -12,7 +12,7 @@ public final class ScarcityLab {
     public static final float OPEN_HALF_HEIGHT=43f,DOOR_HALF_W=14,DOOR_HALF_H=69;
     // Free-standing gate IN FRONT of the doorway. Its 138-unit height
     // overlaps the entire 86-unit opening so there are no initial cracks.
-    public static final float DOOR_FRONT_OFFSET=42f,DOOR_MAX_TRAVEL=170f;
+    public static final float DOOR_FRONT_OFFSET=34f,DOOR_MAX_TRAVEL=170f;
     public static final float WALL_HALF_THICKNESS=10f,MAX_LINK_SPAN=23f;
     public final float ox,oy;
     public final UnknownWorld.Entity food;
@@ -414,11 +414,11 @@ public final class ScarcityLab {
             }
         }
         // High-speed particles and core must stop at first contact.
-        float[] px={-22},py={74},vx={900},vy={0};
+        float[] px={9},py={74},vx={900},vy={0};
         fixtureLab.sweptProject(px,py,vx,vy,0,-10,43,10,115,2,.035f);
         if(px[0]>-11.9f)throw new IllegalStateException("Fast wall tunneling");
         MotorBrain.Body core=new MotorBrain.Body();
-        core.cx=-5;core.cy=74;core.cvx=900;
+        core.cx=5;core.cy=74;core.cvx=900;
         fixtureLab.applyToCore(core,-10,43,10,115,9,.035f);
         if(core.cx>-18.9f)throw new IllegalStateException("Core passed solid wall");
         if(crossesInterior(gate-18,-DOOR_HALF_H-6,
