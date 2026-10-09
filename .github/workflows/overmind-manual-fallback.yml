@@ -1,4 +1,5 @@
-name: OVERMIND automatic verified GitHub APK releases
+name: OVERMIND verified GitHub fallback releases
+# Regenerate signed APK fallback for 0.8.2 while Vercel deployment catches up.
 on:
   push:
     branches: [main]
