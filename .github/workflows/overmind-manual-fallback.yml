@@ -1,42 +1,66 @@
-name: OVERMIND signed APK fallback release
+name: OVERMIND automatic verified GitHub APK releases
 on:
   push:
     branches: [main]
-    paths: ['.github/workflows/overmind-manual-fallback.yml']
+    paths:
+      - 'updater/public/latest.json'
+      - '.github/workflows/overmind-manual-fallback.yml'
   workflow_dispatch:
 permissions:
   contents: write
+concurrency:
+  group: overmind-signed-github-releases
+  cancel-in-progress: false
 jobs:
   publish:
     runs-on: ubuntu-latest
+    timeout-minutes: 8
     steps:
       - uses: actions/checkout@v4
-      - name: Validate exact existing signed OTA artifact
+      - name: Verify exact signed APK in published manifest
         run: |
           python3 - <<'PY'
           import json,hashlib,pathlib
-          m=json.load(open('updater/public/latest.json'))
-          assert m['available'] is True
-          assert m['applicationId']=='com.overmind.zero.ota'
-          apk=pathlib.Path('updater/public/apk')/m['apkUrl'].rsplit('/',1)[-1]
-          assert apk.is_file(), f'APK not found: {apk}'
+          m=json.load(open('updater/public/latest.json',encoding='utf-8'))
+          assert m.get('available') is True
+          assert m.get('applicationId')=='com.overmind.zero.ota'
+          name=m['apkUrl'].rsplit('/',1)[-1]
+          apk=pathlib.Path('updater/public/apk')/name
+          assert apk.is_file(), f'APK not found: {name}'
           raw=apk.read_bytes()
-          assert len(raw)==m['sizeBytes'], 'Size mismatch'
-          assert hashlib.sha256(raw).hexdigest()==m['sha256'], 'Hash mismatch'
-          assert raw[:2]==b'PK','Not an APK zip file'
+          assert len(raw)==m['sizeBytes']
+          assert hashlib.sha256(raw).hexdigest()==m['sha256']
+          assert raw.startswith(b'PK')
+          version=m['versionName']
+          assert version.replace('.','').replace('-','').isalnum()
           pathlib.Path('/tmp/verified_apk_path').write_text(str(apk))
-          print('Validated signed APK archive from publishing pipeline:',m['versionName'],len(raw),'bytes')
+          pathlib.Path('/tmp/verified_version').write_text(version)
+          pathlib.Path('/tmp/verified_code').write_text(str(m['versionCode']))
+          print('Verified Android update artifact',version,len(raw),'bytes')
           PY
-      - name: Publish downloadable GitHub Release for owner
+      - name: Create private-repo GitHub Release
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
           set -euo pipefail
           SRC="$(cat /tmp/verified_apk_path)"
-          TAG="overmind-zero-v0.5.0-ota.18"
-          cp "$SRC" OVERMIND-ZERO-v0.5.apk
+          VERSION="$(cat /tmp/verified_version)"
+          VERSION_CODE="$(cat /tmp/verified_code)"
+          TAG="overmind-zero-v$VERSION"
+          cp "$SRC" OVERMIND-ZERO.apk
           if gh release view "$TAG" >/dev/null 2>&1; then
-            gh release upload "$TAG" OVERMIND-ZERO-v0.5.apk --clobber
-          else
-            gh release create "$TAG" OVERMIND-ZERO-v0.5.apk --title "OVERMIND ZERO 0.5 — cervello decisionale" --notes "APK firmata originale v0.5.0-ota.18, versionCode 1018. Stesso applicationId e certificato delle versioni OTA. Installare SOPRA la versione precedente senza disinstallarla. Fallback per limite giornaliero Vercel. In alternativa il normale Aggiorna riprenderà quando Vercel pubblicherà il manifest." --target "${{ github.sha }}"
+            echo "Release $TAG already exists: leave immutable signed asset unchanged."
+            exit 0
           fi
+          cat > release-notes.md <<NOTES
+          APK originale di OVERMIND ZERO $VERSION (versionCode $VERSION_CODE).
+          
+          Stesso package Android com.overmind.zero.ota e stessa chiave stabile OTA.
+          Installa SOPRA la versione precedente senza disinstallare: i salvataggi restano.
+          
+          Distribuzione alternativa quando Vercel non ha ancora aggiornato il manifest pubblico.
+          NOTES
+          gh release create "$TAG" OVERMIND-ZERO.apk \
+            --title "OVERMIND ZERO $VERSION" \
+            --notes-file release-notes.md \
+            --target "${{ github.sha }}"
