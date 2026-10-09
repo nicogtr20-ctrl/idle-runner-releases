@@ -59,3 +59,12 @@
 - [ ] Verifica su Galaxy S21 della pagina e dell'apprendimento dopo aggiornamento senza disinstallare
 - [ ] Esperimento che verifichi sul dispositivo se e quando viene davvero accettato un neurone aggiuntivo (nessuna crescita garantita)
 - [ ] Vercel: ripristinare manifest pubblico/OTA quando limite gratuito si libera
+
+## ZERO-007 — apprendimento del corpo deformabile (v0.7)
+- [x] Passare da 10 soli punti motori a 32 punti addizionali sulla membrana senza perdere i pesi appresi.
+- [x] Nuova rete condivisa per estensione radiale e flessione laterale locale; nessun arto preimpostato.
+- [x] Membrana elastica fisica, interazioni con collisioni reali e controllo dei limiti di allungamento.
+- [x] Controllo e salvataggio di 74 nuovi parametri in CERVELLO/ABILITA e CERVELLO/PARAMETRI/MEMBRANA.
+- [x] Test su JVM e Android, release firmata e pubblicata via Vercel 0.7.0-ota.22.
+- [ ] Test manuale su Galaxy S21: si vedono pseudopodi locali utili dopo l'addestramento? Le interazioni cambiano?
+- [ ] Eventuale successiva evoluzione: controllare l'acquisizione di appendici che si piegano e possono afferrare un disco su direzioni nuove, non soltanto allungarsi.
