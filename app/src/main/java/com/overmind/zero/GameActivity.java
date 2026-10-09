@@ -86,7 +86,22 @@ public final class GameActivity extends Activity {
                 invalidate();
             });
         }
+        /** Consume reset requests only after dashboard left the foreground.
+            Scoped keys are removed before reloading live runtime objects. */
+        boolean consumeResetRequest(){
+            String scope=prefs.getString(ResetDomains.REQUEST,"");
+            if(!ResetDomains.valid(scope))return false;
+            SharedPreferences.Editor edit=prefs.edit();
+            if(ResetDomains.ALL.equals(scope))edit.clear();
+            else for(String key:ResetDomains.keys(scope))edit.remove(key);
+            edit.remove(ResetDomains.REQUEST);
+            // Synchronous commit prevents a delayed save from resurrecting
+            // partially cleared state after a destructive user action.
+            if(!edit.commit())throw new IllegalStateException("Reset persistence failed");
+            return true;
+        }
         void load(){
+            consumeResetRequest();
             String initial=prefs.getString("virgin","");
             virgin=decode(initial);
             if(virgin==null){virgin=MotorBrain.virgin(new Random(System.nanoTime()));}
@@ -116,6 +131,8 @@ public final class GameActivity extends Activity {
             decisionBrain.restore(prefs.getString("decision_brain_v05",""));
             sensorMind=new SensorimotorMind();
             sensorMind.restore(prefs.getString("sensorimotor_model_v09",""));
+            sensorMind.diagnostics.restore(
+                prefs.getString("sensorimotor_diagnostics_v091",""));
             reserve=prefs.getFloat("zero_energy_v03",57f);
             elapsedLife=prefs.getFloat("scarcity_elapsed_v08",0);
             scarcity=prefs.getBoolean("scarcity_active_v08",false);
@@ -192,6 +209,7 @@ public final class GameActivity extends Activity {
               .putFloat("max_displacement_v041",biggestDisplacement)
               .putString("decision_brain_v05",decisionBrain.serialize())
               .putString("sensorimotor_model_v09",sensorMind.serialize())
+              .putString("sensorimotor_diagnostics_v091",sensorMind.diagnostics.encode())
               .putString("morph_brain_v07",encode(shapeTrainer.best))
               .putInt("morph_attempts_v07",shapeTrainer.attempts)
               .putInt("morph_accepted_v07",shapeTrainer.accepted)
@@ -207,11 +225,15 @@ public final class GameActivity extends Activity {
               .apply();
         }
         void resume(){
+            // A reset requested from CERVELLO/ANALISI must replace objects in
+            // memory before the next frame can save old weights again.
+            if(prefs.contains(ResetDomains.REQUEST))load();
+            learning=true;
             enabled=true;lastFrame=0;postInvalidateOnAnimation();
             // All new experience comes from the creature's lived state,
             // not an off-screen hand-coded goal-directed trial. Preserve
             // previously learned motor and membrane weights unchanged.
-            sensorMind.setLearning(learning);
+            sensorMind.setLearning(true);
         }
         void suspend(){
             // Stop the training worker while the app is backgrounded without
@@ -408,7 +430,7 @@ public final class GameActivity extends Activity {
                     }
                     // Real temporal observation AFTER collisions, hunger
                     // and any energy actually collected.
-                    sensorMind.setLearning(learning);
+                    sensorMind.setLearning(true);
                     sensorMind.observe(SensorimotorMind.Senses.read(
                         creature,surface,chamber,environment,reserve),slice);
                     phase+=slice;
@@ -630,8 +652,8 @@ public final class GameActivity extends Activity {
             float y=H-168;
             rounded(c,12,y,468,H-12,0xe00d1923,21);
             text(c,"APPRENDIMENTO DA ZERO",25,y+25,13,TEAL,false);
-            text(c,"Percepisce • prova • confronta le conseguenze.",25,y+45,11,0xffacc5ca,false);
-            button(c,19,y+61,153,H-26,learning?"FERMA":"ADDESTRA",TEAL);
+            text(c,"APPRENDIMENTO ON • SEMPRE ATTIVO",25,y+45,11,0xffacc5ca,false);
+            button(c,19,y+61,153,H-26,"ANALISI",TEAL);
             button(c,165,y+61,314,H-26,"TEMPO x"+speed,0xffbfdaec);
             button(c,326,y+61,462,H-26,"CONFRONTA",GOLD);
             text(c,simulationRunning?"ESPERIENZE SENSORIALI "+sensorMind.experiences+
@@ -726,7 +748,11 @@ public final class GameActivity extends Activity {
                 invalidate();return true;
             }
             if(y>=H-108){
-                if(x<157){learning=!learning;sensorMind.setLearning(learning);}
+                if(x<157){
+                    save();
+                    GameActivity.this.startActivity(new android.content.Intent(
+                        GameActivity.this,BrainToolsActivity.class));
+                }
                 else if(x<319){speed=speed==1?5:speed==5?20:1;}
                 else compare();
                 return true;
@@ -741,12 +767,10 @@ public final class GameActivity extends Activity {
                     new android.content.Intent(GameActivity.this,BrainStatsActivity.class));
                 return true;
             }
-            if(y<137&&x<310){
-                if(resetArmed&&resetNotice>0){
-                    learning=false;
-                    prefs.edit().clear().apply();
-                    load();resetArmed=false;resetNotice=0;resume();
-                }else{resetArmed=true;resetNotice=2.4f;}
+            if(y<137&&x<217){
+                save();
+                GameActivity.this.startActivity(new android.content.Intent(
+                    GameActivity.this,BrainToolsActivity.class));
                 return true;
             }
             if(y>234&&y<280&&x>398){
