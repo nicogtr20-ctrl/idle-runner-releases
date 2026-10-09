@@ -65,3 +65,10 @@ Il codice, gli asset e i release APK restano di proprietà e sotto controllo del
 - **Nuova autonomia sensori→azioni→conseguenze:** 26 canali sensoriali, 16 azioni motorie/adesive, 11.664 pesi inizialmente vergini con memoria a lungo termine `sensorimotor_model_v09`. Nessun calcolo di target heading nella vita di ZERO; memoria dei cervelli precedenti conservata. Il pre-addestramento offscreen precedente è messo in pausa.
 - Signed CI superata, manifest GitHub v0.9.0-ota.29 versione 1029. Il manifest pubblico Vercel al controllo è fermo alla 1024; serve Release privata GitHub come fallback finché OTA non riprende.
 - Per studio e limiti leggere `docs/HANDOFF.md`; per installazione puntare alla nuova release una volta creata, senza disinstallare l'app attuale.
+
+## Stato più recente — ZERO-009.1 (2026-10-09)
+- Signed **v0.9.1-ota.32** 1032, GitHub Release privata: https://github.com/nicogtr20-ctrl/idle-runner-releases/releases/tag/overmind-zero-v0.9.1-ota.32 .
+- Nuova pagina ANALISI accessibile dal gioco e dal fondo di CERVELLO, con confronto errori fuori training e reset selettivi (7 sezioni) più reset totale a doppia conferma.
+- Toggle FERMA/ADDESTRA sostituito da ANALISI; apprendimento del modello mondo sempre attivo quando la simulazione gira. Memorie precedenti conservate.
+- Vercel pubblico risultava ancora alla 0.8.1 per deploy stale: non usare AGGIORNA per il 0.9.1 finché non verificato live. Test manuale S21 pendente.
+- Lettura completa in `docs/HANDOFF.md`.

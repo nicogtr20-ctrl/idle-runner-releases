@@ -76,3 +76,10 @@
 - `Morphology.Surface.step(...,gripDrive)` eredita tutti i pesi pre-v0.9; aggiunge una modulazione tattile dell'adesione generata dall'azione del modello, non da un trigger automatico del cancello. Restano obbligatori contatto fisico, hold e due punti distinti.
 - `GameActivity` non calcola più la direzione esatta del target: nessun `decisionBrain.choose(environment,...)` e niente trials offscreen su un target noto. Pesi preesistenti di locomozione/manipolazione/membrana/valori storici restano nel database. Modello nuovo `sensorimotor_model_v09` persistente; vita mortale.
 - Importante: previsione associativa di *un solo passo* + apprendimento TD non equivale a un world model generale capace di ragionare verbalmente «più spazio ora». Va dimostrata la generalizzazione e la capacità fisica sul dispositivo.
+
+## ZERO-009.1 — Persistence and evaluation interfaces
+- `LearningDiagnostics`: bucket heldout ogni quinta transizione reale, escluso dai gradienti forward/value, errore RMSE modello e baseline no-change; serie 48 gruppi, serializzazione separata in `sensorimotor_diagnostics_v091`. Non modificarla indipendentemente dal modello di vita per evitare duplicati di osservazioni.
+- `BrainToolsActivity`: vista nativa Android per il grafico e i comandi reset, con richieste disaccoppiate dal ciclo foreground. Manifest aggiunge activity privata.
+- `ResetDomains`: elenco esplicito e testato di chiavi SharedPreferences non sovrapposte per modello, choice, motor, manipulation, membrane, exploration, room; reset ALL azzera intero profilo, salvaguardando però package e firma Android esterni al profilo.
+- `GameActivity.load/consumeResetRequest`: applica reset atomico prima di ricaricare i parametri dai dati persistenti, poi resetEpisode; preserva altri sottosistemi e obbliga conferma UI. L'apprendimento online rimane sempre attivo.
+- Nota: risultati comparativi “azione policy vs scelta casuale” sono osservazionali; per valutare causalità occorre campionare stessi stati e intervenire sul mondo con gruppi di controllo espliciti.

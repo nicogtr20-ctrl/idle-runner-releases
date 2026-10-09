@@ -109,3 +109,14 @@
 - [ ] Pubblicazione live aggiornata Vercel (manifest risultava 0.8.1).
 - [ ] Test vero Galaxy S21: le azioni apprese avvicinano alla risorsa? La strategia del cancello migliora?
 - [ ] Misurare apprendimento causale con interventi controllati e transizioni su configurazioni mai viste, non soltanto errori ridotti in training.
+
+## ZERO-009.1 — Statistiche nuove e azzeramenti espliciti
+- [x] Rimuovere FERMA/ADDESTRA e rendere sempre attivo l'apprendimento online mentre il mondo simula
+- [x] Pagina ANALISI con grafico errore predittivo heldout (campioni NON allenati) versus baseline persistente
+- [x] Mostrare confronto esplorazioni vs policy con avviso di NON controllabilità della situazione
+- [x] Reset indipendente per 7 sottosistemi e reset totale con doppia conferma, via richiesta consumata a foreground
+- [x] Eliminare reset nascosto che poteva cancellare tutta la memoria senza avviso
+- [x] Android Debug + signed release 0.9.1-ota.32, fallback GitHub verificato per hash
+- [ ] Test manuale su Galaxy S21 (pulsante ANALISI, grafico dopo 25 nuove esperienze, prova reset selettivo su richiesta)
+- [ ] A/B di policy contro casuale a parità di stato: ancora NON implementato
+- [ ] Ripristinare manifest pubblico Vercel alla v0.9.1 quando deployment libero
