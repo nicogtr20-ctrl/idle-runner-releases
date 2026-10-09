@@ -120,3 +120,13 @@
 - [ ] Test manuale su Galaxy S21 (pulsante ANALISI, grafico dopo 25 nuove esperienze, prova reset selettivo su richiesta)
 - [ ] A/B di policy contro casuale a parità di stato: ancora NON implementato
 - [ ] Ripristinare manifest pubblico Vercel alla v0.9.1 quando deployment libero
+
+## ZERO-009.2 — apprendimento nel mondo di gioco
+- [x] Riattivato l'apprendimento di motore, manipolazione e membrana/presa senza usare vecchi trainer con target noto; mutazioni selezionate da esperienze vissute con controllo approssimativo delle condizioni.
+- [x] Memorie precedenti intatte e rollback dei tentativi sfavorevoli; morte mantiene reset fisico senza cancellare reti.
+- [x] Vite più lunghe: fame meno rapida, pericoli rossi attenuati, respawn con energia maggiore.
+- [x] Escludere stimoli ordinari dalla stanza e introdurre unica risorsa speciale +80 con impronta visiva distinta, senza anticipare il valore alla rete.
+- [x] Staging e APK Android firmata 0.9.2-ota.34 via GitHub Actions.
+- [ ] Galaxy S21: verificare se gli attuatori migliorano davvero senza rollout invisibili e se ZERO raggiunge la ricompensa, registrando prove spontanee.
+- [ ] Eseguire comparazioni controllate su stato identico e direzioni/stimoli nuovi per distinguere vera competenza da rumore ambientale.
+- [ ] Verificare la distribuzione OTA Vercel di 1034, o usare GitHub Release privata fino a ripristino.

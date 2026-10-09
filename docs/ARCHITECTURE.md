@@ -83,3 +83,8 @@
 - `ResetDomains`: elenco esplicito e testato di chiavi SharedPreferences non sovrapposte per modello, choice, motor, manipulation, membrane, exploration, room; reset ALL azzera intero profilo, salvaguardando però package e firma Android esterni al profilo.
 - `GameActivity.load/consumeResetRequest`: applica reset atomico prima di ricaricare i parametri dai dati persistenti, poi resetEpisode; preserva altri sottosistemi e obbliga conferma UI. L'apprendimento online rimane sempre attivo.
 - Nota: risultati comparativi “azione policy vs scelta casuale” sono osservazionali; per valutare causalità occorre campionare stessi stati e intervenire sul mondo con gruppi di controllo espliciti.
+
+## ZERO-009.2 — apprendimento fisico durante il gameplay
+- `OnlineBodyLearning` usa soltanto transizioni della stessa simulazione visibile: 8 esperienze con pesi memorizzati, 8 con piccoli pesi mutati, poi confronto correlazionale di premio sensoriale, spostamento e contatti. I criteri di contesto comparano energia, stessa stanza e direzione media; non è equivalente a randomizzazione né esperimento A/B su medesima condizione. I nuovi pesi vengono applicati e persistiti solo dopo accettazione, gli altri rimangono; i tentativi non conclusi si cancellano alla morte/reset.
+- Il modulo `SensorimotorMind` da 11.664 pesi continua a imparare ogni ~0.65 s. Il vecchio `DecisionBrain` rimane memorizzato e continua a ricevere osservazioni storiche, ma non sceglie la direzione attiva.
+- La rarità non aggiunge una categoria semantica al cervello: `UnknownWorld.Entity` ha un effetto fisico nuovo, e `Senses.read` presenta la sua firma con due segnali cromatici esistenti. Totale ingressi sempre 26, nessuna migrazione dei modelli.

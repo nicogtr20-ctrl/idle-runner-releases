@@ -72,3 +72,8 @@ Il codice, gli asset e i release APK restano di proprietà e sotto controllo del
 - Toggle FERMA/ADDESTRA sostituito da ANALISI; apprendimento del modello mondo sempre attivo quando la simulazione gira. Memorie precedenti conservate.
 - Vercel pubblico risultava ancora alla 0.8.1 per deploy stale: non usare AGGIORNA per il 0.9.1 finché non verificato live. Test manuale S21 pendente.
 - Lettura completa in `docs/HANDOFF.md`.
+
+## Ultima versione — ZERO-009.2 (2026-10-09)
+- Firmata `0.9.2-ota.34` (`versionCode=1034`), branch ufficiale `feature/overmind-inapp-updater`, APK in manifest GitHub `updater/public/latest.json`. GitHub Release fallback da verificare, server Vercel pubblico potenzialmente fermo; NON promettere il tasto AGGIORNA senza prova live.
+- Addestramento di corpo, manipolazione e membrana avviene in condizioni realmente vissute (finestre comparative approssimate) anziché tramite i vecchi rollout con obiettivo noto. I vecchi pesi e le memorie restano. Consumo energetico rallentato, danno rosso ridotto, stanza senza stimoli ordinari e risorsa rara viola/oro +80 soltanto all'interno.
+- **Per dettagli aggiornati e limiti sperimentali leggere l'ultima sezione di docs/HANDOFF.md.** Test sul Galaxy S21 ancora richiesto.

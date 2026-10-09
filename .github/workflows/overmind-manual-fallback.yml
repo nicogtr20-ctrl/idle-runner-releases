@@ -1,5 +1,5 @@
 name: OVERMIND verified GitHub fallback releases
-# Publish verified ZERO v0.9.1 signed APK when Vercel public deployment remains stale.
+# Publish verified ZERO v0.9.2 signed APK when Vercel public deployment remains stale.
 on:
   push:
     branches: [main]
