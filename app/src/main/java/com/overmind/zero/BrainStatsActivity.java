@@ -63,6 +63,8 @@ public final class BrainStatsActivity extends Activity {
             maxGateTravel=pref.getFloat("gate_travel_v08",0);
             worldMind=new SensorimotorMind();
             worldMind.restore(pref.getString("sensorimotor_model_v09",""));
+            worldMind.diagnostics.restore(
+                pref.getString("sensorimotor_diagnostics_v091",""));
             decisions=new DecisionBrain(90517L);
             decisions.restore(pref.getString("decision_brain_v05",""));
             choiceStart=decisions.initialSnapshot();
@@ -164,7 +166,8 @@ public final class BrainStatsActivity extends Activity {
             header(c);
             rect(c,0,H-62,480,H,bg,0);
             line(c,H-61);
-            label(c,"‹ TORNA A ZERO",240,H-24,15,cyan,true);
+            label(c,"‹ ZERO",104,H-24,15,cyan,true);
+            label(c,"ANALISI / AZZERA ›",345,H-24,14,gold,true);
             c.restore();
         }
         float hero(Canvas c,String title,String value,String caption,float top){
@@ -188,12 +191,20 @@ public final class BrainStatsActivity extends Activity {
             int total=movementNow.length+handNow.length+choiceNow.length+shapeNow.length+worldMind.parameterCount();
             int original=movementStart.length+handStart.length+DecisionBrain.PARAMS;
             y=hero(c,"POTENZA NEURALE / PARAMETRI",String.valueOf(total),
-                original+" PRECEDENTI  •  +"+(total-original)+" DI ESPERIENZA",y);
+                original+" PARAMETRI STORICI  •  "+(total-original)+
+                " AGGIUNTI DA NUOVE ARCHITETTURE",y);
             y=skill(c,y,"MODELLO DEL MONDO",
                 worldMind.parameterCount()+" pesi",
                 worldMind.experiences+" esperienze reali  •  "+
                 worldMind.decisions+" azioni autonome",
                 Math.min(1f,worldMind.experiences/1000f),cyan);
+            LearningDiagnostics diag=worldMind.diagnostics;
+            y=skill(c,y,"VERIFICA NUOVO MODELLO",
+                diag.heldoutTransitions+" campioni",
+                diag.heldoutTransitions==0?"Apri ANALISI dopo 25 nuove esperienze":
+                "Errore rete: "+String.format(Locale.US,"%.3f",diag.modelError)+
+                "  /  Base: "+String.format(Locale.US,"%.3f",diag.baselineError),
+                Math.min(1f,diag.heldoutTransitions/100f),gold);
             y=skill(c,y,"SCELTA DEGLI STIMOLI",
                 choiceNow.length+" pesi",decisions.updates+" esperienze  •  "+decisions.decisions+" decisioni",
                 Math.min(1f,decisions.updates/500f),cyan);
@@ -318,7 +329,7 @@ public final class BrainStatsActivity extends Activity {
         float contentMax(){
             if(tab==1)return 175+91+58+125+38+current().length*40+52;
             if(tab==2)return 177+129+240+101*5+144+36;
-            return 177+129+101*7+39+147+60;
+            return 177+129+101*8+39+147+60;
         }
         void limitScroll(){
             offset=Math.max(0,Math.min(offset,Math.max(0,contentMax()-(H-70))));
@@ -336,7 +347,15 @@ public final class BrainStatsActivity extends Activity {
                     lastY=sy;return true;
                 case MotionEvent.ACTION_UP:
                     if(dragged)return true;
-                    if(sy>H-66||(sy<96&&sx<122)){finish();return true;}
+                    if(sy<96&&sx<122){finish();return true;}
+                    if(sy>H-66){
+                        if(sx<194)finish();
+                        else {
+                            startActivity(new android.content.Intent(
+                                BrainStatsActivity.this,BrainToolsActivity.class));
+                        }
+                        return true;
+                    }
                     if(sy>=105&&sy<=155){
                         tab=Math.max(0,Math.min(2,(int)((sx-16)/151)));
                         offset=0;invalidate();return true;

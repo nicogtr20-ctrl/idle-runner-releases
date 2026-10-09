@@ -1,0 +1,58 @@
+name: OVERMIND v0.9.1 diagnostics and independent memory resets
+on:
+  push:
+    branches: [feature/overmind-v091-diagnostics-safe-resets]
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 35
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with: {distribution: temurin, java-version: '17'}
+      - uses: gradle/actions/setup-gradle@v4
+        with: {gradle-version: '8.11.1'}
+      - name: Test embodied learner and out-of-training evaluation
+        run: |
+          mkdir -p /tmp/zero091
+          javac -d /tmp/zero091 app/src/main/java/com/overmind/zero/MotorBrain.java app/src/main/java/com/overmind/zero/UnknownWorld.java app/src/main/java/com/overmind/zero/ContactLearning.java app/src/main/java/com/overmind/zero/DecisionBrain.java app/src/main/java/com/overmind/zero/Morphology.java app/src/main/java/com/overmind/zero/ScarcityLab.java app/src/main/java/com/overmind/zero/LearningDiagnostics.java app/src/main/java/com/overmind/zero/ResetDomains.java app/src/main/java/com/overmind/zero/SensorimotorMind.java
+          java -cp /tmp/zero091 com.overmind.zero.MotorBrain
+          java -cp /tmp/zero091 com.overmind.zero.UnknownWorld
+          java -cp /tmp/zero091 com.overmind.zero.ContactLearning
+          java -cp /tmp/zero091 com.overmind.zero.DecisionBrain
+          java -cp /tmp/zero091 com.overmind.zero.Morphology
+          java -cp /tmp/zero091 com.overmind.zero.ScarcityLab
+          java -cp /tmp/zero091 com.overmind.zero.SensorimotorMind
+          java -cp /tmp/zero091 com.overmind.zero.LearningDiagnostics
+          java -cp /tmp/zero091 com.overmind.zero.ResetDomains
+      - name: Verify learning always on and reset safety
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          g=Path('app/src/main/java/com/overmind/zero/GameActivity.java').read_text()
+          t=Path('app/src/main/java/com/overmind/zero/BrainToolsActivity.java').read_text()
+          s=Path('app/src/main/java/com/overmind/zero/BrainStatsActivity.java').read_text()
+          m=Path('app/src/main/java/com/overmind/zero/SensorimotorMind.java').read_text()
+          manif=Path('app/src/main/AndroidManifest.xml').read_text()
+          assert 'learning=!learning' not in g
+          assert 'button(c,19,y+61,153,H-26,"ANALISI",TEAL)' in g
+          assert 'sensorMind.setLearning(true)' in g
+          assert 'sensorimotor_diagnostics_v091' in g
+          assert 'consumeResetRequest()' in g
+          assert 'if(prefs.contains(ResetDomains.REQUEST))load()' in g
+          assert 'edit.commit()' in g and 'edit.clear()' in g
+          assert 'AlertDialog.Builder' in t and 'confirmReset(code,name,detail,true,true)' in t
+          assert 'putString(ResetDomains.REQUEST,code).commit()' in t
+          assert 'FLAG_ACTIVITY_CLEAR_TOP' in t
+          assert 'BrainToolsActivity.class' in s
+          assert 'com.overmind.zero.BrainToolsActivity' in manif
+          assert 'boolean holdout=diagnostics.shouldHoldout()' in m
+          assert m.count('learning&&!holdout')==2
+          assert 'diagnostics.record(error,(float)Math.sqrt(naiveErr/S)' in m
+          print('ZERO-009.1 safe selective reset, permanent learning, held-out metrics, UI navigation passed')
+          PY
+      - name: Build Android APK
+        run: gradle --no-daemon assembleDebug
