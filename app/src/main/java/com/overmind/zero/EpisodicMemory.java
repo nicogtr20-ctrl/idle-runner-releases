@@ -364,7 +364,7 @@ public final class EpisodicMemory {
         EpisodicMemory legacy=new EpisodicMemory();
         String oldFormat=snapshot.replaceFirst("em2;", "em1;");
         String[] oldGroups=oldFormat.split(";",-1);
-        String[] head=oldGroups[7].split(",",-1);
+        String[] head=oldGroups[8].split(",",-1);
         StringBuilder oldEvent=new StringBuilder(head[0]).append(",").append(head[3]);
         // Old format allowed at most 9 actions; use newest nine.
         int steps=Integer.parseInt(head[3]),first=Math.max(0,steps-9);
