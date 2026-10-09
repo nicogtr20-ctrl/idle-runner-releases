@@ -164,7 +164,13 @@
 - APK: `/apk/overmind-zero-1036-c44377b63385.apk` (87.864 byte).
 - NETTO, VIA, nuove zone e spesa energetica misurata; scoring motorio anti-oscillazione basato su spostamento netto ed effetti fisici, mantenendo la libertà di rotazione. Pulsante PROVE/ANALISI migliorati; statistiche trial per ogni rete isolate da reset selettivi. Stessi salvataggi/chiave OTA.
 
-## OTA 0.9.5-ota.39 — 2026-10-09T23:19:06.959857+00:00
-- Pacchetto Android firmato pubblicato su Vercel (codice 1039).
-- SHA-256: `86caeb85b6eba94aa657d6f19ac7dff5dd0e4e8d2974bf71e8c6c12a3201c211`.
-- APK: `/apk/overmind-zero-1039-86caeb85b6eb.apk`.
+
+## v0.9.5 — memoria episodica e conseguenze (10 ottobre 2026)
+- Nuovo modulo `EpisodicMemory.java` (max 18 ricordi, 9 azioni + sensi, snapshot dei 3 attuatori) costruito esclusivamente da eventi vissuti: spostamento effettivo di oggetti/porta o energia reale.
+- Recupero contestuale con bias morbido, replay dei pesi fisici soltanto per azione realmente selezionata, fallback se mancato progresso e durata oltre morte.
+- Rinforzo da variazione fisica dell'ambiente rilevata DOPO la simulazione; il vecchio motore/sensori e 11.664 pesi restano compatibili. Trial mutazione motoria sospeso durante l'esecuzione ricordata per non falsare accettazioni.
+- Nuovo archivio preferenze `episodic_memory_v095`, schermata ANALISI e reset selettivo MEMORIA EPISODICA.
+- **Non vi è prova in-game di porta attraversata o di controllo causale:** primo test su Galaxy S21 ancora da realizzare dopo release. Per dettagli vedere `docs/EXPERIMENT_0095.md`.
+
+## Pubblicazione verificata v0.9.5-ota.39
+La compilazione Android firmata `38003676123` è verde: versionCode `1039`, SHA-256 `86caeb85b6eba94aa657d6f19ac7dff5dd0e4e8d2974bf71e8c6c12a3201c211`, 92.692 byte. Test in-game su Galaxy S21 ancora pendente, nessun reset richiesto.
