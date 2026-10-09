@@ -236,10 +236,39 @@ public final class Morphology {
         private final Random rnd=new Random(7192026);
         public volatile float[] best;
         public volatile int attempts,accepted;
+        public volatile int gateAttempts,gateAccepted;
         public volatile float bestFitness=Float.NaN;
         private float mutation=.26f;
         public Trainer(float[] loaded){
             best=loaded==null?virgin(new Random(14790)):loaded.clone();
+        }
+        /**
+         * Separate curriculum for genuinely constrained manipulation.
+         * The baseline and candidate both face the SAME closed chamber.
+         * A candidate must improve actual measured door displacement,
+         * bilateral contact or food access, and remain stable on holdout.
+         */
+        public boolean attemptGate(float[] motor,float[] hand){
+            float[] baseline=best;
+            float baselineScore=ScarcityLab.trainingFitness(motor,hand,baseline);
+            float[] candidate=baseline.clone();
+            int changed=2+rnd.nextInt(9);
+            for(int i=0;i<changed;i++){
+                int k=rnd.nextInt(candidate.length);
+                candidate[k]=clamp(candidate[k]+(float)rnd.nextGaussian()*mutation,-3.2f,3.2f);
+            }
+            float score=ScarcityLab.trainingFitness(motor,hand,candidate);
+            gateAttempts++;
+            attempts++;
+            if(!Float.isFinite(score)||score<=baselineScore+.04f)return false;
+            float holdOld=ScarcityLab.heldoutFitness(motor,hand,baseline);
+            float holdNew=ScarcityLab.heldoutFitness(motor,hand,candidate);
+            if(holdNew<holdOld-.12f)return false;
+            best=candidate;
+            gateAccepted++;
+            accepted++;
+            bestFitness=score;
+            return true;
         }
         public boolean attempt(float[] motor,float[] hand){
             float[] base=best;
@@ -294,6 +323,9 @@ public final class Morphology {
         float baseline=fitness(motor,hand,blank);
         Trainer trainer=new Trainer(blank);
         for(int i=0;i<16;i++)trainer.attempt(motor,hand);
+        trainer.attemptGate(motor,hand);
+        if(trainer.gateAttempts!=1)
+            throw new IllegalStateException("Gate curriculum never ran");
         float learnt=fitness(motor,hand,trainer.best);
         if(!Float.isFinite(baseline)||learnt+1e-3f<baseline||trainer.best.length!=PARAMS)
             throw new IllegalStateException("Morphology trainer regression");
