@@ -1,6 +1,6 @@
 # OVERMIND: ZERO — Whitepaper di progetto
 
-**Versione:** 0.9.5 (documento vivo) · **Data:** 10 ottobre 2026 · **Stato:** prototipo di ricerca Android
+**Versione:** 0.9.6 (documento vivo) · **Data:** 10 ottobre 2026 · **Stato:** prototipo di ricerca Android
 
 ## Sintesi
 OVERMIND: ZERO è un esperimento di *artificial life* trasformato gradualmente in gioco mobile 2D. Il protagonista è una piccola massa scura dall'aspetto di ferrofluido/organismo simbionte. Il giocatore **non** controlla ZERO né le parla; è un osservatore invisibile che può modificare la simulazione, finanziare interventi con esperienza guadagnata e osservare come l'entità si comporta ed evolve.
@@ -95,3 +95,7 @@ Un recupero avviene solo sotto sufficiente somiglianza sensoriale; un bias +0,72
 
 ### Release ZERO 0.9.5-ota.39 — 2026-10-10
 APK firmata, versionCode 1039, 92.692 byte; SHA-256 `86caeb85b6eba94aa657d6f19ac7dff5dd0e4e8d2974bf71e8c6c12a3201c211`; CI firmata `38003676123` verde, file `updater/public/latest.json` aggiornato. Il test manuale sul Samsung Galaxy S21 resta da fare. Non attribuire retroattivamente le 111U di apertura della v0.9.4 alla nuova memoria.
+
+
+## Ipotesi di apprendimento autobiografico con valenza — ZERO v0.9.6
+Le emozioni umane e la comprensione causale **non** sono implementate. La creatura costruisce una traccia neurale e un archivio di episodi (fino a 36 azioni su 24 eventi) conservando azioni, 26 sensazioni e parametri motorii. Solo conseguenze ambientali realmente misurate possono attribuire un segno favorevole o dannoso: contatto con risorsa produce delta energia; uno spostamento fisico verificato può rinforzare. Non è programmata alcuna categoria semantica del colore. Un ricordo positivo corrispondente può influenzare l'azione e il riuso temporaneo dei controllori; un negativo può ridurre la preferenza per l'azione che ha preceduto l'effetto nocivo. Ricordi confermati vengono consolidati invece di essere eliminati per anzianità. Il risultato atteso (preferire risorse, evitare pericoli, ricordare una tecnica) è **ipotesi da verificare**, non capacità dimostrata. Limiti: matching percettivo ambiguo, segmentazione approssimata, episodi oltre 36 step troncati, premio euristico, nessun planner multistep verificato. Protocollo e risultati: `docs/EXPERIMENT_0096.md`.
