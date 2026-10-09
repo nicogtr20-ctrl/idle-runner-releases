@@ -30,6 +30,8 @@ public final class BrainStatsActivity extends Activity {
                   white=0xffe5f8f5,purple=0xffb2a6ee;
         final float[] movementStart,movementNow,handStart,handNow,shapeStart,shapeNow;
         final int morphAttempts,morphAccepted;
+        final int gateTests,gateLearned,grips,solved,energyEaten;
+        final float maxGateTravel;
         final float[] choiceStart,choiceNow;
         final DecisionBrain decisions;
         final int motorAttempts,motorAccepted,handAttempts,handAccepted;
@@ -47,6 +49,12 @@ public final class BrainStatsActivity extends Activity {
             shapeNow=parse(pref.getString("morph_brain_v07",""),Morphology.PARAMS);
             morphAttempts=pref.getInt("morph_attempts_v07",0);
             morphAccepted=pref.getInt("morph_accepted_v07",0);
+            gateTests=pref.getInt("morph_gate_attempts_v08",0);
+            gateLearned=pref.getInt("morph_gate_success_v08",0);
+            grips=pref.getInt("grip_events_v08",0);
+            solved=pref.getInt("room_success_v08",0);
+            energyEaten=pref.getInt("finite_energy_eaten_v08",0);
+            maxGateTravel=pref.getFloat("gate_travel_v08",0);
             decisions=new DecisionBrain(90517L);
             decisions.restore(pref.getString("decision_brain_v05",""));
             choiceStart=decisions.initialSnapshot();
@@ -186,6 +194,10 @@ public final class BrainStatsActivity extends Activity {
                 shapeNow.length+" pesi",Morphology.POINTS+" punti fisici  •  "+
                     morphAttempts+" esperimenti  •  "+morphAccepted+" miglioramenti",
                 Math.min(1f,morphAccepted/50f),purple);
+            y=skill(c,y,"PROVA STANZA: PRESA BILATERALE",
+                solved+" stanze",grips+" prese  •  "+(int)maxGateTravel+
+                    " U porta  •  "+energyEaten+" energie consumate",
+                Math.min(1f,solved/5f),gold);
             y=skill(c,y,"ESPLORAZIONE",
                 ""+decisions.explorations,decisions.abandoned+" tentativi interrotti  •  "+contacts+" contatti",
                 Math.min(1f,decisions.explorations/150f),cyan);
@@ -280,6 +292,9 @@ public final class BrainStatsActivity extends Activity {
                 morphAccepted+" evoluzioni",Morphology.POINTS+
                     " punti • "+Morphology.PARAMS+" pesi • nessun arto predefinito",
                 Math.min(1f,morphAccepted/50f),purple);
+            y=skill(c,y,"ADDESTRAMENTO PRESA",
+                gateTests+" prove",gateLearned+" varianti accettate su camera fisica",
+                gateTests==0?0:(float)gateLearned/gateTests,gold);
             rect(c,17,y,463,y+144,panel,16);
             label(c,"REGOLA DI EVOLUZIONE",29,y+29,14,gold,false);
             label(c,"Quando l'errore resta alto, ZERO prova",29,y+56,12,white,false);
@@ -289,8 +304,8 @@ public final class BrainStatsActivity extends Activity {
         }
         float contentMax(){
             if(tab==1)return 175+91+58+125+38+current().length*40+52;
-            if(tab==2)return 177+129+240+101*4+144+36;
-            return 177+129+101*6+39+147+60;
+            if(tab==2)return 177+129+240+101*5+144+36;
+            return 177+129+101*7+39+147+60;
         }
         void limitScroll(){
             offset=Math.max(0,Math.min(offset,Math.max(0,contentMax()-(H-70))));
