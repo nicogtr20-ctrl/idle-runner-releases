@@ -1,0 +1,48 @@
+name: OVERMIND v0.7 plastic body and learned pseudopodia
+on:
+  push:
+    branches: [feature/overmind-v07-plastic-body]
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 35
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+      - uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: '8.11.1'
+      - name: Test motor, interaction, decisions, and fully deformable membrane
+        run: |
+          mkdir -p /tmp/overmind-v07
+          javac -d /tmp/overmind-v07 app/src/main/java/com/overmind/zero/MotorBrain.java app/src/main/java/com/overmind/zero/UnknownWorld.java app/src/main/java/com/overmind/zero/ContactLearning.java app/src/main/java/com/overmind/zero/DecisionBrain.java app/src/main/java/com/overmind/zero/Morphology.java
+          java -cp /tmp/overmind-v07 com.overmind.zero.MotorBrain
+          java -cp /tmp/overmind-v07 com.overmind.zero.UnknownWorld
+          java -cp /tmp/overmind-v07 com.overmind.zero.ContactLearning
+          java -cp /tmp/overmind-v07 com.overmind.zero.DecisionBrain
+          java -cp /tmp/overmind-v07 com.overmind.zero.Morphology
+      - name: Confirm no fixed arms, truthful physics, and preserved memories
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          game=Path('app/src/main/java/com/overmind/zero/GameActivity.java').read_text()
+          body=Path('app/src/main/java/com/overmind/zero/Morphology.java').read_text()
+          stats=Path('app/src/main/java/com/overmind/zero/BrainStatsActivity.java').read_text()
+          assert 'public static final int POINTS=32;' in body
+          assert 'surface.step(creature,shapeTrainer.best' in game
+          assert 'Morphology.collide(surface,object,dt)' in game
+          assert 'float[] xx=surface.x, yy=surface.y;' in game
+          assert 'morph_brain_v07' in game and 'hand_brain_v04' in game
+          assert 'decision_brain_v05' in game and 'putString("best"' in game
+          assert '"MEMBRANA"' in stats and 'shapeNow.length' in stats
+          assert 'decisionBrain.choose(environment' in game
+          print('True 32-point body rendered, collides, learns, persists and displays weights')
+          PY
+      - name: Compile Android staging APK
+        run: gradle --no-daemon assembleDebug

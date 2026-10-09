@@ -32,6 +32,7 @@ public final class GameActivity extends Activity {
         final float W=480f;
         MotorBrain.Trainer trainer;
         ContactLearning.Trainer handTrainer;
+        Morphology.Trainer shapeTrainer;
         int pushes=0,physicalContacts=0;
         float biggestDisplacement=0;
         float recentDisplacement=0;
@@ -49,6 +50,7 @@ public final class GameActivity extends Activity {
         String lastEvent="ZERO NON CONOSCE QUESTO MONDO";
         float eventTime=7;
         MotorBrain.Body creature=new MotorBrain.Body();
+        Morphology.Surface surface=new Morphology.Surface(creature);
         float[] virgin;
         volatile boolean learning=true,enabled=true;
         Thread worker;
@@ -91,6 +93,9 @@ public final class GameActivity extends Activity {
             handTrainer=new ContactLearning.Trainer(savedHand);
             handTrainer.attempts=prefs.getInt("hand_attempts_v04",0);
             handTrainer.accepted=prefs.getInt("hand_successes_v04",0);
+            shapeTrainer=new Morphology.Trainer(decodeShape(prefs.getString("morph_brain_v07","")));
+            shapeTrainer.attempts=prefs.getInt("morph_attempts_v07",0);
+            shapeTrainer.accepted=prefs.getInt("morph_accepted_v07",0);
             // Do not reuse v0.4's 'physical_pushes' counter: it counted
             // collisions, not confirmed object displacement.
             pushes=prefs.getInt("objects_displaced_v041",0);
@@ -131,6 +136,19 @@ public final class GameActivity extends Activity {
                 return w;
             }catch(Exception ex){return null;}
         }
+        float[] decodeShape(String s){
+            if(s==null||s.length()==0)return null;
+            String[] arr=s.split(",");
+            if(arr.length!=Morphology.PARAMS)return null;
+            float[] out=new float[Morphology.PARAMS];
+            try {
+                for(int i=0;i<out.length;i++){
+                    out[i]=Float.parseFloat(arr[i]);
+                    if(!Float.isFinite(out[i])||Math.abs(out[i])>5)return null;
+                }
+                return out;
+            }catch(Exception e){return null;}
+        }
         String encode(float[] values){
             StringBuilder b=new StringBuilder();
             for(int i=0;i<values.length;i++){
@@ -155,6 +173,9 @@ public final class GameActivity extends Activity {
               .putInt("collisions_v041",physicalContacts)
               .putFloat("max_displacement_v041",biggestDisplacement)
               .putString("decision_brain_v05",decisionBrain.serialize())
+              .putString("morph_brain_v07",encode(shapeTrainer.best))
+              .putInt("morph_attempts_v07",shapeTrainer.attempts)
+              .putInt("morph_accepted_v07",shapeTrainer.accepted)
               .apply();
         }
         void resume(){
@@ -168,9 +189,15 @@ public final class GameActivity extends Activity {
                             // Preserve the motor already learned in earlier
                             // versions; train extra manipulation muscles on
                             // measured physical outcomes, not scripted impulses.
-                            if(saved%5==0)handTrainer.attempt(trainer.best);
+                            // Shape trials run on copies of the same body and
+                            // collision physics used onscreen. Prioritize them
+                            // without discarding existing motor learning.
+                            if(saved%7==0)
+                                shapeTrainer.attempt(trainer.best,handTrainer.best);
+                            else if(saved%5==0)
+                                handTrainer.attempt(trainer.best);
                             else trainer.attempt();
-                            if(++saved%55==0)save();
+                            if(++saved%35==0)save();
                             Thread.sleep(12);
                         }catch(Exception e){
                             learning=false;
@@ -189,7 +216,8 @@ public final class GameActivity extends Activity {
         }
         void resetEpisode(){
             // Only initial boot or actual simulated death restarts the body.
-            creature.reset();episode++;phase=0;trailCount=0;clock=0;
+            creature.reset();surface.reset(creature);
+            episode++;phase=0;trailCount=0;clock=0;
             environment=UnknownWorld.newHabitat(episode,creature.cx,creature.cy);
             chosenObject=null;decisionBrain.abandon();
             goalTimer=0;contactsThisLife=0;worldTime=0;
@@ -237,7 +265,8 @@ public final class GameActivity extends Activity {
             // are consequences of its simulated physical movement.
             for(UnknownWorld.Entity object:environment){
                 if(object.isMovable()){
-                    float impulse=ContactLearning.collide(creature,object,dt);
+                    float impulse=Morphology.collide(surface,object,dt)
+                        +ContactLearning.collide(creature,object,dt);
                     if(impulse>.65f){
                         object.everCollided=true;
                         if(object.contactCooldown<=0){
@@ -273,6 +302,10 @@ public final class GameActivity extends Activity {
                 float nearest=dist;
                 for(int k=0;k<MotorBrain.N;k++){
                     float d=(float)Math.hypot(object.x-creature.x[k],object.y-creature.y[k]);
+                    if(d<nearest)nearest=d;
+                }
+                for(int k=0;k<Morphology.POINTS;k++){
+                    float d=(float)Math.hypot(object.x-surface.x[k],object.y-surface.y[k]);
                     if(d<nearest)nearest=d;
                 }
                 if(nearest<18+object.radius){
@@ -316,6 +349,11 @@ public final class GameActivity extends Activity {
                         (float)Math.sin(heading),slice,hand,
                         chosenObject!=null?chosenObject.x:0,
                         chosenObject!=null?chosenObject.y:0);
+                    // No preset appendages: learned local actuation of each
+                    // mass in the continuous deformable surface.
+                    surface.step(creature,shapeTrainer.best,
+                        chosenObject!=null?chosenObject.x:creature.cx,
+                        chosenObject!=null?chosenObject.y:creature.cy,slice);
                     resolveObjects(slice);
                     phase+=slice;
                     if(phase>=13f){
@@ -432,13 +470,13 @@ public final class GameActivity extends Activity {
             c.scale(2.3f,2.3f);
             // Catmull-like quadratic smoothing through the simulation's actual
             // perimeter masses; NOT a fixed spider silhouette.
-            float[] xx=creature.x, yy=creature.y;
+            float[] xx=surface.x, yy=surface.y;
             path.reset();
-            float a0=(xx[MotorBrain.N-1]+xx[0])*.5f;
-            float b0=(yy[MotorBrain.N-1]+yy[0])*.5f;
+            float a0=(xx[Morphology.POINTS-1]+xx[0])*.5f;
+            float b0=(yy[Morphology.POINTS-1]+yy[0])*.5f;
             path.moveTo(a0,b0);
-            for(int i=0;i<MotorBrain.N;i++){
-                int j=(i+1)%MotorBrain.N;
+            for(int i=0;i<Morphology.POINTS;i++){
+                int j=(i+1)%Morphology.POINTS;
                 path.quadTo(xx[i],yy[i],(xx[i]+xx[j])*.5f,(yy[i]+yy[j])*.5f);
             }
             path.close();
@@ -452,17 +490,17 @@ public final class GameActivity extends Activity {
             paint.setColor(0xaa55a49b);paint.setStyle(Paint.Style.STROKE);paint.setStrokeWidth(.75f);
             c.drawPath(path,paint);paint.setStyle(Paint.Style.FILL);
             // Metallic ferrofluid glints react to local strain and real actuation.
-            for(int i=0;i<MotorBrain.N;i++){
+            for(int i=0;i<Morphology.POINTS;i++){
                 float dx=xx[i]-creature.cx,dy=yy[i]-creature.cy;
                 float r=(float)Math.hypot(dx,dy);
-                float a=creature.act[i];
-                float glowRadius=.8f+Math.abs(a)*1.4f;
+                float stretch=surface.extension[i];
+                float glowRadius=.55f+Math.min(2.5f,stretch*.035f);
                 if(i%2==0){
                     paint.setColor(0x8867f6d5);
-                    c.drawCircle(xx[i]-dx*.11f,yy[i]-dy*.11f,glowRadius,paint);
+                    c.drawCircle(xx[i]-dx*.04f,yy[i]-dy*.04f,glowRadius,paint);
                 }
-                if(r>33){
-                    paint.setColor(0x4c8df5e6);c.drawCircle(xx[i],yy[i],1.4f,paint);
+                if(r>48){
+                    paint.setColor(0x8c97f5dc);c.drawCircle(xx[i],yy[i],1.65f,paint);
                 }
             }
             paint.setColor(0x889de5da);
@@ -477,12 +515,12 @@ public final class GameActivity extends Activity {
             rounded(c,12,12,468,145,0xeb0a1420,20);
             rounded(c,27,28,31,55,TEAL,2);
             text(c,"O V E R M I N D",43,39,14,TEAL,false);
-            text(c,"ZERO / ESPERIMENTO 005",26,72,21,0xffe9faf6,false);
+            text(c,"ZERO / ESPERIMENTO 006",26,72,21,0xffe9faf6,false);
             rounded(c,339,104,459,138,0xff20444a,11);
             text(c,"AGGIORNA",399,127,12,TEAL,true);
             rounded(c,217,104,333,138,0xff283b58,11);
             text(c,"CERVELLO",275,127,12,0xffd2c4fc,true);
-            text(c,"SCELTE NEURALI • ESPERIENZA DIRETTA",27,99,11,MUTED,false);
+            text(c,"CORPO PLASTICO • PSEUDOPODI APPRESI",27,99,11,MUTED,false);
             text(c,"VERSIONE "+installedVersion+"  •  OTA",27,120,10,0xff708d9d,false);
             text(c,"TENTATIVI",377,34,11,MUTED,false);
             text(c,String.valueOf(trainer.attempts),380,71,22,GOLD,false);
@@ -493,7 +531,7 @@ public final class GameActivity extends Activity {
             float y=H-168;
             rounded(c,12,y,468,H-12,0xe00d1923,21);
             text(c,"APPRENDIMENTO DA ZERO",25,y+25,13,TEAL,false);
-            text(c,"ZERO apprende anche quali stimoli investigare.",25,y+45,11,0xffacc5ca,false);
+            text(c,"32 punti liberi • nessun braccio predefinito.",25,y+45,11,0xffacc5ca,false);
             button(c,19,y+61,153,H-26,learning?"FERMA":"ADDESTRA",TEAL);
             button(c,165,y+61,314,H-26,"TEMPO x"+speed,0xffbfdaec);
             button(c,326,y+61,462,H-26,"CONFRONTA",GOLD);
@@ -513,6 +551,9 @@ public final class GameActivity extends Activity {
                     +"  •  PREVISIONE "+format(decisionBrain.lastPrediction),
                     25,398,10,0xffaac3cb,false);
             }
+            text(c,"MEMBRANA "+Morphology.POINTS+" PUNTI  •  ALLUNGAMENTO "+
+                  (int)surface.peakExtension+" U  •  TEST "+shapeTrainer.attempts,
+                  25,421,11,GOLD,false);
             if(uiTime<updaterStatusUntil&&updaterStatus.length()>0){
                 rounded(c,13,338,467,387,0xef1f3944,13);
                 text(c,updaterStatus.length()>52?updaterStatus.substring(0,52):updaterStatus,240,368,11,0xffd5fff4,true);

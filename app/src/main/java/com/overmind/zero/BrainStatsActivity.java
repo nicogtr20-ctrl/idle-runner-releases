@@ -28,7 +28,8 @@ public final class BrainStatsActivity extends Activity {
         final int bg=0xff08101b,panel=0xff112330,stroke=0xff24414a,
                   cyan=0xff7cf5df,gold=0xfff0c077,muted=0xff91adb6,
                   white=0xffe5f8f5,purple=0xffb2a6ee;
-        final float[] movementStart,movementNow,handStart,handNow;
+        final float[] movementStart,movementNow,handStart,handNow,shapeStart,shapeNow;
+        final int morphAttempts,morphAccepted;
         final float[] choiceStart,choiceNow;
         final DecisionBrain decisions;
         final int motorAttempts,motorAccepted,handAttempts,handAccepted;
@@ -42,6 +43,10 @@ public final class BrainStatsActivity extends Activity {
             movementNow=parse(pref.getString("best",""),MotorBrain.PARAMS);
             handNow=parse(pref.getString("hand_brain_v04",""),ContactLearning.PARAMS);
             handStart=new float[ContactLearning.PARAMS];
+            shapeStart=Morphology.virgin(new Random(14790));
+            shapeNow=parse(pref.getString("morph_brain_v07",""),Morphology.PARAMS);
+            morphAttempts=pref.getInt("morph_attempts_v07",0);
+            morphAccepted=pref.getInt("morph_accepted_v07",0);
             decisions=new DecisionBrain(90517L);
             decisions.restore(pref.getString("decision_brain_v05",""));
             choiceStart=decisions.initialSnapshot();
@@ -96,9 +101,18 @@ public final class BrainStatsActivity extends Activity {
         }
         String val(float f){return String.format(Locale.US,"%+.3f",f);}
         String score(float f){return String.format(Locale.US,"%+.1f",f);}
-        float[] originals(){return brainType==0?choiceStart:brainType==1?movementStart:handStart;}
-        float[] current(){return brainType==0?choiceNow:brainType==1?movementNow:handNow;}
-        String kind(){return brainType==0?"DECISIONI":brainType==1?"MOVIMENTO":"MANIPOLAZIONE";}
+        float[] originals(){
+            return brainType==0?choiceStart:brainType==1?movementStart:
+                    brainType==2?handStart:shapeStart;
+        }
+        float[] current(){
+            return brainType==0?choiceNow:brainType==1?movementNow:
+                    brainType==2?handNow:shapeNow;
+        }
+        String kind(){
+            return brainType==0?"DECISIONI":brainType==1?"MOVIMENTO":
+                    brainType==2?"MANIPOLAZIONE":"MEMBRANA";
+        }
         float drift(float[] a,float[] b){
             float sum=0;for(int i=0;i<b.length;i++)sum+=Math.abs(b[i]-a[i]);
             return sum/Math.max(1,b.length);
@@ -155,10 +169,10 @@ public final class BrainStatsActivity extends Activity {
         }
         void drawSkills(Canvas c){
             float y=177;
-            int total=movementNow.length+handNow.length+choiceNow.length;
+            int total=movementNow.length+handNow.length+choiceNow.length+shapeNow.length;
             int original=movementStart.length+handStart.length+DecisionBrain.PARAMS;
             y=hero(c,"POTENZA NEURALE / PARAMETRI",String.valueOf(total),
-                original+" ALLA NASCITA  •  +"+(total-original)+" NUOVI",y);
+                original+" PRIMA DELLA MEMBRANA  •  +"+(total-original)+" NUOVI",y);
             y=skill(c,y,"SCELTA DEGLI STIMOLI",
                 choiceNow.length+" pesi",decisions.updates+" esperienze  •  "+decisions.decisions+" decisioni",
                 Math.min(1f,decisions.updates/500f),cyan);
@@ -168,6 +182,10 @@ public final class BrainStatsActivity extends Activity {
             y=skill(c,y,"MANIPOLAZIONE",
                 handNow.length+" pesi",pushed+" dischi spostati  •  "+collisions+" urti",
                 Math.min(1f,pushed/100f),gold);
+            y=skill(c,y,"MEMBRANA PLASTICA",
+                shapeNow.length+" pesi",Morphology.POINTS+" punti fisici  •  "+
+                    morphAttempts+" esperimenti  •  "+morphAccepted+" miglioramenti",
+                Math.min(1f,morphAccepted/50f),purple);
             y=skill(c,y,"ESPLORAZIONE",
                 ""+decisions.explorations,decisions.abandoned+" tentativi interrotti  •  "+contacts+" contatti",
                 Math.min(1f,decisions.explorations/150f),cyan);
@@ -188,11 +206,11 @@ public final class BrainStatsActivity extends Activity {
             label(c,"RETI NEURALI / PESI VERI",29,y+24,15,cyan,false);
             label(c,"Valore originale  →  peso appreso",29,y+51,12,muted,false);
             y+=91;
-            String[] names={"SCELTA","CORPO","MANIP."};
-            for(int i=0;i<3;i++){
-                float x=17+i*150;
-                rect(c,x,y,x+144,y+43,brainType==i?0xff27615b:0xff1b3440,12);
-                label(c,names[i],x+72,y+27,12,brainType==i?cyan:muted,true);
+            String[] names={"SCELTA","MOTO","OGGETTI","MEMBRANA"};
+            for(int i=0;i<4;i++){
+                float x=17+i*112;
+                rect(c,x,y,x+107,y+43,brainType==i?0xff27615b:0xff1b3440,11);
+                label(c,names[i],x+53,y+27,10,brainType==i?cyan:muted,true);
             }
             y+=58;
             float[] a=originals(),b=current();
@@ -258,6 +276,10 @@ public final class BrainStatsActivity extends Activity {
                 String.format(Locale.US,"%.3f",decisions.averageError),
                 "Errore recente: più basso è generalmente meglio",
                 1-Math.min(1,decisions.averageError/2),purple);
+            y=skill(c,y,"MORFOLOGIA APPRESA",
+                morphAccepted+" evoluzioni",Morphology.POINTS+
+                    " punti • "+Morphology.PARAMS+" pesi • nessun arto predefinito",
+                Math.min(1f,morphAccepted/50f),purple);
             rect(c,17,y,463,y+144,panel,16);
             label(c,"REGOLA DI EVOLUZIONE",29,y+29,14,gold,false);
             label(c,"Quando l'errore resta alto, ZERO prova",29,y+56,12,white,false);
@@ -267,8 +289,8 @@ public final class BrainStatsActivity extends Activity {
         }
         float contentMax(){
             if(tab==1)return 175+91+58+125+38+current().length*40+52;
-            if(tab==2)return 177+129+240+101*3+144+36;
-            return 177+129+101*5+39+147+60;
+            if(tab==2)return 177+129+240+101*4+144+36;
+            return 177+129+101*6+39+147+60;
         }
         void limitScroll(){
             offset=Math.max(0,Math.min(offset,Math.max(0,contentMax()-(H-70))));
@@ -292,7 +314,7 @@ public final class BrainStatsActivity extends Activity {
                         offset=0;invalidate();return true;
                     }
                     if(tab==1&&sy>=175+91-offset&&sy<=175+91+51-offset){
-                        brainType=Math.max(0,Math.min(2,(int)((sx-17)/150)));
+                        brainType=Math.max(0,Math.min(3,(int)((sx-17)/112)));
                         offset=0;invalidate();return true;
                     }
                     return true;
