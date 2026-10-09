@@ -103,21 +103,21 @@ public final class ScarcityLab {
         for(int k=0;k<MotorBrain.N;k++){
             for(int w=0;w<6;w++){
                 boundaries(w,temp);
-                project(body.x,body.y,body.vx,body.vy,k,
-                        temp[0],temp[1],temp[2],temp[3],1.5f);
+                sweptProject(body.x,body.y,body.vx,body.vy,k,
+                        temp[0],temp[1],temp[2],temp[3],1.5f,dt);
             }
-            project(body.x,body.y,body.vx,body.vy,k,
-                x-DOOR_HALF_W,yc-DOOR_HALF_H,x+DOOR_HALF_W,yc+DOOR_HALF_H,1.5f);
+            sweptProject(body.x,body.y,body.vx,body.vy,k,
+                x-DOOR_HALF_W,yc-DOOR_HALF_H,x+DOOR_HALF_W,yc+DOOR_HALF_H,1.5f,dt);
         }
         for(int i=0;i<Morphology.POINTS;i++){
             for(int w=0;w<6;w++){
                 boundaries(w,temp);
-                project(skin.x,skin.y,skin.vx,skin.vy,i,
-                    temp[0],temp[1],temp[2],temp[3],1.5f);
+                sweptProject(skin.x,skin.y,skin.vx,skin.vy,i,
+                    temp[0],temp[1],temp[2],temp[3],1.5f,dt);
             }
             // Contact on gate edges not already resolved by grip physics
-            project(skin.x,skin.y,skin.vx,skin.vy,i,
-                x-DOOR_HALF_W,yc-DOOR_HALF_H,x+DOOR_HALF_W,yc+DOOR_HALF_H,1.5f);
+            sweptProject(skin.x,skin.y,skin.vx,skin.vy,i,
+                x-DOOR_HALF_W,yc-DOOR_HALF_H,x+DOOR_HALF_W,yc+DOOR_HALF_H,1.5f,dt);
         }
         for(int w=0;w<6;w++){
             boundaries(w,temp);
@@ -202,6 +202,46 @@ public final class ScarcityLab {
             if(repairs==0)break;
         }
     }
+    /** Swept collision: stop a moving mass at the first face it reaches.
+     * Discrete nearest-face projection alone can eject a fast particle on the
+     * wrong side of a wall and falsely make a pseudopod pass through it. */
+    private boolean sweptProject(float[] px,float[] py,float[] vx,float[] vy,
+                                 int i,float l,float t,float r,float b,
+                                 float radius,float dt){
+        if(dt<=0)return project(px,py,vx,vy,i,l,t,r,b,radius);
+        float x=px[i],y=py[i],ox=x-vx[i]*dt,oy=y-vy[i]*dt;
+        float left=l-radius,right=r+radius,top=t-radius,bottom=b+radius;
+        if(ox<=left&&x>left&&vx[i]>0){
+            float frac=(left-ox)/(x-ox);
+            float hitY=oy+(y-oy)*frac;
+            if(hitY>=top&&hitY<=bottom){
+                px[i]=left;py[i]=hitY;vx[i]=0;return true;
+            }
+        }
+        if(ox>=right&&x<right&&vx[i]<0){
+            float frac=(right-ox)/(x-ox);
+            float hitY=oy+(y-oy)*frac;
+            if(hitY>=top&&hitY<=bottom){
+                px[i]=right;py[i]=hitY;vx[i]=0;return true;
+            }
+        }
+        if(oy<=top&&y>top&&vy[i]>0){
+            float frac=(top-oy)/(y-oy);
+            float hitX=ox+(x-ox)*frac;
+            if(hitX>=left&&hitX<=right){
+                py[i]=top;px[i]=hitX;vy[i]=0;return true;
+            }
+        }
+        if(oy>=bottom&&y<bottom&&vy[i]<0){
+            float frac=(bottom-oy)/(y-oy);
+            float hitX=ox+(x-ox)*frac;
+            if(hitX>=left&&hitX<=right){
+                py[i]=bottom;px[i]=hitX;vy[i]=0;return true;
+            }
+        }
+        return project(px,py,vx,vy,i,l,t,r,b,radius);
+    }
+
     /** Wall slabs: entrance outside the opening, far wall, ceiling, floor. */
     private void boundaries(int id,float[] r){
         float l=entranceX(),right=ox+END_X;
@@ -342,6 +382,10 @@ public final class ScarcityLab {
         }
         if(solid.solidLinkCorrections==0)
             throw new IllegalStateException("Penetrating cloth segment was not corrected");
+        float[] px={-2f},py={2f},vx={650f},vy={0f};
+        solid.sweptProject(px,py,vx,vy,0,-13,-34,13,34,1.5f,.03f);
+        if(px[0]>-14.4f)
+            throw new IllegalStateException("Swept point tunneled across the solid gate");
         // A real membrane that bends around the top is allowed.
         if(crossesInterior(-16,-43,0,-42,-13,-34,13,34)||
            crossesInterior(0,-42,16,-43,-13,-34,13,34))
