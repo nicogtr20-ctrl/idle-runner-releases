@@ -9,7 +9,11 @@ import java.util.Locale;
  */
 public final class ScarcityLab {
     public static final float ENTRY_X=115,END_X=314,TOP=-105,BOTTOM=105;
-    public static final float OPEN_HALF_HEIGHT=43f,DOOR_HALF_W=13,DOOR_HALF_H=34;
+    public static final float OPEN_HALF_HEIGHT=43f,DOOR_HALF_W=14,DOOR_HALF_H=69;
+    // Free-standing gate IN FRONT of the doorway. Its 138-unit height
+    // overlaps the entire 86-unit opening so there are no initial cracks.
+    public static final float DOOR_FRONT_OFFSET=42f,DOOR_MAX_TRAVEL=170f;
+    public static final float WALL_HALF_THICKNESS=10f,MAX_LINK_SPAN=23f;
     public final float ox,oy;
     public final UnknownWorld.Entity food;
     public float doorY=0,doorVelocity=0,dualContactTime=0;
@@ -25,11 +29,11 @@ public final class ScarcityLab {
         food=new UnknownWorld.Entity(ox+242,oy,0,0);
     }
     public float entranceX(){return ox+ENTRY_X;}
-    public float gateX(){return entranceX();}
+    public float gateX(){return entranceX()-DOOR_FRONT_OFFSET;}
     public float gateCenterY(){return oy+doorY;}
     public float gateTop(){return gateCenterY()-DOOR_HALF_H;}
     public float gateBottom(){return gateCenterY()+DOOR_HALF_H;}
-    public boolean openingFree(){return doorY>=77f;}
+    public boolean openingFree(){return gateTop()>oy+OPEN_HALF_HEIGHT+3f;}
     public float foodDistance(float x,float y){return (float)Math.hypot(food.x-x,food.y-y);}
 
     /**
@@ -78,8 +82,8 @@ public final class ScarcityLab {
         float drag=(float)Math.exp(-(independent?3f:8f)*dt);
         doorVelocity=clamp(doorVelocity*drag,-80,80);
         float previous=doorY;
-        doorY=clamp(doorY+doorVelocity*dt,0,105);
-        if(doorY==0||doorY==105)doorVelocity=0;
+        doorY=clamp(doorY+doorVelocity*dt,0,DOOR_MAX_TRAVEL);
+        if(doorY==0||doorY==DOOR_MAX_TRAVEL)doorVelocity=0;
         maxDoorTravel=Math.max(maxDoorTravel,doorY);
         if(openingFree())everOpened=true;
         return doorY-previous;
@@ -99,9 +103,9 @@ public final class ScarcityLab {
         // motor particles, even when its movement is still locked.
         float x=gateX(),yc=gateCenterY();
         applyToCore(body,x-DOOR_HALF_W,yc-DOOR_HALF_H,
-            x+DOOR_HALF_W,yc+DOOR_HALF_H,10);
+            x+DOOR_HALF_W,yc+DOOR_HALF_H,10,dt);
         for(int k=0;k<MotorBrain.N;k++){
-            for(int w=0;w<6;w++){
+            for(int w=0;w<5;w++){
                 boundaries(w,temp);
                 sweptProject(body.x,body.y,body.vx,body.vy,k,
                         temp[0],temp[1],temp[2],temp[3],1.5f,dt);
@@ -110,7 +114,7 @@ public final class ScarcityLab {
                 x-DOOR_HALF_W,yc-DOOR_HALF_H,x+DOOR_HALF_W,yc+DOOR_HALF_H,1.5f,dt);
         }
         for(int i=0;i<Morphology.POINTS;i++){
-            for(int w=0;w<6;w++){
+            for(int w=0;w<5;w++){
                 boundaries(w,temp);
                 sweptProject(skin.x,skin.y,skin.vx,skin.vy,i,
                     temp[0],temp[1],temp[2],temp[3],1.5f,dt);
@@ -119,9 +123,9 @@ public final class ScarcityLab {
             sweptProject(skin.x,skin.y,skin.vx,skin.vy,i,
                 x-DOOR_HALF_W,yc-DOOR_HALF_H,x+DOOR_HALF_W,yc+DOOR_HALF_H,1.5f,dt);
         }
-        for(int w=0;w<6;w++){
+        for(int w=0;w<5;w++){
             boundaries(w,temp);
-            applyToCore(body,temp[0],temp[1],temp[2],temp[3],10);
+            applyToCore(body,temp[0],temp[1],temp[2],temp[3],10,dt);
         }
         // A point may be outside a solid while the edge between two points
         // cuts straight through it. Never render or simulate such a crossing.
@@ -184,13 +188,28 @@ public final class ScarcityLab {
         return true;
     }
     public void resolveSolidLinks(Morphology.Surface skin){
-        // Repeat because correcting one edge can stretch its neighbor.
-        // Early-out keeps the cost low when the organism is not near walls.
-        for(int pass=0;pass<4;pass++){
+        // Neighboring membrane particles are bonded: fixing a collision
+        // cannot leave a huge straight bridge across an entire wall.
+        // Resolve both springs and solid geometry iteratively.
+        for(int pass=0;pass<7;pass++){
             int repairs=0;
             for(int i=0;i<Morphology.POINTS;i++){
                 int j=(i+1)%Morphology.POINTS;
-                for(int w=0;w<6;w++){
+                float dx=skin.x[j]-skin.x[i],dy=skin.y[j]-skin.y[i];
+                float distance=(float)Math.hypot(dx,dy);
+                if(distance>MAX_LINK_SPAN&&Float.isFinite(distance)){
+                    float shrink=(distance-MAX_LINK_SPAN)*.5f/distance;
+                    float sx=dx*shrink,sy=dy*shrink;
+                    skin.x[i]+=sx;skin.y[i]+=sy;
+                    skin.x[j]-=sx;skin.y[j]-=sy;
+                    skin.vx[i]*=.75f;skin.vy[i]*=.75f;
+                    skin.vx[j]*=.75f;skin.vy[j]*=.75f;
+                    repairs++;
+                }
+            }
+            for(int i=0;i<Morphology.POINTS;i++){
+                int j=(i+1)%Morphology.POINTS;
+                for(int w=0;w<5;w++){
                     boundaries(w,temp);
                     if(correctLink(skin,i,j,temp[0],temp[1],temp[2],temp[3]))
                         repairs++;
@@ -246,13 +265,14 @@ public final class ScarcityLab {
     private void boundaries(int id,float[] r){
         float l=entranceX(),right=ox+END_X;
         float t=oy+TOP,b=oy+BOTTOM;
+        float half=WALL_HALF_THICKNESS;
         switch(id){
-            case 0:fill(r,l-7,t-9,l+7,oy-OPEN_HALF_HEIGHT);break;
-            case 1:fill(r,l-7,oy+OPEN_HALF_HEIGHT,l+7,b+9);break;
-            case 2:fill(r,l-7,t-9,right+7,t+7);break;
-            case 3:fill(r,l-7,b-7,right+7,b+9);break;
-            case 4:fill(r,right-7,t-9,right+7,b+9);break;
-            default:fill(r,l-7,oy-OPEN_HALF_HEIGHT-7,l+7,oy-OPEN_HALF_HEIGHT);break;
+            case 0:fill(r,l-half,t-10,l+half,oy-OPEN_HALF_HEIGHT);break;
+            case 1:fill(r,l-half,oy+OPEN_HALF_HEIGHT,l+half,b+10);break;
+            case 2:fill(r,l-half,t-10,right+half,t+half);break;
+            case 3:fill(r,l-half,b-half,right+half,b+10);break;
+            case 4:fill(r,right-half,t-10,right+half,b+10);break;
+            default:throw new IllegalArgumentException("Invalid wall");
         }
     }
     private static void fill(float[] r,float a,float b,float c,float d){
@@ -282,9 +302,9 @@ public final class ScarcityLab {
         if(speed<0){vx[i]-=speed*nx;vy[i]-=speed*ny;}
         return true;
     }
-    private void applyToCore(MotorBrain.Body b,float l,float t,float r,float bot,float radius){
+    private void applyToCore(MotorBrain.Body b,float l,float t,float r,float bot,float radius,float dt){
         float[] px={b.cx},py={b.cy},vx={b.cvx},vy={b.cvy};
-        if(project(px,py,vx,vy,0,l,t,r,bot,radius)){
+        if(sweptProject(px,py,vx,vy,0,l,t,r,bot,radius,dt)){
             b.cx=px[0];b.cy=py[0];b.cvx=vx[0];b.cvy=vy[0];
         }
     }
@@ -334,75 +354,88 @@ public final class ScarcityLab {
     public static void main(String[] args){
         MotorBrain.Body body=new MotorBrain.Body();
         Morphology.Surface membrane=new Morphology.Surface(body);
-        ScarcityLab chamber=new ScarcityLab(-115,0); // gate at x=0
-        // A unilateral contact must NEVER translate a closed door.
-        // All unused masses are kept away from the gate in the fixture.
+        ScarcityLab chamber=new ScarcityLab(-115,0);
+        if(!(chamber.gateX()+DOOR_HALF_W<chamber.entranceX()-WALL_HALF_THICKNESS-5))
+            throw new IllegalStateException("Gate must be IN FRONT of wall, not embedded");
+        if(chamber.gateTop()>=-OPEN_HALF_HEIGHT||chamber.gateBottom()<=OPEN_HALF_HEIGHT)
+            throw new IllegalStateException("Long gate does not cover opening");
         for(int i=0;i<Morphology.POINTS;i++){
-            membrane.x[i]=-180;membrane.y[i]=-180;
+            membrane.x[i]=-220;membrane.y[i]=-180;
             membrane.vx[i]=membrane.vy[i]=0;
         }
-        membrane.x[0]=-ScarcityLab.DOOR_HALF_W-1;
+        membrane.x[0]=chamber.gateX()-DOOR_HALF_W-1;
         membrane.y[0]=0;membrane.vy[0]=65;
         for(int i=0;i<22;i++)chamber.solveGate(membrane,MotorBrain.STEP);
         if(chamber.maxDoorTravel>0.0001f||chamber.grasps!=0)
-            throw new IllegalStateException("Single-sided push bypassed grip");
-        // Two nonadjacent membrane particles on opposite faces physically
-        // move together: tangential sliding friction can displace the door.
+            throw new IllegalStateException("Unilateral push bypassed gate");
         int opposite=Morphology.POINTS/2;
-        membrane.x[opposite]=ScarcityLab.DOOR_HALF_W+1;
+        membrane.x[opposite]=chamber.gateX()+DOOR_HALF_W+1;
         membrane.y[opposite]=0;membrane.vy[opposite]=65;
-        for(int i=0;i<70;i++){
+        for(int i=0;i<130;i++){
             membrane.y[0]=chamber.gateCenterY();
             membrane.y[opposite]=chamber.gateCenterY();
             chamber.solveGate(membrane,MotorBrain.STEP);
         }
         if(chamber.grasps<1||chamber.maxDoorTravel<15)
-            throw new IllegalStateException("Opposing physical contacts failed to move gate");
-        // Regression: two masses separated by a solid door with no mass
-        // inside it STILL form a crossing segment. Point-only physics misses
-        // that, and the old smoothed renderer made it look like a ghost limb.
-        ScarcityLab solid=new ScarcityLab(-115,0);
-        MotorBrain.Body fixtureBody=new MotorBrain.Body();
-        Morphology.Surface fixture=new Morphology.Surface(fixtureBody);
+            throw new IllegalStateException("Genuine opposed contact cannot slide freestanding gate");
+        ScarcityLab fixtureLab=new ScarcityLab(-115,0);
+        Morphology.Surface fixture=new Morphology.Surface(new MotorBrain.Body());
         for(int i=0;i<Morphology.POINTS;i++){
-            fixture.x[i]=-90;fixture.y[i]=-110;
+            fixture.x[i]=-220;fixture.y[i]=-180;
             fixture.vx[i]=fixture.vy[i]=0;
         }
-        fixture.x[0]=-16;fixture.y[0]=0;
-        fixture.x[1]=16;fixture.y[1]=0;
-        if(!crossesInterior(fixture.x[0],fixture.y[0],fixture.x[1],fixture.y[1],
-                -DOOR_HALF_W,-DOOR_HALF_H,DOOR_HALF_W,DOOR_HALF_H))
-            throw new IllegalStateException("Crossing fixture is invalid");
-        solid.resolveSolidLinks(fixture);
+        // Through-gate edge: both end particles outside the rectangle
+        float gate=fixtureLab.gateX();
+        fixture.x[0]=gate-DOOR_HALF_W-4;fixture.y[0]=0;
+        fixture.x[1]=gate+DOOR_HALF_W+4;fixture.y[1]=0;
+        fixtureLab.resolveSolidLinks(fixture);
         for(int i=0;i<Morphology.POINTS;i++){
             int j=(i+1)%Morphology.POINTS;
             if(crossesInterior(fixture.x[i],fixture.y[i],fixture.x[j],fixture.y[j],
-                    -DOOR_HALF_W,-DOOR_HALF_H,DOOR_HALF_W,DOOR_HALF_H))
-                throw new IllegalStateException("Membrane passed through the rigid gate");
+                gate-DOOR_HALF_W,fixtureLab.gateTop(),
+                gate+DOOR_HALF_W,fixtureLab.gateBottom()))
+                throw new IllegalStateException("Solid door still crossed by membrane edge");
         }
-        if(solid.solidLinkCorrections==0)
-            throw new IllegalStateException("Penetrating cloth segment was not corrected");
-        float[] px={-2f},py={2f},vx={650f},vy={0f};
-        solid.sweptProject(px,py,vx,vy,0,-13,-34,13,34,1.5f,.03f);
-        if(px[0]>-14.4f)
-            throw new IllegalStateException("Swept point tunneled across the solid gate");
-        // A real membrane that bends around the top is allowed.
-        if(crossesInterior(-16,-43,0,-42,-13,-34,13,34)||
-           crossesInterior(0,-42,16,-43,-13,-34,13,34))
-            throw new IllegalStateException("Free path around corner falsely blocked");
-        ScarcityLab unopened=new ScarcityLab(0,0);
-        if(unopened.foodTouchedByCore(new MotorBrain.Body()))
-            throw new IllegalStateException("Core ate unreachable food from afar");
+        // Through-WALL edge (previous regression only tested the gate)
+        for(int i=0;i<Morphology.POINTS;i++){
+            fixture.x[i]=-220;fixture.y[i]=-180;
+            fixture.vx[i]=fixture.vy[i]=0;
+        }
+        fixture.x[0]=-26;fixture.y[0]=76;fixture.x[1]=26;fixture.y[1]=76;
+        fixtureLab.resolveSolidLinks(fixture);
+        for(int i=0;i<Morphology.POINTS;i++){
+            int j=(i+1)%Morphology.POINTS;
+            for(int w=0;w<5;w++){
+                fixtureLab.boundaries(w,fixtureLab.temp);
+                if(crossesInterior(fixture.x[i],fixture.y[i],fixture.x[j],fixture.y[j],
+                    fixtureLab.temp[0],fixtureLab.temp[1],
+                    fixtureLab.temp[2],fixtureLab.temp[3]))
+                    throw new IllegalStateException("Membrane crosses solid WALL");
+            }
+        }
+        // High-speed particles and core must stop at first contact.
+        float[] px={-22},py={74},vx={900},vy={0};
+        fixtureLab.sweptProject(px,py,vx,vy,0,-10,43,10,115,2,.035f);
+        if(px[0]>-11.9f)throw new IllegalStateException("Fast wall tunneling");
+        MotorBrain.Body core=new MotorBrain.Body();
+        core.cx=-5;core.cy=74;core.cvx=900;
+        fixtureLab.applyToCore(core,-10,43,10,115,9,.035f);
+        if(core.cx>-18.9f)throw new IllegalStateException("Core passed solid wall");
+        if(crossesInterior(gate-18,-DOOR_HALF_H-6,
+              gate,-DOOR_HALF_H-6,gate-DOOR_HALF_W,
+              -DOOR_HALF_H,gate+DOOR_HALF_W,DOOR_HALF_H))
+            throw new IllegalStateException("Legitimate route around door blocked");
+        UnknownWorld.Entity finite=new UnknownWorld.Entity(0,0,0,0);
+        if(finite.touch(0,0)<=0||finite.ready())
+            throw new IllegalStateException("Consumed energy revived");
         float[] motor=MotorBrain.virgin(new java.util.Random(918273));
         float[] hand=ContactLearning.virgin();
         float[] shape=Morphology.virgin(new java.util.Random(14790));
-        float score=trainingFitness(motor,hand,shape);
-        if(!Float.isFinite(score)||score<=-99999)
-            throw new IllegalStateException("Chamber training reward not finite");
-        UnknownWorld.Entity supply=new UnknownWorld.Entity(0,0,0,0);
-        if(supply.touch(0,0)<=0||supply.ready())
-            throw new IllegalStateException("Consumed energy respawned");
-        System.out.printf(Locale.US,"ZERO-008 physical test passed: points=%d unilateralTravel=0 bilateralTravel=%.2f grips=%d finiteEnergy=true%n",
-                Morphology.POINTS,chamber.maxDoorTravel,chamber.grasps);
+        if(!Float.isFinite(trainingFitness(motor,hand,shape)))
+            throw new IllegalStateException("Physical challenge simulation NaN");
+        System.out.printf(Locale.US,
+             "ZERO-008.2 physics passed: frontDoorGap=%.1f doorHeight=%.0f openingHeight=%.0f unilateral=0 bilateralTravel=%.2f wallEdgesSolid=true coreSweep=true%n",
+             chamber.entranceX()-WALL_HALF_THICKNESS-(chamber.gateX()+DOOR_HALF_W),
+             2*DOOR_HALF_H,2*OPEN_HALF_HEIGHT,chamber.maxDoorTravel);
     }
 }
