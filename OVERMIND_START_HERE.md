@@ -1,6 +1,6 @@
 # OVERMIND: ZERO — punto di ingresso per tutte le nuove chat
 
-> Ultimo aggiornamento della documentazione: 9 ottobre 2026.
+> Ultimo aggiornamento della documentazione: 10 ottobre 2026.
 >
 > **OBIETTIVO DEL PROGETTO:** creare su Android una forma di vita artificiale ("ZERO"), rappresentata da una macchia nera simile a ferrofluido, con corpo deformabile e apprendimento autonomo da esperienze in un mondo simulato. Il giocatore è una presenza invisibile, non impartisce ordini alla creatura e ne modifica il mondo.
 
@@ -82,3 +82,13 @@ Il codice, gli asset e i release APK restano di proprietà e sotto controllo del
 - Ultima APK firmata (package com.overmind.zero.ota): versionCode 1036, sha256 `c44377b633854bee3b1ea3ad9715e8499f7e4202ae956cdd84ea85fd44b3c58d`.
 - Staging `feature/overmind-v094-efficient-exploration`; stable `feature/overmind-inapp-updater`. CI ufficiale firmata 37999520662 superata.
 - ZERO conserva pesi e memoria della 0.9.3, non richiede azzeramento; cambia la valutazione degli esperimenti corporei per non premiare giri in tondo inutili. NETTO, VIA, ZONE NUOVE, EFFICIENZA in HUD; ANALISI conta accettate/scartate; PROVE sostituisce il vecchio comparatore sintetico. Leggere HANDOFF per limitazioni e test S21; Vercel OTA pubblico può essere in ritardo, GitHub Release fallback verificata da usare.
+
+
+## OVERMIND ZERO 0.9.5 — memoria episodica delle conseguenze (10 ottobre 2026)
+**Prima lettura obbligatoria: `docs/EXPERIMENT_0095.md`** (resoconto dettagliato delle screenshot, versioni, codice, stato dei test e criteri del prossimo esperimento).
+Il 9-10 ottobre, Galaxy S21 ha mostrato ZERO che sposta una porta fino a **111U** (la soglia per passaggio interamente libero è **>115U**), effettua 268 prese, sposta 93 dischi, ma non entra nella stanza e, dopo la morte, non ripete la tattica. Questo è comportamento fisico reale, NON prova che ZERO abbia compreso la porta.
+La v0.9.5 crea ricordi di sequenze **effettivamente vissute** (fino a 9 sensazioni/azioni) dopo conseguenze fisiche, con snapshot dei 62+18+82 pesi corporei in uso; ricorda situazioni sensoriali simili e suggerisce azioni, senza imporre script o una direzione. Il modello predittivo da 11.664 parametri, le memorie v0.9.4 e i salvataggi restano compatibili. Aggiornamento dell'APK `com.overmind.zero.ota` in place e firma stabile obbligatori.
+**Non azzerare i cervelli.** La memoria episodica parte vuota; non può ricostruire i 111U della prova storica. I test automatici verificano correttezza, non successo autonomo della porta. Prossimo test: episodio importante → morte → sensi simili → richiamo → nuovo effetto fisico → eventualmente ingresso/energia.
+
+### Release ZERO 0.9.5-ota.39 — 2026-10-10
+APK firmata, versionCode 1039, 92.692 byte; SHA-256 `86caeb85b6eba94aa657d6f19ac7dff5dd0e4e8d2974bf71e8c6c12a3201c211`; CI firmata `38003676123` verde, file `updater/public/latest.json` aggiornato. Il test manuale sul Samsung Galaxy S21 resta da fare. Non attribuire retroattivamente le 111U di apertura della v0.9.4 alla nuova memoria.
