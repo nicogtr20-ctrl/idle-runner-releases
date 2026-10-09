@@ -49,3 +49,9 @@ Il codice, gli asset e i release APK restano di proprietà e sotto controllo del
 ### Stato confermato 0.8.0-ota.23
 - **Nuova release OTA online verificata:** https://overmind-zero-updates.vercel.app/latest.json (versionCode 1023) e APK https://overmind-zero-updates.vercel.app/apk/overmind-zero-1023-941873ee1d08.apk (63.556 byte). Puoi usare AGGIORNA in-app senza disinstallare; la vecchia memoria rimane.
 - Dopo aggiornamento: attendere scarsità oppure toccare test stanza nel HUD; verificare PRESE / PORTA / STANZE RISOLTE e comportamento reale vicino al blocco, non solo i numeri di training. Dettagli completi in docs/HANDOFF.md.
+
+## Ultimo rilascio verificato — 0.8.1-ota.24 (2026-10-09)
+- Corrette collisioni nella stanza: tutte le porzioni di membrana devono rispettare il blocco, anche tra punti consecutivi; punti veloci fermati sulla faccia d'impatto; rendering aderente ai 96 segmenti fisici.
+- **La morte per energia zero e il ritorno al centro sono intenzionali** e non sono stati rimossi (chiarimento utente).
+- Installazione in-place: AGGIORNA o https://overmind-zero-updates.vercel.app/apk/overmind-zero-1024-0e10bb4ce202.apk; stessa firma e salvataggi.
+- Per il report tecnico completo vedere `docs/HANDOFF.md`. Attende prova manuale Galaxy S21, soprattutto presa a due facce.

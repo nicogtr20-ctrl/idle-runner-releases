@@ -79,3 +79,11 @@
 - [x] JVM smoke tests e staging Android.
 - [ ] Test manuale su Galaxy S21 (almeno 5 tentativi di stanza): verificare l'effettiva presa, assenza di teletrasporto, accesso fisico e performance FPS.
 - [ ] Migliorare successivamente percezione ostacoli e pianificazione senza fornire posizione perfetta del nutrimento.
+
+## ZERO-008.1 — Rigidità fisica della porta
+- [x] Conservare esplicitamente il respawn per esaurimento energetico (voluto dall'utente)
+- [x] Verificare collisione continua di tutti i 96 segmenti, non soltanto i singoli nodi
+- [x] Bloccare attraversamenti rapidi tra fotogrammi e correggere bordo grafico durante stanza
+- [x] Test di collisione con segmento che taglia il blocco e test di percorso libero attorno al bordo; CI Android verde
+- [x] APK 0.8.1-ota.24 firmata e verificata pubblicamente su Vercel
+- [ ] Osservazione sul Galaxy S21: vedere se ZERO avvolge l'ostacolo e forma due contatti fisici indipendenti
