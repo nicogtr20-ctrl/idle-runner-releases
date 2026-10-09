@@ -18,6 +18,8 @@ public final class ScarcityLab {
     public final UnknownWorld.Entity food;
     public float doorY=0,doorVelocity=0,dualContactTime=0;
     public int grasps=0,oneSidedContacts=0,opposedContactFrames=0;
+    public int tactileFrames=0,adhesiveContactFrames=0,dualTouchNoGrip=0;
+    public float adhesiveEffort=0;
     public boolean reachedEnergy=false,everOpened=false;
     public float maxDoorTravel=0;
     public int solidLinkCorrections=0;
@@ -41,27 +43,56 @@ public final class ScarcityLab {
      * surface contact on BOTH opposite faces, with physically distinct
      * material particles. Single-sided pushes never translate the gate.
      */
+    /** Real adhesion requires BOTH independent points to COMMAND gripping.
+     * Normal pressure, even on both sides, can never actuate the gate. */
     public float solveGate(Morphology.Surface skin,float dt){
         float lx=gateX()-DOOR_HALF_W,rx=gateX()+DOOR_HALF_W;
         float cy=gateCenterY();
-        int leftCount=0,rightCount=0,leftIdx=-1,rightIdx=-1;
+        int leftTouch=0,rightTouch=0,leftGrip=0,rightGrip=0;
+        int leftIdx=-1,rightIdx=-1;
         float lv=0,rv=0;
         for(int i=0;i<Morphology.POINTS;i++){
             float x=skin.x[i],y=skin.y[i];
-            if(Math.abs(y-cy)>DOOR_HALF_H+2)continue;
-            float dl=Math.abs(x-lx),dr=Math.abs(x-rx);
-            if(dl<=3.7f&&x<gateX()){
-                leftCount++;leftIdx=i;lv+=skin.vy[i];
-                // Impenetrability of the gate's solid left face
+            float faceLeft=Math.abs(x-lx),faceRight=Math.abs(x-rx);
+            boolean near=Math.abs(y-cy)<=DOOR_HALF_H+2;
+            boolean left=near&&faceLeft<=3.7f&&x<gateX();
+            boolean right=near&&faceRight<=3.7f&&x>=gateX();
+            boolean inContact=left||right;
+            // The neural policy observes the actual touch on NEXT frame.
+            // Touch is a sensor, adhesion is a separate learned command.
+            skin.touchSense[i]=inContact?1:0;
+            if(!inContact){
+                skin.gripHold[i]=0;
+                continue;
+            }
+            tactileFrames++;
+            if(left){
+                leftTouch++;
                 if(x>lx-1.8f){skin.x[i]=lx-1.8f;skin.vx[i]=Math.min(0,skin.vx[i])*.40f;}
-            }else if(dr<=3.7f&&x>=gateX()){
-                rightCount++;rightIdx=i;rv+=skin.vy[i];
+            }else{
+                rightTouch++;
                 if(x<rx+1.8f){skin.x[i]=rx+1.8f;skin.vx[i]=Math.max(0,skin.vx[i])*.40f;}
             }
+            if(skin.gripCommand[i]>Morphology.GRIP_THRESHOLD){
+                skin.gripHold[i]=Math.min(.5f,skin.gripHold[i]+dt);
+                // Report deliberate attempts separately from successful grasp.
+                adhesiveEffort+=dt;
+                adhesiveContactFrames++;
+                if(skin.gripHold[i]>=Morphology.GRIP_HOLD){
+                    if(left){
+                        leftGrip++;lv+=skin.vy[i];leftIdx=i;
+                    }else{
+                        rightGrip++;rv+=skin.vy[i];rightIdx=i;
+                    }
+                }
+            }else{
+                // No adhesion merely because body hit the obstacle.
+                skin.gripHold[i]=0;
+            }
         }
-        boolean independent=leftCount>0&&rightCount>0;
-        // Prevent the same near-neighbor folded membrane from being counted as
-        // two independent protrusions just because it curves around a corner.
+        if(leftTouch>0&&rightTouch>0&&(leftGrip==0||rightGrip==0))
+            dualTouchNoGrip++;
+        boolean independent=leftGrip>0&&rightGrip>0;
         if(independent){
             int apart=Math.abs(leftIdx-rightIdx);
             independent=Math.min(apart,Morphology.POINTS-apart)>=Morphology.POINTS/10;
@@ -69,14 +100,16 @@ public final class ScarcityLab {
         if(independent){
             opposedContactFrames++;
             dualContactTime+=dt;
-            if(!wasGrasping&&dualContactTime>=.075f){grasps++;wasGrasping=true;}
-            // Friction from the measured membrane's velocity; NO scripted
-            // door "open" impulse when both sides touch.
-            float desired=(lv/leftCount+rv/rightCount)*.5f;
+            if(!wasGrasping&&dualContactTime>=.075f){
+                grasps++;wasGrasping=true;
+            }
+            // Opposite patches stick and exert TANGENTIAL force through
+            // their measured velocities. The code never moves it on touch.
+            float desired=(lv/leftGrip+rv/rightGrip)*.5f;
             float acceleration=clamp((desired-doorVelocity)*5.5f,-160f,160f);
             doorVelocity+=acceleration*dt;
         }else{
-            if(leftCount+rightCount>0)oneSidedContacts++;
+            if(leftTouch+rightTouch>0)oneSidedContacts++;
             dualContactTime=0;wasGrasping=false;
         }
         float drag=(float)Math.exp(-(independent?3f:8f)*dt);
@@ -339,7 +372,11 @@ public final class ScarcityLab {
             if(lab.foodTouchedByCore(body))break;
         }
         float approach=clamp(110-minGateDistance,0,110);
+        // Small feedback for experimentally activating an adhesive sensor
+        // WHILE touching, larger feedback for actual grip and displacement.
+        // No score for simply colliding with the obstacle.
         float score=.08f*approach
+            +.025f*Math.min(250,lab.adhesiveContactFrames)
             +2.6f*lab.maxDoorTravel
             +.09f*Math.min(400,lab.opposedContactFrames)
             +4f*Math.min(2,lab.grasps)
@@ -378,13 +415,38 @@ public final class ScarcityLab {
         int opposite=Morphology.POINTS/2;
         membrane.x[opposite]=chamber.gateX()+DOOR_HALF_W+1;
         membrane.y[opposite]=0;membrane.vy[opposite]=65;
+        // Physics must reject even genuine opposite-side CONTACT when
+        // neural adhesion has not been enabled.
+        for(int i=0;i<40;i++){
+            membrane.y[0]=chamber.gateCenterY();
+            membrane.y[opposite]=chamber.gateCenterY();
+            chamber.solveGate(membrane,MotorBrain.STEP);
+        }
+        if(chamber.grasps!=0||chamber.maxDoorTravel>0.0001f||
+           chamber.dualTouchNoGrip==0)
+            throw new IllegalStateException("Two uncommanded contacts opened gate!");
+        // Learned controller can now choose to activate adhesion on each
+        // genuinely touching region; the gate can then slide with velocity.
+        membrane.gripCommand[0]=1;
+        membrane.gripCommand[opposite]=1;
         for(int i=0;i<130;i++){
             membrane.y[0]=chamber.gateCenterY();
             membrane.y[opposite]=chamber.gateCenterY();
             chamber.solveGate(membrane,MotorBrain.STEP);
         }
         if(chamber.grasps<1||chamber.maxDoorTravel<15)
-            throw new IllegalStateException("Genuine opposed contact cannot slide freestanding gate");
+            throw new IllegalStateException("Opposed active grips could not slide gate");
+        // Release just one motor command: zero further traction.
+        float lockedTravel=chamber.doorY;
+        chamber.doorVelocity=0;
+        membrane.gripCommand[opposite]=0;
+        for(int i=0;i<18;i++){
+            membrane.y[0]=chamber.gateCenterY();
+            membrane.y[opposite]=chamber.gateCenterY();
+            chamber.solveGate(membrane,MotorBrain.STEP);
+        }
+        if(chamber.doorY>lockedTravel+.0001f)
+            throw new IllegalStateException("Gate kept moving without dual active grip");
         ScarcityLab fixtureLab=new ScarcityLab(-115,0);
         Morphology.Surface fixture=new Morphology.Surface(new MotorBrain.Body());
         for(int i=0;i<Morphology.POINTS;i++){
