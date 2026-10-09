@@ -1,6 +1,6 @@
 # OVERMIND ZERO — Esperimento 0096: apprendimento da benefici e pericoli
 
-**Data:** 10 ottobre 2026. **Stato:** codice 0.9.6 integrato nel branch OTA, test automatici JVM/Android completati; test sul telefono ancora necessario. Ultima release firmata va verificata dal manifest `updater/public/latest.json` e asset GitHub.
+**Data:** 10 ottobre 2026. **Stato:** v0.9.6-ota.40 firmata e pubblicata; test manuale sul Galaxy S21 ancora necessario. Ultima release firmata va verificata dal manifest `updater/public/latest.json` e asset GitHub.
 
 ## Perché esiste la 0.9.6
 L'esperimento mira a sviluppare la capacità della creatura ZERO di **conservare esperienze più lunghe**, consolidare ripetizioni riuscite e distinguere esiti **benefici o dannosi** attraverso conseguenze effettivamente vissute, senza programmare cosa significhi ogni colore.
@@ -44,3 +44,11 @@ Memoria episodica: fino a 24 eventi × 36 coppie sensazione/azione × 26 ingress
 
 ## Ripresa in nuove chat
 Leggere `OVERMIND_START_HERE.md`, `AGENTS.md`, questo documento, `docs/HANDOFF.md`, `docs/WHITEPAPER.md`, `docs/ARCHITECTURE.md`, `docs/CHANGELOG.md`, `docs/ROADMAP.md`. Controllare sempre branch, manifest SHA256 e stato workflow/release, senza inventare URL APK o successi sul telefono. Aggiornare ogni documento e annotare ogni screenshot utente con versione, metrica e incertezza.
+
+
+### Release Android firmata 0.9.6-ota.40 — 10 ottobre 2026
+- **Stato:** build e firma stabile GitHub Actions `38005290019` **success**, JVM e Android staging `38005143609` e `38005224595` success; validazione pacchetto Android/update provider superata.
+- **versionCode 1040**, package `com.overmind.zero.ota`, **94.984 byte**, **SHA-256** `0e1c4dfbcd4f77cd2575b5cc5d0ca9f6dd6189054f19066501cf9180c730efcb`.
+- Asset sorgente `updater/public/apk/overmind-zero-1040-0e1c4dfbcd4f.apk`, manifest `updater/public/latest.json`; GitHub Release privata con tag `overmind-zero-v0.9.6-ota.40` dopo verifica dell'azione fallback.
+- Conserva firma, package e SharedPreferences da 0.9.5 e precedenti. **Non disinstallare, non azzerare**. La nuova memoria utilizza `em2` e recupera `em1`.
+- **Ancora da dimostrare su Samsung S21:** preferenza effettiva per punti energetici, evitamento di quelli dannosi, apprendimento e recupero di prese utili dopo la morte e attraversamento del cancello. I test CI NON dimostrano tutto ciò.
