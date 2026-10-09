@@ -9,6 +9,7 @@ import java.util.*;
  */
 public final class UnknownWorld {
     public static final int SIGNATURES=3;
+    public static final float RARE_ENERGY=80f;
     public static final class Entity {
         public float x,y,vx,vy,cooldown,contactCooldown;
         public boolean consumed=false;
@@ -38,13 +39,19 @@ public final class UnknownWorld {
             return (float)Math.hypot(x-spawnX,y-spawnY);
         }
         boolean isMovable(){return law==2;}
+        public boolean isRare(){return law==3;}
         float touch(float directionX,float directionY) {
+            if(law==3){
+                if(consumed)return 0;
+                consumed=true;cooldown=Float.POSITIVE_INFINITY;
+                return RARE_ENERGY;
+            }
             if(law==0){
                 if(consumed)return 0;
                 consumed=true;cooldown=Float.POSITIVE_INFINITY;
                 return 22;
             }
-            if(law==1){cooldown=9;return -18;}
+            if(law==1){cooldown=9;return -7;}
             // NEVER set velocity on touch. The live physics collision solver is
             // the ONLY way a movable object can receive momentum.
             cooldown=1.4f;
@@ -169,6 +176,9 @@ public final class UnknownWorld {
         marked.x=19;marked.tick(.025f);
         if(marked.peakDisplacement<18.9f||marked.spawnX!=0)
             throw new IllegalStateException("Object displacement evidence failed");
+        Entity rare=new Entity(20,0,0,3);
+        if(!rare.isRare()||rare.touch(0,0)!=RARE_ENERGY||rare.touch(0,0)!=0)
+            throw new IllegalStateException("Rare reward must be unique, finite and stronger");
         Entity finite=new Entity(30,0,0,0);
         if(finite.touch(0,0)!=22||finite.ready()||finite.touch(0,0)!=0)
             throw new IllegalStateException("A consumed energy pulse must disappear");

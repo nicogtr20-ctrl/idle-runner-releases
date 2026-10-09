@@ -1,0 +1,41 @@
+name: OVERMIND v0.9.2 lived learning and survival
+on:
+  push:
+    branches: [feature/overmind-v092-lived-adaptation-survival-reward]
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 35
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with: {distribution: temurin, java-version: '17'}
+      - uses: gradle/actions/setup-gradle@v4
+        with: {gradle-version: '8.11.1'}
+      - name: Validate actual learned physical controllers and chamber
+        run: |
+          mkdir -p /tmp/zero092
+          javac -d /tmp/zero092 app/src/main/java/com/overmind/zero/{MotorBrain,UnknownWorld,ContactLearning,DecisionBrain,Morphology,ScarcityLab,SensorimotorMind,LearningDiagnostics,ResetDomains,OnlineBodyLearning}.java
+          for test in MotorBrain UnknownWorld ContactLearning DecisionBrain Morphology ScarcityLab SensorimotorMind LearningDiagnostics ResetDomains OnlineBodyLearning; do
+            java -cp /tmp/zero092 com.overmind.zero.$test
+          done
+      - name: Check learning is actually lived, finite and safe
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          a=Path("app/src/main/java/com/overmind/zero/GameActivity.java").read_text()
+          w=Path("app/src/main/java/com/overmind/zero/UnknownWorld.java").read_text()
+          m=Path("app/src/main/java/com/overmind/zero/SensorimotorMind.java").read_text()
+          assert "liveBody.observe(" in a and "liveBody.weights(2" in a
+          assert "trainer.attempt()" not in a and "shapeTrainer.attemptGate(" not in a
+          assert "reserve-(scarcity?.30f:.09f)*dt" in a
+          assert "chamber.overlapsRoom(e.x,e.y,e.radius)" in a
+          assert "RARE_ENERGY=80f" in w and "if(e.isRare())v[14+2*4+sector]" in m
+          assert "sensorMind.setLearning(true)" in a and "pending_reset_v091" not in a
+          print("ZERO-009.2 verified source invariants")
+          PY
+      - name: Build Android
+        run: gradle --no-daemon assembleDebug

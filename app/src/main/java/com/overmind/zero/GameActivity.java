@@ -33,6 +33,9 @@ public final class GameActivity extends Activity {
         MotorBrain.Trainer trainer;
         ContactLearning.Trainer handTrainer;
         Morphology.Trainer shapeTrainer;
+        OnlineBodyLearning liveBody=new OnlineBodyLearning();
+        float liveStartX,liveStartY,liveStartEnergy;
+        int liveStartContacts;
         int pushes=0,physicalContacts=0;
         float biggestDisplacement=0;
         float recentDisplacement=0;
@@ -140,6 +143,7 @@ public final class GameActivity extends Activity {
             energyEaten=prefs.getInt("finite_energy_eaten_v08",0);
             gripsEver=prefs.getInt("grip_events_v08",0);
             farthestGate=prefs.getFloat("gate_travel_v08",0);
+            liveBody=new OnlineBodyLearning();
             speed=1;learning=true;simulationRunning=true;
             resetEpisode();
             save();
@@ -230,9 +234,8 @@ public final class GameActivity extends Activity {
             if(prefs.contains(ResetDomains.REQUEST))load();
             learning=true;
             enabled=true;lastFrame=0;postInvalidateOnAnimation();
-            // All new experience comes from the creature's lived state,
-            // not an off-screen hand-coded goal-directed trial. Preserve
-            // previously learned motor and membrane weights unchanged.
+            // All adaptation happens in the visible world. Inherited motor
+            // and membrane weights persist until a lived test is accepted.
             sensorMind.setLearning(true);
         }
         void suspend(){
@@ -244,13 +247,16 @@ public final class GameActivity extends Activity {
         }
         void resetEpisode(){
             // Only initial boot or actual simulated death restarts the body.
+            liveBody.abortTrial();
             creature.reset();surface.reset(creature);
             episode++;phase=0;trailCount=0;clock=0;
             chamber=null;
             environment=UnknownWorld.newHabitat(episode,creature.cx,creature.cy,scarcity);
             chosenObject=null;decisionBrain.abandon();
             goalTimer=0;contactsThisLife=0;worldTime=0;
-            reserve=Math.max(42,Math.min(92,reserve));
+            reserve=Math.max(70,Math.min(92,reserve));
+            liveStartX=creature.cx;liveStartY=creature.cy;
+            liveStartEnergy=reserve;liveStartContacts=physicalContacts;
             sensorMind.resetEpisode(SensorimotorMind.Senses.read(
                 creature,surface,chamber,environment,reserve));
             heading=(float)Math.atan2(sensorMind.motorY(),sensorMind.motorX());
@@ -268,6 +274,7 @@ public final class GameActivity extends Activity {
             }
             environment.addAll(UnknownWorld.newHabitat(
                 episode,creature.cx,creature.cy,scarcity));
+            excludeOrdinaryRoomObjects();
             while(environment.size()>24){
                 if(environment.get(0)==(chamber!=null?chamber.food:null)){
                     environment.remove(1);
@@ -280,6 +287,14 @@ public final class GameActivity extends Activity {
             lastEvent="NUOVA AREA ESPLORATA  •  ZERO NON SI AZZERA";
             eventTime=3;
         }
+        void excludeOrdinaryRoomObjects(){
+            if(chamber==null)return;
+            for(int i=environment.size()-1;i>=0;i--){
+                UnknownWorld.Entity e=environment.get(i);
+                if(e!=chamber.food&&chamber.overlapsRoom(e.x,e.y,e.radius))
+                    environment.remove(i);
+            }
+        }
         void activateChamber(boolean manual){
             if(chamber!=null){
                 gripsEver+=chamber.grasps;
@@ -287,10 +302,11 @@ public final class GameActivity extends Activity {
                 environment.remove(chamber.food);
             }
             scarcity=true;
-            if(manual)reserve=Math.min(58,reserve);
+            // Test the door without a forced energy penalty.
             chamber=new ScarcityLab(creature.cx,creature.cy);
+            excludeOrdinaryRoomObjects();
             environment.add(chamber.food);
-            nextChamber=elapsedLife+95f;
+            nextChamber=elapsedLife+150f;
             chosenObject=null;goalTimer=0;
             chamberMessage="STIMOLI VISIVI • OSTACOLO FISICO";
             lastEvent="NUOVO ESPERIMENTO • STANZA E BLOCCO";
@@ -302,12 +318,13 @@ public final class GameActivity extends Activity {
             if(!scarcity&&elapsedLife>=70f)scarcity=true;
             // Physiological requirement is part of the organism, NOT a
             // scripted plan for solving the current room.
-            reserve=Math.max(0,reserve-(scarcity?.70f:.14f)*dt);
+            reserve=Math.max(0,reserve-(scarcity?.30f:.09f)*dt);
             if(scarcity&&elapsedLife>=nextChamber&&
                 (chamber==null||chamber.reachedEnergy))
                 activateChamber(false);
             for(UnknownWorld.Entity object:environment)object.tick(dt);
             if(environment.size()<3)extendHabitat();
+            excludeOrdinaryRoomObjects();
             // No object selector or precomputed destination heading.
             chosenObject=null;
         }
@@ -380,7 +397,7 @@ public final class GameActivity extends Activity {
                     gripsEver+=chamber.grasps;
                     farthestGate=Math.max(farthestGate,chamber.maxDoorTravel);
                 }
-                reserve=45;lastEvent="CORPO ESAUSTO • MEMORIA CONSERVATA";eventTime=6;
+                reserve=70;lastEvent="CORPO ESAUSTO • MEMORIA CONSERVATA";eventTime=6;
                 resetEpisode();
                 nextChamber=elapsedLife+12f;
                 save();
@@ -408,8 +425,9 @@ public final class GameActivity extends Activity {
                     float mx=sensorMind.motorX(),my=sensorMind.motorY();
                     heading=(float)Math.atan2(my,mx);
                     float px=creature.cx+mx*145f,py=creature.cy+my*145f;
-                    creature.step(trainer.best,mx,my,slice,handTrainer.best,px,py);
-                    surface.step(creature,shapeTrainer.best,px,py,slice,
+                    creature.step(liveBody.weights(0,trainer.best),mx,my,slice,
+                        liveBody.weights(1,handTrainer.best),px,py);
+                    surface.step(creature,liveBody.weights(2,shapeTrainer.best),px,py,slice,
                         sensorMind.adhesion());
                     if(chamber!=null){
                         chamber.constrain(creature,surface,slice);
@@ -419,10 +437,10 @@ public final class GameActivity extends Activity {
                     if(chamber!=null&&!chamber.reachedEnergy&&
                         chamber.foodTouchedByCore(creature)){
                         float prior=reserve;
-                        reserve=Math.min(100,reserve+22);
+                        reserve=Math.min(100,reserve+UnknownWorld.RARE_ENERGY);
                         energyEaten++;chambersCleared++;
                         decisionBrain.learn(chamber.food,prior,reserve,0);
-                        chamberMessage="SUCCESSO: ZERO HA RAGGIUNTO L'ENERGIA";
+                        chamberMessage="SCOPERTA RARA • RISERVA RIPRISTINATA";
                         lastEvent="RISORSA RAGGIUNTA DIETRO IL BLOCCO";
                         eventTime=7;
                         nextChamber=elapsedLife+40;
@@ -431,8 +449,31 @@ public final class GameActivity extends Activity {
                     // Real temporal observation AFTER collisions, hunger
                     // and any energy actually collected.
                     sensorMind.setLearning(true);
+                    long beforeExperience=sensorMind.experiences;
                     sensorMind.observe(SensorimotorMind.Senses.read(
                         creature,surface,chamber,environment,reserve),slice);
+                    if(sensorMind.experiences>beforeExperience){
+                        OnlineBodyLearning.Result result=liveBody.observe(
+                            sensorMind.lastReward,
+                            (float)Math.hypot(creature.cx-liveStartX,creature.cy-liveStartY),
+                            Math.max(0,physicalContacts-liveStartContacts),
+                            liveStartEnergy,chamber!=null,mx,my,
+                            trainer.best,handTrainer.best,shapeTrainer.best);
+                        liveStartX=creature.cx;liveStartY=creature.cy;
+                        liveStartEnergy=reserve;liveStartContacts=physicalContacts;
+                        if(result!=null){
+                            if(result.domain==0){trainer.attempts++;if(result.accepted){
+                                trainer.best=result.weights;trainer.accepted++;}}
+                            else if(result.domain==1){handTrainer.attempts++;if(result.accepted){
+                                handTrainer.best=result.weights;handTrainer.accepted++;}}
+                            else {shapeTrainer.attempts++;
+                                if(chamber!=null)shapeTrainer.gateAttempts++;
+                                if(result.accepted){shapeTrainer.best=result.weights;
+                                    shapeTrainer.accepted++;
+                                    if(chamber!=null)shapeTrainer.gateAccepted++;}}
+                            save();
+                        }
+                    }
                     phase+=slice;
                     if(phase>=13f){
                         // NOT a reset: the world expands around ZERO.
@@ -521,7 +562,7 @@ public final class GameActivity extends Activity {
                     text(c,"APERTA",gx,cy-87,10,TEAL,true);
                 else text(c,"BLOCCATA",gx,cy-87,9,GOLD,true);
             }
-                        int[] colors={0xff64d8ca,0xffcc7da4,0xffd2b889};
+            int[] colors={0xff64d8ca,0xffcc7da4,0xffd2b889};
             for(UnknownWorld.Entity object:environment){
                 if(object.consumed)continue;
                 float x=object.x,y=object.y;
@@ -548,8 +589,13 @@ public final class GameActivity extends Activity {
                 }
                 paint.setColor(0xff151c26);
                 c.drawCircle(x,y,object.radius,paint);
-                paint.setColor(colors[object.signature]);
+                paint.setColor(object.isRare()?0xffb58cff:colors[object.signature]);
                 c.drawCircle(x,y,object.radius*.63f,paint);
+                if(object.isRare()){
+                    paint.setColor(0xffffdf93);
+                    c.drawCircle(x,y,object.radius*.27f,paint);
+                    ring(c,x,y,object.radius+4+2*(float)Math.sin(uiTime*3),0x88d9a7ff,1.3f);
+                }
                 paint.setColor(0x66ffffff);
                 c.drawCircle(x-object.radius*.25f,y-object.radius*.22f,object.radius*.17f,paint);
                 if(object==chosenObject){
@@ -646,13 +692,13 @@ public final class GameActivity extends Activity {
             text(c,"TENTATIVI",377,34,11,MUTED,false);
             text(c,String.valueOf(trainer.attempts),380,71,22,GOLD,false);
             rounded(c,13,158,467,232,0xca0e1a25,17);
-            text(c,"MOVIMENTO • PUNTEGGIO TRAINING",27,182,11,0xffb5d7d6,false);
+            text(c,"MOVIMENTO • RIFERIMENTO STORICO",27,182,11,0xffb5d7d6,false);
             text(c,format(trainer.initialFitness)+" → "+format(trainer.bestFitness),27,210,20,0xffeffff8,false);
             text(c,"unità / episodio",283,212,11,MUTED,false);
             float y=H-168;
             rounded(c,12,y,468,H-12,0xe00d1923,21);
             text(c,"APPRENDIMENTO DA ZERO",25,y+25,13,TEAL,false);
-            text(c,"APPRENDIMENTO ON • SEMPRE ATTIVO",25,y+45,11,0xffacc5ca,false);
+            text(c,"MONDO + CORPO + PRESA • APPRENDIMENTO ON",25,y+45,11,0xffacc5ca,false);
             button(c,19,y+61,153,H-26,"ANALISI",TEAL);
             button(c,165,y+61,314,H-26,"TEMPO x"+speed,0xffbfdaec);
             button(c,326,y+61,462,H-26,"CONFRONTA",GOLD);

@@ -213,6 +213,10 @@ public final class SensorimotorMind {
                 if(channel<14||channel>=S)continue;
                 float bright=1-d/230f;
                 v[channel]=Math.max(v[channel],bright);
+                // The rare resource emits a SECOND visual wavelength. Its
+                // physical effect is not supplied to the learner as a label.
+                // Existing 26-dimensional weight matrices need no migration.
+                if(e.isRare())v[14+2*4+sector]=Math.max(v[14+2*4+sector],bright*.85f);
             }
             return v;
         }

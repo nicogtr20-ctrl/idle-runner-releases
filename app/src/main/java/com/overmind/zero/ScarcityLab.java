@@ -16,6 +16,12 @@ public final class ScarcityLab {
     public static final float WALL_HALF_THICKNESS=10f,MAX_LINK_SPAN=23f;
     public final float ox,oy;
     public final UnknownWorld.Entity food;
+    /** Chamber interior, boundary walls and door approach must be reserved. */
+    public boolean overlapsRoom(float x,float y,float radius){
+        return x>=entranceX()-WALL_HALF_THICKNESS-radius &&
+            x<=ox+END_X+WALL_HALF_THICKNESS+radius &&
+            y>=oy+TOP-10-radius && y<=oy+BOTTOM+10+radius;
+    }
     public float doorY=0,doorVelocity=0,dualContactTime=0;
     public int grasps=0,oneSidedContacts=0,opposedContactFrames=0;
     public int tactileFrames=0,adhesiveContactFrames=0,dualTouchNoGrip=0;
@@ -28,7 +34,7 @@ public final class ScarcityLab {
 
     public ScarcityLab(float x,float y){
         ox=x;oy=y;
-        food=new UnknownWorld.Entity(ox+242,oy,0,0);
+        food=new UnknownWorld.Entity(ox+242,oy,0,3);
     }
     public float entranceX(){return ox+ENTRY_X;}
     public float gateX(){return entranceX()-DOOR_FRONT_OFFSET;}
@@ -399,6 +405,9 @@ public final class ScarcityLab {
                 (chamber.gateX()+DOOR_HALF_W);
         if(corridor>=20f||corridor<=3f)
             throw new IllegalStateException("Wall-gate gap allows full-body bypass");
+        if(!chamber.food.isRare() || !chamber.overlapsRoom(chamber.food.x,chamber.food.y,chamber.food.radius) ||
+           chamber.overlapsRoom(chamber.entranceX()-200,chamber.oy,15))
+            throw new IllegalStateException("Rare chamber reward improperly placed");
         if(!(chamber.gateX()+DOOR_HALF_W<chamber.entranceX()-WALL_HALF_THICKNESS-5))
             throw new IllegalStateException("Gate must be IN FRONT of wall, not embedded");
         if(chamber.gateTop()>=-OPEN_HALF_HEIGHT||chamber.gateBottom()<=OPEN_HALF_HEIGHT)
