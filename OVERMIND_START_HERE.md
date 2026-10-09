@@ -40,3 +40,8 @@ Il codice, gli asset e i release APK restano di proprietà e sotto controllo del
 - **v0.7.0-ota.22**: corpo con 32 masse perimetrali deformabili e rete di 74 pesi locali (nessun braccio predefinito), nuovi strumenti nella pagina CERVELLO. Vecchio sistema motorio (62), manipolazione (18) e decisioni (91+) preservati. Codice su `feature/overmind-inapp-updater` e ramo `feature/overmind-v07-plastic-body`.
 - Distribuzione OTA Vercel **verificata online**: https://overmind-zero-updates.vercel.app/latest.json (1022); APK firmata https://overmind-zero-updates.vercel.app/apk/overmind-zero-1022-74610481e450.apk . Premere `AGGIORNA` nell'app corrente; non disinstallarla.
 - Prima prova effettiva sul Galaxy S21 in attesa. Priorità: filmato di sporgenze locali e valore ALLUNGAMENTO, numero TEST della morfologia dopo addestramento, parametri MEMBRANA appresi. Per dettagli leggere docs/HANDOFF.md.
+
+## Ultimo sviluppo — ZERO-008 / 2026-10-09
+- Branch `feature/overmind-v08-scarcity-grasp-chamber`: membrana a 96 nodi, energia finita, emergenza di nuove risorse rara, camera con porta scorrevole che richiede contatti fisici su due lati, e addestramento mirato delle capacità di manipolazione.
+- La build viene firmata tramite `feature/overmind-inapp-updater`, package invariato `com.overmind.zero.ota`; verificare https://overmind-zero-updates.vercel.app/latest.json prima di usare AGGIORNA, salvando la precedente memoria. L'installazione su Galaxy S21 è da validare.
+- Leggere `docs/HANDOFF.md` per dettagli tecnici e limiti; NON dire che ZERO ha imparato a usare due braccia finché non si vede spostare e superare la porta senza spinte prefissate.

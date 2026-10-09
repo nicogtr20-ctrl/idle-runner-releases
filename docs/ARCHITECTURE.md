@@ -57,3 +57,9 @@
 - `Morphology.collide`: impulso fisico reale sui segmenti della membrana mobile. Il movimento degli oggetti deriva dalle collisioni, non dal numero di tentativi.
 - `Morphology.Trainer`: neuroevoluzione su rollout corporei con avvicinamento, spinta e consumo energetico; scelta migliore conserva i pesi. Il vecchio `MotorBrain` (62) e `ContactLearning` (18) sono mantenuti, `DecisionBrain` (91+) continua invariato. Corpo e membrane sono simulati separatamente per mantenere compatibilità dei salvataggi.
 - `GameActivity` ora renderizza il vero contorno esterno di 32 masse e aggiorna le statistiche; `BrainStatsActivity` espone MEMBRANA/74 pesi in più e parametri iniziali/attuali. Chiavi persistent nuove `morph_brain_v07`, `morph_attempts_v07`, `morph_accepted_v07`.
+
+## ZERO-008 — ScarcityLab e fisica della stanza
+- `ScarcityLab` crea una stanza rettangolare persistente in coordinate del mondo e una porta scorrevole rigida vincolata lungo y. Collisioni AABB proiettano fuori dalle pareti nucleo, 10 masse interne e 96 nodi esterni. `solveGate` misura nodi su entrambe le facce e la loro componente tangenziale di velocità; unica forza che muove il blocco se stretto. Nodi opposti devono essere materialmente separati lungo la membrana.
+- `UnknownWorld.Entity` ora è consumabile per segnali nutritivi, `newHabitat(...,scarce)` limita spawn. Salvataggi di esperimenti indipendenti dalla crescita dei cervelli.
+- Allenamento morfologico aggiunge `attemptGate` e `ScarcityLab.trainingFitness`: la simulazione ottimizza avvicinamento, contatti bilaterali, effettivo spostamento della porta e accesso al nutrimento. Una terza posizione è usata per verificare capacità di generalizzazione.
+- Compromessi: senza rilevazione esplicita dei muri e senza world model gli episodi potrebbero non essere risolti; reward e navigazione sono ancora impostati nel codice. Prestazioni 96 nodi/colpi da misurare sul Galaxy S21.

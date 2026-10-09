@@ -68,3 +68,14 @@
 - [x] Test su JVM e Android, release firmata e pubblicata via Vercel 0.7.0-ota.22.
 - [ ] Test manuale su Galaxy S21: si vedono pseudopodi locali utili dopo l'addestramento? Le interazioni cambiano?
 - [ ] Eventuale successiva evoluzione: controllare l'acquisizione di appendici che si piegano e possono afferrare un disco su direzioni nuove, non soltanto allungarsi.
+
+## ZERO-008 — Scarsità, presa bilaterale e ambiente vincolato
+- [x] Membrana raffinata a 96 punti senza perdere i 74 parametri salvati.
+- [x] Energia raccolta sparisce; nuova energia diventa rara in scarsità.
+- [x] Stanza visibile con muri fisici, porta scorrevole e nutrimento dietro.
+- [x] Porta può muoversi SOLO grazie a contatti reali simultanei su due lati differenti della membrana, con velocità tangenziale misurata.
+- [x] Addestramento separato su stanza con controllo di holdout.
+- [x] Contatori verificabili di prese, scorrimento, stanze risolte, nutrimento consumato.
+- [x] JVM smoke tests e staging Android.
+- [ ] Test manuale su Galaxy S21 (almeno 5 tentativi di stanza): verificare l'effettiva presa, assenza di teletrasporto, accesso fisico e performance FPS.
+- [ ] Migliorare successivamente percezione ostacoli e pianificazione senza fornire posizione perfetta del nutrimento.
