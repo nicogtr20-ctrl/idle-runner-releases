@@ -23,3 +23,7 @@
 
 ## Pubblicazione verificata v0.9.5-ota.39
 La compilazione Android firmata `38003676123` è verde: versionCode `1039`, SHA-256 `86caeb85b6eba94aa657d6f19ac7dff5dd0e4e8d2974bf71e8c6c12a3201c211`, 92.692 byte. Test in-game su Galaxy S21 ancora pendente, nessun reset richiesto.
+
+
+## Procedura obbligatoria dopo 0.9.6
+Leggere `docs/EXPERIMENT_0096.md` prima di iniziare un altro aggiornamento. Documenta richiesta utente, osservazioni del dispositivo (0.9.4 max porta 111U, non ingresso), differenze 0.9.5→0.9.6, memorie positive/dannose, nuovo formato em2 compatibile em1, schema reset e criteri di validazione. Non descrivere i colori come regole hardcoded, non confondere contatori di avversione con capacità dimostrate, non sovrascrivere i salvataggi o firmare con nuova chiave. Mantenere AGENTS, START_HERE, WHITEPAPER, ARCHITECTURE, HANDOFF, ROADMAP, CHANGELOG, EXPERIMENT_0096 aggiornati e accessibili su `main` per le future chat.
