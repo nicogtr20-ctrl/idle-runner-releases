@@ -240,7 +240,7 @@ public final class BrainStatsActivity extends Activity {
             label(c,"I progressi delle barre sono scale grafiche, non livelli di intelligenza.",25,y+18,10,muted,false);
             rect(c,17,y+39,463,y+147,0xff152e36,16);
             label(c,"VALORI DI APPRENDIMENTO",29,y+67,13,cyan,false);
-            label(c,"Movimento: "+score(motorInitialFitness)+"  →  "+score(motorNowFitness),30,y+93,14,white,false);
+            label(c,"Test motorio storico: "+score(motorInitialFitness)+"  →  "+score(motorNowFitness),30,y+93,12,white,false);
             label(c,"Errore recente delle decisioni: "+String.format(Locale.US,"%.3f",decisions.averageError),
                 30,y+119,12,muted,false);
         }
