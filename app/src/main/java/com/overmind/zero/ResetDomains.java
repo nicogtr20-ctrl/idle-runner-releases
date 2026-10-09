@@ -21,7 +21,8 @@ public final class ResetDomains {
             case MOTOR:return new String[]{"virgin","best","attempts","accepted","original",
                                   "lived_distance_total_v093","lived_distance_record_v093",
                                   "explored_cells_v094","record_net_v094","energy_spent_v094",
-                                  "online_accepted_motor_v094","online_rejected_motor_v094"};
+                                  "online_accepted_motor_v094","online_rejected_motor_v094",
+                                  "motor_recoveries_v097","motor_free_choices_v097"};
             case MANIPULATION:return new String[]{"hand_brain_v04","hand_attempts_v04",
                  "hand_successes_v04","objects_displaced_v041","collisions_v041","max_displacement_v041",
                  "online_accepted_hand_v094","online_rejected_hand_v094"};
@@ -32,7 +33,7 @@ public final class ResetDomains {
             case ROOM:return new String[]{"room_success_v08","finite_energy_eaten_v08",
                  "grip_events_v08","gate_travel_v08","scarcity_elapsed_v08",
                  "scarcity_active_v08"};
-            case EPISODES:return new String[]{"episodic_memory_v095"};
+            case EPISODES:return new String[]{"episodic_memory_v095","physical_replays_v097"};
             case ALL:return new String[0]; // handled by Editor.clear()
             default:throw new IllegalArgumentException("Unknown reset scope: "+domain);
         }
