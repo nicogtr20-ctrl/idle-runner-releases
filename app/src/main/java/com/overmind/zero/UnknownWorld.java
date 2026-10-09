@@ -11,6 +11,7 @@ public final class UnknownWorld {
     public static final int SIGNATURES=3;
     public static final class Entity {
         public float x,y,vx,vy,cooldown,contactCooldown;
+        public boolean consumed=false;
         public final float spawnX,spawnY;
         public boolean everCollided=false, countedAsMoved=false;
         public float peakDisplacement=0;
@@ -22,7 +23,7 @@ public final class UnknownWorld {
             this.signature=signature;this.law=physicalLaw;
             radius=physicalLaw==2?19:15;
         }
-        boolean ready(){return cooldown<=0;}
+        boolean ready(){return !consumed&&cooldown<=0;}
         void tick(float dt){
             cooldown=Math.max(0,cooldown-dt);
             contactCooldown=Math.max(0,contactCooldown-dt);
@@ -38,7 +39,11 @@ public final class UnknownWorld {
         }
         boolean isMovable(){return law==2;}
         float touch(float directionX,float directionY) {
-            if(law==0){cooldown=6;return 22;}
+            if(law==0){
+                if(consumed)return 0;
+                consumed=true;cooldown=Float.POSITIVE_INFINITY;
+                return 22;
+            }
             if(law==1){cooldown=9;return -18;}
             // NEVER set velocity on touch. The live physics collision solver is
             // the ONLY way a movable object can receive momentum.
@@ -113,12 +118,23 @@ public final class UnknownWorld {
     }
     /** Spawn surroundings relative to current body; never teleport the body. */
     public static ArrayList<Entity> newHabitat(int episode,float originX,float originY){
+        return newHabitat(episode,originX,originY,false);
+    }
+    /** During shortage, energy is rare and every collected unit disappears.
+        A new resource may emerge occasionally, never on every frame. */
+    public static ArrayList<Entity> newHabitat(int episode,float originX,float originY,boolean scarce){
         ArrayList<Entity> a=new ArrayList<>();
         float spin=episode*0.39f;
         float[] angles={.2f,2.5f,4.4f,-1.1f,1.7f,-2.2f};
         int[] signals={0,1,2,0,1,2};
         int[] effects={0,1,2,0,1,2};
         for(int i=0;i<angles.length;i++){
+            if(scarce){
+                // 1 supply every fifth expansion, not infinite energy.
+                if(signals[i]==0&&(episode%5!=0||i!=0))continue;
+                if(signals[i]==1&&i!=1)continue;
+                if(signals[i]==2&&i!=2)continue;
+            }
             float angle=angles[i]+spin;
             float d=130+(i%3)*44;
             a.add(new Entity(originX+(float)Math.cos(angle)*d,
@@ -153,6 +169,11 @@ public final class UnknownWorld {
         marked.x=19;marked.tick(.025f);
         if(marked.peakDisplacement<18.9f||marked.spawnX!=0)
             throw new IllegalStateException("Object displacement evidence failed");
+        Entity finite=new Entity(30,0,0,0);
+        if(finite.touch(0,0)!=22||finite.ready()||finite.touch(0,0)!=0)
+            throw new IllegalStateException("A consumed energy pulse must disappear");
+        if(newHabitat(7,0,0,true).size()>2)
+            throw new IllegalStateException("Shortage still spawns abundant energy");
         System.out.printf(Locale.US,
           "ZERO-002 selftest: known_types=%d contacts=%d learned_values=[%.2f, %.2f, %.2f] preferred_signature=%d%n",
           copy.discoveries,copy.total,copy.estimated[0],copy.estimated[1],copy.estimated[2],chosen.signature);

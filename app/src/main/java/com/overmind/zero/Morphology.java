@@ -4,7 +4,7 @@ import java.util.Locale;
 import java.util.Random;
 
 /**
- * ZERO-007: no predefined arms, legs or tentacle positions. Thirty-two
+ * ZERO-007: no predefined arms, legs or tentacle positions. Ninety-six
  * adjacent elastic surface masses cover the ENTIRE organism perimeter.
  * Each mass receives the SAME learned local controller and may extend,
  * turn sideways or retract based on local state and perceived stimulus.
@@ -14,7 +14,7 @@ import java.util.Random;
  * 62 motor weights and 18 manipulation weights remain byte-for-byte valid.
  */
 public final class Morphology {
-    public static final int POINTS=32;
+    public static final int POINTS=96;
     public static final int INPUTS=9,HIDDEN=6,PARAMS=INPUTS*HIDDEN+HIDDEN+2*HIDDEN+2;
     public static final float MAX_REACH=105f,MAX_RADIAL=155f;
     private Morphology(){}
@@ -116,7 +116,9 @@ public final class Morphology {
             }
             // Finite synthetic material: prevent the network from inflating
             // all 32 nodes into a permanently enormous bubble.
-            float budget=Math.min(1f,385f/Math.max(1,requested));
+            // Budget scales with the number of material particles so existing
+            // v0.7 muscle weights retain similar behavior after 32→96 refinement.
+            float budget=Math.min(1f,(385f*POINTS/32f)/Math.max(1,requested));
             for(int i=0;i<POINTS;i++){
                 extension[i]*=budget;
                 float tx=-ny[i],ty=nx[i];
@@ -201,13 +203,14 @@ public final class Morphology {
         UnknownWorld.Entity disk=new UnknownWorld.Entity(dx*86,dy*86,2,2);
         float start=disk.x*dx+disk.y*dy;
         float bestDistance=90,impulseSum=0;
-        for(int frame=0;frame<160;frame++){
+        for(int frame=0;frame<110;frame++){
             float dt=MotorBrain.STEP;
             body.step(motor,dx,dy,dt,hand,disk.x,disk.y);
             surface.step(body,morph,disk.x,disk.y,dt);
             impulseSum+=collide(surface,disk,dt);
             impulseSum+=ContactLearning.collide(body,disk,dt);
             disk.tick(dt);
+            // Measure nearest physical membrane point, not a scripted hand.
             for(int i=0;i<POINTS;i++){
                 float d=(float)Math.hypot(surface.x[i]-disk.x,surface.y[i]-disk.y);
                 bestDistance=Math.min(bestDistance,d);

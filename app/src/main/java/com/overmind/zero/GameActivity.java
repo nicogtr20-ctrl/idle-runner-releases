@@ -51,6 +51,12 @@ public final class GameActivity extends Activity {
         float eventTime=7;
         MotorBrain.Body creature=new MotorBrain.Body();
         Morphology.Surface surface=new Morphology.Surface(creature);
+        ScarcityLab chamber;
+        boolean scarcity=false;
+        float elapsedLife=0,nextChamber=70f;
+        int chambersCleared=0,energyEaten=0,gripsEver=0;
+        float farthestGate=0;
+        String chamberMessage="LA FAME RENDERA' PREZIOSA L'ENERGIA";
         float[] virgin;
         volatile boolean learning=true,enabled=true;
         Thread worker;
@@ -106,6 +112,12 @@ public final class GameActivity extends Activity {
             decisionBrain=new DecisionBrain(90517L);
             decisionBrain.restore(prefs.getString("decision_brain_v05",""));
             reserve=prefs.getFloat("zero_energy_v03",57f);
+            elapsedLife=prefs.getFloat("scarcity_elapsed_v08",0);
+            scarcity=prefs.getBoolean("scarcity_active_v08",false);
+            chambersCleared=prefs.getInt("room_success_v08",0);
+            energyEaten=prefs.getInt("finite_energy_eaten_v08",0);
+            gripsEver=prefs.getInt("grip_events_v08",0);
+            farthestGate=prefs.getFloat("gate_travel_v08",0);
             speed=1;learning=true;simulationRunning=true;
             resetEpisode();
             save();
@@ -176,6 +188,13 @@ public final class GameActivity extends Activity {
               .putString("morph_brain_v07",encode(shapeTrainer.best))
               .putInt("morph_attempts_v07",shapeTrainer.attempts)
               .putInt("morph_accepted_v07",shapeTrainer.accepted)
+              .putBoolean("scarcity_active_v08",scarcity)
+              .putFloat("scarcity_elapsed_v08",elapsedLife)
+              .putInt("room_success_v08",chambersCleared)
+              .putInt("finite_energy_eaten_v08",energyEaten)
+              .putInt("grip_events_v08",gripsEver+(chamber!=null?chamber.grasps:0))
+              .putFloat("gate_travel_v08",Math.max(farthestGate,
+                  chamber!=null?chamber.maxDoorTravel:0))
               .apply();
         }
         void resume(){
@@ -218,7 +237,8 @@ public final class GameActivity extends Activity {
             // Only initial boot or actual simulated death restarts the body.
             creature.reset();surface.reset(creature);
             episode++;phase=0;trailCount=0;clock=0;
-            environment=UnknownWorld.newHabitat(episode,creature.cx,creature.cy);
+            chamber=null;
+            environment=UnknownWorld.newHabitat(episode,creature.cx,creature.cy,scarcity);
             chosenObject=null;decisionBrain.abandon();
             goalTimer=0;contactsThisLife=0;worldTime=0;
             reserve=Math.max(42,Math.min(92,reserve));
@@ -230,12 +250,18 @@ public final class GameActivity extends Activity {
             episode++;phase=0;
             for(int i=environment.size()-1;i>=0;i--){
                 UnknownWorld.Entity e=environment.get(i);
-                if(Math.hypot(e.x-creature.cx,e.y-creature.cy)>600)
+                if(e!= (chamber!=null?chamber.food:null)
+                        && (e.consumed ||
+                            Math.hypot(e.x-creature.cx,e.y-creature.cy)>600))
                     environment.remove(i);
             }
             environment.addAll(UnknownWorld.newHabitat(
-                episode,creature.cx,creature.cy));
-            while(environment.size()>24)environment.remove(0);
+                episode,creature.cx,creature.cy,scarcity));
+            while(environment.size()>24){
+                if(environment.get(0)==(chamber!=null?chamber.food:null)){
+                    environment.remove(1);
+                }else environment.remove(0);
+            }
             if(chosenObject!=null&&!environment.contains(chosenObject)){
                 decisionBrain.abandon();
                 chosenObject=null;goalTimer=0;
@@ -243,9 +269,30 @@ public final class GameActivity extends Activity {
             lastEvent="NUOVA AREA ESPLORATA  •  ZERO NON SI AZZERA";
             eventTime=3;
         }
+        void activateChamber(boolean manual){
+            if(chamber!=null){
+                gripsEver+=chamber.grasps;
+                farthestGate=Math.max(farthestGate,chamber.maxDoorTravel);
+                environment.remove(chamber.food);
+            }
+            scarcity=true;
+            if(manual)reserve=Math.min(58,reserve);
+            chamber=new ScarcityLab(creature.cx,creature.cy);
+            environment.add(chamber.food);
+            nextChamber=elapsedLife+95f;
+            chosenObject=null;goalTimer=0;
+            chamberMessage="RISORSA DIETRO LA PORTA: SERVE UNA PRESA";
+            lastEvent="NUOVO ESPERIMENTO • STANZA E BLOCCO";
+            eventTime=5;
+            save();
+        }
         void updateHabitat(float dt){
-            worldTime+=dt;goalTimer-=dt;
-            reserve=Math.max(0,reserve-.14f*dt);
+            worldTime+=dt;elapsedLife+=dt;goalTimer-=dt;
+            if(!scarcity&&elapsedLife>=70f)scarcity=true;
+            // Scarcity is explicit, increasing metabolic urgency.
+            reserve=Math.max(0,reserve-(scarcity?.70f:.14f)*dt);
+            if(scarcity&&chamber==null&&elapsedLife>=nextChamber)
+                activateChamber(false);
             for(UnknownWorld.Entity object:environment)object.tick(dt);
             if(chosenObject==null||!chosenObject.ready()||goalTimer<=0){
                 if(chosenObject!=null&&goalTimer<=0)decisionBrain.abandon();
@@ -264,6 +311,7 @@ public final class GameActivity extends Activity {
             // Called AFTER the deformable body moves, so contact impulses
             // are consequences of its simulated physical movement.
             for(UnknownWorld.Entity object:environment){
+                if(chamber!=null&&object==chamber.food)continue;
                 if(object.isMovable()){
                     float impulse=Morphology.collide(surface,object,dt)
                         +ContactLearning.collide(creature,object,dt);
@@ -314,6 +362,7 @@ public final class GameActivity extends Activity {
                     reserve=Math.max(0,Math.min(100,reserve+delta));
                     mind.observe(object.signature,delta,0);
                     decisionBrain.learn(object,before,reserve,0);
+                    if(delta>0)energyEaten++;
                     contactsThisLife++;chosenObject=null;goalTimer=0;
                     lastEvent="STIMOLO "+(object.signature+1)+"  ENERGIA "+(delta>=0?"+":"")+(int)delta;
                     eventTime=4;
@@ -323,8 +372,14 @@ public final class GameActivity extends Activity {
             }
             eventTime=Math.max(0,eventTime-dt);
             if(reserve<=0){
+                if(chamber!=null){
+                    gripsEver+=chamber.grasps;
+                    farthestGate=Math.max(farthestGate,chamber.maxDoorTravel);
+                }
                 reserve=45;lastEvent="CORPO ESAUSTO • MEMORIA CONSERVATA";eventTime=6;
-                resetEpisode();save();
+                resetEpisode();
+                nextChamber=elapsedLife+12f;
+                save();
             }
         }
         @Override protected void onSizeChanged(int w,int h,int ow,int oh){
@@ -354,7 +409,23 @@ public final class GameActivity extends Activity {
                     surface.step(creature,shapeTrainer.best,
                         chosenObject!=null?chosenObject.x:creature.cx,
                         chosenObject!=null?chosenObject.y:creature.cy,slice);
+                    if(chamber!=null){
+                        chamber.constrain(creature,surface,slice);
+                        farthestGate=Math.max(farthestGate,chamber.maxDoorTravel);
+                    }
                     resolveObjects(slice);
+                    if(chamber!=null&&!chamber.reachedEnergy&&
+                        chamber.foodTouchedByCore(creature)){
+                        float prior=reserve;
+                        reserve=Math.min(100,reserve+22);
+                        energyEaten++;chambersCleared++;
+                        decisionBrain.learn(chamber.food,prior,reserve,0);
+                        chamberMessage="SUCCESSO: ZERO HA RAGGIUNTO L'ENERGIA";
+                        lastEvent="RISORSA RAGGIUNTA DIETRO IL BLOCCO";
+                        eventTime=7;
+                        nextChamber=elapsedLife+40;
+                        save();
+                    }
                     phase+=slice;
                     if(phase>=13f){
                         // NOT a reset: the world expands around ZERO.
@@ -417,8 +488,35 @@ public final class GameActivity extends Activity {
                 paint.setColor(Math.abs(hash)%3==0?0x39307879:0x272e5d68);
                 c.drawCircle(xx+((i*j)%17),yy,rr,paint);
             }
-            int[] colors={0xff64d8ca,0xffcc7da4,0xffd2b889};
+            if(chamber!=null){
+                float x=chamber.entranceX(),cx=chamber.ox,cy=chamber.oy;
+                paint.setShader(null);
+                paint.setColor(0x1824b6b6);
+                c.drawRect(x,cy+ScarcityLab.TOP,cx+ScarcityLab.END_X,
+                    cy+ScarcityLab.BOTTOM,paint);
+                paint.setColor(0xff4a7781);
+                c.drawRect(x-7,cy+ScarcityLab.TOP-9,x+7,
+                    cy-ScarcityLab.OPEN_HALF_HEIGHT,paint);
+                c.drawRect(x-7,cy+ScarcityLab.OPEN_HALF_HEIGHT,x+7,
+                    cy+ScarcityLab.BOTTOM+9,paint);
+                c.drawRect(x-7,cy+ScarcityLab.TOP-9,cx+ScarcityLab.END_X+7,
+                    cy+ScarcityLab.TOP+7,paint);
+                c.drawRect(x-7,cy+ScarcityLab.BOTTOM-7,cx+ScarcityLab.END_X+7,
+                    cy+ScarcityLab.BOTTOM+9,paint);
+                c.drawRect(cx+ScarcityLab.END_X-7,cy+ScarcityLab.TOP-9,
+                    cx+ScarcityLab.END_X+7,cy+ScarcityLab.BOTTOM+9,paint);
+                paint.setColor(0xffdfb982);
+                c.drawRoundRect(x-ScarcityLab.DOOR_HALF_W,chamber.gateTop(),
+                    x+ScarcityLab.DOOR_HALF_W,chamber.gateBottom(),4,4,paint);
+                paint.setColor(0xff0d1a22);
+                c.drawCircle(x,chamber.gateCenterY(),3,paint);
+                if(chamber.openingFree())
+                    text(c,"APERTA",x,cy-57,10,TEAL,true);
+                else text(c,"BLOCCATA",x,cy-57,9,GOLD,true);
+            }
+                        int[] colors={0xff64d8ca,0xffcc7da4,0xffd2b889};
             for(UnknownWorld.Entity object:environment){
+                if(object.consumed)continue;
                 float x=object.x,y=object.y;
                 paint.setShader(new RadialGradient(x,y,35,new int[]{(object.ready()?0x2248dfc4:0x113d7377),0x003d7377},null,Shader.TileMode.CLAMP));
                 c.drawCircle(x,y,35,paint);paint.setShader(null);
@@ -515,12 +613,12 @@ public final class GameActivity extends Activity {
             rounded(c,12,12,468,145,0xeb0a1420,20);
             rounded(c,27,28,31,55,TEAL,2);
             text(c,"O V E R M I N D",43,39,14,TEAL,false);
-            text(c,"ZERO / ESPERIMENTO 006",26,72,21,0xffe9faf6,false);
+            text(c,"ZERO / ESPERIMENTO 007",26,72,21,0xffe9faf6,false);
             rounded(c,339,104,459,138,0xff20444a,11);
             text(c,"AGGIORNA",399,127,12,TEAL,true);
             rounded(c,217,104,333,138,0xff283b58,11);
             text(c,"CERVELLO",275,127,12,0xffd2c4fc,true);
-            text(c,"CORPO PLASTICO • PSEUDOPODI APPRESI",27,99,11,MUTED,false);
+            text(c,"ENERGIA FINITA • PRESA BILATERALE",27,99,11,MUTED,false);
             text(c,"VERSIONE "+installedVersion+"  •  OTA",27,120,10,0xff708d9d,false);
             text(c,"TENTATIVI",377,34,11,MUTED,false);
             text(c,String.valueOf(trainer.attempts),380,71,22,GOLD,false);
@@ -531,7 +629,7 @@ public final class GameActivity extends Activity {
             float y=H-168;
             rounded(c,12,y,468,H-12,0xe00d1923,21);
             text(c,"APPRENDIMENTO DA ZERO",25,y+25,13,TEAL,false);
-            text(c,"32 punti liberi • nessun braccio predefinito.",25,y+45,11,0xffacc5ca,false);
+            text(c,"96 masse • porta mobile solo con due contatti.",25,y+45,11,0xffacc5ca,false);
             button(c,19,y+61,153,H-26,learning?"FERMA":"ADDESTRA",TEAL);
             button(c,165,y+61,314,H-26,"TEMPO x"+speed,0xffbfdaec);
             button(c,326,y+61,462,H-26,"CONFRONTA",GOLD);
@@ -551,9 +649,17 @@ public final class GameActivity extends Activity {
                     +"  •  PREVISIONE "+format(decisionBrain.lastPrediction),
                     25,398,10,0xffaac3cb,false);
             }
-            text(c,"MEMBRANA "+Morphology.POINTS+" PUNTI  •  ALLUNGAMENTO "+
-                  (int)surface.peakExtension+" U  •  TEST "+shapeTrainer.attempts,
+            text(c,"MEMBRANA "+Morphology.POINTS+"  •  ESTENSIONE "+
+                  (int)surface.peakExtension+" U  •  ALLEN. "+shapeTrainer.attempts,
                   25,421,11,GOLD,false);
+            text(c,(scarcity?"SCARSITA' ATTIVA":"SCORTE IN ESAURIMENTO")+
+                "  •  ENERGIE PRESE "+energyEaten+"  •  STANZE RISOLTE "+chambersCleared,
+                25,443,11,scarcity?0xffef9f91:TEAL,false);
+            if(chamber!=null){
+                text(c,"PORTA "+(int)chamber.doorY+" U  •  PRESE "+
+                    (gripsEver+chamber.grasps)+"  •  DUE LATI "+
+                    chamber.opposedContactFrames,25,465,11,GOLD,false);
+            }else text(c,"TOCCA QUI PER ATTIVARE TEST STANZA E FAME",25,465,11,GOLD,false);
             if(uiTime<updaterStatusUntil&&updaterStatus.length()>0){
                 rounded(c,13,338,467,387,0xef1f3944,13);
                 text(c,updaterStatus.length()>52?updaterStatus.substring(0,52):updaterStatus,240,368,11,0xffd5fff4,true);
@@ -605,6 +711,10 @@ public final class GameActivity extends Activity {
             float scale=getWidth()/W;
             float x=ev.getX()/scale,y=ev.getY()/scale;
             if(showBenchmark){showBenchmark=false;return true;}
+            if(y>442&&y<480&&x<380){
+                activateChamber(true);
+                invalidate();return true;
+            }
             if(y>=H-108){
                 if(x<157){learning=!learning;}
                 else if(x<319){speed=speed==1?5:speed==5?20:1;}
