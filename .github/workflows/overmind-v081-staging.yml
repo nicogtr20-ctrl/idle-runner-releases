@@ -1,7 +1,7 @@
-name: OVERMIND v0.8.1 membrane collision tests
+name: OVERMIND v0.8.2 membrane collision tests
 on:
   push:
-    branches: [fix/overmind-v08-solid-membrane-collision]
+    branches: [fix/overmind-v082-front-door-solid-walls]
   workflow_dispatch:
 permissions:
   contents: read
@@ -20,14 +20,14 @@ jobs:
           gradle-version: '8.11.1'
       - name: Test continuous solid collisions, energy and learning
         run: |
-          mkdir -p /tmp/overmindv081
-          javac -d /tmp/overmindv081 app/src/main/java/com/overmind/zero/MotorBrain.java app/src/main/java/com/overmind/zero/UnknownWorld.java app/src/main/java/com/overmind/zero/ContactLearning.java app/src/main/java/com/overmind/zero/DecisionBrain.java app/src/main/java/com/overmind/zero/Morphology.java app/src/main/java/com/overmind/zero/ScarcityLab.java
-          java -cp /tmp/overmindv081 com.overmind.zero.MotorBrain
-          java -cp /tmp/overmindv081 com.overmind.zero.UnknownWorld
-          java -cp /tmp/overmindv081 com.overmind.zero.ContactLearning
-          java -cp /tmp/overmindv081 com.overmind.zero.DecisionBrain
-          java -cp /tmp/overmindv081 com.overmind.zero.Morphology
-          java -cp /tmp/overmindv081 com.overmind.zero.ScarcityLab
+          mkdir -p /tmp/overmindv082
+          javac -d /tmp/overmindv082 app/src/main/java/com/overmind/zero/MotorBrain.java app/src/main/java/com/overmind/zero/UnknownWorld.java app/src/main/java/com/overmind/zero/ContactLearning.java app/src/main/java/com/overmind/zero/DecisionBrain.java app/src/main/java/com/overmind/zero/Morphology.java app/src/main/java/com/overmind/zero/ScarcityLab.java
+          java -cp /tmp/overmindv082 com.overmind.zero.MotorBrain
+          java -cp /tmp/overmindv082 com.overmind.zero.UnknownWorld
+          java -cp /tmp/overmindv082 com.overmind.zero.ContactLearning
+          java -cp /tmp/overmindv082 com.overmind.zero.DecisionBrain
+          java -cp /tmp/overmindv082 com.overmind.zero.Morphology
+          java -cp /tmp/overmindv082 com.overmind.zero.ScarcityLab
       - name: Verify the genuine energy-death respawn is preserved
         run: |
           python3 - <<'PY'
@@ -38,6 +38,9 @@ jobs:
           assert 'resetEpisode();' in a
           assert 'resolveSolidLinks(skin);' in b
           assert 'crossesInterior' in b
+          assert 'DOOR_FRONT_OFFSET=34f' in b and 'DOOR_HALF_H=69' in b
+          assert 'MAX_LINK_SPAN=23f' in b and 'WALL_HALF_THICKNESS=10f' in b
+          assert 'c.drawRoundRect(gx-ScarcityLab.DOOR_HALF_W' in a
           assert 'path.lineTo(xx[i],yy[i])' in a
           assert 'decision_brain_v05' in a and 'morph_brain_v07' in a
           print('Respawn, neural memory, physical membrane rendering verified.')
