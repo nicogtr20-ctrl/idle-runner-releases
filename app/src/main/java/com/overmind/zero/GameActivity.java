@@ -35,6 +35,8 @@ public final class GameActivity extends Activity {
         Morphology.Trainer shapeTrainer;
         OnlineBodyLearning liveBody=new OnlineBodyLearning();
         float liveStartX,liveStartY,liveStartEnergy;
+        float travelSinceAction=0,forwardSinceAction=0;
+        float lifeDistance=0,totalTravel=0,bestLifeDistance=0;
         int liveStartContacts;
         int pushes=0,physicalContacts=0;
         float biggestDisplacement=0;
@@ -137,6 +139,8 @@ public final class GameActivity extends Activity {
             sensorMind.diagnostics.restore(
                 prefs.getString("sensorimotor_diagnostics_v091",""));
             reserve=prefs.getFloat("zero_energy_v03",57f);
+            totalTravel=prefs.getFloat("lived_distance_total_v093",0);
+            bestLifeDistance=prefs.getFloat("lived_distance_record_v093",0);
             elapsedLife=prefs.getFloat("scarcity_elapsed_v08",0);
             scarcity=prefs.getBoolean("scarcity_active_v08",false);
             chambersCleared=prefs.getInt("room_success_v08",0);
@@ -205,6 +209,8 @@ public final class GameActivity extends Activity {
               .putFloat("original",trainer.initialFitness)
               .putString("world_knowledge_v03",mind.serialize())
               .putFloat("zero_energy_v03",reserve)
+              .putFloat("lived_distance_total_v093",totalTravel)
+              .putFloat("lived_distance_record_v093",bestLifeDistance)
               .putString("hand_brain_v04",encode(handTrainer.best))
               .putInt("hand_attempts_v04",handTrainer.attempts)
               .putInt("hand_successes_v04",handTrainer.accepted)
@@ -247,6 +253,8 @@ public final class GameActivity extends Activity {
         }
         void resetEpisode(){
             // Only initial boot or actual simulated death restarts the body.
+            bestLifeDistance=Math.max(bestLifeDistance,lifeDistance);
+            lifeDistance=0;travelSinceAction=0;forwardSinceAction=0;
             liveBody.abortTrial();
             creature.reset();surface.reset(creature);
             episode++;phase=0;trailCount=0;clock=0;
@@ -426,6 +434,7 @@ public final class GameActivity extends Activity {
                     float mx=sensorMind.motorX(),my=sensorMind.motorY();
                     heading=(float)Math.atan2(my,mx);
                     float px=creature.cx+mx*145f,py=creature.cy+my*145f;
+                    float beforeX=creature.cx,beforeY=creature.cy;
                     creature.step(liveBody.weights(0,trainer.best),mx,my,slice,
                         liveBody.weights(1,handTrainer.best),px,py);
                     surface.step(creature,liveBody.weights(2,shapeTrainer.best),px,py,slice,
@@ -433,6 +442,16 @@ public final class GameActivity extends Activity {
                     if(chamber!=null){
                         chamber.constrain(creature,surface,slice);
                         farthestGate=Math.max(farthestGate,chamber.maxDoorTravel);
+                    }
+                    // Only measured physical displacement after collisions
+                    // and before simulated death can count as motor progress.
+                    float ddx=creature.cx-beforeX,ddy=creature.cy-beforeY;
+                    float physicalTravel=(float)Math.hypot(ddx,ddy);
+                    if(Float.isFinite(physicalTravel)&&physicalTravel<80){
+                        lifeDistance+=physicalTravel;totalTravel+=physicalTravel;
+                        travelSinceAction+=physicalTravel;
+                        forwardSinceAction+=ddx*mx+ddy*my;
+                        bestLifeDistance=Math.max(bestLifeDistance,lifeDistance);
                     }
                     resolveObjects(slice);
                     if(chamber!=null&&!chamber.reachedEnergy&&
@@ -456,12 +475,12 @@ public final class GameActivity extends Activity {
                         creature,surface,chamber,environment,reserve),slice);
                     if(sensorMind.experiences>beforeExperience){
                         OnlineBodyLearning.Result result=liveBody.observe(
-                            sensorMind.lastReward,
-                            (float)Math.hypot(creature.cx-liveStartX,creature.cy-liveStartY),
+                            sensorMind.lastReward,travelSinceAction,forwardSinceAction,
                             Math.max(0,physicalContacts-liveStartContacts),
                             liveStartEnergy,chamber!=null,mx,my,
                             trainer.best,handTrainer.best,shapeTrainer.best);
                         liveStartX=creature.cx;liveStartY=creature.cy;
+                        travelSinceAction=0;forwardSinceAction=0;
                         liveStartEnergy=reserve;liveStartContacts=physicalContacts;
                         if(result!=null){
                             if(result.domain==0){trainer.attempts++;if(result.accepted){
@@ -694,9 +713,9 @@ public final class GameActivity extends Activity {
             text(c,"TENTATIVI",377,34,11,MUTED,false);
             text(c,String.valueOf(trainer.attempts),380,71,22,GOLD,false);
             rounded(c,13,158,467,232,0xca0e1a25,17);
-            text(c,"MOVIMENTO • RIFERIMENTO STORICO",27,182,11,0xffb5d7d6,false);
-            text(c,format(trainer.initialFitness)+" → "+format(trainer.bestFitness),27,210,20,0xffeffff8,false);
-            text(c,"unità / episodio",283,212,11,MUTED,false);
+            text(c,"MOVIMENTO REALE • DISTANZA DEL NUCLEO",27,182,11,0xffb5d7d6,false);
+            text(c,(int)lifeDistance+" U  •  RECORD "+(int)bestLifeDistance+" U",27,210,20,0xffeffff8,false);
+            text(c,"per vita",384,212,11,MUTED,false);
             float y=H-168;
             rounded(c,12,y,468,H-12,0xe00d1923,21);
             text(c,"APPRENDIMENTO DA ZERO",25,y+25,13,TEAL,false);
@@ -725,6 +744,9 @@ public final class GameActivity extends Activity {
                     +"  •  PREVISIONE "+format(decisionBrain.lastPrediction),
                     25,398,10,0xffaac3cb,false);
             }
+            text(c,"CAMMINO "+(int)totalTravel+" U  •  CORPO "+
+                (liveBody.testingCandidate()?"TEST PESI":"PESI SALVATI"),
+                25,392,10,0xffb5d7d6,false);
             text(c,"MEMBRANA "+Morphology.POINTS+"  •  ESTENSIONE "+
                   (int)surface.peakExtension+" U  •  PROVE PRESA "+
                   shapeTrainer.gateAttempts,
