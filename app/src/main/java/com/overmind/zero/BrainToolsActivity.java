@@ -123,7 +123,11 @@ public final class BrainToolsActivity extends Activity {
         line(physical,"MEMBRANA · conservate / scartate",
              prefs.getInt("online_accepted_membrane_v094",0)+" / "+
              prefs.getInt("online_rejected_membrane_v094",0),WHITE);
-        paragraph(physical,"I contatori partono dalla 0.9.4: non sono ricostruibili dai tentativi precedenti. Una zona è una cella di 75 unità, conteggiata una volta per vita. Le varianti sono confrontate su finestre successive, NON nelle stesse condizioni iniziali: dati indicativi, non una prova causale.");
+        line(physical,"Recuperi da immobilità (0.9.7)",
+             String.valueOf(prefs.getInt("motor_recoveries_v097",0)),CYAN);
+        line(physical,"Decisioni temporaneamente libere dai ricordi",
+             String.valueOf(prefs.getInt("motor_free_choices_v097",0)),WHITE);
+        paragraph(physical,"La 0.9.7 protegge il motore appreso: un ricordo non può sovrascriverne i 62 pesi. Dopo 2 finestre di circa 7 secondi senza spostamento netto né effetto fisico, sospende temporaneamente soltanto i suggerimenti positivi della memoria. Non impone una direzione, non cancella i pesi né prova che ZERO impari più velocemente. I confronti delle varianti restano osservazionali, non A/B controllati.");
         EpisodicMemory episodes=new EpisodicMemory();
         episodes.restore(prefs.getString("episodic_memory_v095",""));
         LinearLayout memory=panel(body);
@@ -146,6 +150,8 @@ public final class BrainToolsActivity extends Activity {
              String.valueOf(episodes.matched),WHITE);
         line(memory,"Azioni realmente richiamate",
              String.valueOf(episodes.replayed),CYAN);
+        line(memory,"Riprove fisiche con membrana in contatto",
+             String.valueOf(prefs.getInt("physical_replays_v097",0)),WHITE);
         line(memory,"Effetti positivi nuovamente osservati",
              String.valueOf(episodes.repeatEffects),CYAN);
         line(memory,"Scelte diverse da un ricordo dannoso",
@@ -154,7 +160,7 @@ public final class BrainToolsActivity extends Activity {
              episodes.lastTraceLength+" azioni",WHITE);
         line(memory,"Ultimo effetto fisico ricordato",
              number(episodes.lastEventEffect),AMBER);
-        paragraph(memory,"Dalla 0.9.6 ZERO ricorda sequenze vissute di lunghezza variabile (fino a 36 azioni), effetti benefici e dannosi osservati e rafforza i ricordi ripetutamente confermati. Un effetto energetico deriva dal CONTATTO, non dalla fame naturale. Il ricordo positivo può orientare una scelta, quello dannoso può penalizzare l'azione già osservata; nessun colore è programmato come buono o cattivo. I vecchi ricordi 0.9.5 migrano senza azzerare gli altri cervelli. 'Evitati' indica scelte differenti in contesti simili, non la prova di aver compreso il pericolo.");
+        paragraph(memory,"Le memorie v0.9.6 restano valide: benefici/danni, sequenze di 2–36 azioni, conferme e formato em2 (anche em1). Dalla 0.9.7 il richiamo può suggerire azioni, ma non sostituisce mai il controllo motorio migliore già salvato. Soltanto con reale contatto tattile e fuori dalle prove mutate può riprovare i pesi di presa e membrana; altrimenti usa quelli correnti. Le scelte negative restano attive anche quando l'autocorrezione sospende brevemente i ricordi positivi. Non è una dimostrazione di comprensione, causalità o stanza superata.");
         LinearLayout reset=panel(body);
         reset.addView(label("AZZERA APPRENDIMENTO",17,AMBER,true));
         paragraph(reset,"Ogni voce ritorna allo stato vergine SOLO per quel sistema. Altre memorie e reti rimangono. L'azzeramento ricarica il corpo nella mappa per applicare i nuovi parametri in sicurezza.");
