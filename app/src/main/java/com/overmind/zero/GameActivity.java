@@ -496,30 +496,30 @@ public final class GameActivity extends Activity {
                 c.drawCircle(xx+((i*j)%17),yy,rr,paint);
             }
             if(chamber!=null){
-                float x=chamber.entranceX(),cx=chamber.ox,cy=chamber.oy;
+                float x=chamber.entranceX(),gx=chamber.gateX(),cx=chamber.ox,cy=chamber.oy;
                 paint.setShader(null);
                 paint.setColor(0x1824b6b6);
                 c.drawRect(x,cy+ScarcityLab.TOP,cx+ScarcityLab.END_X,
                     cy+ScarcityLab.BOTTOM,paint);
                 paint.setColor(0xff4a7781);
-                c.drawRect(x-7,cy+ScarcityLab.TOP-9,x+7,
+                c.drawRect(x-ScarcityLab.WALL_HALF_THICKNESS,cy+ScarcityLab.TOP-10,x+ScarcityLab.WALL_HALF_THICKNESS,
                     cy-ScarcityLab.OPEN_HALF_HEIGHT,paint);
-                c.drawRect(x-7,cy+ScarcityLab.OPEN_HALF_HEIGHT,x+7,
+                c.drawRect(x-ScarcityLab.WALL_HALF_THICKNESS,cy+ScarcityLab.OPEN_HALF_HEIGHT,x+ScarcityLab.WALL_HALF_THICKNESS,
                     cy+ScarcityLab.BOTTOM+9,paint);
-                c.drawRect(x-7,cy+ScarcityLab.TOP-9,cx+ScarcityLab.END_X+7,
+                c.drawRect(x-ScarcityLab.WALL_HALF_THICKNESS,cy+ScarcityLab.TOP-10,cx+ScarcityLab.END_X+ScarcityLab.WALL_HALF_THICKNESS,
                     cy+ScarcityLab.TOP+7,paint);
-                c.drawRect(x-7,cy+ScarcityLab.BOTTOM-7,cx+ScarcityLab.END_X+7,
+                c.drawRect(x-ScarcityLab.WALL_HALF_THICKNESS,cy+ScarcityLab.BOTTOM-ScarcityLab.WALL_HALF_THICKNESS,cx+ScarcityLab.END_X+ScarcityLab.WALL_HALF_THICKNESS,
                     cy+ScarcityLab.BOTTOM+9,paint);
-                c.drawRect(cx+ScarcityLab.END_X-7,cy+ScarcityLab.TOP-9,
-                    cx+ScarcityLab.END_X+7,cy+ScarcityLab.BOTTOM+9,paint);
+                c.drawRect(cx+ScarcityLab.END_X-ScarcityLab.WALL_HALF_THICKNESS,cy+ScarcityLab.TOP-10,
+                    cx+ScarcityLab.END_X+ScarcityLab.WALL_HALF_THICKNESS,cy+ScarcityLab.BOTTOM+10,paint);
                 paint.setColor(0xffdfb982);
-                c.drawRoundRect(x-ScarcityLab.DOOR_HALF_W,chamber.gateTop(),
-                    x+ScarcityLab.DOOR_HALF_W,chamber.gateBottom(),4,4,paint);
+                c.drawRoundRect(gx-ScarcityLab.DOOR_HALF_W,chamber.gateTop(),
+                    gx+ScarcityLab.DOOR_HALF_W,chamber.gateBottom(),4,4,paint);
                 paint.setColor(0xff0d1a22);
-                c.drawCircle(x,chamber.gateCenterY(),3,paint);
+                c.drawCircle(gx,chamber.gateCenterY(),3,paint);
                 if(chamber.openingFree())
-                    text(c,"APERTA",x,cy-57,10,TEAL,true);
-                else text(c,"BLOCCATA",x,cy-57,9,GOLD,true);
+                    text(c,"APERTA",gx,cy-87,10,TEAL,true);
+                else text(c,"BLOCCATA",gx,cy-87,9,GOLD,true);
             }
                         int[] colors={0xff64d8ca,0xffcc7da4,0xffd2b889};
             for(UnknownWorld.Entity object:environment){
