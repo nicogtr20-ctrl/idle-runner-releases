@@ -150,8 +150,14 @@ public final class SensorimotorMind {
         averagePredictionError=experiences==0?error:
                 averagePredictionError*.98f+error*.02f;
         float deltaEnergy=(after[0]-before[0])*10f;
+        // Reward only actual measured velocity aligned with ZERO's own
+        // selected action. No target coordinates and no synthetic impulse.
+        float ax=(float)Math.cos((trialAction%8)*Math.PI/4);
+        float ay=(float)Math.sin((trialAction%8)*Math.PI/4);
+        float realForward=Math.max(-1f,Math.min(1f,after[1]*ax+after[2]*ay));
         lastReward=Math.max(-2,Math.min(2,deltaEnergy))
                     +.10f*Math.min(2,sensoryChange)
+                    +.24f*realForward
                     +.3f*progress-.012f;
         if(learning&&!holdout){
             float td=bounded(lastReward+GAMMA*bestFuture(after)-estimate(before,trialAction));
