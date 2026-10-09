@@ -323,7 +323,8 @@ public final class GameActivity extends Activity {
                 (chamber==null||chamber.reachedEnergy))
                 activateChamber(false);
             for(UnknownWorld.Entity object:environment)object.tick(dt);
-            if(environment.size()<3)extendHabitat();
+            // Scarcity must not spawn new entities every rendered frame.
+            if(environment.size()<3&&phase>=4f)extendHabitat();
             excludeOrdinaryRoomObjects();
             // No object selector or precomputed destination heading.
             chosenObject=null;
@@ -438,10 +439,11 @@ public final class GameActivity extends Activity {
                         chamber.foodTouchedByCore(creature)){
                         float prior=reserve;
                         reserve=Math.min(100,reserve+UnknownWorld.RARE_ENERGY);
+                        int gained=(int)(reserve-prior);
                         energyEaten++;chambersCleared++;
                         decisionBrain.learn(chamber.food,prior,reserve,0);
                         chamberMessage="SCOPERTA RARA • RISERVA RIPRISTINATA";
-                        lastEvent="RISORSA RAGGIUNTA DIETRO IL BLOCCO";
+                        lastEvent="SCOPERTA RARA • ENERGIA +"+gained;
                         eventTime=7;
                         nextChamber=elapsedLife+40;
                         save();
