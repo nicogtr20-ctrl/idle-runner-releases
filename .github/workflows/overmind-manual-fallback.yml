@@ -1,5 +1,5 @@
 name: OVERMIND verified GitHub fallback releases
-# Regenerate signed APK fallback for 0.8.2 while Vercel deployment catches up.
+# Publish checksum-verified v0.8.3 neural adhesive grip APK while Vercel deploy catches up.
 on:
   push:
     branches: [main]
