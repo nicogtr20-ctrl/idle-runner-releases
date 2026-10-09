@@ -477,9 +477,11 @@ public final class GameActivity extends Activity {
             rounded(c,12,12,468,145,0xeb0a1420,20);
             rounded(c,27,28,31,55,TEAL,2);
             text(c,"O V E R M I N D",43,39,14,TEAL,false);
-            text(c,"ZERO / ESPERIMENTO 004",26,72,21,0xffe9faf6,false);
+            text(c,"ZERO / ESPERIMENTO 005",26,72,21,0xffe9faf6,false);
             rounded(c,339,104,459,138,0xff20444a,11);
             text(c,"AGGIORNA",399,127,12,TEAL,true);
+            rounded(c,217,104,333,138,0xff283b58,11);
+            text(c,"CERVELLO",275,127,12,0xffd2c4fc,true);
             text(c,"SCELTE NEURALI • ESPERIENZA DIRETTA",27,99,11,MUTED,false);
             text(c,"VERSIONE "+installedVersion+"  •  OTA",27,120,10,0xff708d9d,false);
             text(c,"TENTATIVI",377,34,11,MUTED,false);
@@ -568,8 +570,14 @@ public final class GameActivity extends Activity {
                 else compare();
                 return true;
             }
-            if(y>=104&&y<145&&x>=328){
+            if(y>=104&&y<145&&x>=339){
                 updater.checkAndInstall();
+                return true;
+            }
+            if(y>=104&&y<145&&x>=217&&x<334){
+                save();
+                GameActivity.this.startActivity(
+                    new android.content.Intent(GameActivity.this,BrainStatsActivity.class));
                 return true;
             }
             if(y<137&&x<310){

@@ -1,0 +1,48 @@
+name: OVERMIND v0.6 evolving brain and skills screen
+on:
+  push:
+    branches: [feature/overmind-v06-evolving-brain-dashboard]
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+      - uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: '8.11.1'
+      - name: Test evolving neural brain, migration and physics
+        run: |
+          mkdir -p /tmp/zero-v06
+          javac -d /tmp/zero-v06 app/src/main/java/com/overmind/zero/MotorBrain.java app/src/main/java/com/overmind/zero/UnknownWorld.java app/src/main/java/com/overmind/zero/ContactLearning.java app/src/main/java/com/overmind/zero/DecisionBrain.java
+          java -cp /tmp/zero-v06 com.overmind.zero.MotorBrain
+          java -cp /tmp/zero-v06 com.overmind.zero.UnknownWorld
+          java -cp /tmp/zero-v06 com.overmind.zero.ContactLearning
+          java -cp /tmp/zero-v06 com.overmind.zero.DecisionBrain
+      - name: Verify brain page and prior memory fields
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          game=Path('app/src/main/java/com/overmind/zero/GameActivity.java').read_text()
+          brain=Path('app/src/main/java/com/overmind/zero/BrainStatsActivity.java').read_text()
+          manifest=Path('app/src/main/AndroidManifest.xml').read_text()
+          assert 'BrainStatsActivity.class' in game
+          assert 'android:name="com.overmind.zero.BrainStatsActivity"' in manifest
+          assert 'decision_brain_v05' in game
+          assert 'hand_brain_v04' in game and 'putString("best"' in game
+          assert 'initialSnapshot()' in brain and 'snapshot()' in brain
+          assert 'movementStart' in brain and 'movementNow' in brain
+          assert 'PARAMETRI' in brain and 'EVOLUZIONE' in brain
+          assert 'decisionBrain.choose(environment' in game
+          assert 'mind.choose(environment' not in game
+          print('ZERO-006 static navigation, saved memory and genuine weight comparison OK')
+          PY
+      - name: Build Android APK staging
+        run: gradle --no-daemon assembleDebug
