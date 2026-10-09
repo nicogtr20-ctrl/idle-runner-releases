@@ -618,6 +618,12 @@ public final class GameActivity extends Activity {
                 if(r>48){
                     paint.setColor(0x8c97f5dc);c.drawCircle(xx[i],yy[i],1.65f,paint);
                 }
+                // Orange sparks show only PHYSICALLY engaged neural adhesion,
+                // not ordinary contacts or the membrane's motor contractions.
+                if(chamber!=null&&surface.gripHold[i]>=Morphology.GRIP_HOLD){
+                    paint.setColor(0xfff8c979);
+                    c.drawCircle(xx[i],yy[i],3.15f,paint);
+                }
             }
             paint.setColor(0x889de5da);
             c.drawOval(creature.cx-13,creature.cy-17,creature.cx+5,creature.cy-12,paint);
