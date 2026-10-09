@@ -49,3 +49,13 @@
 - [ ] Test reale dell'aggiornamento 0.5 sul Galaxy S21
 - [ ] Verificare che Vercel possa pubblicare nuovamente dopo esaurimento del limite giornaliero
 - [ ] Navigazione autonoma senza direzione geometrica suggerita
+
+## ZERO-006 — Pagina abilità e crescita del cervello
+- [x] V0.6: pesi del cervello decisionale da 91, estensibili fino a 217, +9 alla volta dopo verifica errore e validazione separata
+- [x] Migrazione della memoria v0.5 senza cancellare i pesi già appresi
+- [x] Pagina CERVELLO con ABILITA, PARAMETRI (partenza/attuale/delta) ed EVOLUZIONE
+- [x] Test JVM, verifica UI, firma APK Android (run 19 e 20)
+- [x] Release APK 0.6.0-ota.19 nel repository privato GitHub
+- [ ] Verifica su Galaxy S21 della pagina e dell'apprendimento dopo aggiornamento senza disinstallare
+- [ ] Esperimento che verifichi sul dispositivo se e quando viene davvero accettato un neurone aggiuntivo (nessuna crescita garantita)
+- [ ] Vercel: ripristinare manifest pubblico/OTA quando limite gratuito si libera
