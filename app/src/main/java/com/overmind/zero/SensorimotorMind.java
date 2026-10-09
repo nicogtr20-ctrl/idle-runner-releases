@@ -24,6 +24,8 @@ public final class SensorimotorMind {
     public static final int PARAMETERS=FORWARD_WEIGHTS+VALUE_WEIGHTS;
     private static final float MODEL_LR=.018f,VALUE_LR=.04f,GAMMA=.78f;
     private final Random random=new Random(60909);
+    private transient EpisodicMemory episodic;
+    public synchronized void attachMemory(EpisodicMemory memory){episodic=memory;}
     private final float[] model=new float[FORWARD_WEIGHTS];
     private final float[] value=new float[VALUE_WEIGHTS];
     private final float[] trialState=new float[S];
@@ -85,6 +87,7 @@ public final class SensorimotorMind {
 
     public synchronized int choose(float[] senses){
         if(senses.length!=S)throw new IllegalArgumentException("sensor width");
+        int proposed=episodic==null?-1:episodic.suggested(senses);
         int chosen=0;
         float best=-Float.MAX_VALUE;
         // Exploration is intrinsic to learning; no action is mapped to a
@@ -97,7 +100,9 @@ public final class SensorimotorMind {
             }
             float curiosity=.035f*Math.min(3,predictedChange);
             float jitter=(random.nextFloat()-.5f)*(.15f+.18f/(1+experiences/45f));
-            float score=q+curiosity+jitter;
+            // Remembered effects bias a choice but never force it.
+            float memoryBias=a==proposed?.72f:0;
+            float score=q+curiosity+jitter+memoryBias;
             if(score>best){best=score;chosen=a;}
         }
         float epsilon=Math.max(.09f,.52f/(1+experiences/120f));
@@ -107,6 +112,7 @@ public final class SensorimotorMind {
             actionExploratory=true;
         }
         if(action!=chosen)actionsReconsidered++;
+        if(episodic!=null)episodic.chosen(chosen,proposed);
         action=chosen;decisions++;
         estimatedValue=estimate(senses,chosen);
         System.arraycopy(senses,0,trialState,0,S);
@@ -119,6 +125,13 @@ public final class SensorimotorMind {
         scripted training example. One action has enough time for motor force
         to affect the body (approx 0.65 simulation seconds). */
     public synchronized void observe(float[] after,float dt){
+        observe(after,dt,0);
+    }
+    /**
+     * Generic positive motion of a physically contacted obstacle. This is
+     * AFTER physics: neither an action command nor a gate/room success label.
+     */
+    public synchronized void observe(float[] after,float dt,float physicalEffect){
         if(after.length!=S)throw new IllegalArgumentException("sensory width");
         if(trialAction<0){choose(after);return;}
         elapsed+=Math.max(0,dt);
@@ -158,6 +171,7 @@ public final class SensorimotorMind {
         lastReward=Math.max(-2,Math.min(2,deltaEnergy))
                     +.10f*Math.min(2,sensoryChange)
                     +.24f*realForward
+                    +.085f*Math.min(16,Math.max(0,physicalEffect))
                     +.3f*progress-.012f;
         if(learning&&!holdout){
             float td=bounded(lastReward+GAMMA*bestFuture(after)-estimate(before,trialAction));
