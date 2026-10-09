@@ -156,3 +156,16 @@ Documentazione dettagliata e limiti scientifici: `docs/EXPERIMENT_0095.md`.
 
 ## Pubblicazione verificata v0.9.5-ota.39
 La compilazione Android firmata `38003676123` è verde: versionCode `1039`, SHA-256 `86caeb85b6eba94aa657d6f19ac7dff5dd0e4e8d2974bf71e8c6c12a3201c211`, 92.692 byte. Test in-game su Galaxy S21 ancora pendente, nessun reset richiesto.
+
+
+## ZERO 0.9.6 — memoria delle conseguenze benefiche e nocive
+- [x] Episodi vissuti di durata variabile 2–36 azioni e archivio ampliato a 24.
+- [x] Misurare vantaggi e danni energetici a contatto, compreso danno che precede morte; non attribuire la fame a un oggetto.
+- [x] Associazioni sensoriali positive e negative senza etichette fisse blu/rosso; richiamo favorevole debole e avversione per azioni dannose.
+- [x] Consolidamento delle memorie confermate e rimpiazzo per forza, non pura età; migrazione em1→em2 senza reset.
+- [x] ANALISI: positivi, negativi, ricordi confermati, lunghezza, scelte diverse da un pericolo.
+- [x] Test JVM su em1 migrazione, red/blue da energia, morte, lunghe sequenze, regressioni e Android build.
+- [ ] Prova real-world Galaxy S21: acquisizione dati, confronto su scene identiche e preferenza effettiva per energie/utilità.
+- [ ] Verificare il ritorno alla tecnica di presa e completamento del cancello, non solo contatori.
+- [ ] Ricerca su capacità autonoma di pianificazione a più passi dal modello del mondo, separata dai dati esperienziali.
+Dettagli: `docs/EXPERIMENT_0096.md`.
