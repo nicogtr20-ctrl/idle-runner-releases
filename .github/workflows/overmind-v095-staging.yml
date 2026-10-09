@@ -1,0 +1,50 @@
+name: OVERMIND 0.9.5 autobiographical memory staging
+on:
+  push:
+    branches: [feature/overmind-v095-episodic-consequences]
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 35
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with: {distribution: temurin, java-version: '17'}
+      - uses: gradle/actions/setup-gradle@v4
+        with: {gradle-version: '8.11.1'}
+      - name: All in-life learning, episode and physics JVM tests
+        run: |
+          mkdir -p /tmp/zero095
+          javac -d /tmp/zero095 app/src/main/java/com/overmind/zero/{MotorBrain,UnknownWorld,ContactLearning,DecisionBrain,Morphology,ScarcityLab,SensorimotorMind,LearningDiagnostics,ResetDomains,MotionExploration,OnlineBodyLearning,EpisodicMemory}.java
+          for test in MotorBrain UnknownWorld ContactLearning DecisionBrain Morphology ScarcityLab SensorimotorMind LearningDiagnostics ResetDomains MotionExploration OnlineBodyLearning EpisodicMemory; do
+            java -cp /tmp/zero095 com.overmind.zero.$test
+          done
+      - name: Verify no solved-gate oracle or regression to scripted trainer
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          g=Path('app/src/main/java/com/overmind/zero/GameActivity.java').read_text()
+          m=Path('app/src/main/java/com/overmind/zero/EpisodicMemory.java').read_text()
+          s=Path('app/src/main/java/com/overmind/zero/SensorimotorMind.java').read_text()
+          u=Path('app/src/main/java/com/overmind/zero/BrainToolsActivity.java').read_text()
+          r=Path('app/src/main/java/com/overmind/zero/ResetDomains.java').read_text()
+          assert 'episodic_memory_v095' in g
+          assert 'environmentEffectSinceAction' in g
+          assert 'float actuallyMoved=Math.abs(chamber.doorY-doorBefore)' in g
+          assert 'if(actedFromMemory)liveBody.abortTrial();' in g
+          assert 'episodic.consequence(' in g and 'episodic.action(observedBefore,actionBefore)' in g
+          assert 'episodic.weights(2,liveBody.weights(2,shapeTrainer.best))' in g
+          assert 'episodic.suggested(senses)' in s and 'episodic.chosen(chosen,proposed)' in s
+          assert 'MIN_EFFECT' in m and 'MAX_EPISODES=18' in m
+          assert 'if(cooldown>0)' in m
+          assert 'MEMORIA DELLE ESPERIENZE' in u and 'MEMORIA EPISODICA' in u
+          assert 'case EPISODES:return new String[]{"episodic_memory_v095"};' in r
+          assert 'trainer.attempt()' not in g and 'shapeTrainer.attemptGate(' not in g
+          assert 'Math.atan2(chosenObject.y' not in g and 'decisionBrain.choose(environment' not in g
+          print('ZERO 0.9.5 neural recall, preserved motor freedom, scope resets, honest episodic evidence verified')
+          PY
+      - name: Build Android debug with actual application code
+        run: gradle --no-daemon assembleDebug
