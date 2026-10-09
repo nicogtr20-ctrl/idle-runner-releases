@@ -26,7 +26,7 @@ jobs:
       - name: Unit tests
         run: |
           mkdir -p /tmp/overmind
-          javac -d /tmp/overmind app/src/main/java/com/overmind/zero/MotorBrain.java app/src/main/java/com/overmind/zero/UnknownWorld.java app/src/main/java/com/overmind/zero/ContactLearning.java app/src/main/java/com/overmind/zero/DecisionBrain.java app/src/main/java/com/overmind/zero/Morphology.java app/src/main/java/com/overmind/zero/ScarcityLab.java app/src/main/java/com/overmind/zero/SensorimotorMind.java app/src/main/java/com/overmind/zero/LearningDiagnostics.java app/src/main/java/com/overmind/zero/ResetDomains.java app/src/main/java/com/overmind/zero/OnlineBodyLearning.java
+          javac -d /tmp/overmind app/src/main/java/com/overmind/zero/MotorBrain.java app/src/main/java/com/overmind/zero/UnknownWorld.java app/src/main/java/com/overmind/zero/ContactLearning.java app/src/main/java/com/overmind/zero/DecisionBrain.java app/src/main/java/com/overmind/zero/Morphology.java app/src/main/java/com/overmind/zero/ScarcityLab.java app/src/main/java/com/overmind/zero/SensorimotorMind.java app/src/main/java/com/overmind/zero/LearningDiagnostics.java app/src/main/java/com/overmind/zero/ResetDomains.java app/src/main/java/com/overmind/zero/OnlineBodyLearning.java app/src/main/java/com/overmind/zero/MotionExploration.java
           java -cp /tmp/overmind com.overmind.zero.MotorBrain
           java -cp /tmp/overmind com.overmind.zero.UnknownWorld
           java -cp /tmp/overmind com.overmind.zero.ContactLearning
@@ -37,6 +37,7 @@ jobs:
           java -cp /tmp/overmind com.overmind.zero.LearningDiagnostics
           java -cp /tmp/overmind com.overmind.zero.ResetDomains
           java -cp /tmp/overmind com.overmind.zero.OnlineBodyLearning
+          java -cp /tmp/overmind com.overmind.zero.MotionExploration
           # v0.6 includes v0.5 -> v0.6 weight migration and expansion invariants.
       - name: Confirm trained selection replaced scripted selector
         run: |
@@ -130,6 +131,26 @@ jobs:
           assert 'worldMind.restore(' in ui
           assert 'morph_brain_v07' in a and 'decision_brain_v05' in a
           print('ZERO-009 gates: no goal oracle, online sensory learning, old memory and mortal life preserved.')
+          PY
+      - name: Verify net exploration, persistent per-skill trial tracking and real comparison UI
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          a=Path('app/src/main/java/com/overmind/zero/GameActivity.java').read_text()
+          b=Path('app/src/main/java/com/overmind/zero/OnlineBodyLearning.java').read_text()
+          j=Path('app/src/main/java/com/overmind/zero/MotionExploration.java').read_text()
+          t=Path('app/src/main/java/com/overmind/zero/BrainToolsActivity.java').read_text()
+          r=Path('app/src/main/java/com/overmind/zero/ResetDomains.java').read_text()
+          assert 'journey.observe(creature.cx,creature.cy,energyBeforeFrame,reserve)' in a
+          assert 'NETTO ' in a and 'ZONE NUOVE ' in a and 'showBenchmark=true' in a
+          assert 'lastBaselineScore' in a and 'lastCandidateScore' in a
+          assert 'useful=net>baseNet+1.5f' in b and 'energySpent' in b
+          assert 'MAX_CELLS_PER_LIFE' in j and 'lifeCells' in j
+          for domain in ('motor','hand','membrane'):
+            assert 'online_accepted_'+domain+'_v094' in a
+            assert 'online_rejected_'+domain+'_v094' in r
+          assert 'ADATTAMENTO CORPOREO REALE' in t
+          print('ZERO-009.4: real net exploration, efficiency, safe domain resets and truthful test overlay passed')
           PY
       - name: Compile OTA client
         run: gradle --no-daemon assembleDebug
