@@ -25,7 +25,9 @@ public final class SensorimotorMind {
     private static final float MODEL_LR=.018f,VALUE_LR=.04f,GAMMA=.78f;
     private final Random random=new Random(60909);
     private transient EpisodicMemory episodic;
+    private transient MotorAutonomyGuard motorGuard;
     public synchronized void attachMemory(EpisodicMemory memory){episodic=memory;}
+    public synchronized void attachMotorGuard(MotorAutonomyGuard guard){motorGuard=guard;}
     private final float[] model=new float[FORWARD_WEIGHTS];
     private final float[] value=new float[VALUE_WEIGHTS];
     private final float[] trialState=new float[S];
@@ -87,7 +89,9 @@ public final class SensorimotorMind {
 
     public synchronized int choose(float[] senses){
         if(senses.length!=S)throw new IllegalArgumentException("sensor width");
-        int proposed=episodic==null?-1:episodic.suggested(senses);
+        boolean protectMotor=motorGuard!=null&&motorGuard.suppressPositiveRecall();
+        if(protectMotor)motorGuard.decisionWhenSuppressed();
+        int proposed=episodic==null?-1:episodic.suggested(senses,!protectMotor);
         int chosen=0;
         float best=-Float.MAX_VALUE;
         // Exploration is intrinsic to learning; no action is mapped to a
