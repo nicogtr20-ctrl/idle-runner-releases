@@ -26,24 +26,27 @@ jobs:
       - name: Unit tests
         run: |
           mkdir -p /tmp/overmind
-          javac -d /tmp/overmind app/src/main/java/com/overmind/zero/MotorBrain.java app/src/main/java/com/overmind/zero/UnknownWorld.java app/src/main/java/com/overmind/zero/ContactLearning.java app/src/main/java/com/overmind/zero/DecisionBrain.java app/src/main/java/com/overmind/zero/Morphology.java app/src/main/java/com/overmind/zero/ScarcityLab.java
+          javac -d /tmp/overmind app/src/main/java/com/overmind/zero/MotorBrain.java app/src/main/java/com/overmind/zero/UnknownWorld.java app/src/main/java/com/overmind/zero/ContactLearning.java app/src/main/java/com/overmind/zero/DecisionBrain.java app/src/main/java/com/overmind/zero/Morphology.java app/src/main/java/com/overmind/zero/ScarcityLab.java app/src/main/java/com/overmind/zero/SensorimotorMind.java
           java -cp /tmp/overmind com.overmind.zero.MotorBrain
           java -cp /tmp/overmind com.overmind.zero.UnknownWorld
           java -cp /tmp/overmind com.overmind.zero.ContactLearning
           java -cp /tmp/overmind com.overmind.zero.DecisionBrain
           java -cp /tmp/overmind com.overmind.zero.Morphology
           java -cp /tmp/overmind com.overmind.zero.ScarcityLab
+          java -cp /tmp/overmind com.overmind.zero.SensorimotorMind
           # v0.6 includes v0.5 -> v0.6 weight migration and expansion invariants.
       - name: Confirm trained selection replaced scripted selector
         run: |
           python3 - <<'PY'
           from pathlib import Path
           s=Path("app/src/main/java/com/overmind/zero/GameActivity.java").read_text()
-          assert "decisionBrain.choose(environment" in s
+          assert "decisionBrain.choose(environment" not in s
+          assert "sensorMind.observe(SensorimotorMind.Senses.read(" in s
+          assert "float mx=sensorMind.motorX(),my=sensorMind.motorY();" in s
           assert "mind.choose(environment" not in s
           assert 'putString("decision_brain_v05"' in s
           assert 'decisionBrain.learn(object,before,reserve,0)' in s
-          print("Decisions are selected by trained brain, never the old scripted selector")
+          print("ZERO self-selects movement using actual online sensorimotor feedback")
           PY
       - name: Verify evolving brain and in-app skill sheet
         run: |
@@ -83,9 +86,10 @@ jobs:
           assert 'consumed=true;cooldown=Float.POSITIVE_INFINITY' in world
           assert 'leftGrip>0&&rightGrip>0' in chamber
           assert 'dualTouchNoGrip' in chamber and 'Morphology.GRIP_HOLD' in chamber
-          assert 'gripCommand[i]=Math.max(0,out[2])' in brain
+          assert 'out[2]+gripDrive*touchSense[i]' in brain
           assert 'public static float[] migrate' in brain
-          assert 'shapeTrainer.attemptGate(trainer.best,handTrainer.best)' in app
+          assert 'shapeTrainer.attemptGate(trainer.best,handTrainer.best)' not in app
+          assert 'sensorimotor_model_v09' in app
           assert 'room_success_v08' in app and 'grip_events_v08' in app
           print('ZERO-008: physical 96-point membrane, finite energy, bilateral grip, room tests and old brain persistence passed')
           PY
@@ -97,13 +101,32 @@ jobs:
           s=Path('app/src/main/java/com/overmind/zero/ScarcityLab.java').read_text()
           a=Path('app/src/main/java/com/overmind/zero/GameActivity.java').read_text()
           assert 'GRIP_HEAD=HIDDEN+2' in m
-          assert 'gripCommand[i]=Math.max(0,out[2])' in m
+          assert 'out[2]+gripDrive*touchSense[i]' in m
           assert 'grab+=touch*w[LEGACY_PARAMS+HIDDEN+1]' in m
           assert 'if(chamber!=null&&surface.gripHold[i]>=Morphology.GRIP_HOLD)' in a
           assert 'dualTouchNoGrip' in s and 'leftGrip>0&&rightGrip>0' in s
           assert 'decision_brain_v05' in a and 'morph_brain_v07' in a
           assert 'if(reserve<=0)' in a and 'resetEpisode();' in a
           print('Only actively commanding adhesive patches can drag gate; 74 learned weights preserved.')
+          PY
+      - name: Verify forward-model driven autonomy and unchanged death
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          a=Path('app/src/main/java/com/overmind/zero/GameActivity.java').read_text()
+          m=Path('app/src/main/java/com/overmind/zero/SensorimotorMind.java').read_text()
+          ui=Path('app/src/main/java/com/overmind/zero/BrainStatsActivity.java').read_text()
+          assert 'sensorimotor_model_v09' in a and 'sensorMind.observe(' in a
+          assert 'Math.atan2(chosenObject.y' not in a and 'decisionBrain.choose(environment' not in a
+          assert 'sensorMind.adhesion()' in a
+          assert 'sensorMind.setLearning(learning);' in a
+          assert 'if(reserve<=0)' in a and 'resetEpisode();' in a
+          assert 'shapeTrainer.attemptGate(trainer.best,handTrainer.best)' not in a
+          assert 'deltaEnergy=(after[0]-before[0])*10f' in m
+          assert 'model[base+j]' in m and 'value[base+k]' in m
+          assert 'worldMind.restore(' in ui
+          assert 'morph_brain_v07' in a and 'decision_brain_v05' in a
+          print('ZERO-009 gates: no goal oracle, online sensory learning, old memory and mortal life preserved.')
           PY
       - name: Compile OTA client
         run: gradle --no-daemon assembleDebug
