@@ -153,8 +153,9 @@ public final class GameActivity extends Activity {
         float[] decodeShape(String s){
             if(s==null||s.length()==0)return null;
             String[] arr=s.split(",");
-            if(arr.length!=Morphology.PARAMS)return null;
-            float[] out=new float[Morphology.PARAMS];
+            if(arr.length!=Morphology.PARAMS&&arr.length!=Morphology.LEGACY_PARAMS)
+                return null;
+            float[] out=new float[arr.length];
             try {
                 for(int i=0;i<out.length;i++){
                     out[i]=Float.parseFloat(arr[i]);
@@ -630,12 +631,12 @@ public final class GameActivity extends Activity {
             rounded(c,12,12,468,145,0xeb0a1420,20);
             rounded(c,27,28,31,55,TEAL,2);
             text(c,"O V E R M I N D",43,39,14,TEAL,false);
-            text(c,"ZERO / ESPERIMENTO 007",26,72,21,0xffe9faf6,false);
+            text(c,"ZERO / ESPERIMENTO 008",26,72,21,0xffe9faf6,false);
             rounded(c,339,104,459,138,0xff20444a,11);
             text(c,"AGGIORNA",399,127,12,TEAL,true);
             rounded(c,217,104,333,138,0xff283b58,11);
             text(c,"CERVELLO",275,127,12,0xffd2c4fc,true);
-            text(c,"ENERGIA FINITA • PRESA BILATERALE",27,99,11,MUTED,false);
+            text(c,"PRESA APPRESA • DUE ADESIONI ATTIVE",27,99,11,MUTED,false);
             text(c,"VERSIONE "+installedVersion+"  •  OTA",27,120,10,0xff708d9d,false);
             text(c,"TENTATIVI",377,34,11,MUTED,false);
             text(c,String.valueOf(trainer.attempts),380,71,22,GOLD,false);
@@ -646,7 +647,7 @@ public final class GameActivity extends Activity {
             float y=H-168;
             rounded(c,12,y,468,H-12,0xe00d1923,21);
             text(c,"APPRENDIMENTO DA ZERO",25,y+25,13,TEAL,false);
-            text(c,"96 masse • porta mobile solo con due contatti.",25,y+45,11,0xffacc5ca,false);
+            text(c,"96 punti: tocca, attiva presa, poi trascina.",25,y+45,11,0xffacc5ca,false);
             button(c,19,y+61,153,H-26,learning?"FERMA":"ADDESTRA",TEAL);
             button(c,165,y+61,314,H-26,"TEMPO x"+speed,0xffbfdaec);
             button(c,326,y+61,462,H-26,"CONFRONTA",GOLD);
@@ -677,6 +678,9 @@ public final class GameActivity extends Activity {
                 text(c,"PORTA "+(int)chamber.doorY+" U  •  PRESE "+
                     (gripsEver+chamber.grasps)+"  •  DUE LATI "+
                     chamber.opposedContactFrames,25,465,11,GOLD,false);
+                text(c,"TOCCHI "+chamber.tactileFrames+"  •  ADESIONI "+
+                    chamber.adhesiveContactFrames+"  •  SENZA PRESA "+
+                    chamber.dualTouchNoGrip,25,486,10,TEAL,false);
             }else text(c,"TOCCA QUI PER ATTIVARE TEST STANZA E FAME",25,465,11,GOLD,false);
             if(uiTime<updaterStatusUntil&&updaterStatus.length()>0){
                 rounded(c,13,338,467,387,0xef1f3944,13);
