@@ -46,7 +46,12 @@ public final class BrainStatsActivity extends Activity {
             handNow=parse(pref.getString("hand_brain_v04",""),ContactLearning.PARAMS);
             handStart=new float[ContactLearning.PARAMS];
             shapeStart=Morphology.virgin(new Random(14790));
-            shapeNow=parse(pref.getString("morph_brain_v07",""),Morphology.PARAMS);
+            float[] previousShape=parse(pref.getString("morph_brain_v07",""),
+                    Morphology.LEGACY_PARAMS);
+            String rawShape=pref.getString("morph_brain_v07","");
+            shapeNow=rawShape.split(",").length==Morphology.PARAMS
+                    ?parse(rawShape,Morphology.PARAMS)
+                    :Morphology.migrate(previousShape);
             morphAttempts=pref.getInt("morph_attempts_v07",0);
             morphAccepted=pref.getInt("morph_accepted_v07",0);
             gateTests=pref.getInt("morph_gate_attempts_v08",0);
@@ -190,7 +195,7 @@ public final class BrainStatsActivity extends Activity {
             y=skill(c,y,"MANIPOLAZIONE",
                 handNow.length+" pesi",pushed+" dischi spostati  •  "+collisions+" urti",
                 Math.min(1f,pushed/100f),gold);
-            y=skill(c,y,"MEMBRANA PLASTICA",
+            y=skill(c,y,"MEMBRANA ADESIVA",
                 shapeNow.length+" pesi",Morphology.POINTS+" punti fisici  •  "+
                     morphAttempts+" esperimenti  •  "+morphAccepted+" miglioramenti",
                 Math.min(1f,morphAccepted/50f),purple);
