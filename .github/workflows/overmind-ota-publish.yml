@@ -26,11 +26,12 @@ jobs:
       - name: Unit tests
         run: |
           mkdir -p /tmp/overmind
-          javac -d /tmp/overmind app/src/main/java/com/overmind/zero/MotorBrain.java app/src/main/java/com/overmind/zero/UnknownWorld.java app/src/main/java/com/overmind/zero/ContactLearning.java app/src/main/java/com/overmind/zero/DecisionBrain.java
+          javac -d /tmp/overmind app/src/main/java/com/overmind/zero/MotorBrain.java app/src/main/java/com/overmind/zero/UnknownWorld.java app/src/main/java/com/overmind/zero/ContactLearning.java app/src/main/java/com/overmind/zero/DecisionBrain.java app/src/main/java/com/overmind/zero/Morphology.java
           java -cp /tmp/overmind com.overmind.zero.MotorBrain
           java -cp /tmp/overmind com.overmind.zero.UnknownWorld
           java -cp /tmp/overmind com.overmind.zero.ContactLearning
           java -cp /tmp/overmind com.overmind.zero.DecisionBrain
+          java -cp /tmp/overmind com.overmind.zero.Morphology
           # v0.6 includes v0.5 -> v0.6 weight migration and expansion invariants.
       - name: Confirm trained selection replaced scripted selector
         run: |
@@ -59,6 +60,22 @@ jobs:
           assert 'growthAttempts' in brain and 'growthAccepted' in brain
           assert 'if(parts.length>0&&"v1".equals(parts[0]))' in brain
           print('ZERO-006 signed release gate passed: migration, real weight sheet, growth')
+          PY
+      - name: Enforce real 32-point deformable membrane in signed APK
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          app=Path('app/src/main/java/com/overmind/zero/GameActivity.java').read_text()
+          brain=Path('app/src/main/java/com/overmind/zero/Morphology.java').read_text()
+          page=Path('app/src/main/java/com/overmind/zero/BrainStatsActivity.java').read_text()
+          assert 'public static final int POINTS=32;' in brain
+          assert 'surface.step(creature,shapeTrainer.best' in app
+          assert 'Morphology.collide(surface,object,dt)' in app
+          assert 'float[] xx=surface.x, yy=surface.y;' in app
+          assert 'morph_brain_v07' in app and 'decision_brain_v05' in app
+          assert 'hand_brain_v04' in app and 'putString("best"' in app
+          assert '"MEMBRANA"' in page
+          print('ZERO-007 real surface dynamics, collision, learning and persistence confirmed')
           PY
       - name: Compile OTA client
         run: gradle --no-daemon assembleDebug
