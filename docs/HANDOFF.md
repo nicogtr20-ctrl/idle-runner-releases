@@ -1,6 +1,6 @@
 # HANDOFF — punto di ripresa per un'altra chat o agente
 
-**Ultimo aggiornamento:** 2026-10-09
+**Ultimo aggiornamento:** 2026-10-10
 
 ### Riferimenti
 Repository: `nicogtr20-ctrl/idle-runner-releases` (privato).
@@ -187,3 +187,15 @@ Scrivere: «Apri su GitHub `nicogtr20-ctrl/idle-runner-releases`, leggi `OVERMIN
 - GameActivity: HUD mette **NETTO** versus **VIA/percorso** con record, zone nuove, efficienza (max netto/energia spesa nella vita). Tasto **PROVE** sostituisce il vecchio CONFRONTA basato su esperimenti sintetici offline e visualizza ultimi punteggi di finestre osservate, netto e conservato/scartato; pagina ANALISI contiene contatori e descrive limite di comparazione. BrainStats aggiunge ESPLORAZIONE FISICA REALE e rinomina il vecchio benchmark in TEST MOTORIO STORICO. 96 masse/82 pesi e camera fisica immutati.
 - Staging CI verde `37999404600`: JVM tradizionale e nuove regressioni (loops vs movimento netto, zone nuove, energia e durata vite, scope reset), Android Debug. Firmata stable OTA CI `37999520662` VERDE e pubblicata nel manifest GitHub main: **0.9.4-ota.36**, versionCode 1036, sha256 `c44377b633854bee3b1ea3ad9715e8499f7e4202ae956cdd84ea85fd44b3c58d`, APK **87.864 byte**, percorso `updater/public/apk/overmind-zero-1036-c44377b63385.apk`. GitHub Release privata fallback da verificare tramite workflow trigger. **NON promettere AGGIORNA in app se Vercel manifest pubblico è stantio.**
 - **TEST MANUALE S21 PENDENTE:** installare sopra 0.9.3 senza disinstallare; vecchi tentativi/memorie restano; nessun reset. Vedere VIA salire con cerchi ma NETTO e zone no; PROVE mostra esiti; accettate/scartate per rete in ANALISI; verificare che impari azioni utili e non solo molti giri. Non dichiarare successo prima della prova sul dispositivo.
+
+
+## Handoff 0.9.5 — 2026-10-10: la porta si muove, manca il recupero della strategia
+**LEGGERE `docs/EXPERIMENT_0095.md` COME PRIMA FONTE: ricostruzione completa, codice, test, limiti, metriche e roadmap.**
+L'utente ha testato la v0.9.4 in condizioni reali Galaxy S21: 38.070 esperienze; motore 786 tentativi e 158 miglioramenti, 93 dischi spostati, manipolazione 347 urti, membrana 774 esperimenti/185 miglioramenti; 268 prese porta, massimo 111U, zero stanze completate. ZERO ha continuato a tirare, non è entrato, è morto e non ha ripetuto la presa. Nel codice `ScarcityLab.openingFree()` la porta deve spostarsi oltre 115U: 111U non garantisce passaggio libero.
+Problema v0.9.4: nessuna traccia esplicita di sequenze sensoriali e azioni pre-evento, nessuna copia di pesi associata all'evento; valutazione prevalente di movimento netto/esplorazione senza forte riconoscimento fisico di ostacoli spostati.
+Fix v0.9.5 (branch `feature/overmind-v095-episodic-consequences`): nuova classe `EpisodicMemory.java`, 9 azioni/conseguenze sensoriali al massimo per evento, 18 ricordi persistenti, snapshot pesi motore 62/manip 18/membrana 82, matching con sensi futuri e bonus morbido per richiamo, riapplicazione temporanea dei pesi se ZERO sceglie il suggerimento. Memoria sopravvive alla morte; una prova che non dà nuovi effetti viene raffreddata. Generico `environmentEffectSinceAction` ricavato dalla fisica di porta e dischi, senza identificare il cancello come ricompensa; influenza rinforzo `SensorimotorMind` e punteggio `OnlineBodyLearning`. Se memoria guida azione, si interrompe il trial di mutazione per non falsarne il voto. UI: ANALISI nuova sezione e reset solo `episodic_memory_v095`. Rete `wm1` e le chiavi dei cervelli restano, update OTA senza reinstallazione.
+**Limite:** non è ragionamento cosciente, controfattuale, previsione multistep o dimostrazione di riproduzione riuscita: va testato su S21. I ricordi nuovi partono da zero, non vengono inventati retroattivamente dalla v0.9.4.
+Passi futuri: comparatore veri stati identici (random seed), visione di movimento relativo degli ostacoli, misure rigorose su riuso strategia/variazioni postura, modello del mondo generativo e pianificazione multistep se predizioni generalizzano. Riportare metriche e fallimenti, non promuovere ogni contatore a «intelligenza».
+
+### Release ZERO 0.9.5-ota.39 — 2026-10-10
+APK firmata, versionCode 1039, 92.692 byte; SHA-256 `86caeb85b6eba94aa657d6f19ac7dff5dd0e4e8d2974bf71e8c6c12a3201c211`; CI firmata `38003676123` verde, file `updater/public/latest.json` aggiornato. Il test manuale sul Samsung Galaxy S21 resta da fare. Non attribuire retroattivamente le 111U di apertura della v0.9.4 alla nuova memoria.
