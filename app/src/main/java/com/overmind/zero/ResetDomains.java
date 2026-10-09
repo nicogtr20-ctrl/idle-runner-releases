@@ -19,11 +19,15 @@ public final class ResetDomains {
             case WORLD:return new String[]{"sensorimotor_model_v09","sensorimotor_diagnostics_v091"};
             case CHOICE:return new String[]{"decision_brain_v05"};
             case MOTOR:return new String[]{"virgin","best","attempts","accepted","original",
-                                  "lived_distance_total_v093","lived_distance_record_v093"};
+                                  "lived_distance_total_v093","lived_distance_record_v093",
+                                  "explored_cells_v094","record_net_v094","energy_spent_v094",
+                                  "online_accepted_motor_v094","online_rejected_motor_v094"};
             case MANIPULATION:return new String[]{"hand_brain_v04","hand_attempts_v04",
-                 "hand_successes_v04","objects_displaced_v041","collisions_v041","max_displacement_v041"};
+                 "hand_successes_v04","objects_displaced_v041","collisions_v041","max_displacement_v041",
+                 "online_accepted_hand_v094","online_rejected_hand_v094"};
             case MEMBRANE:return new String[]{"morph_brain_v07","morph_attempts_v07",
-                 "morph_accepted_v07","morph_gate_attempts_v08","morph_gate_success_v08"};
+                 "morph_accepted_v07","morph_gate_attempts_v08","morph_gate_success_v08",
+                 "online_accepted_membrane_v094","online_rejected_membrane_v094"};
             case EXPLORATION:return new String[]{"world_knowledge_v03"};
             case ROOM:return new String[]{"room_success_v08","finite_energy_eaten_v08",
                  "grip_events_v08","gate_travel_v08","scarcity_elapsed_v08",
