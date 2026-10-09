@@ -176,6 +176,13 @@ public final class EpisodicMemory {
      * harmful ACTION separately. A harmful episode never reenacts its body.
      */
     public int suggested(float[] senses){
+        return suggested(senses,true);
+    }
+    /**
+     * A measured locomotion stall temporarily suppresses positive recall.
+     * Harmful experience warnings remain enabled. This NEVER decides heading.
+     */
+    public int suggested(float[] senses,boolean allowPositive){
         replayAtAction=false;replayActive=false;
         replayMotor=replayHand=replayMembrane=null;
         aversionAction=-1;aversionStrength=0;
@@ -212,6 +219,7 @@ public final class EpisodicMemory {
             if(d<MATCH*1.25f){positive=selected;positiveIndex=continuation;posDist=d;}
         }
         if(negDist+.01f<posDist)positive=null;
+        if(!allowPositive)positive=null;
         if(cooldown>0){cooldown--;positive=null;}
         selected=positive;selectedIndex=positiveIndex;
         if(positive==null){continuation=0;return -1;}
@@ -240,9 +248,18 @@ public final class EpisodicMemory {
             selected=null;continuation=0;cooldown=3;
         }
     }
+    /**
+     * The best saved MOTOR controller is NEVER overridden by an old episode.
+     * Prior physical snapshots of hand/membrane may be tried ONLY during
+     * verified membrane contact and when GameActivity is not testing a
+     * candidate. A remembered action alone changes no actuator weights.
+     */
     public float[] weights(int type,float[] normal){
-        if(!replayActive)return normal;
-        return type==0?replayMotor:type==1?replayHand:replayMembrane;
+        return weights(type,normal,false);
+    }
+    public float[] weights(int type,float[] normal,boolean realTactileContact){
+        if(!replayActive||!realTactileContact||type==0)return normal;
+        return type==1?replayHand:type==2?replayMembrane:normal;
     }
 
     /** em2 extends em1 without rewriting old motor/world network formats. */
@@ -344,8 +361,10 @@ public final class EpisodicMemory {
         if(m.suggested(safe)!=4||m.bias(4,4)<.3f)
             throw new AssertionError("Similar positive experience was forgotten");
         m.chosen(4,4);
-        if(!m.physicallyReplaying()||m.weights(0,motor)==motor)
-            throw new AssertionError("Physical recall is only for chosen positive actions");
+        if(!m.physicallyReplaying()||m.weights(0,motor,true)!=motor||
+            m.weights(1,hand)!=hand||m.weights(2,skin)!=skin||
+            m.weights(1,hand,true)==hand||m.weights(2,skin,true)==skin)
+            throw new AssertionError("Memory must never replace learned motor; physical grip needs real contact");
         int old=m.consolidated;
         for(int i=0;i<10;i++)m.action(safe,4);
         if(!m.consequence(0,22,motor,hand,skin,true)||
