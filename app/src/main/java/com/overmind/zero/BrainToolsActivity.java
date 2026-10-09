@@ -106,6 +106,24 @@ public final class BrainToolsActivity extends Activity {
         line(decisions,"Ricompensa media modello",average(d.modelRewardSum,d.modelActions),AMBER);
         line(decisions,"Ricompensa media esplorazione",average(d.exploreRewardSum,d.exploreActions),AMBER);
         paragraph(decisions,"Confronto osservazionale: le situazioni affrontate dalle due scelte possono essere diverse. NON è un esperimento controllato a parità di mondo, né prova di intelligenza causale.");
+        LinearLayout physical=panel(body);
+        physical.addView(label("ADATTAMENTO CORPOREO REALE",16,CYAN,true));
+        line(physical,"Zone esplorate (somma delle vite)",
+             String.valueOf(prefs.getInt("explored_cells_v094",0)),WHITE);
+        line(physical,"Record distanza netta",
+             ((int)prefs.getFloat("record_net_v094",0))+" U",CYAN);
+        line(physical,"Energia consumata misurata",
+             ((int)prefs.getFloat("energy_spent_v094",0))+" U",WHITE);
+        line(physical,"MOTORE · varianti conservate / scartate",
+             prefs.getInt("online_accepted_motor_v094",0)+" / "+
+             prefs.getInt("online_rejected_motor_v094",0),WHITE);
+        line(physical,"MANIPOLAZIONE · conservate / scartate",
+             prefs.getInt("online_accepted_hand_v094",0)+" / "+
+             prefs.getInt("online_rejected_hand_v094",0),WHITE);
+        line(physical,"MEMBRANA · conservate / scartate",
+             prefs.getInt("online_accepted_membrane_v094",0)+" / "+
+             prefs.getInt("online_rejected_membrane_v094",0),WHITE);
+        paragraph(physical,"I contatori partono dalla 0.9.4: non sono ricostruibili dai tentativi precedenti. Una zona è una cella di 75 unità, conteggiata una volta per vita. Le varianti sono confrontate su finestre successive, NON nelle stesse condizioni iniziali: dati indicativi, non una prova causale.");
         LinearLayout reset=panel(body);
         reset.addView(label("AZZERA APPRENDIMENTO",17,AMBER,true));
         paragraph(reset,"Ogni voce ritorna allo stato vergine SOLO per quel sistema. Altre memorie e reti rimangono. L'azzeramento ricarica il corpo nella mappa per applicare i nuovi parametri in sicurezza.");
