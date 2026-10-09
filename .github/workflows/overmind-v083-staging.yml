@@ -1,0 +1,48 @@
+name: OVERMIND v0.8.3 learned active grip experiments
+on:
+  push:
+    branches: [feature/overmind-v083-learned-grip-actuators]
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with: {distribution: temurin, java-version: '17'}
+      - uses: gradle/actions/setup-gradle@v4
+        with: {gradle-version: '8.11.1'}
+      - name: Test motor, finite world, decision network, adhesion and door
+        run: |
+          mkdir -p /tmp/overmind083
+          javac -d /tmp/overmind083 app/src/main/java/com/overmind/zero/MotorBrain.java app/src/main/java/com/overmind/zero/UnknownWorld.java app/src/main/java/com/overmind/zero/ContactLearning.java app/src/main/java/com/overmind/zero/DecisionBrain.java app/src/main/java/com/overmind/zero/Morphology.java app/src/main/java/com/overmind/zero/ScarcityLab.java
+          java -cp /tmp/overmind083 com.overmind.zero.MotorBrain
+          java -cp /tmp/overmind083 com.overmind.zero.UnknownWorld
+          java -cp /tmp/overmind083 com.overmind.zero.ContactLearning
+          java -cp /tmp/overmind083 com.overmind.zero.DecisionBrain
+          java -cp /tmp/overmind083 com.overmind.zero.Morphology
+          java -cp /tmp/overmind083 com.overmind.zero.ScarcityLab
+      - name: Assert intentional grip, migration and preserved deaths
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          body=Path('app/src/main/java/com/overmind/zero/Morphology.java').read_text()
+          room=Path('app/src/main/java/com/overmind/zero/ScarcityLab.java').read_text()
+          app=Path('app/src/main/java/com/overmind/zero/GameActivity.java').read_text()
+          ui=Path('app/src/main/java/com/overmind/zero/BrainStatsActivity.java').read_text()
+          assert 'LEGACY_PARAMS=INPUTS*HIDDEN+HIDDEN+2*HIDDEN+2' in body
+          assert 'public static float[] migrate' in body
+          assert 'gripCommand[i]=Math.max(0,out[2])' in body
+          assert 'skin.gripHold[i]>=Morphology.GRIP_HOLD' in room
+          assert 'leftGrip>0&&rightGrip>0' in room
+          assert 'dualTouchNoGrip' in room
+          assert 'if(reserve<=0)' in app and 'resetEpisode();' in app
+          assert 'decision_brain_v05' in app and 'morph_brain_v07' in app
+          assert 'Morphology.migrate' in ui
+          print('Learned grip is separate from pressure, old neural memories persist.')
+          PY
+      - name: Build Android Debug
+        run: gradle --no-daemon assembleDebug
