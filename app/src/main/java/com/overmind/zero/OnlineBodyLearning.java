@@ -16,7 +16,8 @@ public final class OnlineBodyLearning {
     private float pathSum,forwardSum,rewardSum,spentSum,gainSum,dirXSum,dirYSum;
     private int noveltySum,contactsSum;
     private float firstX,firstY,baseScore,baseNet,baseEnergy,baseDirX,baseDirY;
-    private float baseNovelty,baseGain;
+    private float baseNovelty,baseGain,basePhysicalEffect;
+    private float externalEffectSum=0;
     private int baseContacts;
     private boolean baseRoom,roomAtStart,roomChanged;
     private float[] candidate;
@@ -48,6 +49,7 @@ public final class OnlineBodyLearning {
     public void abortTrial(){
         phase=0;samples=0;candidate=null;
         pathSum=forwardSum=rewardSum=spentSum=gainSum=dirXSum=dirYSum=0;
+        externalEffectSum=0;
         noveltySum=contactsSum=0;roomChanged=false;
     }
     public int activeDomain(){return domain;}
@@ -75,6 +77,11 @@ public final class OnlineBodyLearning {
     static float evaluate(float path,float net,int novel,int contacts,
                           float energySpent,float energyGained,
                           float forward,float reward){
+        return evaluate(path,net,novel,contacts,energySpent,energyGained,forward,reward,0);
+    }
+    static float evaluate(float path,float net,int novel,int contacts,
+                          float energySpent,float energyGained,
+                          float forward,float reward,float physicalEffect){
         // Net displacement wins over useless looping. Exploring never-visited
         // cells and obtaining energy/physical contact can ALSO be rewarded,
         // so rotations and stationary manipulation are not prohibited.
@@ -82,6 +89,7 @@ public final class OnlineBodyLearning {
              +.12f*Math.min(150,net)
              +1.8f*Math.min(12,novel)
              +.20f*Math.min(12,contacts)
+             +1.4f*Math.min(30,Math.max(0,physicalEffect))
              +.16f*Math.min(60,energyGained)
              -.22f*Math.min(30,energySpent)
              +.02f*Math.max(-40,Math.min(40,forward))
@@ -98,11 +106,20 @@ public final class OnlineBodyLearning {
                           float startX,float startY,float endX,float endY,
                           boolean room,float dirX,float dirY,
                           float[] motor,float[] hand,float[] shape){
+        return observe(reward,path,forward,contacts,energyBefore,energyAfter,newCells,
+                       startX,startY,endX,endY,room,dirX,dirY,motor,hand,shape,0);
+    }
+    public Result observe(float reward,float path,float forward,int contacts,
+                          float energyBefore,float energyAfter,int newCells,
+                          float startX,float startY,float endX,float endY,
+                          boolean room,float dirX,float dirY,
+                          float[] motor,float[] hand,float[] shape,float physicalEffect){
         if(!Float.isFinite(reward)||!Float.isFinite(path)||!Float.isFinite(forward)||
            !Float.isFinite(energyBefore)||!Float.isFinite(energyAfter)||
            !Float.isFinite(startX)||!Float.isFinite(startY)||
            !Float.isFinite(endX)||!Float.isFinite(endY)||
-           !Float.isFinite(dirX)||!Float.isFinite(dirY))return null;
+           !Float.isFinite(dirX)||!Float.isFinite(dirY)||
+           !Float.isFinite(physicalEffect))return null;
         if(samples==0){
             roomAtStart=room;roomChanged=false;
             firstX=startX;firstY=startY;
@@ -118,23 +135,26 @@ public final class OnlineBodyLearning {
         else gainSum+=energyDelta;
         noveltySum+=Math.min(6,Math.max(0,newCells));
         contactsSum+=Math.min(6,Math.max(0,contacts));
+        externalEffectSum+=Math.min(50,Math.max(0,physicalEffect));
         dirXSum+=dirX;dirYSum+=dirY;
         if(++samples<WINDOW)return null;
         float net=(float)Math.hypot(endX-firstX,endY-firstY);
         float score=evaluate(pathSum,net,noveltySum,contactsSum,
-                              spentSum,gainSum,forwardSum,rewardSum);
+                              spentSum,gainSum,forwardSum,rewardSum,externalEffectSum);
         float energyAfterWindow=energyAfter;
         float avgX=dirXSum/WINDOW,avgY=dirYSum/WINDOW;
         int novel=noveltySum,cont=contactsSum;
-        float gain=gainSum;
+        float gain=gainSum,effect=externalEffectSum;
         boolean stable=!roomChanged;
         samples=0;
         pathSum=forwardSum=rewardSum=spentSum=gainSum=dirXSum=dirYSum=0;
+        externalEffectSum=0;
         noveltySum=contactsSum=0;
         if(net>5||novel>1)mobileWindows++;
         if(phase==0){
             baseScore=score;baseNet=net;
             baseNovelty=novel;baseContacts=cont;baseGain=gain;
+            basePhysicalEffect=effect;
             baseEnergy=energyAfterWindow;baseDirX=avgX;baseDirY=avgY;
             baseRoom=room;phase=1;
             candidate=mutate(domain==MOTOR?motor:domain==MANIPULATION?hand:shape,
@@ -149,7 +169,8 @@ public final class OnlineBodyLearning {
         boolean useful=net>baseNet+1.5f ||
                        novel>baseNovelty ||
                        gain>baseGain+3 ||
-                       cont>baseContacts+1;
+                       cont>baseContacts+1 ||
+                       effect>basePhysicalEffect+2.0f;
         boolean acceptedTrial=comparable&&useful&&score>baseScore+.30f;
         Result result=new Result(domain,acceptedTrial,
                                  acceptedTrial?candidate:null,baseScore,score);
