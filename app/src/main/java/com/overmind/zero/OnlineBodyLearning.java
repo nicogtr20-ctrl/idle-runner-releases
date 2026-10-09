@@ -172,7 +172,7 @@ public final class OnlineBodyLearning {
                              int novelty,int touch,float before,float after,
                              float startX,float endX,float[] m,float[] h,float[] sh){
         for(int i=0;i<count;i++)b.observe(reward,path,movement,touch,
-            before,after,novelty,startX,endX,false,1,0,m,h,sh);
+            before,after,novelty,startX,0,endX,0,false,1,0,m,h,sh);
     }
     public static void main(String[] args){
         float[] motor=MotorBrain.virgin(new Random(13));
