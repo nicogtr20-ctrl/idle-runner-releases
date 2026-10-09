@@ -35,6 +35,7 @@ public final class EpisodicMemory {
     private final ArrayList<Event> events=new ArrayList<>();
     private Event selected=null;
     private int selectedIndex=-1,continuation=0,cooldown=0;
+    private int replayActionsWithoutEffect=0;
     private float[] replayMotor,replayHand,replayMembrane;
     private boolean replayActive=false;
     public int captured=0,matched=0,replayed=0,repeatEffects=0;
@@ -47,6 +48,7 @@ public final class EpisodicMemory {
     public void resetLife(){
         recent.clear(); selected=null;selectedIndex=-1;
         replayActive=false;replayAtAction=false;continuation=0;cooldown=0;
+        replayActionsWithoutEffect=0;
         replayMotor=replayHand=replayMembrane=null;
     }
     /** Record just the real previous action when that action has concluded. */
@@ -73,6 +75,10 @@ public final class EpisodicMemory {
         float effect=Math.max(0,Math.min(100,physicalEffect))+
                      Math.max(0,Math.min(80,energyGained))*.25f;
         if(!Float.isFinite(effect)||effect<MIN_EFFECT||recent.size()<2)return false;
+        if(performedRecall){
+            repeatEffects++;
+            replayActionsWithoutEffect=0;
+        }
         if(motor==null||hand==null||membrane==null||
            motor.length!=MotorBrain.PARAMS||
            hand.length!=ContactLearning.PARAMS||
@@ -95,7 +101,6 @@ public final class EpisodicMemory {
         if(events.size()>=MAX_EPISODES)events.remove(0);
         events.add(e);captured++;lastTraceLength=e.trace.size();
         lastEventEffect=e.effect;
-        if(performedRecall)repeatEffects++;
         return true;
     }
     private static float distance(float[] a,float[] b){
@@ -119,6 +124,12 @@ public final class EpisodicMemory {
         replayAtAction=false;replayActive=false;
         replayMotor=replayHand=replayMembrane=null;
         if(senses==null||senses.length!=SensorimotorMind.S||!salient(senses))return -1;
+        if(replayActionsWithoutEffect>=12){
+            // A remembered action sequence that repeatedly achieves nothing
+            // must stop biasing the policy. Return to open exploration.
+            cooldown=30;replayActionsWithoutEffect=0;
+            selected=null;continuation=0;
+        }
         if(cooldown>0){cooldown--;return -1;}
         Event best=null;int bestIndex=-1;float dist=MATCH;
         if(selected!=null&&continuation<selected.trace.size()){
@@ -150,7 +161,8 @@ public final class EpisodicMemory {
         if(suggestion<0||selected==null||actual!=suggestion){
             selected=null;continuation=0;return;
         }
-        replayed++;replayAtAction=true;
+        replayed++;replayActionsWithoutEffect++;
+        replayAtAction=true;
         replayActive=true;
         replayMotor=selected.motor;
         replayHand=selected.hand;
