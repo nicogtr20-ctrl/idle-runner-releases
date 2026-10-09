@@ -191,6 +191,26 @@ jobs:
           OVERMIND_KEYSTORE_FILE="$RUNNER_TEMP/disposable.p12" OVERMIND_KEYSTORE_PASSWORD="NeverShipThisTestKey1" OVERMIND_KEY_ALIAS="overmindtest" OVERMIND_KEY_PASSWORD="NeverShipThisTestKey1" gradle --no-daemon assembleRelease
           test -s app/build/outputs/apk/release/app-release.apk
           echo "Release-signing path compiled with DISPOSABLE key. APK NOT published."
+      - name: Ensure positive/negative memory and v0.9.5 migration in signed APK
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          e=Path('app/src/main/java/com/overmind/zero/EpisodicMemory.java').read_text()
+          g=Path('app/src/main/java/com/overmind/zero/GameActivity.java').read_text()
+          p=Path('app/src/main/java/com/overmind/zero/SensorimotorMind.java').read_text()
+          t=Path('app/src/main/java/com/overmind/zero/BrainToolsActivity.java').read_text()
+          assert 'DEPTH=36,MAX_EPISODES=24' in e
+          assert 'raw.startsWith("em1;")' in e and 'raw.startsWith("em2;")' in e
+          assert 'e.confirmed' in e and 'if(e.harmful())' in e
+          assert 'eventEnergyDeltaSinceAction+=reserve-before' in g
+          assert 'eventEnergyDeltaSinceAction<0' in g
+          assert 'episodic.consequence(' in g
+          assert 'episodic_memory_v095' in g
+          assert 'episodic.bias(a,proposed)' in p
+          assert 'Esperienze dannose' in t
+          assert 'trainer.attempt()' not in g
+          print('Signed ZERO 0.9.6: memory valence, storage migration and autonomy verified')
+          PY
       - name: Assemble stable signed APK
         if: env.signing_ready == 'true'
         run: gradle --no-daemon assembleRelease
