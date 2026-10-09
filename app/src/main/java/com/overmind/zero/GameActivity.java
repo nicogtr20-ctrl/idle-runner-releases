@@ -521,6 +521,7 @@ public final class GameActivity extends Activity {
                     // Real temporal observation AFTER collisions, hunger
                     // and any energy actually collected.
                     sensorMind.setLearning(true);
+                    boolean actedFromMemory=episodic.physicallyReplaying();
                     long beforeExperience=sensorMind.experiences;
                     // Snapshot the PREVIOUS decision before the model chooses
                     // the next one. Its sensory state is what ZERO actually saw.
@@ -533,9 +534,14 @@ public final class GameActivity extends Activity {
                         episodic.action(observedBefore,actionBefore);
                         boolean remembered=episodic.consequence(
                             environmentEffectSinceAction,energyGainedSinceAction,
-                            lastAppliedMotor,lastAppliedHand,lastAppliedMembrane);
+                            lastAppliedMotor,lastAppliedHand,lastAppliedMembrane,
+                            actedFromMemory);
                         if(remembered)save();
-                        OnlineBodyLearning.Result result=liveBody.observe(
+                        // Recalled physical weights are not the candidate
+                        // currently tested by OnlineBodyLearning. Keep the
+                        // evaluators separate to avoid a false "improvement".
+                        if(actedFromMemory)liveBody.abortTrial();
+                        OnlineBodyLearning.Result result=actedFromMemory?null:liveBody.observe(
                             sensorMind.lastReward,travelSinceAction,forwardSinceAction,
                             Math.max(0,physicalContacts-liveStartContacts),
                             liveStartEnergy,reserve,journey.takeNewCells(),
