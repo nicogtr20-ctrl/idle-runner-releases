@@ -15,7 +15,9 @@ import java.util.Random;
  */
 public final class Morphology {
     public static final int POINTS=96;
-    public static final int INPUTS=9,HIDDEN=6,PARAMS=INPUTS*HIDDEN+HIDDEN+2*HIDDEN+2;
+    public static final int INPUTS=9,HIDDEN=6,LEGACY_PARAMS=INPUTS*HIDDEN+HIDDEN+2*HIDDEN+2;
+    public static final int GRIP_HEAD=HIDDEN+2,PARAMS=LEGACY_PARAMS+GRIP_HEAD;
+    public static final float GRIP_THRESHOLD=.28f,GRIP_HOLD=.075f;
     public static final float MAX_REACH=105f,MAX_RADIAL=155f;
     private Morphology(){}
 
@@ -27,6 +29,16 @@ public final class Morphology {
         for(int i=0;i<INPUTS*HIDDEN+HIDDEN;i++)
             w[i]=(float)rnd.nextGaussian()*.20f;
         return w;
+    }
+    /** Keep the exact old indices 0..73. The new grip output alone uses
+     * weights 74..81. Old learning is not remapped or overwritten. */
+    public static float[] migrate(float[] loaded){
+        if(loaded==null)return virgin(new Random(14790));
+        if(loaded.length==PARAMS)return loaded.clone();
+        if(loaded.length!=LEGACY_PARAMS)return virgin(new Random(14790));
+        float[] upgraded=new float[PARAMS];
+        System.arraycopy(loaded,0,upgraded,0,LEGACY_PARAMS);
+        return upgraded;
     }
     static void output(float[] w,float[] signal,float[] out){
         float h0=0,h1=0,h2=0,h3=0,h4=0,h5=0;
@@ -41,6 +53,13 @@ public final class Morphology {
             }
         }
         int p=INPUTS*HIDDEN+HIDDEN;
+        // The grip head learns separately from old radial/tangential muscles.
+        float grab=w[LEGACY_PARAMS+HIDDEN];
+        grab+=signal[8]*w[LEGACY_PARAMS+HIDDEN+1];
+        grab+=h0*w[LEGACY_PARAMS]+h1*w[LEGACY_PARAMS+1]
+             +h2*w[LEGACY_PARAMS+2]+h3*w[LEGACY_PARAMS+3]
+             +h4*w[LEGACY_PARAMS+4]+h5*w[LEGACY_PARAMS+5];
+        out[2]=(float)Math.tanh(grab);
         out[0]=(float)Math.tanh(w[p+2*HIDDEN]+
                 h0*w[p]+h1*w[p+1]+h2*w[p+2]+h3*w[p+3]+h4*w[p+4]+h5*w[p+5]);
         out[1]=(float)Math.tanh(w[p+2*HIDDEN+1]+
@@ -52,11 +71,18 @@ public final class Morphology {
         public final float[] x=new float[POINTS],y=new float[POINTS];
         public final float[] vx=new float[POINTS],vy=new float[POINTS];
         public final float[] extension=new float[POINTS];
+        /** Local command output from the learned grip head, not an arm index. */
+        public final float[] gripCommand=new float[POINTS];
+        /** Tactile contact carried from prior physics frame. */
+        public final float[] touchSense=new float[POINTS];
+        /** Contact must be accompanied by sustained intentional actuation. */
+        public final float[] gripHold=new float[POINTS];
+        public int intentionalPoints=0;
         private final float[] ax=new float[POINTS],ay=new float[POINTS];
         private final float[] nx=new float[POINTS],ny=new float[POINTS];
         private final float[] gx=new float[POINTS],gy=new float[POINTS];
         private final float[] fx=new float[POINTS],fy=new float[POINTS];
-        private final float[] out=new float[2];
+        private final float[] out=new float[3];
         private final float[] input=new float[INPUTS];
         public int stretchedPoints=0;
         public float maxExtension=0,totalEffort=0,peakExtension=0;
@@ -83,6 +109,7 @@ public final class Morphology {
             for(int i=0;i<POINTS;i++){
                 x[i]=ax[i];y[i]=ay[i];
                 vx[i]=vy[i]=extension[i]=0;
+            gripCommand[i]=touchSense[i]=gripHold[i]=0;
             }
         }
         public void step(MotorBrain.Body body,float[] brain,float targetX,float targetY,float dt){
@@ -92,7 +119,7 @@ public final class Morphology {
             float dx=targetD>.001f?toX/targetD:0;
             float dy=targetD>.001f?toY/targetD:0;
             float requested=0;
-            maxExtension=0;stretchedPoints=0;
+            maxExtension=0;stretchedPoints=0;intentionalPoints=0;
             for(int i=0;i<POINTS;i++){
                 float radial=(x[i]-ax[i])*nx[i]+(y[i]-ay[i])*ny[i];
                 float radialV=vx[i]*nx[i]+vy[i]*ny[i];
@@ -108,6 +135,10 @@ public final class Morphology {
                 input[7]=clamp((float)Math.hypot(targetX-x[i],targetY-y[i])/125f,0,2);
                 input[8]=1;
                 output(brain,input,out);
+                // A new neural actuator at EVERY one of the 96 surface
+                // masses. Merely touching a solid NEVER implies grabbing.
+                gripCommand[i]=Math.max(0,out[2]);
+                if(gripCommand[i]>GRIP_THRESHOLD)intentionalPoints++;
                 // One locally learned activation per membrane particle.
                 // There is no action named "grow arm" or fixed arm count.
                 extension[i]=Math.max(0,out[0])*MAX_REACH;
@@ -240,7 +271,7 @@ public final class Morphology {
         public volatile float bestFitness=Float.NaN;
         private float mutation=.26f;
         public Trainer(float[] loaded){
-            best=loaded==null?virgin(new Random(14790)):loaded.clone();
+            best=migrate(loaded);
         }
         /**
          * Separate curriculum for genuinely constrained manipulation.
@@ -254,7 +285,11 @@ public final class Morphology {
             float[] candidate=baseline.clone();
             int changed=2+rnd.nextInt(9);
             for(int i=0;i<changed;i++){
-                int k=rnd.nextInt(candidate.length);
+                // Bias gate experiments toward untrained adhesive output,
+                // while still allowing ZERO to reshape its whole body.
+                int k=rnd.nextFloat()<.72f
+                     ?LEGACY_PARAMS+rnd.nextInt(GRIP_HEAD)
+                     :rnd.nextInt(candidate.length);
                 candidate[k]=clamp(candidate[k]+(float)rnd.nextGaussian()*mutation,-3.2f,3.2f);
             }
             float score=ScarcityLab.trainingFitness(motor,hand,candidate);
@@ -321,6 +356,18 @@ public final class Morphology {
         float[] motor=MotorBrain.virgin(new Random(918273));
         float[] hand=ContactLearning.virgin();
         float baseline=fitness(motor,hand,blank);
+        // Historical 74-weight v0.8 membrane must retain the exact policy.
+        float[] legacy=new float[LEGACY_PARAMS];
+        System.arraycopy(programmed,0,legacy,0,LEGACY_PARAMS);
+        float[] migrated=migrate(legacy);
+        if(migrated.length!=PARAMS)throw new IllegalStateException("Grip head not appended");
+        for(int i=0;i<LEGACY_PARAMS;i++){
+            if(migrated[i]!=legacy[i])throw new IllegalStateException("Old weights were changed");
+        }
+        float[] prev=new float[3],upgraded=new float[3];
+        float[] sensors={.5f,.2f,.2f,.1f,.3f,0,1,.6f,1};
+        output(migrate(legacy),sensors,upgraded);
+        if(upgraded[2]!=0)throw new IllegalStateException("Grip started active without learning");
         Trainer trainer=new Trainer(blank);
         for(int i=0;i<16;i++)trainer.attempt(motor,hand);
         trainer.attemptGate(motor,hand);
