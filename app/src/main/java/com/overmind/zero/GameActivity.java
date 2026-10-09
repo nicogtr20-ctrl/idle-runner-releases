@@ -862,7 +862,8 @@ public final class GameActivity extends Activity {
                     +"  •  PREVISIONE "+format(decisionBrain.lastPrediction),
                     25,398,10,0xffaac3cb,false);
             }
-            text(c,"RECUPERO "+motorGuard.recoveryActivations+" • RICORDI "+episodic.stored()+
+            text(c,"ZONE "+journey.lifeCells+" • RECUPERI "+motorGuard.recoveryActivations+
+                " • RICORDI "+episodic.stored()+
                 " (+"+episodic.positiveCount()+"/-"+episodic.negativeCount()+")"
                 +" • RICHIAMI "+episodic.replayed+
                 (episodic.physicallyReplaying()?" • RICORDO ATTIVO":""),
