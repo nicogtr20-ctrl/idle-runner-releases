@@ -55,3 +55,8 @@ Il codice, gli asset e i release APK restano di proprietà e sotto controllo del
 - **La morte per energia zero e il ritorno al centro sono intenzionali** e non sono stati rimossi (chiarimento utente).
 - Installazione in-place: AGGIORNA o https://overmind-zero-updates.vercel.app/apk/overmind-zero-1024-0e10bb4ce202.apk; stessa firma e salvataggi.
 - Per il report tecnico completo vedere `docs/HANDOFF.md`. Attende prova manuale Galaxy S21, soprattutto presa a due facce.
+
+## Stato più recente (2026-10-09): v0.8.3-ota.27
+- Nuova presa neurale sui 96 punti della membrana, 8 pesi aggiuntivi (74→82); vecchi pesi e apprendimento preservati. Doppio contatto da solo NON sposta più il cancello.
+- Versione firmata in GitHub Release privata: https://github.com/nicogtr20-ctrl/idle-runner-releases/releases/tag/overmind-zero-v0.8.3-ota.27 ; installare SOPRA app esistente senza disinstallare.
+- Il manifest GitHub è aggiornato alla 1027, mentre Vercel pubblico era ancora alla 1024 al controllo; verificare prima di promettere AGGIORNA. Test fisici/JVM e build Android OK, prova su Galaxy S21 pendente. Leggere `docs/HANDOFF.md` per dettagli.

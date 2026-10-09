@@ -87,3 +87,14 @@
 - [x] Test di collisione con segmento che taglia il blocco e test di percorso libero attorno al bordo; CI Android verde
 - [x] APK 0.8.1-ota.24 firmata e verificata pubblicamente su Vercel
 - [ ] Osservazione sul Galaxy S21: vedere se ZERO avvolge l'ostacolo e forma due contatti fisici indipendenti
+
+## ZERO-008.3 — Contatto NON significa presa
+- [x] Inserita terza uscita neurale nei 96 punti della membrana (74→82 pesi, compatibile con vecchi salvataggi).
+- [x] Sensore tattile separato, comando di adesione autonomo, azione inizialmente spenta.
+- [x] Porta trascinabile solo quando due regioni indipendenti mantengono la presa neurale attiva.
+- [x] Test: due contatti opposti senza comando non aprono; una presa rilasciata blocca la trazione; due comandi attivi possono aprire.
+- [x] Pesi del cervello in pagina abilità, contatori tocchi/adesioni e feedback dorato dei punti.
+- [x] CI e build firmata 0.8.3-ota.27; APK GitHub Release verificata.
+- [ ] Test sul Galaxy S21 dell'apprendimento reale della presa e salvataggio di tutti i parametri.
+- [ ] Ripristinare la versione live Vercel 1027 e il pulsante AGGIORNA se il server è rimasto arretrato.
+- [ ] Generalizzare l'adesione appresa ad altri oggetti, non solo al cancello della camera.

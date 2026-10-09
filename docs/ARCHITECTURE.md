@@ -63,3 +63,9 @@
 - `UnknownWorld.Entity` ora è consumabile per segnali nutritivi, `newHabitat(...,scarce)` limita spawn. Salvataggi di esperimenti indipendenti dalla crescita dei cervelli.
 - Allenamento morfologico aggiunge `attemptGate` e `ScarcityLab.trainingFitness`: la simulazione ottimizza avvicinamento, contatti bilaterali, effettivo spostamento della porta e accesso al nutrimento. Una terza posizione è usata per verificare capacità di generalizzazione.
 - Compromessi: senza rilevazione esplicita dei muri e senza world model gli episodi potrebbero non essere risolti; reward e navigazione sono ancora impostati nel codice. Prestazioni 96 nodi/colpi da misurare sul Galaxy S21.
+
+## ZERO-008.3 — Adesione locale come nuova abilità appresa
+- `Morphology`: terza uscita di rete, non un pulsante del giocatore né una preimpostazione di arti: i 96 punti condividono gli stessi 8 nuovi parametri e ricevono un segnale tattile locale prodotto dai contatti fisici. La memoria della precedente rete 74 parametri è preservata append-only.
+- `ScarcityLab`: attrito porta possibile solo tra due attuatori distinti su facce opposte, con soglia di comando e hold di 75 ms. Contatti passivi non muovono la porta. Vecchio benchmark a contatto automatico non è più valido.
+- Addestramento su simulazioni fisiche con premi misurati dopo adesione attiva e spostamento; nessuna istruzione semantica di utilizzare due braccia. L'agente potrebbe non scoprire mai il comportamento complesso con la sola evoluzione.
+- `GameActivity`: punti dorati quando la presa è fisicamente ingaggiata, HUD con ADESIONI/TOCCHI/SENZA PRESA, memoria e morte per esaurimento non toccate.
