@@ -26,7 +26,7 @@ jobs:
       - name: Unit tests
         run: |
           mkdir -p /tmp/overmind
-          javac -d /tmp/overmind app/src/main/java/com/overmind/zero/MotorBrain.java app/src/main/java/com/overmind/zero/UnknownWorld.java app/src/main/java/com/overmind/zero/ContactLearning.java app/src/main/java/com/overmind/zero/DecisionBrain.java app/src/main/java/com/overmind/zero/Morphology.java app/src/main/java/com/overmind/zero/ScarcityLab.java app/src/main/java/com/overmind/zero/SensorimotorMind.java app/src/main/java/com/overmind/zero/LearningDiagnostics.java app/src/main/java/com/overmind/zero/ResetDomains.java
+          javac -d /tmp/overmind app/src/main/java/com/overmind/zero/MotorBrain.java app/src/main/java/com/overmind/zero/UnknownWorld.java app/src/main/java/com/overmind/zero/ContactLearning.java app/src/main/java/com/overmind/zero/DecisionBrain.java app/src/main/java/com/overmind/zero/Morphology.java app/src/main/java/com/overmind/zero/ScarcityLab.java app/src/main/java/com/overmind/zero/SensorimotorMind.java app/src/main/java/com/overmind/zero/LearningDiagnostics.java app/src/main/java/com/overmind/zero/ResetDomains.java app/src/main/java/com/overmind/zero/OnlineBodyLearning.java
           java -cp /tmp/overmind com.overmind.zero.MotorBrain
           java -cp /tmp/overmind com.overmind.zero.UnknownWorld
           java -cp /tmp/overmind com.overmind.zero.ContactLearning
@@ -36,6 +36,7 @@ jobs:
           java -cp /tmp/overmind com.overmind.zero.SensorimotorMind
           java -cp /tmp/overmind com.overmind.zero.LearningDiagnostics
           java -cp /tmp/overmind com.overmind.zero.ResetDomains
+          java -cp /tmp/overmind com.overmind.zero.OnlineBodyLearning
           # v0.6 includes v0.5 -> v0.6 weight migration and expansion invariants.
       - name: Confirm trained selection replaced scripted selector
         run: |
@@ -75,7 +76,7 @@ jobs:
           brain=Path('app/src/main/java/com/overmind/zero/Morphology.java').read_text()
           page=Path('app/src/main/java/com/overmind/zero/BrainStatsActivity.java').read_text()
           assert 'public static final int POINTS=96;' in brain
-          assert 'surface.step(creature,shapeTrainer.best' in app
+          assert 'surface.step(creature,liveBody.weights(2,shapeTrainer.best)' in app
           assert 'Morphology.collide(surface,object,dt)' in app
           assert 'float[] xx=surface.x, yy=surface.y;' in app
           assert 'morph_brain_v07' in app and 'decision_brain_v05' in app
