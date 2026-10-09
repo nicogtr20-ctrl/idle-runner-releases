@@ -205,3 +205,11 @@ APK firmata, versionCode 1039, 92.692 byte; SHA-256 `86caeb85b6eba94aa657d6f19ac
 **Leggi prima `docs/EXPERIMENT_0096.md`: contiene storia, prove sul telefono, modifiche, formato, test, limitazioni e piano successivo.**
 Su richiesta utente ZERO ora deve ricordare intere esperienze più lunghe e imparare sia benefici (+energia) sia pericoli (-energia). Codice: `EpisodicMemory.java` max36 step/max24 eventi, em2 con restore retrocompatibile em1, consolidamento delle ricorrenze, valore positivo/negativo, episodio dannoso mai rigiocato e penalità per l'azione prossima al danno, mantenendo azioni autonome ed esplorazione. `GameActivity` osserva la differenza energetica attribuibile al **contatto** anziché alla fame, salva danni letali prima del reset, non conosce segnali cromatici “corretti”; `SensorimotorMind` usa `episodic.bias`. ANALISI include contatori favorevoli/dannosi/conferme/lunghezza/azioni differenti. Nessun reset vecchie reti, dei pesi 11.664, del corpo, della membrana o della memoria em1. Test JVM/Android verde; esito sul Galaxy S21 ancora aperto.
 Prossimi step: misurare che in scene simili recuperi/eviti energia più spesso, e che ripeta prese fino alla soglia >115U e attraversi. Non confondere indicatori con prova causale.
+
+
+### Release Android firmata 0.9.6-ota.40 — 10 ottobre 2026
+- **Stato:** build e firma stabile GitHub Actions `38005290019` **success**, JVM e Android staging `38005143609` e `38005224595` success; validazione pacchetto Android/update provider superata.
+- **versionCode 1040**, package `com.overmind.zero.ota`, **94.984 byte**, **SHA-256** `0e1c4dfbcd4f77cd2575b5cc5d0ca9f6dd6189054f19066501cf9180c730efcb`.
+- Asset sorgente `updater/public/apk/overmind-zero-1040-0e1c4dfbcd4f.apk`, manifest `updater/public/latest.json`; GitHub Release privata con tag `overmind-zero-v0.9.6-ota.40` dopo verifica dell'azione fallback.
+- Conserva firma, package e SharedPreferences da 0.9.5 e precedenti. **Non disinstallare, non azzerare**. La nuova memoria utilizza `em2` e recupera `em1`.
+- **Ancora da dimostrare su Samsung S21:** preferenza effettiva per punti energetici, evitamento di quelli dannosi, apprendimento e recupero di prese utili dopo la morte e attraversamento del cancello. I test CI NON dimostrano tutto ciò.
