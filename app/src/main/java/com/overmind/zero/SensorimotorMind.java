@@ -101,7 +101,7 @@ public final class SensorimotorMind {
             float curiosity=.035f*Math.min(3,predictedChange);
             float jitter=(random.nextFloat()-.5f)*(.15f+.18f/(1+experiences/45f));
             // Remembered effects bias a choice but never force it.
-            float memoryBias=a==proposed?.72f:0;
+            float memoryBias=episodic==null?0:episodic.bias(a,proposed);
             float score=q+curiosity+jitter+memoryBias;
             if(score>best){best=score;chosen=a;}
         }
