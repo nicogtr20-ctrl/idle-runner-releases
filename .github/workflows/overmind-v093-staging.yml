@@ -1,0 +1,43 @@
+name: OVERMIND 0.9.3 in-life motor bootstrap tests
+on:
+  push:
+    branches: [fix/zero-v093-unblock-locomotion]
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 35
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with: {distribution: temurin, java-version: '17'}
+      - uses: gradle/actions/setup-gradle@v4
+        with: {gradle-version: '8.11.1'}
+      - name: Run original and new physics/learning tests
+        run: |
+          mkdir -p /tmp/zero093
+          javac -d /tmp/zero093 app/src/main/java/com/overmind/zero/{MotorBrain,UnknownWorld,ContactLearning,DecisionBrain,Morphology,ScarcityLab,SensorimotorMind,LearningDiagnostics,ResetDomains,OnlineBodyLearning}.java
+          for test in MotorBrain UnknownWorld ContactLearning DecisionBrain Morphology ScarcityLab SensorimotorMind LearningDiagnostics ResetDomains OnlineBodyLearning; do
+            java -cp /tmp/zero093 com.overmind.zero.$test
+          done
+      - name: Verify truly lived displacement and old-memory compatibility
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          g=Path('app/src/main/java/com/overmind/zero/GameActivity.java').read_text()
+          w=Path('app/src/main/java/com/overmind/zero/OnlineBodyLearning.java').read_text()
+          s=Path('app/src/main/java/com/overmind/zero/SensorimotorMind.java').read_text()
+          assert 'physicalTravel=(float)Math.hypot(ddx,ddy)' in g
+          assert 'travelSinceAction,forwardSinceAction' in g
+          assert 'lived_distance_total_v093' in g
+          assert 'trainer.attempt()' not in g and 'shapeTrainer.attemptGate(' not in g
+          assert 'MotorBrain.INPUT*MotorBrain.HIDDEN' in w
+          assert 'stationary candidate was incorrectly learned' in w
+          assert 'realForward' in s
+          assert 'sensorMind.setLearning(true)' in g
+          print('Real-world motor training and saved-memory safeguards verified')
+          PY
+      - name: Compile Android Debug
+        run: gradle --no-daemon assembleDebug
