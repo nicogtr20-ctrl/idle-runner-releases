@@ -183,3 +183,8 @@ La compilazione Android firmata `38003676123` è verde: versionCode `1039`, SHA-
 - Memorie negative registrate anche se il danno causa la morte; vecchi cervelli e firma APK rimangono. Diagnostica ANALISI ampliata.
 - Test JVM e Android staging riusciti: nessuna dimostrazione di evitamento o completamento stanza sul telefono ancora disponibile.
 Per prove e prossimi step: `docs/EXPERIMENT_0096.md`. VersionCode e digest release: controllare `updater/public/latest.json`.
+
+## OTA 0.9.6-ota.40 — 2026-10-09T23:43:09.736607+00:00
+- Pacchetto Android firmato pubblicato su Vercel (codice 1040).
+- SHA-256: `0e1c4dfbcd4f77cd2575b5cc5d0ca9f6dd6189054f19066501cf9180c730efcb`.
+- APK: `/apk/overmind-zero-1040-0e1c4dfbcd4f.apk`.
