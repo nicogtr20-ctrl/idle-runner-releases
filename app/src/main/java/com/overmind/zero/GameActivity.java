@@ -36,7 +36,7 @@ public final class GameActivity extends Activity {
         OnlineBodyLearning liveBody=new OnlineBodyLearning();
         MotionExploration journey=new MotionExploration();
         EpisodicMemory episodic=new EpisodicMemory();
-        float environmentEffectSinceAction=0,energyGainedSinceAction=0;
+        float environmentEffectSinceAction=0,eventEnergyDeltaSinceAction=0;
         float[] lastAppliedMotor,lastAppliedHand,lastAppliedMembrane;
         float liveStartX,liveStartY,liveStartEnergy;
         float travelSinceAction=0,forwardSinceAction=0;
@@ -281,7 +281,7 @@ public final class GameActivity extends Activity {
             // Only initial boot or actual simulated death restarts the body.
             bestLifeDistance=Math.max(bestLifeDistance,lifeDistance);
             lifeDistance=0;travelSinceAction=0;forwardSinceAction=0;
-            environmentEffectSinceAction=0;energyGainedSinceAction=0;
+            environmentEffectSinceAction=0;eventEnergyDeltaSinceAction=0;
             episodic.resetLife(); // Forget the interrupted sequence, NOT past events.
             liveBody.abortTrial();
             creature.reset();surface.reset(creature);
@@ -422,6 +422,9 @@ public final class GameActivity extends Activity {
                     float before=reserve;
                     float delta=object.touch(dx/Math.max(1,dist),dy/Math.max(1,dist));
                     reserve=Math.max(0,Math.min(100,reserve+delta));
+                    // Only actual physical contact, never passive hunger,
+                    // determines positive/negative autobiographical valence.
+                    eventEnergyDeltaSinceAction+=reserve-before;
                     mind.observe(object.signature,delta,0);
                     decisionBrain.learn(object,before,reserve,0);
                     if(delta>0)energyEaten++;
@@ -437,6 +440,13 @@ public final class GameActivity extends Activity {
                 if(chamber!=null){
                     gripsEver+=chamber.grasps;
                     farthestGate=Math.max(farthestGate,chamber.maxDoorTravel);
+                }
+                // Injury immediately preceding death must be recorded BEFORE
+                // the transient episode buffer is reset.
+                if(eventEnergyDeltaSinceAction<0){
+                    episodic.action(sensorMind.stateCopy(),sensorMind.action);
+                    if(episodic.consequence(0,eventEnergyDeltaSinceAction,
+                       lastAppliedMotor,lastAppliedHand,lastAppliedMembrane,false))save();
                 }
                 reserve=70;lastEvent="CORPO ESAUSTO • MEMORIA CONSERVATA";eventTime=6;
                 resetEpisode();
@@ -501,6 +511,7 @@ public final class GameActivity extends Activity {
                         chamber.foodTouchedByCore(creature)){
                         float prior=reserve;
                         reserve=Math.min(100,reserve+UnknownWorld.RARE_ENERGY);
+                        eventEnergyDeltaSinceAction+=reserve-prior;
                         int gained=(int)(reserve-prior);
                         energyEaten++;chambersCleared++;
                         decisionBrain.learn(chamber.food,prior,reserve,0);
@@ -514,9 +525,8 @@ public final class GameActivity extends Activity {
                     // destination to ZERO. Do not count death/respawn as travel.
                     if(lifeStamp==episode){
                         journey.observe(creature.cx,creature.cy,energyBeforeFrame,reserve);
-                        // Only energy *really received* contributes to delayed
-                        // credit (the normal natural decay is not an event).
-                        energyGainedSinceAction+=Math.max(0,reserve-energyBeforeFrame);
+                        // Episodic valence comes only from actual contact;
+                        // energyBeforeFrame is retained for motion telemetry.
                     }
                     // Real temporal observation AFTER collisions, hunger
                     // and any energy actually collected.
@@ -533,10 +543,10 @@ public final class GameActivity extends Activity {
                     if(sensorMind.experiences>beforeExperience){
                         episodic.action(observedBefore,actionBefore);
                         boolean remembered=episodic.consequence(
-                            environmentEffectSinceAction,energyGainedSinceAction,
+                            environmentEffectSinceAction,eventEnergyDeltaSinceAction,
                             lastAppliedMotor,lastAppliedHand,lastAppliedMembrane,
                             actedFromMemory);
-                        if(remembered)save();
+                        if(remembered||episodic.takeDirty())save();
                         // Recalled physical weights are not the candidate
                         // currently tested by OnlineBodyLearning. Keep the
                         // evaluators separate to avoid a false "improvement".
@@ -551,7 +561,7 @@ public final class GameActivity extends Activity {
                             environmentEffectSinceAction);
                         liveStartX=creature.cx;liveStartY=creature.cy;
                         travelSinceAction=0;forwardSinceAction=0;
-                        environmentEffectSinceAction=0;energyGainedSinceAction=0;
+                        environmentEffectSinceAction=0;eventEnergyDeltaSinceAction=0;
                         liveStartEnergy=reserve;liveStartContacts=physicalContacts;
                         if(result!=null){
                             if(result.domain==0){trainer.attempts++;if(result.accepted){
@@ -774,7 +784,7 @@ public final class GameActivity extends Activity {
             rounded(c,12,12,468,145,0xeb0a1420,20);
             rounded(c,27,28,31,55,TEAL,2);
             text(c,"O V E R M I N D",43,39,14,TEAL,false);
-            text(c,"ZERO / ESPERIMENTO 009.5",26,72,21,0xffe9faf6,false);
+            text(c,"ZERO / ESPERIMENTO 009.6",26,72,21,0xffe9faf6,false);
             rounded(c,339,104,459,138,0xff20444a,11);
             text(c,"AGGIORNA",399,127,12,TEAL,true);
             rounded(c,217,104,333,138,0xff283b58,11);
@@ -814,8 +824,9 @@ public final class GameActivity extends Activity {
                     +"  •  PREVISIONE "+format(decisionBrain.lastPrediction),
                     25,398,10,0xffaac3cb,false);
             }
-            text(c,"ZONE "+journey.lifeCells+" • MEMORIE "+episodic.stored()+
-                " • RICHIAMI "+episodic.replayed+
+            text(c,"ZONE "+journey.lifeCells+" • RICORDI "+episodic.stored()+
+                " (+"+episodic.positiveCount()+"/-"+episodic.negativeCount()+")"
+                +" • RICHIAMI "+episodic.replayed+
                 (episodic.physicallyReplaying()?" • RICORDO ATTIVO":""),
                 25,377,10,0xffb5d7d6,false);
             text(c,"MEMBRANA "+Morphology.POINTS+"  •  ESTENSIONE "+
