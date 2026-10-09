@@ -37,6 +37,7 @@ public final class BrainStatsActivity extends Activity {
         final SensorimotorMind worldMind;
         final int motorAttempts,motorAccepted,handAttempts,handAccepted;
         final int pushed,collisions,contacts;
+        final int exploredCells,motorAccepted094,motorRejected094;
         final float motorInitialFitness,motorNowFitness;
         final float[] predicted=new float[3];
         Dashboard(Context ctx){
@@ -73,6 +74,9 @@ public final class BrainStatsActivity extends Activity {
             motorAccepted=pref.getInt("accepted",0);
             handAttempts=pref.getInt("hand_attempts_v04",0);
             handAccepted=pref.getInt("hand_successes_v04",0);
+            exploredCells=pref.getInt("explored_cells_v094",0);
+            motorAccepted094=pref.getInt("online_accepted_motor_v094",0);
+            motorRejected094=pref.getInt("online_rejected_motor_v094",0);
             pushed=pref.getInt("objects_displaced_v041",0);
             collisions=pref.getInt("collisions_v041",0);
             String mem=pref.getString("world_knowledge_v03","");
@@ -211,6 +215,10 @@ public final class BrainStatsActivity extends Activity {
             y=skill(c,y,"CONTROLLO DEL CORPO",
                 movementNow.length+" pesi",motorAttempts+" tentativi  •  "+motorAccepted+" miglioramenti",
                 Math.min(1f,motorAttempts/30000f),purple);
+            y=skill(c,y,"ESPLORAZIONE FISICA REALE",
+                exploredCells+" zone",
+                "Varianti motore conservate "+motorAccepted094+"  •  scartate "+motorRejected094,
+                Math.min(1f,exploredCells/100f),cyan);
             y=skill(c,y,"MANIPOLAZIONE",
                 handNow.length+" pesi",pushed+" dischi spostati  •  "+collisions+" urti",
                 Math.min(1f,pushed/100f),gold);
