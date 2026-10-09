@@ -736,9 +736,7 @@ public final class GameActivity extends Activity {
                 (sensorMind.adhesion()>0?"ON":"OFF")+
                 "  •  ERRORE PREVISIONE "+format(sensorMind.averagePredictionError),
                 25,402,10,TEAL,false);
-            text(c,"ASSOCIAZIONI STORICHE: "+decisionBrain.decisions+"  •  ESPERIENZE: "
-                 +decisionBrain.updates+"  •  ESPLORAZIONI: "+decisionBrain.explorations,
-                 25,377,11,TEAL,false);
+            // Older stimulus-choice model is historical, not the active policy.
             if(chosenObject!=null){
                 text(c,"SCELTO DALLA RETE: SEGNALE "+(chosenObject.signature+1)
                     +"  •  PREVISIONE "+format(decisionBrain.lastPrediction),
@@ -746,7 +744,7 @@ public final class GameActivity extends Activity {
             }
             text(c,"CAMMINO "+(int)totalTravel+" U  •  CORPO "+
                 (liveBody.testingCandidate()?"TEST PESI":"PESI SALVATI"),
-                25,392,10,0xffb5d7d6,false);
+                25,377,10,0xffb5d7d6,false);
             text(c,"MEMBRANA "+Morphology.POINTS+"  •  ESTENSIONE "+
                   (int)surface.peakExtension+" U  •  PROVE PRESA "+
                   shapeTrainer.gateAttempts,
