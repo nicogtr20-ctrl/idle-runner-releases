@@ -102,6 +102,8 @@ public final class GameActivity extends Activity {
             shapeTrainer=new Morphology.Trainer(decodeShape(prefs.getString("morph_brain_v07","")));
             shapeTrainer.attempts=prefs.getInt("morph_attempts_v07",0);
             shapeTrainer.accepted=prefs.getInt("morph_accepted_v07",0);
+            shapeTrainer.gateAttempts=prefs.getInt("morph_gate_attempts_v08",0);
+            shapeTrainer.gateAccepted=prefs.getInt("morph_gate_success_v08",0);
             // Do not reuse v0.4's 'physical_pushes' counter: it counted
             // collisions, not confirmed object displacement.
             pushes=prefs.getInt("objects_displaced_v041",0);
@@ -188,6 +190,8 @@ public final class GameActivity extends Activity {
               .putString("morph_brain_v07",encode(shapeTrainer.best))
               .putInt("morph_attempts_v07",shapeTrainer.attempts)
               .putInt("morph_accepted_v07",shapeTrainer.accepted)
+              .putInt("morph_gate_attempts_v08",shapeTrainer.gateAttempts)
+              .putInt("morph_gate_success_v08",shapeTrainer.gateAccepted)
               .putBoolean("scarcity_active_v08",scarcity)
               .putFloat("scarcity_elapsed_v08",elapsedLife)
               .putInt("room_success_v08",chambersCleared)
@@ -211,7 +215,9 @@ public final class GameActivity extends Activity {
                             // Shape trials run on copies of the same body and
                             // collision physics used onscreen. Prioritize them
                             // without discarding existing motor learning.
-                            if(saved%7==0)
+                            if(saved%29==0)
+                                shapeTrainer.attemptGate(trainer.best,handTrainer.best);
+                            else if(saved%7==0)
                                 shapeTrainer.attempt(trainer.best,handTrainer.best);
                             else if(saved%5==0)
                                 handTrainer.attempt(trainer.best);
@@ -650,7 +656,8 @@ public final class GameActivity extends Activity {
                     25,398,10,0xffaac3cb,false);
             }
             text(c,"MEMBRANA "+Morphology.POINTS+"  •  ESTENSIONE "+
-                  (int)surface.peakExtension+" U  •  ALLEN. "+shapeTrainer.attempts,
+                  (int)surface.peakExtension+" U  •  PROVE PRESA "+
+                  shapeTrainer.gateAttempts,
                   25,421,11,GOLD,false);
             text(c,(scarcity?"SCARSITA' ATTIVA":"SCORTE IN ESAURIMENTO")+
                 "  •  ENERGIE PRESE "+energyEaten+"  •  STANZE RISOLTE "+chambersCleared,
