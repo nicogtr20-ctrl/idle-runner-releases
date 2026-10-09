@@ -35,6 +35,9 @@ public final class GameActivity extends Activity {
         Morphology.Trainer shapeTrainer;
         OnlineBodyLearning liveBody=new OnlineBodyLearning();
         MotionExploration journey=new MotionExploration();
+        EpisodicMemory episodic=new EpisodicMemory();
+        float environmentEffectSinceAction=0,energyGainedSinceAction=0;
+        float[] lastAppliedMotor,lastAppliedHand,lastAppliedMembrane;
         float liveStartX,liveStartY,liveStartEnergy;
         float travelSinceAction=0,forwardSinceAction=0;
         float lifeDistance=0,totalTravel=0,bestLifeDistance=0;
@@ -139,6 +142,9 @@ public final class GameActivity extends Activity {
             sensorMind.restore(prefs.getString("sensorimotor_model_v09",""));
             sensorMind.diagnostics.restore(
                 prefs.getString("sensorimotor_diagnostics_v091",""));
+            episodic=new EpisodicMemory();
+            episodic.restore(prefs.getString("episodic_memory_v095",""));
+            sensorMind.attachMemory(episodic);
             reserve=prefs.getFloat("zero_energy_v03",57f);
             totalTravel=prefs.getFloat("lived_distance_total_v093",0);
             bestLifeDistance=prefs.getFloat("lived_distance_record_v093",0);
@@ -239,6 +245,7 @@ public final class GameActivity extends Activity {
               .putString("decision_brain_v05",decisionBrain.serialize())
               .putString("sensorimotor_model_v09",sensorMind.serialize())
               .putString("sensorimotor_diagnostics_v091",sensorMind.diagnostics.encode())
+              .putString("episodic_memory_v095",episodic.encode())
               .putString("morph_brain_v07",encode(shapeTrainer.best))
               .putInt("morph_attempts_v07",shapeTrainer.attempts)
               .putInt("morph_accepted_v07",shapeTrainer.accepted)
@@ -274,6 +281,8 @@ public final class GameActivity extends Activity {
             // Only initial boot or actual simulated death restarts the body.
             bestLifeDistance=Math.max(bestLifeDistance,lifeDistance);
             lifeDistance=0;travelSinceAction=0;forwardSinceAction=0;
+            environmentEffectSinceAction=0;energyGainedSinceAction=0;
+            episodic.resetLife(); // Forget the interrupted sequence, NOT past events.
             liveBody.abortTrial();
             creature.reset();surface.reset(creature);
             journey.newLife(creature.cx,creature.cy);
@@ -381,6 +390,9 @@ public final class GameActivity extends Activity {
                     object.peakDisplacement=Math.max(object.peakDisplacement,shift);
                     if(object.everCollided && !object.countedAsMoved && shift>=12f){
                         object.countedAsMoved=true;
+                        // A physically verified change in an external object,
+                        // regardless of object identity, can strengthen history.
+                        environmentEffectSinceAction+=Math.min(18,shift);
                         pushes++;
                         decisionBrain.learn(object,reserve,reserve,shift);
                         if(chosenObject==object){chosenObject=null;goalTimer=0;}
@@ -457,12 +469,21 @@ public final class GameActivity extends Activity {
                     heading=(float)Math.atan2(my,mx);
                     float px=creature.cx+mx*145f,py=creature.cy+my*145f;
                     float beforeX=creature.cx,beforeY=creature.cy;
-                    creature.step(liveBody.weights(0,trainer.best),mx,my,slice,
-                        liveBody.weights(1,handTrainer.best),px,py);
-                    surface.step(creature,liveBody.weights(2,shapeTrainer.best),px,py,slice,
+                    // A remembered configuration is *proposed* only when ZERO
+                    // voluntarily chose an action recalled from similar senses.
+                    // All 96 particles remain fully physical, no scripted gate.
+                    lastAppliedMotor=episodic.weights(0,liveBody.weights(0,trainer.best));
+                    lastAppliedHand=episodic.weights(1,liveBody.weights(1,handTrainer.best));
+                    lastAppliedMembrane=episodic.weights(2,liveBody.weights(2,shapeTrainer.best));
+                    creature.step(lastAppliedMotor,mx,my,slice,lastAppliedHand,px,py);
+                    surface.step(creature,lastAppliedMembrane,px,py,slice,
                         sensorMind.adhesion());
                     if(chamber!=null){
+                        float doorBefore=chamber.doorY;
                         chamber.constrain(creature,surface,slice);
+                        float actuallyMoved=Math.abs(chamber.doorY-doorBefore);
+                        if(Float.isFinite(actuallyMoved))
+                            environmentEffectSinceAction+=Math.min(2,actuallyMoved);
                         farthestGate=Math.max(farthestGate,chamber.maxDoorTravel);
                     }
                     // Only measured physical displacement after collisions
@@ -491,24 +512,40 @@ public final class GameActivity extends Activity {
                     }
                     // The journal observes the lived world, never suggests a
                     // destination to ZERO. Do not count death/respawn as travel.
-                    if(lifeStamp==episode)
+                    if(lifeStamp==episode){
                         journey.observe(creature.cx,creature.cy,energyBeforeFrame,reserve);
+                        // Only energy *really received* contributes to delayed
+                        // credit (the normal natural decay is not an event).
+                        energyGainedSinceAction+=Math.max(0,reserve-energyBeforeFrame);
+                    }
                     // Real temporal observation AFTER collisions, hunger
                     // and any energy actually collected.
                     sensorMind.setLearning(true);
                     long beforeExperience=sensorMind.experiences;
+                    // Snapshot the PREVIOUS decision before the model chooses
+                    // the next one. Its sensory state is what ZERO actually saw.
+                    float[] observedBefore=sensorMind.stateCopy();
+                    int actionBefore=sensorMind.action;
                     sensorMind.observe(SensorimotorMind.Senses.read(
-                        creature,surface,chamber,environment,reserve),slice);
+                        creature,surface,chamber,environment,reserve),slice,
+                        environmentEffectSinceAction);
                     if(sensorMind.experiences>beforeExperience){
+                        episodic.action(observedBefore,actionBefore);
+                        boolean remembered=episodic.consequence(
+                            environmentEffectSinceAction,energyGainedSinceAction,
+                            lastAppliedMotor,lastAppliedHand,lastAppliedMembrane);
+                        if(remembered)save();
                         OnlineBodyLearning.Result result=liveBody.observe(
                             sensorMind.lastReward,travelSinceAction,forwardSinceAction,
                             Math.max(0,physicalContacts-liveStartContacts),
                             liveStartEnergy,reserve,journey.takeNewCells(),
                             liveStartX,liveStartY,creature.cx,creature.cy,
                             chamber!=null,mx,my,
-                            trainer.best,handTrainer.best,shapeTrainer.best);
+                            trainer.best,handTrainer.best,shapeTrainer.best,
+                            environmentEffectSinceAction);
                         liveStartX=creature.cx;liveStartY=creature.cy;
                         travelSinceAction=0;forwardSinceAction=0;
+                        environmentEffectSinceAction=0;energyGainedSinceAction=0;
                         liveStartEnergy=reserve;liveStartContacts=physicalContacts;
                         if(result!=null){
                             if(result.domain==0){trainer.attempts++;if(result.accepted){
@@ -731,7 +768,7 @@ public final class GameActivity extends Activity {
             rounded(c,12,12,468,145,0xeb0a1420,20);
             rounded(c,27,28,31,55,TEAL,2);
             text(c,"O V E R M I N D",43,39,14,TEAL,false);
-            text(c,"ZERO / ESPERIMENTO 009.4",26,72,21,0xffe9faf6,false);
+            text(c,"ZERO / ESPERIMENTO 009.5",26,72,21,0xffe9faf6,false);
             rounded(c,339,104,459,138,0xff20444a,11);
             text(c,"AGGIORNA",399,127,12,TEAL,true);
             rounded(c,217,104,333,138,0xff283b58,11);
@@ -771,9 +808,9 @@ public final class GameActivity extends Activity {
                     +"  •  PREVISIONE "+format(decisionBrain.lastPrediction),
                     25,398,10,0xffaac3cb,false);
             }
-            text(c,"ZONE NUOVE "+journey.lifeCells+
-                "  •  EFFICIENZA "+(int)journey.efficiency()+" U/E"+
-                "  •  "+(liveBody.testingCandidate()?"PESI IN PROVA":"PESI SALVATI"),
+            text(c,"ZONE "+journey.lifeCells+" • MEMORIE "+episodic.stored()+
+                " • RICHIAMI "+episodic.replayed+
+                (episodic.physicallyReplaying()?" • RICORDO ATTIVO":""),
                 25,377,10,0xffb5d7d6,false);
             text(c,"MEMBRANA "+Morphology.POINTS+"  •  ESTENSIONE "+
                   (int)surface.peakExtension+" U  •  PROVE PRESA "+
