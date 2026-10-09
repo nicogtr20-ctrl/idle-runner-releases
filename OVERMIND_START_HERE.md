@@ -45,3 +45,7 @@ Il codice, gli asset e i release APK restano di proprietà e sotto controllo del
 - Branch `feature/overmind-v08-scarcity-grasp-chamber`: membrana a 96 nodi, energia finita, emergenza di nuove risorse rara, camera con porta scorrevole che richiede contatti fisici su due lati, e addestramento mirato delle capacità di manipolazione.
 - La build viene firmata tramite `feature/overmind-inapp-updater`, package invariato `com.overmind.zero.ota`; verificare https://overmind-zero-updates.vercel.app/latest.json prima di usare AGGIORNA, salvando la precedente memoria. L'installazione su Galaxy S21 è da validare.
 - Leggere `docs/HANDOFF.md` per dettagli tecnici e limiti; NON dire che ZERO ha imparato a usare due braccia finché non si vede spostare e superare la porta senza spinte prefissate.
+
+### Stato confermato 0.8.0-ota.23
+- **Nuova release OTA online verificata:** https://overmind-zero-updates.vercel.app/latest.json (versionCode 1023) e APK https://overmind-zero-updates.vercel.app/apk/overmind-zero-1023-941873ee1d08.apk (63.556 byte). Puoi usare AGGIORNA in-app senza disinstallare; la vecchia memoria rimane.
+- Dopo aggiornamento: attendere scarsità oppure toccare test stanza nel HUD; verificare PRESE / PORTA / STANZE RISOLTE e comportamento reale vicino al blocco, non solo i numeri di training. Dettagli completi in docs/HANDOFF.md.
