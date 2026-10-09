@@ -92,3 +92,8 @@ La v0.9.5 crea ricordi di sequenze **effettivamente vissute** (fino a 9 sensazio
 
 ### Release ZERO 0.9.5-ota.39 — 2026-10-10
 APK firmata, versionCode 1039, 92.692 byte; SHA-256 `86caeb85b6eba94aa657d6f19ac7dff5dd0e4e8d2974bf71e8c6c12a3201c211`; CI firmata `38003676123` verde, file `updater/public/latest.json` aggiornato. Il test manuale sul Samsung Galaxy S21 resta da fare. Non attribuire retroattivamente le 111U di apertura della v0.9.4 alla nuova memoria.
+
+
+## Ultimo progetto attivo: ZERO 0.9.6 (10 ottobre 2026)
+**Documento prioritario:** `docs/EXPERIMENT_0096.md` (descrive fatti osservati, implementazione, migrazione, limiti, test e prossime tappe). L'ultima modifica introduce ricordi episodici di durata variabile **2–36 azioni**, fino a **24** eventi, valenza favorevole/dannosa appresa dai **cambiamenti energetici realmente provocati dal contatto**, bias positivo e penalità negativa senza hardcode dei colori. Consolidamento per conferme: gli eventi non vengono sostituiti semplicemente perché vecchi. Migrazione `em1→em2` nella stessa chiave `episodic_memory_v095`: installare sopra 0.9.5 senza azzerare. Non sostenere che già preferisca i punti blu/eviti i rossi: da dimostrare in gioco.
+Le osservazioni sperimentali del Galaxy S21 restano quelle della v0.9.4 (93 dischi, porta max 111U, 0 stanze); `docs/EXPERIMENT_0096.md` distingue il visto dai risultati soltanto automatizzati. Per il build firmato leggere `updater/public/latest.json` e la corrispondente release GitHub.
