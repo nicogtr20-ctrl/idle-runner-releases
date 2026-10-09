@@ -297,7 +297,8 @@ public final class GameActivity extends Activity {
             if(!scarcity&&elapsedLife>=70f)scarcity=true;
             // Scarcity is explicit, increasing metabolic urgency.
             reserve=Math.max(0,reserve-(scarcity?.70f:.14f)*dt);
-            if(scarcity&&chamber==null&&elapsedLife>=nextChamber)
+            if(scarcity&&elapsedLife>=nextChamber &&
+                (chamber==null||chamber.reachedEnergy))
                 activateChamber(false);
             for(UnknownWorld.Entity object:environment)object.tick(dt);
             if(chosenObject==null||!chosenObject.ready()||goalTimer<=0){
