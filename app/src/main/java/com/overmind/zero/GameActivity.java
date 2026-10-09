@@ -577,12 +577,22 @@ public final class GameActivity extends Activity {
             // perimeter masses; NOT a fixed spider silhouette.
             float[] xx=surface.x, yy=surface.y;
             path.reset();
-            float a0=(xx[Morphology.POINTS-1]+xx[0])*.5f;
-            float b0=(yy[Morphology.POINTS-1]+yy[0])*.5f;
-            path.moveTo(a0,b0);
-            for(int i=0;i<Morphology.POINTS;i++){
-                int j=(i+1)%Morphology.POINTS;
-                path.quadTo(xx[i],yy[i],(xx[i]+xx[j])*.5f,(yy[i]+yy[j])*.5f);
+            if(chamber!=null){
+                // The 96 physical edges are the visible outline INSIDE the
+                // puzzle. Quadratic rounding between masses used to bleed the
+                // rendered blob through an otherwise-solid door.
+                path.moveTo(xx[0],yy[0]);
+                for(int i=1;i<Morphology.POINTS;i++)
+                    path.lineTo(xx[i],yy[i]);
+            }else{
+                float a0=(xx[Morphology.POINTS-1]+xx[0])*.5f;
+                float b0=(yy[Morphology.POINTS-1]+yy[0])*.5f;
+                path.moveTo(a0,b0);
+                for(int i=0;i<Morphology.POINTS;i++){
+                    int j=(i+1)%Morphology.POINTS;
+                    path.quadTo(xx[i],yy[i],(xx[i]+xx[j])*.5f,
+                        (yy[i]+yy[j])*.5f);
+                }
             }
             path.close();
             paint.setShader(null);paint.setStyle(Paint.Style.FILL);
