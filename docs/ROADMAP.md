@@ -140,3 +140,19 @@
 - [x] JVM e Android CI staging + firma stable 0.9.4-ota.36 riuscita.
 - [ ] Testare sul Galaxy S21 sia locomozione utile sia rischio di accettazione falsa in condizioni diverse; implementare A/B rigoroso su scene iniziali identiche senza addestramento nascosto.
 - [ ] Validare che l'apprendimento non provochi regressione di presa, manipolazione e stanza nei tentativi prolungati.
+
+
+## ZERO-009.5 — memoria di strategie realmente vissute (10 ottobre 2026)
+- [x] Definire criterio di evento basato su conseguenza fisica **generica** (movimento oggetto, porta, energia), mai su una procedura prescelta.
+- [x] Memorizzare ultimo episodio: 26 sensi, azioni selezionate, pesi motori, manipolazione e membrana realmente attivi; max 18 ricordi di 9 azioni.
+- [x] Recuperare eventi tramite sensi simili, offrire preferenza debole non obbligatoria, riusare per poco i pesi registrati, cooldown se nessun risultato.
+- [x] Persistenza sopravvivente alla morte e agli update, nuova sezione ANALISI e reset specifico senza cancellare altre reti.
+- [x] Rinforzo fisico generico e isolamento trial di mutazione dal replay per evitare falso positivo.
+- [ ] Su Galaxy S21: verificare ripetizione della tecnica fisica dopo morte, trasferimento a porta ricreata, attraversamento e raccolta dell'energia rara.
+- [ ] A/B rigoroso con medesima fisica e seed: base vs cervello precedente vs recall, conteggio esiti fisici e percentuale tentativi con recupero riuscito.
+- [ ] Sviluppare sensori per movimento relativo e storia temporale, non etichette semantiche “questa è una porta”.
+- [ ] Solo dopo le prove: planning controfattuale multistep sul modello del mondo, senza fondere simulazioni immaginate con dati reali.
+Documentazione dettagliata e limiti scientifici: `docs/EXPERIMENT_0095.md`.
+
+## Pubblicazione verificata v0.9.5-ota.39
+La compilazione Android firmata `38003676123` è verde: versionCode `1039`, SHA-256 `86caeb85b6eba94aa657d6f19ac7dff5dd0e4e8d2974bf71e8c6c12a3201c211`, 92.692 byte. Test in-game su Galaxy S21 ancora pendente, nessun reset richiesto.
