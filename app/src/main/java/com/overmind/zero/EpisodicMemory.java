@@ -65,6 +65,11 @@ public final class EpisodicMemory {
      */
     public boolean consequence(float physicalEffect,float energyGained,
                                float[] motor,float[] hand,float[] membrane){
+        return consequence(physicalEffect,energyGained,motor,hand,membrane,replayAtAction);
+    }
+    public boolean consequence(float physicalEffect,float energyGained,
+                               float[] motor,float[] hand,float[] membrane,
+                               boolean performedRecall){
         float effect=Math.max(0,Math.min(100,physicalEffect))+
                      Math.max(0,Math.min(80,energyGained))*.25f;
         if(!Float.isFinite(effect)||effect<MIN_EFFECT||recent.size()<2)return false;
@@ -90,7 +95,7 @@ public final class EpisodicMemory {
         if(events.size()>=MAX_EPISODES)events.remove(0);
         events.add(e);captured++;lastTraceLength=e.trace.size();
         lastEventEffect=e.effect;
-        if(replayAtAction)repeatEffects++;
+        if(performedRecall)repeatEffects++;
         return true;
     }
     private static float distance(float[] a,float[] b){
@@ -248,7 +253,8 @@ public final class EpisodicMemory {
         n.chosen(12,proposed);
         if(!n.physicallyReplaying()||n.weights(0,mot)==mot||n.replayed!=1)
             throw new AssertionError("Contextual body replay not selected");
-        n.action(s,12);n.consequence(10,0,mot,hand,shape);
+        n.action(s,12);n.action(s,12);
+        n.consequence(10,0,mot,hand,shape,true);
         if(n.repeatEffects!=1)throw new AssertionError("No measured replay success");
         n.resetLife();
         if(n.stored()!=1||n.replayed!=1)throw new AssertionError("Death erased recall");
