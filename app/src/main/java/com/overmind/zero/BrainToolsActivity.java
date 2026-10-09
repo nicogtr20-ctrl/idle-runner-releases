@@ -124,6 +124,25 @@ public final class BrainToolsActivity extends Activity {
              prefs.getInt("online_accepted_membrane_v094",0)+" / "+
              prefs.getInt("online_rejected_membrane_v094",0),WHITE);
         paragraph(physical,"I contatori partono dalla 0.9.4: non sono ricostruibili dai tentativi precedenti. Una zona è una cella di 75 unità, conteggiata una volta per vita. Le varianti sono confrontate su finestre successive, NON nelle stesse condizioni iniziali: dati indicativi, non una prova causale.");
+        EpisodicMemory episodes=new EpisodicMemory();
+        episodes.restore(prefs.getString("episodic_memory_v095",""));
+        LinearLayout memory=panel(body);
+        memory.addView(label("MEMORIA DELLE ESPERIENZE",16,CYAN,true));
+        line(memory,"Sequenze significative conservate",
+             String.valueOf(episodes.stored()),WHITE);
+        line(memory,"Esperienze registrate nel tempo",
+             String.valueOf(episodes.captured),WHITE);
+        line(memory,"Situazioni riconosciute",
+             String.valueOf(episodes.matched),WHITE);
+        line(memory,"Azioni realmente richiamate",
+             String.valueOf(episodes.replayed),CYAN);
+        line(memory,"Effetti fisici riprodotti",
+             String.valueOf(episodes.repeatEffects),AMBER);
+        line(memory,"Lunghezza ultimo ricordo",
+             episodes.lastTraceLength+" azioni",WHITE);
+        line(memory,"Ultimo effetto fisico ricordato",
+             number(episodes.lastEventEffect),AMBER);
+        paragraph(memory,"Il ricordo conserva sensazioni, azioni effettive e pesi corporei attivi. Il richiamo influenza, ma non impone, l'azione scelta. 'Effetti riprodotti' significa nuovo effetto misurato dopo un richiamo, NON prova di comprensione né stanza superata. Questi dati iniziano dalla v0.9.5; i progressi precedenti restano intatti.");
         LinearLayout reset=panel(body);
         reset.addView(label("AZZERA APPRENDIMENTO",17,AMBER,true));
         paragraph(reset,"Ogni voce ritorna allo stato vergine SOLO per quel sistema. Altre memorie e reti rimangono. L'azzeramento ricarica il corpo nella mappa per applicare i nuovi parametri in sicurezza.");
@@ -134,6 +153,7 @@ public final class BrainToolsActivity extends Activity {
         resetButton(reset,"MEMBRANA E PRESA","82 pesi, prove fisiche e miglioramenti della membrana.",ResetDomains.MEMBRANE,false);
         resetButton(reset,"MEMORIA DEGLI STIMOLI","Associazioni storiche separate dai cervelli.",ResetDomains.EXPLORATION,false);
         resetButton(reset,"STANZA E SOPRAVVIVENZA","Successi, energie, prese e cronologia della scarsità.",ResetDomains.ROOM,false);
+        resetButton(reset,"MEMORIA EPISODICA","Ricordi vissuti, sequenze di azioni e tentativi di richiamo.",ResetDomains.EPISODES,false);
         resetButton(reset,"AZZERA TUTTO","CANCELLA tutti i cervelli, statistiche, memoria ed esperienze.",ResetDomains.ALL,true);
         TextView back=label("‹ TORNA A ZERO",17,CYAN,true);
         back.setGravity(Gravity.CENTER);
