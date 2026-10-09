@@ -172,6 +172,42 @@ public final class ScarcityLab {
         }
         return false;
     }
+    /**
+     * Honest physical training trial: no manual assignment of door movement,
+     * grasping or food. The controller gets only a target direction and local
+     * sensor states, exactly as in the visible simulation.
+     */
+    public static float trial(float[] motor,float[] hand,float[] shape,float offsetY){
+        MotorBrain.Body body=new MotorBrain.Body();
+        Morphology.Surface skin=new Morphology.Surface(body);
+        ScarcityLab lab=new ScarcityLab(-72,offsetY);
+        float minGateDistance=200;
+        for(int frame=0;frame<150;frame++){
+            float dt=MotorBrain.STEP;
+            float dx=lab.food.x-body.cx,dy=lab.food.y-body.cy;
+            float len=(float)Math.hypot(dx,dy);
+            if(len>.01f){dx/=len;dy/=len;}
+            body.step(motor,dx,dy,dt,hand,lab.food.x,lab.food.y);
+            skin.step(body,shape,lab.food.x,lab.food.y,dt);
+            lab.constrain(body,skin,dt);
+            float dist=(float)Math.hypot(body.cx-lab.gateX(),body.cy-lab.gateCenterY());
+            minGateDistance=Math.min(minGateDistance,dist);
+            if(lab.foodTouchedByCore(body))break;
+        }
+        float approach=clamp(110-minGateDistance,0,110);
+        float score=.08f*approach
+            +2.6f*lab.maxDoorTravel
+            +.09f*Math.min(400,lab.opposedContactFrames)
+            +4f*Math.min(2,lab.grasps)
+            +(lab.reachedEnergy?260f:0f)-skin.totalEffort*.12f;
+        return Float.isFinite(score)?score:-100000f;
+    }
+    public static float trainingFitness(float[] motor,float[] hand,float[] shape){
+        return (trial(motor,hand,shape,-10)+trial(motor,hand,shape,12))*.5f;
+    }
+    public static float heldoutFitness(float[] motor,float[] hand,float[] shape){
+        return trial(motor,hand,shape,25);
+    }
     public static void main(String[] args){
         MotorBrain.Body body=new MotorBrain.Body();
         Morphology.Surface membrane=new Morphology.Surface(body);
@@ -202,6 +238,12 @@ public final class ScarcityLab {
         ScarcityLab unopened=new ScarcityLab(0,0);
         if(unopened.foodTouchedByCore(new MotorBrain.Body()))
             throw new IllegalStateException("Core ate unreachable food from afar");
+        float[] motor=MotorBrain.virgin(new java.util.Random(918273));
+        float[] hand=ContactLearning.virgin();
+        float[] shape=Morphology.virgin(new java.util.Random(14790));
+        float score=trainingFitness(motor,hand,shape);
+        if(!Float.isFinite(score)||score<=-99999)
+            throw new IllegalStateException("Chamber training reward not finite");
         UnknownWorld.Entity supply=new UnknownWorld.Entity(0,0,0,0);
         if(supply.touch(0,0)<=0||supply.ready())
             throw new IllegalStateException("Consumed energy respawned");
