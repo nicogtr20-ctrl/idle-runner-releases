@@ -121,7 +121,7 @@ jobs:
           assert 'sensorimotor_model_v09' in a and 'sensorMind.observe(' in a
           assert 'Math.atan2(chosenObject.y' not in a and 'decisionBrain.choose(environment' not in a
           assert 'sensorMind.adhesion()' in a
-          assert 'sensorMind.setLearning(learning);' in a
+          assert 'sensorMind.setLearning(true);' in a and 'learning=!learning' not in a
           assert 'if(reserve<=0)' in a and 'resetEpisode();' in a
           assert 'shapeTrainer.attemptGate(trainer.best,handTrainer.best)' not in a
           assert 'deltaEnergy=(after[0]-before[0])*10f' in m
