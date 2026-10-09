@@ -40,7 +40,7 @@ public final class Morphology {
         System.arraycopy(loaded,0,upgraded,0,LEGACY_PARAMS);
         return upgraded;
     }
-    static void output(float[] w,float[] signal,float[] out){
+    static void output(float[] w,float[] signal,float touch,float[] out){
         float h0=0,h1=0,h2=0,h3=0,h4=0,h5=0;
         for(int j=0;j<HIDDEN;j++){
             float a=w[INPUTS*HIDDEN+j];
@@ -55,7 +55,7 @@ public final class Morphology {
         int p=INPUTS*HIDDEN+HIDDEN;
         // The grip head learns separately from old radial/tangential muscles.
         float grab=w[LEGACY_PARAMS+HIDDEN];
-        grab+=signal[8]*w[LEGACY_PARAMS+HIDDEN+1];
+        grab+=touch*w[LEGACY_PARAMS+HIDDEN+1];
         grab+=h0*w[LEGACY_PARAMS]+h1*w[LEGACY_PARAMS+1]
              +h2*w[LEGACY_PARAMS+2]+h3*w[LEGACY_PARAMS+3]
              +h4*w[LEGACY_PARAMS+4]+h5*w[LEGACY_PARAMS+5];
@@ -134,7 +134,7 @@ public final class Morphology {
                 input[6]=(float)Math.cos(t*2.8f+a);
                 input[7]=clamp((float)Math.hypot(targetX-x[i],targetY-y[i])/125f,0,2);
                 input[8]=1;
-                output(brain,input,out);
+                output(brain,input,touchSense[i],out);
                 // A new neural actuator at EVERY one of the 96 surface
                 // masses. Merely touching a solid NEVER implies grabbing.
                 gripCommand[i]=Math.max(0,out[2]);
@@ -366,7 +366,7 @@ public final class Morphology {
         }
         float[] prev=new float[3],upgraded=new float[3];
         float[] sensors={.5f,.2f,.2f,.1f,.3f,0,1,.6f,1};
-        output(migrate(legacy),sensors,upgraded);
+        output(migrate(legacy),sensors,0,upgraded);
         if(upgraded[2]!=0)throw new IllegalStateException("Grip started active without learning");
         Trainer trainer=new Trainer(blank);
         for(int i=0;i<16;i++)trainer.attempt(motor,hand);
