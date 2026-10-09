@@ -81,10 +81,29 @@ jobs:
           assert 'chamber.constrain(creature,surface,slice);' in app
           assert 'foodTouchedByCore(creature)' in app
           assert 'consumed=true;cooldown=Float.POSITIVE_INFINITY' in world
-          assert 'leftCount>0&&rightCount>0' in chamber
+          assert 'leftGrip>0&&rightGrip>0' in chamber
+          assert 'dualTouchNoGrip' in chamber and 'Morphology.GRIP_HOLD' in chamber
+          assert 'gripCommand[i]=Math.max(0,out[2])' in brain
+          assert 'public static float[] migrate' in brain
           assert 'shapeTrainer.attemptGate(trainer.best,handTrainer.best)' in app
           assert 'room_success_v08' in app and 'grip_events_v08' in app
           print('ZERO-008: physical 96-point membrane, finite energy, bilateral grip, room tests and old brain persistence passed')
+          PY
+      - name: Verify active grip, backward compatible brain and life continuity
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          m=Path('app/src/main/java/com/overmind/zero/Morphology.java').read_text()
+          s=Path('app/src/main/java/com/overmind/zero/ScarcityLab.java').read_text()
+          a=Path('app/src/main/java/com/overmind/zero/GameActivity.java').read_text()
+          assert 'GRIP_HEAD=HIDDEN+2' in m
+          assert 'gripCommand[i]=Math.max(0,out[2])' in m
+          assert 'grab+=touch*w[LEGACY_PARAMS+HIDDEN+1]' in m
+          assert 'if(chamber!=null&&surface.gripHold[i]>=Morphology.GRIP_HOLD)' in a
+          assert 'dualTouchNoGrip' in s and 'leftGrip>0&&rightGrip>0' in s
+          assert 'decision_brain_v05' in a and 'morph_brain_v07' in a
+          assert 'if(reserve<=0)' in a and 'resetEpisode();' in a
+          print('Only actively commanding adhesive patches can drag gate; 74 learned weights preserved.')
           PY
       - name: Compile OTA client
         run: gradle --no-daemon assembleDebug
