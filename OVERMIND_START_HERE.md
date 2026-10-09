@@ -97,3 +97,11 @@ APK firmata, versionCode 1039, 92.692 byte; SHA-256 `86caeb85b6eba94aa657d6f19ac
 ## Ultimo progetto attivo: ZERO 0.9.6 (10 ottobre 2026)
 **Documento prioritario:** `docs/EXPERIMENT_0096.md` (descrive fatti osservati, implementazione, migrazione, limiti, test e prossime tappe). L'ultima modifica introduce ricordi episodici di durata variabile **2–36 azioni**, fino a **24** eventi, valenza favorevole/dannosa appresa dai **cambiamenti energetici realmente provocati dal contatto**, bias positivo e penalità negativa senza hardcode dei colori. Consolidamento per conferme: gli eventi non vengono sostituiti semplicemente perché vecchi. Migrazione `em1→em2` nella stessa chiave `episodic_memory_v095`: installare sopra 0.9.5 senza azzerare. Non sostenere che già preferisca i punti blu/eviti i rossi: da dimostrare in gioco.
 Le osservazioni sperimentali del Galaxy S21 restano quelle della v0.9.4 (93 dischi, porta max 111U, 0 stanze); `docs/EXPERIMENT_0096.md` distingue il visto dai risultati soltanto automatizzati. Per il build firmato leggere `updater/public/latest.json` e la corrispondente release GitHub.
+
+
+### Release Android firmata 0.9.6-ota.40 — 10 ottobre 2026
+- **Stato:** build e firma stabile GitHub Actions `38005290019` **success**, JVM e Android staging `38005143609` e `38005224595` success; validazione pacchetto Android/update provider superata.
+- **versionCode 1040**, package `com.overmind.zero.ota`, **94.984 byte**, **SHA-256** `0e1c4dfbcd4f77cd2575b5cc5d0ca9f6dd6189054f19066501cf9180c730efcb`.
+- Asset sorgente `updater/public/apk/overmind-zero-1040-0e1c4dfbcd4f.apk`, manifest `updater/public/latest.json`; GitHub Release privata con tag `overmind-zero-v0.9.6-ota.40` dopo verifica dell'azione fallback.
+- Conserva firma, package e SharedPreferences da 0.9.5 e precedenti. **Non disinstallare, non azzerare**. La nuova memoria utilizza `em2` e recupera `em1`.
+- **Ancora da dimostrare su Samsung S21:** preferenza effettiva per punti energetici, evitamento di quelli dannosi, apprendimento e recupero di prese utili dopo la morte e attraversamento del cancello. I test CI NON dimostrano tutto ciò.
