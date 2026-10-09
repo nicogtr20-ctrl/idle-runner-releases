@@ -195,15 +195,15 @@ public final class ScarcityLab {
         float enter=0f,leave=1f;
         if(Math.abs(dx)<1e-7f){if(ax<l||ax>r)return false;}
         else{
-            float a=(l-ax)/dx,b=(r-ax)/dx;
-            enter=Math.max(enter,Math.min(a,b));
-            leave=Math.min(leave,Math.max(a,b));
+            float u=(l-ax)/dx,v=(r-ax)/dx;
+            enter=Math.max(enter,Math.min(u,v));
+            leave=Math.min(leave,Math.max(u,v));
         }
         if(Math.abs(dy)<1e-7f){if(ay<t||ay>b)return false;}
         else{
-            float a=(t-ay)/dy,b=(b-ay)/dy;
-            enter=Math.max(enter,Math.min(a,b));
-            leave=Math.min(leave,Math.max(a,b));
+            float u=(t-ay)/dy,v=(b-ay)/dy;
+            enter=Math.max(enter,Math.min(u,v));
+            leave=Math.min(leave,Math.max(u,v));
         }
         return enter<=leave;
     }
