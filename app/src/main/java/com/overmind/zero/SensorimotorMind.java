@@ -29,6 +29,8 @@ public final class SensorimotorMind {
     private final float[] trialState=new float[S];
     private int trialAction=-1;
     private boolean learning=true;
+    public final LearningDiagnostics diagnostics=new LearningDiagnostics();
+    private boolean actionExploratory=false;
     private float elapsed=0;
     public long experiences=0,explorations=0,decisions=0;
     public float predictionError=Float.NaN,estimatedValue=0,lastReward=0,averagePredictionError=0;
@@ -99,7 +101,11 @@ public final class SensorimotorMind {
             if(score>best){best=score;chosen=a;}
         }
         float epsilon=Math.max(.09f,.52f/(1+experiences/120f));
-        if(random.nextFloat()<epsilon){chosen=random.nextInt(ACTIONS);explorations++;}
+        actionExploratory=false;
+        if(random.nextFloat()<epsilon){
+            chosen=random.nextInt(ACTIONS);explorations++;
+            actionExploratory=true;
+        }
         if(action!=chosen)actionsReconsidered++;
         action=chosen;decisions++;
         estimatedValue=estimate(senses,chosen);
@@ -118,13 +124,15 @@ public final class SensorimotorMind {
         elapsed+=Math.max(0,dt);
         if(elapsed<.65f)return;
         float[] before=trialState;
-        float err=0,sensoryChange=0;
+        boolean holdout=diagnostics.shouldHoldout();
+        float err=0,naiveErr=0,sensoryChange=0;
         for(int k=0;k<S;k++){
             float pred=predictFeature(before,trialAction,k);
             float delta=after[k]-pred;
             err+=delta*delta;
+            float unchanged=after[k]-before[k];naiveErr+=unchanged*unchanged;
             if(k>=6)sensoryChange+=Math.abs(after[k]-before[k]);
-            if(learning){
+            if(learning&&!holdout){
                 float g=MODEL_LR*bounded(delta);
                 int base=(trialAction*S+k)*P;
                 for(int j=0;j<S;j++)
@@ -145,13 +153,15 @@ public final class SensorimotorMind {
         lastReward=Math.max(-2,Math.min(2,deltaEnergy))
                     +.10f*Math.min(2,sensoryChange)
                     +.3f*progress-.012f;
-        if(learning){
+        if(learning&&!holdout){
             float td=bounded(lastReward+GAMMA*bestFuture(after)-estimate(before,trialAction));
             int base=trialAction*P;
             for(int k=0;k<S;k++)
                 value[base+k]=Math.max(-4,Math.min(4,value[base+k]+VALUE_LR*td*before[k]));
             value[base+S]=Math.max(-4,Math.min(4,value[base+S]+VALUE_LR*td));
         }
+        diagnostics.record(error,(float)Math.sqrt(naiveErr/S),
+            lastReward,actionExploratory);
         experiences++;
         learnedControl=(float)Math.min(1,experiences/1500.);
         choose(after);
