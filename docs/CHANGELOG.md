@@ -163,3 +163,8 @@
 - SHA-256: `c44377b633854bee3b1ea3ad9715e8499f7e4202ae956cdd84ea85fd44b3c58d`.
 - APK: `/apk/overmind-zero-1036-c44377b63385.apk` (87.864 byte).
 - NETTO, VIA, nuove zone e spesa energetica misurata; scoring motorio anti-oscillazione basato su spostamento netto ed effetti fisici, mantenendo la libertà di rotazione. Pulsante PROVE/ANALISI migliorati; statistiche trial per ogni rete isolate da reset selettivi. Stessi salvataggi/chiave OTA.
+
+## OTA 0.9.5-ota.39 — 2026-10-09T23:19:06.959857+00:00
+- Pacchetto Android firmato pubblicato su Vercel (codice 1039).
+- SHA-256: `86caeb85b6eba94aa657d6f19ac7dff5dd0e4e8d2974bf71e8c6c12a3201c211`.
+- APK: `/apk/overmind-zero-1039-86caeb85b6eb.apk`.
