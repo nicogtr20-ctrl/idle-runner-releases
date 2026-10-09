@@ -1,0 +1,51 @@
+name: ZERO 0.9.6 positive and negative experience
+on:
+  push:
+    branches: [feature/overmind-v096-valenced-experience]
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 35
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+      - uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: '8.11.1'
+      - name: JVM physical and memory migration regression tests
+        run: |
+          mkdir -p /tmp/zero096
+          javac -d /tmp/zero096 app/src/main/java/com/overmind/zero/{MotorBrain,UnknownWorld,ContactLearning,DecisionBrain,Morphology,ScarcityLab,SensorimotorMind,LearningDiagnostics,ResetDomains,MotionExploration,OnlineBodyLearning,EpisodicMemory}.java
+          for test in MotorBrain UnknownWorld ContactLearning DecisionBrain Morphology ScarcityLab SensorimotorMind LearningDiagnostics ResetDomains MotionExploration OnlineBodyLearning EpisodicMemory; do
+            java -cp /tmp/zero096 com.overmind.zero.$test
+          done
+      - name: Verify only lived events can create danger and benefit memories
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          g=Path("app/src/main/java/com/overmind/zero/GameActivity.java").read_text()
+          e=Path("app/src/main/java/com/overmind/zero/EpisodicMemory.java").read_text()
+          p=Path("app/src/main/java/com/overmind/zero/SensorimotorMind.java").read_text()
+          t=Path("app/src/main/java/com/overmind/zero/BrainToolsActivity.java").read_text()
+          assert "eventEnergyDeltaSinceAction+=reserve-before;" in g
+          assert "eventEnergyDeltaSinceAction+=reserve-prior;" in g
+          assert "if(eventEnergyDeltaSinceAction<0)" in g
+          assert "episodic.consequence(" in g
+          assert "episodic_memory_v095" in g
+          assert "public static final int DEPTH=36,MAX_EPISODES=24;" in e
+          assert "raw.startsWith(\"em1;\")" in e and "raw.startsWith(\"em2;\")" in e
+          assert "float negative=action==aversionAction?aversionStrength:0;" in e
+          assert "float memoryBias=episodic==null?0:episodic.bias(a,proposed);" in p
+          assert "Esperienze dannose" in t and "Ricordi consolidati" in t
+          assert "trainer.attempt()" not in g
+          assert "Math.atan2(chosenObject.y" not in g
+          print("ZERO-009.6: lived positive/negative memory and preservation of action autonomy verified")
+          PY
+      - name: Build actual Android debug APK
+        run: gradle --no-daemon assembleDebug
