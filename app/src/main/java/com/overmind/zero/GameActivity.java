@@ -34,6 +34,7 @@ public final class GameActivity extends Activity {
         ContactLearning.Trainer handTrainer;
         Morphology.Trainer shapeTrainer;
         OnlineBodyLearning liveBody=new OnlineBodyLearning();
+        MotionExploration journey=new MotionExploration();
         float liveStartX,liveStartY,liveStartEnergy;
         float travelSinceAction=0,forwardSinceAction=0;
         float lifeDistance=0,totalTravel=0,bestLifeDistance=0;
@@ -148,6 +149,15 @@ public final class GameActivity extends Activity {
             gripsEver=prefs.getInt("grip_events_v08",0);
             farthestGate=prefs.getFloat("gate_travel_v08",0);
             liveBody=new OnlineBodyLearning();
+            for(int kind=0;kind<3;kind++){
+                String k=kind==0?"motor":kind==1?"hand":"membrane";
+                liveBody.restoreCounts(kind,prefs.getInt("online_accepted_"+k+"_v094",0),
+                    prefs.getInt("online_rejected_"+k+"_v094",0));
+            }
+            journey=new MotionExploration();
+            journey.restore(prefs.getInt("explored_cells_v094",0),
+                prefs.getFloat("record_net_v094",0),
+                prefs.getFloat("energy_spent_v094",0));
             speed=1;learning=true;simulationRunning=true;
             resetEpisode();
             save();
@@ -211,6 +221,15 @@ public final class GameActivity extends Activity {
               .putFloat("zero_energy_v03",reserve)
               .putFloat("lived_distance_total_v093",totalTravel)
               .putFloat("lived_distance_record_v093",bestLifeDistance)
+              .putInt("explored_cells_v094",journey.totalCells)
+              .putFloat("record_net_v094",journey.recordNet)
+              .putFloat("energy_spent_v094",journey.totalEnergySpent)
+              .putInt("online_accepted_motor_v094",liveBody.accepted(0))
+              .putInt("online_rejected_motor_v094",liveBody.rejected(0))
+              .putInt("online_accepted_hand_v094",liveBody.accepted(1))
+              .putInt("online_rejected_hand_v094",liveBody.rejected(1))
+              .putInt("online_accepted_membrane_v094",liveBody.accepted(2))
+              .putInt("online_rejected_membrane_v094",liveBody.rejected(2))
               .putString("hand_brain_v04",encode(handTrainer.best))
               .putInt("hand_attempts_v04",handTrainer.attempts)
               .putInt("hand_successes_v04",handTrainer.accepted)
@@ -257,6 +276,7 @@ public final class GameActivity extends Activity {
             lifeDistance=0;travelSinceAction=0;forwardSinceAction=0;
             liveBody.abortTrial();
             creature.reset();surface.reset(creature);
+            journey.newLife(creature.cx,creature.cy);
             episode++;phase=0;trailCount=0;clock=0;
             chamber=null;
             environment=UnknownWorld.newHabitat(episode,creature.cx,creature.cy,scarcity);
@@ -427,6 +447,8 @@ public final class GameActivity extends Activity {
             if(simulationRunning){
                 for(int i=0;i<speed;i++){
                     float slice=Math.min(dt,.035f);
+                    float energyBeforeFrame=reserve;
+                    int lifeStamp=episode;
                     updateHabitat(slice);
                     // ACTION is sampled from learned sensory-action
                     // values. There is no atan2(food), target teleport or
@@ -467,6 +489,10 @@ public final class GameActivity extends Activity {
                         nextChamber=elapsedLife+40;
                         save();
                     }
+                    // The journal observes the lived world, never suggests a
+                    // destination to ZERO. Do not count death/respawn as travel.
+                    if(lifeStamp==episode)
+                        journey.observe(creature.cx,creature.cy,energyBeforeFrame,reserve);
                     // Real temporal observation AFTER collisions, hunger
                     // and any energy actually collected.
                     sensorMind.setLearning(true);
@@ -477,7 +503,9 @@ public final class GameActivity extends Activity {
                         OnlineBodyLearning.Result result=liveBody.observe(
                             sensorMind.lastReward,travelSinceAction,forwardSinceAction,
                             Math.max(0,physicalContacts-liveStartContacts),
-                            liveStartEnergy,chamber!=null,mx,my,
+                            liveStartEnergy,reserve,journey.takeNewCells(),
+                            liveStartX,liveStartY,creature.cx,creature.cy,
+                            chamber!=null,mx,my,
                             trainer.best,handTrainer.best,shapeTrainer.best);
                         liveStartX=creature.cx;liveStartY=creature.cy;
                         travelSinceAction=0;forwardSinceAction=0;
@@ -703,7 +731,7 @@ public final class GameActivity extends Activity {
             rounded(c,12,12,468,145,0xeb0a1420,20);
             rounded(c,27,28,31,55,TEAL,2);
             text(c,"O V E R M I N D",43,39,14,TEAL,false);
-            text(c,"ZERO / ESPERIMENTO 009",26,72,21,0xffe9faf6,false);
+            text(c,"ZERO / ESPERIMENTO 009.4",26,72,21,0xffe9faf6,false);
             rounded(c,339,104,459,138,0xff20444a,11);
             text(c,"AGGIORNA",399,127,12,TEAL,true);
             rounded(c,217,104,333,138,0xff283b58,11);
@@ -713,16 +741,17 @@ public final class GameActivity extends Activity {
             text(c,"TENTATIVI",377,34,11,MUTED,false);
             text(c,String.valueOf(trainer.attempts),380,71,22,GOLD,false);
             rounded(c,13,158,467,232,0xca0e1a25,17);
-            text(c,"MOVIMENTO REALE • DISTANZA DEL NUCLEO",27,182,11,0xffb5d7d6,false);
-            text(c,(int)lifeDistance+" U  •  RECORD "+(int)bestLifeDistance+" U",27,210,20,0xffeffff8,false);
-            text(c,"per vita",384,212,11,MUTED,false);
+            text(c,"MOVIMENTO REALE • NETTO / PERCORSO",27,182,11,0xffb5d7d6,false);
+            text(c,"NETTO "+(int)journey.netDistance+" U  •  VIA "+(int)lifeDistance+" U",
+                27,210,19,0xffeffff8,false);
+            text(c,"MAX "+(int)journey.recordNet,363,181,10,GOLD,false);
             float y=H-168;
             rounded(c,12,y,468,H-12,0xe00d1923,21);
             text(c,"APPRENDIMENTO DA ZERO",25,y+25,13,TEAL,false);
             text(c,"MONDO + CORPO + PRESA • APPRENDIMENTO ON",25,y+45,11,0xffacc5ca,false);
             button(c,19,y+61,153,H-26,"ANALISI",TEAL);
             button(c,165,y+61,314,H-26,"TEMPO x"+speed,0xffbfdaec);
-            button(c,326,y+61,462,H-26,"CONFRONTA",GOLD);
+            button(c,326,y+61,462,H-26,"PROVE",GOLD);
             text(c,simulationRunning?"ESPERIENZE SENSORIALI "+sensorMind.experiences+
                "  •  DECISIONI "+sensorMind.decisions:"SIMULAZIONE IN PAUSA",24,255,11,MUTED,false);
             rounded(c,25,276,456,287,0xff273746,5);
@@ -742,8 +771,9 @@ public final class GameActivity extends Activity {
                     +"  •  PREVISIONE "+format(decisionBrain.lastPrediction),
                     25,398,10,0xffaac3cb,false);
             }
-            text(c,"CAMMINO "+(int)totalTravel+" U  •  CORPO "+
-                (liveBody.testingCandidate()?"TEST PESI":"PESI SALVATI"),
+            text(c,"ZONE NUOVE "+journey.lifeCells+
+                "  •  EFFICIENZA "+(int)journey.efficiency()+" U/E"+
+                "  •  "+(liveBody.testingCandidate()?"PESI IN PROVA":"PESI SALVATI"),
                 25,377,10,0xffb5d7d6,false);
             text(c,"MEMBRANA "+Morphology.POINTS+"  •  ESTENSIONE "+
                   (int)surface.peakExtension+" U  •  PROVE PRESA "+
@@ -769,15 +799,21 @@ public final class GameActivity extends Activity {
             if(showBenchmark){
                 float top=H*.32f;
                 rounded(c,20,top,460,top+294,0xf20e222e,22);
-                text(c,"VERIFICA SU DIREZIONI NUOVE",240,top+31,16,TEAL,true);
-                text(c,"MOVIMENTO • VERGINE  "+format(benchStart),240,top+69,14,MUTED,true);
-                text(c,"MOVIMENTO • APPRESO  "+format(benchNow),240,top+97,14,GOLD,true);
-                text(c,"MANIPOLAZIONE",240,top+146,17,TEAL,true);
-                text(c,"PESI INIZIALI    "+format(handInitial),240,top+177,15,MUTED,true);
-                text(c,"PESI APPRESI     "+format(handTrained),240,top+207,15,GOLD,true);
-                text(c,benchWorking?"TEST IN ESECUZIONE...":Float.isFinite(handTrained)
-                    ?(handTrained>handInitial?"VANTAGGIO MISURATO":"NESSUN VANTAGGIO MISURATO")
-                    :"IN ATTESA",240,top+244,12,handTrained>handInitial?TEAL:GOLD,true);
+                text(c,"ESPERIMENTI CORPOREI REALI",240,top+31,15,TEAL,true);
+                String d=liveBody.lastDomain==0?"MOTORE":
+                         liveBody.lastDomain==1?"MANIPOLAZIONE":
+                         liveBody.lastDomain==2?"MEMBRANA":"IN ATTESA";
+                text(c,"ULTIMA PROVA: "+d,240,top+69,13,GOLD,true);
+                text(c,"PESI SALVATI: "+String.format(Locale.US,"%.2f",liveBody.lastBaselineScore),
+                    240,top+101,14,MUTED,true);
+                text(c,"PESI SPERIMENTALI: "+String.format(Locale.US,"%.2f",liveBody.lastCandidateScore),
+                    240,top+132,14,TEAL,true);
+                text(c,"NETTO "+(int)liveBody.lastBaselineNet+" U → "+
+                    (int)liveBody.lastCandidateNet+" U",240,top+162,14,0xffd9e8e6,true);
+                text(c,liveBody.lastDomain<0?"NESSUNA PROVA COMPLETATA":
+                    liveBody.lastWasAccepted?"VARIANTE CONSERVATA":"VARIANTE SCARTATA",
+                    240,top+195,14,liveBody.lastWasAccepted?TEAL:GOLD,true);
+                text(c,"Finestre reali successive, NON A/B identico.",240,top+229,11,MUTED,true);
                 text(c,"TOCCA PER CHIUDERE",240,top+278,11,MUTED,true);
             }
             if(resetNotice>0)text(c,"TOCCA DI NUOVO IL TITOLO PER AZZERARE LA MEMORIA",240,289,11,GOLD,true);
@@ -792,19 +828,9 @@ public final class GameActivity extends Activity {
             text(c,caption,(l+r)*.5f,(t+b)*.5f+5,13,color,true);
         }
         void compare(){
-            if(benchWorking)return;
-            benchWorking=true;showBenchmark=true;
-            float[] fresh=MotorBrain.copy(virgin),learned=MotorBrain.copy(trainer.best);
-            float[] handLearned=handTrainer.best.clone();
-            new Thread(()->{
-                float a=MotorBrain.benchmark(fresh),b=MotorBrain.benchmark(learned);
-                float c=ContactLearning.heldout(learned,ContactLearning.virgin());
-                float d=ContactLearning.heldout(learned,handLearned);
-                post(()->{
-                    benchStart=a;benchNow=b;handInitial=c;handTrained=d;
-                    benchWorking=false;invalidate();
-                });
-            },"zero-benchmark").start();
+            // Shows ONLY two actual windows from lived experience.
+            // Legacy off-screen target-driven benchmark was misleading.
+            showBenchmark=true;
         }
         @Override public boolean onTouchEvent(MotionEvent ev){
             if(ev.getActionMasked()!=MotionEvent.ACTION_UP)return true;
