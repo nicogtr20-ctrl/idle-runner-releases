@@ -60,3 +60,8 @@ Il codice, gli asset e i release APK restano di proprietà e sotto controllo del
 - Nuova presa neurale sui 96 punti della membrana, 8 pesi aggiuntivi (74→82); vecchi pesi e apprendimento preservati. Doppio contatto da solo NON sposta più il cancello.
 - Versione firmata in GitHub Release privata: https://github.com/nicogtr20-ctrl/idle-runner-releases/releases/tag/overmind-zero-v0.8.3-ota.27 ; installare SOPRA app esistente senza disinstallare.
 - Il manifest GitHub è aggiornato alla 1027, mentre Vercel pubblico era ancora alla 1024 al controllo; verificare prima di promettere AGGIORNA. Test fisici/JVM e build Android OK, prova su Galaxy S21 pendente. Leggere `docs/HANDOFF.md` per dettagli.
+
+## Stato più recente — ZERO-009 / v0.9.0-ota.29 (2026-10-09)
+- **Nuova autonomia sensori→azioni→conseguenze:** 26 canali sensoriali, 16 azioni motorie/adesive, 11.664 pesi inizialmente vergini con memoria a lungo termine `sensorimotor_model_v09`. Nessun calcolo di target heading nella vita di ZERO; memoria dei cervelli precedenti conservata. Il pre-addestramento offscreen precedente è messo in pausa.
+- Signed CI superata, manifest GitHub v0.9.0-ota.29 versione 1029. Il manifest pubblico Vercel al controllo è fermo alla 1024; serve Release privata GitHub come fallback finché OTA non riprende.
+- Per studio e limiti leggere `docs/HANDOFF.md`; per installazione puntare alla nuova release una volta creata, senza disinstallare l'app attuale.

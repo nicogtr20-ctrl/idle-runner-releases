@@ -98,3 +98,14 @@
 - [ ] Test sul Galaxy S21 dell'apprendimento reale della presa e salvataggio di tutti i parametri.
 - [ ] Ripristinare la versione live Vercel 1027 e il pulsante AGGIORNA se il server è rimasto arretrato.
 - [ ] Generalizzare l'adesione appresa ad altri oggetti, non solo al cancello della camera.
+
+## ZERO-009 — Apprendimento dalle conseguenze proprie
+- [x] Rimuovere dalla navigazione attiva il heading calcolato verso il bersaglio (`atan2` del target).
+- [x] Sensori fisici propri e del mondo, 26 canali, con raggi ostacoli e visione occlusa da muri.
+- [x] Politica che sceglie fra 16 azioni motorie e adesive, esplora e impara in vita.
+- [x] Modello predittivo online 11.664 parametri (transizioni + valori azione), salvataggio persistente.
+- [x] Mantenere stati motori appresi, membrana 96 punti, morte per fame/respawn.
+- [x] CI di convergenza predittiva/persistenza/occlusione e Android firmato v0.9.0-ota.29.
+- [ ] Pubblicazione live aggiornata Vercel (manifest risultava 0.8.1).
+- [ ] Test vero Galaxy S21: le azioni apprese avvicinano alla risorsa? La strategia del cancello migliora?
+- [ ] Misurare apprendimento causale con interventi controllati e transizioni su configurazioni mai viste, non soltanto errori ridotti in training.
