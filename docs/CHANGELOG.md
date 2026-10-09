@@ -147,3 +147,8 @@
 - SHA-256: `6269cc3be2f80e320ca1cbcc4c0adb1a246cf6a0e4c725eed299aafae2fda51a`.
 - APK: `/apk/overmind-zero-1034-6269cc3be2f8.apk` (83.960 byte).
 - Attuatori motore, manipolazione, membrana e presa riaddestrabili esclusivamente con prove reali nel gioco; memoria e apprendimento predittivo conservati. Minore fame/danni rossi, nessun oggetto ordinario nella stanza e risorsa rara esclusiva +80.
+
+## OTA 0.9.3-ota.35 — 2026-10-09T11:29:39.654695+00:00
+- Pacchetto Android firmato pubblicato su Vercel (codice 1035).
+- SHA-256: `6f8111405753c0f13c28d9a0c21a51783f1939367e079c0c5b98f8bd1e79c82c`.
+- APK: `/apk/overmind-zero-1035-6f8111405753.apk`.
