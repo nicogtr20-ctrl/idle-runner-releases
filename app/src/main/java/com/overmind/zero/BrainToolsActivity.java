@@ -128,21 +128,33 @@ public final class BrainToolsActivity extends Activity {
         episodes.restore(prefs.getString("episodic_memory_v095",""));
         LinearLayout memory=panel(body);
         memory.addView(label("MEMORIA DELLE ESPERIENZE",16,CYAN,true));
-        line(memory,"Sequenze significative conservate",
-             String.valueOf(episodes.stored()),WHITE);
+        line(memory,"Esperienze significative conservate",
+             String.valueOf(episodes.stored())+" / "+EpisodicMemory.MAX_EPISODES,WHITE);
+        line(memory,"Esperienze favorevoli",
+             String.valueOf(episodes.positiveCount()),CYAN);
+        line(memory,"Esperienze dannose",
+             String.valueOf(episodes.negativeCount()),AMBER);
+        line(memory,"Sequenza più lunga",
+             episodes.longestTrace()+" / "+EpisodicMemory.DEPTH+" azioni",WHITE);
+        line(memory,"Ricordi consolidati da conferme",
+             String.valueOf(episodes.consolidated),WHITE);
+        line(memory,"Conferme del ricordo più stabile",
+             String.valueOf(episodes.strongestConfirmations()),CYAN);
         line(memory,"Esperienze registrate nel tempo",
              String.valueOf(episodes.captured),WHITE);
         line(memory,"Situazioni riconosciute",
              String.valueOf(episodes.matched),WHITE);
         line(memory,"Azioni realmente richiamate",
              String.valueOf(episodes.replayed),CYAN);
-        line(memory,"Effetti fisici riprodotti",
-             String.valueOf(episodes.repeatEffects),AMBER);
+        line(memory,"Effetti positivi nuovamente osservati",
+             String.valueOf(episodes.repeatEffects),CYAN);
+        line(memory,"Scelte diverse da un ricordo dannoso",
+             String.valueOf(episodes.avoided),AMBER);
         line(memory,"Lunghezza ultimo ricordo",
              episodes.lastTraceLength+" azioni",WHITE);
         line(memory,"Ultimo effetto fisico ricordato",
              number(episodes.lastEventEffect),AMBER);
-        paragraph(memory,"Il ricordo conserva sensazioni, azioni effettive e pesi corporei attivi. Il richiamo influenza, ma non impone, l'azione scelta. 'Effetti riprodotti' significa nuovo effetto misurato dopo un richiamo, NON prova di comprensione né stanza superata. Questi dati iniziano dalla v0.9.5; i progressi precedenti restano intatti.");
+        paragraph(memory,"Dalla 0.9.6 ZERO ricorda sequenze vissute di lunghezza variabile (fino a 36 azioni), effetti benefici e dannosi osservati e rafforza i ricordi ripetutamente confermati. Un effetto energetico deriva dal CONTATTO, non dalla fame naturale. Il ricordo positivo può orientare una scelta, quello dannoso può penalizzare l'azione già osservata; nessun colore è programmato come buono o cattivo. I vecchi ricordi 0.9.5 migrano senza azzerare gli altri cervelli. 'Evitati' indica scelte differenti in contesti simili, non la prova di aver compreso il pericolo.");
         LinearLayout reset=panel(body);
         reset.addView(label("AZZERA APPRENDIMENTO",17,AMBER,true));
         paragraph(reset,"Ogni voce ritorna allo stato vergine SOLO per quel sistema. Altre memorie e reti rimangono. L'azzeramento ricarica il corpo nella mappa per applicare i nuovi parametri in sicurezza.");
