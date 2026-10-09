@@ -157,3 +157,9 @@
 - Pacchetto Android firmato pubblicato su Vercel (codice 1036).
 - SHA-256: `c44377b633854bee3b1ea3ad9715e8499f7e4202ae956cdd84ea85fd44b3c58d`.
 - APK: `/apk/overmind-zero-1036-c44377b63385.apk`.
+
+## OTA 0.9.4-ota.36 — 2026-10-09
+- Signed Android build (versionCode 1036) via OTA stable workflow 37999520662, green.
+- SHA-256: `c44377b633854bee3b1ea3ad9715e8499f7e4202ae956cdd84ea85fd44b3c58d`.
+- APK: `/apk/overmind-zero-1036-c44377b63385.apk` (87.864 byte).
+- NETTO, VIA, nuove zone e spesa energetica misurata; scoring motorio anti-oscillazione basato su spostamento netto ed effetti fisici, mantenendo la libertà di rotazione. Pulsante PROVE/ANALISI migliorati; statistiche trial per ogni rete isolate da reset selettivi. Stessi salvataggi/chiave OTA.

@@ -130,3 +130,13 @@
 - [ ] Galaxy S21: verificare se gli attuatori migliorano davvero senza rollout invisibili e se ZERO raggiunge la ricompensa, registrando prove spontanee.
 - [ ] Eseguire comparazioni controllate su stato identico e direzioni/stimoli nuovi per distinguere vera competenza da rumore ambientale.
 - [ ] Verificare la distribuzione OTA Vercel di 1034, o usare GitHub Release privata fino a ripristino.
+
+## ZERO-009.4 — locomozione utile ed esplorazione misurabile
+- [x] Fare tracking di spostamento netto del nucleo distinto da distanza totale per vita e record.
+- [x] Introdurre celle nuove visitate una sola volta per vita e indicatore di efficienza basato su energia effettivamente spesa.
+- [x] Nuova funzione di selezione dei controllori: cammino circolare senza nuove conseguenze NON costituisce progresso; rotazione utile per risorsa/contatto resta possibile.
+- [x] Numeri accettate/scartate separati per motore/manipolazione/membrana e reset realmente selettivi; all'upgrade vecchi pesi conservati.
+- [x] PROVE mostra gli ultimi test realmente vissuti anziché risultati del vecchio benchmark con destinazione predefinita.
+- [x] JVM e Android CI staging + firma stable 0.9.4-ota.36 riuscita.
+- [ ] Testare sul Galaxy S21 sia locomozione utile sia rischio di accettazione falsa in condizioni diverse; implementare A/B rigoroso su scene iniziali identiche senza addestramento nascosto.
+- [ ] Validare che l'apprendimento non provochi regressione di presa, manipolazione e stanza nei tentativi prolungati.

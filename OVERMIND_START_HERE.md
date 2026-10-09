@@ -77,3 +77,8 @@ Il codice, gli asset e i release APK restano di proprietà e sotto controllo del
 - Firmata `0.9.2-ota.34` (`versionCode=1034`), branch ufficiale `feature/overmind-inapp-updater`, APK in manifest GitHub `updater/public/latest.json`. GitHub Release fallback da verificare, server Vercel pubblico potenzialmente fermo; NON promettere il tasto AGGIORNA senza prova live.
 - Addestramento di corpo, manipolazione e membrana avviene in condizioni realmente vissute (finestre comparative approssimate) anziché tramite i vecchi rollout con obiettivo noto. I vecchi pesi e le memorie restano. Consumo energetico rallentato, danno rosso ridotto, stanza senza stimoli ordinari e risorsa rara viola/oro +80 soltanto all'interno.
 - **Per dettagli aggiornati e limiti sperimentali leggere l'ultima sezione di docs/HANDOFF.md.** Test sul Galaxy S21 ancora richiesto.
+
+## Ultimo aggiornamento — 0.9.4-ota.36 (2026-10-09)
+- Ultima APK firmata (package com.overmind.zero.ota): versionCode 1036, sha256 `c44377b633854bee3b1ea3ad9715e8499f7e4202ae956cdd84ea85fd44b3c58d`.
+- Staging `feature/overmind-v094-efficient-exploration`; stable `feature/overmind-inapp-updater`. CI ufficiale firmata 37999520662 superata.
+- ZERO conserva pesi e memoria della 0.9.3, non richiede azzeramento; cambia la valutazione degli esperimenti corporei per non premiare giri in tondo inutili. NETTO, VIA, ZONE NUOVE, EFFICIENZA in HUD; ANALISI conta accettate/scartate; PROVE sostituisce il vecchio comparatore sintetico. Leggere HANDOFF per limitazioni e test S21; Vercel OTA pubblico può essere in ritardo, GitHub Release fallback verificata da usare.
