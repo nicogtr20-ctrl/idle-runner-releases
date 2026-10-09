@@ -174,3 +174,12 @@
 
 ## Pubblicazione verificata v0.9.5-ota.39
 La compilazione Android firmata `38003676123` è verde: versionCode `1039`, SHA-256 `86caeb85b6eba94aa657d6f19ac7dff5dd0e4e8d2974bf71e8c6c12a3201c211`, 92.692 byte. Test in-game su Galaxy S21 ancora pendente, nessun reset richiesto.
+
+
+## 0.9.6 — 10 ottobre 2026 · Memorie complete positive e negative
+- Episodi di 2–36 passi (ex 9), fino a 24 ricordi (ex 18); accettazione basata su effetti di contatto energetico reali, benefici o nocivi, oltre a spostamenti fisici.
+- Richiami positivi e avversione appresa dalle conseguenze dannose, senza alcuna regola specifica per blu/rosso, né script per la porta.
+- Esperienze confermate rafforzate, conservazione dei ricordi ad alta priorità, migrazione da `em1` a `em2` nella chiave `episodic_memory_v095`.
+- Memorie negative registrate anche se il danno causa la morte; vecchi cervelli e firma APK rimangono. Diagnostica ANALISI ampliata.
+- Test JVM e Android staging riusciti: nessuna dimostrazione di evitamento o completamento stanza sul telefono ancora disponibile.
+Per prove e prossimi step: `docs/EXPERIMENT_0096.md`. VersionCode e digest release: controllare `updater/public/latest.json`.
