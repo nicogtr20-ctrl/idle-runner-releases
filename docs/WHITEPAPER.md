@@ -1,6 +1,6 @@
 # OVERMIND: ZERO — Whitepaper di progetto
 
-**Versione:** 0.2 (documento vivo) · **Data:** 9 ottobre 2026 · **Stato:** prototipo di ricerca Android
+**Versione:** 0.9.5 (documento vivo) · **Data:** 10 ottobre 2026 · **Stato:** prototipo di ricerca Android
 
 ## Sintesi
 OVERMIND: ZERO è un esperimento di *artificial life* trasformato gradualmente in gioco mobile 2D. Il protagonista è una piccola massa scura dall'aspetto di ferrofluido/organismo simbionte. Il giocatore **non** controlla ZERO né le parla; è un osservatore invisibile che può modificare la simulazione, finanziare interventi con esperienza guadagnata e osservare come l'entità si comporta ed evolve.
@@ -85,3 +85,13 @@ A differenza dei rollout precedenti, ogni esperimento sulla locomozione, manipol
 
 ## ZERO-009.4 — valutazione dei movimenti utili
 La mera distanza integrata non distingue esplorazione da giri locali. ZERO ora sperimenta esattamente come prima, ma il criterio di accettazione misura la distanza netta dal punto iniziale della finestra, novità spaziale fisicamente verificata, energia e interazioni tattili reali. Le spire circolari non sono proibite: un giro capace di muovere oggetti o raccogliere una risorsa può essere utile. Il comportamento può restare inefficiente: le finestre consecutive differiscono nello stato iniziale, gli incentivi sono progettati e un incremento di punteggio non prova pianificazione o generalizzazione.
+
+
+## Ricordi contestuali e credito temporale nella versione 0.9.5
+La v0.9.4 separava locomozione netta da movimenti ciclici, ma non conservava il percorso sensorimotorio che portava a modifiche importanti nell'ambiente. Il test reale del 10 ottobre 2026 registra fino a 111 unità di traslazione del cancello con 268 prese, senza ingresso o riapplicazione sistematica dopo la morte. È un'osservazione promettente **ma non dimostra né comprensione né porta interamente libera** (soglia geometrica >115U).
+La nuova ipotesi verificabile: memorizzare **solo dopo l'azione** le sequenze realmente vissute che hanno prodotto un effetto fisico e rendere questi esempi disponibili alle azioni future sotto contesto sensoriale simile. Lo snapshot include 26 ingressi sensoriali, una delle 16 azioni e lo stato dei tre controllori motori (62, 18, 82 parametri). Non include coordinate premiate, etichette “cancello aperto” o un piano per raccogliere l'energia. Le memorie hanno capacità limitata (18 eventi, 9 azioni per evento) per calcolo/archiviazione.
+Un recupero avviene solo sotto sufficiente somiglianza sensoriale; un bias +0,72 si somma ai valori della politica già appresa, che rimane stocastica. Se l'azione suggerita viene davvero selezionata, possono essere utilizzati temporaneamente i pesi memorizzati. Un esperimento che ripete azioni senza nuovi effetti entra in cooldown. La retroattribuzione di valore è ancora euristica e correlazionale, non causalità dimostrata: distinguere «ricordato», «riprovato» ed «effetto di nuovo osservato». I 11.664 pesi di predizione non svolgono ancora pianificazione generativa multistep.
+**Criterio di successo ancora aperto:** misurare che dopo morte/nuova stanza ZERO riconosca uno stato pertinente, provi realmente una configurazione ricordata, generi di nuovo uno spostamento e infine raccolga la risorsa rara oltre il cancello, più spesso rispetto a un controllo a pari condizioni senza memoria. Vedi `docs/EXPERIMENT_0095.md` per protocollo riproducibile e confondenti.
+
+### Release ZERO 0.9.5-ota.39 — 2026-10-10
+APK firmata, versionCode 1039, 92.692 byte; SHA-256 `86caeb85b6eba94aa657d6f19ac7dff5dd0e4e8d2974bf71e8c6c12a3201c211`; CI firmata `38003676123` verde, file `updater/public/latest.json` aggiornato. Il test manuale sul Samsung Galaxy S21 resta da fare. Non attribuire retroattivamente le 111U di apertura della v0.9.4 alla nuova memoria.
