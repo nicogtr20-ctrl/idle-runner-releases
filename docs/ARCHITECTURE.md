@@ -104,3 +104,7 @@ La telemetria `MotionExploration` prende soltanto coordinate e riserva *dopo* i 
 
 ### Release ZERO 0.9.5-ota.39 — 2026-10-10
 APK firmata, versionCode 1039, 92.692 byte; SHA-256 `86caeb85b6eba94aa657d6f19ac7dff5dd0e4e8d2974bf71e8c6c12a3201c211`; CI firmata `38003676123` verde, file `updater/public/latest.json` aggiornato. Il test manuale sul Samsung Galaxy S21 resta da fare. Non attribuire retroattivamente le 111U di apertura della v0.9.4 alla nuova memoria.
+
+
+## v0.9.6: memoria valenziata e riuso sensomotorio
+Modulo `EpisodicMemory`: ring live MAX_STEPS/DEPTH=36, archivio MAX_EPISODES=24, 26 canali sensoriali/16 azioni e snapshot pesi controller (62, 18, 82). `consequence(effect, energyDelta, weights)` riceve l'effetto fisico generico più il delta di riserva provocato da una **risorsa effettivamente toccata**; la fame non crea memoria negativa. `suggested` e `bias` interrogano sia ricordi positivi (azione favorita/replay temporaneo se scelta) sia dannosi (penalità senza replay). Consolidamento aumenta conferme; eviction sceglie il più debole solo se il nuovo lo merita. Persistenza nella chiave `episodic_memory_v095` con codifica `em2`, lettura `em1` e `em2`, parsing atomico e cap lunghezza; gli altri formati di salvataggio non cambiano. Sorgenti `GameActivity` (tocchi + fatalità), `SensorimotorMind` (preferenza/avversione) e `BrainToolsActivity` (telemetria). Non inferire conoscenza semantica o efficacia generalizzata. Per piano test e limitazioni leggere `docs/EXPERIMENT_0096.md`.
