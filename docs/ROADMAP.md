@@ -171,6 +171,7 @@ Documentazione dettagliata e limiti scientifici: `docs/EXPERIMENT_0095.md`.
 - [x] Persistenza dei pesi e del contesto nella stessa vita; cancellazione del contesto transitorio alla morte.
 - [x] Reset integrato nel dominio MODELLO DEL MONDO e salvataggi con nome compatibili.
 - [x] STATISTICHE 0.10.5 lasciate inalterate.
+- [x] Build firmata e OTA pubblica 0.10.6-ota.55 verificata (publisher 38064599838; manifest/APK HTTP 200).
 - [ ] Verifica Galaxy S21: dopo abbastanza esperienze, controllare in CERVELLO che la confidenza temporale esca da 0% soltanto se l'errore held-out migliora.
 - [ ] Verificare sul mondo reale simulato se ZERO mantiene più a lungo sequenze con effetto fisico continuativo (es. spostamento progressivo) senza regola specifica.
 - [ ] Solo dopo questa prova: valutare “skill/chunk” di sequenze apprese e successiva integrazione del contesto nel planner multistep.

@@ -18,5 +18,10 @@ La modifica “STATISTICHE 25-vs-25 + storico lifetime” è nello stable `featu
 - `https://overmind-zero-updates.vercel.app/latest.json` e APK verificati HTTP 200 dopo la pubblicazione.
 È quindi corretto usare **AGGIORNA** nell'app. Installare sopra la versione esistente; non disinstallare.
 
-## Stato 0.10.6 — candidato stabile
-La memoria di lavoro temporale ha superato staging run 38064278116 e 38064377747. Il codice è stato promosso su `feature/overmind-inapp-updater`; la versione base è `0.10.6-ota`. Il publisher firmato deve ancora concludere con successo prima di considerare AGGIORNA verificato sulla 0.10.6.
+## Stato 0.10.6-ota.55 — verificato
+La memoria di lavoro temporale ha superato staging **38064278116** e **38064377747** e publisher firmato **38064599838**.
+- versionCode **1055**, versionName **0.10.6-ota.55**.
+- SHA-256 `bdc0dc5fd1dc9dce992d5a9cf139efd560421091f8ada01cec1bcbe47b48ff30`.
+- APK: `https://overmind-zero-updates.vercel.app/apk/overmind-zero-1055-bdc0dc5fd1dc.apk`, **143.732 byte**.
+- Manifest e APK verificati HTTP 200.
+È corretto usare **AGGIORNA** nell'app. Installare sopra la versione esistente; non disinstallare.

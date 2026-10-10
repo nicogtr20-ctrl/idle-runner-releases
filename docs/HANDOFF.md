@@ -218,4 +218,6 @@ Passi futuri: comparatore veri stati identici (random seed), visione di moviment
 - Reset WORLD include la nuova chiave. Gli slot nominati catturano tutte le SharedPreferences, quindi la nuova memoria viene salvata senza schema slot nuovo.
 - `BrainStatsActivity`: nuova riga MEMORIA DI LAVORO TEMPORALE; il totale parametri include +7.344. Nessuna modifica a `StatisticsActivity`.
 - Staging run **38064278116** verde: `TemporalWorkingMemory.main` dimostra due storie → due hidden/predizioni sulla stessa osservazione, heldout gate, credito ritardato, round-trip serializzazione e reset vita; tutte le regressioni precedenti e `assembleDebug` verdi.
-- Publisher stabile aggiornato per compilare/testare il nuovo modulo e mantenere i gate 0.10.5. **Non segnare firmata/OTA finché il run stable non è verde e manifest/APK live non sono verificati.**
+- Publisher stabile aggiornato per compilare/testare il nuovo modulo e mantenere i gate 0.10.5.
+- **RELEASE FIRMATA E OTA VERIFICATA:** publisher **38064599838** verde; `0.10.6-ota.55`, versionCode **1055**, SHA-256 `bdc0dc5fd1dc9dce992d5a9cf139efd560421091f8ada01cec1bcbe47b48ff30`, **143.732 byte**. Manifest e APK Vercel verificati HTTP 200; GitHub Release `overmind-zero-v0.10.6-ota.55`.
+- **TEST S21:** aggiornare sopra la 0.10.5. In CERVELLO la memoria temporale parte con confidenza 0%; è corretto. Deve restare a 0 finché non accumula almeno 25 campioni held-out e non dimostra una predizione temporale migliore. Non azzerare ZERO per provarla.
