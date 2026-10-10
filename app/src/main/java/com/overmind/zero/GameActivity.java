@@ -42,6 +42,7 @@ public final class GameActivity extends Activity {
         TemporalSkillBank temporalSkillBank=new TemporalSkillBank();
         BodyProprioception bodySchema=new BodyProprioception();
         SpatialPerception spatialMap=new SpatialPerception();
+        CausalExperiments causalExperiments=new CausalExperiments();
         MotorAutonomyGuard motorGuard=new MotorAutonomyGuard();
         MotorSkillBank skillBank=new MotorSkillBank();
         GripSkillBank gripBank=new GripSkillBank();
@@ -184,6 +185,9 @@ public final class GameActivity extends Activity {
             spatialMap=new SpatialPerception();
             spatialMap.restore(prefs.getString(SpatialPerception.KEY,""));
             sensorMind.attachSpatialPerception(spatialMap);
+            causalExperiments=new CausalExperiments();
+            causalExperiments.restore(prefs.getString(CausalExperiments.KEY,""));
+            sensorMind.attachCausalExperiments(causalExperiments);
             episodic=new EpisodicMemory();
             episodic.restore(prefs.getString("episodic_memory_v095",""));
             sensorMind.attachMemory(episodic);
@@ -420,6 +424,7 @@ public final class GameActivity extends Activity {
               .putString("temporal_skills_v107",temporalSkillBank.encode())
               .putString(BodyProprioception.KEY,bodySchema.encode())
               .putString(SpatialPerception.KEY,spatialMap.encode())
+              .putString(CausalExperiments.KEY,causalExperiments.encode())
               .putString(LifeStatistics.KEY,lifeStats.encode())
               .putInt("motor_recoveries_v097",motorGuard.recoveryActivations)
               .putInt("motor_free_choices_v097",motorGuard.freeChoices)
