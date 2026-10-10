@@ -24,6 +24,8 @@ public final class UnknownWorld {
             this.signature=signature;this.law=physicalLaw;
             radius=physicalLaw==2?19:15;
         }
+        /** Serialization uses physical identity without exposing it to policy. */
+        int physicalLaw(){return law;}
         boolean ready(){return !consumed&&cooldown<=0;}
         void tick(float dt){
             cooldown=Math.max(0,cooldown-dt);
