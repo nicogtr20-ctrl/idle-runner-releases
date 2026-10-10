@@ -8,5 +8,12 @@
 - Il publisher firmato ufficiale è `.github/workflows/overmind-ota-publish.yml` sul branch `feature/overmind-inapp-updater`.
 - Prima di dire che il pulsante AGGIORNA offre una versione, verificare realmente manifest e APK pubblici.
 
-## Stato 0.10.5 — 10 ottobre 2026
-La modifica “STATISTICHE 25-vs-25 + storico lifetime” è validata solo in staging sul branch `feature/overmind-v105-lifetime-statistics` (run 38059707433 verde). Finché non viene incorporata nello stable e non passa il publisher firmato, non presentarla come OTA disponibile.
+## Stato 0.10.5-ota.54 — 10 ottobre 2026
+La modifica “STATISTICHE 25-vs-25 + storico lifetime” è nello stable `feature/overmind-inapp-updater`.
+- Staging QA: **38059707433**, verde.
+- Publisher firmato: **38060026469**, verde.
+- versionCode **1054**, versionName **0.10.5-ota.54**.
+- SHA-256: `34bd2eb5261f499b196037832dce744f37b7b3822a49a7f655c3b6347f0c4e7a`.
+- APK: `https://overmind-zero-updates.vercel.app/apk/overmind-zero-1054-34bd2eb5261f.apk`, **138.636 byte**.
+- `https://overmind-zero-updates.vercel.app/latest.json` e APK verificati HTTP 200 dopo la pubblicazione.
+È quindi corretto usare **AGGIORNA** nell'app. Installare sopra la versione esistente; non disinstallare.

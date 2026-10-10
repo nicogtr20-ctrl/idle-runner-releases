@@ -90,11 +90,12 @@ Il 9-10 ottobre, Galaxy S21 ha mostrato ZERO che sposta una porta fino a **111U*
 La v0.9.5 crea ricordi di sequenze **effettivamente vissute** (fino a 9 sensazioni/azioni) dopo conseguenze fisiche, con snapshot dei 62+18+82 pesi corporei in uso; ricorda situazioni sensoriali simili e suggerisce azioni, senza imporre script o una direzione. Il modello predittivo da 11.664 parametri, le memorie v0.9.4 e i salvataggi restano compatibili. Aggiornamento dell'APK `com.overmind.zero.ota` in place e firma stabile obbligatori.
 **Non azzerare i cervelli.** La memoria episodica parte vuota; non può ricostruire i 111U della prova storica. I test automatici verificano correttezza, non successo autonomo della porta. Prossimo test: episodio importante → morte → sensi simili → richiamo → nuovo effetto fisico → eventualmente ingresso/energia.
 
-## Stato in sviluppo — ZERO 0.10.5 / statistiche robuste (10 ottobre 2026)
+## Release verificata — ZERO 0.10.5-ota.54 / statistiche robuste (10 ottobre 2026)
 - Branch di prova: `feature/overmind-v105-lifetime-statistics`, derivato da `feature/overmind-inapp-updater`.
 - La pagina **STATISTICHE** separa ora tre scale: vita in corso, capacità attuale come media delle **ultime 25 vite**, e storico permanente.
 - Il trend principale è **25 vite recenti vs 25 precedenti** e si attiva soltanto con 50 vite complete, per non scambiare poche casualità per miglioramento.
 - `LifeStatistics` conserva ancora le ultime 50 vite individuali per grafici e confronto, ma aggiunge somme/record permanenti: dopo la 51ª vita le medie storiche non perdono più i campioni vecchi.
 - Migrazione `ls1 -> ls2` senza cambiare la chiave SharedPreferences `life_statistics_v104`. Per ZERO già esistenti il passato precedente alla telemetria non viene inventato: l'interfaccia dichiara lo storico come incompleto.
 - Tutta la statistica resta **observer-only**: non entra in reward, policy, world model, memoria episodica o selezione delle azioni.
-- QA staging 0.10.5: test JVM, migrazione, finestre 25-vs-25 e build Android Debug superati nel run GitHub Actions **38059707433**. Release firmata/OTA non ancora pubblicata a questo punto.
+- QA staging: run **38059707433** verde. Publisher stabile firmato **38060026469** verde.
+- **OTA pubblico verificato HTTP 200**: versionCode **1054**, versionName **0.10.5-ota.54**, SHA-256 `34bd2eb5261f499b196037832dce744f37b7b3822a49a7f655c3b6347f0c4e7a`, APK **138.636 byte**. Installare sopra l'app esistente; non disinstallare.
