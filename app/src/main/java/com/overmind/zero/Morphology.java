@@ -1,6 +1,5 @@
 package com.overmind.zero;
 
-import java.util.Arrays;
 import java.util.Locale;
 import java.util.Random;
 
@@ -122,9 +121,10 @@ public final class Morphology {
             Physical adhesive traction STILL requires contact and grip hold. */
         public void step(MotorBrain.Body body,float[] brain,float targetX,float targetY,float dt,float gripDrive){
             t+=dt;anchors(body);
-            // Each new physical slice starts with an empty disk pressure map.
-            // Actual collisions below fill this sensory channel afterward.
-            Arrays.fill(touchPulse,0f);
+            // Recent disk pressure decays over actual simulation time, so
+            // brief real contacts are still sensed at the next decision.
+            // Only actual collisions below increase this channel.
+            for(int p=0;p<POINTS;p++)touchPulse[p]*=(float)Math.exp(-2.5f*dt);
             float toX=targetX-body.cx,toY=targetY-body.cy;
             float targetD=(float)Math.hypot(toX,toY);
             float dx=targetD>.001f?toX/targetD:0;
