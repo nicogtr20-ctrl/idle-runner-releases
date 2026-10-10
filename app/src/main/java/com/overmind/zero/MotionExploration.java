@@ -38,6 +38,49 @@ public final class MotionExploration {
         long key=(gridX<<32)^(gridY&0xffffffffL);
         if(cells.add(key)){lifeCells++;totalCells++;newSinceAction++;}
     }
+    /** Save exactly the current life's visited cells, so loading a saved
+     * physical position never invents new exploration credit or net travel.
+     * Global totals are already persisted in the working brain profile. */
+    public String saveLife(){
+        StringBuilder b=new StringBuilder("life1|")
+            .append(originX).append(',').append(originY).append(',')
+            .append(lifeCells).append(',').append(netDistance).append(',')
+            .append(maxNetLife).append(',').append(lifeEnergySpent).append(',')
+            .append(lifeEnergyGained).append(',').append(newSinceAction).append('|');
+        boolean first=true;
+        for(Long key:cells){
+            if(!first)b.append(',');first=false;
+            b.append(Long.toString(key,36));
+        }
+        return b.toString();
+    }
+    public boolean loadLife(String raw){
+        if(raw==null||raw.length()>150000||!raw.startsWith("life1|"))return false;
+        try{
+            String[] parts=raw.split("\\|",-1);
+            if(parts.length!=3)return false;
+            String[] v=parts[1].split(",",-1);
+            if(v.length!=8)return false;
+            float ox=Float.parseFloat(v[0]),oy=Float.parseFloat(v[1]);
+            int amount=Integer.parseInt(v[2]),newCount=Integer.parseInt(v[7]);
+            float net=Float.parseFloat(v[3]),max=Float.parseFloat(v[4]),
+                  spent=Float.parseFloat(v[5]),gained=Float.parseFloat(v[6]);
+            if(!Float.isFinite(ox)||!Float.isFinite(oy)||
+               !Float.isFinite(net)||!Float.isFinite(max)||
+               !Float.isFinite(spent)||!Float.isFinite(gained)||
+               amount<0||amount>MAX_CELLS_PER_LIFE||newCount<0||
+               newCount>MAX_CELLS_PER_LIFE)return false;
+            HashSet<Long> parsed=new HashSet<>();
+            if(!parts[2].isEmpty())
+                for(String item:parts[2].split(","))parsed.add(Long.parseLong(item,36));
+            if(parsed.size()!=amount)return false;
+            originX=ox;originY=oy;
+            cells.clear();cells.addAll(parsed);
+            lifeCells=amount;netDistance=net;maxNetLife=max;
+            lifeEnergySpent=spent;lifeEnergyGained=gained;newSinceAction=newCount;
+            return true;
+        }catch(RuntimeException ignored){return false;}
+    }
     /** Read only after the world's collision/energy computation. */
     public void observe(float x,float y,float energyBefore,float energyAfter){
         if(!Float.isFinite(x)||!Float.isFinite(y)||
