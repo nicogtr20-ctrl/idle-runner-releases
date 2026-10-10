@@ -16,12 +16,17 @@ public final class MotorAutonomyGuard {
     private boolean initialized=false;
     private float startX,startY,windowSeconds,worldEffect,remaining=0;
     private int stalledWindows=0;
+    private final int[] recentActions=new int[32];
+    private final int[] recentCounts=new int[SensorimotorMind.ACTIONS];
+    private int recentIndex=0,recentSize=0;
     public int recoveryActivations=0,freeChoices=0;
     public float lastNet=0,lastWorldEffect=0;
 
     public void resetLife(float x,float y){
         initialized=true;startX=x;startY=y;windowSeconds=0;worldEffect=0;
         remaining=0;stalledWindows=0;lastNet=0;lastWorldEffect=0;
+        recentIndex=recentSize=0;
+        java.util.Arrays.fill(recentCounts,0);
     }
     public void restoreCounts(int recoveries,int choices){
         recoveryActivations=Math.max(0,recoveries);
@@ -30,6 +35,22 @@ public final class MotorAutonomyGuard {
     public boolean suppressPositiveRecall(){return remaining>0;}
     public float remainingSeconds(){return remaining;}
     public void decisionWhenSuppressed(){if(suppressPositiveRecall())freeChoices++;}
+    /** Discourage only the repeated actions observed during real stalls:
+     * do not assign a correct direction. */
+    public void action(int selected){
+        if(selected<0||selected>=SensorimotorMind.ACTIONS)return;
+        if(recentSize==recentActions.length){
+            recentCounts[recentActions[recentIndex]]--;
+        }else recentSize++;
+        recentActions[recentIndex]=selected;
+        recentCounts[selected]++;
+        recentIndex=(recentIndex+1)%recentActions.length;
+    }
+    public float stagnationBias(int candidate){
+        if(!suppressPositiveRecall()||candidate<0||candidate>=recentCounts.length||
+           recentSize<8)return 0;
+        return -.95f*recentCounts[candidate]/recentSize;
+    }
     public void observe(float dt,float x,float y,float measuredWorldChange){
         if(!Float.isFinite(dt)||dt<0||dt>1||
            !Float.isFinite(x)||!Float.isFinite(y)||
@@ -65,6 +86,9 @@ public final class MotorAutonomyGuard {
             throw new AssertionError("Repeatedly stationary organism did not get free choices");
         g.decisionWhenSuppressed();
         if(g.freeChoices!=1)throw new AssertionError("Decision counter");
+        for(int i=0;i<32;i++)g.action(3);
+        if(!(g.stagnationBias(3)<g.stagnationBias(5)))
+            throw new AssertionError("Repeated stalled heading not discouraged");
         for(int i=0;i<7;i++)g.observe(1,80,0,0);
         if(g.suppressPositiveRecall())throw new AssertionError("Progress failed to release recall");
         int prior=g.recoveryActivations;
