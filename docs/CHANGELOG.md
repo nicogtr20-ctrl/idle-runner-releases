@@ -251,3 +251,10 @@
 - Pacchetto Android firmato pubblicato su Vercel (codice 1061).
 - SHA-256: `8d8f121d985735ca3d7cac507007fb85a1ee192603309c2e867dc39e638e53c3`.
 - APK: `/apk/overmind-zero-1061-8d8f121d9857.apk`.
+
+## OVERMIND ZERO 0.11.1-ota.61 — lived cause/effect experiments (10 October 2026)
+- Added `CausalExperiments`: learned per-action hypotheses from 13×13 previously observed occupancy grid aligned by body odometry; distinguish movement of ZERO versus change in surrounding solids, no privileged door identity.
+- Observed blocker turning to free is a candidate only; physical crossing requires actual subsequent body movement into that location. Real energy/physical outcomes are assessed from existing sensorimotor path.
+- Holdout gate >=30 with action-conditioned error at least 5% better than same-context baseline, randomized trials of multiple alternative actions, max learned choice bias ±0.15. No forced door plan.
+- Save/restore new `ce1` / `causal_experiments_v111` per unchanged 12 named ZERO profiles. New isolated reset and ANALISI section; old physics, 26-input network, temporal memory/skills, proprioception/spatial map, other game saves and signing unchanged.
+- QA 38073279447 & 38073332255 SUCCESS, official signed 38073421560 SUCCESS. Version code1061, size169280, SHA256 8d8f121d985735ca3d7cac507007fb85a1ee192603309c2e867dc39e638e53c3, live Vercel manifest/APK HTTP200. S21 test pending; see `docs/EXPERIMENT_0111.md`.
