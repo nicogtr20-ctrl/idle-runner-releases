@@ -11,6 +11,8 @@
     android:theme="@android:style/Theme.Material.NoActionBar"
     android:icon="@drawable/ic_launcher" android:supportsRtl="true">
 
+    <activity android:name="com.overmind.zero.BehavioralLabActivity"
+      android:exported="false" android:screenOrientation="portrait"/>
     <activity android:name="com.overmind.zero.SaveSlotsActivity"
       android:exported="false" android:screenOrientation="portrait"/>
     <activity android:name="com.overmind.zero.StatisticsActivity"
