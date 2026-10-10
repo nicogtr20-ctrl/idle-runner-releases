@@ -1,0 +1,84 @@
+name: ZERO 0.11.6 Telemetry Only QA
+on:
+  push:
+    branches: [feature/overmind-v116-share-telemetry]
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 35
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+      - uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: '8.11.1'
+      - name: Verify all behavior classes are exact byte-identical 0.11.4 baseline
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          from hashlib import sha1
+          base=Path('app/src/main/java/com/overmind/zero')
+          old={
+          'SensorimotorMind.java':'c16d3f5b8fd81f6060f5ac732d57a46099ed0179',
+          'GameActivity.java':'e7b805047f723f4a528fe05373024382077388ba',
+          'InstrumentalNavigation.java':'2eb6390e7e80f17b488f148ec2d76b41e19e27a9',
+          'BehavioralLaboratory.java':'e016be507d54b2535885a5c2070951fd9e4c72f7',
+          'BehavioralLabActivity.java':'c1e655a947454e2cb77baad6b282890f00097717',
+          'ResetDomains.java':'99e0b726e95f96683d5de942da2cb2ff0c9eb318'}
+          for f,want in old.items():
+            data=(base/f).read_bytes()
+            blob=sha1(b'blob '+str(len(data)).encode()+b'\0'+data).hexdigest()
+            assert blob==want,(f,blob,want)
+          assert '0.11.6-ota' in Path('app/build.gradle').read_text()
+          assert "applicationId 'com.overmind.zero.ota'" in Path('app/build.gradle').read_text()
+          assert 'AdaptiveSafety' not in (base/'GameActivity.java').read_text()
+          assert 'AdaptiveSafety' not in (base/'SensorimotorMind.java').read_text()
+          print('ZERO 0.11.6: 0.11.4 behavior confirmed BYTE-FOR-BYTE.')
+          PY
+      - name: Core real physics / cognitive backward-compatibility tests
+        run: |
+          mkdir -p /tmp/zero116
+          javac -d /tmp/zero116 app/src/main/java/com/overmind/zero/{MotorBrain,UnknownWorld,ContactLearning,DecisionBrain,Morphology,ScarcityLab,SensorimotorMind,SpatialPerception,CausalExperiments,BodyProprioception,InstrumentalNavigation,GoalContinuity,GateBehaviorMetrics,BehavioralLaboratory,TemporalWorkingMemory,TemporalSkillBank,TemporalPersistenceRegression,LearnedSequencePlanner,LearningDiagnostics,ResetDomains,OnlineBodyLearning,MotionExploration,EpisodicMemory,MotorAutonomyGuard,MotorSkillBank,ExperienceCredit,GripSkillBank,SaveProfileCodec,LifeStatistics}.java
+          for test in BehavioralLaboratory InstrumentalNavigation GoalContinuity GateBehaviorMetrics CausalExperiments SpatialPerception BodyProprioception TemporalPersistenceRegression TemporalWorkingMemory TemporalSkillBank SaveProfileCodec EpisodicMemory LifeStatistics SensorimotorMind ExperienceCredit LearnedSequencePlanner MotorBrain UnknownWorld ContactLearning DecisionBrain Morphology ScarcityLab OnlineBodyLearning MotionExploration ResetDomains MotorAutonomyGuard MotorSkillBank GripSkillBank; do
+            java -cp /tmp/zero116 com.overmind.zero.$test
+          done
+      - name: Prove no automatic upload / leak / save mutation
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          base=Path('app/src/main/java/com/overmind/zero')
+          share=(base/'TelemetryGitHub.java').read_text()
+          ui=(base/'TelemetryActivity.java').read_text()
+          analysis=(base/'BrainToolsActivity.java').read_text()
+          manifest=Path('app/src/main/AndroidManifest.xml').read_text()
+          assert 'zero-telemetry/current.json' in share
+          assert 'zero-telemetry/history/' in share
+          assert 'SaveSlotStore.WORKING' in share
+          assert 'zero_behavior_lab_v113' in share
+          assert 'SaveSlotStore.PENDING_RELOAD' in share
+          assert 'ResetDomains.REQUEST' in share
+          assert 'AndroidKeyStore' in share and 'AES/GCM/NoPadding' in share
+          assert 'Bearer ' in share and 'https://api.github.com/repos/' in share
+          assert 'GitHubReport' not in share
+          assert 'getSharedPreferences(SETTINGS,Context.MODE_PRIVATE).edit()' in share
+          assert 'getSharedPreferences(SaveSlotStore.WORKING,Context.MODE_PRIVATE).edit()' not in share
+          assert '.putString("cipher",coded)' in share
+          assert 'CONDIVIDI DATI CON GPT' in ui
+          assert 'TelemetryGitHub.upload(' in ui
+          assert 'CONFIGURA / CAMBIA TOKEN GITHUB' in ui
+          assert 'new Intent(this,TelemetryActivity.class)' in analysis
+          assert 'android:name="com.overmind.zero.TelemetryActivity"' in manifest
+          assert 'android.permission.INTERNET' in manifest
+          assert 'getSharedPreferences("zero_motorbrain_001",MODE_PRIVATE).edit()' not in ui
+          assert '12 slot' in ui
+          assert 'SLOTS=12' in (base/'SaveSlotStore.java').read_text()
+          print('ZERO telemetry: explicit-only, encrypted token, private GitHub content, no game write.')
+          PY
+      - name: Build Android APK with new share screen
+        run: gradle --no-daemon assembleDebug
