@@ -1,5 +1,5 @@
 name: OVERMIND verified GitHub fallback releases
-# Publish verified OVERMIND ZERO 0.10.0-ota.47 signed APK with twelve named save slots.
+# Publish verified OVERMIND ZERO 0.10.1-ota.48 signed APK with independent outcome attribution and unchanged twelve named save slots.
 on:
   push:
     branches: [main]
