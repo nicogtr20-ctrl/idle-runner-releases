@@ -37,13 +37,14 @@ public final class BehavioralLaboratory {
         public float[] hands=ContactLearning.virgin();
         public float[] membrane=Morphology.virgin(new Random(14790));
         public String world="",navigation="",outcome="",diagnostics="",planning="",
-            memory="",temporal="",skills="",body="",spatial="",causal="";
+            memory="",temporal="",skills="",body="",spatial="",causal="",intent="";
         public Profile copy(){
             Profile r=new Profile();
             r.motor=motor.clone();r.hands=hands.clone();r.membrane=membrane.clone();
             r.world=world;r.navigation=navigation;r.outcome=outcome;r.planning=planning;
             r.diagnostics=diagnostics;r.memory=memory;r.temporal=temporal;
             r.skills=skills;r.body=body;r.spatial=spatial;r.causal=causal;
+            r.intent=intent;
             return r;
         }
     }
@@ -55,6 +56,8 @@ public final class BehavioralLaboratory {
         public float gain,damage,firstContact=Float.NaN,bestDistance,
             endDistance,traveled,gateTravel,endingReserve;
         public long actualDecisions,learnedNavigationChoices;
+        public int confirmedIntentions,continuedIntentions;
+        public GateBehaviorMetrics gateDiagnostics=new GateBehaviorMetrics();
         Trial(int scene,int trialSeed,boolean enabled){
             scenario=scene;seed=trialSeed;instrumental=enabled;
         }
@@ -66,7 +69,14 @@ public final class BehavioralLaboratory {
                 NAMES[scenario],seed,instrumental?"ATTIVA":"CONTROLLO",
                 gain,damage,energeticContacts,damagingContacts,bestDistance,
                 Float.isNaN(firstContact)?"mai":String.format(Locale.US,"%.1f s",firstContact),
-                gateTravel,gatePassages,actualDecisions,learnedNavigationChoices);
+                gateTravel,gatePassages,actualDecisions,learnedNavigationChoices)+
+                (scenario==GATE?String.format(Locale.US,
+                "\\n      fisica: vicino %d frame, nucleo %d, membrana %d, adesione %d, comandi %d, presa %d, bilaterale %d, varco %d, porta più vicina %.1f U; stato: %s",
+                gateDiagnostics.nearbyFrames,gateDiagnostics.coreTouchFrames,
+                gateDiagnostics.skinTouchFrames,gateDiagnostics.driveFrames,
+                gateDiagnostics.commandFrames,gateDiagnostics.heldFrames,
+                gateDiagnostics.opposedFrames,gateDiagnostics.opened,
+                gateDiagnostics.closestDistance(),gateDiagnostics.obstacleStage()):"");
         }
     }
 
@@ -118,6 +128,9 @@ public final class BehavioralLaboratory {
                     "Differenze medie ATTIVA − CONTROLLO: movimento vero cancello "+
                     "%+.1f U, attraversamenti %+.2f, energia ritrovata %+.1f.\n",
                     sums[3]/valid,sums[4]/valid,sums[0]/valid));
+                if(s==GATE){
+                    b.append("DIAGNOSI CANCELLO: le coordinate della risorsa NON dicono se ZERO si è avvicinato alla porta. Sotto: distanza reale dalla porta, contatto fisico, adesione comandata, grip della membrana e presa opposta. Nessun numero viene usato dalla sua policy.\\n");
+                }
                 b.append(String.format(Locale.US,
                     "Scelte influenzate (ATTIVA / CONTROLLO): %.1f / %.1f; "+
                     "decisioni attive %.1f per prova.\n",
@@ -181,6 +194,8 @@ public final class BehavioralLaboratory {
         causal.restore(p.causal);brain.attachCausalExperiments(causal);
         InstrumentalNavigation nav=new InstrumentalNavigation();
         nav.restore(p.navigation);brain.attachNavigation(nav);
+        GoalContinuity goal=new GoalContinuity();
+        goal.restore(p.intent);brain.attachGoalContinuity(goal);
         MotorAutonomyGuard guard=new MotorAutonomyGuard();
         brain.attachMotorGuard(guard);
         brain.setLearning(true);
@@ -227,6 +242,8 @@ public final class BehavioralLaboratory {
         float[] energeticEffects=new float[UnknownWorld.SIGNATURES];
         boolean entered=false,opened=false;
         long initialDecisions=brain.decisions,initialChoices=brain.navigation().choicesInfluenced;
+        int priorIntents=brain.goalContinuity().confirmed;
+        int priorContinued=brain.goalContinuity().continued;
         for(int i=0;i<FRAMES;i++){
             if(cancel!=null&&cancel.stopped())return null;
             float t=i*DT;
@@ -240,6 +257,7 @@ public final class BehavioralLaboratory {
             if(room!=null){
                 float before=room.doorY;
                 room.constrain(body,surface,DT,brain.adhesion());
+                r.gateDiagnostics.observe(body,room);
                 effect+=Math.min(2f,Math.abs(room.doorY-before));
                 r.gateTravel=Math.max(r.gateTravel,room.maxDoorTravel);
                 if(room.openingFree()&&!opened){opened=true;r.gateOpenings++;}
@@ -316,6 +334,8 @@ public final class BehavioralLaboratory {
         r.endingReserve=reserve;
         r.actualDecisions=brain.decisions-initialDecisions;
         r.learnedNavigationChoices=brain.navigation().choicesInfluenced-initialChoices;
+        r.confirmedIntentions=brain.goalContinuity().confirmed-priorIntents;
+        r.continuedIntentions=brain.goalContinuity().continued-priorContinued;
         return r;
     }
     public static Result run(Profile p,Progress progress,Cancel stop){
