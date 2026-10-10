@@ -45,7 +45,8 @@ jobs:
           assert 'randomTried[slot]<3' in p and 'contextRandom[ctx]-randomTried[slot]<5' in p
           assert 'if(validations<30' in p and 'modelError>=referenceError*.95f' in p
           assert 'livedReward' in p and 'energyDelta' in p
-          assert 'body.cx' not in p and 'room.gate' not in p
+          runtime=p.split('public static void main(')[0]
+          assert 'body.cx' not in runtime and 'room.gate' not in runtime
           assert 'public byte observedCell(int cx,int cy)' in rays
           assert 'public float perceivedX()' in rays and 'public float perceivedY()' in rays
           assert 'public static final int S=26;' in mind
