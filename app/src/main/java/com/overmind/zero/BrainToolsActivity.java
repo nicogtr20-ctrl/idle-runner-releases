@@ -279,8 +279,8 @@ public final class BrainToolsActivity extends Activity {
         for(int dir=0;dir<8;dir++){
             int r=dir*2;
             String readings=String.format(Locale.US,"%.0f U / %.0f U",
-                ranges[r]*SpatialPerception.RANGE,
-                ranges[r+1]*SpatialPerception.RANGE);
+                space.distance(r),
+                space.distance(r+1));
             line(spatial,(r*360/SpatialPerception.RAYS)+"° / "+
                 ((r+1)*360/SpatialPerception.RAYS)+"°",readings,WHITE);
         }
