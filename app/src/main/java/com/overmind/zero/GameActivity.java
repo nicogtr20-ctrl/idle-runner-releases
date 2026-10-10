@@ -40,7 +40,7 @@ public final class GameActivity extends Activity {
         MotorSkillBank skillBank=new MotorSkillBank();
         GripSkillBank gripBank=new GripSkillBank();
         // Read-only physical test instrumentation, scoped to the current room.
-        int previousGripDrive=0,previousGripHeld=0;
+        int previousGripDrive=0,previousGripHeld=0,previousOpposedFrames=0;
         int ongoingUnsuccessfulGrip=0;
         int gripRecoveryCooldown=0;
         int lastSkillStall=0;
@@ -314,7 +314,7 @@ public final class GameActivity extends Activity {
             lifeDistance=0;travelSinceAction=0;forwardSinceAction=0;
             environmentEffectSinceAction=0;eventEnergyDeltaSinceAction=0;
             episodic.resetLife(); // Forget transient attempt, NOT learned motor or memories.
-            previousGripDrive=previousGripHeld=0;
+            previousGripDrive=previousGripHeld=previousOpposedFrames=0;
             ongoingUnsuccessfulGrip=0;gripRecoveryCooldown=0;
             liveBody.abortTrial();
             creature.reset();surface.reset(creature);
@@ -376,7 +376,7 @@ public final class GameActivity extends Activity {
             scarcity=true;
             // Test the door without a forced energy penalty.
             chamber=new ScarcityLab(creature.cx,creature.cy);
-            previousGripDrive=previousGripHeld=0;
+            previousGripDrive=previousGripHeld=previousOpposedFrames=0;
             ongoingUnsuccessfulGrip=0;gripRecoveryCooldown=0;
             excludeOrdinaryRoomObjects();
             environment.add(chamber.food);
@@ -547,12 +547,14 @@ public final class GameActivity extends Activity {
                         // confirmed adhesion held, not because ZERO touched
                         // the gate or because it was told to attempt a grip.
                         boolean physicalHold=chamber.gateHeldFrames>previousGripHeld;
+                        boolean opposedNow=chamber.opposedContactFrames>previousOpposedFrames;
                         if(physicalHold){
                             if(gripBank.observe(lastAppliedHand,lastAppliedMembrane,
-                                true,chamber.opposedContactFrames>0,
+                                true,opposedNow,
                                 Math.max(0,actuallyMoved)))save();
                         }
                         previousGripHeld=chamber.gateHeldFrames;
+                        previousOpposedFrames=chamber.opposedContactFrames;
                         boolean voluntaryGripAtGate=
                             chamber.gateDriveFrames>previousGripDrive;
                         previousGripDrive=chamber.gateDriveFrames;
