@@ -270,3 +270,9 @@ Added `InstrumentalNavigation`: energy outcomes per physically observed visual f
 - Pacchetto Android firmato pubblicato su Vercel (codice 1063).
 - SHA-256: `35d2ced944ac1125967b46ae67588a305b136984f1232edd59f14a9632b30d95`.
 - APK: `/apk/overmind-zero-1063-35d2ced944ac.apk`.
+
+## ZERO 0.11.3-ota.63 — Laboratorio comportamentale A/B isolato (10 ottobre 2026)
+- Aggiunto `BehavioralLaboratory.java`: tre scenari fisici ripetibili energia, pericolo, porta, 3 varianti appaiate ciascuno, nav strumentale ON/OFF, 18 prove × 32 s simulati. Brain e motor controllers clonati da profilo salvato, stessi componenti fisici veri Body/Surface/ScarcityLab e stessi sensori reali; misure di energia, danni, contatti, vicinanza, porta e attraversamenti reali.
+- `SensorimotorMind.setNavigationAdviceEnabled(false)` esclude **solo il bias decisionale in controllo benchmark**; valore di default true nel gioco e vecchi S=26, memorie, motor weights e OTA firma immutati.
+- Nuova `BehavioralLabActivity` privata, link da ANALISI, avvio thread in background con progresso/annullamento. Report in preferenze `zero_behavior_lab_v113`, nessuna scrittura su `zero_motorbrain_001` né sugli slot personaggi.
+- QA staging `38086989808` SUCCESS (fisica e 18 trial, tutti i test precedenti e compilazione Android). Firma/publisher `38087100529` SUCCESS, versionCode1063, signed APK184108 bytes checksum 35d2ced944ac1125967b46ae67588a305b136984f1232edd59f14a9632b30d95; JSON/APK Vercel HTTP200. Non testato su Galaxy S21 e non prova ancora miglioramenti in-game. `docs/EXPERIMENT_0113.md`.
