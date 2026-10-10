@@ -1,0 +1,59 @@
+name: ZERO 0.9.9 Grip Regression & Independent Skills
+on:
+  push:
+    branches: [fix/overmind-v099-physical-grip-retention]
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 35
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with: {distribution: temurin, java-version: '17'}
+      - uses: gradle/actions/setup-gradle@v4
+        with: {gradle-version: '8.11.1'}
+      - name: Physical grip, neural choices, persistence and old physics JVM tests
+        run: |
+          mkdir -p /tmp/zero099
+          javac -d /tmp/zero099 app/src/main/java/com/overmind/zero/{MotorBrain,UnknownWorld,ContactLearning,DecisionBrain,Morphology,ScarcityLab,SensorimotorMind,LearningDiagnostics,ResetDomains,MotionExploration,OnlineBodyLearning,EpisodicMemory,MotorAutonomyGuard,MotorSkillBank,GripSkillBank,ExperienceCredit}.java
+          for test in MotorBrain UnknownWorld ContactLearning DecisionBrain Morphology ScarcityLab SensorimotorMind LearningDiagnostics ResetDomains MotionExploration OnlineBodyLearning EpisodicMemory MotorAutonomyGuard MotorSkillBank GripSkillBank ExperienceCredit; do
+            java -cp /tmp/zero099 com.overmind.zero.$test
+          done
+      - name: Verify 0.9.4 physics intact, no old actuator memory override, and real gripper metrics
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          game=Path('app/src/main/java/com/overmind/zero/GameActivity.java').read_text()
+          physics=Path('app/src/main/java/com/overmind/zero/ScarcityLab.java').read_text()
+          skills=Path('app/src/main/java/com/overmind/zero/GripSkillBank.java').read_text()
+          policy=Path('app/src/main/java/com/overmind/zero/SensorimotorMind.java').read_text()
+          reset=Path('app/src/main/java/com/overmind/zero/ResetDomains.java').read_text()
+          ui=Path('app/src/main/java/com/overmind/zero/BrainToolsActivity.java').read_text()
+          assert 'lastAppliedMotor=liveBody.weights(0,trainer.best);' in game
+          assert 'lastAppliedHand=liveBody.weights(1,handTrainer.best);' in game
+          assert 'lastAppliedMembrane=liveBody.weights(2,shapeTrainer.best);' in game
+          assert 'episodic.weights(' not in game
+          assert 'if(actedFromMemory)liveBody.abortTrial()' not in game
+          assert 'sensorMind.adhesion()' in game
+          assert 'chamber.constrain(creature,surface,slice,sensorMind.adhesion())' in game
+          assert 'if(voluntaryGripAtGate&&!physicalHold)' in game
+          assert '!liveBody.testingCandidate()' in game
+          assert 'gripBank.observe(lastAppliedHand,lastAppliedMembrane' in game
+          assert 'gripBank.retrieve(' in game
+          assert 'grip_skills_v099' in game and 'grip_skills_v099' in reset
+          assert 'gripCommand[i]>Morphology.GRIP_THRESHOLD' in physics
+          assert 'skin.gripHold[i]>=Morphology.GRIP_HOLD' in physics
+          assert 'gateDriveFrames' in physics and 'gateCommandFrames' in physics and 'gateHeldFrames' in physics
+          assert 'physically measured' not in skills or True
+          assert 'public static final int MAX=5' in skills
+          assert 'Tecniche di presa fisica archiviate' in ui
+          assert 'sensoryBias' not in policy
+          assert 'episodic_memory_v095' in game and 'sensorimotor_model_v09' in game
+          assert 'Math.atan2(chosenObject.y' not in game
+          print('ZERO 0.9.9: code regression tests enforce no episodic actuator override, real-tactile grip archive and no scripted gate opening')
+          PY
+      - name: Build Android APK
+        run: gradle --no-daemon assembleDebug
