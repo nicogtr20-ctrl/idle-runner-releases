@@ -246,3 +246,8 @@
 - `SensorimotorMind` conserva esattamente 26 input e reti vecchie; `GameActivity.save/load` salva `spatial_perception_v110` nel vecchio profilo, disponibile automaticamente ai 12 slot. Reset `SPATIAL` separato, geometria della mappa solo per vita.
 - ANALISI mostra mini-mappa vera delle celle viste, 16 distanze e confidenza; CERVELLO mostra pesi nuovi.
 - Staging `38071087243` SUCCESS, GitHub signed `38071321701` SUCCESS. APK 0.11.0-ota.60 code1060, 162004 B, SHA256 `076d315c484cd11d695a40219a26a4a30508de1478a3a31b5abee5a488fee84e`, Vercel manifest/APK HTTP200. Galaxy S21 test pendente. Paper `docs/EXPERIMENT_0110.md`.
+
+## OTA 0.11.1-ota.61 — 2026-10-10T17:52:57.955474+00:00
+- Pacchetto Android firmato pubblicato su Vercel (codice 1061).
+- SHA-256: `8d8f121d985735ca3d7cac507007fb85a1ee192603309c2e867dc39e638e53c3`.
+- APK: `/apk/overmind-zero-1061-8d8f121d9857.apk`.
