@@ -1,5 +1,5 @@
 name: OVERMIND verified GitHub fallback releases
-# Publish checksum-verified ZERO v0.9.9-ota.46 signed APK as a GitHub release.
+# Publish verified OVERMIND ZERO 0.10.0-ota.47 signed APK with twelve named save slots.
 on:
   push:
     branches: [main]
