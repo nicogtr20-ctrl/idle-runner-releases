@@ -335,3 +335,8 @@ Per prove e prossimi step: `docs/EXPERIMENT_0096.md`. VersionCode e digest relea
 - Memoria temporanea rolling max36 passi, resetLife() alla morte mantiene ricordi registrati; em3/ec2/wm1, 12 slot e controller non cambiano. Nessun recupero retroattivo di eventi mai salvati.
 - Nuovo test per 44 azioni neutre con controlli di conseguenza dopo ciascuna, poi beneficio/danno, morte e restore; staging 38055704183 SUCCESS, publisher 38055836537 SUCCESS.
 - APK firmata 1051, 0.10.3-ota.51, 129180 byte, SHA256 `3bcf4c2674c73a7de134158fea3064e5b31b953d899ba96af4344f2b6fb8a522`; release https://github.com/nicogtr20-ctrl/idle-runner-releases/releases/tag/overmind-zero-v0.10.3-ota.51. Manifest e APK Vercel HTTP200 verificati, test effettivo Galaxy S21 pendente. Paper `docs/EXPERIMENT_0103.md`.
+
+## OTA 0.10.4-ota.52 — 2026-10-10T13:51:16.570330+00:00
+- Pacchetto Android firmato pubblicato su Vercel (codice 1052).
+- SHA-256: `972209b7554e25f62836b7c475c2178da90acae01b5976516ef6ad29360cb7a3`.
+- APK: `/apk/overmind-zero-1052-972209b7554e.apk`.
