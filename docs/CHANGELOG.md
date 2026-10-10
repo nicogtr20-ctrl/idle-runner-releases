@@ -347,3 +347,8 @@ Per prove e prossimi step: `docs/EXPERIMENT_0096.md`. VersionCode e digest relea
 - Added `LifeStatistics.java` metrics positive/harmful actual contact, net/cells/disks, room/door, recall results, mortality-only per-life closure, automatic pause exclusion, save/restore and first upgraded partial-life migration.
 - Added `StatisticsActivity.java`, five-button HUD and link in ANALISI. Original independent neurocontrollers and episodic memory remain unchanged. Save stat history per named active person via `life_statistics_v104` (12 slots).
 - QA JVM + Android staging 38057090717 SUCCESS and signed stable workflow 38057209555 SUCCESS. APK 0.10.4-ota.52 code1052, 136304 bytes SHA `972209b7554e25f62836b7c475c2178da90acae01b5976516ef6ad29360cb7a3`; Vercel latest and APK HTTP 200; test S21 pending. Paper: docs/EXPERIMENT_0104.md.
+
+## OTA 0.10.5-ota.54 — 2026-10-10T14:34:27.986580+00:00
+- Pacchetto Android firmato pubblicato su Vercel (codice 1054).
+- SHA-256: `34bd2eb5261f499b196037832dce744f37b7b3822a49a7f655c3b6347f0c4e7a`.
+- APK: `/apk/overmind-zero-1054-34bd2eb5261f.apk`.
