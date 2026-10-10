@@ -72,6 +72,15 @@ public final class SaveSlotStore {
             float x=Float.parseFloat(n);
             if(!Float.isFinite(x)||Math.abs(x)>5)throw new IllegalArgumentException("Motor corrupted");
         }
+        Object scene=profile.get("physical_scene_v100");
+        if(!(scene instanceof String))
+            throw new IllegalArgumentException("Physical scene missing; leave the game and save again");
+        try {
+            JSONObject parsed=new JSONObject((String)scene);
+            if(parsed.getInt("v")!=1 ||
+               GameSceneSnapshot.restore(parsed.getJSONObject("physical").toString())==null)
+                throw new IllegalArgumentException("Damaged physical scene");
+        }catch(Exception error){throw new IllegalArgumentException("Damaged physical scene",error);}
     }
     private Map<String,Object> capture(){
         Map<String,Object> current=new HashMap<>(working.getAll());
