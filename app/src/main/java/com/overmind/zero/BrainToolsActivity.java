@@ -249,6 +249,43 @@ public final class BrainToolsActivity extends Activity {
         }
         paragraph(proprio,"I sensori leggono dove i 96 punti fisici toccano oggetti, mantengono adesione, si estendono o scorrono radialmente. Gli otto settori non identificano porte o ostacoli: mostrano soltanto segnali locali del corpo. La nuova rete NON influenza le azioni finche' non prevede cambiamenti tattili meglio del riferimento su almeno 30 esperienze escluse dall'addestramento. I precedenti 26 sensi e i vecchi pesi sono conservati.");
 
+        SpatialPerception space=new SpatialPerception();
+        space.restore(prefs.getString(SpatialPerception.KEY,""));
+        LinearLayout spatial=panel(body);
+        spatial.addView(label("PERCEZIONE DELLO SPAZIO",16,CYAN,true));
+        paragraph(spatial,"Mappa costruita SOLO attraverso 16 raggi sensoriali e movimenti realmente vissuti. Scuro = sconosciuto; azzurro = osservato libero; arancio = ostacolo osservato. La croce indica ZERO.");
+        SpatialMapView view=new SpatialMapView(this,space);
+        LinearLayout.LayoutParams lpMap=new LinearLayout.LayoutParams(-1,dp(245));
+        lpMap.topMargin=dp(11);
+        spatial.addView(view,lpMap);
+        line(spatial,"Direzioni rilevate",SpatialPerception.RAYS+" raggi",WHITE);
+        line(spatial,"Portata massima",String.format(Locale.US,"%.0f U",SpatialPerception.RANGE),WHITE);
+        line(spatial,"Celle osservate / memoria",
+            space.mappedCells()+" / "+SpatialPerception.MAX_CELLS,CYAN);
+        line(spatial,"Celle libere osservate",String.valueOf(space.freeCells()),WHITE);
+        line(spatial,"Ostacoli osservati",String.valueOf(space.blockedCells()),AMBER);
+        line(spatial,"Scansioni realmente vissute",String.valueOf(space.sweeps),WHITE);
+        line(spatial,"Azioni e conseguenze osservate",String.valueOf(space.transitions),WHITE);
+        line(spatial,"Prove fuori addestramento",String.valueOf(space.validations),WHITE);
+        line(spatial,"Errore di previsione spaziale",
+            space.validations>0?number(space.error):"—",WHITE);
+        line(spatial,"Errore senza previsione",
+            space.validations>0?number(space.baseline):"—",MUTED);
+        line(spatial,"Affidabilita' appresa",
+            String.format(Locale.US,"%.1f%%",100*space.confidence()),CYAN);
+        line(spatial,"Scelte influenzate",
+            String.valueOf(space.choiceInfluences),WHITE);
+        float[] ranges=space.ranges();
+        for(int dir=0;dir<8;dir++){
+            int r=dir*2;
+            String readings=String.format(Locale.US,"%.0f U / %.0f U",
+                ranges[r]*SpatialPerception.RANGE,
+                ranges[r+1]*SpatialPerception.RANGE);
+            line(spatial,(r*360/SpatialPerception.RAYS)+"° / "+
+                ((r+1)*360/SpatialPerception.RAYS)+"°",readings,WHITE);
+        }
+        paragraph(spatial,"Nessuna zona nascosta viene rivelata. Le celle dietro ostacoli restano sconosciute. Il cervello NON riceve una mappa completa del mondo né istruzioni di percorso: i suggerimenti spaziali rimangono a zero finche' le previsioni non superano almeno 30 verifiche fuori addestramento. La mappa locale si rinnova ad ogni vita; i pesi appresi restano salvati nel singolo ZERO.");
+
         LinearLayout reset=panel(body);
         reset.addView(label("AZZERA APPRENDIMENTO",17,AMBER,true));
         paragraph(reset,"Ogni voce ritorna allo stato vergine SOLO per quel sistema. Altre memorie e reti rimangono. L'azzeramento ricarica il corpo nella mappa per applicare i nuovi parametri in sicurezza.");
@@ -262,6 +299,7 @@ public final class BrainToolsActivity extends Activity {
         resetButton(reset,"MEMORIA EPISODICA","Ricordi vissuti, sequenze di azioni e tentativi di richiamo.",ResetDomains.EPISODES,false);
         resetButton(reset,"ABILITA TEMPORALI","Sequenze autonome consolidate e cronologia dei loro replay.",ResetDomains.TEMPORAL_SKILLS,false);
         resetButton(reset,"PERCEZIONE CORPOREA","Mappa tattile, previsioni e valori motori appresi; non cancella la membrana fisica.",ResetDomains.PROPRIOCEPTION,false);
+        resetButton(reset,"PERCEZIONE SPAZIALE","Azzeramento SOLO dei raggi, della memoria locale degli ostacoli e dei pesi spaziali.",ResetDomains.SPATIAL,false);
         resetButton(reset,"AZZERA TUTTO","CANCELLA tutti i cervelli, statistiche, memoria ed esperienze.",ResetDomains.ALL,true);
         LinearLayout saves=panel(body);
         saves.addView(label("LE TUE PARTITE",17,CYAN,true));
@@ -319,6 +357,32 @@ public final class BrainToolsActivity extends Activity {
                 startActivity(target);
                 finish();
             }).show();
+    }
+    /** Player-only visualization of *observed* occupancy, not the true map. */
+    private static final class SpatialMapView extends View {
+        final SpatialPerception model;
+        final Paint paint=new Paint(Paint.ANTI_ALIAS_FLAG);
+        SpatialMapView(Context c,SpatialPerception m){super(c);model=m;}
+        @Override protected void onDraw(Canvas c){
+            super.onDraw(c);
+            int radius=8,side=radius*2+1;
+            byte[] visible=model.localMap(radius);
+            float step=Math.min((getWidth()-12f)/side,(getHeight()-12f)/side);
+            float left=(getWidth()-side*step)/2f,top=(getHeight()-side*step)/2f;
+            paint.setStrokeWidth(Math.max(1f,step*.055f));
+            for(int y=0;y<side;y++)for(int x=0;x<side;x++){
+                byte occupancy=visible[y*side+x];
+                paint.setColor(occupancy<0?0xff28677c:
+                    occupancy>0?0xffda9872:0xff14212c);
+                float l=left+x*step,t=top+y*step;
+                c.drawRect(l+1,t+1,l+step-1,t+step-1,paint);
+            }
+            paint.setColor(0xff83ecda);
+            float x=left+(radius+.5f)*step,y=top+(radius+.5f)*step;
+            c.drawCircle(x,y,step*.34f,paint);
+            paint.setStyle(Paint.Style.STROKE);paint.setStrokeWidth(2f);
+            c.drawCircle(x,y,step*.46f,paint);paint.setStyle(Paint.Style.FILL);
+        }
     }
     private static final class Graph extends View {
         final Paint pen=new Paint(3);final LearningDiagnostics history;
