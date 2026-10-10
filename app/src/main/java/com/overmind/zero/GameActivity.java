@@ -602,7 +602,7 @@ public final class GameActivity extends Activity {
                 // the transient episode buffer is reset.
                 if(eventEnergyDeltaSinceAction<0){
                     episodic.action(sensorMind.stateCopy(),sensorMind.action);
-                    if(episodic.consequence(0,eventEnergyDeltaSinceAction,
+                    if(episodic.consequenceSeparated(0,energySinceAction,
                        lastAppliedMotor,lastAppliedHand,lastAppliedMembrane,false))save();
                 }
                 reserve=70;lastEvent="CORPO ESAUSTO • MEMORIA CONSERVATA";eventTime=6;
@@ -770,8 +770,8 @@ public final class GameActivity extends Activity {
                         environmentEffectSinceAction);
                     if(sensorMind.experiences>beforeExperience){
                         episodic.action(observedBefore,actionBefore);
-                        boolean remembered=episodic.consequence(
-                            environmentEffectSinceAction,eventEnergyDeltaSinceAction,
+                        boolean remembered=episodic.consequenceSeparated(
+                            environmentEffectSinceAction,energySinceAction,
                             lastAppliedMotor,lastAppliedHand,lastAppliedMembrane,
                             actedFromMemory);
                         if(remembered||episodic.takeDirty())save();
