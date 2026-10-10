@@ -46,6 +46,7 @@ public final class GameActivity extends Activity {
         int gripRecoveryCooldown=0;
         int lastSkillStall=0;
         float environmentEffectSinceAction=0,eventEnergyDeltaSinceAction=0;
+        final float[] energySinceAction=new float[UnknownWorld.SIGNATURES];
         int recalledManipulationEvents=0;
         float[] lastAppliedMotor,lastAppliedHand,lastAppliedMembrane;
         float liveStartX,liveStartY,liveStartEnergy;
@@ -160,6 +161,7 @@ public final class GameActivity extends Activity {
                 prefs.getInt("real_energy_credits_v098",0),
                 prefs.getInt("real_damage_credits_v098",0),
                 prefs.getInt("real_action_credits_v098",0));
+            sensorMind.restoreOutcomeModel(prefs.getString("outcome_credit_v101",""));
             sensorMind.diagnostics.restore(
                 prefs.getString("sensorimotor_diagnostics_v091",""));
             episodic=new EpisodicMemory();
@@ -358,6 +360,7 @@ public final class GameActivity extends Activity {
               .putInt("real_energy_credits_v098",sensorMind.positiveContactCredits())
               .putInt("real_damage_credits_v098",sensorMind.negativeContactCredits())
               .putInt("real_action_credits_v098",sensorMind.historicalActionsCredited())
+              .putString("outcome_credit_v101",sensorMind.outcomeModel())
               .putInt("attempts",trainer.attempts)
               .putInt("accepted",trainer.accepted)
               .putFloat("original",trainer.initialFitness)
@@ -425,6 +428,7 @@ public final class GameActivity extends Activity {
             bestLifeDistance=Math.max(bestLifeDistance,lifeDistance);
             lifeDistance=0;travelSinceAction=0;forwardSinceAction=0;
             environmentEffectSinceAction=0;eventEnergyDeltaSinceAction=0;
+            java.util.Arrays.fill(energySinceAction,0f);
             episodic.resetLife(); // Forget transient attempt, NOT learned motor or memories.
             previousGripDrive=previousGripHeld=previousOpposedFrames=0;
             ongoingUnsuccessfulGrip=0;gripRecoveryCooldown=0;
@@ -576,7 +580,8 @@ public final class GameActivity extends Activity {
                     eventEnergyDeltaSinceAction+=reserve-before;
                     // Actual feedback trains the self-selected motor-action
                     // history; no color, target angle or food flag passed.
-                    sensorMind.contactOutcome(reserve-before);
+                    sensorMind.contactOutcome(reserve-before,object.signature);
+                    energySinceAction[object.signature]+=reserve-before;
                     mind.observe(object.signature,delta,0);
                     decisionBrain.learn(object,before,reserve,0);
                     if(delta>0)energyEaten++;
@@ -733,7 +738,8 @@ public final class GameActivity extends Activity {
                         float prior=reserve;
                         reserve=Math.min(100,reserve+UnknownWorld.RARE_ENERGY);
                         eventEnergyDeltaSinceAction+=reserve-prior;
-                        sensorMind.contactOutcome(reserve-prior);
+                        sensorMind.contactOutcome(reserve-prior,chamber.food.signature);
+                        energySinceAction[chamber.food.signature]+=reserve-prior;
                         int gained=(int)(reserve-prior);
                         energyEaten++;chambersCleared++;
                         decisionBrain.learn(chamber.food,prior,reserve,0);
@@ -782,6 +788,7 @@ public final class GameActivity extends Activity {
                         liveStartX=creature.cx;liveStartY=creature.cy;
                         travelSinceAction=0;forwardSinceAction=0;
                         environmentEffectSinceAction=0;eventEnergyDeltaSinceAction=0;
+                        java.util.Arrays.fill(energySinceAction,0f);
                         liveStartEnergy=reserve;liveStartContacts=physicalContacts;
                         if(result!=null){
                             if(result.domain==0){
