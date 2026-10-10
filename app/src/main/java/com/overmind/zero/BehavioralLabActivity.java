@@ -147,6 +147,7 @@ public final class BehavioralLabActivity extends Activity {
         p.body=prefs.getString(BodyProprioception.KEY,"");
         p.spatial=prefs.getString(SpatialPerception.KEY,"");
         p.causal=prefs.getString(CausalExperiments.KEY,"");
+        p.intent=prefs.getString(GoalContinuity.KEY,"");
         return p;
     }
     private void runLab(){
