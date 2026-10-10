@@ -41,6 +41,7 @@ public final class GameActivity extends Activity {
         TemporalWorkingMemory workingMemory=new TemporalWorkingMemory();
         TemporalSkillBank temporalSkillBank=new TemporalSkillBank();
         BodyProprioception bodySchema=new BodyProprioception();
+        SpatialPerception spatialMap=new SpatialPerception();
         MotorAutonomyGuard motorGuard=new MotorAutonomyGuard();
         MotorSkillBank skillBank=new MotorSkillBank();
         GripSkillBank gripBank=new GripSkillBank();
@@ -180,6 +181,9 @@ public final class GameActivity extends Activity {
             bodySchema=new BodyProprioception();
             bodySchema.restore(prefs.getString(BodyProprioception.KEY,""));
             sensorMind.attachBodySchema(bodySchema);
+            spatialMap=new SpatialPerception();
+            spatialMap.restore(prefs.getString(SpatialPerception.KEY,""));
+            sensorMind.attachSpatialPerception(spatialMap);
             episodic=new EpisodicMemory();
             episodic.restore(prefs.getString("episodic_memory_v095",""));
             sensorMind.attachMemory(episodic);
@@ -362,6 +366,7 @@ public final class GameActivity extends Activity {
                 sensorMind.resumeEpisode(SensorimotorMind.Senses.read(
                     creature,surface,chamber,environment,reserve),action);
                 sensorMind.updateBodySense(creature,surface);
+                sensorMind.resumeSpatialSense(creature,chamber,environment);
                 motorGuard.resetLife(creature.cx,creature.cy);
                 lastSkillStall=motorGuard.recoveryActivations;
                 liveBody.abortTrial();
@@ -414,6 +419,7 @@ public final class GameActivity extends Activity {
               .putString("temporal_working_memory_v106",workingMemory.encode())
               .putString("temporal_skills_v107",temporalSkillBank.encode())
               .putString(BodyProprioception.KEY,bodySchema.encode())
+              .putString(SpatialPerception.KEY,spatialMap.encode())
               .putString(LifeStatistics.KEY,lifeStats.encode())
               .putInt("motor_recoveries_v097",motorGuard.recoveryActivations)
               .putInt("motor_free_choices_v097",motorGuard.freeChoices)
@@ -476,6 +482,7 @@ public final class GameActivity extends Activity {
             sensorMind.resetEpisode(SensorimotorMind.Senses.read(
                 creature,surface,chamber,environment,reserve));
             sensorMind.updateBodySense(creature,surface);
+            sensorMind.updateSpatialSense(creature,chamber,environment);
             heading=(float)Math.atan2(sensorMind.motorY(),sensorMind.motorX());
         }
         void extendHabitat(){
@@ -808,7 +815,8 @@ public final class GameActivity extends Activity {
                     int actionBefore=sensorMind.action;
                     sensorMind.observe(SensorimotorMind.Senses.read(
                         creature,surface,chamber,environment,reserve),slice,
-                        environmentEffectSinceAction,creature,surface);
+                        environmentEffectSinceAction,creature,surface,
+                        chamber,environment);
                     if(sensorMind.experiences>beforeExperience){
                         episodic.action(observedBefore,actionBefore);
                         int recallsBefore=episodic.repeatEffects;
