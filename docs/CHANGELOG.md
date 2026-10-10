@@ -265,3 +265,8 @@
 - APK: `/apk/overmind-zero-1062-bbec60568821.apk`.
 ## OVERMIND ZERO 0.11.2-ota.62 — goal-directed instrumental learning (10 October 2026)
 Added `InstrumentalNavigation`: energy outcomes per physically observed visual frequency AND real resultant motion per freely chosen motor command; no target coordinates, object identity or scripted red/blue preference. 3×8 visual sensors with correct angular sectors and physically accurate occlusion, no new inputs to original 26-sensor weight array. Heldout motor reliability gate and score bounded ±1.6. Actual chosen policy tested for energy-seeking and harm-avoidance after evidence. Removed direct `+.24f*realForward` motor reward from TD; actual observed energy provides instrumental value, tiny generic exploration preserved. Old Q bounded prior, no weights deleted. Cooling red remains visually observable. Stored `instrumental_navigation_v112` per unchanged 12 slots; separate NAVIGATION reset and ANALISI/CERVELLO screens. Legacy `DecisionBrain`/old `UnknownWorld.Mind` are passive archives, not active motor decision makers. Staging `38078898196` SUCCESS, signed `38078981840` SUCCESS, version1062, APK174824 bytes, SHA bbec605688215fea99c450aeb91314e437f197456f6b104b15c2e3388cc07f38, OTA/public Vercel HTTP200 after manual deployment `dpl_7ukm6M55KeVaxPq9naHZUpSTeUkT`. Real S21 improvement unknown; full `docs/EXPERIMENT_0112.md`.
+
+## OTA 0.11.3-ota.63 — 2026-10-10T21:19:37.066695+00:00
+- Pacchetto Android firmato pubblicato su Vercel (codice 1063).
+- SHA-256: `35d2ced944ac1125967b46ae67588a305b136984f1232edd59f14a9632b30d95`.
+- APK: `/apk/overmind-zero-1063-35d2ced944ac.apk`.
