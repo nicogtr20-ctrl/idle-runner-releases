@@ -27,7 +27,7 @@ jobs:
       - name: Unit tests
         run: |
           mkdir -p /tmp/overmind
-          javac -d /tmp/overmind app/src/main/java/com/overmind/zero/MotorBrain.java app/src/main/java/com/overmind/zero/UnknownWorld.java app/src/main/java/com/overmind/zero/ContactLearning.java app/src/main/java/com/overmind/zero/DecisionBrain.java app/src/main/java/com/overmind/zero/Morphology.java app/src/main/java/com/overmind/zero/ScarcityLab.java app/src/main/java/com/overmind/zero/SensorimotorMind.java app/src/main/java/com/overmind/zero/SpatialPerception.java app/src/main/java/com/overmind/zero/BodyProprioception.java app/src/main/java/com/overmind/zero/TemporalWorkingMemory.java app/src/main/java/com/overmind/zero/TemporalSkillBank.java app/src/main/java/com/overmind/zero/TemporalPersistenceRegression.java app/src/main/java/com/overmind/zero/LearnedSequencePlanner.java app/src/main/java/com/overmind/zero/LearningDiagnostics.java app/src/main/java/com/overmind/zero/ResetDomains.java app/src/main/java/com/overmind/zero/OnlineBodyLearning.java app/src/main/java/com/overmind/zero/MotionExploration.java app/src/main/java/com/overmind/zero/EpisodicMemory.java app/src/main/java/com/overmind/zero/MotorAutonomyGuard.java app/src/main/java/com/overmind/zero/MotorSkillBank.java app/src/main/java/com/overmind/zero/ExperienceCredit.java app/src/main/java/com/overmind/zero/GripSkillBank.java app/src/main/java/com/overmind/zero/SaveProfileCodec.java app/src/main/java/com/overmind/zero/LifeStatistics.java
+          javac -d /tmp/overmind app/src/main/java/com/overmind/zero/MotorBrain.java app/src/main/java/com/overmind/zero/UnknownWorld.java app/src/main/java/com/overmind/zero/ContactLearning.java app/src/main/java/com/overmind/zero/DecisionBrain.java app/src/main/java/com/overmind/zero/Morphology.java app/src/main/java/com/overmind/zero/ScarcityLab.java app/src/main/java/com/overmind/zero/SensorimotorMind.java app/src/main/java/com/overmind/zero/SpatialPerception.java app/src/main/java/com/overmind/zero/CausalExperiments.java app/src/main/java/com/overmind/zero/BodyProprioception.java app/src/main/java/com/overmind/zero/TemporalWorkingMemory.java app/src/main/java/com/overmind/zero/TemporalSkillBank.java app/src/main/java/com/overmind/zero/TemporalPersistenceRegression.java app/src/main/java/com/overmind/zero/LearnedSequencePlanner.java app/src/main/java/com/overmind/zero/LearningDiagnostics.java app/src/main/java/com/overmind/zero/ResetDomains.java app/src/main/java/com/overmind/zero/OnlineBodyLearning.java app/src/main/java/com/overmind/zero/MotionExploration.java app/src/main/java/com/overmind/zero/EpisodicMemory.java app/src/main/java/com/overmind/zero/MotorAutonomyGuard.java app/src/main/java/com/overmind/zero/MotorSkillBank.java app/src/main/java/com/overmind/zero/ExperienceCredit.java app/src/main/java/com/overmind/zero/GripSkillBank.java app/src/main/java/com/overmind/zero/SaveProfileCodec.java app/src/main/java/com/overmind/zero/LifeStatistics.java
           java -cp /tmp/overmind com.overmind.zero.MotorBrain
           java -cp /tmp/overmind com.overmind.zero.UnknownWorld
           java -cp /tmp/overmind com.overmind.zero.ContactLearning
@@ -35,6 +35,7 @@ jobs:
           java -cp /tmp/overmind com.overmind.zero.Morphology
           java -cp /tmp/overmind com.overmind.zero.ScarcityLab
           java -cp /tmp/overmind com.overmind.zero.SensorimotorMind
+          java -cp /tmp/overmind com.overmind.zero.CausalExperiments
           java -cp /tmp/overmind com.overmind.zero.SpatialPerception
           java -cp /tmp/overmind com.overmind.zero.BodyProprioception
           java -cp /tmp/overmind com.overmind.zero.TemporalWorkingMemory
@@ -409,7 +410,7 @@ jobs:
           assert 'temporalSkills.physicalOutcome(physicalEffect)' in sm
           assert 'temporal_skills_v107' in g and 'TEMPORAL_SKILLS="temporal_skills"' in reset
           assert 'temporal_working_memory_v106' in g
-          assert '0.11.0-ota' in gradle
+          assert '0.11.1-ota' in gradle
           assert 'com.overmind.zero.StatisticsActivity' in manifest
           assert 'episodic.consequenceSeparated(' in g and 'episodic.weights(' not in g
           print('0.10.7 verified: repeated lived sequences become bounded context-sensitive skills; prior cognition/statistics preserved.')
@@ -437,7 +438,7 @@ jobs:
           assert 'temporalSkills.resumeLife()' in mind
           assert 'physical_scene_v100' in g and 'SaveProfileCodec.encode(capture())' in slots
           assert 'new HashMap<>(working.getAll())' in slots
-          assert 'applicationId \'com.overmind.zero.ota\'' in p and '0.11.0-ota' in p
+          assert 'applicationId \'com.overmind.zero.ota\'' in p and '0.11.1-ota' in p
           print('ZERO 0.10.8 signed gate: real learned hidden state/weights and sequential skills survive stop/reopen/named save; earlier brain untouched.')
           PY
       - name: Gate 0.10.9 spatial proprioception and continued independent learning
@@ -476,7 +477,7 @@ jobs:
           assert 'case PROPRIOCEPTION:return new String[]{BodyProprioception.KEY};' in reset
           assert 'bodyMap.parameterCount()' in stats
           assert 'lifeStats.tick(dt);' in g and 'for(int i=0;i<speed;i++)' in g
-          assert '0.11.0-ota' in code and "applicationId 'com.overmind.zero.ota'" in code
+          assert '0.11.1-ota' in code and "applicationId 'com.overmind.zero.ota'" in code
           print('ZERO 0.10.9 SIGNED GATE: honest tactile world, 96 contacts, eight directions, no embedded goals, old motor and all save slots compatible.')
           PY
       - name: Gate 0.11.0 actual spatial perception, occlusion, map, permanent cognition and saves
@@ -518,10 +519,56 @@ jobs:
           assert 'spatial.parameterCount()' in brain
           assert 'SaveProfileCodec.encode(capture())' in slots and 'SLOTS=12' in slots
           assert "applicationId 'com.overmind.zero.ota'" in gradle
-          assert '0.11.0-ota' in gradle
+          assert '0.11.1-ota' in gradle
           assert 'lifeStats.tick(dt);' in g and 'for(int i=0;i<speed;i++)' in g
           assert 'episodic.consequenceSeparated(' in g and 'episodic.weights(' not in g
           print('ZERO 0.11.0 signed: honest occluded rays and bounded map, heldout learning, independent original brain, twelve character slots, and real time simulation')
+          PY
+      - name: Gate 0.11.1 experimental world model and saved intervention evidence
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          p=Path('app/src/main/java/com/overmind/zero/CausalExperiments.java').read_text()
+          spatial=Path('app/src/main/java/com/overmind/zero/SpatialPerception.java').read_text()
+          mind=Path('app/src/main/java/com/overmind/zero/SensorimotorMind.java').read_text()
+          g=Path('app/src/main/java/com/overmind/zero/GameActivity.java').read_text()
+          reset=Path('app/src/main/java/com/overmind/zero/ResetDomains.java').read_text()
+          analyze=Path('app/src/main/java/com/overmind/zero/BrainToolsActivity.java').read_text()
+          stats=Path('app/src/main/java/com/overmind/zero/BrainStatsActivity.java').read_text()
+          slots=Path('app/src/main/java/com/overmind/zero/SaveSlotStore.java').read_text()
+          gradle=Path('app/build.gradle').read_text()
+          runtime=p.split('public static void main(')[0]
+          assert 'CONTEXTS=3, ACTIONS=SensorimotorMind.ACTIONS' in runtime
+          assert 'scene.perceivedX()-anchorX' in runtime
+          assert 'scene.observedCell(originX+dx,originY+dy)' in runtime
+          assert 'old>=2&&now<0' in runtime and 'old<=-2&&now>=2' in runtime
+          assert 'candidateKeys' in runtime and 'confirmedPassages++' in runtime
+          assert 'randomTried[slot]<3' in runtime
+          assert 'contextRandom[ctx]-randomTried[slot]<5' in runtime
+          assert 'if(validations<30' in runtime
+          assert 'modelError>=referenceError*.95f' in runtime
+          assert 'body.cx' not in runtime and 'room.gate' not in runtime
+          assert 'public byte observedCell(int cx,int cy)' in spatial
+          assert 'public static final int S=26;' in mind
+          assert 'causal.choiceBias(spatial,a)' in mind
+          assert 'causal.chosen(spatial,chosen,actionExploratory)' in mind
+          assert 'causal.consequence(spatial,trialAction,lastReward,learning&&!holdout,holdout)' in mind
+          assert 'causal.energyOutcome(actualEnergyDelta)' in mind
+          assert 'causalExperiments.restore(prefs.getString(CausalExperiments.KEY,""))' in g
+          assert '.putString(CausalExperiments.KEY,causalExperiments.encode())' in g
+          assert '.putString(SpatialPerception.KEY,spatialMap.encode())' in g
+          assert '.putString(BodyProprioception.KEY,bodySchema.encode())' in g
+          assert '.putString("temporal_working_memory_v106",workingMemory.encode())' in g
+          assert '.putString("temporal_skills_v107",temporalSkillBank.encode())' in g
+          assert '.putString("episodic_memory_v095",episodic.encode())' in g
+          assert '.putString(LifeStatistics.KEY,lifeStats.encode())' in g
+          assert 'case CAUSAL:return new String[]{CausalExperiments.KEY};' in reset
+          assert 'ResetDomains.CAUSAL' in analyze
+          assert 'causal.learnedParameters()' in stats
+          assert 'SaveProfileCodec.encode(capture())' in slots and 'SLOTS=12' in slots
+          assert '0.11.1-ota' in gradle and "applicationId 'com.overmind.zero.ota'" in gradle
+          assert 'lifeStats.tick(dt)' in g and 'for(int i=0;i<speed;i++)' in g
+          print('ZERO 0.11.1 signed gate: genuinely lived cause/effect experiments, heldout and randomized alternative comparisons, no scripted gate, legacy learning persisted')
           PY
       - name: Assemble stable signed APK
         if: env.signing_ready == 'true'
