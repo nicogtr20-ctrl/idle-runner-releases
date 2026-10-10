@@ -175,3 +175,17 @@ Documentazione dettagliata e limiti scientifici: `docs/EXPERIMENT_0095.md`.
 - [ ] Verifica Galaxy S21: dopo abbastanza esperienze, controllare in CERVELLO che la confidenza temporale esca da 0% soltanto se l'errore held-out migliora.
 - [ ] Verificare sul mondo reale simulato se ZERO mantiene più a lungo sequenze con effetto fisico continuativo (es. spostamento progressivo) senza regola specifica.
 - [ ] Solo dopo questa prova: valutare “skill/chunk” di sequenze apprese e successiva integrazione del contesto nel planner multistep.
+
+## ZERO-010.7 — skill temporali autonome
+- [x] Estrarre candidati di 2–8 azioni esclusivamente da sequenze realmente vissute prima di effetti positivi.
+- [x] Richiedere almeno due ricorrenze compatibili prima dell'influenza sulla policy.
+- [x] Replay come bias, non comando obbligatorio.
+- [x] Interrompere la skill quando il contesto temporale diverge.
+- [x] Confermare replay solo con una nuova conseguenza reale; timeout/danno riducono affidabilità.
+- [x] Persistenza, slot nominati e reset indipendente ABILITA TEMPORALI.
+- [x] CERVELLO/ANALISI mostrano candidati, consolidate, lunghezza, replay riusciti/falliti.
+- [x] STATISTICHE 0.10.5 e memoria temporale 0.10.6 lasciate inalterate.
+- [x] Build firmata e OTA pubblica 0.10.7-ota.56 verificata (publisher 38066032322; manifest/APK HTTP 200).
+- [ ] Test Galaxy S21: lasciare vivere ZERO abbastanza da ottenere confidenza temporale >0 e osservare se compaiono skill consolidate.
+- [ ] Verificare se una skill viene richiamata in un contesto simile e mantiene un effetto fisico progressivo senza essere stata programmata per quell'oggetto.
+- [ ] Passo successivo solo dopo verifica: permettere al planner di valutare skill consolidate come macro-azioni.
