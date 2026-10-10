@@ -135,3 +135,18 @@ Ciclo vita:
 - `resetEpisode` (morte/nuova vita) azzera stato ricorrente e trace, non i pesi;
 - `resumeEpisode` conserva il contesto serializzato quando si riapre la stessa scena fisica;
 - il reset “MODELLO DEL MONDO” cancella anche la memoria temporale; gli altri domini restano separati.
+
+## Skill temporali autonome v0.10.7
+`TemporalSkillBank` è un archivio dinamico separato dalle banche di pesi motori `MotorSkillBank` e `GripSkillBank`.
+
+Dati per skill:
+- lunghezza 2–8;
+- azione discreta realmente scelta a ogni passo;
+- vettore hidden da 16 elementi della memoria temporale prima di ogni azione;
+- conferme, fallimenti, attivazioni, completamenti, utilità media.
+
+Scoperta: dopo un effetto positivo energetico/fisico reale vengono estratti i suffissi disponibili della trace recente; la prima occorrenza resta dormiente; il matching richiede stessa sequenza d'azioni e vicinanza dei contesti temporali; servono almeno due conferme prima di produrre bias.
+
+Replay: richiede anche `TemporalWorkingMemory.confidence()>0`; bias massimo **0,64**, mai azione forzata. Divergenza del nuovo hidden rispetto al passo successivo appreso causa abort + fallimento. Dopo l'ultima azione attende al massimo 3 decisioni per una conseguenza positiva reale; danno o timeout abbassano l'affidabilità.
+
+Persistenza: `temporal_skills_v107`. Reset vita/ripresa cancella soltanto la trace e l'esecuzione in corso; l'archivio consolidato persiste. Reset selettivo dedicato disponibile.
