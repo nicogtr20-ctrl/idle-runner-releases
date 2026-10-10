@@ -234,3 +234,8 @@
 - Nella vecchia policy S=26 i pesi e il formato restano. `GameActivity.save/load` e 12 slot includono `body_proprioception_v109`. In ANALISI nuova sezione corpo + reset autonomo; CERVELLO mostra parametri.
 - Staging GitHub Actions 38069416680 SUCCESS; signed 38069513724 SUCCESS. APK 0.10.9-ota.58 code1058, 155816 byte sha256 9bad1270ef3dae172858d55a1f90e3d92cc44c89e1559c9b18ce508f94b933e5. Vercel prima 0.10.8, corretto con deployment Git manuale dpl_CHFimoyKSiLUR7mAn587GexvZypS e verificato HTTP200. S21 prova utente ancora necessaria.
 - Canonical docs/EXPERIMENT_0109.md.
+
+## OTA 0.11.0-ota.60 — 2026-10-10T17:22:05.295285+00:00
+- Pacchetto Android firmato pubblicato su Vercel (codice 1060).
+- SHA-256: `076d315c484cd11d695a40219a26a4a30508de1478a3a31b5abee5a488fee84e`.
+- APK: `/apk/overmind-zero-1060-076d315c484c.apk`.
