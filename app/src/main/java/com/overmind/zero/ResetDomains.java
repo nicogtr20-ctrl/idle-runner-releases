@@ -18,7 +18,7 @@ public final class ResetDomains {
         switch(domain){
             case WORLD:return new String[]{"sensorimotor_model_v09","sensorimotor_diagnostics_v091",
                 "real_energy_credits_v098","real_damage_credits_v098","real_action_credits_v098",
-                "outcome_credit_v101"};
+                "outcome_credit_v101","learned_planner_stats_v102"};
             case CHOICE:return new String[]{"decision_brain_v05"};
             case MOTOR:return new String[]{"virgin","best","attempts","accepted","original",
                                   "lived_distance_total_v093","lived_distance_record_v093",
