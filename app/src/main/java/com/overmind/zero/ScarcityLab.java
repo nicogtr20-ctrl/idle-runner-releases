@@ -25,6 +25,11 @@ public final class ScarcityLab {
     public float doorY=0,doorVelocity=0,dualContactTime=0;
     public int grasps=0,oneSidedContacts=0,opposedContactFrames=0;
     public int tactileFrames=0,adhesiveContactFrames=0,dualTouchNoGrip=0;
+    /** Each is a PHYSICS frame in the current room, not a neural decision.
+     * Diagnose failure stage: intent -> command -> held grip. */
+    public int gateContactFrames=0,gateDriveFrames=0,gateNoDriveFrames=0;
+    public int gateCommandFrames=0,gateHeldFrames=0;
+    public float peakTouchGripCommand=0;
     public float adhesiveEffort=0;
     public boolean reachedEnergy=false,everOpened=false;
     public float maxDoorTravel=0;
@@ -52,9 +57,15 @@ public final class ScarcityLab {
     /** Real adhesion requires BOTH independent points to COMMAND gripping.
      * Normal pressure, even on both sides, can never actuate the gate. */
     public float solveGate(Morphology.Surface skin,float dt){
+        return solveGate(skin,dt,0f);
+    }
+    /** The third argument is passive diagnostics of the controller's own
+     * chosen adhesion channel. It does NOT command any physical grip. */
+    public float solveGate(Morphology.Surface skin,float dt,float chosenGripDrive){
         float lx=gateX()-DOOR_HALF_W,rx=gateX()+DOOR_HALF_W;
         float cy=gateCenterY();
         int leftTouch=0,rightTouch=0,leftGrip=0,rightGrip=0;
+        int commanded=0,held=0;
         int leftIdx=-1,rightIdx=-1;
         float lv=0,rv=0;
         for(int i=0;i<Morphology.POINTS;i++){
@@ -79,12 +90,15 @@ public final class ScarcityLab {
                 rightTouch++;
                 if(x<rx+1.8f){skin.x[i]=rx+1.8f;skin.vx[i]=Math.max(0,skin.vx[i])*.40f;}
             }
+            peakTouchGripCommand=Math.max(peakTouchGripCommand,skin.gripCommand[i]);
             if(skin.gripCommand[i]>Morphology.GRIP_THRESHOLD){
+                commanded++;
                 skin.gripHold[i]=Math.min(.5f,skin.gripHold[i]+dt);
                 // Report deliberate attempts separately from successful grasp.
                 adhesiveEffort+=dt;
                 adhesiveContactFrames++;
                 if(skin.gripHold[i]>=Morphology.GRIP_HOLD){
+                    held++;
                     if(left){
                         leftGrip++;lv+=skin.vy[i];leftIdx=i;
                     }else{
@@ -95,6 +109,13 @@ public final class ScarcityLab {
                 // No adhesion merely because body hit the obstacle.
                 skin.gripHold[i]=0;
             }
+        }
+        if(leftTouch+rightTouch>0){
+            gateContactFrames++;
+            if(chosenGripDrive>.1f)gateDriveFrames++;
+            else gateNoDriveFrames++;
+            if(commanded>0)gateCommandFrames++;
+            if(held>0)gateHeldFrames++;
         }
         if(leftTouch>0&&rightTouch>0&&(leftGrip==0||rightGrip==0))
             dualTouchNoGrip++;
@@ -133,11 +154,16 @@ public final class ScarcityLab {
      * are physical obstacles, so the food cannot be reached through walls.
      */
     public void constrain(MotorBrain.Body body,Morphology.Surface skin,float dt){
+        constrain(body,skin,dt,0f);
+    }
+    /** 4th input is a read-only measurement of ZERO's action, NOT a policy. */
+    public void constrain(MotorBrain.Body body,Morphology.Surface skin,float dt,
+                          float chosenGripDrive){
         // Resolve the actual edges BEFORE sensing a bilateral grasp. A
         // membrane that has tunneled through the obstacle must not count as
         // an appendage legitimately placed on its opposite face.
         resolveSolidLinks(skin);
-        solveGate(skin,dt);
+        solveGate(skin,dt,chosenGripDrive);
         // Gate is an actual physical barrier for the body center and old
         // motor particles, even when its movement is still locked.
         float x=gateX(),yc=gateCenterY();
