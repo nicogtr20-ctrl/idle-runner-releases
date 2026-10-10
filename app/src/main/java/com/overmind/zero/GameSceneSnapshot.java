@@ -123,6 +123,7 @@ public final class GameSceneSnapshot {
                 r.put("everOpened",room.everOpened);
                 r.put("maxDoorTravel",room.maxDoorTravel);
                 r.put("solidLinkCorrections",room.solidLinkCorrections);
+                r.put("graspingLatch",room.graspingLatch());
                 root.put("room",r);
             }
             JSONArray a=new JSONArray();
@@ -177,6 +178,7 @@ public final class GameSceneSnapshot {
                 out.room.everOpened=r.getBoolean("everOpened");
                 out.room.maxDoorTravel=(float)r.getDouble("maxDoorTravel");
                 out.room.solidLinkCorrections=r.getInt("solidLinkCorrections");
+                out.room.restoreGraspingLatch(r.getBoolean("graspingLatch"));
                 if(!Float.isFinite(out.room.doorY)||out.room.doorY<0||
                    out.room.doorY>ScarcityLab.DOOR_MAX_TRAVEL)return null;
             }
