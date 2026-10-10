@@ -26,5 +26,5 @@ La memoria di lavoro temporale ha superato staging **38064278116** e **380643777
 - Manifest e APK verificati HTTP 200.
 È corretto usare **AGGIORNA** nell'app. Installare sopra la versione esistente; non disinstallare.
 
-## Stato 0.10.7 — staging
-Skill temporali autonome validate su staging **38065646624**. Codice ancora sul branch `feature/overmind-v107-temporal-skills`; non considerare 0.10.7 disponibile da AGGIORNA finché il publisher stable non è verde e manifest/APK pubblici non sono verificati.
+## Stato 0.10.7 — candidato stabile
+Skill temporali autonome validate su staging **38065646624** e promosse su `feature/overmind-inapp-updater`. Il publisher firmato deve ancora concludere con successo prima di considerare AGGIORNA verificato sulla 0.10.7.
