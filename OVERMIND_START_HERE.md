@@ -1,5 +1,9 @@
 # OVERMIND: ZERO — punto di ingresso per tutte le nuove chat
 
+## CORREZIONE PRIORITARIA: ZERO 0.9.8 AUTONOMIA (10 ottobre 2026)
+**PRIMA DI TUTTO leggere `docs/EXPERIMENT_0098.md`, sezione CORREZIONE 0098-A.** La prima 0.9.8 (`0.9.8-ota.42`) attribuiva un bonus geometrico alle direzioni orientate verso segnali visivi valutati benefici/dannosi. L'utente ha esplicitamente rifiutato questo intervento comportamentale: ZERO deve avere informazioni apprese sull'energia, ma poter decidere autonomamente se avvicinarsi a una sfera anche quando ha bisogno di energia. Nella 0.9.8 corretta è stato rimosso `SensoryValenceGuide` e **NON ESISTE più `sensoryBias` per gli heading**; la nuova `ExperienceCredit` accredita i veri guadagni/perdite energetiche alle ultime 12 azioni effettivamente compiute, aggiornando le normali reti Q con i 26 sensi di quel momento. Le ricompense energetiche fisiologiche restano definite dal mondo e dal sistema di apprendimento, NON è autonomia assoluta filosofica. Motori, memoria, protezione antistallo e archivi di competenze v0.9.8 restano invariati. APK patch sulla medesima linea 0.9.8 con versionCode aumentato, firma identica. Nessun progresso su S21 dimostrato finché non viene testato.
+
+
 > Ultimo aggiornamento della documentazione: 10 ottobre 2026.
 >
 > **OBIETTIVO DEL PROGETTO:** creare su Android una forma di vita artificiale ("ZERO"), rappresentata da una macchia nera simile a ferrofluido, con corpo deformabile e apprendimento autonomo da esperienze in un mondo simulato. Il giocatore è una presenza invisibile, non impartisce ordini alla creatura e ne modifica il mondo.
