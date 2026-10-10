@@ -280,3 +280,11 @@ Per prove e prossimi step: `docs/EXPERIMENT_0096.md`. VersionCode e digest relea
 - SHA256: **`f4524305cdea4094e23c2eb12f664e21f6fe07cff6c3f3e949c0c4e035e6ec1e`**, esattamente uguale in release GitHub e `updater/public/latest.json`.
 - Link esistente (NON ipotetico): `https://github.com/nicogtr20-ctrl/idle-runner-releases/releases/download/overmind-zero-v0.9.9-ota.46/OVERMIND-ZERO.apk`.
 - Installare direttamente sopra la vecchia APK senza disinstallare, **senza premere alcun reset**. Nessun test comportamentale sul Galaxy S21 della 0.9.9 ancora disponibile. La conferma necessaria è la catena PRESA SCELTA→COMANDO→TENUTA e la velocità/NETTO.
+
+## ZERO 0.10.0 — Partite salvate con nome
+- Nuova schermata PARTITE nel gioco e CERVELLO/ANALISI: **12 slot** con nomi, data e Salva/Carica/Sovrascrivi/Rinomina/Elimina; Nuova partita indipendente.
+- Salvataggio automatico del personaggio in uso e backup RECUPERA ZERO PRECEDENTE prima di un caricamento/nuovo ZERO (backup ultimo cambio sostituito al cambio seguente).
+- Profili neurali e progressi completi a checksum SHA256, serializzazione sicura di modelli da oltre 64KB, pref slot separati dai reset.
+- Nuovo salvataggio fisico `GameSceneSnapshot`: stato nucleo 10 masse, membrana 96 punti, cancello e fisica presa, oggetti reali/risorse consumate, vita/posizione/energia/aree esplorate, velocità/pausa; caricamento delle scene e progressi con nuovo `SaveSlotsActivity` e token di reload.
+- Nessuna cancellazione degli archivi da RESET TUTTO, nessun cambiamento alla logica di apprendimento, alla firma/OTA o alle memorie em1/em2. Prove evolutive transitorie e random bit-identico non preservati.
+- QA JVM/Android e gate firmata; test reale sul Galaxy S21 da svolgere. Documento completo `docs/EXPERIMENT_0100.md`.
