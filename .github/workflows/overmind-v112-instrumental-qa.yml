@@ -1,0 +1,79 @@
+name: ZERO 0.11.2 Instrumental Agency Integration QA
+on:
+  push:
+    branches: [feature/overmind-v112-instrumental-navigation]
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 35
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+      - uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: '8.11.1'
+      - name: Physical signal plus real learned motion and all old brain regressions
+        run: |
+          mkdir -p /tmp/zero112
+          javac -d /tmp/zero112 app/src/main/java/com/overmind/zero/{MotorBrain,UnknownWorld,ContactLearning,DecisionBrain,Morphology,ScarcityLab,SensorimotorMind,SpatialPerception,CausalExperiments,BodyProprioception,InstrumentalNavigation,TemporalWorkingMemory,TemporalSkillBank,TemporalPersistenceRegression,LearnedSequencePlanner,LearningDiagnostics,ResetDomains,OnlineBodyLearning,MotionExploration,EpisodicMemory,MotorAutonomyGuard,MotorSkillBank,ExperienceCredit,GripSkillBank,SaveProfileCodec,LifeStatistics}.java
+          for test in InstrumentalNavigation CausalExperiments SpatialPerception BodyProprioception TemporalPersistenceRegression TemporalWorkingMemory TemporalSkillBank SaveProfileCodec EpisodicMemory LifeStatistics SensorimotorMind ExperienceCredit LearnedSequencePlanner MotorBrain UnknownWorld ContactLearning DecisionBrain Morphology ScarcityLab OnlineBodyLearning MotionExploration ResetDomains MotorAutonomyGuard MotorSkillBank GripSkillBank; do
+            java -cp /tmp/zero112 com.overmind.zero.$test
+          done
+      - name: Audit full sensor to energy to motor to memory pathway
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          root=Path('app/src/main/java/com/overmind/zero')
+          nav=(root/'InstrumentalNavigation.java').read_text()
+          mind=(root/'SensorimotorMind.java').read_text()
+          game=(root/'GameActivity.java').read_text()
+          ui=(root/'BrainToolsActivity.java').read_text()
+          brain=(root/'BrainStatsActivity.java').read_text()
+          reset=(root/'ResetDomains.java').read_text()
+          slots=(root/'SaveSlotStore.java').read_text()
+          world=(root/'UnknownWorld.java').read_text()
+          gradle=Path('app/build.gradle').read_text()
+          assert 'public static float[] spectral8(' in mind
+          assert 'navigation.energyOutcome(actualEnergyDelta,' in mind
+          assert 'navigation.bias(a,senses[0])' in mind
+          assert 'navigation.chosen(chosen,observedBody)' in mind
+          assert 'navigation.consequence(trialAction,body,learning&&!holdout,holdout)' in mind
+          assert 'navigation.sense(body,room,objects)' in mind or 'navigation.sense(b,room,objects)' in mind
+          assert 'actualEnergySinceChoice+=actualEnergyDelta;' in mind
+          assert 'lastReward=energyOutcome+' in mind
+          assert '.24f*realForward' not in mind
+          assert 'chosenObject=null;' in game
+          assert 'navigation.restore(prefs.getString(InstrumentalNavigation.KEY,""))' in game
+          assert '.putString(InstrumentalNavigation.KEY,navigation.encode())' in game
+          assert 'sensorMind.attachNavigation(navigation)' in game
+          assert 'sensorMind.updateNavigationSense(creature,chamber,environment)' in game
+          assert 'sensorMind.contactOutcome(reserve-before,object.signature)' in game
+          assert 'sensorMind.contactOutcome(reserve-prior,chamber.food.signature)' in game
+          assert 'float[] sample=SensorimotorMind.Senses.spectral8(' in nav
+          assert 'if(effects[signal]==0' in nav
+          assert 'trials[action]<3' in nav and 'holdouts[action]<2' in nav
+          assert 'float projection=(float)(dx*Math.cos(angle)+dy*Math.sin(angle))' in nav
+          assert 'return clamp(1.85f*score/' in nav
+          assert 'UnknownWorld.Entity' not in nav.split('public static void main(')[0] or 'java.util.ArrayList<UnknownWorld.Entity>' in nav
+          assert 'case NAVIGATION:return new String[]{InstrumentalNavigation.KEY};' in reset
+          assert 'ResetDomains.NAVIGATION' in ui
+          assert 'navigation.parameterCount()' in brain
+          assert 'SaveProfileCodec.encode(capture())' in slots and 'SLOTS=12' in slots
+          for key in ['CausalExperiments.KEY','SpatialPerception.KEY','BodyProprioception.KEY']:
+            assert '.putString('+key+',' in game
+          for key in ['"episodic_memory_v095"','"temporal_working_memory_v106"','"temporal_skills_v107"','LifeStatistics.KEY']:
+            assert '.putString('+key+',' in game
+          assert "applicationId 'com.overmind.zero.ota'" in gradle
+          assert '0.11.2-ota' in gradle
+          assert 'lifeStats.tick(dt)' in game and 'for(int i=0;i<speed;i++)' in game
+          assert 'law==0' in world and 'law==1' in world
+          print('ZERO-0112 audit: raw light -> contact energy -> learned valence; real body action -> measured displacement -> instrumental choice; no walking reward, all old brains and slots preserved.')
+          PY
+      - name: Build complete Android debug APK
+        run: gradle --no-daemon assembleDebug
