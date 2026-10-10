@@ -152,6 +152,19 @@ public final class SpatialPerception {
         int n=0;for(byte v:memory.values())if(v<0)n++;return n;
     }
     public float odometryTravel(){return (float)Math.hypot(odometryX,odometryY);}
+    /** Sensor-relative odometry, NOT a privileged absolute-world location.
+     * Used for comparing occupancy evidence at the SAME observed location
+     * before/after a chosen action rather than confusing self-motion for
+     * movement of the surroundings. */
+    public float perceivedX(){return odometryX;}
+    public float perceivedY(){return odometryY;}
+    public int perceivedCellX(){return cell(odometryX);}
+    public int perceivedCellY(){return cell(odometryY);}
+    public byte observedCell(int cx,int cy){
+        Byte evidence=memory.get(key(cx,cy));
+        return evidence==null?0:evidence;
+    }
+
     /** Read-only square centered on ZERO's estimated current position.
      * 0 unseen, negative confirmed navigable sightline, positive obstacle.
      * Returns observations, NOT the actual hidden scene. */
