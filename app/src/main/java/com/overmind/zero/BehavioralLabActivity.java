@@ -75,7 +75,7 @@ public final class BehavioralLabActivity extends Activity {
             "posizione/velocita' iniziale per ciascuna.");
         paragraph(description,"Ogni prova viene ripetuta con lo STESSO cervello "+
             "iniziale: (A) navigazione disattivata solo nella scelta delle "+
-            "azioni e (B) navigazione attiva. Percezioni, fisica, memorie "+
+            "azioni (incluse intenzioni) e (B) navigazione piu' intenzioni attive. Percezioni, fisica, memorie "+
             "e apprendimento restano in entrambe.");
         paragraph(description,"Ogni prova usa il motore fisico reale del gioco "+
             "per 32 secondi simulati. I risultati riportano veri contatti, "+
@@ -83,7 +83,7 @@ public final class BehavioralLabActivity extends Activity {
             "e attraversamento. Non forniamo bersagli o traiettorie al cervello.");
         paragraph(description,"La prova usa una COPIA dello ZERO attualmente "+
             "salvato, non cancella né allena il personaggio reale. "+
-            "Se la rete di navigazione non ha ancora imparato, "+
+            "Se la navigazione e le intenzioni non hanno ancora imparato, "+
             "un pareggio e' normale e non e' una dimostrazione di successo.");
         LinearLayout controls=card(root);
         run=new Button(this);run.setText("AVVIA CONFRONTO A/B");
