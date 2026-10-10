@@ -6,6 +6,7 @@ import android.content.Context;
 import android.content.SharedPreferences;
 import android.graphics.*;
 import android.view.*;
+import org.json.JSONObject;
 import java.util.*;
 import java.util.Locale;
 
@@ -125,7 +126,7 @@ public final class GameActivity extends Activity {
             if(prefs.getBoolean(SaveSlotStore.PENDING_RELOAD,false) &&
                !prefs.edit().remove(SaveSlotStore.PENDING_RELOAD).commit())
                 throw new IllegalStateException("Unable to apply save-slot switch");
-            consumeResetRequest();
+            boolean wasReset=consumeResetRequest();
             String initial=prefs.getString("virgin","");
             virgin=decode(initial);
             if(virgin==null){virgin=MotorBrain.virgin(new Random(System.nanoTime()));}
@@ -194,7 +195,12 @@ public final class GameActivity extends Activity {
                 prefs.getFloat("record_net_v094",0),
                 prefs.getFloat("energy_spent_v094",0));
             speed=1;learning=true;simulationRunning=true;
-            resetEpisode();
+            // A fresh install/explicit reset has no saved world. Regular
+            // restarts and named slot loads rebuild exactly the stored scene.
+            if(wasReset||!restoreScene(prefs.getString("physical_scene_v100",""))){
+                resetEpisode();
+                prefs.edit().remove("physical_scene_v100").apply();
+            }
             save();
         }
         float[] decode(String s){
@@ -245,6 +251,99 @@ public final class GameActivity extends Activity {
             }
             return b.toString();
         }
+        /** Physical checkpoint for a true saved game, not merely a brain
+         * export. Named save slots copy this AFTER onPause has flushed it. */
+        void saveScene(){
+            if(creature==null||surface==null||environment==null)return;
+            try{
+                JSONObject snapshot=new JSONObject();
+                snapshot.put("v",1);
+                snapshot.put("physical",new JSONObject(
+                    GameSceneSnapshot.capture(creature,surface,environment,chamber)));
+                snapshot.put("episode",episode);
+                snapshot.put("phase",phase);
+                snapshot.put("elapsedLife",elapsedLife);
+                snapshot.put("nextChamber",nextChamber);
+                snapshot.put("clock",clock);
+                snapshot.put("worldTime",worldTime);
+                snapshot.put("lifeDistance",lifeDistance);
+                snapshot.put("travelSinceAction",travelSinceAction);
+                snapshot.put("forwardSinceAction",forwardSinceAction);
+                snapshot.put("heading",heading);
+                snapshot.put("contactsThisLife",contactsThisLife);
+                snapshot.put("scarcity",scarcity);
+                snapshot.put("journey",journey.saveLife());
+                snapshot.put("currentAction",sensorMind.action);
+                snapshot.put("liveStartX",liveStartX);
+                snapshot.put("liveStartY",liveStartY);
+                snapshot.put("liveStartEnergy",liveStartEnergy);
+                snapshot.put("liveStartContacts",liveStartContacts);
+                snapshot.put("previousGripDrive",previousGripDrive);
+                snapshot.put("previousGripHeld",previousGripHeld);
+                snapshot.put("previousOpposedFrames",previousOpposedFrames);
+                snapshot.put("chamberMessage",chamberMessage);
+                snapshot.put("lastEvent",lastEvent);
+                snapshot.put("eventTime",eventTime);
+                if(!prefs.edit().putString("physical_scene_v100",snapshot.toString()).commit())
+                    throw new IllegalStateException("Impossibile salvare la scena fisica");
+            }catch(Exception e){
+                throw new IllegalStateException("Non riesco a salvare posizione e stanza",e);
+            }
+        }
+        /** Decode temporary objects FIRST; never partially install a
+         * damaged scene or mix it with weights from another save slot. */
+        boolean restoreScene(String raw){
+            if(raw==null||raw.length()<100||raw.length()>2400000)return false;
+            try{
+                JSONObject o=new JSONObject(raw);
+                if(o.getInt("v")!=1)return false;
+                GameSceneSnapshot.Scene scene=GameSceneSnapshot.restore(
+                    o.getJSONObject("physical").toString());
+                if(scene==null)return false;
+                int savedEpisode=o.getInt("episode");
+                int action=o.getInt("currentAction");
+                float savedPhase=(float)o.getDouble("phase");
+                float savedElapsed=(float)o.getDouble("elapsedLife");
+                float savedNext=(float)o.getDouble("nextChamber");
+                if(savedEpisode<0||action<0||action>=SensorimotorMind.ACTIONS||
+                   !Float.isFinite(savedPhase)||!Float.isFinite(savedElapsed)||
+                   !Float.isFinite(savedNext)||savedPhase<0||savedPhase>14)return false;
+                // Only after the complete physical structure was verified.
+                creature=scene.body;surface=scene.skin;
+                chamber=scene.room;environment=scene.objects;
+                episode=savedEpisode;phase=savedPhase;
+                elapsedLife=savedElapsed;nextChamber=savedNext;
+                clock=(float)o.getDouble("clock");
+                worldTime=(float)o.getDouble("worldTime");
+                lifeDistance=(float)o.getDouble("lifeDistance");
+                travelSinceAction=(float)o.getDouble("travelSinceAction");
+                forwardSinceAction=(float)o.getDouble("forwardSinceAction");
+                heading=(float)o.getDouble("heading");
+                contactsThisLife=o.getInt("contactsThisLife");
+                scarcity=o.getBoolean("scarcity");
+                chamberMessage=o.getString("chamberMessage");
+                lastEvent=o.getString("lastEvent");
+                eventTime=(float)o.getDouble("eventTime");
+                liveStartX=(float)o.getDouble("liveStartX");
+                liveStartY=(float)o.getDouble("liveStartY");
+                liveStartEnergy=(float)o.getDouble("liveStartEnergy");
+                liveStartContacts=o.getInt("liveStartContacts");
+                previousGripDrive=o.getInt("previousGripDrive");
+                previousGripHeld=o.getInt("previousGripHeld");
+                previousOpposedFrames=o.getInt("previousOpposedFrames");
+                journey.loadLife(o.getString("journey"));
+                sensorMind.resetEpisode(SensorimotorMind.Senses.read(
+                    creature,surface,chamber,environment,reserve));
+                sensorMind.action=action;
+                motorGuard.resetLife(creature.cx,creature.cy);
+                lastSkillStall=motorGuard.recoveryActivations;
+                liveBody.abortTrial();
+                trailCount=0;trailClock=0;
+                // The room/current body's coordinates remain untouched.
+                return true;
+            }catch(Exception invalid){return false;}
+        }
+
         void save(){
             if(trainer==null)return;
             prefs.edit().putString("virgin",encode(virgin))
@@ -309,10 +408,11 @@ public final class GameActivity extends Activity {
             sensorMind.setLearning(true);
         }
         void suspend(){
-            // Stop the training worker while the app is backgrounded without
-            // forgetting whether learning was enabled by the player.
+            // Pause and FLUSH BOTH cognition and physical state before the
+            // named-slot screen is allowed to inspect the working profile.
             enabled=false;
             save();
+            saveScene();
             lastFrame=0;
         }
         void resetEpisode(){
@@ -716,6 +816,11 @@ public final class GameActivity extends Activity {
                     }
                 }
             }
+            // Lightweight periodic checkpoint for app/task interruptions.
+            // Normal neural saves remain more frequent than physical writes.
+            if(simulationRunning&&lastSave+12000000000L<now){
+                save();saveScene();lastSave=now;
+            }
             c.save();float scale=getWidth()/W;c.scale(scale,scale);
             renderWorld(c);
             renderBody(c);
@@ -1029,6 +1134,7 @@ public final class GameActivity extends Activity {
             if(y>=H-108){
                 if(x<126){
                     save();
+                    saveScene();
                     GameActivity.this.startActivity(new android.content.Intent(
                         GameActivity.this,SaveSlotsActivity.class));
                 }else if(x<238){
