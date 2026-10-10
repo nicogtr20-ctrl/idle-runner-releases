@@ -169,3 +169,16 @@ La compilazione Android firmata `38003676123` è verde: versionCode `1039`, SHA-
 - [ ] Verificare il ritorno alla tecnica di presa e completamento del cancello, non solo contatori.
 - [ ] Ricerca su capacità autonoma di pianificazione a più passi dal modello del mondo, separata dai dati esperienziali.
 Dettagli: `docs/EXPERIMENT_0096.md`.
+
+
+## 0.9.7 — correggere regressione di movimento da memoria
+- [x] Eliminare la sostituzione dei 62 pesi motorii con snapshot vecchi della memoria episodica, mantenendo gli attuali pesi e l'evoluzione autonoma in vita.
+- [x] Limitare il replay fisico di mano/membrana a contatti realmente rilevati, fuori da tentativi di mutazione, senza script per il cancello.
+- [x] Non abortire prove evolutive per un mero richiamo di azione; abortire soltanto quando si sono applicati davvero vecchi pesi sulla presa/membrana.
+- [x] Introduzione guard antistallo basato su spostamento netto ed effetto fisico, che permette azioni indipendenti temporanee senza direzioni programmate.
+- [x] Persistenza metriche diagnostiche antistallo e replay fisico; reset per dominio e vecchie memorie em1/em2 conservati.
+- [x] Test JVM automatici sul guard, ricordi e protezione motore; compilazione Android staging.
+- [ ] Confermare su Galaxy S21 che NETTO e VIA su tempo equivalente recuperino rispetto alla 0.9.5/0.9.6, senza regressioni nella presa.
+- [ ] Se lo stallo persiste, separare effetto dei pesi storici, della politica neurale e dei trial non-controllati con A/B a stesso stato iniziale e seed.
+- [ ] Valutare archivio delle abilità motorie con rollback misurato e comparazioni rigorose, non hardcode delle strategie.
+Protocollo nel documento `docs/EXPERIMENT_0097.md`.
