@@ -171,7 +171,10 @@ public final class OnlineBodyLearning {
                        gain>baseGain+3 ||
                        cont>baseContacts+1 ||
                        effect>basePhysicalEffect+2.0f;
-        boolean acceptedTrial=comparable&&useful&&score>baseScore+.30f;
+        // Preserve locomotor translation while other domains may optimize
+        // stationary manipulation; don't accept a motor that slows to zero.
+        boolean motorCapable=domain!=MOTOR||net>=Math.max(7f,baseNet*.80f);
+        boolean acceptedTrial=comparable&&useful&&motorCapable&&score>baseScore+.30f;
         Result result=new Result(domain,acceptedTrial,
                                  acceptedTrial?candidate:null,baseScore,score);
         lastDomain=domain;lastWasAccepted=acceptedTrial;
