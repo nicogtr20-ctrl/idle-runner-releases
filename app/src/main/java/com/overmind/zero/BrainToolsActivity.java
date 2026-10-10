@@ -26,6 +26,49 @@ public final class BrainToolsActivity extends Activity {
         prefs=getSharedPreferences("zero_motorbrain_001",MODE_PRIVATE);
         showPage();
     }
+    private static final int SAVE_GPT_REPORT=4418;
+    private java.io.File pendingReport;
+    private void prepareSnapshot(boolean toDocuments){
+        new Thread(()->{
+            try{
+                final java.io.File file=GptReport.create(this);
+                runOnUiThread(()->{
+                    if(isFinishing()||isDestroyed())return;
+                    pendingReport=file;
+                    try{
+                        if(toDocuments)startActivityForResult(
+                            GptReport.saveToDocuments(),SAVE_GPT_REPORT);
+                        else startActivity(GptReport.share(this,file));
+                    }catch(Exception error){showReportError(error);}
+                });
+            }catch(Exception error){
+                runOnUiThread(()->{
+                    if(!isFinishing()&&!isDestroyed())showReportError(error);
+                });
+            }
+        },"zero-explicit-json-export").start();
+    }
+    private void showReportError(Exception failure){
+        new AlertDialog.Builder(this).setTitle("REPORT NON DISPONIBILE")
+            .setMessage(failure.getMessage()==null?
+                "Impossibile generare il report. Nessun dato e' stato modificato."
+                :failure.getMessage()).setPositiveButton("OK",null).show();
+    }
+    @Override protected void onActivityResult(int request,int result,Intent data){
+        super.onActivityResult(request,result,data);
+        if(request!=SAVE_GPT_REPORT||result!=RESULT_OK||data==null||
+           data.getData()==null||pendingReport==null)return;
+        try(java.io.FileInputStream input=new java.io.FileInputStream(pendingReport);
+            java.io.OutputStream output=getContentResolver().openOutputStream(data.getData())){
+            if(output==null)throw new java.io.IOException("Destinazione non scrivibile");
+            byte[] chunk=new byte[16384];int read;
+            while((read=input.read(chunk))!=-1)output.write(chunk,0,read);
+            new AlertDialog.Builder(this).setTitle("REPORT SALVATO")
+                .setMessage("Allega OVERMIND-ZERO-GPT-REPORT.json a questa chat. Potro' analizzarlo e archiviarlo su GitHub nel progetto privato.")
+                .setPositiveButton("OK",null).show();
+        }catch(Exception error){showReportError(error);}
+    }
+
     int dp(float n){return (int)(n*getResources().getDisplayMetrics().density+.5f);}
     TextView label(String text,int size,int color,boolean bold){
         TextView t=new TextView(this);
@@ -74,6 +117,15 @@ public final class BrainToolsActivity extends Activity {
         LinearLayout body=vertical();pad(body,17,24);scroll.addView(body);
         TextView title=label("CERVELLO / ANALISI",25,WHITE,true);body.addView(title);
         paragraph(body,"Monitoraggio reale • apprendimento automatico sempre attivo");
+        LinearLayout sharing=panel(body);
+        sharing.addView(label("CONDIVIDI DATI CON GPT  ↗",18,CYAN,true));
+        paragraph(sharing,"Genera una copia JSON del cervello salvato: parametri, statistiche delle vite, modelli, memoria, motori, manipolazione, navigazione e ultimo laboratorio. Altri slot esclusi.");
+        paragraph(sharing,"Seleziona ChatGPT nel menu Android per inviare il report. Niente viene caricato su server senza la tua scelta.");
+        sharing.setOnClickListener(v->prepareSnapshot(false));
+        LinearLayout fileAction=panel(body);
+        fileAction.addView(label("SALVA REPORT JSON  ›",15,CYAN,true));
+        paragraph(fileAction,"Alternativa se ChatGPT non appare fra le app: salva il file e allegalo direttamente a questa chat.");
+        fileAction.setOnClickListener(v->prepareSnapshot(true));
         LinearLayout openLab=panel(body);
         openLab.addView(label("LABORATORIO COMPORTAMENTALE  ›",17,CYAN,true));
         paragraph(openLab,"Tre ambienti fisici ripetibili: energia, pericolo, cancello. Confronta lo stesso cervello con e senza influenza della navigazione, senza modificare le partite.");
