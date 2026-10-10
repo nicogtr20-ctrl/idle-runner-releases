@@ -107,6 +107,29 @@ public final class InstrumentalNavigation {
         completed++;
         pending=-1;
     }
+    /** True signed risk of this action's actually LEARNED displacement:
+     * positive means closer to frequencies previously proven harmful,
+     * negative means farther. No object positions or colour rules. */
+    public float learnedHarmExposure(int action){
+        if(action<0||action>=ACTIONS||trials[action]<3||
+           holdouts[action]<2||testError[action]>=zeroError[action]*.99f||
+           zeroError[action]<2f)return 0;
+        float dx=motorDx[action],dy=motorDy[action],sum=0,weight=0;
+        if(!Float.isFinite(dx)||!Float.isFinite(dy))return 0;
+        for(int signal=0;signal<SIGNALS;signal++){
+            if(effects[signal]<1||valence[signal]>-.12f)continue;
+            for(int sector=0;sector<SECTORS;sector++){
+                float seen=visual[signal*SECTORS+sector];
+                if(seen<.08f)continue;
+                double angle=sector*2*Math.PI/SECTORS;
+                float projection=(float)(dx*Math.cos(angle)+dy*Math.sin(angle));
+                float brightness=seen*seen*(-valence[signal]);
+                sum+=brightness*clamp(projection/42f,-1f,1f);
+                weight+=brightness;
+            }
+        }
+        return weight<.015f?0:clamp(sum/(.35f+weight),-1,1);
+    }
     /** Value comes from EXPECTED access to a valuable visible signal;
      * not a payoff on travel length, spinning, raw changed pixels or
      * the act of selecting a heading. No learned values -> exact zero. */
