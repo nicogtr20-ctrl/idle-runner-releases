@@ -50,3 +50,6 @@ Il report del laboratorio mostra per ogni prova CANCELLO le metriche fisiche con
 5. Distinguere limiti fisici del gate (presa bilaterale) dalla capacità cognitiva di scegliere una manovra; non presumere che un generico incentivo a movimento generi la risorsa.
 
 Repo privato `nicogtr20-ctrl/idle-runner-releases`. Codice Android `feature/overmind-inapp-updater` (stable); staging `feature/overmind-v114-continuity-gate-diagnostics`; GitHub APK+manifest/docs su `main`. Prima di lavorare ancora leggere `AGENTS.md`, `OVERMIND_START_HERE.md`, `docs/HANDOFF.md`, `docs/EXPERIMENT_0112.md`, `docs/EXPERIMENT_0113.md` e questo rapporto. **Un aggiornamento Vercel non è completato fino a HTTP200 reale dei due endpoint.**
+
+## Aggiornamento finale: OTA produzione disponibile
+Dopo il primo fallimento 404 sul nuovo APK pubblico, il deploy Vercel è stato aggiornato manualmente a `dpl_4KmbNc3nikDq5EPd2i8v2JMTqBM7` (READY, HEAD main `725d1920505c3c004280f0f8d6b5950fd1474566`). Gli URL `/latest.json` e `/apk/overmind-zero-1064-255727583121.apk` hanno risposto entrambi **HTTP200** sul dominio ufficiale; manifest versione1064 con SHA atteso, APK 190132 byte e MIME Android. Si può usare il pulsante AGGIORNA; resta da verificare la prova reale su Galaxy S21. Non cancellare dati o disinstallare.
