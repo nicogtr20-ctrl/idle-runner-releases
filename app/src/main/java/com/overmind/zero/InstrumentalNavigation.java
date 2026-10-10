@@ -220,7 +220,7 @@ public final class InstrumentalNavigation {
         float x=b.cx,y=b.cy;
         for(int action=0;action<8;action++){
             float angle=(float)(action*Math.PI/4);
-            for(int j=0;j<10;j++){
+            for(int j=0;j<64;j++){
                 b.cx=x;b.cy=y;
                 n.sense(b,null,world);n.chosen(action,b);
                 b.cx+=Math.cos(angle)*30;b.cy+=Math.sin(angle)*30;
