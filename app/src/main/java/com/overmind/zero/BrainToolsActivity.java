@@ -90,7 +90,14 @@ public final class BrainToolsActivity extends Activity {
                 "Il modello non supera ancora il riferimento sui campioni esclusi.";
             paragraph(evidence,result);
         }
-        paragraph(evidence,"Ogni quinta esperienza, a partire da questo aggiornamento, viene misurata e NON usata per correggere i pesi. Il riferimento suppone che i sensori restino invariati. È un test di previsione, non la prova che sappia risolvere la stanza.");
+        paragraph(evidence,"Ogni quinta esperienza viene valutata fuori addestramento. Dalla 0.10.2 ZERO usa previsioni di sequenze fino a 3 azioni SOLO quando l'errore su campioni esclusi supera quello di un modello che prevede nessun cambiamento.");
+        LearnedSequencePlanner plans=new LearnedSequencePlanner();
+        plans.restore(prefs.getString("learned_planner_stats_v102",""));
+        line(evidence,"Valutazioni di sequenze previste",String.valueOf(plans.attempts),WHITE);
+        line(evidence,"Previsioni attendibili utilizzate",String.valueOf(plans.enabled),CYAN);
+        line(evidence,"Previsioni rifiutate per incertezza",String.valueOf(plans.abstained),AMBER);
+        line(evidence,"Scelte influenzate da previsioni apprese",String.valueOf(plans.changed),WHITE);
+        paragraph(evidence,"Le previsioni sono ipotesi del modello sui propri sensori, non eventi fisici e non prove di causa-effetto. La pianificazione non impone direzioni, obiettivi o la manovra per aprire il cancello. Un modello poco affidabile viene ignorato.");
         LinearLayout graph=panel(body);
         graph.addView(label("EVOLUZIONE ERRORE DI PREVISIONE",15,CYAN,true));
         if(d.points()>0){
