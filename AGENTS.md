@@ -1,6 +1,11 @@
 # Istruzioni permanenti agli assistenti che lavorano su questo repository
 
 
+## Handoff 0.10.9: genuine body proprioception
+Read `docs/EXPERIMENT_0109.md` first. Android code branch `feature/overmind-inapp-updater`, stage `feature/overmind-v109-body-proprioception`. The 96-point physical membrane now exposes passive disk contact pressure `touchPulse`, sampled in an 8-sector, 4-channel-per-sector `BodyProprioception` (32 real sensed features) plus 3088 learnable physical predictor/value weights. Policy bias is identically 0 until >=30 held-out transitions and better-than-no-change prediction by >=4%; then bounded to ±0.23. This is sensory learning, NOT a programmed gate action or self-consciousness. Existing `SensorimotorMind.S=26`, sensor/temporal/episodic controllers, 12 named save slots, physical body, signature and OTA are unchanged. New key `body_proprioception_v109` is saved AND restored in GameActivity and scoped to each named ZERO, with independent reset. All QA `38069416680` and signed OTA `38069513724` success, release `0.10.9-ota.58` v1058 SHA `9bad1270ef3dae172858d55a1f90e3d92cc44c89e1559c9b18ce508f94b933e5`. Vercel needed manual deployment `dpl_CHFimoyKSiLUR7mAn587GexvZypS` and is now production READY; public manifest and APK both HTTP200. S21 observed efficacy and updater click not yet proven; do not uninstall/reset.
+
+
+
 ## OVERMIND 0.10.8 critical note
 Read docs/EXPERIMENT_0108.md. Source audit found GameActivity.load() restored temporal_working_memory_v106 and temporal_skills_v107 but GameActivity.save() never wrote them. Version 0.10.8-ota.57 fixes by serializing workingMemory.encode() and temporalSkillBank.encode() in the same existing SharedPreferences editor as all legacy brains and life statistics. CI now runs TemporalPersistenceRegression and rejects signed releases without actual load+save callsites. Staging 38067546249/38067671221 pass, stable run 38067752564 success; Vercel 1057 HTTP200 and matching APK 150816 bytes. 0.10.5 stats, 0.10.6 temporal context and 0.10.7 skill chunks remain intact and are coherent but behavioral benefit on S21 unverified. No reset, no changed package, signing, 12 slots or old episodic memories; unpersisted old temporal progress cannot be reconstructed.
 
