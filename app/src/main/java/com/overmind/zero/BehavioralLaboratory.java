@@ -65,11 +65,12 @@ public final class BehavioralLaboratory {
             return String.format(Locale.US,
                 "%s #%d %s: +%.1f / -%.1f energia, tocchi +%d -%d, "+
                 "vicinanza min %.1f, tempo contatto %s, "+
-                "cancello %.1f U, passaggi %d, decisioni %d, nav %d",
+                "cancello %.1f U, passaggi %d, decisioni %d, nav %d, intenzioni %d/%d",
                 NAMES[scenario],seed,instrumental?"ATTIVA":"CONTROLLO",
                 gain,damage,energeticContacts,damagingContacts,bestDistance,
                 Float.isNaN(firstContact)?"mai":String.format(Locale.US,"%.1f s",firstContact),
-                gateTravel,gatePassages,actualDecisions,learnedNavigationChoices)+
+                gateTravel,gatePassages,actualDecisions,learnedNavigationChoices,
+                confirmedIntentions,continuedIntentions)+
                 (scenario==GATE?String.format(Locale.US,
                 "\\n      fisica: vicino %d frame, nucleo %d, membrana %d, adesione %d, comandi %d, presa %d, bilaterale %d, varco %d, porta più vicina %.1f U; stato: %s",
                 gateDiagnostics.nearbyFrames,gateDiagnostics.coreTouchFrames,
@@ -89,7 +90,7 @@ public final class BehavioralLaboratory {
                 "LABORATORIO ZERO — A/B FISICO, SENZA SCRIPT\n"+
                 "Tre scenari, tre varianti ciascuno, 32 secondi SIMULATI per prova.\n"+
                 "Stesso cervello iniziale e stessa scena per ogni coppia; "+
-                "varia solo l'influenza della navigazione strumentale.\n"+
+                "variano solo i consigli della navigazione e la continuita' delle intenzioni.\n"+
                 "Le coordinate degli oggetti sono usate SOLO per misurare i risultati.\n\n");
             for(int s=0;s<CASES;s++){
                 b.append(NAMES[s]).append("\n");
@@ -132,7 +133,7 @@ public final class BehavioralLaboratory {
                     b.append("DIAGNOSI CANCELLO: le coordinate della risorsa NON dicono se ZERO si è avvicinato alla porta. Sotto: distanza reale dalla porta, contatto fisico, adesione comandata, grip della membrana e presa opposta. Nessun numero viene usato dalla sua policy.\\n");
                 }
                 b.append(String.format(Locale.US,
-                    "Scelte influenzate (ATTIVA / CONTROLLO): %.1f / %.1f; "+
+                    "Scelte navigazione influenzate (ATTIVA / CONTROLLO): %.1f / %.1f; "+
                     "decisioni attive %.1f per prova.\n",
                     sums[8]/valid,sums[9]/valid,sums[7]/valid));
                 if(sums[8]<1)b.append(
