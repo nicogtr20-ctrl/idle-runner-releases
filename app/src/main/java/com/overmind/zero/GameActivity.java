@@ -37,6 +37,9 @@ public final class GameActivity extends Activity {
         MotionExploration journey=new MotionExploration();
         EpisodicMemory episodic=new EpisodicMemory();
         MotorAutonomyGuard motorGuard=new MotorAutonomyGuard();
+        MotorSkillBank skillBank=new MotorSkillBank();
+        SensoryValenceGuide sensoryGuide=new SensoryValenceGuide();
+        int lastSkillStall=0;
         float environmentEffectSinceAction=0,eventEnergyDeltaSinceAction=0;
         boolean recalledManipulationInAction=false;
         int recalledManipulationEvents=0;
@@ -139,6 +142,9 @@ public final class GameActivity extends Activity {
             biggestDisplacement=prefs.getFloat("max_displacement_v041",0);
             mind=new UnknownWorld.Mind();
             mind.deserialize(prefs.getString("world_knowledge_v03",""));
+            sensoryGuide=new SensoryValenceGuide();
+            sensoryGuide.restoreCounts(prefs.getInt("visual_guided_v098",0),
+                prefs.getInt("visual_avoided_v098",0));
             decisionBrain=new DecisionBrain(90517L);
             decisionBrain.restore(prefs.getString("decision_brain_v05",""));
             sensorMind=new SensorimotorMind();
@@ -152,6 +158,10 @@ public final class GameActivity extends Activity {
             motorGuard.restoreCounts(prefs.getInt("motor_recoveries_v097",0),
                 prefs.getInt("motor_free_choices_v097",0));
             sensorMind.attachMotorGuard(motorGuard);
+            sensorMind.attachSensoryValues(sensoryGuide,mind);
+            skillBank=new MotorSkillBank();
+            skillBank.restore(prefs.getString("motor_skills_v098",""));
+            lastSkillStall=motorGuard.recoveryActivations;
             recalledManipulationEvents=prefs.getInt("physical_replays_v097",0);
             reserve=prefs.getFloat("zero_energy_v03",57f);
             totalTravel=prefs.getFloat("lived_distance_total_v093",0);
@@ -228,6 +238,9 @@ public final class GameActivity extends Activity {
             if(trainer==null)return;
             prefs.edit().putString("virgin",encode(virgin))
               .putString("best",encode(trainer.best))
+              .putString("motor_skills_v098",skillBank.encode())
+              .putInt("visual_guided_v098",sensoryGuide.guidedChoices)
+              .putInt("visual_avoided_v098",sensoryGuide.avoidanceChoices)
               .putInt("attempts",trainer.attempts)
               .putInt("accepted",trainer.accepted)
               .putFloat("original",trainer.initialFitness)
@@ -298,6 +311,7 @@ public final class GameActivity extends Activity {
             liveBody.abortTrial();
             creature.reset();surface.reset(creature);
             motorGuard.resetLife(creature.cx,creature.cy);
+            lastSkillStall=motorGuard.recoveryActivations;
             journey.newLife(creature.cx,creature.cy);
             episode++;phase=0;trailCount=0;clock=0;
             chamber=null;
@@ -536,6 +550,23 @@ public final class GameActivity extends Activity {
                         float newlyMeasuredEffect=Math.max(0,
                             environmentEffectSinceAction-worldEffectAtFrameStart);
                         motorGuard.observe(slice,creature.cx,creature.cy,newlyMeasuredEffect);
+                        // If the learned policy/curriculum is stuck, an old
+                        // physically proven motor can be recovered from the
+                        // archive. No destination, force or gait is prescribed.
+                        if(motorGuard.recoveryActivations>lastSkillStall){
+                            skillBank.stallEvent();
+                            lastSkillStall=motorGuard.recoveryActivations;
+                            if(!liveBody.testingCandidate()){
+                                float[] alternate=skillBank.retrieve(trainer.best);
+                                if(alternate!=null){
+                                    trainer.best=alternate;
+                                    liveBody.abortTrial();
+                                    lastEvent="ABILITA MOTORIA RECUPERATA";
+                                    eventTime=3;
+                                    save();
+                                }
+                            }
+                        }
                     }
                     if(chamber!=null&&!chamber.reachedEnergy&&
                         chamber.foodTouchedByCore(creature)){
@@ -602,8 +633,19 @@ public final class GameActivity extends Activity {
                         recalledManipulationInAction=false;
                         liveStartEnergy=reserve;liveStartContacts=physicalContacts;
                         if(result!=null){
-                            if(result.domain==0){trainer.attempts++;if(result.accepted){
-                                trainer.best=result.weights;trainer.accepted++;}}
+                            if(result.domain==0){
+                                trainer.attempts++;
+                                // Both controllers were exercised physically.
+                                // Archive the incumbent BEFORE replacing it.
+                                skillBank.observe(trainer.best,liveBody.lastBaselineNet,
+                                    liveBody.lastBaselineScore);
+                                if(result.accepted){
+                                    skillBank.observe(result.weights,liveBody.lastCandidateNet,
+                                        liveBody.lastCandidateScore);
+                                    trainer.best=result.weights;
+                                    trainer.accepted++;
+                                }
+                            }
                             else if(result.domain==1){handTrainer.attempts++;if(result.accepted){
                                 handTrainer.best=result.weights;handTrainer.accepted++;}}
                             else {shapeTrainer.attempts++;
@@ -822,7 +864,7 @@ public final class GameActivity extends Activity {
             rounded(c,12,12,468,145,0xeb0a1420,20);
             rounded(c,27,28,31,55,TEAL,2);
             text(c,"O V E R M I N D",43,39,14,TEAL,false);
-            text(c,"ZERO / ESPERIMENTO 009.7",26,72,21,0xffe9faf6,false);
+            text(c,"ZERO / ESPERIMENTO 009.8",26,72,21,0xffe9faf6,false);
             rounded(c,339,104,459,138,0xff20444a,11);
             text(c,"AGGIORNA",399,127,12,TEAL,true);
             rounded(c,217,104,333,138,0xff283b58,11);
@@ -862,7 +904,7 @@ public final class GameActivity extends Activity {
                     +"  •  PREVISIONE "+format(decisionBrain.lastPrediction),
                     25,398,10,0xffaac3cb,false);
             }
-            text(c,"ZONE "+journey.lifeCells+" • RECUPERI "+motorGuard.recoveryActivations+
+            text(c,"ZONE "+journey.lifeCells+" • ABILITA "+skillBank.count()+
                 " • RICORDI "+episodic.stored()+
                 " (+"+episodic.positiveCount()+"/-"+episodic.negativeCount()+")"
                 +" • RICHIAMI "+episodic.replayed+
