@@ -323,3 +323,8 @@ Per prove e prossimi step: `docs/EXPERIMENT_0096.md`. VersionCode e digest relea
 - OTA reliability: UpdateClient fetches both Vercel latest.json and main raw GitHub manifest, selects highest valid versionCode, securely follows pinned allowlisted HTTPS 301/302/303/307/308 max6 and verifies SHA256+size before invoking Android installer; GitHub Releases asset as fallback when Vercel is stale/unavailable.
 - Publisher action directly creates GitHub signed APK Release **before** updating public OTA manifest. Build `0.10.2-ota.50` vCode 1050 sha `fc3dd7f8f754a7e7e530d64ba63b6d82ba1a24f19bfcea9fb17aa5a0f11d497d` validated in both manifest and Release.
 - Vercel production not yet redeployed: 100 deployment/day free quota exhausted via preview ERROR on feature branches without updater root. Vercel project root/output corrected and previews disabled; new user app may require one manual upgrade while production blocked. No S21 confirmation yet; see `docs/EXPERIMENT_0102.md`.
+
+## OTA 0.10.3-ota.51 — 2026-10-10T13:29:48.385850+00:00
+- Pacchetto Android firmato pubblicato su Vercel (codice 1051).
+- SHA-256: `3bcf4c2674c73a7de134158fea3064e5b31b953d899ba96af4344f2b6fb8a522`.
+- APK: `/apk/overmind-zero-1051-3bcf4c2674c7.apk`.
