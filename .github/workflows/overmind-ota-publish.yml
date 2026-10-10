@@ -26,7 +26,7 @@ jobs:
       - name: Unit tests
         run: |
           mkdir -p /tmp/overmind
-          javac -d /tmp/overmind app/src/main/java/com/overmind/zero/MotorBrain.java app/src/main/java/com/overmind/zero/UnknownWorld.java app/src/main/java/com/overmind/zero/ContactLearning.java app/src/main/java/com/overmind/zero/DecisionBrain.java app/src/main/java/com/overmind/zero/Morphology.java app/src/main/java/com/overmind/zero/ScarcityLab.java app/src/main/java/com/overmind/zero/SensorimotorMind.java app/src/main/java/com/overmind/zero/LearningDiagnostics.java app/src/main/java/com/overmind/zero/ResetDomains.java app/src/main/java/com/overmind/zero/OnlineBodyLearning.java app/src/main/java/com/overmind/zero/MotionExploration.java app/src/main/java/com/overmind/zero/EpisodicMemory.java app/src/main/java/com/overmind/zero/MotorAutonomyGuard.java
+          javac -d /tmp/overmind app/src/main/java/com/overmind/zero/MotorBrain.java app/src/main/java/com/overmind/zero/UnknownWorld.java app/src/main/java/com/overmind/zero/ContactLearning.java app/src/main/java/com/overmind/zero/DecisionBrain.java app/src/main/java/com/overmind/zero/Morphology.java app/src/main/java/com/overmind/zero/ScarcityLab.java app/src/main/java/com/overmind/zero/SensorimotorMind.java app/src/main/java/com/overmind/zero/LearningDiagnostics.java app/src/main/java/com/overmind/zero/ResetDomains.java app/src/main/java/com/overmind/zero/OnlineBodyLearning.java app/src/main/java/com/overmind/zero/MotionExploration.java app/src/main/java/com/overmind/zero/EpisodicMemory.java app/src/main/java/com/overmind/zero/MotorAutonomyGuard.java app/src/main/java/com/overmind/zero/MotorSkillBank.java app/src/main/java/com/overmind/zero/SensoryValenceGuide.java
           java -cp /tmp/overmind com.overmind.zero.MotorBrain
           java -cp /tmp/overmind com.overmind.zero.UnknownWorld
           java -cp /tmp/overmind com.overmind.zero.ContactLearning
@@ -40,6 +40,8 @@ jobs:
           java -cp /tmp/overmind com.overmind.zero.MotionExploration
           java -cp /tmp/overmind com.overmind.zero.EpisodicMemory
           java -cp /tmp/overmind com.overmind.zero.MotorAutonomyGuard
+          java -cp /tmp/overmind com.overmind.zero.MotorSkillBank
+          java -cp /tmp/overmind com.overmind.zero.SensoryValenceGuide
           # v0.6 includes v0.5 -> v0.6 weight migration and expansion invariants.
       - name: Confirm trained selection replaced scripted selector
         run: |
@@ -234,6 +236,28 @@ jobs:
           assert 'putString("best",encode(trainer.best))' in g
           assert 'putString("morph_brain_v07",encode(shapeTrainer.best))' in g
           print('Signed 0.9.7 motor stability, tactile-only recall, and preserved historic brains verified')
+          PY
+      - name: Verify recovery and learned visual effects without scripted targets
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          game=Path('app/src/main/java/com/overmind/zero/GameActivity.java').read_text()
+          policy=Path('app/src/main/java/com/overmind/zero/SensorimotorMind.java').read_text()
+          trial=Path('app/src/main/java/com/overmind/zero/OnlineBodyLearning.java').read_text()
+          visual=Path('app/src/main/java/com/overmind/zero/SensoryValenceGuide.java').read_text()
+          assert 'skillBank.retrieve(trainer.best)' in game
+          assert 'trainer.best=alternate;' in game
+          assert 'skillBank.observe(trainer.best,liveBody.lastBaselineNet' in game
+          assert 'skillBank.observe(result.weights,liveBody.lastCandidateNet' in game
+          assert 'lastAppliedMotor=liveBody.weights(0,trainer.best);' in game
+          assert 'sensoryGuide.bias(senses,a,observedWorld.estimated,observedWorld.contacts)' in policy
+          assert 'observedCount[signature]<1' in visual
+          assert 'senses[14+signature*4+sector]' in visual
+          assert 'motorCapable=domain!=MOTOR' in trial
+          assert 'motor_skills_v098' in game and 'episodic_memory_v095' in game
+          assert 'Math.atan2(chosenObject.y' not in game
+          assert 'mind.choose(environment' not in game
+          print('ZERO 0.9.8 observed motor recovery, learned cue value and preserved autonomy pass')
           PY
       - name: Assemble stable signed APK
         if: env.signing_ready == 'true'
