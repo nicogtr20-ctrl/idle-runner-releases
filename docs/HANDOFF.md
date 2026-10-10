@@ -231,4 +231,6 @@ Passi futuri: comparatore veri stati identici (random seed), visione di moviment
 - Persistenza `temporal_skills_v107`; reset dedicato `ResetDomains.TEMPORAL_SKILLS`. Gli slot nominati catturano automaticamente la nuova chiave.
 - UI: CERVELLO mostra consolidate/candidate/max lunghezza/replay riusciti; ANALISI mostra conferme, suggerimenti, attivazioni, successi, fallimenti e interruzioni.
 - Test funzionale `TemporalSkillBank.main`: scoperta ripetuta, richiamo step-by-step, conferma con effetto reale, abort su contesto divergente, nessuna skill positiva da danno, serializzazione e sopravvivenza alla morte.
-- Staging run **38065646624** interamente verde. Publisher stable aggiornato in questo branch; non dichiarare OTA finché stable non è pubblicato e verificato.
+- Staging run **38065646624** interamente verde.
+- **RELEASE FIRMATA E OTA VERIFICATA:** publisher **38066032322** verde; `0.10.7-ota.56`, versionCode **1056**, SHA-256 `a433978f842054c71c2744075f3c5a0105a4bad2f825b7ba7d6a7d1629e2030e`, **149.392 byte**. Manifest e APK Vercel HTTP 200; GitHub Release `overmind-zero-v0.10.7-ota.56`.
+- Test S21 pendente: aggiornare in-place e lasciare ZERO vivere. Le skill possono restare a 0 finché la memoria temporale non supera il proprio gate held-out; non azzerare per provarle.
