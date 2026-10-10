@@ -196,3 +196,11 @@ Per prove e prossimi step: `docs/EXPERIMENT_0096.md`. VersionCode e digest relea
 - Asset sorgente `updater/public/apk/overmind-zero-1040-0e1c4dfbcd4f.apk`, manifest `updater/public/latest.json`; GitHub Release privata con tag `overmind-zero-v0.9.6-ota.40` dopo verifica dell'azione fallback.
 - Conserva firma, package e SharedPreferences da 0.9.5 e precedenti. **Non disinstallare, non azzerare**. La nuova memoria utilizza `em2` e recupera `em1`.
 - **Ancora da dimostrare su Samsung S21:** preferenza effettiva per punti energetici, evitamento di quelli dannosi, apprendimento e recupero di prese utili dopo la morte e attraversamento del cancello. I test CI NON dimostrano tutto ciò.
+
+
+## 0.9.7 — stabilità locomotoria dopo introduzione dei ricordi (10 ottobre 2026)
+- Corretto conflitto architetturale: il motore appreso ora prevale sempre sugli snapshot episodici, che rimangono richiamabili per mano e membrana solo durante contatto tattile e lontano da mutation-trial.
+- Corretto starvation: il solo richiamo di un'azione non interrompe più `OnlineBodyLearning`; un'esperienza con **reale** replay tattile interrompe invece il test contaminato.
+- Nuovo `MotorAutonomyGuard`: osserva immobilità netta su due finestre di 7 secondi ed eventuale spostamento utile di oggetti, sopprime temporaneamente i soli suggerimenti positivi in caso di vero stallo, senza direzione predefinita.
+- ANALISI e salvataggi: recuperi `motor_recoveries_v097`, decisioni libere `motor_free_choices_v097`, riprove `physical_replays_v097`, reset selettivi senza alterare il formato em1/em2.
+- Test JVM/Android staging eseguiti; il miglioramento reale sul Galaxy S21 resta da convalidare. Dettaglio `docs/EXPERIMENT_0097.md`.
