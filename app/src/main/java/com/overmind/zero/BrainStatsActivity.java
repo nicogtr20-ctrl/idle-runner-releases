@@ -38,6 +38,7 @@ public final class BrainStatsActivity extends Activity {
         final TemporalWorkingMemory temporal;
         final TemporalSkillBank temporalSkills;
         final BodyProprioception bodyMap;
+        final SpatialPerception spatial;
         final int motorAttempts,motorAccepted,handAttempts,handAccepted;
         final int pushed,collisions,contacts;
         final int exploredCells,motorAccepted094,motorRejected094;
@@ -75,6 +76,8 @@ public final class BrainStatsActivity extends Activity {
             temporalSkills.restore(pref.getString("temporal_skills_v107",""));
             bodyMap=new BodyProprioception();
             bodyMap.restore(pref.getString(BodyProprioception.KEY,""));
+            spatial=new SpatialPerception();
+            spatial.restore(pref.getString(SpatialPerception.KEY,""));
             decisions=new DecisionBrain(90517L);
             decisions.restore(pref.getString("decision_brain_v05",""));
             choiceStart=decisions.initialSnapshot();
@@ -202,7 +205,7 @@ public final class BrainStatsActivity extends Activity {
         void drawSkills(Canvas c){
             float y=177;
             int total=movementNow.length+handNow.length+choiceNow.length+shapeNow.length+
-                worldMind.parameterCount()+temporal.parameterCount()+bodyMap.parameterCount();
+                worldMind.parameterCount()+temporal.parameterCount()+bodyMap.parameterCount()+spatial.parameterCount();
             int original=movementStart.length+handStart.length+DecisionBrain.PARAMS;
             y=hero(c,"POTENZA NEURALE / PARAMETRI",String.valueOf(total),
                 original+" PARAMETRI STORICI  •  "+(total-original)+
@@ -224,6 +227,11 @@ public final class BrainStatsActivity extends Activity {
                 " settori  •  confidenza "+
                 String.format(Locale.US,"%.0f%%",bodyMap.confidence()*100f),
                 Math.min(1f,bodyMap.validations/100f),cyan);
+            y=skill(c,y,"PERCEZIONE DELLO SPAZIO",
+                spatial.parameterCount()+" pesi",
+                spatial.transitions+" azioni osservate  •  "+SpatialPerception.RAYS+
+                " direzioni  •  mappa "+spatial.mappedCells()+" celle",
+                Math.min(1f,spatial.validations/100f),purple);
             y=skill(c,y,"ABILITA TEMPORALI AUTONOME",
                 temporalSkills.consolidated()+" consolidate",
                 temporalSkills.stored()+" candidate  •  max "+temporalSkills.longest()+
