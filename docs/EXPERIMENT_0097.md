@@ -1,6 +1,6 @@
 # OVERMIND ZERO — Esperimento 0097: preservare la locomozione acquisita
 
-**Data:** 10 ottobre 2026. **Problema reale segnalato dal test sul Galaxy S21:** nella v0.9.4 ZERO viaggiava piuttosto rapidamente, mentre dalla 0.9.5 l'utente lo osserva spesso quasi fermo o muoversi molto più lentamente. La v0.9.6 conserva l'architettura sospetta. Non è stato dimostrato se la causa sia *soltanto* la memoria o anche l'evoluzione dei pesi/politica: non attribuire intenzioni o competenze sulla base di telemetria non confrontata.
+**Data:** 10 ottobre 2026. **APK firmata:** 0.9.7-ota.41, versionCode 1041. **Problema reale segnalato dal test sul Galaxy S21:** nella v0.9.4 ZERO viaggiava piuttosto rapidamente, mentre dalla 0.9.5 l'utente lo osserva spesso quasi fermo o muoversi molto più lentamente. La v0.9.6 conserva l'architettura sospetta. Non è stato dimostrato se la causa sia *soltanto* la memoria o anche l'evoluzione dei pesi/politica: non attribuire intenzioni o competenze sulla base di telemetria non confrontata.
 
 ## Diagnosi effettuata sul codice
 Nelle versioni 0.9.5/0.9.6, `GameActivity` applicava in ogni frame:
@@ -45,3 +45,9 @@ Repository: `nicogtr20-ctrl/idle-runner-releases`.
 - Leggere `OVERMIND_START_HERE.md`, `AGENTS.md`, questo documento, `docs/HANDOFF.md`, `docs/WHITEPAPER.md`, `docs/ARCHITECTURE.md`, `docs/ROADMAP.md`, `docs/CHANGELOG.md`.
 - Verificare versione e SHA della APK **soltanto** tramite `updater/public/latest.json` e un GitHub Release asset esistente. Installare in place con la stessa firma e package `com.overmind.zero.ota`.
 - Obiettivo prossimo dopo test S21: A/B motorio su stati di mondo identici e seed condivisi, rollback di controllori sotto-effettivi senza cancellazione indebita, modello causa-effetto multistep su esperienze **reali**.
+
+
+### RILASCIO OTA 0.9.7-ota.41 — 10 ottobre 2026 (verificato)
+- **GitHub Actions firmata 38007333273 = SUCCESS**, JVM/staging 38007100048 e 38007156421 = SUCCESS. Package `com.overmind.zero.ota`, **versionCode 1041**, peso **96.936 byte**, checksum SHA-256 `4de8ef5a9f22dd6e4caf503fc7543410a5e829cab5beb1e9b0a0bcdea3a9bf1d`.
+- APK verificata nel repository `updater/public/apk/overmind-zero-1041-4de8ef5a9f22.apk`; manifest `updater/public/latest.json` (GitHub) contiene esattamente SHA, versionCode, versione e dimensioni. GitHub Release fallback `overmind-zero-v0.9.7-ota.41` dopo trigger apposito.
+- **Nessun test di comportamento su Galaxy S21 della v0.9.7 ancora effettuato**. I pesi e le memorie esistenti restano installabili in place, ma recupero della velocità prima vista con 0.9.4 deve essere verificato, non garantito.
