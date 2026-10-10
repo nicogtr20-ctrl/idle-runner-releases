@@ -74,6 +74,13 @@ public final class BrainToolsActivity extends Activity {
         LinearLayout body=vertical();pad(body,17,24);scroll.addView(body);
         TextView title=label("CERVELLO / ANALISI",25,WHITE,true);body.addView(title);
         paragraph(body,"Monitoraggio reale • apprendimento automatico sempre attivo");
+        LinearLayout sharePanel=panel(body);
+        sharePanel.addView(label("CONDIVIDI DATI CON GPT  ↗",17,CYAN,true));
+        paragraph(sharePanel,"Carica i modelli appresi, le statistiche delle vite "+
+            "e il laboratorio del SOLO ZERO attuale sul repository GitHub "+
+            "privato. Nessuna modifica al cervello e nessun upload automatico.");
+        sharePanel.setOnClickListener(v->
+            startActivity(new Intent(this,TelemetryActivity.class)));
         LinearLayout openLab=panel(body);
         openLab.addView(label("LABORATORIO COMPORTAMENTALE  ›",17,CYAN,true));
         paragraph(openLab,"Tre ambienti fisici ripetibili: energia, pericolo, cancello. Confronta lo stesso cervello con e senza influenza della navigazione, senza modificare le partite.");
