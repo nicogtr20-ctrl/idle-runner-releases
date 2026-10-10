@@ -36,12 +36,12 @@ public final class BehavioralLaboratory {
         public float[] motor=MotorBrain.virgin(new Random(918273));
         public float[] hands=ContactLearning.virgin();
         public float[] membrane=Morphology.virgin(new Random(14790));
-        public String world="",navigation="",outcome="",diagnostics="",
+        public String world="",navigation="",outcome="",diagnostics="",planning="",
             memory="",temporal="",skills="",body="",spatial="",causal="";
         public Profile copy(){
             Profile r=new Profile();
             r.motor=motor.clone();r.hands=hands.clone();r.membrane=membrane.clone();
-            r.world=world;r.navigation=navigation;r.outcome=outcome;
+            r.world=world;r.navigation=navigation;r.outcome=outcome;r.planning=planning;
             r.diagnostics=diagnostics;r.memory=memory;r.temporal=temporal;
             r.skills=skills;r.body=body;r.spatial=spatial;r.causal=causal;
             return r;
@@ -151,12 +151,20 @@ public final class BehavioralLaboratory {
         return x.gatePassages*5+x.gain/22+
             x.gateTravel/175-x.endDistance/650.0;
     }
-    private static SensorimotorMind restore(Profile p,boolean instrument){
+    private static final class Rig {
+        final SensorimotorMind brain;
+        final EpisodicMemory episodes;
+        final MotorAutonomyGuard guard;
+        Rig(SensorimotorMind mind,EpisodicMemory events,MotorAutonomyGuard protection){
+            brain=mind;episodes=events;guard=protection;
+        }
+    }
+    private static Rig restore(Profile p,boolean instrument){
         SensorimotorMind brain=new SensorimotorMind();
         brain.restore(p.world);
         brain.restoreOutcomeModel(p.outcome);
         brain.diagnostics.restore(p.diagnostics);
-        brain.restorePlanningStats("");
+        brain.restorePlanningStats(p.planning);
         brain.setNavigationAdviceEnabled(instrument);
         EpisodicMemory events=new EpisodicMemory();
         events.restore(p.memory);
@@ -173,9 +181,10 @@ public final class BehavioralLaboratory {
         causal.restore(p.causal);brain.attachCausalExperiments(causal);
         InstrumentalNavigation nav=new InstrumentalNavigation();
         nav.restore(p.navigation);brain.attachNavigation(nav);
-        brain.attachMotorGuard(new MotorAutonomyGuard());
+        MotorAutonomyGuard guard=new MotorAutonomyGuard();
+        brain.attachMotorGuard(guard);
         brain.setLearning(true);
-        return brain;
+        return new Rig(brain,events,guard);
     }
 
     /** Real body/skin solver and ray observations, performed on a clone of
@@ -203,7 +212,9 @@ public final class BehavioralLaboratory {
         // Variation is in the PHYSICAL initial condition, equal for both
         // policies in a pair, never in a scripted action or target heading.
         body.cvx=(seed-19)*.11f;body.cvy=(seed==31?.8f:0f);
-        SensorimotorMind brain=restore(input,active);
+        Rig rig=restore(input,active);
+        SensorimotorMind brain=rig.brain;
+        rig.guard.resetLife(body.cx,body.cy);
         float reserve=55f;
         brain.begin(SensorimotorMind.Senses.read(body,surface,room,objects,reserve));
         brain.updateBodySense(body,surface);
@@ -213,6 +224,7 @@ public final class BehavioralLaboratory {
         UnknownWorld.Entity stimulus=caseId==GATE?room.food:objects.get(0);
         r.bestDistance=(float)Math.hypot(stimulus.x-body.cx,stimulus.y-body.cy);
         float prevX=body.cx,prevY=body.cy,effect=0f;
+        float[] energeticEffects=new float[UnknownWorld.SIGNATURES];
         boolean entered=false,opened=false;
         long initialDecisions=brain.decisions,initialChoices=brain.navigation().choicesInfluenced;
         for(int i=0;i<FRAMES;i++){
@@ -222,6 +234,7 @@ public final class BehavioralLaboratory {
             for(UnknownWorld.Entity object:objects)object.tick(DT);
             float mx=brain.motorX(),my=brain.motorY();
             float px=body.cx+mx*145f,py=body.cy+my*145f;
+            float effectAtFrameStart=effect;
             body.step(input.motor,mx,my,DT,input.hands,px,py);
             surface.step(body,input.membrane,px,py,DT,brain.adhesion());
             if(room!=null){
@@ -240,6 +253,7 @@ public final class BehavioralLaboratory {
                     float gain=reserve-prior;
                     if(gain>.01f){
                         brain.contactOutcome(gain,room.food.signature);
+                        energeticEffects[room.food.signature]+=gain;
                         r.gain+=gain;r.energeticContacts++;
                         if(Float.isNaN(r.firstContact))r.firstContact=t;
                     }
@@ -267,6 +281,7 @@ public final class BehavioralLaboratory {
                         float delta=reserve-before;
                         if(Math.abs(delta)>.01f){
                             brain.contactOutcome(delta,object.signature);
+                            energeticEffects[object.signature]+=delta;
                             if(delta>0){r.gain+=delta;r.energeticContacts++;}
                             else{r.damage-=delta;r.damagingContacts++;}
                             if(Float.isNaN(r.firstContact))r.firstContact=t;
@@ -277,14 +292,24 @@ public final class BehavioralLaboratory {
             float shift=(float)Math.hypot(body.cx-prevX,body.cy-prevY);
             if(Float.isFinite(shift)&&shift<200)r.traveled+=shift;
             prevX=body.cx;prevY=body.cy;
+            rig.guard.observe(DT,body.cx,body.cy,
+                Math.max(0f,effect-effectAtFrameStart));
             r.bestDistance=Math.min(r.bestDistance,
                 (float)Math.hypot(stimulus.x-body.cx,stimulus.y-body.cy));
             long priorExperience=brain.experiences;
+            int priorAction=brain.action;
+            float[] priorSenses=brain.stateCopy();
+            boolean actedFromMemory=rig.episodes.physicallyReplaying();
             brain.observe(SensorimotorMind.Senses.read(body,surface,room,objects,reserve),
                 DT,effect,body,surface,room,objects);
-            // Only clear accumulated real effects when a full motor action
-            // has completed, exactly as live GameActivity does.
-            if(brain.experiences>priorExperience)effect=0;
+            // Mirror the live journaling path at the same decision boundary.
+            if(brain.experiences>priorExperience){
+                rig.episodes.action(priorSenses,priorAction);
+                rig.episodes.consequenceSeparated(effect,energeticEffects,
+                    input.motor,input.hands,input.membrane,actedFromMemory);
+                Arrays.fill(energeticEffects,0f);
+                effect=0;
+            }
             if(reserve<=0)break;
         }
         r.endDistance=(float)Math.hypot(stimulus.x-body.cx,stimulus.y-body.cy);
