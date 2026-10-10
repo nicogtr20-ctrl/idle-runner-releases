@@ -1,5 +1,5 @@
 # OVERMIND ZERO — Esperimento 0098: recupero locomotorio ed energia appresa
-**Data:** 10 ottobre 2026 · **Stato:** implementazione e test automatici completati; test Galaxy S21 ancora necessario.
+**Data:** 10 ottobre 2026 · **Stato:** APK 0.9.8-ota.42 compilata e firmata; test Galaxy S21 ancora necessario.
 
 ## 1. Nuovo feedback reale dell'utente
 Nella v0.9.4 ZERO riusciva a muoversi rapidamente, andare in diverse zone e talvolta avvicinarsi al cancello. Nelle versioni successive (0.9.5–0.9.7) l'utente osserva invece lo stesso schema di avvicinamento a una zona, movimenti circolari/deformazioni lente, permanenza prolungata nello stesso luogo e morte **anche con sfere energetiche visibili vicine**. La camera è centrata sul nucleo; tuttavia misure di distanza totale molto maggiore di distanza NETTA confermano che almeno parte della ripetizione spaziale è reale. In un test della 0.9.4 la porta fu spostata fino a 111 U, non completamente libera (>115 U) e ZERO non entrò. Non attribuire intenzioni a ZERO né dichiarare comprensione del cancello/risorse.
@@ -47,3 +47,12 @@ Repository **`nicogtr20-ctrl/idle-runner-releases`**. `main` ospita i documenti/
 
 ## 7. Prossimo obiettivo dopo test
 Raccogliere evidenza di una **migliore capacità motoria conservata nel tempo**, una **minor morte a fianco di risorse già note** e un **minor ritorno alla stessa zona**, misurando tempo/episodi equivalenti. Se il bonus spettrale non basta, la prossima iterazione deve trattare informazioni temporali dei moti relativi e l'efficacia delle scelte, non inserire bersagli prestabiliti.
+
+
+### RELEASE OTA FIRMATA 0.9.8-ota.42 — 10 ottobre 2026
+- **VersionName** `0.9.8-ota.42`; **versionCode** 1042, package `com.overmind.zero.ota`, peso **101.320 byte**.
+- **Checksum SHA-256 firmato:** `81cb0480de8b47e3cf781c6ddc5e771377ebcfa9d811679a6c202d201bfbf124`.
+- **GitHub Actions** staging `38009632805` = success (JVM, motore, sopravvivenza, Gradle Android) e stable firmata `38009921490` = success (stessa firma e manifest OTA pubblicato).
+- **Manifest GitHub**: `updater/public/latest.json`; APK in `updater/public/apk/overmind-zero-1042-81cb0480de8b.apk`. Release GitHub con tag `overmind-zero-v0.9.8-ota.42` via pipeline fallback su `main`.
+- Il corretto funzionamento sul Samsung Galaxy S21 **deve ancora essere provato**. L'archivio di skill non può recuperare automaticamente motorii della 0.9.4 già sovrascritti prima di questa versione; potrà salvare quelli efficaci osservati d'ora in poi.
+- **Installare sopra la versione precedente SENZA disinstallare né azzerare alcuna memoria.**
