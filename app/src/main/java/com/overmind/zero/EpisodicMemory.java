@@ -28,6 +28,7 @@ public final class EpisodicMemory {
         final ArrayList<Step> trace=new ArrayList<>();
         float effect;
         int confirmed=1,failures=0;
+        int kind=0,source=-1; // em3: historical=0, energy=1, physical=2
         float[] motor,hand,membrane;
         boolean harmful(){return effect<0;}
         float priority(){return Math.min(12,confirmed)*1.8f+
@@ -98,34 +99,94 @@ public final class EpisodicMemory {
             for(float v:array)if(!Float.isFinite(v)||Math.abs(v)>5)return false;
         return true;
     }
-    /** Preserve earlier 0.9.5 API, where the second input was energy GAIN. */
+    /** Historic combined v0.9.5 API is kept only for migration tests and
+     * historical clients; the live app uses consequenceSeparated.
+     */
     public boolean consequence(float physicalEffect,float energyDelta,
                                float[] motor,float[] hand,float[] membrane){
         return consequence(physicalEffect,energyDelta,motor,hand,membrane,replayAtAction);
     }
-    /**
-     * Actual energyDelta from physical resource TOUCH, never passive hunger.
-     * Positive contact and generic obstacle displacement are both beneficial;
-     * damage is intrinsically negative even if no object visibly moves.
-     */
     public boolean consequence(float physicalEffect,float energyDelta,
                                float[] motor,float[] hand,float[] membrane,
                                boolean performedRecall){
-        if(!Float.isFinite(physicalEffect)||!Float.isFinite(energyDelta)||
-           !validWeights(motor,hand,membrane))return false;
-        float effect=Math.min(100,Math.max(0,physicalEffect))+
-                     Math.min(80,Math.max(0,energyDelta))*.25f-
-                     Math.min(80,Math.max(0,-energyDelta))*.60f;
+        if(!Float.isFinite(physicalEffect)||!Float.isFinite(energyDelta))return false;
+        float mixed=Math.min(100,Math.max(0,physicalEffect))+
+            Math.min(80,Math.max(0,energyDelta))*.25f-
+            Math.min(80,Math.max(0,-energyDelta))*.60f;
+        boolean recorded=storeEffect(mixed,0,-1,motor,hand,membrane,performedRecall);
+        recent.clear();return recorded;
+    }
+    /** Independent histories for observed mechanical work and per-frequency
+     * energetic outcomes, even when opposite events occur in the same tick.
+     * Neither outcome cancels the other. The frequency is observable (NOT
+     * the physical object law), and is checked again on future recall.
+     */
+    public boolean consequenceSeparated(float physicalEffect,float[] energyBySignature,
+                                        float[] motor,float[] hand,float[] membrane,
+                                        boolean performedRecall){
+        if(!Float.isFinite(physicalEffect)||energyBySignature==null||
+           energyBySignature.length!=UnknownWorld.SIGNATURES)return false;
+        for(float f:energyBySignature)if(!Float.isFinite(f))return false;
+        boolean stored=false;
+        if(physicalEffect>=MIN_EFFECT)
+            stored|=storeEffect(Math.min(100,physicalEffect),2,-1,
+                                motor,hand,membrane,performedRecall);
+        for(int signature=0;signature<energyBySignature.length;signature++){
+            float delta=energyBySignature[signature];
+            float effect=delta>0?Math.min(80,delta)*.25f:
+                                    -Math.min(80,-delta)*.60f;
+            if(Math.abs(effect)>=MIN_EFFECT)
+                stored|=storeEffect(effect,1,signature,motor,hand,membrane,
+                                    performedRecall);
+        }
+        recent.clear();return stored;
+    }
+    private static boolean seenSource(float[] senses,int signature){
+        if(signature<0||signature>=UnknownWorld.SIGNATURES)return false;
+        for(int k=14+4*signature;k<18+4*signature;k++)
+            if(senses[k]>.06f)return true;
+        return false;
+    }
+    private static boolean relevant(Event e,float[] senses){
+        if(e.kind==1)return seenSource(senses,e.source);
+        if(e.kind==2){
+            if(senses[3]>.02f||senses[4]>.004f||senses[5]>.004f)return true;
+            for(int k=6;k<14;k++)if(senses[k]>.12f)return true;
+            return false;
+        }
+        return true; // Old em1/em2 mixed outcomes cannot be retro-classified.
+    }
+    public int physicalEpisodes(){int n=0;for(Event e:events)if(e.kind==2)n++;return n;}
+    public int energeticEpisodes(){int n=0;for(Event e:events)if(e.kind==1)n++;return n;}
+    public int historicalMixedEpisodes(){int n=0;for(Event e:events)if(e.kind==0)n++;return n;}
+    private boolean storeEffect(float effect,int kind,int source,
+                                float[] motor,float[] hand,float[] membrane,
+                                boolean performedRecall){
+        if(!Float.isFinite(effect)||!validWeights(motor,hand,membrane))return false;
+        if(kind==1){
+            boolean detected=false;
+            for(int i=Math.max(0,recent.size()-8);i<recent.size();i++)
+                if(seenSource(recent.get(i).senses,source)){detected=true;break;}
+            // Unseen sources still teach wavelength values in UnknownWorld,
+            // never fabricate an autobiographical action that caused them.
+            if(!detected)return false;
+        }
         if(Math.abs(effect)<MIN_EFFECT||recent.size()<2)return false;
         if(performedRecall && effect>0){
             repeatEffects++;replayActionsWithoutEffect=0;dirty=true;
         }
         Event candidate=new Event();candidate.effect=effect;
+        candidate.kind=kind;candidate.source=source;
         // Begin at the first detectable environmental cue rather than always
         // cutting at nine. Vary length from two to 36 lived actions; include
         // up to two approach actions preceding the first salient perception.
         int start=-1;
-        for(int i=0;i<recent.size();i++){
+        if(kind==1){
+            for(int i=recent.size()-1;i>=Math.max(0,recent.size()-8);i--){
+                if(seenSource(recent.get(i).senses,source))start=i;
+            }
+        }else if(kind==2)start=Math.max(0,recent.size()-12);
+        else for(int i=0;i<recent.size();i++){
             if(salient(recent.get(i).senses)){start=Math.max(0,i-2);break;}
         }
         if(start<0)start=Math.max(0,recent.size()-4);
@@ -153,7 +214,7 @@ public final class EpisodicMemory {
                 }
                 lastEventEffect=effect;lastTraceLength=candidate.trace.size();
                 dirty=true;
-                recent.clear();
+                
                 return true;
             }
         }
@@ -162,13 +223,13 @@ public final class EpisodicMemory {
             for(int i=1;i<events.size();i++)
                 if(events.get(i).priority()<events.get(weakest).priority())weakest=i;
             if(candidate.priority()<events.get(weakest).priority()){
-                recent.clear();return false;
+                return false;
             }
             events.remove(weakest);
         }
         events.add(candidate);captured++;
         lastTraceLength=candidate.trace.size();lastEventEffect=effect;
-        recent.clear();dirty=true;
+        dirty=true;
         return true;
     }
     /**
@@ -197,6 +258,7 @@ public final class EpisodicMemory {
         float posDist=MATCH;
         float negDist=MATCH;
         for(Event e:events){
+            if(!relevant(e,senses))continue;
             for(int i=0;i<e.trace.size();i++){
                 float dist=distance(senses,e.trace.get(i).senses);
                 float adjusted=dist+.004f*i;
@@ -213,7 +275,8 @@ public final class EpisodicMemory {
                 }
             }
         }
-        if(selected!=null&&continuation<selected.trace.size()&&!selected.harmful()){
+        if(selected!=null&&continuation<selected.trace.size()&&!selected.harmful()&&
+           relevant(selected,senses)){
             Step step=selected.trace.get(continuation);
             float d=distance(senses,step.senses);
             if(d<MATCH*1.25f){positive=selected;positiveIndex=continuation;posDist=d;}
@@ -262,15 +325,16 @@ public final class EpisodicMemory {
         return type==1?replayHand:type==2?replayMembrane:normal;
     }
 
-    /** em2 extends em1 without rewriting old motor/world network formats. */
+    /** em3 preserves em1/em2 migration and records measured outcome source. */
     public String encode(){
-        StringBuilder b=new StringBuilder("em2;").append(captured).append(';')
+        StringBuilder b=new StringBuilder("em3;").append(captured).append(';')
            .append(matched).append(';').append(replayed).append(';')
            .append(repeatEffects).append(';').append(avoided).append(';')
            .append(consolidated).append(';').append(events.size());
         for(Event e:events){
             b.append(';').append(e.effect).append(',').append(e.confirmed)
-             .append(',').append(e.failures).append(',').append(e.trace.size());
+             .append(',').append(e.failures).append(',').append(e.trace.size())
+             .append(',').append(e.kind).append(',').append(e.source);
             for(Step t:e.trace){
                 b.append(',').append(t.action);
                 for(float v:t.senses)b.append(',').append(v);
@@ -283,8 +347,9 @@ public final class EpisodicMemory {
     /** Parse into a temporary list, commit only after full validation. */
     public boolean restore(String raw){
         if(raw==null||raw.isEmpty()||raw.length()>MAX_ENCODED)return false;
-        boolean legacy=raw.startsWith("em1;"),modern=raw.startsWith("em2;");
-        if(!legacy&&!modern)return false;
+        boolean legacy=raw.startsWith("em1;"),modern=raw.startsWith("em2;"),
+                sourced=raw.startsWith("em3;");
+        if(!legacy&&!modern&&!sourced)return false;
         try{
             String[] group=raw.split(";",-1);
             int header=legacy?6:8;
@@ -305,10 +370,17 @@ public final class EpisodicMemory {
                     e.failures=Integer.parseInt(v[index++]);
                 }
                 int steps=Integer.parseInt(v[index++]);
+                if(sourced){
+                    e.kind=Integer.parseInt(v[index++]);
+                    e.source=Integer.parseInt(v[index++]);
+                    if(e.kind<0||e.kind>2||
+                       (e.kind==1&&(e.source<0||e.source>=UnknownWorld.SIGNATURES))||
+                       (e.kind!=1&&e.source!=-1))return false;
+                }
                 if(steps<2||steps>DEPTH||e.confirmed<1||e.confirmed>999||
                     e.failures<0||e.failures>999||
                     !Float.isFinite(e.effect)||Math.abs(e.effect)<MIN_EFFECT||
-                    v.length!=(legacy?2:4)+steps*(1+SensorimotorMind.S)+
+                    v.length!=(legacy?2:sourced?6:4)+steps*(1+SensorimotorMind.S)+
                         MotorBrain.PARAMS+ContactLearning.PARAMS+Morphology.PARAMS)
                     return false;
                 for(int t=0;t<steps;t++){
@@ -381,8 +453,7 @@ public final class EpisodicMemory {
             throw new AssertionError("Corrupt memory accepted");
         // Simulate real 0.9.5 on-disk format.
         EpisodicMemory legacy=new EpisodicMemory();
-        String oldFormat=snapshot.replaceFirst("em2;", "em1;");
-        String[] oldGroups=oldFormat.split(";",-1);
+        String[] oldGroups=snapshot.split(";",-1);
         String[] head=oldGroups[8].split(",",-1);
         StringBuilder oldEvent=new StringBuilder(head[0]).append(",").append(head[3]);
         // Old format allowed at most 9 actions; use newest nine.
@@ -390,13 +461,13 @@ public final class EpisodicMemory {
         oldEvent.setLength(0);oldEvent.append(head[0]).append(",").append(steps-first);
         for(int i=first;i<steps;i++)
             for(int k=0;k<1+SensorimotorMind.S;k++)
-                oldEvent.append(",").append(head[4+i*(1+SensorimotorMind.S)+k]);
-        int tail=4+steps*(1+SensorimotorMind.S);
+                oldEvent.append(",").append(head[6+i*(1+SensorimotorMind.S)+k]);
+        int tail=6+steps*(1+SensorimotorMind.S);
         for(int k=tail;k<head.length;k++)oldEvent.append(",").append(head[k]);
         String em1="em1;1;0;0;0;1;"+oldEvent;
         if(!legacy.restore(em1)||legacy.stored()!=1||legacy.positiveCount()!=1)
             throw new AssertionError("v0.9.5 em1 memory migration failed");
-        if(!legacy.encode().startsWith("em2;"))
+        if(!legacy.encode().startsWith("em3;"))
             throw new AssertionError("migration did not upgrade format");
         System.out.println("ZERO-009.6 passed: varied episodes, beneficial/dangerous recall, consolidation and em1 migration");
     }
