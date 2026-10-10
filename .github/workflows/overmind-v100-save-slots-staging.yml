@@ -57,7 +57,21 @@ jobs:
           assert 'ResetDomains.ALL.equals(scope)' in game
           assert 'zero_save_slots_v100' not in reset
           assert 'grip_skills_v099' in game and 'motor_skills_v098' in game
-          print('Named slots isolated from ALL resets; working save reload; rescue backup and checksum validation pass')
+          scene=Path('app/src/main/java/com/overmind/zero/GameSceneSnapshot.java').read_text()
+          movement=Path('app/src/main/java/com/overmind/zero/MotionExploration.java').read_text()
+          assert 'GameSceneSnapshot.capture(creature,surface,environment,chamber)' in game
+          assert 'GameSceneSnapshot.restore(' in game
+          assert 'physical_scene_v100' in game and 'physical_scene_v100' in slot
+          assert 'saveScene();' in game and 'void restoreScene' not in game
+          assert 'boolean restoreScene(String raw)' in game
+          assert 'getJSONObject("physical")' in slot
+          assert 'for(UnknownWorld.Entity e:environment)' in scene
+          assert 'body.x,body.y,body.vx,body.vy,body.act,body.grip' in scene
+          assert 'skin.gripCommand,skin.touchSense,skin.gripHold' in scene
+          assert 'gateHeldFrames' in scene and 'doorY' in scene
+          assert 'new ScarcityLab(' in scene
+          assert 'public String saveLife()' in movement and 'public boolean loadLife(String raw)' in movement
+          print('Named slots isolated from ALL resets; actual 96-mass scene, door, world and learning preserved; checksum validated')
           PY
       - name: Compile Android APK and UI manifest
         run: gradle --no-daemon assembleDebug
