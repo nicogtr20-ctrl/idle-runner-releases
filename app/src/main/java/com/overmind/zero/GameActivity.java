@@ -45,7 +45,6 @@ public final class GameActivity extends Activity {
         int gripRecoveryCooldown=0;
         int lastSkillStall=0;
         float environmentEffectSinceAction=0,eventEnergyDeltaSinceAction=0;
-        boolean recalledManipulationInAction=false;
         int recalledManipulationEvents=0;
         float[] lastAppliedMotor,lastAppliedHand,lastAppliedMembrane;
         float liveStartX,liveStartY,liveStartEnergy;
@@ -315,7 +314,6 @@ public final class GameActivity extends Activity {
             lifeDistance=0;travelSinceAction=0;forwardSinceAction=0;
             environmentEffectSinceAction=0;eventEnergyDeltaSinceAction=0;
             episodic.resetLife(); // Forget transient attempt, NOT learned motor or memories.
-            recalledManipulationInAction=false;
             previousGripDrive=previousGripHeld=0;
             ongoingUnsuccessfulGrip=0;gripRecoveryCooldown=0;
             liveBody.abortTrial();
@@ -522,23 +520,18 @@ public final class GameActivity extends Activity {
                     float px=creature.cx+mx*145f,py=creature.cy+my*145f;
                     float beforeX=creature.cx,beforeY=creature.cy;
                     float worldEffectAtFrameStart=environmentEffectSinceAction;
-                    // Locomotion always uses the currently trained motor (or
-                    // its legitimate online candidate). No episodic memory is
-                    // permitted to override it with obsolete saved weights.
-                    // Hand/membrane snapshots may be briefly retried ONLY at
-                    // an actually touching membrane, and NEVER during a
-                    // controlled candidate evaluation for the current body.
+                    // The 0.9.5 regression introduced old sensory episodes
+                    // that could override ALL physically learned controllers.
+                    // Even after the motor fix, old hand/membrane weights
+                    // could overwrite grip output *specifically on tactile
+                    // contact*, when grip is needed most. Remove all such
+                    // actuator overrides. Episodic memory still influences
+                    // ZERO's independently selected ACTIONS, but procedural
+                    // skills come only from today's live trained controllers
+                    // or physically tested candidate mutations.
                     lastAppliedMotor=liveBody.weights(0,trainer.best);
-                    boolean tactile=false;
-                    for(int k=0;k<Morphology.POINTS;k++)
-                        if(surface.touchSense[k]>.20f){tactile=true;break;}
-                    boolean recallManip=episodic.physicallyReplaying()&&tactile&&
-                                        !liveBody.testingCandidate();
-                    lastAppliedHand=episodic.weights(1,
-                        liveBody.weights(1,handTrainer.best),recallManip);
-                    lastAppliedMembrane=episodic.weights(2,
-                        liveBody.weights(2,shapeTrainer.best),recallManip);
-                    if(recallManip)recalledManipulationInAction=true;
+                    lastAppliedHand=liveBody.weights(1,handTrainer.best);
+                    lastAppliedMembrane=liveBody.weights(2,shapeTrainer.best);
                     creature.step(lastAppliedMotor,mx,my,slice,lastAppliedHand,px,py);
                     surface.step(creature,lastAppliedMembrane,px,py,slice,
                         sensorMind.adhesion());
@@ -662,18 +655,9 @@ public final class GameActivity extends Activity {
                             lastAppliedMotor,lastAppliedHand,lastAppliedMembrane,
                             actedFromMemory);
                         if(remembered||episodic.takeDirty())save();
-                        // Merely remembering an ACTION must not interrupt
-                        // motor skill training: 0.9.5 incorrectly aborted
-                        // ALL tests during any episodic action, potentially
-                        // starving locomotion of new trials.
-                        // Only an actual tactile replay of hand/membrane
-                        // disqualifies the mixed-weights experiment.
-                        boolean mixedWeights=recalledManipulationInAction;
-                        if(mixedWeights){
-                            recalledManipulationEvents++;
-                            liveBody.abortTrial();
-                        }
-                        OnlineBodyLearning.Result result=mixedWeights?null:liveBody.observe(
+                        // Remembering an action never substitutes an old
+                        // physical controller or interrupts body experiments.
+                        OnlineBodyLearning.Result result=liveBody.observe(
                             sensorMind.lastReward,travelSinceAction,forwardSinceAction,
                             Math.max(0,physicalContacts-liveStartContacts),
                             liveStartEnergy,reserve,journey.takeNewCells(),
@@ -684,7 +668,6 @@ public final class GameActivity extends Activity {
                         liveStartX=creature.cx;liveStartY=creature.cy;
                         travelSinceAction=0;forwardSinceAction=0;
                         environmentEffectSinceAction=0;eventEnergyDeltaSinceAction=0;
-                        recalledManipulationInAction=false;
                         liveStartEnergy=reserve;liveStartContacts=physicalContacts;
                         if(result!=null){
                             if(result.domain==0){
