@@ -276,8 +276,8 @@ public final class BrainToolsActivity extends Activity {
         line(spatial,"Scelte influenzate",
             String.valueOf(space.choiceInfluences),WHITE);
         float[] ranges=space.ranges();
-        for(int dir=0;dir<8;dir++){
-            int r=dir*2;
+        for(int pair=0;pair<8;pair++){
+            int r=pair*2;
             String readings=String.format(Locale.US,"%.0f U / %.0f U",
                 space.distance(r),
                 space.distance(r+1));
