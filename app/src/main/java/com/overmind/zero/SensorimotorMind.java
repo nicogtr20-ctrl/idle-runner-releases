@@ -33,6 +33,9 @@ public final class SensorimotorMind {
     private transient CausalExperiments causal;
     private transient InstrumentalNavigation navigation;
     private transient GoalContinuity intention;
+    private transient AdaptiveSafety safety;
+    public synchronized void attachAdaptiveSafety(AdaptiveSafety s){safety=s;}
+    public synchronized AdaptiveSafety adaptiveSafety(){return safety;}
     public synchronized void attachGoalContinuity(GoalContinuity c){intention=c;}
     public synchronized GoalContinuity goalContinuity(){return intention;}
     // Benchmark-only ablation: sensors, learning and all other policy terms
@@ -59,6 +62,8 @@ public final class SensorimotorMind {
             if(causal!=null)causal.energyOutcome(actualEnergyDelta);
             if(navigation!=null)navigation.energyOutcome(actualEnergyDelta,
                 visuallyObservedSignature,true);
+            if(safety!=null&&navigation!=null)
+                safety.contact(actualEnergyDelta,visuallyObservedSignature,navigation);
             actualEnergySinceChoice+=actualEnergyDelta;
         }
     }
@@ -139,6 +144,7 @@ public final class SensorimotorMind {
         if(causal!=null)causal.resetLife();
         if(navigation!=null)navigation.resetLife();
         if(intention!=null)intention.resetLife();
+        if(safety!=null)safety.resetLife();
         actualEnergySinceChoice=0;
     }
     public synchronized void resetEpisode(float[] first){
@@ -153,6 +159,7 @@ public final class SensorimotorMind {
             if(causal!=null)causal.resetLife();
             if(navigation!=null)navigation.resetLife();
             if(intention!=null)intention.resetLife();
+            if(safety!=null)safety.resetLife();
             actualEnergySinceChoice=0;
             return;
         }
@@ -173,6 +180,7 @@ public final class SensorimotorMind {
         if(causal!=null)causal.resumeLife();
         if(navigation!=null)navigation.resumeLife();
         if(intention!=null)intention.resumeLife();
+        if(safety!=null)safety.resumeLife();
         actualEnergySinceChoice=0;
     }
     public synchronized float motorX(){return (float)Math.cos((action%8)*Math.PI/4);}
@@ -240,6 +248,8 @@ public final class SensorimotorMind {
         float largestCausalBias=0;
         float largestInstrumentalBias=0;
         float largestIntentionBias=0;
+        float largestSafetyBias=0;
+        float[] scores=new float[ACTIONS];
         for(int a=0;a<ACTIONS;a++){
             float q=estimate(senses,a);
             float predictedChange=0;
@@ -285,17 +295,32 @@ public final class SensorimotorMind {
             float intentBias=intention==null||navigation==null||!navigationAdviceEnabled?0:
                 intention.bias(navigation,a,senses[0]);
             largestIntentionBias=Math.max(largestIntentionBias,Math.abs(intentBias));
+            float consequenceSafety=safety==null||!navigationAdviceEnabled?0:
+                safety.bias(navigation,a);
+            largestSafetyBias=Math.max(largestSafetyBias,Math.abs(consequenceSafety));
             float score=legacyQ+earnedValue+planned[a]*.50f+curiosity+jitter+memoryBias+
                         diversity+temporalBias+skillBias+bodyBias+spatialBias+causalBias+
-                        instrumental+intentBias;
+                        instrumental+intentBias+consequenceSafety;
+            scores[a]=score;
             if(score>best){best=score;chosen=a;}
         }
         float epsilon=Math.max(.09f,.52f/(1+experiences/120f));
         if(protectMotor)epsilon=Math.max(epsilon,.28f);
         actionExploratory=false;
         if(random.nextFloat()<epsilon){
-            chosen=random.nextInt(ACTIONS);explorations++;
-            actionExploratory=true;
+            // Randomness still explores, but following REAL energetic injury
+            // it samples alternative actions whose TOTAL learned value is
+            // not catastrophically below the available alternatives.
+            // It does not prescribe a safe compass direction or eliminate
+            // all exploration. With no actual damage: unchanged uniform.
+            if(safety!=null&&safety.active()&&navigationAdviceEnabled&&
+               largestSafetyBias>.04f){
+                int[] feasible=new int[ACTIONS];int total=0;
+                for(int a=0;a<ACTIONS;a++)
+                    if(scores[a]>=best-.75f)feasible[total++]=a;
+                chosen=total==0?chosen:feasible[random.nextInt(total)];
+            }else chosen=random.nextInt(ACTIONS);
+            explorations++;actionExploratory=true;
         }
         if(action!=chosen)actionsReconsidered++;
         if(episodic!=null)episodic.chosen(chosen,proposed);
@@ -329,6 +354,10 @@ public final class SensorimotorMind {
         if(intention!=null&&navigation!=null){
             if(navigationAdviceEnabled)intention.chosen(navigation,chosen,senses[0]);
             intention.noteDecision(largestIntentionBias);
+        }
+        if(safety!=null&&navigation!=null){
+            if(navigationAdviceEnabled)safety.chosen(navigation,chosen);
+            safety.noteChoice(largestSafetyBias);
         }
         actualEnergySinceChoice=0f;
         action=chosen;decisions++;
@@ -371,7 +400,12 @@ public final class SensorimotorMind {
             choose(after);return;
         }
         elapsed+=Math.max(0,dt);
-        if(elapsed<.65f)return;
+        if(safety!=null)safety.elapsed(dt);
+        // A genuine painful contact can shorten the CURRENT commitment,
+        // never choose a scripted escape action. Read/score all ordinary
+        // learned policies at a real physical decision boundary.
+        boolean earlyPain=actualEnergySinceChoice<-.01f&&elapsed>=.18f;
+        if(elapsed<.65f&&!earlyPain)return;
         observedBody=body;
         if(navigation!=null&&body!=null&&objects!=null)
             navigation.sense(body,room,objects);
@@ -434,9 +468,12 @@ public final class SensorimotorMind {
         if(causal!=null&&spatial!=null&&body!=null&&objects!=null)
             causal.consequence(spatial,trialAction,lastReward,learning&&!holdout,holdout);
         if(navigation!=null&&body!=null)
-            navigation.consequence(trialAction,body,learning&&!holdout,holdout);
+            navigation.consequence(trialAction,body,
+                learning&&!holdout&&!earlyPain,holdout&&!earlyPain);
         if(intention!=null&&navigation!=null&&body!=null&&navigationAdviceEnabled)
             intention.consequence(navigation,trialAction,navigation.latestMovement);
+        if(safety!=null&&navigation!=null&&body!=null&&navigationAdviceEnabled)
+            safety.consequence(navigation,trialAction,navigation.latestMovement);
         if(learning&&!holdout){
             float td=bounded(lastReward+GAMMA*bestFuture(after)-estimate(before,trialAction));
             int base=trialAction*P;
