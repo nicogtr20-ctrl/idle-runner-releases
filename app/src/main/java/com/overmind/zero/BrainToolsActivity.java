@@ -223,6 +223,32 @@ public final class BrainToolsActivity extends Activity {
              String.valueOf(chunks.interruptions),AMBER);
         paragraph(skillMemory,"Una sequenza nasce soltanto dalle azioni realmente scelte da ZERO prima di un effetto positivo reale. Una singola fortuna resta candidata: servono almeno due ricorrenze compatibili prima che possa influenzare una scelta. Durante il replay, se il contesto temporale diverge la skill viene interrotta; non esiste una procedura programmata per porte o oggetti.");
 
+        BodyProprioception bodyMap=new BodyProprioception();
+        bodyMap.restore(prefs.getString(BodyProprioception.KEY,""));
+        LinearLayout proprio=panel(body);
+        proprio.addView(label("PERCEZIONE DEL PROPRIO CORPO",16,CYAN,true));
+        line(proprio,"Punti fisici della membrana",String.valueOf(Morphology.POINTS),WHITE);
+        line(proprio,"Settori corporei percepiti",String.valueOf(BodyProprioception.SECTORS),CYAN);
+        line(proprio,"Segnali tattili/propriocettivi",String.valueOf(BodyProprioception.FEATURES),WHITE);
+        line(proprio,"Transizioni corpo-azione vissute",String.valueOf(bodyMap.transitions),WHITE);
+        line(proprio,"Valutazioni fuori addestramento",String.valueOf(bodyMap.validations),WHITE);
+        line(proprio,"Errore previsione tattile",bodyMap.validations>0?
+            number(bodyMap.predictionError):"—",WHITE);
+        line(proprio,"Errore senza prevedere cambiamento",bodyMap.validations>0?
+            number(bodyMap.unchangedError):"—",MUTED);
+        line(proprio,"Affidabilita' appresa per le scelte",
+            String.format(Locale.US,"%.1f%%",100*bodyMap.confidence()),CYAN);
+        line(proprio,"Scelte realmente influenzate",String.valueOf(bodyMap.choiceInfluences),WHITE);
+        line(proprio,"Situazioni con contatto reale",String.valueOf(bodyMap.contactObservations),WHITE);
+        float[] patch=bodyMap.sensed();
+        String[] dir={"E","SE","S","SO","O","NO","N","NE"};
+        for(int k=0;k<BodyProprioception.SECTORS;k++){
+            String state=String.format(Locale.US,"T %.2f  P %.2f  E %.2f  V %+.2f",
+                patch[k],patch[8+k],patch[16+k],patch[24+k]);
+            line(proprio,"Settore "+dir[k],state,WHITE);
+        }
+        paragraph(proprio,"I sensori leggono dove i 96 punti fisici toccano oggetti, mantengono adesione, si estendono o scorrono radialmente. Gli otto settori non identificano porte o ostacoli: mostrano soltanto segnali locali del corpo. La nuova rete NON influenza le azioni finche' non prevede cambiamenti tattili meglio del riferimento su almeno 30 esperienze escluse dall'addestramento. I precedenti 26 sensi e i vecchi pesi sono conservati.");
+
         LinearLayout reset=panel(body);
         reset.addView(label("AZZERA APPRENDIMENTO",17,AMBER,true));
         paragraph(reset,"Ogni voce ritorna allo stato vergine SOLO per quel sistema. Altre memorie e reti rimangono. L'azzeramento ricarica il corpo nella mappa per applicare i nuovi parametri in sicurezza.");
@@ -235,6 +261,7 @@ public final class BrainToolsActivity extends Activity {
         resetButton(reset,"STANZA E SOPRAVVIVENZA","Successi, energie, prese e cronologia della scarsità.",ResetDomains.ROOM,false);
         resetButton(reset,"MEMORIA EPISODICA","Ricordi vissuti, sequenze di azioni e tentativi di richiamo.",ResetDomains.EPISODES,false);
         resetButton(reset,"ABILITA TEMPORALI","Sequenze autonome consolidate e cronologia dei loro replay.",ResetDomains.TEMPORAL_SKILLS,false);
+        resetButton(reset,"PERCEZIONE CORPOREA","Mappa tattile, previsioni e valori motori appresi; non cancella la membrana fisica.",ResetDomains.PROPRIOCEPTION,false);
         resetButton(reset,"AZZERA TUTTO","CANCELLA tutti i cervelli, statistiche, memoria ed esperienze.",ResetDomains.ALL,true);
         LinearLayout saves=panel(body);
         saves.addView(label("LE TUE PARTITE",17,CYAN,true));
