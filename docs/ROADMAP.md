@@ -182,3 +182,13 @@ Dettagli: `docs/EXPERIMENT_0096.md`.
 - [ ] Se lo stallo persiste, separare effetto dei pesi storici, della politica neurale e dei trial non-controllati con A/B a stesso stato iniziale e seed.
 - [ ] Valutare archivio delle abilità motorie con rollback misurato e comparazioni rigorose, non hardcode delle strategie.
 Protocollo nel documento `docs/EXPERIMENT_0097.md`.
+
+## 0.9.8 — priorità pratiche
+- [x] Banca max6 controller motori verificati su NETTO e recupero senza gait programmata.
+- [x] Evitare mutanti motori che riducono il NETTO oltre 20% nella prova relativa.
+- [x] Penalizzare scelte ripetitive in stagnazione; stimolare esplorazione libera.
+- [x] Usare valori energetici dei segnali imparati dai contatti per influenzare i 16 heading tramite settori visivi, senza blu=buono/rosso=cattivo.
+- [x] JVM e compilazione Android staging, persistenza e reset.
+- [ ] Verificare sul Galaxy S21 se aumentano distanza NETTA, sfere raccolte, tempo di sopravvivenza e diminuiscono ritorni allo stesso punto.
+- [ ] A/B con stato e seed uguali; eventuale sensore del moto relativo e apprendimento efficacia tatto/membrana.
+Vedi `docs/EXPERIMENT_0098.md`.
