@@ -261,6 +261,8 @@ public final class GameActivity extends Activity {
                 snapshot.put("physical",new JSONObject(
                     GameSceneSnapshot.capture(creature,surface,environment,chamber)));
                 snapshot.put("episode",episode);
+                snapshot.put("speed",speed);
+                snapshot.put("running",simulationRunning);
                 snapshot.put("phase",phase);
                 snapshot.put("elapsedLife",elapsedLife);
                 snapshot.put("nextChamber",nextChamber);
@@ -312,6 +314,9 @@ public final class GameActivity extends Activity {
                 creature=scene.body;surface=scene.skin;
                 chamber=scene.room;environment=scene.objects;
                 episode=savedEpisode;phase=savedPhase;
+                speed=o.optInt("speed",1);
+                if(speed!=1&&speed!=5&&speed!=20)speed=1;
+                simulationRunning=o.optBoolean("running",true);
                 elapsedLife=savedElapsed;nextChamber=savedNext;
                 clock=(float)o.getDouble("clock");
                 worldTime=(float)o.getDouble("worldTime");
