@@ -1,6 +1,11 @@
 # Istruzioni permanenti agli assistenti che lavorano su questo repository
 
 
+## OVERMIND 0.10.8 critical note
+Read docs/EXPERIMENT_0108.md. Source audit found GameActivity.load() restored temporal_working_memory_v106 and temporal_skills_v107 but GameActivity.save() never wrote them. Version 0.10.8-ota.57 fixes by serializing workingMemory.encode() and temporalSkillBank.encode() in the same existing SharedPreferences editor as all legacy brains and life statistics. CI now runs TemporalPersistenceRegression and rejects signed releases without actual load+save callsites. Staging 38067546249/38067671221 pass, stable run 38067752564 success; Vercel 1057 HTTP200 and matching APK 150816 bytes. 0.10.5 stats, 0.10.6 temporal context and 0.10.7 skill chunks remain intact and are coherent but behavioral benefit on S21 unverified. No reset, no changed package, signing, 12 slots or old episodic memories; unpersisted old temporal progress cannot be reconstructed.
+
+
+
 ## HANDOFF PRIORITARIO 0.10.4: STATISTICHE PER VITA
 Leggi `docs/EXPERIMENT_0104.md`. Separata schermata **STATISTICHE** con cronometro di tempo SIMULATO, non orologio reale. In `GameActivity.updateHabitat(dt)`, `lifeStats.tick(dt)` riceve ciascun subframe x1/x5/x20, e non gira durante la pausa o i menu. Una vita termina soltanto con `reserve<=0`. `LifeStatistics` salva max50 vite complete e confronti ultime10 in `life_statistics_v104` dello stesso profilo `zero_motorbrain_001`, copiato nei dodici salvataggi; pre-esistente vita in corso è marcata parziale, esclusa dalle medie. Dati basati su reali cambiamenti di energia, danni, dischi spostati, distanza netta, zone/porta, stanza, effetti episodici; nessun colore buono/cattivo hardcoded nel policy brain. EVOLUZIONE rimane. QA `38057090717` SUCCESS, signed `38057209555` SUCCESS, v0.10.4-ota.52, SHA `972209b7554e25f62836b7c475c2178da90acae01b5976516ef6ad29360cb7a3`. Vercel manifest/APK HTTP 200. Nessuna prova installazione/qualità su S21 ancora: non attribuire aumento d'intelligenza a semplici grafici. Conservare controller, memorie, 12 slot, firma e package.
 
