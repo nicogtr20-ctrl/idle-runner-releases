@@ -23,11 +23,11 @@ import java.util.Random;
  * Caller supplies read-only snapshot, benchmark report is a separate result.
  */
 public final class BehavioralLaboratory {
-    public static final int ENERGY=0,HARM=1,GATE=2,CASES=3,SEEDS=3;
+    public static final int ENERGY=0,HARM=1,GATE=2,CLUSTER=3,CHOICE=4,CASES=5,SEEDS=3;
     public static final float DT=.035f,SECONDS=32f;
     public static final int FRAMES=(int)(SECONDS/DT);
     public static final int[] VARIANTS={7,19,31};
-    private static final String[] NAMES={"ENERGIA","PERICOLO","CANCELLO"};
+    private static final String[] NAMES={"ENERGIA","PERICOLO","CANCELLO","ROSCI INTORNO","BLU PIU ROSSO"};
     private BehavioralLaboratory(){}
     public interface Progress { void step(int finished,int total,String label); }
     public interface Cancel { boolean stopped(); }
@@ -37,14 +37,14 @@ public final class BehavioralLaboratory {
         public float[] hands=ContactLearning.virgin();
         public float[] membrane=Morphology.virgin(new Random(14790));
         public String world="",navigation="",outcome="",diagnostics="",planning="",
-            memory="",temporal="",skills="",body="",spatial="",causal="",intent="";
+            memory="",temporal="",skills="",body="",spatial="",causal="",intent="",safety="";
         public Profile copy(){
             Profile r=new Profile();
             r.motor=motor.clone();r.hands=hands.clone();r.membrane=membrane.clone();
             r.world=world;r.navigation=navigation;r.outcome=outcome;r.planning=planning;
             r.diagnostics=diagnostics;r.memory=memory;r.temporal=temporal;
             r.skills=skills;r.body=body;r.spatial=spatial;r.causal=causal;
-            r.intent=intent;
+            r.intent=intent;r.safety=safety;
             return r;
         }
     }
@@ -57,6 +57,10 @@ public final class BehavioralLaboratory {
             endDistance,traveled,gateTravel,endingReserve;
         public long actualDecisions,learnedNavigationChoices;
         public int confirmedIntentions,continuedIntentions;
+        public long dangerNearbyFrames,smallSteps,damageFollowingDamage;
+        public int threatEscapes;
+        public float farthestSafetyDistance=0;
+        public int safetyAdvisedDecisions,safetyRecoveries,safetyUnresolved;
         public GateBehaviorMetrics gateDiagnostics=new GateBehaviorMetrics();
         Trial(int scene,int trialSeed,boolean enabled){
             scenario=scene;seed=trialSeed;instrumental=enabled;
@@ -77,7 +81,12 @@ public final class BehavioralLaboratory {
                 gateDiagnostics.skinTouchFrames,gateDiagnostics.driveFrames,
                 gateDiagnostics.commandFrames,gateDiagnostics.heldFrames,
                 gateDiagnostics.opposedFrames,gateDiagnostics.opened,
-                gateDiagnostics.closestDistance(),gateDiagnostics.obstacleStage()):"");
+                gateDiagnostics.closestDistance(),gateDiagnostics.obstacleStage()):"")+
+                (scenario==HARM||scenario==CLUSTER||scenario==CHOICE?
+                 String.format(Locale.US,
+                    "\\n      danno: vicinanza %d frame, microspostamenti %d, uscite dal rischio %d, secondo danno %d, bias prudente %d, recuperi fisici %d, irrisolti %d, max distanza %.1f U",
+                    dangerNearbyFrames,smallSteps,threatEscapes,damageFollowingDamage,
+                    safetyAdvisedDecisions,safetyRecoveries,safetyUnresolved,farthestSafetyDistance):"");
         }
     }
 
@@ -88,7 +97,7 @@ public final class BehavioralLaboratory {
         public String report(){
             StringBuilder b=new StringBuilder(
                 "LABORATORIO ZERO — A/B FISICO, SENZA SCRIPT\n"+
-                "Tre scenari, tre varianti ciascuno, 32 secondi SIMULATI per prova.\n"+
+                "Cinque scenari, tre varianti ciascuno, 32 secondi SIMULATI per prova.\n"+
                 "Stesso cervello iniziale e stessa scena per ogni coppia; "+
                 "variano solo i consigli della navigazione e la continuita' delle intenzioni.\n"+
                 "Le coordinate degli oggetti sono usate SOLO per misurare i risultati.\n\n");
@@ -117,11 +126,11 @@ public final class BehavioralLaboratory {
                 b.append(String.format(Locale.US,
                     "A/B %d coppie — migliore ATTIVA %d, CONTROLLO %d, PARITA' %d\n",
                     valid,navMore,controlMore,equal));
-                if(s==ENERGY)b.append(String.format(Locale.US,
+                if(s==ENERGY||s==CHOICE)b.append(String.format(Locale.US,
                     "Differenze medie ATTIVA − CONTROLLO: energia +%.1f, "+
                     "contatti benefici %+.2f, distanza minima %+.1f U (minore è meglio).\n",
                     sums[0]/valid,sums[5]/valid,sums[2]/valid));
-                if(s==HARM)b.append(String.format(Locale.US,
+                if(s==HARM||s==CLUSTER||s==CHOICE)b.append(String.format(Locale.US,
                     "Differenze medie ATTIVA − CONTROLLO: danno %+.1f, "+
                     "contatti nocivi %+.2f, distanza minima %+.1f U.\n",
                     sums[1]/valid,sums[6]/valid,sums[2]/valid));
@@ -129,6 +138,9 @@ public final class BehavioralLaboratory {
                     "Differenze medie ATTIVA − CONTROLLO: movimento vero cancello "+
                     "%+.1f U, attraversamenti %+.2f, energia ritrovata %+.1f.\n",
                     sums[3]/valid,sums[4]/valid,sums[0]/valid));
+                if(s==CLUSTER||s==CHOICE){
+                    b.append("DIAGNOSI DANNO: vicino ai rischi, micro-movimenti, uscite dalla zona pericolosa e nuovi contatti nocivi. Le coordinate sono SOLO del misuratore, non del cervello.\\n");
+                }
                 if(s==GATE){
                     b.append("DIAGNOSI CANCELLO: le coordinate della risorsa NON dicono se ZERO si è avvicinato alla porta. Sotto: distanza reale dalla porta, contatto fisico, adesione comandata, grip della membrana e presa opposta. Nessun numero viene usato dalla sua policy.\\n");
                 }
@@ -156,10 +168,10 @@ public final class BehavioralLaboratory {
     }
 
     private static double quality(Trial x){
-        if(x.scenario==ENERGY)
+        if(x.scenario==ENERGY||x.scenario==CHOICE)
             return x.gain/22.0+x.energeticContacts*.75-
                 x.bestDistance/160.0;
-        if(x.scenario==HARM)
+        if(x.scenario==HARM||x.scenario==CLUSTER)
             return -x.damage/7.0-x.damagingContacts*.50+
                 Math.min(1,x.bestDistance/160.0)*.15;
         return x.gatePassages*5+x.gain/22+
@@ -197,6 +209,8 @@ public final class BehavioralLaboratory {
         nav.restore(p.navigation);brain.attachNavigation(nav);
         GoalContinuity goal=new GoalContinuity();
         goal.restore(p.intent);brain.attachGoalContinuity(goal);
+        AdaptiveSafety danger=new AdaptiveSafety();
+        danger.restore(p.safety);brain.attachAdaptiveSafety(danger);
         MotorAutonomyGuard guard=new MotorAutonomyGuard();
         brain.attachMotorGuard(guard);
         brain.setLearning(true);
@@ -218,6 +232,21 @@ public final class BehavioralLaboratory {
         if(caseId==GATE){
             room=new ScarcityLab(body.cx,body.cy);
             objects.add(room.food);
+        }else if(caseId==CLUSTER){
+            // Three real damage sources create a physically open fourth
+            // direction. ZERO gets only wavelengths through normal senses.
+            for(int k=0;k<3;k++){
+                float phi=angle+(float)(k*Math.PI*2/3);
+                objects.add(new UnknownWorld.Entity(
+                    (float)Math.cos(phi)*102f,(float)Math.sin(phi)*102f,1,1));
+            }
+        }else if(caseId==CHOICE){
+            // Real good/bad competing contacts with no target sent to policy.
+            objects.add(new UnknownWorld.Entity(
+                (float)Math.cos(angle)*135f,(float)Math.sin(angle)*135f,0,0));
+            objects.add(new UnknownWorld.Entity(
+                (float)Math.cos(angle+.7f)*82f,
+                (float)Math.sin(angle+.7f)*82f,1,1));
         }else{
             float distance=135f;
             float x=(float)Math.cos(angle)*distance;
@@ -241,6 +270,8 @@ public final class BehavioralLaboratory {
         r.bestDistance=(float)Math.hypot(stimulus.x-body.cx,stimulus.y-body.cy);
         float prevX=body.cx,prevY=body.cy,effect=0f;
         float[] energeticEffects=new float[UnknownWorld.SIGNATURES];
+        boolean previouslyNearRisk=false;
+        float previousDamageTime=-100f;
         boolean entered=false,opened=false;
         long initialDecisions=brain.decisions,initialChoices=brain.navigation().choicesInfluenced;
         int priorIntents=brain.goalContinuity().confirmed;
@@ -302,7 +333,11 @@ public final class BehavioralLaboratory {
                             brain.contactOutcome(delta,object.signature);
                             energeticEffects[object.signature]+=delta;
                             if(delta>0){r.gain+=delta;r.energeticContacts++;}
-                            else{r.damage-=delta;r.damagingContacts++;}
+                            else{
+                                r.damage-=delta;r.damagingContacts++;
+                                if(t-previousDamageTime<9.3f)r.damageFollowingDamage++;
+                                previousDamageTime=t;
+                            }
                             if(Float.isNaN(r.firstContact))r.firstContact=t;
                         }
                     }
@@ -310,6 +345,20 @@ public final class BehavioralLaboratory {
             }
             float shift=(float)Math.hypot(body.cx-prevX,body.cy-prevY);
             if(Float.isFinite(shift)&&shift<200)r.traveled+=shift;
+            if(shift<.20f)r.smallSteps++;
+            float dangerDist=Float.POSITIVE_INFINITY;
+            for(UnknownWorld.Entity e:objects){
+                // Identity used exclusively by this EXTERNAL measurement.
+                if(e.physicalLaw()==1)dangerDist=Math.min(dangerDist,
+                    (float)Math.hypot(e.x-body.cx,e.y-body.cy));
+            }
+            if(Float.isFinite(dangerDist)){
+                r.farthestSafetyDistance=Math.max(r.farthestSafetyDistance,dangerDist);
+                if(dangerDist<=95f){r.dangerNearbyFrames++;previouslyNearRisk=true;}
+                else if(previouslyNearRisk&&dangerDist>=132f){
+                    r.threatEscapes++;previouslyNearRisk=false;
+                }
+            }
             prevX=body.cx;prevY=body.cy;
             rig.guard.observe(DT,body.cx,body.cy,
                 Math.max(0f,effect-effectAtFrameStart));
@@ -337,6 +386,9 @@ public final class BehavioralLaboratory {
         r.learnedNavigationChoices=brain.navigation().choicesInfluenced-initialChoices;
         r.confirmedIntentions=brain.goalContinuity().confirmed-priorIntents;
         r.continuedIntentions=brain.goalContinuity().continued-priorContinued;
+        r.safetyAdvisedDecisions=brain.adaptiveSafety().advisedDecisions;
+        r.safetyRecoveries=brain.adaptiveSafety().verifiedWithdrawals;
+        r.safetyUnresolved=brain.adaptiveSafety().unresolved;
         return r;
     }
     public static Result run(Profile p,Progress progress,Cancel stop){
@@ -382,7 +434,7 @@ public final class BehavioralLaboratory {
             throw new AssertionError("Full paired report has missing experiments");
         System.out.println(String.format(Locale.US,
             "ZERO 0.11.3 behavioral lab PASS: %d paired genuine physical trials, "+
-            "3 scenarios, virgin-control neutrality, no forced goal, real gate "+
+            "5 scenarios, virgin-control neutrality, no forced goal, real gate "+
             "and sampled consequences",result.finished));
     }
 }
