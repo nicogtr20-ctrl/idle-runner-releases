@@ -1,0 +1,62 @@
+name: ZERO 0.10.8 Temporal Persistence and Save Migration QA
+on:
+  push:
+    branches: [feature/overmind-v108-temporal-persistence]
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 35
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+      - uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: '8.11.1'
+      - name: JVM real profile save, reload and regression tests
+        run: |
+          mkdir -p /tmp/overmind108
+          javac -d /tmp/overmind108 app/src/main/java/com/overmind/zero/{MotorBrain,UnknownWorld,ContactLearning,DecisionBrain,Morphology,ScarcityLab,SensorimotorMind,TemporalWorkingMemory,TemporalSkillBank,TemporalPersistenceRegression,LearnedSequencePlanner,LearningDiagnostics,ResetDomains,OnlineBodyLearning,MotionExploration,EpisodicMemory,MotorAutonomyGuard,MotorSkillBank,ExperienceCredit,GripSkillBank,SaveProfileCodec,LifeStatistics}.java
+          for test in TemporalPersistenceRegression TemporalWorkingMemory TemporalSkillBank SaveProfileCodec EpisodicMemory LifeStatistics SensorimotorMind ExperienceCredit LearnedSequencePlanner MotorBrain UnknownWorld ContactLearning DecisionBrain Morphology ScarcityLab OnlineBodyLearning MotionExploration ResetDomains MotorAutonomyGuard MotorSkillBank GripSkillBank; do
+            java -cp /tmp/overmind108 com.overmind.zero.$test
+          done
+      - name: Gate actual Android lifecycle persistence, safe saves, no implicit resets
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          g=Path('app/src/main/java/com/overmind/zero/GameActivity.java').read_text()
+          sm=Path('app/src/main/java/com/overmind/zero/SensorimotorMind.java').read_text()
+          slots=Path('app/src/main/java/com/overmind/zero/SaveSlotStore.java').read_text()
+          wf=Path('app/build.gradle').read_text()
+          assert wf.count('0.10.8-ota')==2
+          assert 'applicationId \'com.overmind.zero.ota\'' in wf
+          load=g[g.index('void load(){'):g.index('float[] decode(')]
+          save=g[g.index('void save(){'):g.index('void resume(){')]
+          assert 'workingMemory.restore(prefs.getString("temporal_working_memory_v106",""))' in load
+          assert 'temporalSkillBank.restore(prefs.getString("temporal_skills_v107",""))' in load
+          assert 'sensorMind.attachWorkingMemory(workingMemory)' in load
+          assert 'sensorMind.attachTemporalSkills(temporalSkillBank)' in load
+          assert save.count('.putString("temporal_working_memory_v106",workingMemory.encode())')==1
+          assert save.count('.putString("temporal_skills_v107",temporalSkillBank.encode())')==1
+          assert '.putString("sensorimotor_model_v09",sensorMind.serialize())' in save
+          assert '.putString("episodic_memory_v095",episodic.encode())' in save
+          assert '.putString(LifeStatistics.KEY,lifeStats.encode())' in save
+          assert 'physical_scene_v100' in g and 'SaveProfileCodec.encode(capture())' in slots
+          assert 'new HashMap<>(working.getAll())' in slots
+          assert 'SLOTS=12' in slots and 'protectCurrent();' in slots
+          assert 'if(temporal!=null)temporal.resumeAction(currentAction);' in sm
+          assert 'if(temporalSkills!=null)temporalSkills.resumeLife();' in sm
+          assert 'if(temporal!=null)temporal.resetLife();' in sm
+          assert 'if(temporalSkills!=null)temporalSkills.resetLife();' in sm
+          assert 'episodic.consequenceSeparated(' in g
+          assert 'episodic.weights(' not in g
+          assert 'lifeStats.tick(dt);' in g and 'lifeStats.death();' in g
+          print('0.10.8 pass: app saves real temporal state, legacy episodic and stats, preserves named-slot restore')
+          PY
+      - name: Assemble Android debug APK
+        run: gradle --no-daemon assembleDebug
