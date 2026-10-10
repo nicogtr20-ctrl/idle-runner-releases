@@ -192,6 +192,15 @@ public final class BrainToolsActivity extends Activity {
         resetButton(reset,"STANZA E SOPRAVVIVENZA","Successi, energie, prese e cronologia della scarsità.",ResetDomains.ROOM,false);
         resetButton(reset,"MEMORIA EPISODICA","Ricordi vissuti, sequenze di azioni e tentativi di richiamo.",ResetDomains.EPISODES,false);
         resetButton(reset,"AZZERA TUTTO","CANCELLA tutti i cervelli, statistiche, memoria ed esperienze.",ResetDomains.ALL,true);
+        LinearLayout saves=panel(body);
+        saves.addView(label("LE TUE PARTITE",17,CYAN,true));
+        paragraph(saves,"Salva il cervello attuale in uno slot con nome, carica un altro ZERO oppure crea un nuovo personaggio vergine. Gli slot salvati non vengono cancellati dai reset del cervello.");
+        TextView openSaves=label("▣  SALVA / CARICA PARTITA  ›",16,CYAN,true);
+        openSaves.setPadding(dp(3),dp(18),dp(3),dp(12));
+        openSaves.setOnClickListener(v->{
+            startActivity(new Intent(this,SaveSlotsActivity.class));finish();
+        });
+        saves.addView(openSaves);
         TextView back=label("‹ TORNA A ZERO",17,CYAN,true);
         back.setGravity(Gravity.CENTER);
         back.setPadding(0,dp(24),0,dp(20));
