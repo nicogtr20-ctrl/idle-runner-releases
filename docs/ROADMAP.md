@@ -198,3 +198,14 @@ Documentazione dettagliata e limiti scientifici: `docs/EXPERIMENT_0095.md`.
 - [ ] Samsung S21: aggiornamento in-place, verificare contatori e capacità salvate dopo riavvio e cambio slot.
 - [ ] Prova con scenari controllati: confrontare energia, danno/minuto, attraversamento porta e ripetizione di skill davvero vantaggiose; non basta uno spostamento del cancello.
 Riferimento docs/EXPERIMENT_0108.md.
+
+## ZERO 0.10.9 — propriocezione fisica non semantica
+- [x] 96 punti di membrana fisica → 8 settori x 4 sensi locali: contatto, presa, estensione, slittamento radiale; rilevare pressioni reali da disco senza imporre grip.
+- [x] Nuova rete da 3088 pesi con previsione tattile e valore d'azione; gate predittivo >=30 holdout, errore <=0.96 baseline, bias max ±0.23; nessun hardcoding del cancello.
+- [x] Non cambiare i 26 sensi preesistenti, i pesi, la memoria em3/tw1/ts1, le statistiche ls2, i 12 slot o la firma; salvare/restaurare `body_proprioception_v109` con reset autonomo.
+- [x] Mostrare 8 settori e diagnostica in ANALISI, numero parametri CERVELLO; campionamento solo per decisione per evitare sovraccarico x20.
+- [x] QA staging 38069416680 SUCCESS, signed publisher 38069513724 SUCCESS, 0.10.9-ota.58 v1058, SHA 9bad1270ef3dae172858d55a1f90e3d92cc44c89e1559c9b18ce508f94b933e5, 155816 byte.
+- [x] Recuperare Vercel stantio con Git deployment dpl_CHFimoyKSiLUR7mAn587GexvZypS READY: manifest e APK produzione HTTP200.
+- [ ] Prova reale Galaxy S21: tocchi localizzati, porta/dischi, contatori e apprendimento, pausa/x20, riavvio senza cancellare pesi, slot indipendenti.
+- [ ] Confronto controllato delle 25 vs 25 vite, vera apertura+attraversamento porta e risorse, non solo contatore mosso.
+Documento dettagliato docs/EXPERIMENT_0109.md.
