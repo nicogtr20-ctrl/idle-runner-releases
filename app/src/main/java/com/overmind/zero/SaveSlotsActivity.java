@@ -134,7 +134,7 @@ public final class SaveSlotsActivity extends Activity {
             "Ritornerai al cervello e ai progressi salvati il "+date(entry.time)+
             ".\n\nLa partita attuale verrà conservata automaticamente in "+
             "«RECUPERA ZERO PRECEDENTE» prima del cambio.\n\n"+
-            "Al caricamento ricomincia una scena fisica, mantenendo le conoscenze e le statistiche salvate.",
+            "La posizione, il cancello, gli oggetti, il cervello e i progressi torneranno al punto salvato.",
             "CARICA",()->execute(()->store.load(index),true));
     }
     private void newGame(){
@@ -215,10 +215,9 @@ public final class SaveSlotsActivity extends Activity {
         }
         LinearLayout end=card(0xff1b2a35);
         end.addView(text("COSA VIENE SALVATO",14,WHITE,true));
-        end.addView(text("Cervelli neurali, parametri motori, mano e membrana, "+
-            "ricordi, abilità, energia e statistiche. "+
-            "La posizione esatta degli oggetti e la forma istantanea della stanza "+
-            "non sono ancora ripristinate: il personaggio riprende in una nuova scena.",
+        end.addView(text("Tutto il personaggio: cervelli neurali, ricordi, abilità, "+
+            "energia, statistiche, posizione e forma fisica della membrana, "+
+            "oggetti e cancello. Ogni slot è una fotografia della partita in quel momento.",
             12,MUTED,false));
         button(actions(end),"‹ TORNA AL GIOCO",TEAL,this::finish);
     }
