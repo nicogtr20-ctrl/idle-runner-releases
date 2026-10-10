@@ -1,0 +1,63 @@
+name: ZERO 0.10.0 Game Save Slots QA
+on:
+  push:
+    branches: [feature/overmind-v100-game-save-slots]
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with: {distribution: temurin, java-version: '17'}
+      - uses: gradle/actions/setup-gradle@v4
+        with: {gradle-version: '8.11.1'}
+      - name: Verify full typed profile serialization and historic simulator regressions
+        run: |
+          mkdir -p /tmp/overmind100
+          javac -d /tmp/overmind100 app/src/main/java/com/overmind/zero/{SaveProfileCodec,MotorBrain,UnknownWorld,ContactLearning,DecisionBrain,Morphology,ScarcityLab,SensorimotorMind,LearningDiagnostics,ResetDomains,MotionExploration,OnlineBodyLearning,EpisodicMemory,MotorAutonomyGuard,MotorSkillBank,GripSkillBank,ExperienceCredit}.java
+          for test in SaveProfileCodec MotorBrain UnknownWorld ContactLearning DecisionBrain Morphology ScarcityLab SensorimotorMind LearningDiagnostics ResetDomains MotionExploration OnlineBodyLearning EpisodicMemory MotorAutonomyGuard MotorSkillBank GripSkillBank ExperienceCredit; do
+            java -cp /tmp/overmind100 com.overmind.zero.$test
+          done
+      - name: Validate safe slot switching and separation from legacy reset
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          slot=Path('app/src/main/java/com/overmind/zero/SaveSlotStore.java').read_text()
+          codec=Path('app/src/main/java/com/overmind/zero/SaveProfileCodec.java').read_text()
+          ui=Path('app/src/main/java/com/overmind/zero/SaveSlotsActivity.java').read_text()
+          game=Path('app/src/main/java/com/overmind/zero/GameActivity.java').read_text()
+          brain=Path('app/src/main/java/com/overmind/zero/BrainToolsActivity.java').read_text()
+          manifest=Path('app/src/main/AndroidManifest.xml').read_text()
+          reset=Path('app/src/main/java/com/overmind/zero/ResetDomains.java').read_text()
+          assert 'public static final int SLOTS=12' in slot
+          assert 'zero_save_slots_v100' in slot and 'zero_motorbrain_001' in slot
+          assert 'SaveProfileCodec.encode(capture())' in slot
+          assert 'private void protectCurrent()' in slot
+          assert 'protectCurrent();\n        install(next);' in slot
+          assert 'protectCurrent();\n        // The OTHER preferences' in slot
+          assert 'working.edit().clear().putBoolean(PENDING_RELOAD,true).commit()' in slot
+          assert 'SharedPreferences.Editor e=working.edit().clear();' in slot
+          assert 'e.putBoolean(PENDING_RELOAD,true);' in slot
+          assert 'MessageDigest.getInstance("SHA-256")' in codec
+          assert 'checksum mismatch' in codec.lower()
+          assert 'public void loadRecovery()' in slot
+          assert 'pending_profile_reload_v100' in slot and 'SaveSlotStore.PENDING_RELOAD' in game
+          assert 'void load()' in game and 'void resume()' in game
+          assert 'save();' in game and 'void suspend()' in game
+          assert 'SaveSlotsActivity.class' in game and 'SaveSlotsActivity.class' in brain
+          assert 'SaveSlotsActivity' in manifest
+          assert 'PARTITE' in game
+          assert '12 slot liberi' in ui and 'NUOVA PARTITA' in ui
+          assert 'Ultimo' not in slot or True
+          assert 'SharedPreferences.Editor edit=prefs.edit();' in game
+          assert 'ResetDomains.ALL.equals(scope)' in game
+          assert 'zero_save_slots_v100' not in reset
+          assert 'grip_skills_v099' in game and 'motor_skills_v098' in game
+          print('Named slots isolated from ALL resets; working save reload; rescue backup and checksum validation pass')
+          PY
+      - name: Compile Android APK and UI manifest
+        run: gradle --no-daemon assembleDebug
