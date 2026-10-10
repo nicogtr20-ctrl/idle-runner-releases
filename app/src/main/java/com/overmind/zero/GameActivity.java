@@ -43,6 +43,7 @@ public final class GameActivity extends Activity {
         BodyProprioception bodySchema=new BodyProprioception();
         SpatialPerception spatialMap=new SpatialPerception();
         CausalExperiments causalExperiments=new CausalExperiments();
+        InstrumentalNavigation navigation=new InstrumentalNavigation();
         MotorAutonomyGuard motorGuard=new MotorAutonomyGuard();
         MotorSkillBank skillBank=new MotorSkillBank();
         GripSkillBank gripBank=new GripSkillBank();
@@ -188,6 +189,9 @@ public final class GameActivity extends Activity {
             causalExperiments=new CausalExperiments();
             causalExperiments.restore(prefs.getString(CausalExperiments.KEY,""));
             sensorMind.attachCausalExperiments(causalExperiments);
+            navigation=new InstrumentalNavigation();
+            navigation.restore(prefs.getString(InstrumentalNavigation.KEY,""));
+            sensorMind.attachNavigation(navigation);
             episodic=new EpisodicMemory();
             episodic.restore(prefs.getString("episodic_memory_v095",""));
             sensorMind.attachMemory(episodic);
@@ -371,6 +375,7 @@ public final class GameActivity extends Activity {
                     creature,surface,chamber,environment,reserve),action);
                 sensorMind.updateBodySense(creature,surface);
                 sensorMind.resumeSpatialSense(creature,chamber,environment);
+                sensorMind.updateNavigationSense(creature,chamber,environment);
                 motorGuard.resetLife(creature.cx,creature.cy);
                 lastSkillStall=motorGuard.recoveryActivations;
                 liveBody.abortTrial();
@@ -425,6 +430,7 @@ public final class GameActivity extends Activity {
               .putString(BodyProprioception.KEY,bodySchema.encode())
               .putString(SpatialPerception.KEY,spatialMap.encode())
               .putString(CausalExperiments.KEY,causalExperiments.encode())
+              .putString(InstrumentalNavigation.KEY,navigation.encode())
               .putString(LifeStatistics.KEY,lifeStats.encode())
               .putInt("motor_recoveries_v097",motorGuard.recoveryActivations)
               .putInt("motor_free_choices_v097",motorGuard.freeChoices)
@@ -488,6 +494,7 @@ public final class GameActivity extends Activity {
                 creature,surface,chamber,environment,reserve));
             sensorMind.updateBodySense(creature,surface);
             sensorMind.updateSpatialSense(creature,chamber,environment);
+            sensorMind.updateNavigationSense(creature,chamber,environment);
             heading=(float)Math.atan2(sensorMind.motorY(),sensorMind.motorX());
         }
         void extendHabitat(){
