@@ -469,6 +469,28 @@ public final class EpisodicMemory {
             throw new AssertionError("v0.9.5 em1 memory migration failed");
         if(!legacy.encode().startsWith("em3;"))
             throw new AssertionError("migration did not upgrade format");
-        System.out.println("ZERO-009.6 passed: varied episodes, beneficial/dangerous recall, consolidation and em1 migration");
+        // The same real interval: physical opening work and red contact.
+        // Two independent episodes must survive, not one summed negative.
+        EpisodicMemory simultaneous=new EpisodicMemory();
+        float[] gate=safe.clone();gate[14]=0;gate[4]=.5f;gate[8]=.7f;
+        float[] gateWithRed=gate.clone();gateWithRed[20]=.85f;
+        for(int i=0;i<5;i++)simultaneous.action(gate,10);
+        for(int i=0;i<3;i++)simultaneous.action(gateWithRed,7);
+        float[] outcomes=new float[UnknownWorld.SIGNATURES];outcomes[1]=-7;
+        if(!simultaneous.consequenceSeparated(5f,outcomes,motor,hand,skin,false)||
+           simultaneous.physicalEpisodes()!=1||simultaneous.energeticEpisodes()!=1||
+           simultaneous.stored()!=2)
+            throw new AssertionError("Red contact wrongly cancels physical displacement episode");
+        simultaneous.suggested(gate);
+        if(simultaneous.bias(7,-1)<-.01f)
+            throw new AssertionError("Red aversion replayed when red is not visible");
+        simultaneous.suggested(gateWithRed);
+        if(simultaneous.bias(7,-1)>=-.3f)
+            throw new AssertionError("Observed red danger was not remembered");
+        EpisodicMemory persisted=new EpisodicMemory();
+        if(!persisted.restore(simultaneous.encode())||
+           persisted.physicalEpisodes()!=1||persisted.energeticEpisodes()!=1)
+            throw new AssertionError("em3 lost independent outcome provenance");
+                System.out.println("ZERO-009.6 passed: varied episodes, beneficial/dangerous recall, consolidation and em1 migration");
     }
 }
