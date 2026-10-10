@@ -288,3 +288,8 @@ Per prove e prossimi step: `docs/EXPERIMENT_0096.md`. VersionCode e digest relea
 - Nuovo salvataggio fisico `GameSceneSnapshot`: stato nucleo 10 masse, membrana 96 punti, cancello e fisica presa, oggetti reali/risorse consumate, vita/posizione/energia/aree esplorate, velocità/pausa; caricamento delle scene e progressi con nuovo `SaveSlotsActivity` e token di reload.
 - Nessuna cancellazione degli archivi da RESET TUTTO, nessun cambiamento alla logica di apprendimento, alla firma/OTA o alle memorie em1/em2. Prove evolutive transitorie e random bit-identico non preservati.
 - QA JVM/Android e gate firmata; test reale sul Galaxy S21 da svolgere. Documento completo `docs/EXPERIMENT_0100.md`.
+
+## OTA 0.10.0-ota.47 — 2026-10-10T09:55:11.154998+00:00
+- Pacchetto Android firmato pubblicato su Vercel (codice 1047).
+- SHA-256: `243cf70ce8a0164b63cef91c8755f846dcbdd9b7f37415290a88147d88f0da43`.
+- APK: `/apk/overmind-zero-1047-243cf70ce8a0.apk`.
