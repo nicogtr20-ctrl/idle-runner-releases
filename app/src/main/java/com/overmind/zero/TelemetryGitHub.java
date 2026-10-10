@@ -114,6 +114,8 @@ final class TelemetryGitHub {
             String key=item.getKey();
             if(excluded(key))continue;
             Object v=item.getValue();
+            if(v instanceof Float && !Float.isFinite((Float)v))continue;
+            if(v instanceof Double && !Double.isFinite((Double)v))continue;
             if(v instanceof Number||v instanceof Boolean||v instanceof String)
                 values.put(key,v);
             else if(v instanceof Set){
