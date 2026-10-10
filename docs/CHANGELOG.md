@@ -312,3 +312,8 @@ Per prove e prossimi step: `docs/EXPERIMENT_0096.md`. VersionCode e digest relea
 - Pacchetto Android firmato pubblicato su Vercel (codice 1049).
 - SHA-256: `238f4366e07eb4518cc6aed2b9c536ab8f77fa6ffc0070663b5c9caa5e335de2`.
 - APK: `/apk/overmind-zero-1049-238f4366e07e.apk`.
+
+## OTA 0.10.2-ota.50 — 2026-10-10T13:01:24.986995+00:00
+- Pacchetto Android firmato pubblicato su Vercel (codice 1050).
+- SHA-256: `fc3dd7f8f754a7e7e530d64ba63b6d82ba1a24f19bfcea9fb17aa5a0f11d497d`.
+- APK: `/apk/overmind-zero-1050-fc3dd7f8f754.apk`.
