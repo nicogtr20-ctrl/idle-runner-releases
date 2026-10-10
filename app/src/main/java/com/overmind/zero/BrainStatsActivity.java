@@ -36,6 +36,7 @@ public final class BrainStatsActivity extends Activity {
         final DecisionBrain decisions;
         final SensorimotorMind worldMind;
         final TemporalWorkingMemory temporal;
+        final TemporalSkillBank temporalSkills;
         final int motorAttempts,motorAccepted,handAttempts,handAccepted;
         final int pushed,collisions,contacts;
         final int exploredCells,motorAccepted094,motorRejected094;
@@ -69,6 +70,8 @@ public final class BrainStatsActivity extends Activity {
                 pref.getString("sensorimotor_diagnostics_v091",""));
             temporal=new TemporalWorkingMemory();
             temporal.restore(pref.getString("temporal_working_memory_v106",""));
+            temporalSkills=new TemporalSkillBank();
+            temporalSkills.restore(pref.getString("temporal_skills_v107",""));
             decisions=new DecisionBrain(90517L);
             decisions.restore(pref.getString("decision_brain_v05",""));
             choiceStart=decisions.initialSnapshot();
@@ -212,6 +215,11 @@ public final class BrainStatsActivity extends Activity {
                 " stati interni  •  confidenza "+
                 String.format(Locale.US,"%.0f%%",temporal.confidence()*100f),
                 Math.min(1f,temporal.validationTransitions/100f),purple);
+            y=skill(c,y,"ABILITA TEMPORALI AUTONOME",
+                temporalSkills.consolidated()+" consolidate",
+                temporalSkills.stored()+" candidate  •  max "+temporalSkills.longest()+
+                " azioni  •  richiami riusciti "+temporalSkills.completions,
+                Math.min(1f,temporalSkills.bestConfidence()),gold);
             LearningDiagnostics diag=worldMind.diagnostics;
             y=skill(c,y,"VERIFICA NUOVO MODELLO",
                 diag.heldoutTransitions+" campioni",
@@ -347,7 +355,7 @@ public final class BrainStatsActivity extends Activity {
         float contentMax(){
             if(tab==1)return 175+91+58+125+38+current().length*40+52;
             if(tab==2)return 177+129+240+101*5+144+36;
-            return 177+129+101*8+39+147+60;
+            return 177+129+101*12+39+147+60;
         }
         void limitScroll(){
             offset=Math.max(0,Math.min(offset,Math.max(0,contentMax()-(H-70))));

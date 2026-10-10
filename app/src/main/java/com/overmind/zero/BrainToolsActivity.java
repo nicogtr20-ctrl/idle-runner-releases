@@ -198,6 +198,31 @@ public final class BrainToolsActivity extends Activity {
         line(memory,"Ultimo effetto fisico ricordato",
              number(episodes.lastEventEffect),AMBER);
         paragraph(memory,"Dalla 0.9.9 la memoria episodica rimane memoria di situazioni, azioni e conseguenze. Non può più sostituire motore, mano o membrana con vecchi pesi, neanche al cancello: i ricordi restano disponibili per influenzare le decisioni autonomamente scelte, non i controller fisici. La banca delle prese conserva separatamente SOLO configurazioni verificate da un'adesione reale. I ricordi em1/em2 migrano automaticamente al formato em3 con provenienza dei nuovi eventi, senza perdere i vecchi ricordi; il modello del mondo rimane intatto.");
+
+        TemporalSkillBank chunks=new TemporalSkillBank();
+        chunks.restore(prefs.getString("temporal_skills_v107",""));
+        LinearLayout skillMemory=panel(body);
+        skillMemory.addView(label("ABILITA TEMPORALI AUTONOME",16,CYAN,true));
+        line(skillMemory,"Sequenze candidate conservate",
+             chunks.stored()+" / "+TemporalSkillBank.MAX_SKILLS,WHITE);
+        line(skillMemory,"Sequenze consolidate da ripetizioni",
+             String.valueOf(chunks.consolidated()),CYAN);
+        line(skillMemory,"Sequenza più lunga",
+             chunks.longest()+" / "+TemporalSkillBank.MAX_LEN+" azioni",WHITE);
+        line(skillMemory,"Conferme massime di una tecnica",
+             String.valueOf(chunks.strongestConfirmations()),CYAN);
+        line(skillMemory,"Suggerimenti di skill",
+             String.valueOf(chunks.suggestions),WHITE);
+        line(skillMemory,"Esecuzioni iniziate",
+             String.valueOf(chunks.activations),WHITE);
+        line(skillMemory,"Esecuzioni con nuovo effetto positivo",
+             String.valueOf(chunks.completions),CYAN);
+        line(skillMemory,"Replay falliti",
+             String.valueOf(chunks.failedReplays),AMBER);
+        line(skillMemory,"Interruzioni per scelta/stato diverso",
+             String.valueOf(chunks.interruptions),AMBER);
+        paragraph(skillMemory,"Una sequenza nasce soltanto dalle azioni realmente scelte da ZERO prima di un effetto positivo reale. Una singola fortuna resta candidata: servono almeno due ricorrenze compatibili prima che possa influenzare una scelta. Durante il replay, se il contesto temporale diverge la skill viene interrotta; non esiste una procedura programmata per porte o oggetti.");
+
         LinearLayout reset=panel(body);
         reset.addView(label("AZZERA APPRENDIMENTO",17,AMBER,true));
         paragraph(reset,"Ogni voce ritorna allo stato vergine SOLO per quel sistema. Altre memorie e reti rimangono. L'azzeramento ricarica il corpo nella mappa per applicare i nuovi parametri in sicurezza.");
@@ -209,6 +234,7 @@ public final class BrainToolsActivity extends Activity {
         resetButton(reset,"MEMORIA DEGLI STIMOLI","Associazioni storiche separate dai cervelli.",ResetDomains.EXPLORATION,false);
         resetButton(reset,"STANZA E SOPRAVVIVENZA","Successi, energie, prese e cronologia della scarsità.",ResetDomains.ROOM,false);
         resetButton(reset,"MEMORIA EPISODICA","Ricordi vissuti, sequenze di azioni e tentativi di richiamo.",ResetDomains.EPISODES,false);
+        resetButton(reset,"ABILITA TEMPORALI","Sequenze autonome consolidate e cronologia dei loro replay.",ResetDomains.TEMPORAL_SKILLS,false);
         resetButton(reset,"AZZERA TUTTO","CANCELLA tutti i cervelli, statistiche, memoria ed esperienze.",ResetDomains.ALL,true);
         LinearLayout saves=panel(body);
         saves.addView(label("LE TUE PARTITE",17,CYAN,true));

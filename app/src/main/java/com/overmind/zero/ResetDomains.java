@@ -11,9 +11,9 @@ public final class ResetDomains {
     public static final String REQUEST="pending_reset_v091";
     public static final String WORLD="world",CHOICE="choice",MOTOR="motor",
             MANIPULATION="manipulation",MEMBRANE="membrane",EXPLORATION="exploration",
-            ROOM="room",EPISODES="episodes",ALL="all";
+            ROOM="room",EPISODES="episodes",TEMPORAL_SKILLS="temporal_skills",ALL="all";
     public static final String[] TYPES={WORLD,CHOICE,MOTOR,MANIPULATION,MEMBRANE,
-                                       EXPLORATION,ROOM,EPISODES,ALL};
+                                       EXPLORATION,ROOM,EPISODES,TEMPORAL_SKILLS,ALL};
     public static String[] keys(String domain){
         switch(domain){
             case WORLD:return new String[]{"sensorimotor_model_v09","sensorimotor_diagnostics_v091",
@@ -40,6 +40,7 @@ public final class ResetDomains {
                  "grip_events_v08","gate_travel_v08","scarcity_elapsed_v08",
                  "scarcity_active_v08"};
             case EPISODES:return new String[]{"episodic_memory_v095","physical_replays_v097"};
+            case TEMPORAL_SKILLS:return new String[]{"temporal_skills_v107"};
             case ALL:return new String[0]; // handled by Editor.clear()
             default:throw new IllegalArgumentException("Unknown reset scope: "+domain);
         }

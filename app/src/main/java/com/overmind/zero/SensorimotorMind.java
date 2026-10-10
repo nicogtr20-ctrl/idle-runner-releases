@@ -27,6 +27,7 @@ public final class SensorimotorMind {
     private transient EpisodicMemory episodic;
     private transient MotorAutonomyGuard motorGuard;
     private transient TemporalWorkingMemory temporal;
+    private transient TemporalSkillBank temporalSkills;
     // Performed-action traces give temporally distant actual resource
     // contacts a learning signal. They NEVER add a geometric direction bias.
     private final ExperienceCredit contactCredit=new ExperienceCredit();
@@ -38,6 +39,7 @@ public final class SensorimotorMind {
         if(learning){
             contactCredit.consequence(actualEnergyDelta,visuallyObservedSignature);
             if(temporal!=null)temporal.energyOutcome(actualEnergyDelta);
+            if(temporalSkills!=null)temporalSkills.energyOutcome(actualEnergyDelta);
         }
     }
     public synchronized String outcomeModel(){return contactCredit.encode();}
@@ -57,6 +59,11 @@ public final class SensorimotorMind {
     public synchronized void attachMotorGuard(MotorAutonomyGuard guard){motorGuard=guard;}
     public synchronized void attachWorkingMemory(TemporalWorkingMemory memory){temporal=memory;}
     public synchronized TemporalWorkingMemory workingMemory(){return temporal;}
+    public synchronized void attachTemporalSkills(TemporalSkillBank bank){temporalSkills=bank;}
+    public synchronized TemporalSkillBank temporalSkills(){return temporalSkills;}
+    public synchronized boolean takeTemporalSkillsDirty(){
+        return temporalSkills!=null&&temporalSkills.takeDirty();
+    }
     private final float[] model=new float[FORWARD_WEIGHTS];
     private final float[] value=new float[VALUE_WEIGHTS];
     private final float[] trialState=new float[S];
@@ -80,6 +87,7 @@ public final class SensorimotorMind {
         trialAction=-1;elapsed=0;
         contactCredit.newLife();
         if(temporal!=null)temporal.resetLife();
+        if(temporalSkills!=null)temporalSkills.resetLife();
     }
     public synchronized void resetEpisode(float[] first){
         // Mortality resets bodily position and short-term context, never
@@ -87,6 +95,7 @@ public final class SensorimotorMind {
         if(first==null){
             trialAction=-1;elapsed=0;contactCredit.newLife();
             if(temporal!=null)temporal.resetLife();
+            if(temporalSkills!=null)temporalSkills.resetLife();
             return;
         }
         begin(first);
@@ -100,6 +109,7 @@ public final class SensorimotorMind {
         System.arraycopy(observation,0,trialState,0,S);
         action=currentAction;trialAction=currentAction;elapsed=0;
         if(temporal!=null)temporal.resumeAction(currentAction);
+        if(temporalSkills!=null)temporalSkills.resumeLife();
     }
     public synchronized float motorX(){return (float)Math.cos((action%8)*Math.PI/4);}
     public synchronized float motorY(){return (float)Math.sin((action%8)*Math.PI/4);}
@@ -140,6 +150,10 @@ public final class SensorimotorMind {
         int proposed=episodic==null?-1:episodic.suggested(senses,!protectMotor);
         int chosen=0;
         float best=-Float.MAX_VALUE;
+        float[] temporalContext=temporal==null?null:temporal.contextCopy();
+        TemporalSkillBank.Advice skillAdvice=
+            temporalSkills==null||temporal==null?null:
+            temporalSkills.advice(temporalContext,temporal.confidence());
         // Offline counterfactual predictions never train the world model or
         // give reward for imagined outcomes. The holdout gate prevents the
         // planner from amplifying an untrained, inaccurate world model.
@@ -175,8 +189,10 @@ public final class SensorimotorMind {
             // Recurrent recent-history advice is exactly zero until its
             // temporal prediction wins on held-out real transitions.
             float temporalBias=temporal==null?0:temporal.choiceBias(a);
+            float skillBias=skillAdvice!=null&&skillAdvice.action==a?skillAdvice.bias:0;
             largestTemporalBias=Math.max(largestTemporalBias,Math.abs(temporalBias));
-            float score=q+earnedValue+planned[a]+curiosity+jitter+memoryBias+diversity+temporalBias;
+            float score=q+earnedValue+planned[a]+curiosity+jitter+memoryBias+
+                        diversity+temporalBias+skillBias;
             if(score>best){best=score;chosen=a;}
         }
         float epsilon=Math.max(.09f,.52f/(1+experiences/120f));
@@ -193,6 +209,8 @@ public final class SensorimotorMind {
         // resource. If later actual contact changes energy, it can be
         // credited retrospectively.
         contactCredit.performed(senses,chosen);
+        if(temporalSkills!=null&&temporalContext!=null)
+            temporalSkills.chosen(temporalContext,chosen);
         if(temporal!=null){
             temporal.chosen(chosen);
             temporal.noteDecision(largestTemporalBias);
@@ -260,7 +278,11 @@ public final class SensorimotorMind {
         if(temporal!=null){
             temporal.observe(before,trialAction,after,lastReward,error,
                 learning&&!holdout,holdout);
-            if(learning&&physicalEffect>.015f)temporal.physicalOutcome(physicalEffect);
+            if(temporalSkills!=null)temporalSkills.transition(temporal.contextCopy());
+            if(learning&&physicalEffect>.015f){
+                temporal.physicalOutcome(physicalEffect);
+                if(temporalSkills!=null)temporalSkills.physicalOutcome(physicalEffect);
+            }
         }
         if(learning&&physicalEffect>.015f)
             contactCredit.displaced(physicalEffect);

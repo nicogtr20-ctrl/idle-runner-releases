@@ -39,6 +39,7 @@ public final class GameActivity extends Activity {
         LifeStatistics lifeStats=new LifeStatistics();
         EpisodicMemory episodic=new EpisodicMemory();
         TemporalWorkingMemory workingMemory=new TemporalWorkingMemory();
+        TemporalSkillBank temporalSkillBank=new TemporalSkillBank();
         MotorAutonomyGuard motorGuard=new MotorAutonomyGuard();
         MotorSkillBank skillBank=new MotorSkillBank();
         GripSkillBank gripBank=new GripSkillBank();
@@ -172,6 +173,9 @@ public final class GameActivity extends Activity {
             workingMemory=new TemporalWorkingMemory();
             workingMemory.restore(prefs.getString("temporal_working_memory_v106",""));
             sensorMind.attachWorkingMemory(workingMemory);
+            temporalSkillBank=new TemporalSkillBank();
+            temporalSkillBank.restore(prefs.getString("temporal_skills_v107",""));
+            sensorMind.attachTemporalSkills(temporalSkillBank);
             episodic=new EpisodicMemory();
             episodic.restore(prefs.getString("episodic_memory_v095",""));
             sensorMind.attachMemory(episodic);
@@ -801,7 +805,8 @@ public final class GameActivity extends Activity {
                             lastAppliedMotor,lastAppliedHand,lastAppliedMembrane,
                             actedFromMemory);
                         if(episodic.repeatEffects>recallsBefore)lifeStats.confirmedRecall();
-                        if(remembered||episodic.takeDirty())save();
+                        if(remembered||episodic.takeDirty()||
+                           sensorMind.takeTemporalSkillsDirty())save();
                         // Remembering an action never substitutes an old
                         // physical controller or interrupts body experiments.
                         OnlineBodyLearning.Result result=liveBody.observe(
