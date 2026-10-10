@@ -142,3 +142,11 @@ Le osservazioni sperimentali del Galaxy S21 restano quelle della v0.9.4 (93 disc
 
 ## PRIORITÀ ZERO 0.9.9 — regressione di presa dalla 0.9.5
 **LEGGERE `docs/EXPERIMENT_0099.md`.** Utente: nella 0.9.4 e precedenti punti arancioni di presa attivati regolarmente, cancello spostato fino a 111 U, locomozione rapida. **Dalla 0.9.5** nessun arancione, movimento rallentato. Screenshot 0.9.8-ota.43: TOCCHI 38.259, ADESIONI 0, DUE LATI 0, PORTA 0, NETTO 93U/VIA 5130U. Confronto storico GitHub commit `9b0e716cab4` (v0.9.4) vs `e5ef6752072` (v0.9.5): fisica `ScarcityLab` e `Morphology` **invariate**; introdotta memoria episodica che sovrascriveva controller motore, mano e membrana e abortiva prove. La 0.9.7 impediva replay del motore ma lasciava replay mano/membrana **durante contatto**. Correzione 0.9.9: nessun replay episodico di pesi corporei, apprendimento delle azioni episodiche invariato, nuovo archivio di 5 skill di presa VERIFICATE con tenuta fisica, recovery solo dopo presa autonomamente scelta ma inefficace, telemetria PRESA SCELTA/COMANDO/TENUTA. Nessuna preprogrammazione dell'apertura. Le prese della 0.9.4 perse senza archivio non si ricostruiscono retroattivamente. Miglioramento da validare su S21.
+
+
+### RILASCIO VERIFICATO 0.9.9-ota.46 — 10 ottobre 2026
+- GitHub Actions staging #38013890946: **success**. Publisher firmato #38014277535: **success**. GitHub Release checksum verificato #38014422904: **success**.
+- App **`com.overmind.zero.ota`**; versionName **`0.9.9-ota.46`**, versionCode **1046**; `OVERMIND-ZERO.apk` **104.528 byte**.
+- SHA256: **`f4524305cdea4094e23c2eb12f664e21f6fe07cff6c3f3e949c0c4e035e6ec1e`**, esattamente uguale in release GitHub e `updater/public/latest.json`.
+- Link esistente (NON ipotetico): `https://github.com/nicogtr20-ctrl/idle-runner-releases/releases/download/overmind-zero-v0.9.9-ota.46/OVERMIND-ZERO.apk`.
+- Installare direttamente sopra la vecchia APK senza disinstallare, **senza premere alcun reset**. Nessun test comportamentale sul Galaxy S21 della 0.9.9 ancora disponibile. La conferma necessaria è la catena PRESA SCELTA→COMANDO→TENUTA e la velocità/NETTO.
