@@ -40,6 +40,7 @@ public final class BrainStatsActivity extends Activity {
         final BodyProprioception bodyMap;
         final SpatialPerception spatial;
         final CausalExperiments causal;
+        final InstrumentalNavigation navigation;
         final int motorAttempts,motorAccepted,handAttempts,handAccepted;
         final int pushed,collisions,contacts;
         final int exploredCells,motorAccepted094,motorRejected094;
@@ -81,6 +82,8 @@ public final class BrainStatsActivity extends Activity {
             spatial.restore(pref.getString(SpatialPerception.KEY,""));
             causal=new CausalExperiments();
             causal.restore(pref.getString(CausalExperiments.KEY,""));
+            navigation=new InstrumentalNavigation();
+            navigation.restore(pref.getString(InstrumentalNavigation.KEY,""));
             decisions=new DecisionBrain(90517L);
             decisions.restore(pref.getString("decision_brain_v05",""));
             choiceStart=decisions.initialSnapshot();
@@ -208,7 +211,7 @@ public final class BrainStatsActivity extends Activity {
         void drawSkills(Canvas c){
             float y=177;
             int total=movementNow.length+handNow.length+choiceNow.length+shapeNow.length+
-                worldMind.parameterCount()+temporal.parameterCount()+bodyMap.parameterCount()+spatial.parameterCount()+causal.learnedParameters();
+                worldMind.parameterCount()+temporal.parameterCount()+bodyMap.parameterCount()+spatial.parameterCount()+causal.learnedParameters()+navigation.parameterCount();
             int original=movementStart.length+handStart.length+DecisionBrain.PARAMS;
             y=hero(c,"POTENZA NEURALE / PARAMETRI",String.valueOf(total),
                 original+" PARAMETRI STORICI  •  "+(total-original)+
@@ -241,6 +244,12 @@ public final class BrainStatsActivity extends Activity {
                 " confronti randomizzati  •  "+
                 causal.confirmedPassages+" passaggi verificati",
                 Math.min(1f,causal.validations/100f),gold);
+            y=skill(c,y,"NAVIGAZIONE STRUMENTALE",
+                navigation.parameterCount()+" stime apprese",
+                navigation.knownEffects()+" conseguenze energetiche  •  "+
+                navigation.verifiedActions()+" movimenti verificati  •  "+
+                navigation.choicesInfluenced+" scelte influenzate",
+                Math.min(1f,navigation.verifiedActions()/16f),cyan);
             y=skill(c,y,"ABILITA TEMPORALI AUTONOME",
                 temporalSkills.consolidated()+" consolidate",
                 temporalSkills.stored()+" candidate  •  max "+temporalSkills.longest()+
