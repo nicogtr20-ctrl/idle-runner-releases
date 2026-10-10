@@ -258,3 +258,8 @@
 - Holdout gate >=30 with action-conditioned error at least 5% better than same-context baseline, randomized trials of multiple alternative actions, max learned choice bias ±0.15. No forced door plan.
 - Save/restore new `ce1` / `causal_experiments_v111` per unchanged 12 named ZERO profiles. New isolated reset and ANALISI section; old physics, 26-input network, temporal memory/skills, proprioception/spatial map, other game saves and signing unchanged.
 - QA 38073279447 & 38073332255 SUCCESS, official signed 38073421560 SUCCESS. Version code1061, size169280, SHA256 8d8f121d985735ca3d7cac507007fb85a1ee192603309c2e867dc39e638e53c3, live Vercel manifest/APK HTTP200. S21 test pending; see `docs/EXPERIMENT_0111.md`.
+
+## OTA 0.11.2-ota.62 — 2026-10-10T19:15:49.866322+00:00
+- Pacchetto Android firmato pubblicato su Vercel (codice 1062).
+- SHA-256: `bbec605688215fea99c450aeb91314e437f197456f6b104b15c2e3388cc07f38`.
+- APK: `/apk/overmind-zero-1062-bbec60568821.apk`.
