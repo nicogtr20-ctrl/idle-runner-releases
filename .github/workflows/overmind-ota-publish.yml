@@ -86,7 +86,7 @@ jobs:
           assert 'lastAppliedMembrane=liveBody.weights(2,shapeTrainer.best);' in app
           assert 'lastAppliedHand=liveBody.weights(1,handTrainer.best);' in app
           assert 'episodic.weights(' not in app
-          assert 'recalledManipulationInAction' in app
+          assert 'recalledManipulationInAction' not in app
           assert 'motorGuard.observe(slice,creature.cx,creature.cy,newlyMeasuredEffect);' in app
           assert 'surface.step(creature,lastAppliedMembrane,px,py,slice,' in app
           assert 'Morphology.collide(surface,object,dt)' in app
@@ -96,7 +96,7 @@ jobs:
           assert '"MEMBRANA"' in page
           world=Path('app/src/main/java/com/overmind/zero/UnknownWorld.java').read_text()
           chamber=Path('app/src/main/java/com/overmind/zero/ScarcityLab.java').read_text()
-          assert 'chamber.constrain(creature,surface,slice);' in app
+          assert 'chamber.constrain(creature,surface,slice,sensorMind.adhesion());' in app
           assert 'foodTouchedByCore(creature)' in app
           assert 'consumed=true;cooldown=Float.POSITIVE_INFINITY' in world
           assert 'leftGrip>0&&rightGrip>0' in chamber
