@@ -1,5 +1,9 @@
 # HANDOFF — punto di ripresa per un'altra chat o agente
 
+## 0.9.8 — RETTIFICA FONDAMENTALE SULL'AUTONOMIA
+La prima versione `0.9.8-ota.42` aggiungeva un bonus direzionale `SensoryValenceGuide` alle 16 scelte. Dopo discussione l'utente ha scelto una filosofia più autonoma: ZERO conosce gli effetti energetici osservati ma non deve essere programmato a convergere verso una sfera; deve poter decidere di prenderla o ignorarla e imparare dagli esiti. Correzione 0098-A rimuove **completamente** `SensoryValenceGuide.java`; `SensorimotorMind.choose` non somma più bonus basati su angoli, segnali visivi e fame. `ExperienceCredit` mantiene le ultime 12 coppie 26 sensi/16 azioni *davvero scelte* e, solo al contatto con variazione di energia vera (risorse normali e rare, danni), aggiorna il valore Q di quelle azioni per credito temporale decrescente. Persistono rete `sensorimotor_model_v09` e tutti i cervelli storici senza migrazione, mutazione/rollback motori e memoria episodica. Nuove statistiche: `real_energy_credits_v098`, `real_damage_credits_v098`, `real_action_credits_v098`. Vecchi `visual_guided_v098`/`visual_avoided_v098` NON guidano più ZERO e non devono essere interpretati come apprendimento attuale. Leggere prima `docs/EXPERIMENT_0098.md` sezione correzione; vecchio testo nel paper riguarda `ota.42`. Deve ancora essere verificato in modo controllato sul Galaxy S21; niente successo attribuito senza dati.
+
+
 **Ultimo aggiornamento:** 2026-10-10
 
 ### Riferimenti
