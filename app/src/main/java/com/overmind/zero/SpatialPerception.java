@@ -308,7 +308,7 @@ public final class SpatialPerception {
         SpatialPerception map=new SpatialPerception();
         float[] empty=sense(body.cx,body.cy,null,objects);
         for(float d:empty)require(d==1f,"Empty world should show open space");
-        UnknownWorld.Entity disk=new UnknownWorld.Entity(body.cx+80,body.cy,0,0);
+        UnknownWorld.Entity disk=new UnknownWorld.Entity(body.cx+80,body.cy,0,2);
         objects.add(disk);
         float[] seen=sense(body.cx,body.cy,null,objects);
         require(seen[0]<1f&&seen[8]==1f,"Visible obstacle must affect only the correct angular sector");
