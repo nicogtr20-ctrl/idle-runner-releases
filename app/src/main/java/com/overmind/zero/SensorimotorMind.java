@@ -30,6 +30,7 @@ public final class SensorimotorMind {
     private transient TemporalSkillBank temporalSkills;
     private transient BodyProprioception bodySchema;
     private transient SpatialPerception spatial;
+    private transient CausalExperiments causal;
     // Performed-action traces give temporally distant actual resource
     // contacts a learning signal. They NEVER add a geometric direction bias.
     private final ExperienceCredit contactCredit=new ExperienceCredit();
@@ -43,6 +44,7 @@ public final class SensorimotorMind {
             if(temporal!=null)temporal.energyOutcome(actualEnergyDelta);
             if(temporalSkills!=null)temporalSkills.energyOutcome(actualEnergyDelta);
             if(bodySchema!=null)bodySchema.actualEnergy(actualEnergyDelta);
+            if(causal!=null)causal.energyOutcome(actualEnergyDelta);
         }
     }
     public synchronized String outcomeModel(){return contactCredit.encode();}
@@ -67,6 +69,8 @@ public final class SensorimotorMind {
     public synchronized BodyProprioception bodySchema(){return bodySchema;}
     public synchronized void attachSpatialPerception(SpatialPerception model){spatial=model;}
     public synchronized SpatialPerception spatialPerception(){return spatial;}
+    public synchronized void attachCausalExperiments(CausalExperiments model){causal=model;}
+    public synchronized CausalExperiments causalExperiments(){return causal;}
     public synchronized void updateSpatialSense(MotorBrain.Body b,ScarcityLab room,
         ArrayList<UnknownWorld.Entity> objects){
         if(spatial!=null)spatial.observeEnvironment(b,room,objects);
@@ -110,6 +114,7 @@ public final class SensorimotorMind {
         if(temporalSkills!=null)temporalSkills.resetLife();
         if(bodySchema!=null)bodySchema.resetLife();
         if(spatial!=null)spatial.resetLife();
+        if(causal!=null)causal.resetLife();
     }
     public synchronized void resetEpisode(float[] first){
         // Mortality resets bodily position and short-term context, never
@@ -120,6 +125,7 @@ public final class SensorimotorMind {
             if(temporalSkills!=null)temporalSkills.resetLife();
             if(bodySchema!=null)bodySchema.resetLife();
             if(spatial!=null)spatial.resetLife();
+            if(causal!=null)causal.resetLife();
             return;
         }
         begin(first);
@@ -136,6 +142,7 @@ public final class SensorimotorMind {
         if(temporalSkills!=null)temporalSkills.resumeLife();
         if(bodySchema!=null)bodySchema.resumeLife();
         // Spatial map is reinstated with the saved physical body separately.
+        if(causal!=null)causal.resumeLife();
     }
     public synchronized float motorX(){return (float)Math.cos((action%8)*Math.PI/4);}
     public synchronized float motorY(){return (float)Math.sin((action%8)*Math.PI/4);}
@@ -196,6 +203,7 @@ public final class SensorimotorMind {
         float largestTemporalBias=0;
         float largestBodyBias=0;
         float largestSpatialBias=0;
+        float largestCausalBias=0;
         for(int a=0;a<ACTIONS;a++){
             float q=estimate(senses,a);
             float predictedChange=0;
@@ -226,10 +234,14 @@ public final class SensorimotorMind {
             // no spatial policy bias until out-of-training predictions win.
             float spatialBias=spatial==null?0:spatial.choiceBias(a);
             largestSpatialBias=Math.max(largestSpatialBias,Math.abs(spatialBias));
+            // Experimental evidence must show heldout predictive advantage
+            // AND repeated randomized alternatives in a similar situation.
+            float causalBias=causal==null||spatial==null?0:causal.choiceBias(spatial,a);
+            largestCausalBias=Math.max(largestCausalBias,Math.abs(causalBias));
             float skillBias=skillAdvice!=null&&skillAdvice.action==a?skillAdvice.bias:0;
             largestTemporalBias=Math.max(largestTemporalBias,Math.abs(temporalBias));
             float score=q+earnedValue+planned[a]+curiosity+jitter+memoryBias+
-                        diversity+temporalBias+skillBias+bodyBias+spatialBias;
+                        diversity+temporalBias+skillBias+bodyBias+spatialBias+causalBias;
             if(score>best){best=score;chosen=a;}
         }
         float epsilon=Math.max(.09f,.52f/(1+experiences/120f));
@@ -259,6 +271,10 @@ public final class SensorimotorMind {
         if(spatial!=null){
             spatial.chosen(chosen);
             spatial.noteDecision(largestSpatialBias);
+        }
+        if(causal!=null&&spatial!=null){
+            causal.chosen(spatial,chosen,actionExploratory);
+            causal.noteDecision(largestCausalBias);
         }
         action=chosen;decisions++;
         estimatedValue=estimate(senses,chosen);
@@ -358,6 +374,8 @@ public final class SensorimotorMind {
                                    learning&&!holdout,holdout);
         if(spatial!=null&&body!=null&&objects!=null)
             spatial.consequence(trialAction,lastReward,learning&&!holdout,holdout);
+        if(causal!=null&&spatial!=null&&body!=null&&objects!=null)
+            causal.consequence(spatial,trialAction,lastReward,learning&&!holdout,holdout);
         if(learning&&!holdout){
             float td=bounded(lastReward+GAMMA*bestFuture(after)-estimate(before,trialAction));
             int base=trialAction*P;
