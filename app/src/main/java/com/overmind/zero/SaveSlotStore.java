@@ -90,10 +90,13 @@ public final class SaveSlotStore {
         return current;
     }
     private String record(String name,byte[] snapshot){
+        return record(name,snapshot,System.currentTimeMillis());
+    }
+    private String record(String name,byte[] snapshot,long date){
         try {
             JSONObject o=new JSONObject();
             o.put("v",1);o.put("name",cleanName(name));
-            o.put("created",System.currentTimeMillis());
+            o.put("created",date);
             o.put("snapshot",Base64.encodeToString(snapshot,Base64.NO_WRAP));
             return o.toString();
         }catch(Exception e){throw new IllegalStateException("Unable to create save record",e);}
@@ -113,7 +116,7 @@ public final class SaveSlotStore {
         if(cleaned.isEmpty())throw new IllegalArgumentException("Nome non valido");
         Entry e=get(slot);
         if(e==null)throw new IllegalStateException("Salvataggio mancante o danneggiato");
-        String data=record(cleaned,e.snapshot);
+        String data=record(cleaned,e.snapshot,e.time);
         if(!slots.edit().putString(key(slot),data).commit())
             throw new IllegalStateException("Impossibile rinominare lo slot");
     }
