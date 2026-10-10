@@ -197,3 +197,14 @@
 - Publisher stabile firmato **38064599838** interamente verde; versionCode **1055**, package `com.overmind.zero.ota`.
 - APK pubblica `/apk/overmind-zero-1055-bdc0dc5fd1dc.apk`, **143.732 byte**, SHA-256 `bdc0dc5fd1dc9dce992d5a9cf139efd560421091f8ada01cec1bcbe47b48ff30`.
 - Manifest e APK Vercel verificati HTTP 200; GitHub Release `overmind-zero-v0.10.6-ota.55` creata.
+
+## 0.10.7 — skill temporali autonome (staging, 10 ottobre 2026)
+- Aggiunto `TemporalSkillBank.java`: max 24 chunk di 2–8 azioni e relativi contesti ricorrenti.
+- Candidati estratti esclusivamente da sequenze realmente eseguite prima di conseguenze positive; una singola occorrenza non può guidare ZERO.
+- Consolidamento dopo almeno due ricorrenze compatibili.
+- Replay soft: bias limitato, policy libera di scegliere altro, abort su divergenza del contesto.
+- Successo del replay richiede un nuovo effetto reale; timeout/danno vengono contabilizzati come fallimenti.
+- Nuova persistenza `temporal_skills_v107`, nuovo reset selettivo **ABILITA TEMPORALI** e diagnostica in CERVELLO/ANALISI.
+- Nessuna modifica a STATISTICHE 25-vs-25.
+- versionName base `0.10.7-ota`.
+- Staging **38065646624** verde, incluse regressioni e Android Debug.
