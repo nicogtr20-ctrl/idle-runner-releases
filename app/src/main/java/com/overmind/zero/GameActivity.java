@@ -36,6 +36,7 @@ public final class GameActivity extends Activity {
         Morphology.Trainer shapeTrainer;
         OnlineBodyLearning liveBody=new OnlineBodyLearning();
         MotionExploration journey=new MotionExploration();
+        LifeStatistics lifeStats=new LifeStatistics();
         EpisodicMemory episodic=new EpisodicMemory();
         MotorAutonomyGuard motorGuard=new MotorAutonomyGuard();
         MotorSkillBank skillBank=new MotorSkillBank();
@@ -128,6 +129,8 @@ public final class GameActivity extends Activity {
                !prefs.edit().remove(SaveSlotStore.PENDING_RELOAD).commit())
                 throw new IllegalStateException("Unable to apply save-slot switch");
             boolean wasReset=consumeResetRequest();
+            lifeStats=new LifeStatistics();
+            boolean restoredLifeStats=lifeStats.restore(prefs.getString(LifeStatistics.KEY,""));
             String initial=prefs.getString("virgin","");
             virgin=decode(initial);
             if(virgin==null){virgin=MotorBrain.virgin(new Random(System.nanoTime()));}
@@ -203,6 +206,10 @@ public final class GameActivity extends Activity {
             if(wasReset||!restoreScene(prefs.getString("physical_scene_v100",""))){
                 resetEpisode();
                 prefs.edit().remove("physical_scene_v100").apply();
+            }else if(!restoredLifeStats){
+                // Pre-0.10.4 scene: do not pretend we measured the full life.
+                // The next real death starts the first complete statistics sample.
+                lifeStats.markPartial();
             }
             save();
         }
@@ -389,6 +396,7 @@ public final class GameActivity extends Activity {
               .putString("sensorimotor_model_v09",sensorMind.serialize())
               .putString("sensorimotor_diagnostics_v091",sensorMind.diagnostics.encode())
               .putString("episodic_memory_v095",episodic.encode())
+              .putString(LifeStatistics.KEY,lifeStats.encode())
               .putInt("motor_recoveries_v097",motorGuard.recoveryActivations)
               .putInt("motor_free_choices_v097",motorGuard.freeChoices)
               .putInt("physical_replays_v097",recalledManipulationEvents)
@@ -507,6 +515,7 @@ public final class GameActivity extends Activity {
         }
         void updateHabitat(float dt){
             worldTime+=dt;elapsedLife+=dt;
+            lifeStats.tick(dt); // physics time, multiplied naturally by x1/x5/x20
             if(!scarcity&&elapsedLife>=70f)scarcity=true;
             // Physiological requirement is part of the organism, NOT a
             // scripted plan for solving the current room.
@@ -549,6 +558,7 @@ public final class GameActivity extends Activity {
                         // regardless of object identity, can strengthen history.
                         environmentEffectSinceAction+=Math.min(18,shift);
                         pushes++;
+                        lifeStats.diskMoved();
                         decisionBrain.learn(object,reserve,reserve,shift);
                         if(chosenObject==object){chosenObject=null;goalTimer=0;}
                         biggestDisplacement=Math.max(biggestDisplacement,shift);
@@ -577,6 +587,7 @@ public final class GameActivity extends Activity {
                     float before=reserve;
                     float delta=object.touch(dx/Math.max(1,dist),dy/Math.max(1,dist));
                     reserve=Math.max(0,Math.min(100,reserve+delta));
+                    lifeStats.contact(reserve-before); // actual clamped contact outcome
                     // Only actual physical contact, never passive hunger,
                     // determines positive/negative autobiographical valence.
                     eventEnergyDeltaSinceAction+=reserve-before;
@@ -607,6 +618,11 @@ public final class GameActivity extends Activity {
                     if(episodic.consequenceSeparated(0,energySinceAction,
                        lastAppliedMotor,lastAppliedHand,lastAppliedMembrane,false))save();
                 }
+                // Close ONE measured life only on real death, never on pause,
+                // scene expansion, app restart or switching named save slots.
+                lifeStats.physical(journey.maxNetLife,journey.lifeCells,
+                    chamber==null?0:chamber.maxDoorTravel);
+                lifeStats.death();
                 reserve=70;lastEvent="CORPO ESAUSTO • MEMORIA CONSERVATA";eventTime=6;
                 resetEpisode();
                 nextChamber=elapsedLife+12f;
@@ -739,6 +755,8 @@ public final class GameActivity extends Activity {
                         chamber.foodTouchedByCore(creature)){
                         float prior=reserve;
                         reserve=Math.min(100,reserve+UnknownWorld.RARE_ENERGY);
+                        lifeStats.contact(reserve-prior);
+                        lifeStats.roomSolved();
                         eventEnergyDeltaSinceAction+=reserve-prior;
                         sensorMind.contactOutcome(reserve-prior,chamber.food.signature);
                         energySinceAction[chamber.food.signature]+=reserve-prior;
@@ -755,6 +773,8 @@ public final class GameActivity extends Activity {
                     // destination to ZERO. Do not count death/respawn as travel.
                     if(lifeStamp==episode){
                         journey.observe(creature.cx,creature.cy,energyBeforeFrame,reserve);
+                        lifeStats.physical(journey.maxNetLife,journey.lifeCells,
+                            chamber==null?0:chamber.maxDoorTravel);
                         // Episodic valence comes only from actual contact;
                         // energyBeforeFrame is retained for motion telemetry.
                     }
@@ -772,10 +792,12 @@ public final class GameActivity extends Activity {
                         environmentEffectSinceAction);
                     if(sensorMind.experiences>beforeExperience){
                         episodic.action(observedBefore,actionBefore);
+                        int recallsBefore=episodic.repeatEffects;
                         boolean remembered=episodic.consequenceSeparated(
                             environmentEffectSinceAction,energySinceAction,
                             lastAppliedMotor,lastAppliedHand,lastAppliedMembrane,
                             actedFromMemory);
+                        if(episodic.repeatEffects>recallsBefore)lifeStats.confirmedRecall();
                         if(remembered||episodic.takeDirty())save();
                         // Remembering an action never substitutes an old
                         // physical controller or interrupts body experiments.
@@ -1043,14 +1065,16 @@ public final class GameActivity extends Activity {
             text(c,"NETTO "+(int)journey.netDistance+" U  •  VIA "+(int)lifeDistance+" U",
                 27,210,19,0xffeffff8,false);
             text(c,"MAX "+(int)journey.recordNet,363,181,10,GOLD,false);
+            text(c,"VITA "+LifeStatistics.duration(lifeStats.current().seconds),338,225,11,GOLD,false);
             float y=H-168;
             rounded(c,12,y,468,H-12,0xe00d1923,21);
             text(c,"APPRENDIMENTO DA ZERO",25,y+25,13,TEAL,false);
             text(c,"MONDO + CORPO + PRESA • APPRENDIMENTO ON",25,y+45,11,0xffacc5ca,false);
-            button(c,18,y+61,123,H-26,"PARTITE",GOLD);
-            button(c,130,y+61,235,H-26,"ANALISI",TEAL);
-            button(c,242,y+61,347,H-26,"TEMPO x"+speed,0xffbfdaec);
-            button(c,354,y+61,463,H-26,"PROVE",GOLD);
+            button(c,18,y+61,100,H-26,"PARTITE",GOLD);
+            button(c,106,y+61,188,H-26,"ANALISI",TEAL);
+            button(c,194,y+61,276,H-26,"STATISTICHE",TEAL);
+            button(c,282,y+61,364,H-26,"TEMPO x"+speed,0xffbfdaec);
+            button(c,370,y+61,463,H-26,"PROVE",GOLD);
             text(c,simulationRunning?"ESPERIENZE SENSORIALI "+sensorMind.experiences+
                "  •  DECISIONI "+sensorMind.decisions:"SIMULAZIONE IN PAUSA",24,255,11,MUTED,false);
             rounded(c,25,276,456,287,0xff273746,5);
@@ -1129,7 +1153,7 @@ public final class GameActivity extends Activity {
             rounded(c,l,t,r,b,0xff203640,13);
             paint.setColor(color);paint.setStyle(Paint.Style.STROKE);paint.setStrokeWidth(1.3f);
             c.drawRoundRect(l,t,r,b,13,13,paint);paint.setStyle(Paint.Style.FILL);
-            text(c,caption,(l+r)*.5f,(t+b)*.5f+5,13,color,true);
+            text(c,caption,(l+r)*.5f,(t+b)*.5f+5,caption.length()>9?10:12,color,true);
         }
         void compare(){
             // Shows ONLY two actual windows from lived experience.
@@ -1146,16 +1170,20 @@ public final class GameActivity extends Activity {
                 invalidate();return true;
             }
             if(y>=H-108){
-                if(x<126){
+                if(x<104){
                     save();
                     saveScene();
                     GameActivity.this.startActivity(new android.content.Intent(
                         GameActivity.this,SaveSlotsActivity.class));
-                }else if(x<238){
+                }else if(x<192){
                     save();
                     GameActivity.this.startActivity(new android.content.Intent(
                         GameActivity.this,BrainToolsActivity.class));
-                }else if(x<350){speed=speed==1?5:speed==5?20:1;}
+                }else if(x<280){
+                    save();saveScene();
+                    GameActivity.this.startActivity(new android.content.Intent(
+                        GameActivity.this,StatisticsActivity.class));
+                }else if(x<368){speed=speed==1?5:speed==5?20:1;}
                 else compare();
                 return true;
             }

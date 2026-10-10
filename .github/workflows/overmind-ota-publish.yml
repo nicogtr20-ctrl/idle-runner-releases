@@ -27,7 +27,7 @@ jobs:
       - name: Unit tests
         run: |
           mkdir -p /tmp/overmind
-          javac -d /tmp/overmind app/src/main/java/com/overmind/zero/MotorBrain.java app/src/main/java/com/overmind/zero/UnknownWorld.java app/src/main/java/com/overmind/zero/ContactLearning.java app/src/main/java/com/overmind/zero/DecisionBrain.java app/src/main/java/com/overmind/zero/Morphology.java app/src/main/java/com/overmind/zero/ScarcityLab.java app/src/main/java/com/overmind/zero/SensorimotorMind.java app/src/main/java/com/overmind/zero/LearnedSequencePlanner.java app/src/main/java/com/overmind/zero/LearningDiagnostics.java app/src/main/java/com/overmind/zero/ResetDomains.java app/src/main/java/com/overmind/zero/OnlineBodyLearning.java app/src/main/java/com/overmind/zero/MotionExploration.java app/src/main/java/com/overmind/zero/EpisodicMemory.java app/src/main/java/com/overmind/zero/MotorAutonomyGuard.java app/src/main/java/com/overmind/zero/MotorSkillBank.java app/src/main/java/com/overmind/zero/ExperienceCredit.java app/src/main/java/com/overmind/zero/GripSkillBank.java app/src/main/java/com/overmind/zero/SaveProfileCodec.java
+          javac -d /tmp/overmind app/src/main/java/com/overmind/zero/MotorBrain.java app/src/main/java/com/overmind/zero/UnknownWorld.java app/src/main/java/com/overmind/zero/ContactLearning.java app/src/main/java/com/overmind/zero/DecisionBrain.java app/src/main/java/com/overmind/zero/Morphology.java app/src/main/java/com/overmind/zero/ScarcityLab.java app/src/main/java/com/overmind/zero/SensorimotorMind.java app/src/main/java/com/overmind/zero/LearnedSequencePlanner.java app/src/main/java/com/overmind/zero/LearningDiagnostics.java app/src/main/java/com/overmind/zero/ResetDomains.java app/src/main/java/com/overmind/zero/OnlineBodyLearning.java app/src/main/java/com/overmind/zero/MotionExploration.java app/src/main/java/com/overmind/zero/EpisodicMemory.java app/src/main/java/com/overmind/zero/MotorAutonomyGuard.java app/src/main/java/com/overmind/zero/MotorSkillBank.java app/src/main/java/com/overmind/zero/ExperienceCredit.java app/src/main/java/com/overmind/zero/GripSkillBank.java app/src/main/java/com/overmind/zero/SaveProfileCodec.java app/src/main/java/com/overmind/zero/LifeStatistics.java
           java -cp /tmp/overmind com.overmind.zero.MotorBrain
           java -cp /tmp/overmind com.overmind.zero.UnknownWorld
           java -cp /tmp/overmind com.overmind.zero.ContactLearning
@@ -46,6 +46,7 @@ jobs:
           java -cp /tmp/overmind com.overmind.zero.GripSkillBank
           java -cp /tmp/overmind com.overmind.zero.ExperienceCredit
           java -cp /tmp/overmind com.overmind.zero.SaveProfileCodec
+          java -cp /tmp/overmind com.overmind.zero.LifeStatistics
           # v0.6 includes v0.5 -> v0.6 weight migration and expansion invariants.
       - name: Confirm trained selection replaced scripted selector
         run: |
@@ -372,6 +373,25 @@ jobs:
           assert 'zero_save_slots_v100' in s and 'public static final int SLOTS=12' in s
           assert 'GameSceneSnapshot.capture(creature,surface,environment,chamber)' in g
           print('ZERO 0.10.2 signed gate: earned short horizon forecasts, source verified Vercel/GitHub update, unchanged installed identity')
+          PY
+      - name: Gate 0.10.4 life statistics, 1x/5x/20x simulation clock and saved player separation
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          g=Path('app/src/main/java/com/overmind/zero/GameActivity.java').read_text()
+          s=Path('app/src/main/java/com/overmind/zero/LifeStatistics.java').read_text()
+          a=Path('app/src/main/java/com/overmind/zero/StatisticsActivity.java').read_text()
+          manifest=Path('app/src/main/AndroidManifest.xml').read_text()
+          assert 'lifeStats.tick(dt);' in g and 'for(int i=0;i<speed;i++)' in g
+          assert 'lifeStats.death();' in g and 'if(reserve<=0)' in g
+          assert 'lifeStats.contact(reserve-before);' in g and 'lifeStats.contact(reserve-prior);' in g
+          assert 'putString(LifeStatistics.KEY,lifeStats.encode())' in g
+          assert 'lifeStats.markPartial();' in g and 'StatisticsActivity.class' in g
+          assert 'public static final int HISTORY=50;' in s
+          assert 'stats.average(m,10)' in a and 'ULTIME 50 VITE COMPLETE' in a
+          assert 'com.overmind.zero.StatisticsActivity' in manifest
+          assert 'episodic.consequenceSeparated(' in g and 'episodic.weights(' not in g
+          print('Simulation-time life stats verified: no fabricated death on pause; old learned controllers unaffected.')
           PY
       - name: Assemble stable signed APK
         if: env.signing_ready == 'true'
