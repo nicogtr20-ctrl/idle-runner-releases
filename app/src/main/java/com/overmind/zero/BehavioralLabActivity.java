@@ -140,6 +140,7 @@ public final class BehavioralLabActivity extends Activity {
         p.navigation=prefs.getString(InstrumentalNavigation.KEY,"");
         p.outcome=prefs.getString("outcome_credit_v101","");
         p.diagnostics=prefs.getString("sensorimotor_diagnostics_v091","");
+        p.planning=prefs.getString("learned_planner_stats_v102","");
         p.memory=prefs.getString("episodic_memory_v095","");
         p.temporal=prefs.getString("temporal_working_memory_v106","");
         p.skills=prefs.getString("temporal_skills_v107","");
