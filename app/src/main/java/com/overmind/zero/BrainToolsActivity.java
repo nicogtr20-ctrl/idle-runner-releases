@@ -133,11 +133,13 @@ public final class BrainToolsActivity extends Activity {
         line(physical,"Record traslazione in una prova motoria",
              number(skills.largestVerifiedNet)+" U",WHITE);
         line(physical,"Tecniche precedenti recuperate",String.valueOf(skills.rollbacks),AMBER);
-        line(physical,"Decisioni con memoria visiva favorevole",
-             String.valueOf(prefs.getInt("visual_guided_v098",0)),CYAN);
-        line(physical,"Decisioni con cautela per segnali appresi",
-             String.valueOf(prefs.getInt("visual_avoided_v098",0)),AMBER);
-        paragraph(physical,"Dal 0.9.8 ZERO conserva più configurazioni motorie che hanno dimostrato traslazione reale e può recuperarne una dopo stalli ripetuti. Un movimento circolare non entra nell'archivio solo per aver percorso tanta strada. Dopo un vero blocco il cervello varia maggiormente le azioni scelte, senza una direzione programmata. La percezione di frequenze visive influenza le decisioni soltanto DOPO un reale contatto con conseguenza energetica appresa: nessun colore è predeterminato. Il recupero è un'ipotesi di miglioramento, non una capacità già dimostrata in gioco.");
+        line(physical,"Contatti energetici accreditati al cervello",
+             String.valueOf(prefs.getInt("real_energy_credits_v098",0)),CYAN);
+        line(physical,"Contatti dannosi accreditati al cervello",
+             String.valueOf(prefs.getInt("real_damage_credits_v098",0)),AMBER);
+        line(physical,"Azioni realmente eseguite con esito accreditato",
+             String.valueOf(prefs.getInt("real_action_credits_v098",0)),WHITE);
+        paragraph(physical,"Correzione 0.9.8: eliminato il bonus direzionale per le sfere. ZERO riceve soltanto le conseguenze energetiche dei contatti realmente avvenuti: le sue precedenti azioni effettivamente eseguite aggiornano i valori appresi della rete neurale. Le 26 percezioni (inclusi gli stimoli visivi) rimangono input del cervello, ma nessun colore induce automaticamente ad andare verso una certa direzione. Il comportamento di ricerca delle risorse deve emergere dai valori appresi, non è garantito. L'archivio delle tecniche motorie, il recupero antistallo e i ricordi preesistenti sono conservati.");
         EpisodicMemory episodes=new EpisodicMemory();
         episodes.restore(prefs.getString("episodic_memory_v095",""));
         LinearLayout memory=panel(body);
