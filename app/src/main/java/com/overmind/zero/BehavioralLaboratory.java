@@ -279,11 +279,12 @@ public final class BehavioralLaboratory {
             prevX=body.cx;prevY=body.cy;
             r.bestDistance=Math.min(r.bestDistance,
                 (float)Math.hypot(stimulus.x-body.cx,stimulus.y-body.cy));
+            long priorExperience=brain.experiences;
             brain.observe(SensorimotorMind.Senses.read(body,surface,room,objects,reserve),
                 DT,effect,body,surface,room,objects);
-            // This accumulates physical displacement within an action
-            // interval only, same boundary as the real app.
-            if(brain.action != -1 && brain.experiences>0)effect=0;
+            // Only clear accumulated real effects when a full motor action
+            // has completed, exactly as live GameActivity does.
+            if(brain.experiences>priorExperience)effect=0;
             if(reserve<=0)break;
         }
         r.endDistance=(float)Math.hypot(stimulus.x-body.cx,stimulus.y-body.cy);
