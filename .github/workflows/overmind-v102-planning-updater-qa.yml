@@ -1,0 +1,63 @@
+name: ZERO 0.10.2 Learned Planning and OTA Recovery QA
+on:
+  push:
+    branches: [feature/overmind-v102-learned-planning-ota-reliability]
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 35
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with: {distribution: temurin, java-version: '17'}
+      - uses: gradle/actions/setup-gradle@v4
+        with: {gradle-version: '8.11.1'}
+      - name: Run independently testable learning and migration tests
+        run: |
+          mkdir -p /tmp/zero102
+          javac -d /tmp/zero102 app/src/main/java/com/overmind/zero/{MotorBrain,UnknownWorld,ContactLearning,DecisionBrain,Morphology,ScarcityLab,SensorimotorMind,LearnedSequencePlanner,LearningDiagnostics,ResetDomains,OnlineBodyLearning,MotionExploration,EpisodicMemory,MotorAutonomyGuard,MotorSkillBank,ExperienceCredit,GripSkillBank,SaveProfileCodec}.java
+          for test in LearnedSequencePlanner SensorimotorMind ExperienceCredit EpisodicMemory LearningDiagnostics MotorBrain UnknownWorld ContactLearning DecisionBrain Morphology ScarcityLab OnlineBodyLearning MotionExploration ResetDomains MotorAutonomyGuard MotorSkillBank GripSkillBank SaveProfileCodec; do
+            java -cp /tmp/zero102 com.overmind.zero.$test
+          done
+      - name: Prove planning is learned, cautious and retains the 12 named slots
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          p=Path('app/src/main/java/com/overmind/zero/LearnedSequencePlanner.java').read_text()
+          brain=Path('app/src/main/java/com/overmind/zero/SensorimotorMind.java').read_text()
+          game=Path('app/src/main/java/com/overmind/zero/GameActivity.java').read_text()
+          diag=Path('app/src/main/java/com/overmind/zero/BrainToolsActivity.java').read_text()
+          reset=Path('app/src/main/java/com/overmind/zero/ResetDomains.java').read_text()
+          slots=Path('app/src/main/java/com/overmind/zero/SaveSlotStore.java').read_text()
+          updater=Path('app/src/main/java/com/overmind/zero/UpdateClient.java').read_text()
+          assert 'public static final int ACTIONS=16,DEPTH=3,BEAM=2' in p
+          assert 'd.baselineAt(i)' in p and 'd.errorAt(i)' in p and 'd.heldoutTransitions<30' in p
+          assert 'float[] next=safePredict(model,current,first)' in p
+          assert 'float[] two=safePredict(model,next,action)' in p
+          assert 'new LearnedSequencePlanner.Model()' in brain
+          assert 'contactCredit.value(state,a)' in brain
+          assert 'planned[a]' in brain
+          assert 'if(random.nextFloat()<epsilon)' in brain
+          assert 'sensorimotor_model_v09' in game
+          assert 'learned_planner_stats_v102' in game and 'learned_planner_stats_v102' in reset
+          assert 'Previsioni attendibili utilizzate' in diag
+          assert 'public static final int SLOTS=12' in slots
+          assert 'physical_scene_v100' in slots and 'SaveProfileCodec.encode(capture())' in slots
+          assert 'MANIFEST_URL=' in updater and 'BACKUP_MANIFEST_URL=' in updater
+          assert 'newestManifest()' in updater and 'versionCode' in updater
+          assert 'MessageDigest.getInstance("SHA-256")' in updater
+          assert 'REDIRECT_LIMIT=6' in updater and 'permittedHost' in updater
+          assert 'overmind-zero-updates.vercel.app' in updater
+          assert 'raw.githubusercontent.com/nicogtr20-ctrl/idle-runner-releases/main/updater/public/latest.json' in updater
+          assert 'release-assets.githubusercontent.com' in updater
+          assert 'FLAG_GRANT_READ_URI_PERMISSION' in updater
+          assert 'canRequestPackageInstalls()' in updater
+          assert 'episodic.consequenceSeparated(' in game
+          assert 'lastAppliedMembrane=liveBody.weights(2,shapeTrainer.best);' in game
+          print('ZERO 0.10.2: predicted 3-step sequences with confidence gate, 12 named slots, signed source-separated OTA fallback')
+          PY
+      - name: Compile APK
+        run: gradle --no-daemon assembleDebug
