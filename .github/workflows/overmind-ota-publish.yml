@@ -139,7 +139,7 @@ jobs:
           assert 'sensorMind.setLearning(true);' in a and 'learning=!learning' not in a
           assert 'if(reserve<=0)' in a and 'resetEpisode();' in a
           assert 'shapeTrainer.attemptGate(trainer.best,handTrainer.best)' not in a
-          assert 'deltaEnergy=(after[0]-before[0])*10f' in m
+          assert 'contactCredit.value(senses,a)' in m and 'contactCredit.displaced(physicalEffect)' in m
           assert 'model[base+j]' in m and 'value[base+k]' in m
           assert 'worldMind.restore(' in ui
           assert 'morph_brain_v07' in a and 'decision_brain_v05' in a
@@ -211,11 +211,11 @@ jobs:
           p=Path('app/src/main/java/com/overmind/zero/SensorimotorMind.java').read_text()
           t=Path('app/src/main/java/com/overmind/zero/BrainToolsActivity.java').read_text()
           assert 'DEPTH=36,MAX_EPISODES=24' in e
-          assert 'raw.startsWith("em1;")' in e and 'raw.startsWith("em2;")' in e
+          assert 'raw.startsWith("em1;")' in e and 'raw.startsWith("em2;")' in e and 'raw.startsWith("em3;")' in e
           assert 'e.confirmed' in e and 'if(e.harmful())' in e
           assert 'eventEnergyDeltaSinceAction+=reserve-before' in g
           assert 'eventEnergyDeltaSinceAction<0' in g
-          assert 'episodic.consequence(' in g
+          assert 'episodic.consequenceSeparated(' in g and 'energySinceAction' in g
           assert 'episodic_memory_v095' in g
           assert 'episodic.bias(a,proposed)' in p
           assert 'Esperienze dannose' in t
@@ -256,12 +256,12 @@ jobs:
           assert 'skillBank.observe(trainer.best,liveBody.lastBaselineNet' in game
           assert 'skillBank.observe(result.weights,liveBody.lastCandidateNet' in game
           assert 'lastAppliedMotor=liveBody.weights(0,trainer.best);' in game
-          assert 'sensorMind.contactOutcome(reserve-before);' in game
-          assert 'sensorMind.contactOutcome(reserve-prior);' in game
+          assert 'sensorMind.contactOutcome(reserve-before,object.signature);' in game
+          assert 'sensorMind.contactOutcome(reserve-prior,chamber.food.signature);' in game
           assert 'contactCredit.performed(senses,chosen);' in policy
-          assert 'contactCredit.consequence(actualEnergyDelta,value);' in policy
+          assert 'contactCredit.consequence(actualEnergyDelta,visuallyObservedSignature)' in policy
           assert 'sensoryBias' not in policy and 'sensoryGuide' not in policy
-          assert 'history.descendingIterator()' in credit
+          assert 'history.descendingIterator()' in credit and 'energetic' in credit and 'mechanical' in credit
           assert 'motorCapable=domain!=MOTOR' in trial
           assert 'motor_skills_v098' in game and 'episodic_memory_v095' in game
           assert 'Math.atan2(chosenObject.y' not in game
@@ -324,6 +324,29 @@ jobs:
           assert 'grip_skills_v099' in g and 'episodic_memory_v095' in g
           assert 'lastAppliedMotor=liveBody.weights(0,trainer.best);' in g
           print('Signed ZERO 0.10.0: twelve named slots, original app identity, true physical checkpoint, SHA256, undo, no erased brains')
+          PY
+      - name: Gate 0.10.1 genuine source-separated outcome memory before signing
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          game=Path('app/src/main/java/com/overmind/zero/GameActivity.java').read_text()
+          ep=Path('app/src/main/java/com/overmind/zero/EpisodicMemory.java').read_text()
+          learner=Path('app/src/main/java/com/overmind/zero/ExperienceCredit.java').read_text()
+          mind=Path('app/src/main/java/com/overmind/zero/SensorimotorMind.java').read_text()
+          assert 'episodic.consequenceSeparated(' in game
+          assert 'energySinceAction[object.signature]+=reserve-before;' in game
+          assert 'energySinceAction[chamber.food.signature]+=reserve-prior;' in game
+          assert 'sensorMind.contactOutcome(reserve-before,object.signature);' in game
+          assert 'outcome_credit_v101' in game and 'outcome_credit_v101' in Path('app/src/main/java/com/overmind/zero/ResetDomains.java').read_text()
+          assert 'em3;' in ep and 'old.kind==kind&&old.source==source' in ep
+          assert 'if(!relevant(e,senses))continue;' in ep
+          assert 'if(learning&&physicalEffect>.015f)' in mind
+          assert 'contactCredit.displaced(physicalEffect)' in mind
+          assert 'contactCredit.value(senses,a)' in mind
+          assert 'energetic' in learner and 'mechanical' in learner
+          assert 'skin.gripCommand[i]>Morphology.GRIP_THRESHOLD' in Path('app/src/main/java/com/overmind/zero/ScarcityLab.java').read_text()
+          assert 'GameSceneSnapshot.capture(creature,surface,environment,chamber)' in game
+          print('Source-conditioned real energy, external displacement, old em1/em2 migration, and 12 named slots remain independent')
           PY
       - name: Assemble stable signed APK
         if: env.signing_ready == 'true'
