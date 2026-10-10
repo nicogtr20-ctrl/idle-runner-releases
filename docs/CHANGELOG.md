@@ -259,3 +259,11 @@ Per prove e prossimi step: `docs/EXPERIMENT_0096.md`. VersionCode e digest relea
 - Il GitHub Release pubblico per gli utenti autorizzati è tag `overmind-zero-v0.9.8-ota.43` con asset `OVERMIND-ZERO.apk`; verifica effettiva del rilascio e digest da fare prima di condividere il link.
 - L'utente può aggiornare direttamente sopra la vecchia versione **senza azzerare**. Se la 0.9.7 è attualmente in fase di miglioramento spontaneo del movimento, può lasciarla continuare e installare questa patch in un momento successivo; l'APK corretta non forza nuovi obiettivi.
 - Nessun risultato di sopravvivenza o maggiore libertà decisionale del dispositivo ancora osservato sulla patch: i test automatici validano componenti e firma, non intelligenza.
+
+## 0.9.9 — 10 ottobre 2026: corretta interferenza del replay episodico con la presa
+- Confronto sorgenti v0.9.4→v0.9.5 rivela introduzione di controller episodici sovrascrittivi nel momento in cui iniziano le regressioni simultanee di grip e movimento, fisica porta invariata.
+- GameActivity non usa più snapshot degli episodi per nessuno dei 3 controller corporei (motore, mano, membrana): solo controller appreso o mutazione in prova; ricordi delle esperienze/azioni preservati.
+- `GripSkillBank`: fino a5 vere coppie hand+membrane conservate con tenuta di adesione fisica e prova di recupero dopo ripetuti tentativi autonomi falliti, senza comandi programmatici di presa.
+- Nuova riga HUD porta con contatori frame PRESA SCELTA/COMANDO/TENUTA/TECNICHE e metriche archivi/recuperi in ANALISI.
+- Persistenza `grip_skills_v099`, reset selettivo della membrana; old brains e 6 motor skills invariati.
+- Test JNI/JVM, fisica cancello, Android staging e firma OTA; conferma comportamento reale S21 ancora da raccogliere. Dettagli `docs/EXPERIMENT_0099.md`.
