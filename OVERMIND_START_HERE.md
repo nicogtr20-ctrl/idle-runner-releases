@@ -1,5 +1,9 @@
 # OVERMIND: ZERO — punto di ingresso per tutte le nuove chat
 
+## CORREZIONE PRIORITARIA 0.10.8-ota.57 (10 ottobre 2026)
+La 0.10.5 aggiunge statistiche robuste 25-vs-25 e lifetime; 0.10.6 una memoria temporale di 16 stati interni; 0.10.7 skill scoperte da sequenze reali. Sono idee coerenti, non ancora prova di miglioramento. Trovato bug critico: GameActivity.load() leggeva temporal_working_memory_v106 e temporal_skills_v107, ma save() non le scriveva. La 0.10.8 le salva entrambe senza toccare motore, memoria episodica o 12 slot. Regression test di persistenza tra due ZERO, staging 38067546249/38067671221 e release 38067752564 tutti SUCCESS. APK firmata 0.10.8-ota.57 code1057, manifest e Vercel HTTP200 verificati. Test sul Galaxy S21 PENDENTE, non azzerare o disinstallare. Documento completo: docs/EXPERIMENT_0108.md.
+
+
 > Ultimo aggiornamento della documentazione: 9 ottobre 2026.
 >
 > **OBIETTIVO DEL PROGETTO:** creare su Android una forma di vita artificiale ("ZERO"), rappresentata da una macchia nera simile a ferrofluido, con corpo deformabile e apprendimento autonomo da esperienze in un mondo simulato. Il giocatore è una presenza invisibile, non impartisce ordini alla creatura e ne modifica il mondo.
