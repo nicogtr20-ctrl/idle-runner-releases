@@ -286,6 +286,44 @@ public final class BrainToolsActivity extends Activity {
         }
         paragraph(spatial,"Nessuna zona nascosta viene rivelata. Le celle dietro ostacoli restano sconosciute. Il cervello NON riceve una mappa completa del mondo né istruzioni di percorso: i suggerimenti spaziali rimangono a zero finche' le previsioni non superano almeno 30 verifiche fuori addestramento. La mappa locale si rinnova ad ogni vita; i pesi appresi restano salvati nel singolo ZERO.");
 
+        CausalExperiments causes=new CausalExperiments();
+        causes.restore(prefs.getString(CausalExperiments.KEY,""));
+        LinearLayout experiment=panel(body);
+        experiment.addView(label("ESPERIMENTI / CAUSA ED EFFETTO",16,CYAN,true));
+        paragraph(experiment,"ZERO confronta come si sposta il proprio corpo con i cambiamenti realmente osservati nelle stesse celle della mappa. Nessuna porta o soluzione pre-programmata.");
+        line(experiment,"Esperimenti osservati",String.valueOf(causes.experiments),WHITE);
+        line(experiment,"Spostamenti del corpo senza variazioni degli ostacoli",
+            String.valueOf(causes.motionWithoutChange),WHITE);
+        line(experiment,"Variazioni spaziali con corpo quasi fermo",
+            String.valueOf(causes.changeWithoutMotion),CYAN);
+        line(experiment,"Celle cambiate (occupato/libero)",
+            String.valueOf(causes.worldChanges),WHITE);
+        line(experiment,"Nuove celle libere osservate",
+            String.valueOf(causes.newlyVisible),WHITE);
+        line(experiment,"Aperture possibili osservate",
+            String.valueOf(causes.tentativeOpenings),AMBER);
+        line(experiment,"Passaggi attraversati davvero",
+            String.valueOf(causes.confirmedPassages),CYAN);
+        line(experiment,"Alternative provate casualmente",
+            String.valueOf(causes.testedAlternatives()),WHITE);
+        line(experiment,"Ipotesi confrontabili tra azioni",
+            String.valueOf(causes.confirmedHypotheses()),WHITE);
+        line(experiment,"Previsioni verificate fuori addestramento",
+            String.valueOf(causes.validations),WHITE);
+        line(experiment,"Errore modello per azione",
+            causes.validations>0?number(causes.modelError):"—",WHITE);
+        line(experiment,"Errore riferimento stesso contesto",
+            causes.validations>0?number(causes.referenceError):"—",MUTED);
+        line(experiment,"Fiducia sperimentale",
+            String.format(Locale.US,"%.1f%%",100f*causes.confidence()),CYAN);
+        line(experiment,"Scelte influenzate da prove",
+            String.valueOf(causes.choiceInfluences),WHITE);
+        line(experiment,"Ultimo spostamento del proprio corpo",
+            String.format(Locale.US,"%.1f U",causes.lastBodyMove),WHITE);
+        line(experiment,"Ultimi cambiamenti dell'ambiente",
+            String.format(Locale.US,"%.0f celle",causes.lastEnvironmentalChange),WHITE);
+        paragraph(experiment,"Un ostacolo che sembra scomparso e' soltanto un'ipotesi di apertura. Si conta un passaggio solo quando il corpo attraversa effettivamente quella cella in seguito. Prima di cambiare le proprie decisioni ZERO deve superare almeno 30 prove non usate per apprendere, prevedere meglio del riferimento e aver provato diverse azioni in situazioni simili. Associazioni e verifiche non costituiscono una prova di causalita' certa.");
+
         LinearLayout reset=panel(body);
         reset.addView(label("AZZERA APPRENDIMENTO",17,AMBER,true));
         paragraph(reset,"Ogni voce ritorna allo stato vergine SOLO per quel sistema. Altre memorie e reti rimangono. L'azzeramento ricarica il corpo nella mappa per applicare i nuovi parametri in sicurezza.");
@@ -300,6 +338,7 @@ public final class BrainToolsActivity extends Activity {
         resetButton(reset,"ABILITA TEMPORALI","Sequenze autonome consolidate e cronologia dei loro replay.",ResetDomains.TEMPORAL_SKILLS,false);
         resetButton(reset,"PERCEZIONE CORPOREA","Mappa tattile, previsioni e valori motori appresi; non cancella la membrana fisica.",ResetDomains.PROPRIOCEPTION,false);
         resetButton(reset,"PERCEZIONE SPAZIALE","Azzeramento SOLO dei raggi, della memoria locale degli ostacoli e dei pesi spaziali.",ResetDomains.SPATIAL,false);
+        resetButton(reset,"ESPERIMENTI CAUSALI","Azzera SOLO esperimenti, alternative provate e ipotesi apprese, senza toccare i sensori o la memoria spaziale.",ResetDomains.CAUSAL,false);
         resetButton(reset,"AZZERA TUTTO","CANCELLA tutti i cervelli, statistiche, memoria ed esperienze.",ResetDomains.ALL,true);
         LinearLayout saves=panel(body);
         saves.addView(label("LE TUE PARTITE",17,CYAN,true));
