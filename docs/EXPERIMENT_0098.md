@@ -1,4 +1,31 @@
 # OVERMIND ZERO — Esperimento 0098: recupero locomotorio ed energia appresa
+
+> **AGGIORNAMENTO SUCCESSIVO ALLA PRIMA 0.9.8 — CORREZIONE DELL'AUTONOMIA (10 OTTOBRE 2026).** La descrizione più sotto delle preferenze di orientamento alle sfere si riferisce esclusivamente alla precedente **0.9.8-ota.42**. L'intervento della nuova **0.9.8 corretta** sostituisce quel meccanismo. Non leggere `SensoryValenceGuide` come componente ancora attivo.
+
+## CORREZIONE 0098-A — Separare la scelta autonoma dagli incentivi di direzione
+
+**Problema sollevato dall'utente dopo il rilascio 0.9.8:** la formula che attribuiva punti extra alle azioni rivolte verso settori visivi associati a energia può creare un orientamento comportamentale deciso dall'ingegnere. L'utente vuole che, se ZERO ha imparato che una sfera è vantaggiosa e ha poca energia, **possa comunque decidere autonomamente se prenderla o no**, sulla base delle proprie esperienze e conseguenze previste. Ha inoltre riferito che sulla vecchia versione (0.9.7) il movimento si era spontaneamente sbloccato, tornando a esplorare e interagire; questo è un dato osservazionale, **non prova che la versione precedente fosse del tutto corretta**.
+
+### Differenza tra la 0.9.8-ota.42 e la 0.9.8 corretta
+
+- **ELIMINATO** `SensoryValenceGuide.java`. Prima calcolava per ogni heading un bonus/penalità dal coseno fra la direzione candidata e un settore visivo, moltiplicando per valore energetico noto e fame. Anche se non chiamava `goto(sfera)`, era un incentivo ingegneristico a muoversi verso/contro certi segnali. Non è più presente nell'APK.
+- **NUOVO** `ExperienceCredit.java`: non vede **mai** una sfera, le sue coordinate, la sua direzione, colore o firma fisica; registra semplicemente la storia delle **ultime 12 decisioni effettivamente eseguite**, ciascuna con i 26 sensi realmente percepiti. Solo quando `GameActivity.resolveObjects` registra un cambiamento energetico da un **contatto fisico vero**, oppure un contatto concreto con la risorsa rara nel laboratorio, `SensorimotorMind.contactOutcome(actualEnergyDelta)` fa aggiornare i pesi di valore Q **associati alle azioni realmente scelte da ZERO**. Le azioni più vicine temporalmente all'effetto hanno credito maggiore tramite decadimento 0.83 per passo. La scala del segnale energetico è fisica, basata sull'effetto realmente ottenuto, senza colori prestabiliti o previsione semantica. Il codice continua a premiare genericamente guadagni energetici e a penalizzare perdite, come condizione fisiologica progettata, non come traiettoria prefissata.
+- **NESSUN CONTATTO = NESSUN PREMIO DA QUESTA NUOVA MEMORIA TEMPORALE**. Il modello originale a 26 sensori e 16 azioni, la rete Q e il predittore a un passo di 11.664 pesi, la curiosità, la memoria episodica e la libera esplorazione stocastica restano operativi. Le 26 percezioni includono i settori visivi, quindi la rete può **apprendere nel tempo** che certe azioni in certi contesti visivi precedono benefici o danni: ma non riceve istruzioni «scegli azione rivolta al blu». Può scegliere una direzione diversa, anche con energia bassa.
+- **DOPO LA MORTE** si azzera soltanto la traccia transitoria di 12 azioni (non il cervello Q persistente, non il modello, non le memorie, non il banco motorio). Si evita l'errata attribuzione di conseguenze a una vita precedente.
+- **Conservati senza modifiche**: `MotorSkillBank` (6 tecniche motrici verificate e recupero in stallo), `OnlineBodyLearning` (soglie minime di NETTO), `MotorAutonomyGuard` (penalizzazione di azioni ripetitive soltanto durante stallo), `EpisodicMemory` (em1/em2), 62 motore, 18 manipolazione, 82 membrana, 96 particelle, modello di mondo `wm1`.
+- **Nuova diagnostica**: `real_energy_credits_v098` (contatti di energia guadagnata effettivamente), `real_damage_credits_v098` (contatti dannosi effettivamente), `real_action_credits_v098` (azioni eseguite alle quali sono stati assegnati crediti temporali). Sono indicatori dell'apprendimento e NON attestati che ZERO sappia scegliere gli obiettivi o sopravvivere; i precedenti contatori `visual_guided_v098`/`visual_avoided_v098` erano relativi alla formula rimossa e non sono usati per la policy. Vecchi dati non vengono azzerati quando si aggiorna.
+
+### Limiti scientifici della correzione
+Questo costituisce **apprendimento per rinforzo temporalmente esteso**, non autonomia assoluta né una dimostrazione di decisione libera filosoficamente. Le ricompense di sopravvivenza/energia sono comunque progettate come caratteristiche del corpo e dell'apprendimento. La memoria temporale attribuisce beneficio o danno **a precedenti azioni correlate**, non isola sicuramente la causalità. Senza una ricompensa energetica vissuta, la rete potrebbe non imparare a raggiungere una risorsa: un organismo può ancora morire vicino a sfere. Non è un planner multi-tappa, non predice in modo affidabile tutti i percorsi, e non è dimostrato che estenda appositamente la membrana per raggiungere l'energia.
+
+### Test e protocollo Galaxy S21
+- Test JVM `ExperienceCredit.main`: una ricompensa fisica accredita azioni precedenti con il loro contesto sensoriale; il danno vero assegna valore opposto; senza contatto i pesi non cambiano; la morte elimina la traccia senza cancellare apprendimento; statistiche ripristinabili. Test di regressione su motore, predizione, memoria, porta, reset e compilazione Android.
+- Il rilascio va verificato con **compilazione firmata**, stesso package `com.overmind.zero.ota` e firma, versioneCode superiore, hash APK verificato e download reale GitHub Releases.
+- Sul telefono, installare sopra 0.9.7/0.9.8 senza disinstallare; osservare x5 per tempi equivalenti: distanze NETTO/VIA, sfere effettivamente toccate, riserve energia al contatto, contatti con danno, tempi di vita, mutanti salvati, recuperi dal blocco. Non interpretare la «scelta libera» dal solo movimento apparente.
+- Se ZERO continua a girare o morire vicino a risorse, raccogliere i dati e diagnosticare modello temporale, forma corporea, visibilità/occlusione, politiche neurali e memoria; non reintrodurre bonus di direzione hardcoded per mascherare il problema.
+
+---
+
 **Data:** 10 ottobre 2026 · **Stato:** APK 0.9.8-ota.42 compilata e firmata; test Galaxy S21 ancora necessario.
 
 ## 1. Nuovo feedback reale dell'utente
