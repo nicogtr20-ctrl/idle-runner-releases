@@ -119,6 +119,12 @@ public final class GameActivity extends Activity {
             return true;
         }
         void load(){
+            // Named slot loads/new-game atomically swap the working profile
+            // while this Activity is paused. Discard any stale in-memory
+            // controllers BEFORE the next frame or save.
+            if(prefs.getBoolean(SaveSlotStore.PENDING_RELOAD,false) &&
+               !prefs.edit().remove(SaveSlotStore.PENDING_RELOAD).commit())
+                throw new IllegalStateException("Unable to apply save-slot switch");
             consumeResetRequest();
             String initial=prefs.getString("virgin","");
             virgin=decode(initial);
@@ -294,7 +300,8 @@ public final class GameActivity extends Activity {
         void resume(){
             // A reset requested from CERVELLO/ANALISI must replace objects in
             // memory before the next frame can save old weights again.
-            if(prefs.contains(ResetDomains.REQUEST))load();
+            if(prefs.contains(ResetDomains.REQUEST)||
+               prefs.getBoolean(SaveSlotStore.PENDING_RELOAD,false))load();
             learning=true;
             enabled=true;lastFrame=0;postInvalidateOnAnimation();
             // All adaptation happens in the visible world. Inherited motor
@@ -921,9 +928,10 @@ public final class GameActivity extends Activity {
             rounded(c,12,y,468,H-12,0xe00d1923,21);
             text(c,"APPRENDIMENTO DA ZERO",25,y+25,13,TEAL,false);
             text(c,"MONDO + CORPO + PRESA • APPRENDIMENTO ON",25,y+45,11,0xffacc5ca,false);
-            button(c,19,y+61,153,H-26,"ANALISI",TEAL);
-            button(c,165,y+61,314,H-26,"TEMPO x"+speed,0xffbfdaec);
-            button(c,326,y+61,462,H-26,"PROVE",GOLD);
+            button(c,18,y+61,123,H-26,"PARTITE",GOLD);
+            button(c,130,y+61,235,H-26,"ANALISI",TEAL);
+            button(c,242,y+61,347,H-26,"TEMPO x"+speed,0xffbfdaec);
+            button(c,354,y+61,463,H-26,"PROVE",GOLD);
             text(c,simulationRunning?"ESPERIENZE SENSORIALI "+sensorMind.experiences+
                "  •  DECISIONI "+sensorMind.decisions:"SIMULAZIONE IN PAUSA",24,255,11,MUTED,false);
             rounded(c,25,276,456,287,0xff273746,5);
@@ -1019,12 +1027,15 @@ public final class GameActivity extends Activity {
                 invalidate();return true;
             }
             if(y>=H-108){
-                if(x<157){
+                if(x<126){
+                    save();
+                    GameActivity.this.startActivity(new android.content.Intent(
+                        GameActivity.this,SaveSlotsActivity.class));
+                }else if(x<238){
                     save();
                     GameActivity.this.startActivity(new android.content.Intent(
                         GameActivity.this,BrainToolsActivity.class));
-                }
-                else if(x<319){speed=speed==1?5:speed==5?20:1;}
+                }else if(x<350){speed=speed==1?5:speed==5?20:1;}
                 else compare();
                 return true;
             }
