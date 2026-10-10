@@ -226,3 +226,12 @@ Il feedback reale della 0.9.4: ZERO era rapido; dalla 0.9.5 quasi fermo. Analisi
 
 ## ZERO 0.9.8 — HANDOFF (10 ottobre 2026)
 **Documento sperimentale completo `docs/EXPERIMENT_0098.md`.** Utente riferisce movimento ripetitivo nello stesso punto e morte con sfere energetiche vicine. Analisi: la policy sensori-azioni non usava i valori di `UnknownWorld.Mind` già appresi; mancava un archivio dei controller motori precedenti e il guard inibiva i ricordi ma non penalizzava le azioni ripetute. Nuove classi `MotorSkillBank` (max6, motor_skills_v098, recupero controller dopo stallo) e `SensoryValenceGuide` (bonus/avversione dei 16 heading dalla visione a 12 canali e dall'energia effettivamente osservata durante contatti). `OnlineBodyLearning` ora accetta mutanti motori solo se NETTO>=max(7,80%baseline); `MotorAutonomyGuard` penalizza azioni ripetute durante stallo e aumenta epsilon >=0.28. Non ha hardcode di blu/rosso né `goto()` verso la risorsa. Vecchie reti 62/18/82, 11664 modello, memoria em1/em2 e stats conservate. Test JVM e Android compilation passati, conferma su Galaxy S21 mancante. Codice `feature/overmind-inapp-updater`, staging `feature/overmind-v098-skill-survival-loop`, documenti/release `main`.
+
+
+### RELEASE OTA FIRMATA 0.9.8-ota.42 — 10 ottobre 2026
+- **VersionName** `0.9.8-ota.42`; **versionCode** 1042, package `com.overmind.zero.ota`, peso **101.320 byte**.
+- **Checksum SHA-256 firmato:** `81cb0480de8b47e3cf781c6ddc5e771377ebcfa9d811679a6c202d201bfbf124`.
+- **GitHub Actions** staging `38009632805` = success (JVM, motore, sopravvivenza, Gradle Android) e stable firmata `38009921490` = success (stessa firma e manifest OTA pubblicato).
+- **Manifest GitHub**: `updater/public/latest.json`; APK in `updater/public/apk/overmind-zero-1042-81cb0480de8b.apk`. Release GitHub con tag `overmind-zero-v0.9.8-ota.42` via pipeline fallback su `main`.
+- Il corretto funzionamento sul Samsung Galaxy S21 **deve ancora essere provato**. L'archivio di skill non può recuperare automaticamente motorii della 0.9.4 già sovrascritti prima di questa versione; potrà salvare quelli efficaci osservati d'ora in poi.
+- **Installare sopra la versione precedente SENZA disinstallare né azzerare alcuna memoria.**
