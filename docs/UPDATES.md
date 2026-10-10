@@ -33,3 +33,6 @@ Skill temporali autonome validate su staging **38065646624** e publisher firmato
 - APK: `https://overmind-zero-updates.vercel.app/apk/overmind-zero-1056-a433978f8420.apk`, **149.392 byte**.
 - Manifest e APK verificati HTTP 200.
 È corretto usare **AGGIORNA** nell'app. Installare sopra la versione esistente; non disinstallare.
+
+## 0.10.8-ota.57 — disponibilità verificata 10 ottobre 2026
+Pubblicazione stable GitHub Actions 38067752564 SUCCESS, code 1057, identità com.overmind.zero.ota invariata, APK 150816 byte SHA256 50b45e37a1cc7d801408c0800000a0f957ea2c89159afbff4fb0ba22df3eddc3. Latest manifest pubblico https://overmind-zero-updates.vercel.app/latest.json HTTP200 versione 0.10.8-ota.57, e https://overmind-zero-updates.vercel.app/apk/overmind-zero-1057-50b45e37a1cc.apk HTTP200 content-length 150816. In-app AGGIORNA su Galaxy S21 ancora da provare, installare in-place senza disinstallare, salvataggi invariati. Fix dettagliato docs/EXPERIMENT_0108.md.
