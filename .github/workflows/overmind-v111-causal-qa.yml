@@ -1,0 +1,73 @@
+name: ZERO 0.11.1 Causal Experiments QA
+on:
+  push:
+    branches: [feature/overmind-v111-causal-experiments]
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 35
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+      - uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: '8.11.1'
+      - name: Verify lived cause/effect learning and previous ZERO regressions
+        run: |
+          mkdir -p /tmp/zero111
+          javac -d /tmp/zero111 app/src/main/java/com/overmind/zero/{MotorBrain,UnknownWorld,ContactLearning,DecisionBrain,Morphology,ScarcityLab,SensorimotorMind,SpatialPerception,CausalExperiments,BodyProprioception,TemporalWorkingMemory,TemporalSkillBank,TemporalPersistenceRegression,LearnedSequencePlanner,LearningDiagnostics,ResetDomains,OnlineBodyLearning,MotionExploration,EpisodicMemory,MotorAutonomyGuard,MotorSkillBank,ExperienceCredit,GripSkillBank,SaveProfileCodec,LifeStatistics}.java
+          for test in CausalExperiments SpatialPerception BodyProprioception TemporalPersistenceRegression TemporalWorkingMemory TemporalSkillBank SaveProfileCodec EpisodicMemory LifeStatistics SensorimotorMind ExperienceCredit LearnedSequencePlanner MotorBrain UnknownWorld ContactLearning DecisionBrain Morphology ScarcityLab OnlineBodyLearning MotionExploration ResetDomains MotorAutonomyGuard MotorSkillBank GripSkillBank; do
+            java -cp /tmp/zero111 com.overmind.zero.$test
+          done
+      - name: Verify actual causal interventions, safe memory, no privileged geometry
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          p=Path('app/src/main/java/com/overmind/zero/CausalExperiments.java').read_text()
+          rays=Path('app/src/main/java/com/overmind/zero/SpatialPerception.java').read_text()
+          game=Path('app/src/main/java/com/overmind/zero/GameActivity.java').read_text()
+          mind=Path('app/src/main/java/com/overmind/zero/SensorimotorMind.java').read_text()
+          reset=Path('app/src/main/java/com/overmind/zero/ResetDomains.java').read_text()
+          analysis=Path('app/src/main/java/com/overmind/zero/BrainToolsActivity.java').read_text()
+          stats=Path('app/src/main/java/com/overmind/zero/BrainStatsActivity.java').read_text()
+          slot=Path('app/src/main/java/com/overmind/zero/SaveSlotStore.java').read_text()
+          gradle=Path('app/build.gradle').read_text()
+          assert 'CONTEXTS=3, ACTIONS=SensorimotorMind.ACTIONS' in p
+          assert 'scene.perceivedX()-anchorX' in p and 'scene.observedCell(originX+dx,originY+dy)' in p
+          assert 'old>=2&&now<0' in p and 'old<=-2&&now>=2' in p
+          assert 'candidateKeys' in p and 'confirmedPassages++' in p
+          assert 'randomTried[slot]<3' in p and 'contextRandom[ctx]-randomTried[slot]<5' in p
+          assert 'if(validations<30' in p and 'modelError>=referenceError*.95f' in p
+          assert 'livedReward' in p and 'energyDelta' in p
+          assert 'body.cx' not in p and 'room.gate' not in p
+          assert 'public byte observedCell(int cx,int cy)' in rays
+          assert 'public float perceivedX()' in rays and 'public float perceivedY()' in rays
+          assert 'public static final int S=26;' in mind
+          assert 'causal.choiceBias(spatial,a)' in mind
+          assert 'causal.chosen(spatial,chosen,actionExploratory)' in mind
+          assert 'causal.consequence(spatial,trialAction,lastReward,learning&&!holdout,holdout)' in mind
+          assert 'causal.energyOutcome(actualEnergyDelta)' in mind
+          assert 'causalExperiments.restore(prefs.getString(CausalExperiments.KEY,""))' in game
+          assert '.putString(CausalExperiments.KEY,causalExperiments.encode())' in game
+          assert '.putString(SpatialPerception.KEY,spatialMap.encode())' in game
+          assert '.putString(BodyProprioception.KEY,bodySchema.encode())' in game
+          assert '.putString("episodic_memory_v095",episodic.encode())' in game
+          assert '.putString("temporal_working_memory_v106",workingMemory.encode())' in game
+          assert '.putString("temporal_skills_v107",temporalSkillBank.encode())' in game
+          assert '.putString(LifeStatistics.KEY,lifeStats.encode())' in game
+          assert 'case CAUSAL:return new String[]{CausalExperiments.KEY};' in reset
+          assert 'ResetDomains.CAUSAL' in analysis
+          assert 'causal.learnedParameters()' in stats
+          assert 'SaveProfileCodec.encode(capture())' in slot and 'SLOTS=12' in slot
+          assert '0.11.1-ota' in gradle and "applicationId 'com.overmind.zero.ota'" in gradle
+          assert 'lifeStats.tick(dt)' in game and 'for(int i=0;i<speed;i++)' in game
+          print('ZERO 0.11.1: observed interventions, independent learned hypotheses, heldout and randomized gates, old 26D neural model and 12 save slots safe')
+          PY
+      - name: Android APK builds with saved games preserved
+        run: gradle --no-daemon assembleDebug
