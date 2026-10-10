@@ -1,5 +1,14 @@
 # CHANGELOG — storico OVERMIND ZERO
 
+## 0.9.8 AUTONOMY PATCH — rettifica dopo prima OTA.42 (10 ottobre 2026)
+- Rimosso `SensoryValenceGuide.java`: eliminate preferenze direzionali determinate matematicamente da vicinanza angolare a una fonte visiva nota.
+- Nuovo `ExperienceCredit.java` registra fino a 12 coppie percezione+azione REALI e aggiorna i normali pesi Q soltanto dopo che un contatto energetico reale produce guadagno o danno.
+- `SensorimotorMind.choose` non aggiunge più `sensoryBias`; nessun `goto(sfera)` né tabella innata colore→azioni. Un comportamento favorevole può emergere dai Q appresi, ma non è garantito.
+- Conservati gli altri miglioramenti 0.9.8 (archivio motore max6, anti-stallo, retention), i vecchi 11.664 pesi del predittore e la memoria episodica `em1/em2`.
+- TELEMETRIA: veri contatti energetici positivi/negativi e numero di azioni passate cui l'esito viene attribuito, invece dei precedenti contatori di bonus visivi. Reset WORLD include nuovi contatori.
+- Limiti, test e motivazione scientifica: `docs/EXPERIMENT_0098.md`, sezione CORREZIONE 0098-A. Nessuna convalida del comportamento su Samsung S21 ancora ottenuta.
+
+
 > Le versioni seguenti sono *esperimenti*, non un prodotto finito. Aggiornare questa pagina in OGNI release insieme al file HANDOFF.
 
 ## 2026-10-09 — Infrastruttura aggiornamenti (in preparazione)
