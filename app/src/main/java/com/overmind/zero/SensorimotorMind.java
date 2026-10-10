@@ -32,6 +32,12 @@ public final class SensorimotorMind {
     private transient SpatialPerception spatial;
     private transient CausalExperiments causal;
     private transient InstrumentalNavigation navigation;
+    // Benchmark-only ablation: sensors, learning and all other policy terms
+    // still run. Default production behavior is unchanged (true).
+    private transient boolean navigationAdviceEnabled=true;
+    public synchronized void setNavigationAdviceEnabled(boolean enabled){
+        navigationAdviceEnabled=enabled;
+    }
     private float actualEnergySinceChoice=0f;
     private transient MotorBrain.Body observedBody;
     // Performed-action traces give temporally distant actual resource
@@ -266,7 +272,8 @@ public final class SensorimotorMind {
             // Treat old locomotion-centered TD values as a limited prior:
             // walking is a MEANS, not an intrinsically rewarding goal.
             float legacyQ=.38f*Math.max(-2f,Math.min(2f,q));
-            float instrumental=navigation==null?0:navigation.bias(a,senses[0]);
+            float instrumental=navigation==null||!navigationAdviceEnabled?0:
+                navigation.bias(a,senses[0]);
             largestInstrumentalBias=Math.max(largestInstrumentalBias,Math.abs(instrumental));
             float score=legacyQ+earnedValue+planned[a]*.50f+curiosity+jitter+memoryBias+
                         diversity+temporalBias+skillBias+bodyBias+spatialBias+causalBias+
