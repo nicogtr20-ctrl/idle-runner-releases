@@ -38,6 +38,11 @@ public final class GameActivity extends Activity {
         EpisodicMemory episodic=new EpisodicMemory();
         MotorAutonomyGuard motorGuard=new MotorAutonomyGuard();
         MotorSkillBank skillBank=new MotorSkillBank();
+        GripSkillBank gripBank=new GripSkillBank();
+        // Read-only physical test instrumentation, scoped to the current room.
+        int previousGripDrive=0,previousGripHeld=0;
+        int ongoingUnsuccessfulGrip=0;
+        int gripRecoveryCooldown=0;
         int lastSkillStall=0;
         float environmentEffectSinceAction=0,eventEnergyDeltaSinceAction=0;
         boolean recalledManipulationInAction=false;
@@ -160,6 +165,8 @@ public final class GameActivity extends Activity {
             sensorMind.attachMotorGuard(motorGuard);
             skillBank=new MotorSkillBank();
             skillBank.restore(prefs.getString("motor_skills_v098",""));
+            gripBank=new GripSkillBank();
+            gripBank.restore(prefs.getString("grip_skills_v099",""));
             lastSkillStall=motorGuard.recoveryActivations;
             recalledManipulationEvents=prefs.getInt("physical_replays_v097",0);
             reserve=prefs.getFloat("zero_energy_v03",57f);
@@ -238,6 +245,7 @@ public final class GameActivity extends Activity {
             prefs.edit().putString("virgin",encode(virgin))
               .putString("best",encode(trainer.best))
               .putString("motor_skills_v098",skillBank.encode())
+              .putString("grip_skills_v099",gripBank.encode())
               .putInt("real_energy_credits_v098",sensorMind.positiveContactCredits())
               .putInt("real_damage_credits_v098",sensorMind.negativeContactCredits())
               .putInt("real_action_credits_v098",sensorMind.historicalActionsCredited())
@@ -308,6 +316,8 @@ public final class GameActivity extends Activity {
             environmentEffectSinceAction=0;eventEnergyDeltaSinceAction=0;
             episodic.resetLife(); // Forget transient attempt, NOT learned motor or memories.
             recalledManipulationInAction=false;
+            previousGripDrive=previousGripHeld=0;
+            ongoingUnsuccessfulGrip=0;gripRecoveryCooldown=0;
             liveBody.abortTrial();
             creature.reset();surface.reset(creature);
             motorGuard.resetLife(creature.cx,creature.cy);
@@ -368,6 +378,8 @@ public final class GameActivity extends Activity {
             scarcity=true;
             // Test the door without a forced energy penalty.
             chamber=new ScarcityLab(creature.cx,creature.cy);
+            previousGripDrive=previousGripHeld=0;
+            ongoingUnsuccessfulGrip=0;gripRecoveryCooldown=0;
             excludeOrdinaryRoomObjects();
             environment.add(chamber.food);
             nextChamber=elapsedLife+150f;
@@ -532,11 +544,49 @@ public final class GameActivity extends Activity {
                         sensorMind.adhesion());
                     if(chamber!=null){
                         float doorBefore=chamber.doorY;
-                        chamber.constrain(creature,surface,slice);
+                        chamber.constrain(creature,surface,slice,sensorMind.adhesion());
                         float actuallyMoved=Math.abs(chamber.doorY-doorBefore);
                         if(Float.isFinite(actuallyMoved))
                             environmentEffectSinceAction+=Math.min(2,actuallyMoved);
                         farthestGate=Math.max(farthestGate,chamber.maxDoorTravel);
+
+                        // Preserve motor apparatus only when the PHYSICS
+                        // confirmed adhesion held, not because ZERO touched
+                        // the gate or because it was told to attempt a grip.
+                        boolean physicalHold=chamber.gateHeldFrames>previousGripHeld;
+                        if(physicalHold){
+                            if(gripBank.observe(lastAppliedHand,lastAppliedMembrane,
+                                true,chamber.opposedContactFrames>0,
+                                Math.max(0,actuallyMoved)))save();
+                        }
+                        previousGripHeld=chamber.gateHeldFrames;
+                        boolean voluntaryGripAtGate=
+                            chamber.gateDriveFrames>previousGripDrive;
+                        previousGripDrive=chamber.gateDriveFrames;
+                        if(gripRecoveryCooldown>0)gripRecoveryCooldown--;
+                        // NO scripted grip: restoration is allowed ONLY when
+                        // ZERO independently selected adhesion AND its body
+                        // touched the solid without managing to hold.
+                        if(voluntaryGripAtGate&&!physicalHold){
+                            ongoingUnsuccessfulGrip++;
+                        }else if(physicalHold||!voluntaryGripAtGate){
+                            ongoingUnsuccessfulGrip=0;
+                        }
+                        if(ongoingUnsuccessfulGrip>=120 &&
+                           gripRecoveryCooldown==0 &&
+                           !liveBody.testingCandidate()){
+                            GripSkillBank.Pair historical=gripBank.retrieve(
+                                handTrainer.best,shapeTrainer.best);
+                            if(historical!=null){
+                                handTrainer.best=historical.hand;
+                                shapeTrainer.best=historical.membrane;
+                                liveBody.abortTrial();
+                                ongoingUnsuccessfulGrip=0;
+                                gripRecoveryCooldown=900;
+                                lastEvent="TECNICA DI PRESA RECUPERATA";
+                                eventTime=3;save();
+                            }
+                        }
                     }
                     // Only measured physical displacement after collisions
                     // and before simulated death can count as motor progress.
@@ -868,7 +918,7 @@ public final class GameActivity extends Activity {
             rounded(c,12,12,468,145,0xeb0a1420,20);
             rounded(c,27,28,31,55,TEAL,2);
             text(c,"O V E R M I N D",43,39,14,TEAL,false);
-            text(c,"ZERO / ESPERIMENTO 009.8",26,72,21,0xffe9faf6,false);
+            text(c,"ZERO / ESPERIMENTO 009.9",26,72,21,0xffe9faf6,false);
             rounded(c,339,104,459,138,0xff20444a,11);
             text(c,"AGGIORNA",399,127,12,TEAL,true);
             rounded(c,217,104,333,138,0xff283b58,11);
@@ -928,6 +978,9 @@ public final class GameActivity extends Activity {
                 text(c,"TOCCHI "+chamber.tactileFrames+"  •  ADESIONI "+
                     chamber.adhesiveContactFrames+"  •  SENZA PRESA "+
                     chamber.dualTouchNoGrip,25,486,10,TEAL,false);
+                text(c,"PRESA SCELTA "+chamber.gateDriveFrames+" • COMANDO "+
+                    chamber.gateCommandFrames+" • TENUTA "+chamber.gateHeldFrames+
+                    " • TECNICHE "+gripBank.count(),25,504,10,GOLD,false);
             }else text(c,"TOCCA QUI PER ATTIVARE TEST STANZA E FAME",25,465,11,GOLD,false);
             if(uiTime<updaterStatusUntil&&updaterStatus.length()>0){
                 rounded(c,13,338,467,387,0xef1f3944,13);
