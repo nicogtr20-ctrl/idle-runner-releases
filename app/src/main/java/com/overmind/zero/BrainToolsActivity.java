@@ -355,6 +355,33 @@ public final class BrainToolsActivity extends Activity {
              String.valueOf(navigation.choicesInfluenced),CYAN);
         paragraph(instrument,"Se ZERO non ha ancora visto un effetto energetico o non ha verificato i propri movimenti, questa rete resta neutra. I valori diventano utili quando puo' scegliere azioni che, sulla base dell'esperienza, sembrano avvicinarlo a uno stimolo benefico o allontanarlo da uno dannoso. E' un modello sperimentale, non un comando di inseguimento.");
 
+        GoalContinuity intentions=new GoalContinuity();
+        intentions.restore(prefs.getString(GoalContinuity.KEY,""));
+        LinearLayout intentPanel=panel(body);
+        intentPanel.addView(label("CONTINUITA' DELLE INTENZIONI",16,CYAN,true));
+        paragraph(intentPanel,"ZERO conserva brevemente una preferenza per uno stimolo noto soltanto dopo avere osservato che un movimento reale ha migliorato il proprio accesso a quello stimolo. Due regressioni o la perdita della vista interrompono la preferenza. Nessun premio aggiunto per camminare o girare.");
+        line(intentPanel,"Primi progressi confermati",String.valueOf(intentions.confirmed),WHITE);
+        line(intentPanel,"Progressi consecutivi verificati",String.valueOf(intentions.continued),CYAN);
+        line(intentPanel,"Tentativi abbandonati",String.valueOf(intentions.abandoned),AMBER);
+        line(intentPanel,"Azioni senza progresso",String.valueOf(intentions.failed),WHITE);
+        line(intentPanel,"Scelte influenzate da continuita'",String.valueOf(intentions.advice),CYAN);
+        GateBehaviorMetrics gate=new GateBehaviorMetrics();
+        gate.restore(prefs.getString(GateBehaviorMetrics.KEY,""));
+        LinearLayout gatePanel=panel(body);
+        gatePanel.addView(label("DIAGNOSI FISICA DEL CANCELLO",16,CYAN,true));
+        paragraph(gatePanel,"Solo misure reali del mondo, NON istruzioni fornite al cervello. Distingue il raggiungimento della porta dalle condizioni meccaniche necessarie per muoverla.");
+        line(gatePanel,"Distanza minima dalla porta",String.format(Locale.US,"%.1f U",gate.closestDistance()),WHITE);
+        line(gatePanel,"Vicino alla porta (frame fisici)",String.valueOf(gate.nearbyFrames),WHITE);
+        line(gatePanel,"Nucleo contro la porta",String.valueOf(gate.coreTouchFrames),WHITE);
+        line(gatePanel,"Membrana a contatto",String.valueOf(gate.skinTouchFrames),WHITE);
+        line(gatePanel,"Adesione selezionata al contatto",String.valueOf(gate.driveFrames),WHITE);
+        line(gatePanel,"Presa comandata dalla membrana",String.valueOf(gate.commandFrames),WHITE);
+        line(gatePanel,"Presa realmente mantenuta",String.valueOf(gate.heldFrames),WHITE);
+        line(gatePanel,"Presa sui lati opposti",String.valueOf(gate.opposedFrames),WHITE);
+        line(gatePanel,"Massimo spostamento reale",String.format(Locale.US,"%.1f U",gate.maxTravel),CYAN);
+        line(gatePanel,"Aperture / attraversamenti",gate.opened+" / "+gate.passages,CYAN);
+        paragraph(gatePanel,"Ultimo stadio osservato: "+gate.obstacleStage()+". Le misure derivano dall'ultima copia salvata e non aggiornano la schermata durante il movimento.");
+
         LinearLayout reset=panel(body);
         reset.addView(label("AZZERA APPRENDIMENTO",17,AMBER,true));
         paragraph(reset,"Ogni voce ritorna allo stato vergine SOLO per quel sistema. Altre memorie e reti rimangono. L'azzeramento ricarica il corpo nella mappa per applicare i nuovi parametri in sicurezza.");
@@ -371,6 +398,8 @@ public final class BrainToolsActivity extends Activity {
         resetButton(reset,"PERCEZIONE SPAZIALE","Azzeramento SOLO dei raggi, della memoria locale degli ostacoli e dei pesi spaziali.",ResetDomains.SPATIAL,false);
         resetButton(reset,"ESPERIMENTI CAUSALI","Azzera SOLO esperimenti, alternative provate e ipotesi apprese, senza toccare i sensori o la memoria spaziale.",ResetDomains.CAUSAL,false);
         resetButton(reset,"NAVIGAZIONE E UTILITA","Azzera solo le associazioni tra energia visiva e moti realmente imparati, non gli altri cervelli.",ResetDomains.NAVIGATION,false);
+        resetButton(reset,"CONTINUITA' DELLE INTENZIONI","Azzera solo i tentativi e le statistiche del mantenimento delle intenzioni.",ResetDomains.INTENTION,false);
+        resetButton(reset,"DIAGNOSTICA CANCELLO","Azzera soltanto le misure di contatto e presa, non il comportamento fisico o la memoria.",ResetDomains.GATE_METRICS,false);
         resetButton(reset,"AZZERA TUTTO","CANCELLA tutti i cervelli, statistiche, memoria ed esperienze.",ResetDomains.ALL,true);
         LinearLayout saves=panel(body);
         saves.addView(label("LE TUE PARTITE",17,CYAN,true));
