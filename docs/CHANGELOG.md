@@ -267,3 +267,8 @@ Per prove e prossimi step: `docs/EXPERIMENT_0096.md`. VersionCode e digest relea
 - Nuova riga HUD porta con contatori frame PRESA SCELTA/COMANDO/TENUTA/TECNICHE e metriche archivi/recuperi in ANALISI.
 - Persistenza `grip_skills_v099`, reset selettivo della membrana; old brains e 6 motor skills invariati.
 - Test JNI/JVM, fisica cancello, Android staging e firma OTA; conferma comportamento reale S21 ancora da raccogliere. Dettagli `docs/EXPERIMENT_0099.md`.
+
+## OTA 0.9.9-ota.46 — 2026-10-10T01:45:05.085161+00:00
+- Pacchetto Android firmato pubblicato su Vercel (codice 1046).
+- SHA-256: `f4524305cdea4094e23c2eb12f664e21f6fe07cff6c3f3e949c0c4e035e6ec1e`.
+- APK: `/apk/overmind-zero-1046-f4524305cdea.apk`.
