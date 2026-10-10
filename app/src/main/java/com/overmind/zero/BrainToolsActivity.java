@@ -179,7 +179,7 @@ public final class BrainToolsActivity extends Activity {
              episodes.lastTraceLength+" azioni",WHITE);
         line(memory,"Ultimo effetto fisico ricordato",
              number(episodes.lastEventEffect),AMBER);
-        paragraph(memory,"Le memorie v0.9.6 restano valide: benefici/danni, sequenze di 2–36 azioni, conferme e formato em2 (anche em1). Dalla 0.9.7 il richiamo può suggerire azioni, ma non sostituisce mai il controllo motorio migliore già salvato. Soltanto con reale contatto tattile e fuori dalle prove mutate può riprovare i pesi di presa e membrana; altrimenti usa quelli correnti. Le scelte negative restano attive anche quando l'autocorrezione sospende brevemente i ricordi positivi. Non è una dimostrazione di comprensione, causalità o stanza superata.");
+        paragraph(memory,"Dalla 0.9.9 la memoria episodica rimane memoria di situazioni, azioni e conseguenze. Non può più sostituire motore, mano o membrana con vecchi pesi, neanche al cancello: i ricordi restano disponibili per influenzare le decisioni autonomamente scelte, non i controller fisici. La banca delle prese conserva separatamente SOLO configurazioni verificate da un'adesione reale. I ricordi em1/em2 e il modello del mondo precedente rimangono intatti.");
         LinearLayout reset=panel(body);
         reset.addView(label("AZZERA APPRENDIMENTO",17,AMBER,true));
         paragraph(reset,"Ogni voce ritorna allo stato vergine SOLO per quel sistema. Altre memorie e reti rimangono. L'azzeramento ricarica il corpo nella mappa per applicare i nuovi parametri in sicurezza.");
