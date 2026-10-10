@@ -220,3 +220,15 @@ Documento dettagliato docs/EXPERIMENT_0109.md.
 - [ ] Test S21 AGGIORNA e controlli: celle conosciute/sconosciute, occlusione, segnali dal movimento, riavvio e slot differenti, x1/x20 e pausa.
 - [ ] Misurare miglioramenti sulle vite in condizioni comparabili: energia, danni/minuto, esplorazione netta, spostamento cancello e vero attraversamento stanza. Predizioni accurate non equivalgono a capacità dimostrate.
 Dettagli `docs/EXPERIMENT_0110.md`.
+
+## 0.11.1 — concrete causal experimentation, not gate scripts
+- [x] Distinguish observed body travel from change at the SAME previously observed spatial map coordinates after a real action.
+- [x] Learn generic 16 action × 3 sensor-context experimental consequences from lived reward and real energy; require randomized same-context alternatives and heldout predictive improvement before bounded action bias.
+- [x] Provisional observed blocked-to-free cells are NOT passability success; verify actual subsequent physical traversal separately.
+- [x] Save `causal_experiments_v111` for each ZERO using the existing 12 named slots; unchanged old S=26 brain, spatial/body/temporal episodic memories, motor and simulated timing.
+- [x] Separate CAUSAL reset, ANALISI diagnostics, CERVELLO statistical parameter count.
+- [x] Staging `38073279447` and `38073332255` SUCCESS (synthetic interventions + old regressions + Android debug); stable signed `38073421560` SUCCESS.
+- [x] Production APK `0.11.1-ota.61` 1061, 169280 B, SHA256 8d8f121d985735ca3d7cac507007fb85a1ee192603309c2e867dc39e638e53c3. Vercel manifest and APK HTTP200.
+- [ ] Physical Galaxy S21: AGGIORNA in place, inspect ANALISI causality counters, compare actual traversals with mere gate motion, verify persistence across restarts and independent named ZERO slots.
+- [ ] Quantify 25 vs 25 comparable lives with genuine energy uptake and room crossings, not solely opening candidates or higher prediction confidence.
+Full scientific/implementation report `docs/EXPERIMENT_0111.md`.
