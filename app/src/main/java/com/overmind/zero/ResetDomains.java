@@ -12,9 +12,9 @@ public final class ResetDomains {
     public static final String WORLD="world",CHOICE="choice",MOTOR="motor",
             MANIPULATION="manipulation",MEMBRANE="membrane",EXPLORATION="exploration",
             ROOM="room",EPISODES="episodes",TEMPORAL_SKILLS="temporal_skills",
-            PROPRIOCEPTION="proprioception",SPATIAL="spatial",CAUSAL="causal",NAVIGATION="navigation",INTENTION="intention",GATE_METRICS="gate_metrics",SAFETY="safety",ALL="all";
+            PROPRIOCEPTION="proprioception",SPATIAL="spatial",CAUSAL="causal",NAVIGATION="navigation",INTENTION="intention",GATE_METRICS="gate_metrics",ALL="all";
     public static final String[] TYPES={WORLD,CHOICE,MOTOR,MANIPULATION,MEMBRANE,
-                                       EXPLORATION,ROOM,EPISODES,TEMPORAL_SKILLS,PROPRIOCEPTION,SPATIAL,CAUSAL,NAVIGATION,INTENTION,GATE_METRICS,SAFETY,ALL};
+                                       EXPLORATION,ROOM,EPISODES,TEMPORAL_SKILLS,PROPRIOCEPTION,SPATIAL,CAUSAL,NAVIGATION,INTENTION,GATE_METRICS,ALL};
     public static String[] keys(String domain){
         switch(domain){
             case WORLD:return new String[]{"sensorimotor_model_v09","sensorimotor_diagnostics_v091",
@@ -48,7 +48,6 @@ public final class ResetDomains {
             case NAVIGATION:return new String[]{InstrumentalNavigation.KEY};
             case INTENTION:return new String[]{GoalContinuity.KEY};
             case GATE_METRICS:return new String[]{GateBehaviorMetrics.KEY};
-            case SAFETY:return new String[]{AdaptiveSafety.KEY};
             case ALL:return new String[0]; // handled by Editor.clear()
             default:throw new IllegalArgumentException("Unknown reset scope: "+domain);
         }
