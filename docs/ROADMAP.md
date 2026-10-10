@@ -232,3 +232,14 @@ Dettagli `docs/EXPERIMENT_0110.md`.
 - [ ] Physical Galaxy S21: AGGIORNA in place, inspect ANALISI causality counters, compare actual traversals with mere gate motion, verify persistence across restarts and independent named ZERO slots.
 - [ ] Quantify 25 vs 25 comparable lives with genuine energy uptake and room crossings, not solely opening candidates or higher prediction confidence.
 Full scientific/implementation report `docs/EXPERIMENT_0111.md`.
+## 0.11.2 — movement learned as instrument to get actual energy
+- [x] Root-cause analysis: old 0.8 object/heading geometric scripted target removed 0.9; temporary 0.9.8 visual steering removed; live 0.11.1 Q-reward still incentivized forward locomotion itself and historic chooser disconnected.
+- [x] Introduce independent `InstrumentalNavigation` with 3×8 actually visible spectral observations, energy valence only from actual received/lost energy and measured actual per-action displacement. Gated after 3+ trained/2+ heldout real motor moves beating zero-change reference; no hidden target coordinate, no hardcoded blue/red.
+- [x] Main SensorimotorMind TD reward now includes real energy obtained/lost, NOT old `.24*realForward`; small curiosity remains for unknown stimuli; old Q dampened as bounded prior without wiping learned history.
+- [x] Correct red cooldown visible in raw senses, allow disc occlusion in open world, preserve old 26-input weights and temporal/motor/episodic models.
+- [x] Separate `instrumental_navigation_v112` `in1` saves/loads across 12 profiles, isolated reset NAVIGATION, ANAlISI valence/movement indicators and CERVELLO total count.
+- [x] JVM behavioral tests validate genuine SensorimotorMind.choose() preference for beneficial E vs W and harmful N vs S after experienced energy and actual motor movements, plus older regressions and debug Android: staging `38078898196` SUCCESS.
+- [x] Signed release pipeline `38078981840` SUCCESS, code1062 0.11.2-ota.62, APK 174824 B SHA256 bbec605688215fea99c450aeb91314e437f197456f6b104b15c2e3388cc07f38. Vercel stale 404 fixed by production manual deployment `dpl_7ukm6M55KeVaxPq9naHZUpSTeUkT`, public JSON/APK HTTP200.
+- [ ] On Galaxy S21 confirm AGGIORNA, backup and restore two named slots, real behavior after beneficial and harmful touches, travel-to-resource measured after learned values, x1/x20.
+- [ ] Gate remains a separate general planning challenge: resource hidden behind physical wall is invisible; do not substitute hardcoded gate target/path. Add empirical evaluation before further modules.
+Source/report `docs/EXPERIMENT_0112.md`.
