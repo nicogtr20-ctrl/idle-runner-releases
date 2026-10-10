@@ -1,0 +1,48 @@
+name: ZERO 0.10.5 Lifetime Statistics QA
+on:
+  push:
+    branches: [feature/overmind-v105-lifetime-statistics]
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 35
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with: {distribution: temurin, java-version: '17'}
+      - uses: gradle/actions/setup-gradle@v4
+        with: {gradle-version: '8.11.1'}
+      - name: Run statistics and learning regression tests
+        run: |
+          mkdir -p /tmp/zero105
+          javac -d /tmp/zero105 app/src/main/java/com/overmind/zero/{LifeStatistics,MotorBrain,UnknownWorld,ContactLearning,DecisionBrain,Morphology,ScarcityLab,SensorimotorMind,LearnedSequencePlanner,LearningDiagnostics,ResetDomains,OnlineBodyLearning,MotionExploration,EpisodicMemory,MotorAutonomyGuard,MotorSkillBank,ExperienceCredit,GripSkillBank,SaveProfileCodec}.java
+          for test in LifeStatistics LearnedSequencePlanner SensorimotorMind ExperienceCredit EpisodicMemory LearningDiagnostics MotorBrain UnknownWorld ContactLearning DecisionBrain Morphology ScarcityLab OnlineBodyLearning MotionExploration ResetDomains MotorAutonomyGuard MotorSkillBank GripSkillBank SaveProfileCodec; do
+            java -cp /tmp/zero105 com.overmind.zero.$test
+          done
+      - name: Verify observer-only 25-vs-25 design and migration
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          life=Path('app/src/main/java/com/overmind/zero/LifeStatistics.java').read_text()
+          ui=Path('app/src/main/java/com/overmind/zero/StatisticsActivity.java').read_text()
+          game=Path('app/src/main/java/com/overmind/zero/GameActivity.java').read_text()
+          gradle=Path('app/build.gradle').read_text()
+          assert 'HISTORY=50, WINDOW=25' in life
+          assert 'lifetimeSum' in life and 'lifetimeMax' in life
+          assert 'ls2|' in life and 'restoreV1' in life and 'restoreV2' in life
+          assert 'average(int metric,int offset,int length)' in life
+          assert '25 VS 25 PRECEDENTI' in ui
+          assert 'historyCount()<50' in ui
+          assert 'Tendenza evolutiva' in ui
+          assert 'NON è una ricompensa e ZERO non lo vede' in ui
+          assert 'lifetimeAverage' in ui and 'lifetimeRecord' in ui
+          assert 'LifeStatistics.KEY,lifeStats.encode()' in game
+          assert 'lifeStats.tick(dt)' in game
+          assert '0.10.5-ota' in gradle
+          print('ZERO 0.10.5 QA: 25-vs-25, permanent lifetime accumulator, ls1 migration, observer-only UI')
+          PY
+      - name: Compile Android Debug APK
+        run: gradle --no-daemon assembleDebug
