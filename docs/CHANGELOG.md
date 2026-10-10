@@ -183,3 +183,14 @@
 - Publisher stabile firmato **38060026469** interamente verde; versionCode **1054**, package `com.overmind.zero.ota`.
 - APK pubblica: `/apk/overmind-zero-1054-34bd2eb5261f.apk`, **138.636 byte**, SHA-256 `34bd2eb5261f499b196037832dce744f37b7b3822a49a7f655c3b6347f0c4e7a`.
 - Manifest e APK Vercel verificati HTTP 200 dopo la pubblicazione; GitHub Release `overmind-zero-v0.10.5-ota.54` creata prima dell'aggiornamento manifest.
+
+## 0.10.6 — memoria di lavoro temporale ricorrente (staging, 10 ottobre 2026)
+- Aggiunto `TemporalWorkingMemory.java`: 16 stati ricorrenti e 7.344 pesi appresi.
+- ZERO può ora rappresentare contesti recenti differenti anche quando la lettura sensoriale presente è uguale.
+- Predizione temporale e valore d'azione sono appresi da esperienze reali; una trace di 8 decisioni riceve credito solo da energia o spostamenti fisici realmente osservati.
+- Il contributo temporale alla policy parte da zero e si abilita soltanto dopo >=25 transizioni held-out se l'errore contestuale è almeno 4% migliore del modello one-step; influenza limitata a ±0,45.
+- Stato di lavoro azzerato alla morte, pesi conservati; riapertura della stessa scena ripristina il contesto serializzato.
+- Nuova chiave `temporal_working_memory_v106`, inclusa nel reset MODELLO DEL MONDO e automaticamente negli slot completi.
+- CERVELLO mostra parametri/transizioni/confidenza della memoria di lavoro. **STATISTICHE resta la 25-vs-25 della 0.10.5 senza modifiche.**
+- versionName base `0.10.6-ota`.
+- Staging run **38064278116** verde: test temporale sintetico, regressioni cognitive/fisiche precedenti, persistenza e Android Debug.
