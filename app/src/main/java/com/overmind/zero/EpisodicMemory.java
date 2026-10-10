@@ -201,7 +201,8 @@ public final class EpisodicMemory {
         Step end=candidate.trace.get(candidate.trace.size()-1);
         for(Event old:events){
             Step tail=old.trace.get(old.trace.size()-1);
-            if(old.harmful()==candidate.harmful() &&
+            if(old.kind==kind&&old.source==source &&
+               old.harmful()==candidate.harmful() &&
                 tail.action==end.action &&
                 distance(tail.senses,end.senses)<.054f){
                 old.confirmed=Math.min(999,old.confirmed+1);
