@@ -70,8 +70,7 @@ public final class BehavioralLabActivity extends Activity {
         paragraph(root,"TEST FISICI RIPETIBILI • NON MODIFICA ZERO");
         LinearLayout description=card(root);
         description.addView(txt("Che cosa misuriamo?",16,TEAL,true));
-        paragraph(description,"Cinque prove: raggiungere energia, evitare danno, affrontare "+
-            "piu fonti dannose, scegliere tra risorsa e pericolo e "+
+        paragraph(description,"Tre prove: raggiungere energia, evitare danno e "+
             "interagire con una stanza dotata di cancello. Tre varianti di "+
             "posizione/velocita' iniziale per ciascuna.");
         paragraph(description,"Ogni prova viene ripetuta con lo STESSO cervello "+
@@ -91,7 +90,7 @@ public final class BehavioralLabActivity extends Activity {
         controls.addView(run);
         cancel=new Button(this);cancel.setText("INTERROMPI");
         cancel.setEnabled(false);controls.addView(cancel);
-        status=txt("Pronto per 30 prove fisiche isolate",13,GOLD,true);
+        status=txt("Pronto per 18 prove fisiche isolate",13,GOLD,true);
         paragraph(controls,"Per interrompere la simulazione tocca INTERROMPI "+
             "o esci dalla schermata: i salvataggi reali non vengono toccati.");
         controls.addView(status);
@@ -149,7 +148,6 @@ public final class BehavioralLabActivity extends Activity {
         p.spatial=prefs.getString(SpatialPerception.KEY,"");
         p.causal=prefs.getString(CausalExperiments.KEY,"");
         p.intent=prefs.getString(GoalContinuity.KEY,"");
-        p.safety=prefs.getString(AdaptiveSafety.KEY,"");
         return p;
     }
     private void runLab(){
@@ -175,7 +173,7 @@ public final class BehavioralLabActivity extends Activity {
                     if(isFinishing()||isDestroyed())return;
                     report.setText(text);
                     status.setText(complete&&!canceled?
-                        "30 prove completate — risultati isolati dal personaggio.":
+                        "18 prove completate — risultati isolati dal personaggio.":
                         "Confronto interrotto — report parziale non salvato.");
                 });
             }catch(Throwable failure){
