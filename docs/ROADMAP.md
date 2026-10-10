@@ -209,3 +209,14 @@ Riferimento docs/EXPERIMENT_0108.md.
 - [ ] Prova reale Galaxy S21: tocchi localizzati, porta/dischi, contatori e apprendimento, pausa/x20, riavvio senza cancellare pesi, slot indipendenti.
 - [ ] Confronto controllato delle 25 vs 25 vite, vera apertura+attraversamento porta e risorse, non solo contatore mosso.
 Documento dettagliato docs/EXPERIMENT_0109.md.
+
+## OVERMIND ZERO 0.11.0 — percezione dello spazio non programmata
+- [x] Aggiungere 16 raggi a visibilità fisica e occlusione, costruire da soli una mappa locale di massimo 1024 celle (libero/occupato/sconosciuto) tramite odometria del corpo reale.
+- [x] Non svelare oggetti dietro muri o posizione del cibo/porta; conservare 26 vecchi sensi, propriocezione del corpo, memoria temporale/episodica, 12 slot e firma Android.
+- [x] Predittore e valore d'azione appresi separatamente, scelta invariata fino a >=30 validazioni fuori addestramento e >=4% migliore di baseline; bias max ±0.19.
+- [x] Mappa locale azzerata solo a vita effettivamente nuova, pesi appresi conservati e serializzati nella chiave `spatial_perception_v110` per ogni ZERO; reset autonomo e pagina ANALISI con mini-mappa e metriche.
+- [x] Correggere conflitto fra letture libere e colpite dello stesso scan e variabile omonima in UI; test JVM + compilazione debug `38071087243` SUCCESS.
+- [x] Signed official pipeline `38071321701` SUCCESS, release `0.11.0-ota.60` code1060, 162004 byte, SHA `076d315c484cd11d695a40219a26a4a30508de1478a3a31b5abee5a488fee84e`; Vercel manifest/APK HTTP200 verificati.
+- [ ] Test S21 AGGIORNA e controlli: celle conosciute/sconosciute, occlusione, segnali dal movimento, riavvio e slot differenti, x1/x20 e pausa.
+- [ ] Misurare miglioramenti sulle vite in condizioni comparabili: energia, danni/minuto, esplorazione netta, spostamento cancello e vero attraversamento stanza. Predizioni accurate non equivalgono a capacità dimostrate.
+Dettagli `docs/EXPERIMENT_0110.md`.
