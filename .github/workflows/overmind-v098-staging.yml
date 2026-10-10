@@ -1,7 +1,7 @@
 name: OVERMIND 0.9.8 skills and learned survival decisions
 on:
   push:
-    branches: [feature/overmind-v098-skill-survival-loop]
+    branches: [feature/overmind-v098-skill-survival-loop, fix/overmind-v098-autonomous-choice]
   workflow_dispatch:
 permissions:
   contents: read
@@ -18,8 +18,8 @@ jobs:
       - name: JVM skill bank, energy learning, loop recovery and physics regression
         run: |
           mkdir -p /tmp/zero098
-          javac -d /tmp/zero098 app/src/main/java/com/overmind/zero/{MotorBrain,UnknownWorld,ContactLearning,DecisionBrain,Morphology,ScarcityLab,SensorimotorMind,LearningDiagnostics,ResetDomains,MotionExploration,OnlineBodyLearning,EpisodicMemory,MotorAutonomyGuard,MotorSkillBank,SensoryValenceGuide}.java
-          for test in MotorBrain UnknownWorld ContactLearning DecisionBrain Morphology ScarcityLab SensorimotorMind LearningDiagnostics ResetDomains MotionExploration OnlineBodyLearning EpisodicMemory MotorAutonomyGuard MotorSkillBank SensoryValenceGuide; do
+          javac -d /tmp/zero098 app/src/main/java/com/overmind/zero/{MotorBrain,UnknownWorld,ContactLearning,DecisionBrain,Morphology,ScarcityLab,SensorimotorMind,LearningDiagnostics,ResetDomains,MotionExploration,OnlineBodyLearning,EpisodicMemory,MotorAutonomyGuard,MotorSkillBank,ExperienceCredit}.java
+          for test in MotorBrain UnknownWorld ContactLearning DecisionBrain Morphology ScarcityLab SensorimotorMind LearningDiagnostics ResetDomains MotionExploration OnlineBodyLearning EpisodicMemory MotorAutonomyGuard MotorSkillBank ExperienceCredit; do
             java -cp /tmp/zero098 com.overmind.zero.$test
           done
       - name: No innate targets, preserve prior brains, validate real-world experiments
@@ -27,7 +27,7 @@ jobs:
           python3 - <<'PY'
           from pathlib import Path
           game=Path('app/src/main/java/com/overmind/zero/GameActivity.java').read_text()
-          value=Path('app/src/main/java/com/overmind/zero/SensoryValenceGuide.java').read_text()
+          value=Path('app/src/main/java/com/overmind/zero/ExperienceCredit.java').read_text()
           archive=Path('app/src/main/java/com/overmind/zero/MotorSkillBank.java').read_text()
           policy=Path('app/src/main/java/com/overmind/zero/SensorimotorMind.java').read_text()
           trials=Path('app/src/main/java/com/overmind/zero/OnlineBodyLearning.java').read_text()
