@@ -324,6 +324,32 @@ public final class BrainToolsActivity extends Activity {
             String.format(Locale.US,"%.0f celle",causes.lastEnvironmentalChange),WHITE);
         paragraph(experiment,"Un ostacolo che sembra scomparso e' soltanto un'ipotesi di apertura. Si conta un passaggio solo quando il corpo attraversa effettivamente quella cella in seguito. Prima di cambiare le proprie decisioni ZERO deve superare almeno 30 prove non usate per apprendere, prevedere meglio del riferimento e aver provato diverse azioni in situazioni simili. Associazioni e verifiche non costituiscono una prova di causalita' certa.");
 
+        InstrumentalNavigation navigation=new InstrumentalNavigation();
+        navigation.restore(prefs.getString(InstrumentalNavigation.KEY,""));
+        LinearLayout instrument=panel(body);
+        instrument.addView(label("MOVIMENTO COME MEZZO / ENERGIA",16,CYAN,true));
+        paragraph(instrument,"ZERO impara in modo indipendente (1) quale frequenza della luce ha preceduto energia positiva o negativa al contatto e (2) quale spostamento reale del corpo consegue a ciascuna azione. Un movimento non riceve un premio solo perche' cammina. Le frequenze non hanno nomi o valore preimpostato.");
+        int[] contacts=navigation.spectralContacts();
+        for(int i=0;i<contacts.length;i++)
+            line(instrument,"Frequenza visiva "+(i+1)+" / contatti vissuti",
+                 String.format(Locale.US,"%d  •  valore energia %+.2f",
+                     contacts[i],navigation.signalValue(i)),
+                 navigation.signalValue(i)>0?CYAN:
+                     navigation.signalValue(i)<0?AMBER:WHITE);
+        line(instrument,"Movimenti realmente verificati",
+             navigation.verifiedActions()+" / 16",WHITE);
+        line(instrument,"Tipi di movimenti osservati",
+             String.valueOf(navigation.learnedActions()),WHITE);
+        line(instrument,"Esperienze motorie registrate",
+             String.valueOf(navigation.completed),WHITE);
+        line(instrument,"Conseguenze energetiche positive",
+             String.valueOf(navigation.positiveOutcomes),CYAN);
+        line(instrument,"Conseguenze energetiche negative",
+             String.valueOf(navigation.negativeOutcomes),AMBER);
+        line(instrument,"Scelte con influenza della navigazione",
+             String.valueOf(navigation.choicesInfluenced),CYAN);
+        paragraph(instrument,"Se ZERO non ha ancora visto un effetto energetico o non ha verificato i propri movimenti, questa rete resta neutra. I valori diventano utili quando puo' scegliere azioni che, sulla base dell'esperienza, sembrano avvicinarlo a uno stimolo benefico o allontanarlo da uno dannoso. E' un modello sperimentale, non un comando di inseguimento.");
+
         LinearLayout reset=panel(body);
         reset.addView(label("AZZERA APPRENDIMENTO",17,AMBER,true));
         paragraph(reset,"Ogni voce ritorna allo stato vergine SOLO per quel sistema. Altre memorie e reti rimangono. L'azzeramento ricarica il corpo nella mappa per applicare i nuovi parametri in sicurezza.");
@@ -339,6 +365,7 @@ public final class BrainToolsActivity extends Activity {
         resetButton(reset,"PERCEZIONE CORPOREA","Mappa tattile, previsioni e valori motori appresi; non cancella la membrana fisica.",ResetDomains.PROPRIOCEPTION,false);
         resetButton(reset,"PERCEZIONE SPAZIALE","Azzeramento SOLO dei raggi, della memoria locale degli ostacoli e dei pesi spaziali.",ResetDomains.SPATIAL,false);
         resetButton(reset,"ESPERIMENTI CAUSALI","Azzera SOLO esperimenti, alternative provate e ipotesi apprese, senza toccare i sensori o la memoria spaziale.",ResetDomains.CAUSAL,false);
+        resetButton(reset,"NAVIGAZIONE E UTILITA","Azzera solo le associazioni tra energia visiva e moti realmente imparati, non gli altri cervelli.",ResetDomains.NAVIGATION,false);
         resetButton(reset,"AZZERA TUTTO","CANCELLA tutti i cervelli, statistiche, memoria ed esperienze.",ResetDomains.ALL,true);
         LinearLayout saves=panel(body);
         saves.addView(label("LE TUE PARTITE",17,CYAN,true));
