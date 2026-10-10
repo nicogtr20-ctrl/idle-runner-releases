@@ -9,7 +9,7 @@ import java.util.Locale;
  * One simulated second is the sum of the physics slices, NOT wall-clock time.
  */
 public final class LifeStatistics {
-    public static final int HISTORY=50;
+    public static final int HISTORY=50, WINDOW=25, METRICS=11;
     public static final String KEY="life_statistics_v104";
     public static final int DURATION=0,GOOD=1,HARM=2,GAIN=3,DAMAGE=4,
                             DISKS=5,CELLS=6,NET=7,GATE=8,ROOMS=9,RECALL=10;
@@ -19,6 +19,7 @@ public final class LifeStatistics {
         "Zone nuove","Massima distanza netta","Apertura massima porta",
         "Stanze risolte","Ricordi con nuovo effetto positivo"
     };
+
     public static final class Life {
         public double seconds=0,gain=0,damage=0,maxNet=0,maxGate=0;
         public int good=0,harm=0,disks=0,cells=0,rooms=0,recall=0;
@@ -69,19 +70,35 @@ public final class LifeStatistics {
             return v;
         }
     }
+
     private Life current=new Life();
     private final ArrayList<Life> history=new ArrayList<>();
-    private int completed=0;
+    private final double[] lifetimeSum=new double[METRICS];
+    private final double[] lifetimeMax=new double[METRICS];
+    private int completed=0,lifetimeCount=0;
+    /**
+     * True only when this statistics journal started with this ZERO.
+     * Legacy ZERO instances pre-date v0.10.4, so their unmeasured past cannot
+     * honestly be reconstructed.
+     */
+    private boolean lifetimeComplete=true;
+
     private static boolean finite(double x){return !Double.isNaN(x)&&!Double.isInfinite(x);}
     public Life current(){return current.copy();}
     public int completed(){return completed;}
     public int historyCount(){return history.size();}
+    public int lifetimeCount(){return lifetimeCount;}
+    public boolean lifetimeComplete(){return lifetimeComplete;}
     public Life recent(int backwards){
         if(backwards<0||backwards>=history.size())throw new IllegalArgumentException("index");
         return history.get(history.size()-1-backwards).copy();
     }
-    public void markPartial(){current.partial=true;}
+    public void markPartial(){
+        current.partial=true;
+        lifetimeComplete=false;
+    }
     public boolean partial(){return current.partial;}
+
     public void tick(float simulatedSeconds){
         if(Float.isFinite(simulatedSeconds)&&simulatedSeconds>0)
             current.seconds=Math.min(8640000,current.seconds+simulatedSeconds);
@@ -104,33 +121,143 @@ public final class LifeStatistics {
         if(newCells>=0)current.cells=Math.max(current.cells,newCells);
         if(finite(maxGate)&&maxGate>=0)current.maxGate=Math.max(current.maxGate,maxGate);
     }
+
+    private void addLifetime(Life life){
+        if(lifetimeCount==Integer.MAX_VALUE)return;
+        for(int m=0;m<METRICS;m++){
+            double v=life.value(m);
+            double next=lifetimeSum[m]+v;
+            lifetimeSum[m]=finite(next)?next:Double.MAX_VALUE/4;
+            lifetimeMax[m]=Math.max(lifetimeMax[m],v);
+        }
+        lifetimeCount++;
+    }
+
     /** Only a genuine death completes a life. Loading/switching activities
      * never creates a false death. A life already in progress before migration
      * is deliberately excluded from averages because its events are partial. */
     public void death(){
         if(!current.partial&&current.seconds>0){
+            addLifetime(current);
             history.add(current.copy());
             if(history.size()>HISTORY)history.remove(0);
             if(completed<Integer.MAX_VALUE)completed++;
         }
         current=new Life();
     }
-    public int sampleCount(int last){return Math.min(Math.max(0,last),history.size());}
-    public double average(int metric,int last){
-        int n=sampleCount(last);
+
+    public int sampleCount(int last){return windowCount(0,last);}
+    public int windowCount(int offset,int length){
+        if(offset<0||length<0)throw new IllegalArgumentException("window");
+        int available=Math.max(0,history.size()-offset);
+        return Math.min(length,available);
+    }
+    public double average(int metric,int last){return average(metric,0,last);}
+    public double average(int metric,int offset,int length){
+        int n=windowCount(offset,length);
         if(n==0)return Double.NaN;
         double sum=0;
-        for(int i=0;i<n;i++)sum+=history.get(history.size()-1-i).value(metric);
+        for(int i=0;i<n;i++)sum+=history.get(history.size()-1-offset-i).value(metric);
         return sum/n;
     }
-    public String encode(){
-        StringBuilder b=new StringBuilder("ls1|").append(completed).append('|')
-            .append(current.encode()).append('|').append(history.size());
-        for(Life v:history)b.append('|').append(v.encode());
+    public double lifetimeAverage(int metric){
+        if(metric<0||metric>=METRICS)throw new IllegalArgumentException("metric");
+        return lifetimeCount==0?Double.NaN:lifetimeSum[metric]/lifetimeCount;
+    }
+    public double lifetimeRecord(int metric){
+        if(metric<0||metric>=METRICS)throw new IllegalArgumentException("metric");
+        return lifetimeCount==0?Double.NaN:lifetimeMax[metric];
+    }
+
+    private static String arrayEncode(double[] a){
+        StringBuilder b=new StringBuilder();
+        for(int i=0;i<a.length;i++){
+            if(i>0)b.append(',');
+            b.append(a[i]);
+        }
         return b.toString();
     }
+    private static double[] arrayDecode(String raw){
+        String[] p=raw.split(",",-1);
+        if(p.length!=METRICS)throw new IllegalArgumentException("metric array");
+        double[] result=new double[METRICS];
+        for(int i=0;i<METRICS;i++){
+            result[i]=Double.parseDouble(p[i]);
+            if(!finite(result[i])||result[i]<0)throw new IllegalArgumentException("metric value");
+        }
+        return result;
+    }
+    private void rebuildLifetimeFromHistory(){
+        for(int m=0;m<METRICS;m++){lifetimeSum[m]=0;lifetimeMax[m]=0;}
+        lifetimeCount=0;
+        for(Life life:history)addLifetime(life);
+    }
+
+    /**
+     * ls2 keeps a permanent accumulator for every completed life while
+     * retaining only the newest 50 individual lives for charts/25-vs-25.
+     * KEY intentionally stays v104 so named save slots migrate in-place.
+     */
+    public String encode(){
+        StringBuilder b=new StringBuilder("ls2|").append(completed).append('|')
+            .append(current.encode()).append('|').append(history.size());
+        for(Life v:history)b.append('|').append(v.encode());
+        b.append('|').append(lifetimeCount)
+         .append('|').append(lifetimeComplete?1:0)
+         .append('|').append(arrayEncode(lifetimeSum))
+         .append('|').append(arrayEncode(lifetimeMax));
+        return b.toString();
+    }
+
     public boolean restore(String raw){
-        if(raw==null||raw.length()>20000||!raw.startsWith("ls1|"))return false;
+        if(raw==null||raw.length()>40000)return false;
+        if(raw.startsWith("ls2|"))return restoreV2(raw);
+        if(raw.startsWith("ls1|"))return restoreV1(raw);
+        return false;
+    }
+
+    private boolean restoreV2(String raw){
+        try{
+            String[] parts=raw.split("\\|",-1);
+            if(parts.length<8)return false;
+            int count=Integer.parseInt(parts[1]),n=Integer.parseInt(parts[3]);
+            if(n<0||n>HISTORY||count<n)return false;
+            int tail=4+n;
+            if(parts.length!=tail+4)return false;
+            Life working=Life.decode(parts[2]);
+            ArrayList<Life> valid=new ArrayList<>();
+            for(int i=0;i<n;i++){
+                Life item=Life.decode(parts[i+4]);
+                if(item.partial)return false;
+                valid.add(item);
+            }
+            int lifeCount=Integer.parseInt(parts[tail]);
+            boolean complete;
+            if("1".equals(parts[tail+1]))complete=true;
+            else if("0".equals(parts[tail+1]))complete=false;
+            else return false;
+            double[] sums=arrayDecode(parts[tail+2]);
+            double[] maxima=arrayDecode(parts[tail+3]);
+            if(lifeCount<0||lifeCount>count||(complete&&lifeCount!=count))return false;
+            if(lifeCount<n)return false;
+            for(int m=0;m<METRICS;m++){
+                if(lifeCount==0&&(sums[m]!=0||maxima[m]!=0))return false;
+                if(maxima[m]>sums[m]+1e-6&&lifeCount>0)return false;
+            }
+            current=working;history.clear();history.addAll(valid);completed=count;
+            lifetimeCount=lifeCount;lifetimeComplete=complete;
+            System.arraycopy(sums,0,lifetimeSum,0,METRICS);
+            System.arraycopy(maxima,0,lifetimeMax,0,METRICS);
+            return true;
+        }catch(RuntimeException ignored){return false;}
+    }
+
+    /**
+     * Migration from v0.10.4: only the retained <=50 individual lives exist.
+     * We rebuild what can be proven and explicitly mark the lifetime history
+     * incomplete instead of inventing data about ZERO's earlier life.
+     */
+    private boolean restoreV1(String raw){
         try{
             String[] parts=raw.split("\\|",-1);
             if(parts.length<4)return false;
@@ -140,22 +267,27 @@ public final class LifeStatistics {
             ArrayList<Life> valid=new ArrayList<>();
             for(int i=0;i<n;i++){
                 Life item=Life.decode(parts[i+4]);
-                if(item.partial) return false;
+                if(item.partial)return false;
                 valid.add(item);
             }
             current=working;history.clear();history.addAll(valid);completed=count;
+            rebuildLifetimeFromHistory();
+            lifetimeComplete=false;
             return true;
         }catch(RuntimeException ignored){return false;}
     }
+
     public static String duration(double seconds){
         int total=(int)Math.max(0,Math.floor(seconds));
         return String.format(Locale.ITALY,"%d:%02d",total/60,total%60);
     }
+
     public static void main(String[] args){
         LifeStatistics stats=new LifeStatistics();
         for(int i=0;i<100;i++)stats.tick(.035f);
         if(Math.abs(stats.current.seconds-3.5)>.002)
             throw new AssertionError("Simulation time incorrect");
+
         // Same rendered frame at 1x/5x/20x has 1/5/20 physics slices.
         LifeStatistics x1=new LifeStatistics(),x5=new LifeStatistics(),x20=new LifeStatistics();
         for(int k=0;k<100;k++){x1.tick(.02f);
@@ -164,29 +296,51 @@ public final class LifeStatistics {
         if(Math.abs(x5.current.seconds/x1.current.seconds-5)>.0001||
            Math.abs(x20.current.seconds/x1.current.seconds-20)>.0001)
             throw new AssertionError("x1/x5/x20 must scale simulated time");
+
         stats.contact(30);stats.contact(-7);stats.contact(0);
         stats.diskMoved();stats.physical(241,13,90);stats.roomSolved();stats.confirmedRecall();
         stats.death();
-        if(stats.completed()!=1||stats.historyCount()!=1||
+        if(stats.completed()!=1||stats.lifetimeCount()!=1||stats.historyCount()!=1||
            stats.recent(0).good!=1||stats.recent(0).harm!=1||
            stats.recent(0).damage!=7||stats.recent(0).disks!=1||
            stats.recent(0).maxNet!=241||stats.recent(0).maxGate!=90)
             throw new AssertionError("Life metrics not recorded correctly");
+
         for(int i=0;i<58;i++){stats.tick(10+i);stats.death();}
-        if(stats.historyCount()!=50||stats.completed()!=59||stats.recent(0).seconds<60)
-            throw new AssertionError("Rolling 50-life history broken");
-        if(Math.abs(stats.average(DURATION,10)-62.5)>.001)
-            throw new AssertionError("Previous-ten averages wrong");
+        if(stats.historyCount()!=50||stats.completed()!=59||stats.lifetimeCount()!=59||
+           stats.recent(0).seconds<60)
+            throw new AssertionError("Rolling 50-life history or lifetime accumulator broken");
+        if(Math.abs(stats.average(DURATION,0,25)-55.0)>.001||
+           Math.abs(stats.average(DURATION,25,25)-30.0)>.001)
+            throw new AssertionError("25-vs-25 windows wrong");
+        if(Math.abs(stats.lifetimeAverage(DURATION)-(2236.5/59.0))>.001)
+            throw new AssertionError("Lifetime average lost old lives");
+        if(Math.abs(stats.lifetimeRecord(NET)-241)>.001)
+            throw new AssertionError("Lifetime record incorrect");
+
         LifeStatistics copy=new LifeStatistics();
-        if(!copy.restore(stats.encode())||copy.completed()!=59||
-           copy.historyCount()!=50||copy.recent(0).seconds!=stats.recent(0).seconds)
-            throw new AssertionError("Stored life history failed to restore");
+        if(!copy.restore(stats.encode())||copy.completed()!=59||copy.lifetimeCount()!=59||
+           copy.historyCount()!=50||copy.recent(0).seconds!=stats.recent(0).seconds||
+           Math.abs(copy.lifetimeAverage(DURATION)-stats.lifetimeAverage(DURATION))>.0001)
+            throw new AssertionError("Stored lifetime statistics failed to restore");
+
+        // Build an actual ls1 payload to prove migration remains compatible.
+        StringBuilder old=new StringBuilder("ls1|").append(stats.completed).append('|')
+            .append(stats.current.encode()).append('|').append(stats.history.size());
+        for(Life v:stats.history)old.append('|').append(v.encode());
+        LifeStatistics migrated=new LifeStatistics();
+        if(!migrated.restore(old.toString())||migrated.lifetimeCount()!=50||
+           migrated.lifetimeComplete())
+            throw new AssertionError("Legacy v0.10.4 migration must be honest/incomplete");
+
         copy.tick(22);copy.markPartial();copy.death();
-        if(copy.completed()!=59||copy.historyCount()!=50)
+        if(copy.completed()!=59||copy.lifetimeCount()!=59||copy.historyCount()!=50)
             throw new AssertionError("Incomplete migrated life polluted averages");
+
         LifeStatistics fresh=new LifeStatistics();
         if(fresh.restore("ls1|100|no data|3")||fresh.completed()!=0)
             throw new AssertionError("Corrupt stats accepted");
-        System.out.println("ZERO life statistics: simulated clock x1/x5/x20, real outcomes, history 50, rolling averages, migration and save passed");
+
+        System.out.println("ZERO life statistics: simulated clock, permanent lifetime aggregates, 25-vs-25 windows, records, legacy migration and save passed");
     }
 }
