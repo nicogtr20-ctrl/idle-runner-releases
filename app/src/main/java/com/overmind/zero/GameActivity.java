@@ -45,7 +45,6 @@ public final class GameActivity extends Activity {
         CausalExperiments causalExperiments=new CausalExperiments();
         InstrumentalNavigation navigation=new InstrumentalNavigation();
         GoalContinuity intentions=new GoalContinuity();
-        AdaptiveSafety adaptiveSafety=new AdaptiveSafety();
         GateBehaviorMetrics gateMetrics=new GateBehaviorMetrics();
         MotorAutonomyGuard motorGuard=new MotorAutonomyGuard();
         MotorSkillBank skillBank=new MotorSkillBank();
@@ -198,9 +197,6 @@ public final class GameActivity extends Activity {
             intentions=new GoalContinuity();
             intentions.restore(prefs.getString(GoalContinuity.KEY,""));
             sensorMind.attachGoalContinuity(intentions);
-            adaptiveSafety=new AdaptiveSafety();
-            adaptiveSafety.restore(prefs.getString(AdaptiveSafety.KEY,""));
-            sensorMind.attachAdaptiveSafety(adaptiveSafety);
             gateMetrics=new GateBehaviorMetrics();
             gateMetrics.restore(prefs.getString(GateBehaviorMetrics.KEY,""));
             episodic=new EpisodicMemory();
@@ -443,7 +439,6 @@ public final class GameActivity extends Activity {
               .putString(CausalExperiments.KEY,causalExperiments.encode())
               .putString(InstrumentalNavigation.KEY,navigation.encode())
               .putString(GoalContinuity.KEY,intentions.encode())
-              .putString(AdaptiveSafety.KEY,adaptiveSafety.encode())
               .putString(GateBehaviorMetrics.KEY,gateMetrics.encode())
               .putString(LifeStatistics.KEY,lifeStats.encode())
               .putInt("motor_recoveries_v097",motorGuard.recoveryActivations)
