@@ -403,6 +403,11 @@ public final class GameActivity extends Activity {
               .putString("sensorimotor_model_v09",sensorMind.serialize())
               .putString("sensorimotor_diagnostics_v091",sensorMind.diagnostics.encode())
               .putString("episodic_memory_v095",episodic.encode())
+              // 0.10.8: persist learned temporal readouts, hidden context and
+              // consolidated action sequences alongside the existing brain.
+              // Same working profile is captured atomically by the 12 named slots.
+              .putString("temporal_working_memory_v106",workingMemory.encode())
+              .putString("temporal_skills_v107",temporalSkillBank.encode())
               .putString(LifeStatistics.KEY,lifeStats.encode())
               .putInt("motor_recoveries_v097",motorGuard.recoveryActivations)
               .putInt("motor_free_choices_v097",motorGuard.freeChoices)
