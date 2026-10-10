@@ -211,3 +211,8 @@
 - Publisher stabile firmato **38066032322** verde; versionCode **1056**.
 - APK pubblica `/apk/overmind-zero-1056-a433978f8420.apk`, **149.392 byte**, SHA-256 `a433978f842054c71c2744075f3c5a0105a4bad2f825b7ba7d6a7d1629e2030e`.
 - Manifest/APK Vercel verificati HTTP 200; GitHub Release `overmind-zero-v0.10.7-ota.56` creata.
+
+## OTA 0.10.8-ota.57 — 2026-10-10T16:28:55.321179+00:00
+- Pacchetto Android firmato pubblicato su Vercel (codice 1057).
+- SHA-256: `50b45e37a1cc7d801408c0800000a0f957ea2c89159afbff4fb0ba22df3eddc3`.
+- APK: `/apk/overmind-zero-1057-50b45e37a1cc.apk`.
