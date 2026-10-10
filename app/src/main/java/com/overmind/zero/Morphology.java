@@ -124,7 +124,8 @@ public final class Morphology {
             // Recent disk pressure decays over actual simulation time, so
             // brief real contacts are still sensed at the next decision.
             // Only actual collisions below increase this channel.
-            for(int p=0;p<POINTS;p++)touchPulse[p]*=(float)Math.exp(-2.5f*dt);
+            float tactileDecay=(float)Math.exp(-2.5f*dt);
+            for(int p=0;p<POINTS;p++)touchPulse[p]*=tactileDecay;
             float toX=targetX-body.cx,toY=targetY-body.cy;
             float targetD=(float)Math.hypot(toX,toY);
             float dx=targetD>.001f?toX/targetD:0;
