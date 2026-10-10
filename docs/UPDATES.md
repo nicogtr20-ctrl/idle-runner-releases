@@ -18,5 +18,5 @@ La modifica “STATISTICHE 25-vs-25 + storico lifetime” è nello stable `featu
 - `https://overmind-zero-updates.vercel.app/latest.json` e APK verificati HTTP 200 dopo la pubblicazione.
 È quindi corretto usare **AGGIORNA** nell'app. Installare sopra la versione esistente; non disinstallare.
 
-## Stato 0.10.6 — staging
-Il codice della memoria di lavoro temporale è nel branch `feature/overmind-v106-temporal-working-memory`. Staging run 38064278116 verde. La versione base è `0.10.6-ota`, ma finché il branch non viene portato su `feature/overmind-inapp-updater` e il publisher firmato non conclude con successo, il pulsante AGGIORNA deve continuare a essere considerato 0.10.5.
+## Stato 0.10.6 — candidato stabile
+La memoria di lavoro temporale ha superato staging run 38064278116 e 38064377747. Il codice è stato promosso su `feature/overmind-inapp-updater`; la versione base è `0.10.6-ota`. Il publisher firmato deve ancora concludere con successo prima di considerare AGGIORNA verificato sulla 0.10.6.
