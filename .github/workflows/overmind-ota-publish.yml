@@ -27,7 +27,7 @@ jobs:
       - name: Unit tests
         run: |
           mkdir -p /tmp/overmind
-          javac -d /tmp/overmind app/src/main/java/com/overmind/zero/MotorBrain.java app/src/main/java/com/overmind/zero/UnknownWorld.java app/src/main/java/com/overmind/zero/ContactLearning.java app/src/main/java/com/overmind/zero/DecisionBrain.java app/src/main/java/com/overmind/zero/Morphology.java app/src/main/java/com/overmind/zero/ScarcityLab.java app/src/main/java/com/overmind/zero/SensorimotorMind.java app/src/main/java/com/overmind/zero/LearningDiagnostics.java app/src/main/java/com/overmind/zero/ResetDomains.java app/src/main/java/com/overmind/zero/OnlineBodyLearning.java app/src/main/java/com/overmind/zero/MotionExploration.java app/src/main/java/com/overmind/zero/EpisodicMemory.java app/src/main/java/com/overmind/zero/MotorAutonomyGuard.java app/src/main/java/com/overmind/zero/MotorSkillBank.java app/src/main/java/com/overmind/zero/ExperienceCredit.java app/src/main/java/com/overmind/zero/GripSkillBank.java app/src/main/java/com/overmind/zero/SaveProfileCodec.java
+          javac -d /tmp/overmind app/src/main/java/com/overmind/zero/MotorBrain.java app/src/main/java/com/overmind/zero/UnknownWorld.java app/src/main/java/com/overmind/zero/ContactLearning.java app/src/main/java/com/overmind/zero/DecisionBrain.java app/src/main/java/com/overmind/zero/Morphology.java app/src/main/java/com/overmind/zero/ScarcityLab.java app/src/main/java/com/overmind/zero/SensorimotorMind.java app/src/main/java/com/overmind/zero/LearnedSequencePlanner.java app/src/main/java/com/overmind/zero/LearningDiagnostics.java app/src/main/java/com/overmind/zero/ResetDomains.java app/src/main/java/com/overmind/zero/OnlineBodyLearning.java app/src/main/java/com/overmind/zero/MotionExploration.java app/src/main/java/com/overmind/zero/EpisodicMemory.java app/src/main/java/com/overmind/zero/MotorAutonomyGuard.java app/src/main/java/com/overmind/zero/MotorSkillBank.java app/src/main/java/com/overmind/zero/ExperienceCredit.java app/src/main/java/com/overmind/zero/GripSkillBank.java app/src/main/java/com/overmind/zero/SaveProfileCodec.java
           java -cp /tmp/overmind com.overmind.zero.MotorBrain
           java -cp /tmp/overmind com.overmind.zero.UnknownWorld
           java -cp /tmp/overmind com.overmind.zero.ContactLearning
@@ -35,6 +35,7 @@ jobs:
           java -cp /tmp/overmind com.overmind.zero.Morphology
           java -cp /tmp/overmind com.overmind.zero.ScarcityLab
           java -cp /tmp/overmind com.overmind.zero.SensorimotorMind
+          java -cp /tmp/overmind com.overmind.zero.LearnedSequencePlanner
           java -cp /tmp/overmind com.overmind.zero.LearningDiagnostics
           java -cp /tmp/overmind com.overmind.zero.ResetDomains
           java -cp /tmp/overmind com.overmind.zero.OnlineBodyLearning
@@ -347,6 +348,30 @@ jobs:
           assert 'skin.gripCommand[i]>Morphology.GRIP_THRESHOLD' in Path('app/src/main/java/com/overmind/zero/ScarcityLab.java').read_text()
           assert 'GameSceneSnapshot.capture(creature,surface,environment,chamber)' in game
           print('Source-conditioned real energy, external displacement, old em1/em2 migration, and 12 named slots remain independent')
+          PY
+      - name: Verify 0.10.2 planner confidence gate and GitHub-backed OTA on stable signing
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          p=Path('app/src/main/java/com/overmind/zero/LearnedSequencePlanner.java').read_text()
+          b=Path('app/src/main/java/com/overmind/zero/SensorimotorMind.java').read_text()
+          g=Path('app/src/main/java/com/overmind/zero/GameActivity.java').read_text()
+          u=Path('app/src/main/java/com/overmind/zero/UpdateClient.java').read_text()
+          r=Path('app/src/main/java/com/overmind/zero/ResetDomains.java').read_text()
+          s=Path('app/src/main/java/com/overmind/zero/SaveSlotStore.java').read_text()
+          assert 'd.heldoutTransitions<30' in p and 'd.errorAt(i)' in p
+          assert 'float[] two=safePredict(model,next,action)' in p
+          assert 'new LearnedSequencePlanner.Model()' in b and 'planned[a]' in b
+          assert 'learned_planner_stats_v102' in g and 'learned_planner_stats_v102' in r
+          assert 'MANIFEST_URL=' in u and 'BACKUP_MANIFEST_URL=' in u
+          assert 'newestManifest()' in u and 'REDIRECT_LIMIT=6' in u
+          assert 'MessageDigest.getInstance("SHA-256")' in u
+          assert 'release-assets.githubusercontent.com' in u
+          assert 'FLAG_GRANT_READ_URI_PERMISSION' in u
+          assert 'canRequestPackageInstalls()' in u
+          assert 'zero_save_slots_v100' in s and 'public static final int SLOTS=12' in s
+          assert 'GameSceneSnapshot.capture(creature,surface,environment,chamber)' in g
+          print('ZERO 0.10.2 signed gate: earned short horizon forecasts, source verified Vercel/GitHub update, unchanged installed identity')
           PY
       - name: Assemble stable signed APK
         if: env.signing_ready == 'true'
