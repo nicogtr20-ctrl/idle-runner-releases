@@ -235,6 +235,40 @@ public final class InstrumentalNavigation {
             "Negative energy did not favor learned withdrawal");
         require(n.bias(8,.2f)==0,
             "Untested grip action illegally inherited a movement map");
+        // Integration regression: ZERO's LIVE selector must actually use
+        // the learned spectral/motor relation, not just display diagnostic
+        // scores in ANALISI. No target object/coordinates are passed to it.
+        SensorimotorMind controller=new SensorimotorMind();
+        controller.attachNavigation(n);
+        controller.experiences=20000; // below random exploration floor remains 9%.
+        float[] physiology=new float[SensorimotorMind.S];
+        physiology[0]=.18f;
+        UnknownWorld.Entity red=world.get(1);
+        world.remove(red);
+        b.cx=x;b.cy=y;
+        controller.updateNavigationSense(b,null,world);
+        int east=0,west=0;
+        for(int i=0;i<160;i++){
+            int a=controller.choose(physiology)%8;
+            if(a==0)east++;
+            if(a==4)west++;
+        }
+        require(east>west*3+10,
+            "Actual autonomous action selector still ignores learned access to energy");
+        world.clear();world.add(red);
+        controller.updateNavigationSense(b,null,world);
+        int north=0,south=0;
+        for(int i=0;i<160;i++){
+            int a=controller.choose(physiology)%8;
+            if(a==6)north++;
+            if(a==2)south++;
+        }
+        require(south>north*3+10,
+            "Actual autonomous action selector still ignores learned energy injury");
+        world.clear();
+        world.add(new UnknownWorld.Entity(b.cx+115,b.cy,0,0));
+        world.add(red);
+        n.sense(b,null,world);
         String saved=n.encode();
         InstrumentalNavigation restored=new InstrumentalNavigation();
         require(restored.restore(saved)&&saved.equals(restored.encode()),
