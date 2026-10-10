@@ -44,6 +44,8 @@ public final class GameActivity extends Activity {
         SpatialPerception spatialMap=new SpatialPerception();
         CausalExperiments causalExperiments=new CausalExperiments();
         InstrumentalNavigation navigation=new InstrumentalNavigation();
+        GoalContinuity intentions=new GoalContinuity();
+        GateBehaviorMetrics gateMetrics=new GateBehaviorMetrics();
         MotorAutonomyGuard motorGuard=new MotorAutonomyGuard();
         MotorSkillBank skillBank=new MotorSkillBank();
         GripSkillBank gripBank=new GripSkillBank();
@@ -192,6 +194,11 @@ public final class GameActivity extends Activity {
             navigation=new InstrumentalNavigation();
             navigation.restore(prefs.getString(InstrumentalNavigation.KEY,""));
             sensorMind.attachNavigation(navigation);
+            intentions=new GoalContinuity();
+            intentions.restore(prefs.getString(GoalContinuity.KEY,""));
+            sensorMind.attachGoalContinuity(intentions);
+            gateMetrics=new GateBehaviorMetrics();
+            gateMetrics.restore(prefs.getString(GateBehaviorMetrics.KEY,""));
             episodic=new EpisodicMemory();
             episodic.restore(prefs.getString("episodic_memory_v095",""));
             sensorMind.attachMemory(episodic);
@@ -431,6 +438,8 @@ public final class GameActivity extends Activity {
               .putString(SpatialPerception.KEY,spatialMap.encode())
               .putString(CausalExperiments.KEY,causalExperiments.encode())
               .putString(InstrumentalNavigation.KEY,navigation.encode())
+              .putString(GoalContinuity.KEY,intentions.encode())
+              .putString(GateBehaviorMetrics.KEY,gateMetrics.encode())
               .putString(LifeStatistics.KEY,lifeStats.encode())
               .putInt("motor_recoveries_v097",motorGuard.recoveryActivations)
               .putInt("motor_free_choices_v097",motorGuard.freeChoices)
@@ -476,6 +485,7 @@ public final class GameActivity extends Activity {
             java.util.Arrays.fill(energySinceAction,0f);
             episodic.resetLife(); // Forget transient attempt, NOT learned motor or memories.
             previousGripDrive=previousGripHeld=previousOpposedFrames=0;
+            gateMetrics.resetLife();
             ongoingUnsuccessfulGrip=0;gripRecoveryCooldown=0;
             liveBody.abortTrial();
             creature.reset();surface.reset(creature);
@@ -541,6 +551,7 @@ public final class GameActivity extends Activity {
             // Test the door without a forced energy penalty.
             chamber=new ScarcityLab(creature.cx,creature.cy);
             previousGripDrive=previousGripHeld=previousOpposedFrames=0;
+            gateMetrics.resetLife();
             ongoingUnsuccessfulGrip=0;gripRecoveryCooldown=0;
             excludeOrdinaryRoomObjects();
             environment.add(chamber.food);
@@ -715,6 +726,7 @@ public final class GameActivity extends Activity {
                         if(Float.isFinite(actuallyMoved))
                             environmentEffectSinceAction+=Math.min(2,actuallyMoved);
                         farthestGate=Math.max(farthestGate,chamber.maxDoorTravel);
+                        gateMetrics.observe(creature,chamber);
 
                         // Preserve motor apparatus only when the PHYSICS
                         // confirmed adhesion held, not because ZERO touched
