@@ -140,6 +140,13 @@ public final class BrainToolsActivity extends Activity {
         line(physical,"Azioni realmente eseguite con esito accreditato",
              String.valueOf(prefs.getInt("real_action_credits_v098",0)),WHITE);
         paragraph(physical,"Correzione 0.9.8: eliminato il bonus direzionale per le sfere. ZERO riceve soltanto le conseguenze energetiche dei contatti realmente avvenuti: le sue precedenti azioni effettivamente eseguite aggiornano i valori appresi della rete neurale. Le 26 percezioni (inclusi gli stimoli visivi) rimangono input del cervello, ma nessun colore induce automaticamente ad andare verso una certa direzione. Il comportamento di ricerca delle risorse deve emergere dai valori appresi, non è garantito. L'archivio delle tecniche motorie, il recupero antistallo e i ricordi preesistenti sono conservati.");
+        GripSkillBank gripHistory=new GripSkillBank();
+        gripHistory.restore(prefs.getString("grip_skills_v099",""));
+        line(physical,"Tecniche di presa fisica archiviate",
+            gripHistory.count()+" / "+GripSkillBank.MAX,CYAN);
+        line(physical,"Configurazioni di presa recuperate",
+            String.valueOf(gripHistory.restored),AMBER);
+        paragraph(physical,"0.9.9: le prese salvate sono soltanto quelle realmente mantenute al contatto, non TOCCHI o tentativi. La memoria episodica non sovrascrive più i pesi della membrana nel momento della presa. Il recupero può avvenire solo se ZERO sceglie l'adesione ma non riesce a mantenerla dopo molte prove al cancello. Se una tecnica efficace è stata persa prima della 0.9.9 non può essere ricostruita dal nulla.");
         EpisodicMemory episodes=new EpisodicMemory();
         episodes.restore(prefs.getString("episodic_memory_v095",""));
         LinearLayout memory=panel(body);
