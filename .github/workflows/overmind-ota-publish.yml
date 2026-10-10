@@ -27,7 +27,7 @@ jobs:
       - name: Unit tests
         run: |
           mkdir -p /tmp/overmind
-          javac -d /tmp/overmind app/src/main/java/com/overmind/zero/MotorBrain.java app/src/main/java/com/overmind/zero/UnknownWorld.java app/src/main/java/com/overmind/zero/ContactLearning.java app/src/main/java/com/overmind/zero/DecisionBrain.java app/src/main/java/com/overmind/zero/Morphology.java app/src/main/java/com/overmind/zero/ScarcityLab.java app/src/main/java/com/overmind/zero/SensorimotorMind.java app/src/main/java/com/overmind/zero/BodyProprioception.java app/src/main/java/com/overmind/zero/TemporalWorkingMemory.java app/src/main/java/com/overmind/zero/TemporalSkillBank.java app/src/main/java/com/overmind/zero/TemporalPersistenceRegression.java app/src/main/java/com/overmind/zero/LearnedSequencePlanner.java app/src/main/java/com/overmind/zero/LearningDiagnostics.java app/src/main/java/com/overmind/zero/ResetDomains.java app/src/main/java/com/overmind/zero/OnlineBodyLearning.java app/src/main/java/com/overmind/zero/MotionExploration.java app/src/main/java/com/overmind/zero/EpisodicMemory.java app/src/main/java/com/overmind/zero/MotorAutonomyGuard.java app/src/main/java/com/overmind/zero/MotorSkillBank.java app/src/main/java/com/overmind/zero/ExperienceCredit.java app/src/main/java/com/overmind/zero/GripSkillBank.java app/src/main/java/com/overmind/zero/SaveProfileCodec.java app/src/main/java/com/overmind/zero/LifeStatistics.java
+          javac -d /tmp/overmind app/src/main/java/com/overmind/zero/MotorBrain.java app/src/main/java/com/overmind/zero/UnknownWorld.java app/src/main/java/com/overmind/zero/ContactLearning.java app/src/main/java/com/overmind/zero/DecisionBrain.java app/src/main/java/com/overmind/zero/Morphology.java app/src/main/java/com/overmind/zero/ScarcityLab.java app/src/main/java/com/overmind/zero/SensorimotorMind.java app/src/main/java/com/overmind/zero/SpatialPerception.java app/src/main/java/com/overmind/zero/BodyProprioception.java app/src/main/java/com/overmind/zero/TemporalWorkingMemory.java app/src/main/java/com/overmind/zero/TemporalSkillBank.java app/src/main/java/com/overmind/zero/TemporalPersistenceRegression.java app/src/main/java/com/overmind/zero/LearnedSequencePlanner.java app/src/main/java/com/overmind/zero/LearningDiagnostics.java app/src/main/java/com/overmind/zero/ResetDomains.java app/src/main/java/com/overmind/zero/OnlineBodyLearning.java app/src/main/java/com/overmind/zero/MotionExploration.java app/src/main/java/com/overmind/zero/EpisodicMemory.java app/src/main/java/com/overmind/zero/MotorAutonomyGuard.java app/src/main/java/com/overmind/zero/MotorSkillBank.java app/src/main/java/com/overmind/zero/ExperienceCredit.java app/src/main/java/com/overmind/zero/GripSkillBank.java app/src/main/java/com/overmind/zero/SaveProfileCodec.java app/src/main/java/com/overmind/zero/LifeStatistics.java
           java -cp /tmp/overmind com.overmind.zero.MotorBrain
           java -cp /tmp/overmind com.overmind.zero.UnknownWorld
           java -cp /tmp/overmind com.overmind.zero.ContactLearning
@@ -35,6 +35,7 @@ jobs:
           java -cp /tmp/overmind com.overmind.zero.Morphology
           java -cp /tmp/overmind com.overmind.zero.ScarcityLab
           java -cp /tmp/overmind com.overmind.zero.SensorimotorMind
+          java -cp /tmp/overmind com.overmind.zero.SpatialPerception
           java -cp /tmp/overmind com.overmind.zero.BodyProprioception
           java -cp /tmp/overmind com.overmind.zero.TemporalWorkingMemory
           java -cp /tmp/overmind com.overmind.zero.TemporalSkillBank
@@ -408,7 +409,7 @@ jobs:
           assert 'temporalSkills.physicalOutcome(physicalEffect)' in sm
           assert 'temporal_skills_v107' in g and 'TEMPORAL_SKILLS="temporal_skills"' in reset
           assert 'temporal_working_memory_v106' in g
-          assert '0.10.9-ota' in gradle
+          assert '0.11.0-ota' in gradle
           assert 'com.overmind.zero.StatisticsActivity' in manifest
           assert 'episodic.consequenceSeparated(' in g and 'episodic.weights(' not in g
           print('0.10.7 verified: repeated lived sequences become bounded context-sensitive skills; prior cognition/statistics preserved.')
@@ -436,7 +437,7 @@ jobs:
           assert 'temporalSkills.resumeLife()' in mind
           assert 'physical_scene_v100' in g and 'SaveProfileCodec.encode(capture())' in slots
           assert 'new HashMap<>(working.getAll())' in slots
-          assert 'applicationId \'com.overmind.zero.ota\'' in p and '0.10.9-ota' in p
+          assert 'applicationId \'com.overmind.zero.ota\'' in p and '0.11.0-ota' in p
           print('ZERO 0.10.8 signed gate: real learned hidden state/weights and sequential skills survive stop/reopen/named save; earlier brain untouched.')
           PY
       - name: Gate 0.10.9 spatial proprioception and continued independent learning
@@ -474,8 +475,52 @@ jobs:
           assert 'case PROPRIOCEPTION:return new String[]{BodyProprioception.KEY};' in reset
           assert 'bodyMap.parameterCount()' in stats
           assert 'lifeStats.tick(dt);' in g and 'for(int i=0;i<speed;i++)' in g
-          assert '0.10.9-ota' in code and "applicationId 'com.overmind.zero.ota'" in code
+          assert '0.11.0-ota' in code and "applicationId 'com.overmind.zero.ota'" in code
           print('ZERO 0.10.9 SIGNED GATE: honest tactile world, 96 contacts, eight directions, no embedded goals, old motor and all save slots compatible.')
+          PY
+      - name: Gate 0.11.0 actual spatial perception, occlusion, map, permanent cognition and saves
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          p=Path('app/src/main/java/com/overmind/zero/SpatialPerception.java').read_text()
+          m=Path('app/src/main/java/com/overmind/zero/SensorimotorMind.java').read_text()
+          g=Path('app/src/main/java/com/overmind/zero/GameActivity.java').read_text()
+          ui=Path('app/src/main/java/com/overmind/zero/BrainToolsActivity.java').read_text()
+          brain=Path('app/src/main/java/com/overmind/zero/BrainStatsActivity.java').read_text()
+          reset=Path('app/src/main/java/com/overmind/zero/ResetDomains.java').read_text()
+          slots=Path('app/src/main/java/com/overmind/zero/SaveSlotStore.java').read_text()
+          gradle=Path('app/build.gradle').read_text()
+          assert 'RAYS=16, STEPS=8, CELL=36, MAX_CELLS=1024' in p
+          assert 'SensorimotorMind.Senses.solid(room,x,y,objects)' in p
+          assert 'if(blocked&&step>hit)break;' in p
+          assert 'blockedThisScan.add(' in p
+          assert 'odometryX+=dx;odometryY+=dy;' in p and 'memory.size()>MAX_CELLS' in p
+          assert 'public byte[] localMap(int radius)' in p
+          assert 'if(validations<30' in p and 'error>=baseline*.96f' in p
+          assert 'return bound(value(current,action,mapAhead(action))*trust*.25f,-.19f,.19f);' in p
+          assert 'ScarcityLab.DOOR' not in p and 'UnknownWorld.RARE_ENERGY' not in p
+          assert 'public static final int S=26;' in m
+          assert 'spatial.choiceBias(a)' in m
+          assert 'spatial.consequence(trialAction,lastReward,learning&&!holdout,holdout)' in m
+          assert 'spatial.observeEnvironment(body,room,objects)' in m
+          assert 'spatialMap.restore(prefs.getString(SpatialPerception.KEY,""))' in g
+          assert '.putString(SpatialPerception.KEY,spatialMap.encode())' in g
+          assert 'sensorMind.resumeSpatialSense(creature,chamber,environment)' in g
+          assert 'sensorMind.updateSpatialSense(creature,chamber,environment)' in g
+          assert '.putString(BodyProprioception.KEY,bodySchema.encode())' in g
+          assert '.putString("temporal_working_memory_v106",workingMemory.encode())' in g
+          assert '.putString("temporal_skills_v107",temporalSkillBank.encode())' in g
+          assert '.putString("episodic_memory_v095",episodic.encode())' in g
+          assert '.putString(LifeStatistics.KEY,lifeStats.encode())' in g
+          assert 'ResetDomains.SPATIAL' in ui and 'SpatialMapView extends View' in ui
+          assert 'case SPATIAL:return new String[]{SpatialPerception.KEY};' in reset
+          assert 'spatial.parameterCount()' in brain
+          assert 'SaveProfileCodec.encode(capture())' in slots and 'SLOTS=12' in slots
+          assert "applicationId 'com.overmind.zero.ota'" in gradle
+          assert '0.11.0-ota' in gradle
+          assert 'lifeStats.tick(dt);' in g and 'for(int i=0;i<speed;i++)' in g
+          assert 'episodic.consequenceSeparated(' in g and 'episodic.weights(' not in g
+          print('ZERO 0.11.0 signed: honest occluded rays and bounded map, heldout learning, independent original brain, twelve character slots, and real time simulation')
           PY
       - name: Assemble stable signed APK
         if: env.signing_ready == 'true'
