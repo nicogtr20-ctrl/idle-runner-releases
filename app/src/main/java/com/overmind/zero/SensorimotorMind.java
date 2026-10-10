@@ -26,6 +26,12 @@ public final class SensorimotorMind {
     private final Random random=new Random(60909);
     private transient EpisodicMemory episodic;
     private transient MotorAutonomyGuard motorGuard;
+    private transient SensoryValenceGuide sensoryGuide;
+    private transient UnknownWorld.Mind observedWorld;
+    public synchronized void attachSensoryValues(SensoryValenceGuide guide,
+                                                   UnknownWorld.Mind observed){
+        sensoryGuide=guide;observedWorld=observed;
+    }
     public synchronized void attachMemory(EpisodicMemory memory){episodic=memory;}
     public synchronized void attachMotorGuard(MotorAutonomyGuard guard){motorGuard=guard;}
     private final float[] model=new float[FORWARD_WEIGHTS];
@@ -106,10 +112,17 @@ public final class SensorimotorMind {
             float jitter=(random.nextFloat()-.5f)*(.15f+.18f/(1+experiences/45f));
             // Remembered effects bias a choice but never force it.
             float memoryBias=episodic==null?0:episodic.bias(a,proposed);
-            float score=q+curiosity+jitter+memoryBias;
+            // Generic value learned only from actual resource contacts:
+            // compare the chosen heading to the raw visible frequency sectors.
+            // No object coordinates or hidden label enters the policy.
+            float sensoryBias=(sensoryGuide==null||observedWorld==null)?0:
+                sensoryGuide.bias(senses,a,observedWorld.estimated,observedWorld.contacts);
+            float diversity=motorGuard==null?0:motorGuard.stagnationBias(a);
+            float score=q+curiosity+jitter+memoryBias+sensoryBias+diversity;
             if(score>best){best=score;chosen=a;}
         }
         float epsilon=Math.max(.09f,.52f/(1+experiences/120f));
+        if(protectMotor)epsilon=Math.max(epsilon,.28f);
         actionExploratory=false;
         if(random.nextFloat()<epsilon){
             chosen=random.nextInt(ACTIONS);explorations++;
@@ -117,6 +130,9 @@ public final class SensorimotorMind {
         }
         if(action!=chosen)actionsReconsidered++;
         if(episodic!=null)episodic.chosen(chosen,proposed);
+        if(motorGuard!=null)motorGuard.action(chosen);
+        if(sensoryGuide!=null&&observedWorld!=null)
+            sensoryGuide.chosen(senses,chosen,observedWorld.estimated,observedWorld.contacts);
         action=chosen;decisions++;
         estimatedValue=estimate(senses,chosen);
         System.arraycopy(senses,0,trialState,0,S);
