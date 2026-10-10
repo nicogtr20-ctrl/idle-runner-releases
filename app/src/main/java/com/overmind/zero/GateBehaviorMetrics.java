@@ -52,7 +52,9 @@ public final class GateBehaviorMetrics {
         }
         float dist=distanceToGate(body,r);
         closest=Math.min(closest,dist);
-        if(dist<=110f)nearbyFrames++;
+        // The spawn itself is ~67 units from the rectangular gate.
+        // 45 units requires real approach, not merely spawning nearby.
+        if(dist<=45f)nearbyFrames++;
         if(dist<=MotorBrain.R+3f)coreTouchFrames++;
         maxTravel=Math.max(maxTravel,r.maxDoorTravel);
         boolean open=r.openingFree();
@@ -110,7 +112,7 @@ public final class GateBehaviorMetrics {
         MotorBrain.Body b=new MotorBrain.Body();
         ScarcityLab gate=new ScarcityLab(0,0);
         m.observe(b,gate);
-        if(m.passages!=0||m.opened!=0||m.maxTravel!=0)
+        if(m.passages!=0||m.opened!=0||m.maxTravel!=0||m.nearbyFrames!=0)
             throw new AssertionError("Invented opening with untouched door");
         b.cx=gate.gateX()-ScarcityLab.DOOR_HALF_W-10;
         m.observe(b,gate);
