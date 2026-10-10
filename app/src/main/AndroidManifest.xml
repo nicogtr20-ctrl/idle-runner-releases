@@ -30,6 +30,10 @@
     </activity>
 
     <!-- Read-only temporary APK exposed only to Android's installer. -->
+    <provider android:name="com.overmind.zero.GptReportProvider"
+      android:authorities="${applicationId}.gptreport"
+      android:exported="false"
+      android:grantUriPermissions="true"/>
     <provider android:name="com.overmind.zero.UpdateFileProvider"
       android:authorities="${applicationId}.updates"
       android:exported="false"
