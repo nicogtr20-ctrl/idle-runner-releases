@@ -234,3 +234,13 @@ See `docs/EXPERIMENT_0100.md`.
 - [ ] Run controlled observation on Samsung S21 from named saved ZERO subjects: collect spontaneous partial gate displacement, red/blue collisions, manipulation persistence, effective distance and energy. No claim behavior proven by CI.
 - [ ] Research prospective causal models and long-horizon planning that do not prescribe scripted target actions or rely on hidden coordinates.
 `docs/EXPERIMENT_0101.md`.
+
+
+## ZERO 0.10.3 — blocco risolto, verifica sul dispositivo ancora da fare
+- [x] Diagnosticata la causa del contatore 0/24: cancellazione `recent` a ogni decisione prima di raggiungere 2 azioni.
+- [x] Memoria rolling max36, separazione delle provenienze em3 e reset alla morte mantenuti senza cancellare i ricordi.
+- [x] Test reale action→check per 44 tick neutrali, guadagno, danno, morte e persist em3; JVM + Android staging 38055704183 passati.
+- [x] Versione firmata `0.10.3-ota.51`, run 38055836537 passata, SHA256 `3bcf4c2674c73a7de134158fea3064e5b31b953d899ba96af4344f2b6fb8a522`; Vercel `latest.json` e APK HTTP 200 verificati.
+- [ ] Galaxy S21: test tasto AGGIORNA, salvataggi in-place, raccogliere nuovi eventi, verificare conteggi >0 dopo conseguenze idonee e tipo dei ricordi.
+- [ ] Confronto A/B controllato su stessi individui/situazioni: richiamo di memoria vs puro caso, protezione locomozione/presa, danno simultaneo porta/rosso. Non attribuire capacità causali non dimostrate.
+Vedi `docs/EXPERIMENT_0103.md`.

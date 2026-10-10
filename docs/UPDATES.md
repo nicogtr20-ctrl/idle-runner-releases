@@ -34,3 +34,7 @@ Finché non esiste un APK firmato e pubblicamente distribuito, `available` è `f
 - Premi Aggiorna → verifica HTTPS → download automatico → hash → schermata conferma Android → installazione riuscita.
 - Verifica salvataggi/memoria non cancellati.
 - Prova rete assente, versione uguale, pacchetto errato, hash invalido e APK non accessibile.
+
+
+## Stato reale 10 ottobre 2026 — 0.10.3
+La CI GitHub publisher `38055836537` ha prodotto `0.10.3-ota.51` (code 1051, SHA256 `3bcf4c2674c73a7de134158fea3064e5b31b953d899ba96af4344f2b6fb8a522`, 129180 byte), creato la Release verificata https://github.com/nicogtr20-ctrl/idle-runner-releases/releases/tag/overmind-zero-v0.10.3-ota.51 prima di aggiornare il manifest statico su main. Verifica effettiva del dominio produzione: `https://overmind-zero-updates.vercel.app/latest.json` **HTTP200** indica 1051 e SHA corretto; `https://overmind-zero-updates.vercel.app/apk/overmind-zero-1051-3bcf4c2674c7.apk` **HTTP200**, content-length 129180. Restano necessari il test del pulsante AGGIORNA sul Galaxy S21 e la conferma che la memoria produca realmente nuovi episodi. Il GitHub sorgente resta PRIVATO, dunque il fallback GitHub senza credenziali NON è pubblicamente utilizzabile in app, mentre Vercel attualmente serve il binario pubblico. Non disinstallare né azzerare.
