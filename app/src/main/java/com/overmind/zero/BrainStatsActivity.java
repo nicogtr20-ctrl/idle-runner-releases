@@ -37,6 +37,7 @@ public final class BrainStatsActivity extends Activity {
         final SensorimotorMind worldMind;
         final TemporalWorkingMemory temporal;
         final TemporalSkillBank temporalSkills;
+        final BodyProprioception bodyMap;
         final int motorAttempts,motorAccepted,handAttempts,handAccepted;
         final int pushed,collisions,contacts;
         final int exploredCells,motorAccepted094,motorRejected094;
@@ -72,6 +73,8 @@ public final class BrainStatsActivity extends Activity {
             temporal.restore(pref.getString("temporal_working_memory_v106",""));
             temporalSkills=new TemporalSkillBank();
             temporalSkills.restore(pref.getString("temporal_skills_v107",""));
+            bodyMap=new BodyProprioception();
+            bodyMap.restore(pref.getString(BodyProprioception.KEY,""));
             decisions=new DecisionBrain(90517L);
             decisions.restore(pref.getString("decision_brain_v05",""));
             choiceStart=decisions.initialSnapshot();
@@ -199,7 +202,7 @@ public final class BrainStatsActivity extends Activity {
         void drawSkills(Canvas c){
             float y=177;
             int total=movementNow.length+handNow.length+choiceNow.length+shapeNow.length+
-                worldMind.parameterCount()+temporal.parameterCount();
+                worldMind.parameterCount()+temporal.parameterCount()+bodyMap.parameterCount();
             int original=movementStart.length+handStart.length+DecisionBrain.PARAMS;
             y=hero(c,"POTENZA NEURALE / PARAMETRI",String.valueOf(total),
                 original+" PARAMETRI STORICI  •  "+(total-original)+
@@ -215,6 +218,12 @@ public final class BrainStatsActivity extends Activity {
                 " stati interni  •  confidenza "+
                 String.format(Locale.US,"%.0f%%",temporal.confidence()*100f),
                 Math.min(1f,temporal.validationTransitions/100f),purple);
+            y=skill(c,y,"MAPPA CORPOREA / PROPRIOCEZIONE",
+                bodyMap.parameterCount()+" pesi",
+                bodyMap.transitions+" transizioni  •  "+BodyProprioception.SECTORS+
+                " settori  •  confidenza "+
+                String.format(Locale.US,"%.0f%%",bodyMap.confidence()*100f),
+                Math.min(1f,bodyMap.validations/100f),cyan);
             y=skill(c,y,"ABILITA TEMPORALI AUTONOME",
                 temporalSkills.consolidated()+" consolidate",
                 temporalSkills.stored()+" candidate  •  max "+temporalSkills.longest()+
