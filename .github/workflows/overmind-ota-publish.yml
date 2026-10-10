@@ -27,7 +27,7 @@ jobs:
       - name: Unit tests
         run: |
           mkdir -p /tmp/overmind
-          javac -d /tmp/overmind app/src/main/java/com/overmind/zero/MotorBrain.java app/src/main/java/com/overmind/zero/UnknownWorld.java app/src/main/java/com/overmind/zero/ContactLearning.java app/src/main/java/com/overmind/zero/DecisionBrain.java app/src/main/java/com/overmind/zero/Morphology.java app/src/main/java/com/overmind/zero/ScarcityLab.java app/src/main/java/com/overmind/zero/SensorimotorMind.java app/src/main/java/com/overmind/zero/LearningDiagnostics.java app/src/main/java/com/overmind/zero/ResetDomains.java app/src/main/java/com/overmind/zero/OnlineBodyLearning.java app/src/main/java/com/overmind/zero/MotionExploration.java app/src/main/java/com/overmind/zero/EpisodicMemory.java app/src/main/java/com/overmind/zero/MotorAutonomyGuard.java app/src/main/java/com/overmind/zero/MotorSkillBank.java app/src/main/java/com/overmind/zero/ExperienceCredit.java app/src/main/java/com/overmind/zero/GripSkillBank.java
+          javac -d /tmp/overmind app/src/main/java/com/overmind/zero/MotorBrain.java app/src/main/java/com/overmind/zero/UnknownWorld.java app/src/main/java/com/overmind/zero/ContactLearning.java app/src/main/java/com/overmind/zero/DecisionBrain.java app/src/main/java/com/overmind/zero/Morphology.java app/src/main/java/com/overmind/zero/ScarcityLab.java app/src/main/java/com/overmind/zero/SensorimotorMind.java app/src/main/java/com/overmind/zero/LearningDiagnostics.java app/src/main/java/com/overmind/zero/ResetDomains.java app/src/main/java/com/overmind/zero/OnlineBodyLearning.java app/src/main/java/com/overmind/zero/MotionExploration.java app/src/main/java/com/overmind/zero/EpisodicMemory.java app/src/main/java/com/overmind/zero/MotorAutonomyGuard.java app/src/main/java/com/overmind/zero/MotorSkillBank.java app/src/main/java/com/overmind/zero/ExperienceCredit.java app/src/main/java/com/overmind/zero/GripSkillBank.java app/src/main/java/com/overmind/zero/SaveProfileCodec.java
           java -cp /tmp/overmind com.overmind.zero.MotorBrain
           java -cp /tmp/overmind com.overmind.zero.UnknownWorld
           java -cp /tmp/overmind com.overmind.zero.ContactLearning
@@ -44,6 +44,7 @@ jobs:
           java -cp /tmp/overmind com.overmind.zero.MotorSkillBank
           java -cp /tmp/overmind com.overmind.zero.GripSkillBank
           java -cp /tmp/overmind com.overmind.zero.ExperienceCredit
+          java -cp /tmp/overmind com.overmind.zero.SaveProfileCodec
           # v0.6 includes v0.5 -> v0.6 weight migration and expansion invariants.
       - name: Confirm trained selection replaced scripted selector
         run: |
@@ -289,6 +290,40 @@ jobs:
           assert 'lastAppliedMembrane=liveBody.weights(2,shapeTrainer.best);' in game
           assert 'actualDoorMotion' in grip
           print('ZERO-009.9: restored physical motor+hand+membrane independence, confirmed grip retention, no scripted adhesion')
+          PY
+      - name: Gate signed named saves, full physical scene and future safe reset
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          g=Path('app/src/main/java/com/overmind/zero/GameActivity.java').read_text()
+          ui=Path('app/src/main/java/com/overmind/zero/SaveSlotsActivity.java').read_text()
+          slot=Path('app/src/main/java/com/overmind/zero/SaveSlotStore.java').read_text()
+          scene=Path('app/src/main/java/com/overmind/zero/GameSceneSnapshot.java').read_text()
+          code=Path('app/src/main/java/com/overmind/zero/SaveProfileCodec.java').read_text()
+          journal=Path('app/src/main/java/com/overmind/zero/MotionExploration.java').read_text()
+          manifest=Path('app/src/main/AndroidManifest.xml').read_text()
+          reset=Path('app/src/main/java/com/overmind/zero/ResetDomains.java').read_text()
+          assert 'PARTITE' in g and 'SaveSlotsActivity.class' in g
+          assert 'SaveSlotsActivity' in manifest and 'android:exported="false"' in manifest
+          assert 'public static final int SLOTS=12' in slot
+          assert 'zero_motorbrain_001' in slot and 'zero_save_slots_v100' in slot
+          assert 'zero_save_slots_v100' not in reset
+          assert 'protectCurrent();' in slot and 'PENDING_RELOAD' in slot
+          assert 'working.edit().clear().putBoolean(PENDING_RELOAD,true).commit()' in slot
+          assert 'SaveProfileCodec.encode(capture())' in slot
+          assert 'MessageDigest.getInstance("SHA-256")' in code
+          assert 'GameSceneSnapshot.capture(creature,surface,environment,chamber)' in g
+          assert 'GameSceneSnapshot.restore(' in g
+          assert 'saveScene();' in g and 'void suspend()' in g
+          assert 'physical_scene_v100' in g and 'physical_scene_v100' in slot
+          assert 'skin.gripCommand,skin.touchSense,skin.gripHold' in scene
+          assert 'out.room.doorY=' in scene and 'out.objects.add(loadEntity(' in scene
+          assert 'journey.saveLife()' in g and 'journey.loadLife(' in g
+          assert 'RECUPERA ZERO PRECEDENTE' in ui
+          assert 'NUOVA PARTITA' in ui and 'SOVRASCRIVI' in ui
+          assert 'grip_skills_v099' in g and 'episodic_memory_v095' in g
+          assert 'lastAppliedMotor=liveBody.weights(0,trainer.best);' in g
+          print('Signed ZERO 0.10.0: twelve named slots, original app identity, true physical checkpoint, SHA256, undo, no erased brains')
           PY
       - name: Assemble stable signed APK
         if: env.signing_ready == 'true'
