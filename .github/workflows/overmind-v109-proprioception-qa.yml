@@ -45,7 +45,7 @@ jobs:
           assert 'skin.extension[i]' in p and 'skin.vx[i]-body.cvx' in p
           assert 'if(validations<30' in p and 'predictionError>=unchangedError*.96f' in p
           assert 'clamp(value(current,action)*c*.32f,-.23f,.23f)' in p
-          assert 'touchPulse[p]*=(float)Math.exp(-2.5f*dt)' in m
+          assert 'float tactileDecay=(float)Math.exp(-2.5f*dt)' in m
           assert 's.touchPulse[i]=Math.max(' in m and 's.touchPulse[j]=Math.max(' in m
           assert 'public static final int S=26;' in mind
           assert 'public synchronized void attachBodySchema' in mind
