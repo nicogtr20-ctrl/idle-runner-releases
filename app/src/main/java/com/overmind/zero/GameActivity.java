@@ -162,6 +162,7 @@ public final class GameActivity extends Activity {
                 prefs.getInt("real_damage_credits_v098",0),
                 prefs.getInt("real_action_credits_v098",0));
             sensorMind.restoreOutcomeModel(prefs.getString("outcome_credit_v101",""));
+            sensorMind.restorePlanningStats(prefs.getString("learned_planner_stats_v102",""));
             sensorMind.diagnostics.restore(
                 prefs.getString("sensorimotor_diagnostics_v091",""));
             episodic=new EpisodicMemory();
@@ -361,6 +362,7 @@ public final class GameActivity extends Activity {
               .putInt("real_damage_credits_v098",sensorMind.negativeContactCredits())
               .putInt("real_action_credits_v098",sensorMind.historicalActionsCredited())
               .putString("outcome_credit_v101",sensorMind.outcomeModel())
+              .putString("learned_planner_stats_v102",sensorMind.planningStats())
               .putInt("attempts",trainer.attempts)
               .putInt("accepted",trainer.accepted)
               .putFloat("original",trainer.initialFitness)
