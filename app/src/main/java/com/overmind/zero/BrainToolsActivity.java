@@ -139,7 +139,13 @@ public final class BrainToolsActivity extends Activity {
              String.valueOf(prefs.getInt("real_damage_credits_v098",0)),AMBER);
         line(physical,"Azioni realmente eseguite con esito accreditato",
              String.valueOf(prefs.getInt("real_action_credits_v098",0)),WHITE);
-        paragraph(physical,"Correzione 0.9.8: eliminato il bonus direzionale per le sfere. ZERO riceve soltanto le conseguenze energetiche dei contatti realmente avvenuti: le sue precedenti azioni effettivamente eseguite aggiornano i valori appresi della rete neurale. Le 26 percezioni (inclusi gli stimoli visivi) rimangono input del cervello, ma nessun colore induce automaticamente ad andare verso una certa direzione. Il comportamento di ricerca delle risorse deve emergere dai valori appresi, non è garantito. L'archivio delle tecniche motorie, il recupero antistallo e i ricordi preesistenti sono conservati.");
+        SensorimotorMind causal=new SensorimotorMind();
+        causal.restoreOutcomeModel(prefs.getString("outcome_credit_v101",""));
+        line(physical,"Spostamenti esterni osservati (separati)",String.valueOf(causal.physicalOutcomeEvents()),CYAN);
+        line(physical,"Contatti abbinati a segnale visivo",String.valueOf(causal.sourceMatchedEvents()),WHITE);
+        line(physical,"Contatti senza segnale visivo attribuibile",String.valueOf(causal.ambiguousOutcomeEvents()),AMBER);
+        paragraph(physical,"Dalla 0.10.1, spostamento fisico e guadagno/perdita energetica hanno due valori appresi indipendenti. Il danno da una fonte visiva non cancella il valore fisico di aver mosso il cancello. Eventi con fonte invisibile rimangono incerti: non vengono attribuiti a caso ad un ostacolo. Questi sono indizi associativi, non prova di ragionamento causale.");
+                paragraph(physical,"Correzione 0.9.8: eliminato il bonus direzionale per le sfere. ZERO riceve soltanto le conseguenze energetiche dei contatti realmente avvenuti: le sue precedenti azioni effettivamente eseguite aggiornano i valori appresi della rete neurale. Le 26 percezioni (inclusi gli stimoli visivi) rimangono input del cervello, ma nessun colore induce automaticamente ad andare verso una certa direzione. Il comportamento di ricerca delle risorse deve emergere dai valori appresi, non è garantito. L'archivio delle tecniche motorie, il recupero antistallo e i ricordi preesistenti sono conservati.");
         GripSkillBank gripHistory=new GripSkillBank();
         gripHistory.restore(prefs.getString("grip_skills_v099",""));
         line(physical,"Tecniche di presa fisica archiviate",
@@ -179,7 +185,7 @@ public final class BrainToolsActivity extends Activity {
              episodes.lastTraceLength+" azioni",WHITE);
         line(memory,"Ultimo effetto fisico ricordato",
              number(episodes.lastEventEffect),AMBER);
-        paragraph(memory,"Dalla 0.9.9 la memoria episodica rimane memoria di situazioni, azioni e conseguenze. Non può più sostituire motore, mano o membrana con vecchi pesi, neanche al cancello: i ricordi restano disponibili per influenzare le decisioni autonomamente scelte, non i controller fisici. La banca delle prese conserva separatamente SOLO configurazioni verificate da un'adesione reale. I ricordi em1/em2 e il modello del mondo precedente rimangono intatti.");
+        paragraph(memory,"Dalla 0.9.9 la memoria episodica rimane memoria di situazioni, azioni e conseguenze. Non può più sostituire motore, mano o membrana con vecchi pesi, neanche al cancello: i ricordi restano disponibili per influenzare le decisioni autonomamente scelte, non i controller fisici. La banca delle prese conserva separatamente SOLO configurazioni verificate da un'adesione reale. I ricordi em1/em2 migrano automaticamente al formato em3 con provenienza dei nuovi eventi, senza perdere i vecchi ricordi; il modello del mondo rimane intatto.");
         LinearLayout reset=panel(body);
         reset.addView(label("AZZERA APPRENDIMENTO",17,AMBER,true));
         paragraph(reset,"Ogni voce ritorna allo stato vergine SOLO per quel sistema. Altre memorie e reti rimangono. L'azzeramento ricarica il corpo nella mappa per applicare i nuovi parametri in sicurezza.");
