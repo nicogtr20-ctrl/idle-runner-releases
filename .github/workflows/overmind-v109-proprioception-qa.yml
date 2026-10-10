@@ -1,0 +1,77 @@
+name: ZERO 0.10.9 Lived Body Proprioception QA
+on:
+  push:
+    branches: [feature/overmind-v109-body-proprioception]
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 35
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+      - uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: '8.11.1'
+      - name: Run real 96-point proprioception and prior learning JUnit-style main regressions
+        run: |
+          mkdir -p /tmp/zero109
+          javac -d /tmp/zero109 app/src/main/java/com/overmind/zero/{MotorBrain,UnknownWorld,ContactLearning,DecisionBrain,Morphology,ScarcityLab,SensorimotorMind,BodyProprioception,TemporalWorkingMemory,TemporalSkillBank,TemporalPersistenceRegression,LearnedSequencePlanner,LearningDiagnostics,ResetDomains,OnlineBodyLearning,MotionExploration,EpisodicMemory,MotorAutonomyGuard,MotorSkillBank,ExperienceCredit,GripSkillBank,SaveProfileCodec,LifeStatistics}.java
+          for test in BodyProprioception TemporalPersistenceRegression TemporalWorkingMemory TemporalSkillBank SaveProfileCodec EpisodicMemory LifeStatistics SensorimotorMind ExperienceCredit LearnedSequencePlanner MotorBrain UnknownWorld ContactLearning DecisionBrain Morphology ScarcityLab OnlineBodyLearning MotionExploration ResetDomains MotorAutonomyGuard MotorSkillBank GripSkillBank; do
+            java -cp /tmp/zero109 com.overmind.zero.$test
+          done
+      - name: Gate real world-shaped local sensors, independent memories, neutral start and bounded learned advice
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          p=Path('app/src/main/java/com/overmind/zero/BodyProprioception.java').read_text()
+          m=Path('app/src/main/java/com/overmind/zero/Morphology.java').read_text()
+          mind=Path('app/src/main/java/com/overmind/zero/SensorimotorMind.java').read_text()
+          game=Path('app/src/main/java/com/overmind/zero/GameActivity.java').read_text()
+          reset=Path('app/src/main/java/com/overmind/zero/ResetDomains.java').read_text()
+          brain=Path('app/src/main/java/com/overmind/zero/BrainStatsActivity.java').read_text()
+          analyze=Path('app/src/main/java/com/overmind/zero/BrainToolsActivity.java').read_text()
+          slots=Path('app/src/main/java/com/overmind/zero/SaveSlotStore.java').read_text()
+          gradle=Path('app/build.gradle').read_text()
+          assert 'public static final int SECTORS=8,FEATURES=SECTORS*4' in p
+          assert 'for(int i=0;i<Morphology.POINTS;i++)' in p
+          assert 'Math.atan2(y,x)' in p and 'skin.touchPulse[i]' in p
+          assert 'skin.touchSense[i]' in p and 'skin.gripHold[i]' in p
+          assert 'skin.extension[i]' in p and 'skin.vx[i]-body.cvx' in p
+          assert 'if(validations<30' in p and 'predictionError>=unchangedError*.96f' in p
+          assert 'clamp(value(current,action)*c*.32f,-.23f,.23f)' in p
+          assert 'touchPulse[p]*=(float)Math.exp(-2.5f*dt)' in m
+          assert 's.touchPulse[i]=Math.max(' in m and 's.touchPulse[j]=Math.max(' in m
+          assert 'public static final int S=26;' in mind
+          assert 'public synchronized void attachBodySchema' in mind
+          assert 'BodyProprioception.sense(body,skin)' in mind
+          assert 'bodySchema.choiceBias(a)' in mind
+          assert 'bodySchema.consequence(bodyAfter,trialAction,lastReward,physicalEffect,' in mind
+          assert 'sensorMind.updateBodySense(creature,surface);' in game
+          assert 'environmentEffectSinceAction,creature,surface);' in game
+          assert 'bodySchema.restore(prefs.getString(BodyProprioception.KEY,""))' in game
+          assert '.putString(BodyProprioception.KEY,bodySchema.encode())' in game
+          assert '.putString("temporal_working_memory_v106",workingMemory.encode())' in game
+          assert '.putString("temporal_skills_v107",temporalSkillBank.encode())' in game
+          assert '.putString("episodic_memory_v095",episodic.encode())' in game
+          assert '.putString(LifeStatistics.KEY,lifeStats.encode())' in game
+          assert 'ResetDomains.PROPRIOCEPTION' in analyze
+          assert 'case PROPRIOCEPTION:return new String[]{BodyProprioception.KEY};' in reset
+          assert 'bodyMap.parameterCount()' in brain
+          assert 'SaveProfileCodec.encode(capture())' in slots
+          assert 'SLOTS=12' in slots
+          assert "applicationId 'com.overmind.zero.ota'" in gradle
+          assert '0.10.9-ota' in gradle
+          assert 'episodic.consequenceSeparated(' in game and 'episodic.weights(' not in game
+          assert 'lifeStats.tick(dt);' in game
+          assert 'for(int i=0;i<speed;i++)' in game
+          assert 'ScarcityLab' not in p and 'UnknownWorld.Entity' not in p
+          print('ZERO 0.10.9: real localized body sensors, nonprogrammed learnable perception, legacy 26 inputs, 12 slots and all memories retained')
+          PY
+      - name: Build Android APK without running simulated offscreen training
+        run: gradle --no-daemon assembleDebug
