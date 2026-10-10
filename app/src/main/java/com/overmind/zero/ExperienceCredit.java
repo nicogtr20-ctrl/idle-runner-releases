@@ -89,8 +89,8 @@ public final class ExperienceCredit {
         if(q[3*SensorimotorMind.P+16]!=0||credit.positiveContacts!=0)
             throw new AssertionError("Cannot learn before real contact");
         credit.consequence(22f,q);
-        if(!(q[3*SensorimotorMind.P+16]>0)&&
-           !(q[3*SensorimotorMind.P+16]>=0))throw new AssertionError("Nonfinite value");
+        if(!Float.isFinite(q[3*SensorimotorMind.P+16]))
+            throw new AssertionError("Nonfinite learned value");
         if(q[3*SensorimotorMind.P+16]<.001f||
            q[2*SensorimotorMind.P+16]!=0)
             throw new AssertionError("Reward must apply to performed action/sensory history only");
