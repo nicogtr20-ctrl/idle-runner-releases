@@ -374,7 +374,7 @@ jobs:
           assert 'GameSceneSnapshot.capture(creature,surface,environment,chamber)' in g
           print('ZERO 0.10.2 signed gate: earned short horizon forecasts, source verified Vercel/GitHub update, unchanged installed identity')
           PY
-      - name: Gate 0.10.4 life statistics, 1x/5x/20x simulation clock and saved player separation
+      - name: Gate 0.10.5 lifetime statistics, 25-vs-25 trend and saved player separation
         run: |
           python3 - <<'PY'
           from pathlib import Path
@@ -382,16 +382,24 @@ jobs:
           s=Path('app/src/main/java/com/overmind/zero/LifeStatistics.java').read_text()
           a=Path('app/src/main/java/com/overmind/zero/StatisticsActivity.java').read_text()
           manifest=Path('app/src/main/AndroidManifest.xml').read_text()
+          gradle=Path('app/build.gradle').read_text()
           assert 'lifeStats.tick(dt);' in g and 'for(int i=0;i<speed;i++)' in g
           assert 'lifeStats.death();' in g and 'if(reserve<=0)' in g
           assert 'lifeStats.contact(reserve-before);' in g and 'lifeStats.contact(reserve-prior);' in g
           assert 'putString(LifeStatistics.KEY,lifeStats.encode())' in g
           assert 'lifeStats.markPartial();' in g and 'StatisticsActivity.class' in g
-          assert 'public static final int HISTORY=50;' in s
-          assert 'stats.average(m,10)' in a and 'ULTIME 50 VITE COMPLETE' in a
+          assert 'HISTORY=50, WINDOW=25' in s
+          assert 'lifetimeSum' in s and 'lifetimeMax' in s
+          assert 'ls2|' in s and 'restoreV1' in s and 'restoreV2' in s
+          assert 'stats.average(m,0,WINDOW)' in a and 'stats.average(m,WINDOW,WINDOW)' in a
+          assert '25 VS 25 PRECEDENTI' in a and 'historyCount()<50' in a
+          assert 'lifetimeAverage' in a and 'lifetimeRecord' in a
+          assert 'NON è una ricompensa e ZERO non lo vede' in a
+          assert 'ULTIME 50 VITE COMPLETE' in a
+          assert '0.10.5-ota' in gradle
           assert 'com.overmind.zero.StatisticsActivity' in manifest
           assert 'episodic.consequenceSeparated(' in g and 'episodic.weights(' not in g
-          print('Simulation-time life stats verified: no fabricated death on pause; old learned controllers unaffected.')
+          print('0.10.5 statistics verified: simulated clock, permanent lifetime history, 25-vs-25 observer-only trend.')
           PY
       - name: Assemble stable signed APK
         if: env.signing_ready == 'true'
