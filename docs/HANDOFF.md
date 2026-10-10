@@ -221,3 +221,14 @@ Passi futuri: comparatore veri stati identici (random seed), visione di moviment
 - Publisher stabile aggiornato per compilare/testare il nuovo modulo e mantenere i gate 0.10.5.
 - **RELEASE FIRMATA E OTA VERIFICATA:** publisher **38064599838** verde; `0.10.6-ota.55`, versionCode **1055**, SHA-256 `bdc0dc5fd1dc9dce992d5a9cf139efd560421091f8ada01cec1bcbe47b48ff30`, **143.732 byte**. Manifest e APK Vercel verificati HTTP 200; GitHub Release `overmind-zero-v0.10.6-ota.55`.
 - **TEST S21:** aggiornare sopra la 0.10.5. In CERVELLO la memoria temporale parte con confidenza 0%; è corretto. Deve restare a 0 finché non accumula almeno 25 campioni held-out e non dimostra una predizione temporale migliore. Non azzerare ZERO per provarla.
+
+## 2026-10-10 — ZERO 0.10.7: skill temporali autonome
+- Branch staging: `feature/overmind-v107-temporal-skills`, base stable 0.10.6 SHA `086192f24a4dc8c59bb7086b94d9e8ca482be11f`.
+- `TemporalSkillBank`: max 24 skill, 2–8 step, ogni step = azione autonoma + hidden 16D della `TemporalWorkingMemory`.
+- Scoperta: ogni conseguenza positiva reale estrae i suffissi recenti; 1 occorrenza = candidato dormiente, >=2 matching = consolidato. Matching richiede stessa sequenza d'azioni e contesti temporalmente vicini.
+- Retrieval: abilitato solo se anche `TemporalWorkingMemory.confidence()>0`; bias massimo 0,64. La policy resta libera. Divergenza hidden o scelta diversa interrompono la sequenza.
+- Valutazione: replay confermato solo da successivo effetto reale; 3 decisioni senza effetto -> fallimento; danno -> fallimento immediato.
+- Persistenza `temporal_skills_v107`; reset dedicato `ResetDomains.TEMPORAL_SKILLS`. Gli slot nominati catturano automaticamente la nuova chiave.
+- UI: CERVELLO mostra consolidate/candidate/max lunghezza/replay riusciti; ANALISI mostra conferme, suggerimenti, attivazioni, successi, fallimenti e interruzioni.
+- Test funzionale `TemporalSkillBank.main`: scoperta ripetuta, richiamo step-by-step, conferma con effetto reale, abort su contesto divergente, nessuna skill positiva da danno, serializzazione e sopravvivenza alla morte.
+- Staging run **38065646624** interamente verde. Publisher stable aggiornato in questo branch; non dichiarare OTA finché stable non è pubblicato e verificato.
