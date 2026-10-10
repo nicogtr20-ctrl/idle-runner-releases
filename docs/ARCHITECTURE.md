@@ -101,3 +101,15 @@ La telemetria `MotionExploration` prende soltanto coordinate e riserva *dopo* i 
 - `ResetDomains.EPISODES` contiene la chiave esclusiva `episodic_memory_v095`; non condivide chiavi con gli altri 7 reset. `BrainToolsActivity` mostra contatori distinti: catture, recognition, azioni richiamate ed effetti fisici ulteriori osservati; non interpreta mai questi contatori come completamento della stanza.
 - Prestazioni: retrieval limitato a 18 eventi × 9 azioni × 26 input, formato persistente limitato <220k caratteri e cooldown anti-stallo; non usa un planner di alberi di ricerca.
 - Vedi `docs/EXPERIMENT_0095.md` per handoff dettagliato.
+
+## Telemetria vita v0.10.5
+`LifeStatistics` è un osservatore separato dai controller. Il tempo è simulato: ogni slice fisica chiama `tick(dt)`, quindi x5/x20 produce rispettivamente 5x/20x secondi di gioco per unità di tempo reale; la pausa non aggiunge tempo.
+
+Persistenza:
+- chiave invariata: `life_statistics_v104` per non rompere slot e aggiornamenti;
+- formato nuovo `ls2`, con migrazione read-only del precedente `ls1`;
+- ring delle ultime 50 vite individuali per grafici e due finestre 25+25;
+- accumulatori permanenti `lifetimeSum[11]`, `lifetimeMax[11]` e `lifetimeCount` per medie/record oltre la 50ª vita;
+- flag `lifetimeComplete`: i personaggi che esistevano prima della telemetria non vengono presentati falsamente come storici “dalla nascita”.
+
+`StatisticsActivity` legge questi dati e calcola trend/indice sintetico. Nessun valore della pagina viene restituito a `SensorimotorMind`, `OnlineBodyLearning`, `EpisodicMemory`, planner o reward.

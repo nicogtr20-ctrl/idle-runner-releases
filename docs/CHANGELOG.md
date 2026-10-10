@@ -171,3 +171,12 @@
 - Rinforzo da variazione fisica dell'ambiente rilevata DOPO la simulazione; il vecchio motore/sensori e 11.664 pesi restano compatibili. Trial mutazione motoria sospeso durante l'esecuzione ricordata per non falsare accettazioni.
 - Nuovo archivio preferenze `episodic_memory_v095`, schermata ANALISI e reset selettivo MEMORIA EPISODICA.
 - **Non vi è prova in-game di porta attraversata o di controllo causale:** primo test su Galaxy S21 ancora da realizzare dopo release. Per dettagli vedere `docs/EXPERIMENT_0095.md`.
+
+## 0.10.5 — statistiche 25-vs-25 e storico permanente (staging, 10 ottobre 2026)
+- Pagina **STATISTICHE** riorganizzata in vita corrente, capacità attuale (ultime 25), trend 25-vs-25, storico totale, efficienza/minuto e grafici ultime 50.
+- Il confronto di miglioramento si attiva a 50 vite complete, riducendo la sensibilità a una singola partita casualmente favorevole/sfavorevole.
+- Nuovo accumulatore permanente per tutte le vite misurate: media storica e record non vengono più persi oltre la 50ª vita.
+- Formato persistente `ls2` con lettura/migrazione `ls1`; chiave SharedPreferences invariata. Il passato non misurato di ZERO pre-telemetria viene marcato come incompleto, non inventato.
+- “Tendenza evolutiva” è un indice diagnostico esterno e NON modifica reward/apprendimento.
+- VersionName base portata a `0.10.5-ota`.
+- QA staging GitHub Actions **38059707433**: LifeStatistics/JVM regression, controlli sorgente e Android Debug tutti verdi. Firma/release OTA ancora da eseguire.

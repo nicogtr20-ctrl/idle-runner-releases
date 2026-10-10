@@ -153,3 +153,11 @@
 - [ ] Sviluppare sensori per movimento relativo e storia temporale, non etichette semantiche “questa è una porta”.
 - [ ] Solo dopo le prove: planning controfattuale multistep sul modello del mondo, senza fondere simulazioni immaginate con dati reali.
 Documentazione dettagliata e limiti scientifici: `docs/EXPERIMENT_0095.md`.
+
+## Misurazione robusta — 0.10.5
+- [x] Sostituire “ultima vita vs ultime 10” con capacità attuale su **25 vite**.
+- [x] Trend stabile su **25 recenti vs 25 precedenti**, attivo solo a 50 campioni completi.
+- [x] Storico permanente con medie e record oltre il limite grafico di 50 vite.
+- [x] Migrazione compatibile dal formato statistico 0.10.4 senza cancellare cervelli o slot.
+- [x] Mantenere l'intero sistema observer-only, invisibile alla policy.
+- [ ] Verifica manuale Galaxy S21 dopo 50 vite: controllare che trend, medie storiche e grafici descrivano correttamente una sessione lunga e che x5/x20 usi esclusivamente tempo simulato.
