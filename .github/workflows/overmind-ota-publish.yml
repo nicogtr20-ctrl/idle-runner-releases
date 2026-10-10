@@ -26,7 +26,7 @@ jobs:
       - name: Unit tests
         run: |
           mkdir -p /tmp/overmind
-          javac -d /tmp/overmind app/src/main/java/com/overmind/zero/MotorBrain.java app/src/main/java/com/overmind/zero/UnknownWorld.java app/src/main/java/com/overmind/zero/ContactLearning.java app/src/main/java/com/overmind/zero/DecisionBrain.java app/src/main/java/com/overmind/zero/Morphology.java app/src/main/java/com/overmind/zero/ScarcityLab.java app/src/main/java/com/overmind/zero/SensorimotorMind.java app/src/main/java/com/overmind/zero/LearningDiagnostics.java app/src/main/java/com/overmind/zero/ResetDomains.java app/src/main/java/com/overmind/zero/OnlineBodyLearning.java app/src/main/java/com/overmind/zero/MotionExploration.java app/src/main/java/com/overmind/zero/EpisodicMemory.java app/src/main/java/com/overmind/zero/MotorAutonomyGuard.java app/src/main/java/com/overmind/zero/MotorSkillBank.java app/src/main/java/com/overmind/zero/ExperienceCredit.java
+          javac -d /tmp/overmind app/src/main/java/com/overmind/zero/MotorBrain.java app/src/main/java/com/overmind/zero/UnknownWorld.java app/src/main/java/com/overmind/zero/ContactLearning.java app/src/main/java/com/overmind/zero/DecisionBrain.java app/src/main/java/com/overmind/zero/Morphology.java app/src/main/java/com/overmind/zero/ScarcityLab.java app/src/main/java/com/overmind/zero/SensorimotorMind.java app/src/main/java/com/overmind/zero/LearningDiagnostics.java app/src/main/java/com/overmind/zero/ResetDomains.java app/src/main/java/com/overmind/zero/OnlineBodyLearning.java app/src/main/java/com/overmind/zero/MotionExploration.java app/src/main/java/com/overmind/zero/EpisodicMemory.java app/src/main/java/com/overmind/zero/MotorAutonomyGuard.java app/src/main/java/com/overmind/zero/MotorSkillBank.java app/src/main/java/com/overmind/zero/ExperienceCredit.java app/src/main/java/com/overmind/zero/GripSkillBank.java
           java -cp /tmp/overmind com.overmind.zero.MotorBrain
           java -cp /tmp/overmind com.overmind.zero.UnknownWorld
           java -cp /tmp/overmind com.overmind.zero.ContactLearning
@@ -41,6 +41,7 @@ jobs:
           java -cp /tmp/overmind com.overmind.zero.EpisodicMemory
           java -cp /tmp/overmind com.overmind.zero.MotorAutonomyGuard
           java -cp /tmp/overmind com.overmind.zero.MotorSkillBank
+          java -cp /tmp/overmind com.overmind.zero.GripSkillBank
           java -cp /tmp/overmind com.overmind.zero.ExperienceCredit
           # v0.6 includes v0.5 -> v0.6 weight migration and expansion invariants.
       - name: Confirm trained selection replaced scripted selector
@@ -82,8 +83,9 @@ jobs:
           page=Path('app/src/main/java/com/overmind/zero/BrainStatsActivity.java').read_text()
           assert 'public static final int POINTS=96;' in brain
           assert 'lastAppliedMotor=liveBody.weights(0,trainer.best);' in app
-          assert 'lastAppliedMembrane=episodic.weights(2,' in app
-          assert '!liveBody.testingCandidate()' in app
+          assert 'lastAppliedMembrane=liveBody.weights(2,shapeTrainer.best);' in app
+          assert 'lastAppliedHand=liveBody.weights(1,handTrainer.best);' in app
+          assert 'episodic.weights(' not in app
           assert 'recalledManipulationInAction' in app
           assert 'motorGuard.observe(slice,creature.cx,creature.cy,newlyMeasuredEffect);' in app
           assert 'surface.step(creature,lastAppliedMembrane,px,py,slice,' in app
@@ -228,8 +230,10 @@ jobs:
           t=Path('app/src/main/java/com/overmind/zero/BrainToolsActivity.java').read_text()
           assert 'lastAppliedMotor=liveBody.weights(0,trainer.best);' in g
           assert 'episodic.weights(0' not in g
-          assert 'boolean mixedWeights=recalledManipulationInAction;' in g
-          assert 'OnlineBodyLearning.Result result=mixedWeights?null:liveBody.observe(' in g
+          assert 'lastAppliedHand=liveBody.weights(1,handTrainer.best);' in g
+          assert 'lastAppliedMembrane=liveBody.weights(2,shapeTrainer.best);' in g
+          assert 'episodic.weights(' not in g
+          assert 'OnlineBodyLearning.Result result=liveBody.observe(' in g
           assert 'realTactileContact||type==0' in e
           assert 'episodic.suggested(senses,!protectMotor)' in s
           assert 'Recuperi da immobilità (0.9.7)' in t
@@ -262,6 +266,28 @@ jobs:
           assert 'mind.choose(environment' not in game
           assert not Path('app/src/main/java/com/overmind/zero/SensoryValenceGuide.java').exists()
           print('ZERO 0.9.8 patch preserves autonomous chosen actions, rewards only real contacts, retains motors')
+          PY
+      - name: Gate 0.9.9 signed release on demonstrated tactile grip and valid rollback
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          game=Path('app/src/main/java/com/overmind/zero/GameActivity.java').read_text()
+          gate=Path('app/src/main/java/com/overmind/zero/ScarcityLab.java').read_text()
+          grip=Path('app/src/main/java/com/overmind/zero/GripSkillBank.java').read_text()
+          reset=Path('app/src/main/java/com/overmind/zero/ResetDomains.java').read_text()
+          assert 'gripBank.observe(lastAppliedHand,lastAppliedMembrane' in game
+          assert 'gripBank.retrieve(' in game
+          assert 'if(voluntaryGripAtGate&&!physicalHold)' in game
+          assert 'chamber.constrain(creature,surface,slice,sensorMind.adhesion())' in game
+          assert 'gateDriveFrames' in gate and 'gateCommandFrames' in gate and 'gateHeldFrames' in gate
+          assert 'skin.gripHold[i]>=Morphology.GRIP_HOLD' in gate
+          assert 'grip_skills_v099' in game and 'grip_skills_v099' in reset
+          assert 'episodic.weights(' not in game
+          assert 'lastAppliedMotor=liveBody.weights(0,trainer.best);' in game
+          assert 'lastAppliedHand=liveBody.weights(1,handTrainer.best);' in game
+          assert 'lastAppliedMembrane=liveBody.weights(2,shapeTrainer.best);' in game
+          assert 'actualDoorMotion' in grip
+          print('ZERO-009.9: restored physical motor+hand+membrane independence, confirmed grip retention, no scripted adhesion')
           PY
       - name: Assemble stable signed APK
         if: env.signing_ready == 'true'
