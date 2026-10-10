@@ -74,6 +74,11 @@ public final class BrainToolsActivity extends Activity {
         LinearLayout body=vertical();pad(body,17,24);scroll.addView(body);
         TextView title=label("CERVELLO / ANALISI",25,WHITE,true);body.addView(title);
         paragraph(body,"Monitoraggio reale • apprendimento automatico sempre attivo");
+        LinearLayout linkStats=panel(body);
+        linkStats.addView(label("STATISTICHE DELLE VITE  ›",17,CYAN,true));
+        paragraph(linkStats,"Durata simulata della vita in corso, confronto con le ultime 10 vite completate e grafici delle ultime 50. A x5/x20 anche il tempo di gioco accelera.");
+        linkStats.setOnClickListener(v->startActivity(new Intent(this,StatisticsActivity.class)));
+
         LearningDiagnostics d=new LearningDiagnostics();
         boolean loaded=d.restore(prefs.getString("sensorimotor_diagnostics_v091",""));
         SensorimotorMind model=new SensorimotorMind();
