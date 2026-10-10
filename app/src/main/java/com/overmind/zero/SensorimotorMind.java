@@ -28,6 +28,7 @@ public final class SensorimotorMind {
     private transient MotorAutonomyGuard motorGuard;
     private transient TemporalWorkingMemory temporal;
     private transient TemporalSkillBank temporalSkills;
+    private transient BodyProprioception bodySchema;
     // Performed-action traces give temporally distant actual resource
     // contacts a learning signal. They NEVER add a geometric direction bias.
     private final ExperienceCredit contactCredit=new ExperienceCredit();
@@ -40,6 +41,7 @@ public final class SensorimotorMind {
             contactCredit.consequence(actualEnergyDelta,visuallyObservedSignature);
             if(temporal!=null)temporal.energyOutcome(actualEnergyDelta);
             if(temporalSkills!=null)temporalSkills.energyOutcome(actualEnergyDelta);
+            if(bodySchema!=null)bodySchema.actualEnergy(actualEnergyDelta);
         }
     }
     public synchronized String outcomeModel(){return contactCredit.encode();}
@@ -60,6 +62,12 @@ public final class SensorimotorMind {
     public synchronized void attachWorkingMemory(TemporalWorkingMemory memory){temporal=memory;}
     public synchronized TemporalWorkingMemory workingMemory(){return temporal;}
     public synchronized void attachTemporalSkills(TemporalSkillBank bank){temporalSkills=bank;}
+    public synchronized void attachBodySchema(BodyProprioception map){bodySchema=map;}
+    public synchronized BodyProprioception bodySchema(){return bodySchema;}
+    /** Feed the current physical shape at the start/resume of a life. */
+    public synchronized void updateBodySense(MotorBrain.Body b,Morphology.Surface skin){
+        if(bodySchema!=null)bodySchema.feed(BodyProprioception.sense(b,skin));
+    }
     public synchronized TemporalSkillBank temporalSkills(){return temporalSkills;}
     public synchronized boolean takeTemporalSkillsDirty(){
         return temporalSkills!=null&&temporalSkills.takeDirty();
@@ -88,6 +96,7 @@ public final class SensorimotorMind {
         contactCredit.newLife();
         if(temporal!=null)temporal.resetLife();
         if(temporalSkills!=null)temporalSkills.resetLife();
+        if(bodySchema!=null)bodySchema.resetLife();
     }
     public synchronized void resetEpisode(float[] first){
         // Mortality resets bodily position and short-term context, never
@@ -96,6 +105,7 @@ public final class SensorimotorMind {
             trialAction=-1;elapsed=0;contactCredit.newLife();
             if(temporal!=null)temporal.resetLife();
             if(temporalSkills!=null)temporalSkills.resetLife();
+            if(bodySchema!=null)bodySchema.resetLife();
             return;
         }
         begin(first);
@@ -110,6 +120,7 @@ public final class SensorimotorMind {
         action=currentAction;trialAction=currentAction;elapsed=0;
         if(temporal!=null)temporal.resumeAction(currentAction);
         if(temporalSkills!=null)temporalSkills.resumeLife();
+        if(bodySchema!=null)bodySchema.resumeLife();
     }
     public synchronized float motorX(){return (float)Math.cos((action%8)*Math.PI/4);}
     public synchronized float motorY(){return (float)Math.sin((action%8)*Math.PI/4);}
@@ -168,6 +179,7 @@ public final class SensorimotorMind {
         // Exploration is intrinsic to learning; no action is mapped to a
         // named "correct" behavior. Stable choices come from learned value.
         float largestTemporalBias=0;
+        float largestBodyBias=0;
         for(int a=0;a<ACTIONS;a++){
             float q=estimate(senses,a);
             float predictedChange=0;
@@ -189,10 +201,15 @@ public final class SensorimotorMind {
             // Recurrent recent-history advice is exactly zero until its
             // temporal prediction wins on held-out real transitions.
             float temporalBias=temporal==null?0:temporal.choiceBias(a);
+            // 96 physical masses -> 8-sector proprioceptive map; learned
+            // action advice is zero until its held-out predictions beat
+            // the unchanged-body baseline on real future contacts.
+            float bodyBias=bodySchema==null?0:bodySchema.choiceBias(a);
+            largestBodyBias=Math.max(largestBodyBias,Math.abs(bodyBias));
             float skillBias=skillAdvice!=null&&skillAdvice.action==a?skillAdvice.bias:0;
             largestTemporalBias=Math.max(largestTemporalBias,Math.abs(temporalBias));
             float score=q+earnedValue+planned[a]+curiosity+jitter+memoryBias+
-                        diversity+temporalBias+skillBias;
+                        diversity+temporalBias+skillBias+bodyBias;
             if(score>best){best=score;chosen=a;}
         }
         float epsilon=Math.max(.09f,.52f/(1+experiences/120f));
@@ -215,6 +232,10 @@ public final class SensorimotorMind {
             temporal.chosen(chosen);
             temporal.noteDecision(largestTemporalBias);
         }
+        if(bodySchema!=null){
+            bodySchema.chosen(chosen);
+            bodySchema.noteDecision(largestBodyBias);
+        }
         action=chosen;decisions++;
         estimatedValue=estimate(senses,chosen);
         System.arraycopy(senses,0,trialState,0,S);
@@ -234,10 +255,23 @@ public final class SensorimotorMind {
      * AFTER physics: neither an action command nor a gate/room success label.
      */
     public synchronized void observe(float[] after,float dt,float physicalEffect){
+        observe(after,dt,physicalEffect,null,null);
+    }
+    /** Physical sensor is sampled ONLY at decision boundaries, rather
+     * than 96 atan2 calculations for every x20 physics subframe. */
+    public synchronized void observe(float[] after,float dt,float physicalEffect,
+                                     MotorBrain.Body body,Morphology.Surface skin){
         if(after.length!=S)throw new IllegalArgumentException("sensory width");
-        if(trialAction<0){choose(after);return;}
+        if(trialAction<0){
+            if(bodySchema!=null&&body!=null&&skin!=null)
+                bodySchema.feed(BodyProprioception.sense(body,skin));
+            choose(after);return;
+        }
         elapsed+=Math.max(0,dt);
         if(elapsed<.65f)return;
+        float[] bodyAfter=bodySchema!=null&&body!=null&&skin!=null?
+            BodyProprioception.sense(body,skin):null;
+        if(bodySchema!=null&&bodyAfter!=null)bodySchema.feed(bodyAfter);
         float[] before=trialState;
         boolean holdout=diagnostics.shouldHoldout();
         float err=0,naiveErr=0,sensoryChange=0;
@@ -286,6 +320,9 @@ public final class SensorimotorMind {
         }
         if(learning&&physicalEffect>.015f)
             contactCredit.displaced(physicalEffect);
+        if(bodySchema!=null&&bodyAfter!=null)
+            bodySchema.consequence(bodyAfter,trialAction,lastReward,physicalEffect,
+                                   learning&&!holdout,holdout);
         if(learning&&!holdout){
             float td=bounded(lastReward+GAMMA*bestFuture(after)-estimate(before,trialAction));
             int base=trialAction*P;
