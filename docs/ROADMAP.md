@@ -1,16 +1,5 @@
 # Roadmap e criteri di accettazione
 
-## Rettifica approvata v0.9.8 — autonomia decisionale
-- [x] Rimuovere il bonus programmato che spinge heading verso/contro una sorgente visuale nota (`SensoryValenceGuide`).
-- [x] Aggiungere `ExperienceCredit`: vere azioni+contesti visivi possono imparare dai contatti energetici con ritardo fino a 12 decisioni, senza direzioni corrette predefinite.
-- [x] Preservare MotorSkillBank max6, anti-loop, mutazioni/rollback e salvataggi storici.
-- [x] Aggiornare CERVELLO/ANALISI con eventi veri energia/danno accreditati, anziché contare un bonus visivo di scelta.
-- [x] Regressione JVM, compilazione Android, avvio firma e OTA.
-- [ ] Verificare su S21 che ZERO mantenga locomozione e si orienti efficacemente con apprendimento NON guidato. È ancora possibile che muoia vicino a una sfera.
-- [ ] Migliorare il modello di conseguenze delle azioni a medio termine attraverso esperienze fisiche, non bonus geometrici.
-Documento chiave: `docs/EXPERIMENT_0098.md` sezione 0098-A. Le righe precedenti della ROADMAP relative al bias angolare descrivono soltanto la prima `0.9.8-ota.42`.
-
-
 ## Priorità immediata — updater e documentazione
 - [x] Whitepaper, architettura, storico e handoff su GitHub.
 - [x] Vercel: endpoint HTTPS stabile `/latest.json` (risponde HTTP 200, manifest disabilitato finché manca signing).
@@ -165,94 +154,11 @@ Documento chiave: `docs/EXPERIMENT_0098.md` sezione 0098-A. Le righe precedenti 
 - [ ] Solo dopo le prove: planning controfattuale multistep sul modello del mondo, senza fondere simulazioni immaginate con dati reali.
 Documentazione dettagliata e limiti scientifici: `docs/EXPERIMENT_0095.md`.
 
-## Pubblicazione verificata v0.9.5-ota.39
-La compilazione Android firmata `38003676123` è verde: versionCode `1039`, SHA-256 `86caeb85b6eba94aa657d6f19ac7dff5dd0e4e8d2974bf71e8c6c12a3201c211`, 92.692 byte. Test in-game su Galaxy S21 ancora pendente, nessun reset richiesto.
-
-
-## ZERO 0.9.6 — memoria delle conseguenze benefiche e nocive
-- [x] Episodi vissuti di durata variabile 2–36 azioni e archivio ampliato a 24.
-- [x] Misurare vantaggi e danni energetici a contatto, compreso danno che precede morte; non attribuire la fame a un oggetto.
-- [x] Associazioni sensoriali positive e negative senza etichette fisse blu/rosso; richiamo favorevole debole e avversione per azioni dannose.
-- [x] Consolidamento delle memorie confermate e rimpiazzo per forza, non pura età; migrazione em1→em2 senza reset.
-- [x] ANALISI: positivi, negativi, ricordi confermati, lunghezza, scelte diverse da un pericolo.
-- [x] Test JVM su em1 migrazione, red/blue da energia, morte, lunghe sequenze, regressioni e Android build.
-- [ ] Prova real-world Galaxy S21: acquisizione dati, confronto su scene identiche e preferenza effettiva per energie/utilità.
-- [ ] Verificare il ritorno alla tecnica di presa e completamento del cancello, non solo contatori.
-- [ ] Ricerca su capacità autonoma di pianificazione a più passi dal modello del mondo, separata dai dati esperienziali.
-Dettagli: `docs/EXPERIMENT_0096.md`.
-
-
-## 0.9.7 — correggere regressione di movimento da memoria
-- [x] Eliminare la sostituzione dei 62 pesi motorii con snapshot vecchi della memoria episodica, mantenendo gli attuali pesi e l'evoluzione autonoma in vita.
-- [x] Limitare il replay fisico di mano/membrana a contatti realmente rilevati, fuori da tentativi di mutazione, senza script per il cancello.
-- [x] Non abortire prove evolutive per un mero richiamo di azione; abortire soltanto quando si sono applicati davvero vecchi pesi sulla presa/membrana.
-- [x] Introduzione guard antistallo basato su spostamento netto ed effetto fisico, che permette azioni indipendenti temporanee senza direzioni programmate.
-- [x] Persistenza metriche diagnostiche antistallo e replay fisico; reset per dominio e vecchie memorie em1/em2 conservati.
-- [x] Test JVM automatici sul guard, ricordi e protezione motore; compilazione Android staging.
-- [ ] Confermare su Galaxy S21 che NETTO e VIA su tempo equivalente recuperino rispetto alla 0.9.5/0.9.6, senza regressioni nella presa.
-- [ ] Se lo stallo persiste, separare effetto dei pesi storici, della politica neurale e dei trial non-controllati con A/B a stesso stato iniziale e seed.
-- [ ] Valutare archivio delle abilità motorie con rollback misurato e comparazioni rigorose, non hardcode delle strategie.
-Protocollo nel documento `docs/EXPERIMENT_0097.md`.
-
-## 0.9.8 — priorità pratiche
-- [x] Banca max6 controller motori verificati su NETTO e recupero senza gait programmata.
-- [x] Evitare mutanti motori che riducono il NETTO oltre 20% nella prova relativa.
-- [x] Penalizzare scelte ripetitive in stagnazione; stimolare esplorazione libera.
-- [x] Usare valori energetici dei segnali imparati dai contatti per influenzare i 16 heading tramite settori visivi, senza blu=buono/rosso=cattivo.
-- [x] JVM e compilazione Android staging, persistenza e reset.
-- [ ] Verificare sul Galaxy S21 se aumentano distanza NETTA, sfere raccolte, tempo di sopravvivenza e diminuiscono ritorni allo stesso punto.
-- [ ] A/B con stato e seed uguali; eventuale sensore del moto relativo e apprendimento efficacia tatto/membrana.
-Vedi `docs/EXPERIMENT_0098.md`.
-
-## 0.9.9 — risolvere regressione 0.9.5 senza script
-- [x] Verificare differenza 0.9.4→0.9.5 nel codice GitHub: nessuna modifica alla fisica porta, nuovi controller replay episodici potenzialmente distruttivi.
-- [x] Vietare override episodico dei pesi motore, mano, membrana, ma conservarne l'influenza sulle scelte.
-- [x] Salvare 5 configurazioni di presa/membrana realmente funzionanti sul cancello, recuperarle solo dopo fallimenti reali della presa volontaria.
-- [x] Aggiungere diagnostica di PRESA SCELTA, COMANDO, TENUTA e TECNICHE, rispettando soglia .28 e 0.075s, senza aprire automaticamente la porta.
-- [x] Salvataggio/reset selettivo e test JVM fisici più compilazione Android staging.
-- [ ] Verificare su Galaxy S21 con stesso cervello persistente e screenshot quale stadio fallisce e se ricompare colore arancione.
-- [ ] Se ancora PRESA SCELTA=0 pur con molti TOCCHI, indagare la politica Q e l'influenza delle memorie come suggerimenti, non mutare la fisica per aggirare il problema.
-- [ ] Verificare che movimento netto migliori e porta raggiunga >115U/attraversamento fisico. Documento `docs/EXPERIMENT_0099.md`.
-
-## OVERMIND ZERO 0.10.0 — complete game save/load system
-- [x] Separate working autosave from 12 permanent named snapshots for independently trained ZERO characters.
-- [x] UI Save, Load, Overwrite, Rename, Delete per slot, New ZERO with double confirmation; named save buttons game/analysis.
-- [x] Automatic one-step recovery backup before any load/new ZERO; saved slot file cannot be wiped by reset ALL.
-- [x] Persist all controllers (62/18/82), 11,664 world weights, Q values, episodic memory, skills, stats/energy and exact physical body/room/gate/objects; life visited cells preserved.
-- [x] Restore active game from named slot before physics/autosave using explicit reload request; checksum and bounds reject corrupted saves.
-- [x] JVM codec large-model integrity test and physical-life restoration, Android Gradle QA, signed OTA gate.
-- [ ] Validate all workflows on Galaxy S21 in-place with 0.9.9 data and 2 named slots: save, new game, load back, rename, overwrite, delete, recovery, reset ALL.
-- [ ] Later: import/export save file for transfer to a different device and deterministic RNG/trial snapshots for scientific A/B testing.
-See `docs/EXPERIMENT_0100.md`.
-
-## 0.10.1 Source-aware learning, released
-- [x] Replace pre-0.10.1 scalar reward blend with two separately learned provenances: true external physical displacement and energetic impact tied to observed frequency of touched object.
-- [x] Protect physical gate manipulation learning if red hazard contact occurs in same action interval, avoiding arbitrary cross-channel cancellation.
-- [x] Store two labeled episodic records for simultaneous opposite outcomes via `em3`; read legacy `em1/em2` without pretending historical causality was known.
-- [x] Save `ec2` independent outcome model in working profile and all 12 named slots without changing `wm1` or losing physical/body scene; selective reset.
-- [x] JVM cases for gate moved plus red contact, memory migration, Android QA, stable signed GitHub Release `0.10.1-ota.48` SHA256 verified.
-- [ ] Run controlled observation on Samsung S21 from named saved ZERO subjects: collect spontaneous partial gate displacement, red/blue collisions, manipulation persistence, effective distance and energy. No claim behavior proven by CI.
-- [ ] Research prospective causal models and long-horizon planning that do not prescribe scripted target actions or rely on hidden coordinates.
-`docs/EXPERIMENT_0101.md`.
-
-
-## ZERO 0.10.3 — blocco risolto, verifica sul dispositivo ancora da fare
-- [x] Diagnosticata la causa del contatore 0/24: cancellazione `recent` a ogni decisione prima di raggiungere 2 azioni.
-- [x] Memoria rolling max36, separazione delle provenienze em3 e reset alla morte mantenuti senza cancellare i ricordi.
-- [x] Test reale action→check per 44 tick neutrali, guadagno, danno, morte e persist em3; JVM + Android staging 38055704183 passati.
-- [x] Versione firmata `0.10.3-ota.51`, run 38055836537 passata, SHA256 `3bcf4c2674c73a7de134158fea3064e5b31b953d899ba96af4344f2b6fb8a522`; Vercel `latest.json` e APK HTTP 200 verificati.
-- [ ] Galaxy S21: test tasto AGGIORNA, salvataggi in-place, raccogliere nuovi eventi, verificare conteggi >0 dopo conseguenze idonee e tipo dei ricordi.
-- [ ] Confronto A/B controllato su stessi individui/situazioni: richiamo di memoria vs puro caso, protezione locomozione/presa, danno simultaneo porta/rosso. Non attribuire capacità causali non dimostrate.
-Vedi `docs/EXPERIMENT_0103.md`.
-
-
-## 0.10.4 — Statistic tracking of lived, simulated-time lives
-- [x] Separate **STATISTICHE** dashboard, preserve existing **EVOLUZIONE**.
-- [x] Actual simulation time `x1/x5/x20`, pause does not run clock; separate from legacy scarcity `elapsedLife`.
-- [x] Close a life only at genuine death; separate real positive/negative energy contact from passive hunger, track disks, net, new cells, gate and recalled effects.
-- [x] Rolling last50, previous10 average, completed-life differences green/red, per-minute rates and charts.
-- [x] Store each individual's statistics in the same safe profile and 12 game slots; partial first upgraded life excluded from history.
-- [x] JVM stage regression x1/5/20 + history/persistence and Android compile `38057090717` SUCCESS; signed publisher `38057209555` SUCCESS vCode1052 sha `972209b7554e25f62836b7c475c2178da90acae01b5976516ef6ad29360cb7a3`; Vercel HTTP200 latest/APK verified.
-- [ ] Samsung S21: real button AGGIORNA test, in-game STATISTICHE visual QA, compare elapsed physics time at x1/x5/x20, verify simulated death increments one record and pause none.
-- [ ] Controlled experiments: compare survival/efficiency/energy and skill on matched environments and saved individuals, separate population variance and random seeds before attributing improvement to learning.
-Full instructions `docs/EXPERIMENT_0104.md`.
+## Misurazione robusta — 0.10.5
+- [x] Sostituire “ultima vita vs ultime 10” con capacità attuale su **25 vite**.
+- [x] Trend stabile su **25 recenti vs 25 precedenti**, attivo solo a 50 campioni completi.
+- [x] Storico permanente con medie e record oltre il limite grafico di 50 vite.
+- [x] Migrazione compatibile dal formato statistico 0.10.4 senza cancellare cervelli o slot.
+- [x] Mantenere l'intero sistema observer-only, invisibile alla policy.
+- [x] Build firmata e OTA pubblica 0.10.5-ota.54 verificata (publisher 38060026469; manifest/APK HTTP 200).
+- [ ] Verifica manuale Galaxy S21 dopo 50 vite: controllare che trend, medie storiche e grafici descrivano correttamente una sessione lunga e che x5/x20 usi esclusivamente tempo simulato.

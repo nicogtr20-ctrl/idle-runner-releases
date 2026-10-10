@@ -17,7 +17,7 @@ Realizzare una creatura 2D autocontrollata, deformabile, persistente, che appren
 | 0.9.2-ota.34 | Ripristino apprendimento di corpo/manipolazione/membrana **in vita**; meno fame e meno danno; ricompensa viola/oro +80 nella stanza, niente oggetti normali dentro | Da zero, ~11.000 esperienze senza locomozione: mutazioni motorie troppo piccole. |
 | 0.9.3-ota.35 | Mutazioni più ampie, punteggio motore che richiede traduzione reale; HUD distanze effettive | ZERO ha iniziato a camminare e deformarsi, ma spesso in cerchio; vecchio test CONFRONTA poteva risultare negativo. |
 | 0.9.4-ota.36 | Distanza **netta** distinta dalla via totale, celle nuove da 75U, energia e prova reale PROVE; contatori varianti conservate/scartate | Sul telefono: 38.070 esperienze, 93 dischi spostati, 268 prese, ~111U spostamento porta, nessuna stanza risolta, 185 miglioramenti membrana; apertura *visiva* ma ZERO non entra, poi muore, non torna alla tattica. |
-| **0.9.5-ota.39 (APK firmata, test S21 ancora da fare)** | Memoria episodica di sequenze sensoriali-azioni realmente riuscite e pesi corporei presenti; richiamo debole in situazioni simili; credito da conseguenze fisiche generiche | Non c'è ancora dimostrazione empirica di ripetizione tecnica sul cancello né di passaggio: test manuale richiesto. |
+| **0.9.5 (in sviluppo / test)** | Memoria episodica di sequenze sensoriali-azioni realmente riuscite e pesi corporei presenti; richiamo debole in situazioni simili; credito da conseguenze fisiche generiche | Non c'è ancora dimostrazione empirica di ripetizione tecnica sul cancello né di passaggio: test manuale richiesto. |
 
 **Fatto fisico cruciale:** ScarcityLab `openingFree()` richiede `gateTop() > oy + OPEN_HALF_HEIGHT + 3`, che con altezza porta corrente equivale a una corsa **superiore a 115U**. Un massimo di 111U **non prova apertura completamente libera**: la porta può apparire quasi aperta. La porta è spostata da forze tangenziali di due prese bilaterali reali, non animazione precalcolata.
 
@@ -82,6 +82,3 @@ Test JVM `EpisodicMemory.main`: evento autentico sopra soglia, non acquisire eve
 3. Per nuove modifiche creare branch di prova a partire dalla versione stabile, passare JVM/Android CI, usare firma storica e pubblicare release GitHub APK verificata. Non inventare un link APK senza asset pubblicato.
 4. NON affermare che ZERO ha già appreso a riprodurre apertura/ingresso: controllare screenshot e telemetria dal telefono. Documentare ogni osservazione successiva qui o HANDOFF prima di chiudere la chat.
 
-
-## Rilascio 0.9.5-ota.39
-Workflow firmata `38003676123` = success, versionCode 1039, size 92692 byte, SHA-256 `86caeb85b6eba94aa657d6f19ac7dff5dd0e4e8d2974bf71e8c6c12a3201c211`. Il dato di porta 111U proviene dalla v0.9.4 e NON può essere reimportato come memoria episodica. Il test della nuova funzione sul telefono non è stato ancora svolto.

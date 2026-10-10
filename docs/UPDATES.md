@@ -1,44 +1,19 @@
-# Aggiornamenti Android tramite Vercel — contratto tecnico
+# OVERMIND ZERO — aggiornamenti Android / OTA
 
-## Esperienza utente richiesta
-Un pulsante **Aggiorna** nell'app verifica su Vercel se esiste un APK nuovo. Se sì, scarica il file **dentro l'app** su HTTPS, verifica SHA-256 e avvia `PackageInstaller`/intent di installazione, richiedendo conferma di Android. Non promettere installazione silenziosa: con APK installate fuori Play Store, Android richiede autorizzazione alla fonte e consenso utente.
+## Invarianti
+- Package Android: `com.overmind.zero.ota`.
+- Gli aggiornamenti devono essere installati **sopra** l'app esistente; non disinstallare se si vogliono conservare i dati.
+- La firma APK deve restare la stessa fra versioni. Keystore e credenziali non devono mai entrare nel repository.
+- Android ordinario richiede conferma utente per installare l'APK; nessun aggiornamento silenzioso viene promesso.
+- Il publisher firmato ufficiale è `.github/workflows/overmind-ota-publish.yml` sul branch `feature/overmind-inapp-updater`.
+- Prima di dire che il pulsante AGGIORNA offre una versione, verificare realmente manifest e APK pubblici.
 
-## Architettura
-- Manifest pubblico HTTPS Vercel: `https://overmind-zero-updates.vercel.app/latest.json`.
-- File APK HTTPS distribuito dalla stessa origine, `/apk/overmind-zero.apk`, pubblicato solo dopo CI verde e firma certificato costante.
-- `latest.json` con `schemaVersion`, `available`, `applicationId`, `versionCode`, `versionName`, `apkUrl`, `sha256`, `sizeBytes`, `notes`.
-- Il client esamina codice versione e `applicationId` prima di scaricare; calcola SHA-256 su bytes APK; richiede permessi all'installazione (Android 8+ `REQUEST_INSTALL_PACKAGES` e `canRequestPackageInstalls`).
-- Installazione tramite `FileProvider` content URI (non `file://`), `Intent.ACTION_VIEW` con `application/vnd.android.package-archive`, `FLAG_GRANT_READ_URI_PERMISSION`. Il Package Installer mostra UI di sistema.
-- Manifest deve avere risposta `Cache-Control: no-store` o breve TTL; rilasci atomici per non puntare mai a APK incompleto.
-- Dopo verifica installazione, la nuova app dovrebbe mantenere lo stesso package id, firma e dati persistenti.
-
-## Firma APK: prerequisito
-Le release storiche ZERO-001/002 sono DEBUG e non garantiscono certificato stabile fra run GitHub Actions. Serve **una keystore release persistente** con password/alias custoditi in **GitHub Actions Secrets**, non in repository o in Vercel pubblico.
-**Un solo secret obbligatorio**: `OVERMIND_SIGNING_BUNDLE` (Base64 di un JSON contenente keystore PKCS12, password e alias). Un pacchetto di firma e il backup privato sono stati generati per il proprietario, ma non vengono inseriti nel repository. Configuralo una volta in GitHub → Settings → Secrets and variables → Actions → New repository secret. Il workflow `overmind-ota-publish.yml` legge il secret e firma sempre con lo stesso certificato.
-
-Mai rivelare, stampare o committare la chiave. Prima versione con firma nuova potrebbe richiedere una sola reinstallazione da parte del proprietario.
-
-## Manifest scheletro in updater/public/latest.json
-Finché non esiste un APK firmato e pubblicamente distribuito, `available` è `false`: il pulsante deve mostrare "Nessun aggiornamento disponibile" senza link fittizi.
-
-## Vercel e GitHub
-- Il GitHub repository è privato; GitHub Release APK non è scaricabile direttamente da app Android senza autenticazione. Vercel deve realmente ospitare il binario o usare un backend autenticato e autorizzato.
-- Un deployment Vercel pubblico con APK rende l'APK accessibile a chi conosce l'URL, **non il codice sorgente privato**.
-- Pipeline prevista: CI build → test → firma costante → verifica SHA-256 → pubblicazione binario statico Vercel → manifest aggiornato → verifica HTTPS → release tag + changelog.
-- Se l'host è configurato per proteggere le preview Vercel, il manifest di produzione deve essere pubblicamente raggiungibile dal telefono.
-
-## Test end-to-end da eseguire su Galaxy S21
-- Installazione della prima app **firmata con chiave stabile**.
-- Aggiorna con nessuna versione nuova → messaggio esplicito.
-- Pubblica un APK con versionCode maggiore e stesso applicationId/certificato.
-- Premi Aggiorna → verifica HTTPS → download automatico → hash → schermata conferma Android → installazione riuscita.
-- Verifica salvataggi/memoria non cancellati.
-- Prova rete assente, versione uguale, pacchetto errato, hash invalido e APK non accessibile.
-
-
-## Stato reale 10 ottobre 2026 — 0.10.3
-La CI GitHub publisher `38055836537` ha prodotto `0.10.3-ota.51` (code 1051, SHA256 `3bcf4c2674c73a7de134158fea3064e5b31b953d899ba96af4344f2b6fb8a522`, 129180 byte), creato la Release verificata https://github.com/nicogtr20-ctrl/idle-runner-releases/releases/tag/overmind-zero-v0.10.3-ota.51 prima di aggiornare il manifest statico su main. Verifica effettiva del dominio produzione: `https://overmind-zero-updates.vercel.app/latest.json` **HTTP200** indica 1051 e SHA corretto; `https://overmind-zero-updates.vercel.app/apk/overmind-zero-1051-3bcf4c2674c7.apk` **HTTP200**, content-length 129180. Restano necessari il test del pulsante AGGIORNA sul Galaxy S21 e la conferma che la memoria produca realmente nuovi episodi. Il GitHub sorgente resta PRIVATO, dunque il fallback GitHub senza credenziali NON è pubblicamente utilizzabile in app, mentre Vercel attualmente serve il binario pubblico. Non disinstallare né azzerare.
-
-
-## Pubblicazione verificata 0.10.4 (2026-10-10)
-APK ufficiale firmata `0.10.4-ota.52`, versionCode **1052**, dimensione **136304**, SHA256 `972209b7554e25f62836b7c475c2178da90acae01b5976516ef6ad29360cb7a3`, GitHub Actions publisher `38057209555` success, previa staging `38057090717` success. Asset Release `https://github.com/nicogtr20-ctrl/idle-runner-releases/releases/download/overmind-zero-v0.10.4-ota.52/OVERMIND-ZERO.apk`. `main/updater/public/latest.json` pubblica stesso SHA, versione e URL Vercel. Servizio Vercel `https://overmind-zero-updates.vercel.app/latest.json` risponde HTTP 200 con **0.10.4-ota.52** e `https://overmind-zero-updates.vercel.app/apk/overmind-zero-1052-972209b7554e.apk` HTTP 200 / content-length 136304. Tasto AGGIORNA sul dispositivo e persistenza dati dopo installazione **ancora non verificati sul Galaxy S21**. Non disinstallare. Le 12 partite mantengono l'autosave e i dati statistici; nessuna firma/chiave di rilascio esposta.
+## Stato 0.10.5-ota.54 — 10 ottobre 2026
+La modifica “STATISTICHE 25-vs-25 + storico lifetime” è nello stable `feature/overmind-inapp-updater`.
+- Staging QA: **38059707433**, verde.
+- Publisher firmato: **38060026469**, verde.
+- versionCode **1054**, versionName **0.10.5-ota.54**.
+- SHA-256: `34bd2eb5261f499b196037832dce744f37b7b3822a49a7f655c3b6347f0c4e7a`.
+- APK: `https://overmind-zero-updates.vercel.app/apk/overmind-zero-1054-34bd2eb5261f.apk`, **138.636 byte**.
+- `https://overmind-zero-updates.vercel.app/latest.json` e APK verificati HTTP 200 dopo la pubblicazione.
+È quindi corretto usare **AGGIORNA** nell'app. Installare sopra la versione esistente; non disinstallare.
