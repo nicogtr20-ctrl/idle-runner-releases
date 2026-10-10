@@ -293,3 +293,12 @@ Per prove e prossimi step: `docs/EXPERIMENT_0096.md`. VersionCode e digest relea
 - Pacchetto Android firmato pubblicato su Vercel (codice 1047).
 - SHA-256: `243cf70ce8a0164b63cef91c8755f846dcbdd9b7f37415290a88147d88f0da43`.
 - APK: `/apk/overmind-zero-1047-243cf70ce8a0.apk`.
+
+
+### RILASCIO FIRMATO 0.10.0-ota.47 — 10 ottobre 2026 (verificato)
+- Staging GitHub Actions **38042930799 = SUCCESS** (codec, full scene regression gate, JVM storici e Android). Publisher firmato **38043017718 = SUCCESS** (chiave OTA originale, permission/manifest, asset + latest.json). GitHub Release fallback **38043121519 = SUCCESS** (SHA-256 verificato).
+- Package stabile: **`com.overmind.zero.ota`**, versionName **`0.10.0-ota.47`**, versionCode **1047**, dimensione **122.008 byte**.
+- SHA-256 verificato release + `updater/public/latest.json`: **`243cf70ce8a0164b63cef91c8755f846dcbdd9b7f37415290a88147d88f0da43`**.
+- APK firmata diretta: `https://github.com/nicogtr20-ctrl/idle-runner-releases/releases/download/overmind-zero-v0.10.0-ota.47/OVERMIND-ZERO.apk`.
+- Non disinstallare la precedente: installazione **in-place** mantiene memoria e progressi in `zero_motorbrain_001`; poi aprire **PARTITE → SALVA QUI**, denominare lo ZERO attuale, e solo dopo **NUOVA PARTITA**. Non serve RESET TUTTO per creare nuovo individuo. Gli slot sopravvivono ai reset. Slot manuali congelati, working auto evolve.
+- **Non ancora effettuata verifica comportamentale sul Samsung Galaxy S21**: QA automatico e APK firmata non garantiscono che UI, restore di forma/posizione o tutti i flussi manuali siano perfetti.
