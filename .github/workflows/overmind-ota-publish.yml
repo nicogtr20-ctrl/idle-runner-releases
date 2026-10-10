@@ -26,7 +26,7 @@ jobs:
       - name: Unit tests
         run: |
           mkdir -p /tmp/overmind
-          javac -d /tmp/overmind app/src/main/java/com/overmind/zero/MotorBrain.java app/src/main/java/com/overmind/zero/UnknownWorld.java app/src/main/java/com/overmind/zero/ContactLearning.java app/src/main/java/com/overmind/zero/DecisionBrain.java app/src/main/java/com/overmind/zero/Morphology.java app/src/main/java/com/overmind/zero/ScarcityLab.java app/src/main/java/com/overmind/zero/SensorimotorMind.java app/src/main/java/com/overmind/zero/LearningDiagnostics.java app/src/main/java/com/overmind/zero/ResetDomains.java app/src/main/java/com/overmind/zero/OnlineBodyLearning.java app/src/main/java/com/overmind/zero/MotionExploration.java app/src/main/java/com/overmind/zero/EpisodicMemory.java
+          javac -d /tmp/overmind app/src/main/java/com/overmind/zero/MotorBrain.java app/src/main/java/com/overmind/zero/UnknownWorld.java app/src/main/java/com/overmind/zero/ContactLearning.java app/src/main/java/com/overmind/zero/DecisionBrain.java app/src/main/java/com/overmind/zero/Morphology.java app/src/main/java/com/overmind/zero/ScarcityLab.java app/src/main/java/com/overmind/zero/SensorimotorMind.java app/src/main/java/com/overmind/zero/LearningDiagnostics.java app/src/main/java/com/overmind/zero/ResetDomains.java app/src/main/java/com/overmind/zero/OnlineBodyLearning.java app/src/main/java/com/overmind/zero/MotionExploration.java app/src/main/java/com/overmind/zero/EpisodicMemory.java app/src/main/java/com/overmind/zero/MotorAutonomyGuard.java
           java -cp /tmp/overmind com.overmind.zero.MotorBrain
           java -cp /tmp/overmind com.overmind.zero.UnknownWorld
           java -cp /tmp/overmind com.overmind.zero.ContactLearning
@@ -39,6 +39,7 @@ jobs:
           java -cp /tmp/overmind com.overmind.zero.OnlineBodyLearning
           java -cp /tmp/overmind com.overmind.zero.MotionExploration
           java -cp /tmp/overmind com.overmind.zero.EpisodicMemory
+          java -cp /tmp/overmind com.overmind.zero.MotorAutonomyGuard
           # v0.6 includes v0.5 -> v0.6 weight migration and expansion invariants.
       - name: Confirm trained selection replaced scripted selector
         run: |
@@ -78,7 +79,11 @@ jobs:
           brain=Path('app/src/main/java/com/overmind/zero/Morphology.java').read_text()
           page=Path('app/src/main/java/com/overmind/zero/BrainStatsActivity.java').read_text()
           assert 'public static final int POINTS=96;' in brain
-          assert 'lastAppliedMembrane=episodic.weights(2,liveBody.weights(2,shapeTrainer.best));' in app
+          assert 'lastAppliedMotor=liveBody.weights(0,trainer.best);' in app
+          assert 'lastAppliedMembrane=episodic.weights(2,' in app
+          assert '!liveBody.testingCandidate()' in app
+          assert 'recalledManipulationInAction' in app
+          assert 'motorGuard.observe(slice,creature.cx,creature.cy,newlyMeasuredEffect);' in app
           assert 'surface.step(creature,lastAppliedMembrane,px,py,slice,' in app
           assert 'Morphology.collide(surface,object,dt)' in app
           assert 'float[] xx=surface.x, yy=surface.y;' in app
@@ -210,6 +215,25 @@ jobs:
           assert 'Esperienze dannose' in t
           assert 'trainer.attempt()' not in g
           print('Signed ZERO 0.9.6: memory valence, storage migration and autonomy verified')
+          PY
+      - name: Prevent learned-motor regression and recalled-action training starvation
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          g=Path('app/src/main/java/com/overmind/zero/GameActivity.java').read_text()
+          e=Path('app/src/main/java/com/overmind/zero/EpisodicMemory.java').read_text()
+          s=Path('app/src/main/java/com/overmind/zero/SensorimotorMind.java').read_text()
+          t=Path('app/src/main/java/com/overmind/zero/BrainToolsActivity.java').read_text()
+          assert 'lastAppliedMotor=liveBody.weights(0,trainer.best);' in g
+          assert 'episodic.weights(0' not in g
+          assert 'boolean mixedWeights=recalledManipulationInAction;' in g
+          assert 'OnlineBodyLearning.Result result=mixedWeights?null:liveBody.observe(' in g
+          assert 'realTactileContact||type==0' in e
+          assert 'episodic.suggested(senses,!protectMotor)' in s
+          assert 'Recuperi da immobilità (0.9.7)' in t
+          assert 'putString("best",encode(trainer.best))' in g
+          assert 'putString("morph_brain_v07",encode(shapeTrainer.best))' in g
+          print('Signed 0.9.7 motor stability, tactile-only recall, and preserved historic brains verified')
           PY
       - name: Assemble stable signed APK
         if: env.signing_ready == 'true'
