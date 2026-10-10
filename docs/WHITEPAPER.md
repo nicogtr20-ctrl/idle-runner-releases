@@ -1,5 +1,9 @@
 # OVERMIND: ZERO — Whitepaper di progetto
 
+## 0.9.8-autonomia — da orientamento ingegnerizzato a credito temporale delle scelte
+La versione firmata `0.9.8-ota.42` usava `SensoryValenceGuide`: somma di bonus lungo un settore geometrico che mostrava un segnale visuale associato all'energia. Non veniva obbligata una direzione, ma la formula comunque suggeriva un comportamento. Il feedback del ricercatore esige che ZERO possa scegliere autonomamente se ottenere una sfera anche quando conosce un beneficio e ha fame. Nella correzione `SensoryValenceGuide` è stato rimosso: nessuna moltiplicazione per il coseno della direzione rispetto a un oggetto è più addizionata ai Q. La nuova `ExperienceCredit` rinforza esclusivamente azioni *realmente eseguite*, in contesti sensoriali *realmente osservati*, a seguito di aumenti/diminuzioni di energia per CONTATTO FISICO; conserva le ultime 12 azioni con decadimento della responsabilità `0.83` per distanza temporale. Le scelte restano governate dalla rete Q appresa e dalle componenti di curiosità, ricordi e antistallo, con esplorazione stocastica. È temporal-difference/eligibility credit semplificato, non inferenza causale certa, AGI o libero arbitrio. Nessun bonus fisso blu/rosso. `docs/EXPERIMENT_0098.md` sezione CORREZIONE 0098-A definisce limiti, test, persistenza.
+
+
 **Versione:** 0.9.6 (documento vivo) · **Data:** 10 ottobre 2026 · **Stato:** prototipo di ricerca Android
 
 ## Sintesi
