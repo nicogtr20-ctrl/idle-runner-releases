@@ -237,9 +237,13 @@ public final class InstrumentalNavigation {
             "Untested grip action illegally inherited a movement map");
         String saved=n.encode();
         InstrumentalNavigation restored=new InstrumentalNavigation();
-        require(restored.restore(saved)&&saved.equals(restored.encode())&&
-            restored.bias(0,.2f)>restored.bias(4,.2f),
-            "Learned instrumental navigation lost on restart");
+        require(restored.restore(saved)&&saved.equals(restored.encode()),
+            "Instrumental weights or energetics lost after restart");
+        // Transient light is deliberately NOT persisted. On load the same
+        // physical world is sensed again before any steering is available.
+        restored.sense(b,null,world);
+        require(restored.bias(0,.2f)>restored.bias(4,.2f),
+            "Learned instrumental motion unavailable after new real sensation");
         restored.resetLife();
         require(restored.knownEffects()==2&&restored.verifiedActions()>=8,
             "Death erased learned instrumentality");
