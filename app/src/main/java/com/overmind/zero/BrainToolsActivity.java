@@ -127,7 +127,17 @@ public final class BrainToolsActivity extends Activity {
              String.valueOf(prefs.getInt("motor_recoveries_v097",0)),CYAN);
         line(physical,"Decisioni temporaneamente libere dai ricordi",
              String.valueOf(prefs.getInt("motor_free_choices_v097",0)),WHITE);
-        paragraph(physical,"La 0.9.7 protegge il motore appreso: un ricordo non può sovrascriverne i 62 pesi. Dopo 2 finestre di circa 7 secondi senza spostamento netto né effetto fisico, sospende temporaneamente soltanto i suggerimenti positivi della memoria. Non impone una direzione, non cancella i pesi né prova che ZERO impari più velocemente. I confronti delle varianti restano osservazionali, non A/B controllati.");
+        MotorSkillBank skills=new MotorSkillBank();
+        skills.restore(prefs.getString("motor_skills_v098",""));
+        line(physical,"Tecniche motorie verificate e conservate",skills.count()+" / "+MotorSkillBank.MAX,CYAN);
+        line(physical,"Record traslazione in una prova motoria",
+             number(skills.largestVerifiedNet)+" U",WHITE);
+        line(physical,"Tecniche precedenti recuperate",String.valueOf(skills.rollbacks),AMBER);
+        line(physical,"Decisioni con memoria visiva favorevole",
+             String.valueOf(prefs.getInt("visual_guided_v098",0)),CYAN);
+        line(physical,"Decisioni con cautela per segnali appresi",
+             String.valueOf(prefs.getInt("visual_avoided_v098",0)),AMBER);
+        paragraph(physical,"Dal 0.9.8 ZERO conserva più configurazioni motorie che hanno dimostrato traslazione reale e può recuperarne una dopo stalli ripetuti. Un movimento circolare non entra nell'archivio solo per aver percorso tanta strada. Dopo un vero blocco il cervello varia maggiormente le azioni scelte, senza una direzione programmata. La percezione di frequenze visive influenza le decisioni soltanto DOPO un reale contatto con conseguenza energetica appresa: nessun colore è predeterminato. Il recupero è un'ipotesi di miglioramento, non una capacità già dimostrata in gioco.");
         EpisodicMemory episodes=new EpisodicMemory();
         episodes.restore(prefs.getString("episodic_memory_v095",""));
         LinearLayout memory=panel(body);
