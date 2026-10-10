@@ -302,3 +302,8 @@ Per prove e prossimi step: `docs/EXPERIMENT_0096.md`. VersionCode e digest relea
 - APK firmata diretta: `https://github.com/nicogtr20-ctrl/idle-runner-releases/releases/download/overmind-zero-v0.10.0-ota.47/OVERMIND-ZERO.apk`.
 - Non disinstallare la precedente: installazione **in-place** mantiene memoria e progressi in `zero_motorbrain_001`; poi aprire **PARTITE → SALVA QUI**, denominare lo ZERO attuale, e solo dopo **NUOVA PARTITA**. Non serve RESET TUTTO per creare nuovo individuo. Gli slot sopravvivono ai reset. Slot manuali congelati, working auto evolve.
 - **Non ancora effettuata verifica comportamentale sul Samsung Galaxy S21**: QA automatico e APK firmata non garantiscono che UI, restore di forma/posizione o tutti i flussi manuali siano perfetti.
+
+## OTA 0.10.1-ota.48 — 2026-10-10T11:17:03.858879+00:00
+- Pacchetto Android firmato pubblicato su Vercel (codice 1048).
+- SHA-256: `90d3d1b89408611ab668837783f1ea00c9432a7c2a38d8ac22a597371645166c`.
+- APK: `/apk/overmind-zero-1048-90d3d1b89408.apk`.
