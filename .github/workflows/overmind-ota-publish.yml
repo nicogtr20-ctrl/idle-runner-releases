@@ -389,6 +389,38 @@ jobs:
           grep -F "com.overmind.zero.UpdateFileProvider" "$RUNNER_TEMP/manifest.txt"
           grep -F "com.overmind.zero.ota.updates" "$RUNNER_TEMP/manifest.txt"
           echo "Validated final signed APK: network, installer permission and update provider."
+      - name: Create verified GitHub Release BEFORE updating public OTA manifest
+        if: env.signing_ready == 'true'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          APK="app/build/outputs/apk/release/app-release.apk"
+          test -s "$APK"
+          VERSION_NAME=$(python3 -c 'import json; print(json.load(open("app/build/outputs/apk/release/output-metadata.json"))["elements"][0]["versionName"])')
+          VERSION_CODE=$(python3 -c 'import json; print(json.load(open("app/build/outputs/apk/release/output-metadata.json"))["elements"][0]["versionCode"])')
+          TAG="overmind-zero-v$VERSION_NAME"
+          SHA=$(sha256sum "$APK" | awk '{print $1}')
+          SIZE=$(wc -c < "$APK" | tr -d ' ')
+          if gh release view "$TAG" >/dev/null 2>&1; then
+            echo "Signed GitHub Release exists: $TAG"
+          else
+            cp "$APK" OVERMIND-ZERO.apk
+            cat > "$RUNNER_TEMP/overmind-release-notes.md" <<NOTES
+          OVERMIND ZERO $VERSION_NAME (versionCode $VERSION_CODE)
+
+          APK originale firmata con la chiave stabile dell'app com.overmind.zero.ota.
+          SHA-256: $SHA. Dimensione: $SIZE byte.
+
+          Puoi installare sopra la versione attuale senza disinstallare. I salvataggi con nome restano intatti.
+          La release GitHub offre il percorso di riserva quando Vercel è obsoleto o non raggiungibile.
+          NOTES
+            gh release create "$TAG" OVERMIND-ZERO.apk --repo "${{ github.repository }}" \
+              --title "OVERMIND ZERO $VERSION_NAME" \
+              --notes-file "$RUNNER_TEMP/overmind-release-notes.md" \
+              --target "${{ github.sha }}"
+          fi
+          echo "Verified immutable fallback release ready BEFORE raw GitHub manifest changes."
       - name: Publish signed APK to updater in main
         if: env.signing_ready == 'true'
         env:
