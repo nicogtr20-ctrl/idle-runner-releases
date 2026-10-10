@@ -189,3 +189,12 @@ Documentazione dettagliata e limiti scientifici: `docs/EXPERIMENT_0095.md`.
 - [ ] Test Galaxy S21: lasciare vivere ZERO abbastanza da ottenere confidenza temporale >0 e osservare se compaiono skill consolidate.
 - [ ] Verificare se una skill viene richiamata in un contesto simile e mantiene un effetto fisico progressivo senza essere stata programmata per quell'oggetto.
 - [ ] Passo successivo solo dopo verifica: permettere al planner di valutare skill consolidate come macro-azioni.
+
+## 0.10.8 — Memorie temporali persistenti, verificare su telefono
+- [x] Verifica razionale 0.10.5–0.10.7: funzionalità utili/coerenti, senza assumere progresso cognitivo dimostrato.
+- [x] Fix delle due chiavi mancanti in GameActivity.save(): temporal_working_memory_v106 e temporal_skills_v107; storico, vecchi pesi e slot invariati.
+- [x] Regression test completo SaveProfileCodec di due ZERO indipendenti, modello temporale, hidden e skill; CI staging 38067546249/38067671221 SUCCESS.
+- [x] Release firmata 38067752564 SUCCESS, 0.10.8-ota.57 (1057), APK 150816 byte, Vercel manifest/APK HTTP200.
+- [ ] Samsung S21: aggiornamento in-place, verificare contatori e capacità salvate dopo riavvio e cambio slot.
+- [ ] Prova con scenari controllati: confrontare energia, danno/minuto, attraversamento porta e ripetizione di skill davvero vantaggiose; non basta uno spostamento del cancello.
+Riferimento docs/EXPERIMENT_0108.md.
