@@ -31,6 +31,9 @@ public final class SensorimotorMind {
     private transient BodyProprioception bodySchema;
     private transient SpatialPerception spatial;
     private transient CausalExperiments causal;
+    private transient InstrumentalNavigation navigation;
+    private float actualEnergySinceChoice=0f;
+    private transient MotorBrain.Body observedBody;
     // Performed-action traces give temporally distant actual resource
     // contacts a learning signal. They NEVER add a geometric direction bias.
     private final ExperienceCredit contactCredit=new ExperienceCredit();
@@ -45,6 +48,9 @@ public final class SensorimotorMind {
             if(temporalSkills!=null)temporalSkills.energyOutcome(actualEnergyDelta);
             if(bodySchema!=null)bodySchema.actualEnergy(actualEnergyDelta);
             if(causal!=null)causal.energyOutcome(actualEnergyDelta);
+            if(navigation!=null)navigation.energyOutcome(actualEnergyDelta,
+                visuallyObservedSignature,true);
+            actualEnergySinceChoice+=actualEnergyDelta;
         }
     }
     public synchronized String outcomeModel(){return contactCredit.encode();}
@@ -71,6 +77,13 @@ public final class SensorimotorMind {
     public synchronized SpatialPerception spatialPerception(){return spatial;}
     public synchronized void attachCausalExperiments(CausalExperiments model){causal=model;}
     public synchronized CausalExperiments causalExperiments(){return causal;}
+    public synchronized void attachNavigation(InstrumentalNavigation m){navigation=m;}
+    public synchronized InstrumentalNavigation navigation(){return navigation;}
+    public synchronized void updateNavigationSense(MotorBrain.Body b,ScarcityLab room,
+        ArrayList<UnknownWorld.Entity> objects){
+        observedBody=b;
+        if(navigation!=null)navigation.sense(b,room,objects);
+    }
     public synchronized void updateSpatialSense(MotorBrain.Body b,ScarcityLab room,
         ArrayList<UnknownWorld.Entity> objects){
         if(spatial!=null)spatial.observeEnvironment(b,room,objects);
@@ -115,6 +128,8 @@ public final class SensorimotorMind {
         if(bodySchema!=null)bodySchema.resetLife();
         if(spatial!=null)spatial.resetLife();
         if(causal!=null)causal.resetLife();
+        if(navigation!=null)navigation.resetLife();
+        actualEnergySinceChoice=0;
     }
     public synchronized void resetEpisode(float[] first){
         // Mortality resets bodily position and short-term context, never
@@ -126,6 +141,8 @@ public final class SensorimotorMind {
             if(bodySchema!=null)bodySchema.resetLife();
             if(spatial!=null)spatial.resetLife();
             if(causal!=null)causal.resetLife();
+            if(navigation!=null)navigation.resetLife();
+            actualEnergySinceChoice=0;
             return;
         }
         begin(first);
@@ -143,6 +160,8 @@ public final class SensorimotorMind {
         if(bodySchema!=null)bodySchema.resumeLife();
         // Spatial map is reinstated with the saved physical body separately.
         if(causal!=null)causal.resumeLife();
+        if(navigation!=null)navigation.resumeLife();
+        actualEnergySinceChoice=0;
     }
     public synchronized float motorX(){return (float)Math.cos((action%8)*Math.PI/4);}
     public synchronized float motorY(){return (float)Math.sin((action%8)*Math.PI/4);}
@@ -152,6 +171,9 @@ public final class SensorimotorMind {
     public synchronized int parameterCount(){return PARAMETERS;}
 
     private static float bounded(float x){return Math.max(-1.5f,Math.min(1.5f,x));}
+    private static float clampEnergyReward(float amount){
+        return Math.max(-1.5f,Math.min(1.5f,amount/22f));
+    }
     private float predictFeature(float[] state,int a,int dim){
         int start=(a*S+dim)*P;
         float z=model[start+S];
@@ -204,6 +226,7 @@ public final class SensorimotorMind {
         float largestBodyBias=0;
         float largestSpatialBias=0;
         float largestCausalBias=0;
+        float largestInstrumentalBias=0;
         for(int a=0;a<ACTIONS;a++){
             float q=estimate(senses,a);
             float predictedChange=0;
@@ -240,8 +263,14 @@ public final class SensorimotorMind {
             largestCausalBias=Math.max(largestCausalBias,Math.abs(causalBias));
             float skillBias=skillAdvice!=null&&skillAdvice.action==a?skillAdvice.bias:0;
             largestTemporalBias=Math.max(largestTemporalBias,Math.abs(temporalBias));
-            float score=q+earnedValue+planned[a]+curiosity+jitter+memoryBias+
-                        diversity+temporalBias+skillBias+bodyBias+spatialBias+causalBias;
+            // Treat old locomotion-centered TD values as a limited prior:
+            // walking is a MEANS, not an intrinsically rewarding goal.
+            float legacyQ=.38f*Math.max(-2f,Math.min(2f,q));
+            float instrumental=navigation==null?0:navigation.bias(a,senses[0]);
+            largestInstrumentalBias=Math.max(largestInstrumentalBias,Math.abs(instrumental));
+            float score=legacyQ+earnedValue+planned[a]*.50f+curiosity+jitter+memoryBias+
+                        diversity+temporalBias+skillBias+bodyBias+spatialBias+causalBias+
+                        instrumental;
             if(score>best){best=score;chosen=a;}
         }
         float epsilon=Math.max(.09f,.52f/(1+experiences/120f));
@@ -276,6 +305,11 @@ public final class SensorimotorMind {
             causal.chosen(spatial,chosen,actionExploratory);
             causal.noteDecision(largestCausalBias);
         }
+        if(navigation!=null){
+            navigation.chosen(chosen,observedBody);
+            navigation.noteSelection(largestInstrumentalBias);
+        }
+        actualEnergySinceChoice=0f;
         action=chosen;decisions++;
         estimatedValue=estimate(senses,chosen);
         System.arraycopy(senses,0,trialState,0,S);
@@ -312,10 +346,14 @@ public final class SensorimotorMind {
                 bodySchema.feed(BodyProprioception.sense(body,skin));
             if(spatial!=null&&body!=null&&objects!=null)
                 spatial.observeEnvironment(body,room,objects);
+            updateNavigationSense(body,room,objects);
             choose(after);return;
         }
         elapsed+=Math.max(0,dt);
         if(elapsed<.65f)return;
+        observedBody=body;
+        if(navigation!=null&&body!=null&&objects!=null)
+            navigation.sense(body,room,objects);
         float[] bodyAfter=bodySchema!=null&&body!=null&&skin!=null?
             BodyProprioception.sense(body,skin):null;
         if(bodySchema!=null&&bodyAfter!=null)bodySchema.feed(bodyAfter);
@@ -350,14 +388,12 @@ public final class SensorimotorMind {
         // Energy change and external-object displacement are NO LONGER
         // mixed into this generic TD target. Their actual, source-linked
         // consequences train independent value channels above.
-        // Reward only actual measured velocity aligned with ZERO's own
-        // selected action. No target coordinates and no synthetic impulse.
-        float ax=(float)Math.cos((trialAction%8)*Math.PI/4);
-        float ay=(float)Math.sin((trialAction%8)*Math.PI/4);
-        float realForward=Math.max(-1f,Math.min(1f,after[1]*ax+after[2]*ay));
-        lastReward=.10f*Math.min(2,sensoryChange)
-                    +.24f*realForward
-                    +.3f*progress-.012f;
+        // Moving/turning is NOT the reward. Reward real acquired/lost
+        // energy; a very small genuine sensory learning-progress term
+        // remains for exploration in the absence of known resources.
+        float energyOutcome=clampEnergyReward(actualEnergySinceChoice);
+        lastReward=energyOutcome+.025f*Math.min(2,sensoryChange)
+                    +.15f*progress-.018f;
         if(temporal!=null){
             temporal.observe(before,trialAction,after,lastReward,error,
                 learning&&!holdout,holdout);
@@ -376,6 +412,8 @@ public final class SensorimotorMind {
             spatial.consequence(trialAction,lastReward,learning&&!holdout,holdout);
         if(causal!=null&&spatial!=null&&body!=null&&objects!=null)
             causal.consequence(spatial,trialAction,lastReward,learning&&!holdout,holdout);
+        if(navigation!=null&&body!=null)
+            navigation.consequence(trialAction,body,learning&&!holdout,holdout);
         if(learning&&!holdout){
             float td=bounded(lastReward+GAMMA*bestFuture(after)-estimate(before,trialAction));
             int base=trialAction*P;
@@ -394,6 +432,27 @@ public final class SensorimotorMind {
         motion, eight short-range obstacle rays and twelve spectral sectors. */
     public static final class Senses {
         private Senses(){}
+        /** Eight directional sectors of OBSERVED spectral light. This is
+         * perception only; no coordinates or semantic names reach learning.
+         * A visible inactive (cooling-down) hazard stays optically present. */
+        public static float[] spectral8(MotorBrain.Body b,ScarcityLab lab,
+                                         ArrayList<UnknownWorld.Entity> objects){
+            float[] v=new float[UnknownWorld.SIGNATURES*8];
+            if(b==null||objects==null)return v;
+            for(UnknownWorld.Entity e:objects){
+                if(e.consumed)continue;
+                float dx=e.x-b.cx,dy=e.y-b.cy;
+                float d=(float)Math.hypot(dx,dy);
+                if(!Float.isFinite(d)||d<.1f||d>210f)continue;
+                if(occluded(lab,b.cx,b.cy,e.x,e.y,objects,e))continue;
+                int sector=((int)Math.floor((Math.atan2(dy,dx)+Math.PI/8)/
+                    (Math.PI/4))+8)%8;
+                float bright=Math.max(0f,1f-d/230f);
+                v[e.signature*8+sector]=Math.max(v[e.signature*8+sector],bright);
+                if(e.isRare())v[2*8+sector]=Math.max(v[2*8+sector],bright*.85f);
+            }
+            return v;
+        }
         public static float[] read(MotorBrain.Body b,Morphology.Surface skin,
                                    ScarcityLab lab,ArrayList<UnknownWorld.Entity> objects,
                                    float energy){
@@ -425,7 +484,7 @@ public final class SensorimotorMind {
             // Raw channel identities are VISUAL frequencies, not "food",
             // "danger" or action values. Occluded objects are invisible.
             for(UnknownWorld.Entity e:objects){
-                if(!e.ready())continue;
+                if(e.consumed)continue;
                 float dx=e.x-b.cx,dy=e.y-b.cy;
                 float d=(float)Math.hypot(dx,dy);
                 if(d>210||d<.1f)continue;
@@ -445,7 +504,7 @@ public final class SensorimotorMind {
         }
         private static boolean occluded(ScarcityLab lab,float ax,float ay,float bx,float by,
                                         ArrayList<UnknownWorld.Entity> objects,UnknownWorld.Entity self){
-            if(lab==null)return false;
+            // Real movable solids occlude light even outside the chamber.
             for(int i=1;i<15;i++){
                 float t=i/15f;
                 if(solid(lab,ax+(bx-ax)*t,ay+(by-ay)*t,objects,self))return true;
