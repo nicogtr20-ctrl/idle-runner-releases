@@ -111,7 +111,8 @@ public final class SaveProfileCodec {
     public static void main(String[] args){
         Map<String,Object> initial=new HashMap<>();
         initial.put("best","0.1,0.2,0.3");
-        initial.put("sensorimotor_model_v09","x".repeat(160000));
+        char[] large=new char[160000];Arrays.fill(large,'x');
+        initial.put("sensorimotor_model_v09",new String(large));
         initial.put("attempts",4321);
         initial.put("scarcity_active_v08",true);
         initial.put("record_net_v094",42.75f);
