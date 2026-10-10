@@ -1,0 +1,60 @@
+name: ZERO 0.11.6 Exact 0.11.4 Brain and Private GPT Export QA
+on:
+  push:
+    branches: [feature/overmind-v116-gpt-report]
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+      - uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: '8.11.1'
+      - name: Validate ONLY explicit export, no new game policy
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          p=Path("app/src/main/java/com/overmind/zero")
+          activity=(p/"BrainToolsActivity.java").read_text()
+          game=(p/"GameActivity.java").read_text()
+          mind=(p/"SensorimotorMind.java").read_text()
+          provider=(p/"GptReportProvider.java").read_text()
+          report=(p/"GptReport.java").read_text()
+          gradle=Path("app/build.gradle").read_text()
+          manifest=Path("app/src/main/AndroidManifest.xml").read_text()
+          assert "AdaptiveSafety" not in game and "AdaptiveSafety" not in mind
+          assert not (p/"AdaptiveSafety.java").exists()
+          assert "Condividi" in activity.upper() or "CONDIVIDI DATI CON GPT" in activity
+          assert "startActivity(GptReport.share(this,file))" in activity
+          assert "GptReport.create(this)" in activity
+          assert 'ctx.getSharedPreferences(\n            SaveSlotStore.WORKING,Context.MODE_PRIVATE)' in report
+          assert "getAll()" in report and 'zero_behavior_lab_v113' in report
+          assert 'getSharedPreferences(SaveSlotStore.SAVES' not in report
+          assert ".edit()" not in report and "http" not in report
+          assert "FLAG_GRANT_READ_URI_PERMISSION" in report
+          assert 'android:exported="false"' in manifest
+          assert '${applicationId}.gptreport' in manifest
+          assert '"r".equals(mode)' in provider and '"/report.json".equals(uri.getPath())' in provider
+          assert "android:grantUriPermissions" in manifest
+          assert '0.11.6-ota' in gradle and "applicationId 'com.overmind.zero.ota'" in gradle
+          assert 'SaveProfileCodec.encode(capture())' in (p/"SaveSlotStore.java").read_text()
+          assert 'SLOTS=12' in (p/"SaveSlotStore.java").read_text()
+          print('0.11.6: user-initiated only, report-only app components, private read grant, 0.11.4 chooser intact and 12 saves unchanged')
+          PY
+      - name: Run 0.11.4 brain and laboratory Java regressions
+        run: |
+          mkdir -p /tmp/zero116
+          javac -d /tmp/zero116 app/src/main/java/com/overmind/zero/{MotorBrain,UnknownWorld,ContactLearning,DecisionBrain,Morphology,ScarcityLab,SensorimotorMind,SpatialPerception,CausalExperiments,BodyProprioception,InstrumentalNavigation,GoalContinuity,GateBehaviorMetrics,BehavioralLaboratory,TemporalWorkingMemory,TemporalSkillBank,TemporalPersistenceRegression,LearnedSequencePlanner,LearningDiagnostics,ResetDomains,OnlineBodyLearning,MotionExploration,EpisodicMemory,MotorAutonomyGuard,MotorSkillBank,ExperienceCredit,GripSkillBank,SaveProfileCodec,LifeStatistics}.java
+          for test in BehavioralLaboratory InstrumentalNavigation GoalContinuity GateBehaviorMetrics CausalExperiments SpatialPerception BodyProprioception TemporalPersistenceRegression TemporalWorkingMemory TemporalSkillBank SaveProfileCodec EpisodicMemory LifeStatistics SensorimotorMind ExperienceCredit LearnedSequencePlanner MotorBrain UnknownWorld ContactLearning DecisionBrain Morphology ScarcityLab OnlineBodyLearning MotionExploration ResetDomains MotorAutonomyGuard MotorSkillBank GripSkillBank; do
+            java -cp /tmp/zero116 com.overmind.zero.$test
+          done
+      - name: Compile Android report with secure content provider
+        run: gradle --no-daemon assembleDebug
