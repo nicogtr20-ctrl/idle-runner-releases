@@ -224,3 +224,13 @@ Vedi `docs/EXPERIMENT_0098.md`.
 - [ ] Validate all workflows on Galaxy S21 in-place with 0.9.9 data and 2 named slots: save, new game, load back, rename, overwrite, delete, recovery, reset ALL.
 - [ ] Later: import/export save file for transfer to a different device and deterministic RNG/trial snapshots for scientific A/B testing.
 See `docs/EXPERIMENT_0100.md`.
+
+## 0.10.1 Source-aware learning, released
+- [x] Replace pre-0.10.1 scalar reward blend with two separately learned provenances: true external physical displacement and energetic impact tied to observed frequency of touched object.
+- [x] Protect physical gate manipulation learning if red hazard contact occurs in same action interval, avoiding arbitrary cross-channel cancellation.
+- [x] Store two labeled episodic records for simultaneous opposite outcomes via `em3`; read legacy `em1/em2` without pretending historical causality was known.
+- [x] Save `ec2` independent outcome model in working profile and all 12 named slots without changing `wm1` or losing physical/body scene; selective reset.
+- [x] JVM cases for gate moved plus red contact, memory migration, Android QA, stable signed GitHub Release `0.10.1-ota.48` SHA256 verified.
+- [ ] Run controlled observation on Samsung S21 from named saved ZERO subjects: collect spontaneous partial gate displacement, red/blue collisions, manipulation persistence, effective distance and energy. No claim behavior proven by CI.
+- [ ] Research prospective causal models and long-horizon planning that do not prescribe scripted target actions or rely on hidden coordinates.
+`docs/EXPERIMENT_0101.md`.
