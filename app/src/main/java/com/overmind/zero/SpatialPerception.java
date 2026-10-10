@@ -69,7 +69,7 @@ public final class SpatialPerception {
             for(int s=1;s<=STEPS;s++){
                 float x=cx+dx*s*STEP,y=cy+dy*s*STEP;
                 if(SensorimotorMind.Senses.solid(room,x,y,objects)){
-                    result[r]=(float)s/STEPS;
+                    result[r]=(float)s/(STEPS+1);
                     break;
                 }
             }
@@ -91,8 +91,8 @@ public final class SpatialPerception {
         for(int r=0;r<RAYS;r++){
             float theta=rad(r);
             float dx=(float)Math.cos(theta),dy=(float)Math.sin(theta);
-            int hit=Math.round(distances[r]*STEPS);
-            boolean blocked=hit<STEPS;
+            boolean blocked=distances[r]<.999f;
+            int hit=blocked?Math.round(distances[r]*(STEPS+1)):STEPS+1;
             for(int s=1;s<=STEPS;s++){
                 if(blocked&&s>hit)break;
                 float x=odometryX+dx*STEP*s,y=odometryY+dy*STEP*s;
@@ -127,6 +127,11 @@ public final class SpatialPerception {
         if(valid(rays))System.arraycopy(rays,0,current,0,RAYS);
     }
     public float[] ranges(){return current.clone();}
+    public float distance(int ray){
+        if(ray<0||ray>=RAYS)throw new IllegalArgumentException("ray");
+        return current[ray]>=.999f?RANGE:
+            Math.round(current[ray]*(STEPS+1))*STEP;
+    }
     public int mappedCells(){return memory.size();}
     public int blockedCells(){
         int n=0;for(byte v:memory.values())if(v>0)n++;return n;
