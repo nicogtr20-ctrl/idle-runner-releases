@@ -243,3 +243,13 @@ Full scientific/implementation report `docs/EXPERIMENT_0111.md`.
 - [ ] On Galaxy S21 confirm AGGIORNA, backup and restore two named slots, real behavior after beneficial and harmful touches, travel-to-resource measured after learned values, x1/x20.
 - [ ] Gate remains a separate general planning challenge: resource hidden behind physical wall is invisible; do not substitute hardcoded gate target/path. Add empirical evaluation before further modules.
 Source/report `docs/EXPERIMENT_0112.md`.
+
+## 0.11.3 — verifica fisica prima di aggiungere nuove intenzioni
+- [x] Laboratorio A/B ripetibile isolato: energia, danno, cancello; ognuno 3 posizioni/stati iniziali × controllo/attivo = **18 prove di 32 secondi SIMULATI**, condizioni appaiate identiche e stesse reti salvate.
+- [x] Misurare SOLO risultati veri con componenti Body.step, Surface.step, ScarcityLab.constrain, entity.touch e rete SensorimotorMind reale: contatti, guadagni/danni energetici, distanza, cancello effettivamente spostato e attraversamento attraverso porta aperta.
+- [x] Navigazione disattivabile **esclusivamente** in una copia di benchmark tramite `setNavigationAdviceEnabled(false)`; nel gioco live rimane attiva di default. Memoria episodica, spatial/temporal e policy generale presenti in entrambe le condizioni.
+- [x] Android ANALISI → LABORATORIO COMPORTAMENTALE, avvio in background con progresso e arresto; leggere il profilo attuale, eseguire copie in memoria, salvare il report **solo** in `zero_behavior_lab_v113` e mai in `zero_motorbrain_001` / vecchi 12 slot.
+- [x] Staging `38086989808 SUCCESS` (regressioni JVM + Android debug + prova 18 scene); publisher signed `38087100529 SUCCESS`. Pubblicata `0.11.3-ota.63` code1063, APK184108 B SHA256 35d2ced944ac1125967b46ae67588a305b136984f1232edd59f14a9632b30d95, live manifest/APK HTTP200 verificati.
+- [ ] Utente Galaxy S21: installazione in place e completamento benchmark, raccolta screenshot/report dalle tre sezioni + scelte nav.
+- [ ] Dopo esito dei test, correggere i limiti effettivamente osservati e solo **poi** aggiungere continuità di intenzioni apprese, non script a bersagli.
+Limite dichiarato: non comprende le mutazioni fisiche runtime OnlineBodyLearning o il mondo dinamico complesso della partita, e tre coppie non dimostrano causalità statistica. Dettagli `docs/EXPERIMENT_0113.md`.
