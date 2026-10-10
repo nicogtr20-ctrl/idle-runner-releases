@@ -27,7 +27,7 @@ public final class BehavioralLaboratory {
     public static final float DT=.035f,SECONDS=32f;
     public static final int FRAMES=(int)(SECONDS/DT);
     public static final int[] VARIANTS={7,19,31};
-    private static final String[] NAMES={"ENERGIA","PERICOLO","CANCELLO","ROSCI INTORNO","BLU PIU ROSSO"};
+    private static final String[] NAMES={"ENERGIA","PERICOLO","CANCELLO","ROSSI INTORNO","BLU PIU ROSSO"};
     private BehavioralLaboratory(){}
     public interface Progress { void step(int finished,int total,String label); }
     public interface Cancel { boolean stopped(); }
@@ -276,6 +276,9 @@ public final class BehavioralLaboratory {
         long initialDecisions=brain.decisions,initialChoices=brain.navigation().choicesInfluenced;
         int priorIntents=brain.goalContinuity().confirmed;
         int priorContinued=brain.goalContinuity().continued;
+        int priorSafetyAdvice=brain.adaptiveSafety().advisedDecisions;
+        int priorSafetyRecovered=brain.adaptiveSafety().verifiedWithdrawals;
+        int priorSafetyUnresolved=brain.adaptiveSafety().unresolved;
         for(int i=0;i<FRAMES;i++){
             if(cancel!=null&&cancel.stopped())return null;
             float t=i*DT;
@@ -386,9 +389,9 @@ public final class BehavioralLaboratory {
         r.learnedNavigationChoices=brain.navigation().choicesInfluenced-initialChoices;
         r.confirmedIntentions=brain.goalContinuity().confirmed-priorIntents;
         r.continuedIntentions=brain.goalContinuity().continued-priorContinued;
-        r.safetyAdvisedDecisions=brain.adaptiveSafety().advisedDecisions;
-        r.safetyRecoveries=brain.adaptiveSafety().verifiedWithdrawals;
-        r.safetyUnresolved=brain.adaptiveSafety().unresolved;
+        r.safetyAdvisedDecisions=brain.adaptiveSafety().advisedDecisions-priorSafetyAdvice;
+        r.safetyRecoveries=brain.adaptiveSafety().verifiedWithdrawals-priorSafetyRecovered;
+        r.safetyUnresolved=brain.adaptiveSafety().unresolved-priorSafetyUnresolved;
         return r;
     }
     public static Result run(Profile p,Progress progress,Cancel stop){
