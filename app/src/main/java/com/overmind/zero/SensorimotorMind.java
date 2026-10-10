@@ -32,6 +32,9 @@ public final class SensorimotorMind {
     private transient SpatialPerception spatial;
     private transient CausalExperiments causal;
     private transient InstrumentalNavigation navigation;
+    private transient GoalContinuity intention;
+    public synchronized void attachGoalContinuity(GoalContinuity c){intention=c;}
+    public synchronized GoalContinuity goalContinuity(){return intention;}
     // Benchmark-only ablation: sensors, learning and all other policy terms
     // still run. Default production behavior is unchanged (true).
     private transient boolean navigationAdviceEnabled=true;
@@ -135,6 +138,7 @@ public final class SensorimotorMind {
         if(spatial!=null)spatial.resetLife();
         if(causal!=null)causal.resetLife();
         if(navigation!=null)navigation.resetLife();
+        if(intention!=null)intention.resetLife();
         actualEnergySinceChoice=0;
     }
     public synchronized void resetEpisode(float[] first){
@@ -148,6 +152,7 @@ public final class SensorimotorMind {
             if(spatial!=null)spatial.resetLife();
             if(causal!=null)causal.resetLife();
             if(navigation!=null)navigation.resetLife();
+            if(intention!=null)intention.resetLife();
             actualEnergySinceChoice=0;
             return;
         }
@@ -167,6 +172,7 @@ public final class SensorimotorMind {
         // Spatial map is reinstated with the saved physical body separately.
         if(causal!=null)causal.resumeLife();
         if(navigation!=null)navigation.resumeLife();
+        if(intention!=null)intention.resumeLife();
         actualEnergySinceChoice=0;
     }
     public synchronized float motorX(){return (float)Math.cos((action%8)*Math.PI/4);}
@@ -233,6 +239,7 @@ public final class SensorimotorMind {
         float largestSpatialBias=0;
         float largestCausalBias=0;
         float largestInstrumentalBias=0;
+        float largestIntentionBias=0;
         for(int a=0;a<ACTIONS;a++){
             float q=estimate(senses,a);
             float predictedChange=0;
@@ -275,9 +282,12 @@ public final class SensorimotorMind {
             float instrumental=navigation==null||!navigationAdviceEnabled?0:
                 navigation.bias(a,senses[0]);
             largestInstrumentalBias=Math.max(largestInstrumentalBias,Math.abs(instrumental));
+            float intentBias=intention==null||navigation==null||!navigationAdviceEnabled?0:
+                intention.bias(navigation,a,senses[0]);
+            largestIntentionBias=Math.max(largestIntentionBias,Math.abs(intentBias));
             float score=legacyQ+earnedValue+planned[a]*.50f+curiosity+jitter+memoryBias+
                         diversity+temporalBias+skillBias+bodyBias+spatialBias+causalBias+
-                        instrumental;
+                        instrumental+intentBias;
             if(score>best){best=score;chosen=a;}
         }
         float epsilon=Math.max(.09f,.52f/(1+experiences/120f));
@@ -315,6 +325,10 @@ public final class SensorimotorMind {
         if(navigation!=null){
             navigation.chosen(chosen,observedBody);
             navigation.noteSelection(largestInstrumentalBias);
+        }
+        if(intention!=null&&navigation!=null){
+            if(navigationAdviceEnabled)intention.chosen(navigation,chosen,senses[0]);
+            intention.noteDecision(largestIntentionBias);
         }
         actualEnergySinceChoice=0f;
         action=chosen;decisions++;
@@ -421,6 +435,8 @@ public final class SensorimotorMind {
             causal.consequence(spatial,trialAction,lastReward,learning&&!holdout,holdout);
         if(navigation!=null&&body!=null)
             navigation.consequence(trialAction,body,learning&&!holdout,holdout);
+        if(intention!=null&&navigation!=null&&body!=null&&navigationAdviceEnabled)
+            intention.consequence(navigation,trialAction,navigation.latestMovement);
         if(learning&&!holdout){
             float td=bounded(lastReward+GAMMA*bestFuture(after)-estimate(before,trialAction));
             int base=trialAction*P;
