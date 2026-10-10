@@ -222,3 +222,8 @@
 - Nessun cambiamento al controller fisico, ai salvataggi nominati (12), agli altri cervelli o ai metodi di apprendimento della 0.10.7.
 - Nuovo TemporalPersistenceRegression e CI gate obbligatori: test 38067546249, 38067671221, 38067752564 SUCCESS.
 - APK firmata v1057 da 150816 byte, SHA256 50b45e37a1cc7d801408c0800000a0f957ea2c89159afbff4fb0ba22df3eddc3; manifest e APK Vercel HTTP200. Prova Samsung S21 pendente. Paper docs/EXPERIMENT_0108.md.
+
+## OTA 0.10.9-ota.58 — 2026-10-10T16:55:42.583124+00:00
+- Pacchetto Android firmato pubblicato su Vercel (codice 1058).
+- SHA-256: `9bad1270ef3dae172858d55a1f90e3d92cc44c89e1559c9b18ce508f94b933e5`.
+- APK: `/apk/overmind-zero-1058-9bad1270ef3d.apk`.
