@@ -26,12 +26,18 @@ public final class SensorimotorMind {
     private final Random random=new Random(60909);
     private transient EpisodicMemory episodic;
     private transient MotorAutonomyGuard motorGuard;
-    private transient SensoryValenceGuide sensoryGuide;
-    private transient UnknownWorld.Mind observedWorld;
-    public synchronized void attachSensoryValues(SensoryValenceGuide guide,
-                                                   UnknownWorld.Mind observed){
-        sensoryGuide=guide;observedWorld=observed;
+    // Performed-action traces give temporally distant actual resource
+    // contacts a learning signal. They NEVER add a geometric direction bias.
+    private final ExperienceCredit contactCredit=new ExperienceCredit();
+    public synchronized void contactOutcome(float actualEnergyDelta){
+        if(learning)contactCredit.consequence(actualEnergyDelta,value);
     }
+    public synchronized void restoreContactCounts(int positive,int negative,int credits){
+        contactCredit.restoreCounters(positive,negative,credits);
+    }
+    public synchronized int positiveContactCredits(){return contactCredit.positiveContacts;}
+    public synchronized int negativeContactCredits(){return contactCredit.negativeContacts;}
+    public synchronized int historicalActionsCredited(){return contactCredit.updatedActions;}
     public synchronized void attachMemory(EpisodicMemory memory){episodic=memory;}
     public synchronized void attachMotorGuard(MotorAutonomyGuard guard){motorGuard=guard;}
     private final float[] model=new float[FORWARD_WEIGHTS];
@@ -55,10 +61,11 @@ public final class SensorimotorMind {
         if(observation.length!=S)throw new IllegalArgumentException("sensory width");
         System.arraycopy(observation,0,trialState,0,S);
         trialAction=-1;elapsed=0;
+        contactCredit.newLife();
     }
     public synchronized void resetEpisode(float[] first){
         // Mortality resets bodily position, never destroys the learned model.
-        if(first==null){trialAction=-1;elapsed=0;return;}
+        if(first==null){trialAction=-1;elapsed=0;contactCredit.newLife();return;}
         begin(first);
     }
     public synchronized float motorX(){return (float)Math.cos((action%8)*Math.PI/4);}
@@ -112,13 +119,11 @@ public final class SensorimotorMind {
             float jitter=(random.nextFloat()-.5f)*(.15f+.18f/(1+experiences/45f));
             // Remembered effects bias a choice but never force it.
             float memoryBias=episodic==null?0:episodic.bias(a,proposed);
-            // Generic value learned only from actual resource contacts:
-            // compare the chosen heading to the raw visible frequency sectors.
-            // No object coordinates or hidden label enters the policy.
-            float sensoryBias=(sensoryGuide==null||observedWorld==null)?0:
-                sensoryGuide.bias(senses,a,observedWorld.estimated,observedWorld.contacts);
+            // No hand-crafted energy-colour / angular steering. Only
+            // action-values learned from ZERO's own physical experiences
+            // and generic curiosity/memory/anti-stall terms influence choice.
             float diversity=motorGuard==null?0:motorGuard.stagnationBias(a);
-            float score=q+curiosity+jitter+memoryBias+sensoryBias+diversity;
+            float score=q+curiosity+jitter+memoryBias+diversity;
             if(score>best){best=score;chosen=a;}
         }
         float epsilon=Math.max(.09f,.52f/(1+experiences/120f));
@@ -131,8 +136,10 @@ public final class SensorimotorMind {
         if(action!=chosen)actionsReconsidered++;
         if(episodic!=null)episodic.chosen(chosen,proposed);
         if(motorGuard!=null)motorGuard.action(chosen);
-        if(sensoryGuide!=null&&observedWorld!=null)
-            sensoryGuide.chosen(senses,chosen,observedWorld.estimated,observedWorld.contacts);
+        // This is a *self-selected* real action, not the direction of a
+        // resource. If later actual contact changes energy, it can be
+        // credited retrospectively.
+        contactCredit.performed(senses,chosen);
         action=chosen;decisions++;
         estimatedValue=estimate(senses,chosen);
         System.arraycopy(senses,0,trialState,0,S);
