@@ -1,0 +1,81 @@
+name: ZERO 0.11.4 Verified Intentions and Gate-Physics Diagnostics QA
+on:
+  push:
+    branches: [feature/overmind-v114-continuity-gate-diagnostics]
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+      - uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: '8.11.1'
+      - name: Actual physics scenarios plus new goal and gate diagnostics regressions
+        run: |
+          mkdir -p /tmp/zero114
+          javac -d /tmp/zero114 app/src/main/java/com/overmind/zero/{MotorBrain,UnknownWorld,ContactLearning,DecisionBrain,Morphology,ScarcityLab,SensorimotorMind,SpatialPerception,CausalExperiments,BodyProprioception,InstrumentalNavigation,GoalContinuity,GateBehaviorMetrics,BehavioralLaboratory,TemporalWorkingMemory,TemporalSkillBank,TemporalPersistenceRegression,LearnedSequencePlanner,LearningDiagnostics,ResetDomains,OnlineBodyLearning,MotionExploration,EpisodicMemory,MotorAutonomyGuard,MotorSkillBank,ExperienceCredit,GripSkillBank,SaveProfileCodec,LifeStatistics}.java
+          for test in GoalContinuity GateBehaviorMetrics BehavioralLaboratory InstrumentalNavigation CausalExperiments SpatialPerception BodyProprioception TemporalPersistenceRegression TemporalWorkingMemory TemporalSkillBank SaveProfileCodec EpisodicMemory LifeStatistics SensorimotorMind ExperienceCredit LearnedSequencePlanner MotorBrain UnknownWorld ContactLearning DecisionBrain Morphology ScarcityLab OnlineBodyLearning MotionExploration ResetDomains MotorAutonomyGuard MotorSkillBank GripSkillBank; do
+            java -cp /tmp/zero114 com.overmind.zero.$test
+          done
+      - name: Gate honest goals, no privileged policy, A/B unchanged lives, full persistence
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          d=Path('app/src/main/java/com/overmind/zero')
+          intent=(d/'GoalContinuity.java').read_text()
+          stages=(d/'GateBehaviorMetrics.java').read_text()
+          brain=(d/'SensorimotorMind.java').read_text()
+          lab=(d/'BehavioralLaboratory.java').read_text()
+          game=(d/'GameActivity.java').read_text()
+          ui=(d/'BrainToolsActivity.java').read_text()
+          activity=(d/'BehavioralLabActivity.java').read_text()
+          reset=(d/'ResetDomains.java').read_text()
+          gradle=Path('app/build.gradle').read_text()
+          save=(d/'SaveSlotStore.java').read_text()
+          assert 'candidate(InstrumentalNavigation n)' in intent
+          assert 'Math.abs(value)*b*b' in intent
+          assert 'actualTravel<3f' in intent and 'delta>.009f' in intent
+          assert 'return clamp(learned*persistence,0,.48f)' in intent
+          assert 'reward' not in intent.lower().split('public static void main(')[0] or 'never directly rewarded' in intent.lower()
+          assert 'room.constrain(body,surface,DT,brain.adhesion())' in lab
+          assert 'r.gateDiagnostics.observe(body,room)' in lab
+          assert 'gateDiagnostics.closestDistance()' in lab
+          assert 'gateDiagnostics.commandFrames' in lab
+          assert 'brain.setNavigationAdviceEnabled(instrument)' in lab
+          assert 'brain.attachGoalContinuity(goal)' in lab
+          assert 'setNavigationAdviceEnabled(boolean enabled)' in brain
+          assert 'navigationAdviceEnabled=true' in brain
+          assert 'intention.bias(navigation,a,senses[0])' in brain
+          assert 'intention.consequence(navigation,trialAction,navigation.latestMovement)' in brain
+          assert 'intention.chosen(navigation,chosen,senses[0])' in brain
+          assert 'lastReward=energyOutcome+' in brain
+          assert 'public static final int S=26;' in brain
+          assert 'gateMetrics.observe(creature,chamber)' in game
+          assert '.putString(GoalContinuity.KEY,intentions.encode())' in game
+          assert '.putString(GateBehaviorMetrics.KEY,gateMetrics.encode())' in game
+          assert 'sensorMind.attachGoalContinuity(intentions)' in game
+          for key in ['InstrumentalNavigation.KEY','CausalExperiments.KEY','SpatialPerception.KEY','BodyProprioception.KEY','LifeStatistics.KEY']:
+            assert '.putString('+key+',' in game
+          for key in ['"episodic_memory_v095"','"temporal_working_memory_v106"','"temporal_skills_v107"']:
+            assert '.putString('+key+',' in game
+          assert 'case INTENTION:return new String[]{GoalContinuity.KEY};' in reset
+          assert 'case GATE_METRICS:return new String[]{GateBehaviorMetrics.KEY};' in reset
+          assert 'ResetDomains.INTENTION' in ui and 'ResetDomains.GATE_METRICS' in ui
+          assert 'GateBehaviorMetrics.KEY' in ui and 'GoalContinuity.KEY' in ui
+          assert 'p.intent=prefs.getString(GoalContinuity.KEY,"")' in activity
+          assert 'getSharedPreferences("zero_motorbrain_001",MODE_PRIVATE).edit()' not in activity
+          assert 'SaveProfileCodec.encode(capture())' in save and 'SLOTS=12' in save
+          assert '0.11.4-ota' in gradle and "applicationId 'com.overmind.zero.ota'" in gradle
+          assert 'lifeStats.tick(dt)' in game
+          print('ZERO 0.11.4 safe: real proximity-only intentions, measured gate diagnostics, no target or gait script, A/B and 12 saves preserved')
+          PY
+      - name: Android APK compile - diagnostics + brain + benchmark
+        run: gradle --no-daemon assembleDebug
