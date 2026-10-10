@@ -1,0 +1,73 @@
+name: ZERO 0.11.0 True Spatial Perception QA
+on:
+  push:
+    branches: [feature/overmind-v110-spatial-perception]
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 35
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+      - uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: '8.11.1'
+      - name: Run lived spatial perception and existing cognition regressions
+        run: |
+          mkdir -p /tmp/zero110
+          javac -d /tmp/zero110 app/src/main/java/com/overmind/zero/{MotorBrain,UnknownWorld,ContactLearning,DecisionBrain,Morphology,ScarcityLab,SensorimotorMind,SpatialPerception,BodyProprioception,TemporalWorkingMemory,TemporalSkillBank,TemporalPersistenceRegression,LearnedSequencePlanner,LearningDiagnostics,ResetDomains,OnlineBodyLearning,MotionExploration,EpisodicMemory,MotorAutonomyGuard,MotorSkillBank,ExperienceCredit,GripSkillBank,SaveProfileCodec,LifeStatistics}.java
+          for test in SpatialPerception BodyProprioception TemporalPersistenceRegression TemporalWorkingMemory TemporalSkillBank SaveProfileCodec EpisodicMemory LifeStatistics SensorimotorMind ExperienceCredit LearnedSequencePlanner MotorBrain UnknownWorld ContactLearning DecisionBrain Morphology ScarcityLab OnlineBodyLearning MotionExploration ResetDomains MotorAutonomyGuard MotorSkillBank GripSkillBank; do
+            java -cp /tmp/zero110 com.overmind.zero.$test
+          done
+      - name: Gate honest line of sight, map from movements, gated behavior and safe profile migration
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          p=Path('app/src/main/java/com/overmind/zero/SpatialPerception.java').read_text()
+          g=Path('app/src/main/java/com/overmind/zero/GameActivity.java').read_text()
+          m=Path('app/src/main/java/com/overmind/zero/SensorimotorMind.java').read_text()
+          r=Path('app/src/main/java/com/overmind/zero/ResetDomains.java').read_text()
+          slots=Path('app/src/main/java/com/overmind/zero/SaveSlotStore.java').read_text()
+          ui=Path('app/src/main/java/com/overmind/zero/BrainToolsActivity.java').read_text()
+          brain=Path('app/src/main/java/com/overmind/zero/BrainStatsActivity.java').read_text()
+          gradle=Path('app/build.gradle').read_text()
+          assert 'RAYS=16, STEPS=8, CELL=36, MAX_CELLS=1024' in p
+          assert 'SensorimotorMind.Senses.solid(room,x,y,objects)' in p
+          assert 'if(blocked&&s>hit)break;' in p
+          assert 'odometryX+=dx;odometryY+=dy;' in p
+          assert 'memory.size()>MAX_CELLS' in p
+          assert 'public byte[] localMap(int radius)' in p
+          assert 'if(validations<30' in p and 'error>=baseline*.96f' in p
+          assert 'return bound(value(current,action,mapAhead(action))*trust*.25f,-.19f,.19f);' in p
+          assert 'ScarcityLab.DOOR' not in p and 'UnknownWorld.RARE_ENERGY' not in p
+          assert 'public static final int S=26;' in m
+          assert 'spatial.choiceBias(a)' in m
+          assert 'spatial.consequence(trialAction,lastReward,learning&&!holdout,holdout)' in m
+          assert 'spatial.observeEnvironment(body,room,objects)' in m
+          assert 'spatialMap.restore(prefs.getString(SpatialPerception.KEY,""))' in g
+          assert '.putString(SpatialPerception.KEY,spatialMap.encode())' in g
+          assert 'sensorMind.resumeSpatialSense(creature,chamber,environment)' in g
+          assert 'sensorMind.updateSpatialSense(creature,chamber,environment)' in g
+          assert 'chamber,environment);' in g
+          assert 'sensorMind.updateBodySense(creature,surface)' in g
+          assert '.putString("episodic_memory_v095",episodic.encode())' in g
+          assert '.putString("temporal_working_memory_v106",workingMemory.encode())' in g
+          assert '.putString("temporal_skills_v107",temporalSkillBank.encode())' in g
+          assert '.putString(BodyProprioception.KEY,bodySchema.encode())' in g
+          assert '.putString(LifeStatistics.KEY,lifeStats.encode())' in g
+          assert 'case SPATIAL:return new String[]{SpatialPerception.KEY};' in r
+          assert 'ResetDomains.SPATIAL' in ui and 'SpatialMapView extends View' in ui
+          assert 'spatial.parameterCount()' in brain
+          assert 'SaveProfileCodec.encode(capture())' in slots and 'SLOTS=12' in slots
+          assert '0.11.0-ota' in gradle and "applicationId 'com.overmind.zero.ota'" in gradle
+          assert 'lifeStats.tick(dt)' in g and 'for(int i=0;i<speed;i++)' in g
+          print('ZERO 0.11.0 verified: actual occluded rays, visited-life bounded map, no predefined routes, independent old neural models, per-character saves')
+          PY
+      - name: Compile Android debug APK
+        run: gradle --no-daemon assembleDebug
