@@ -95,9 +95,11 @@ public final class CausalExperiments {
         long occupied=key(scene.perceivedCellX(),scene.perceivedCellY());
         for(int i=0;i<candidateCount;i++){
             if(candidateKeys[i]!=occupied)continue;
-            // A real crossing yields credit only once and only on a later
-            // physical observation. It is not a label supplied by the room.
-            if(scene.observedCell(x(occupied),y(occupied))<0){
+            // Crossing requires actual subsequent body travel, never a
+            // stationary body overlapping a cell due to grid rounding.
+            float displacement=(float)Math.hypot(scene.perceivedX()-anchorX,
+                                                scene.perceivedY()-anchorY);
+            if(displacement>=8f&&scene.observedCell(x(occupied),y(occupied))<0){
                 confirmedPassages++;
                 int slot=candidateSource[i];
                 meanOutcome[slot]=cap(meanOutcome[slot]+.25f,-2,2);
@@ -343,6 +345,61 @@ public final class CausalExperiments {
               "Corrupt persistence format accepted");
         check(CASES==48&&m.learnedParameters()==153,
               "Action-conditioned hypotheses unexpected dimensions");
+        // Same sensor grid location, different world: a movable disk
+        // disappears while ZERO stays put. This is not egomotion and is
+        // only a tentative opening until its body subsequently passes.
+        SpatialPerception changedSpace=new SpatialPerception();
+        CausalExperiments changed=new CausalExperiments();
+        MotorBrain.Body stationary=new MotorBrain.Body();
+        java.util.ArrayList<UnknownWorld.Entity> disks=new java.util.ArrayList<>();
+        UnknownWorld.Entity disk=new UnknownWorld.Entity(
+            stationary.cx+90,stationary.cy,0,2);
+        disks.add(disk);
+        changedSpace.observeEnvironment(stationary,null,disks);
+        changed.chosen(changedSpace,2,true);
+        disk.x+=350;
+        for(int i=0;i<7;i++)
+            changedSpace.observeEnvironment(stationary,null,disks);
+        changed.consequence(changedSpace,2,0,true,false);
+        check(changed.lastBodyMove==0&&changed.lastEnvironmentalChange>0,
+            "Changed obstacle was confused with self-motion");
+        check(changed.tentativeOpenings>0&&changed.confirmedPassages==0,
+            "An unvisited potential passage counted as a confirmed crossing");
+        changed.chosen(changedSpace,0,true);
+        stationary.cx+=90;
+        changedSpace.observeEnvironment(stationary,null,disks);
+        changed.consequence(changedSpace,0,0,true,false);
+        check(changed.confirmedPassages>=1,
+            "Actual physical crossing of a previously blocked location not detected");
+
+        // Controlled synthetic physical effects: an exploratory motor
+        // alternative genuinely travels, while another stays put. Same
+        // visual situation, distinct action outcomes. Holdout samples
+        // NEVER update the means being tested.
+        SpatialPerception alternatives=new SpatialPerception();
+        CausalExperiments learner=new CausalExperiments();
+        MotorBrain.Body moving=new MotorBrain.Body();
+        java.util.ArrayList<UnknownWorld.Entity> world=new java.util.ArrayList<>();
+        alternatives.observeEnvironment(moving,null,world);
+        for(int i=0;i<240;i++){
+            for(int action=0;action<2;action++){
+                learner.chosen(alternatives,action,true);
+                if(action==0)moving.cx+=32f;
+                alternatives.observeEnvironment(moving,null,world);
+                learner.consequence(alternatives,action,
+                    action==0?.65f:-.35f,i%6!=0,i%6==0);
+            }
+        }
+        check(learner.validations>=60&&learner.testedAlternatives()>=2&&
+              learner.confirmedHypotheses()>=2,
+              "Not enough randomized matching action alternatives");
+        check(learner.confidence()>0&&learner.choiceBias(alternatives,0)>0,
+              "A learned repeated experimentally useful action was never eligible");
+        String proven=learner.encode();
+        CausalExperiments resumed=new CausalExperiments();
+        check(resumed.restore(proven)&&resumed.encode().equals(proven)&&
+              resumed.choiceBias(alternatives,0)>0,
+              "Heldout-backed experiments and learned value lost on restart");
         System.out.println(String.format(Locale.US,
           "ZERO-0111 pass: ego/environment separation, cold-start neutrality, "+
           "actual randomized alternatives gate, life-limited hypotheses, persistence %d bytes",
