@@ -12,9 +12,9 @@ public final class ResetDomains {
     public static final String WORLD="world",CHOICE="choice",MOTOR="motor",
             MANIPULATION="manipulation",MEMBRANE="membrane",EXPLORATION="exploration",
             ROOM="room",EPISODES="episodes",TEMPORAL_SKILLS="temporal_skills",
-            PROPRIOCEPTION="proprioception",SPATIAL="spatial",CAUSAL="causal",ALL="all";
+            PROPRIOCEPTION="proprioception",SPATIAL="spatial",CAUSAL="causal",NAVIGATION="navigation",ALL="all";
     public static final String[] TYPES={WORLD,CHOICE,MOTOR,MANIPULATION,MEMBRANE,
-                                       EXPLORATION,ROOM,EPISODES,TEMPORAL_SKILLS,PROPRIOCEPTION,SPATIAL,CAUSAL,ALL};
+                                       EXPLORATION,ROOM,EPISODES,TEMPORAL_SKILLS,PROPRIOCEPTION,SPATIAL,CAUSAL,NAVIGATION,ALL};
     public static String[] keys(String domain){
         switch(domain){
             case WORLD:return new String[]{"sensorimotor_model_v09","sensorimotor_diagnostics_v091",
@@ -45,6 +45,7 @@ public final class ResetDomains {
             case PROPRIOCEPTION:return new String[]{BodyProprioception.KEY};
             case SPATIAL:return new String[]{SpatialPerception.KEY};
             case CAUSAL:return new String[]{CausalExperiments.KEY};
+            case NAVIGATION:return new String[]{InstrumentalNavigation.KEY};
             case ALL:return new String[0]; // handled by Editor.clear()
             default:throw new IllegalArgumentException("Unknown reset scope: "+domain);
         }
