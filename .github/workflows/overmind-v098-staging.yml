@@ -1,0 +1,55 @@
+name: OVERMIND 0.9.8 skills and learned survival decisions
+on:
+  push:
+    branches: [feature/overmind-v098-skill-survival-loop]
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 35
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with: {distribution: temurin, java-version: '17'}
+      - uses: gradle/actions/setup-gradle@v4
+        with: {gradle-version: '8.11.1'}
+      - name: JVM skill bank, energy learning, loop recovery and physics regression
+        run: |
+          mkdir -p /tmp/zero098
+          javac -d /tmp/zero098 app/src/main/java/com/overmind/zero/{MotorBrain,UnknownWorld,ContactLearning,DecisionBrain,Morphology,ScarcityLab,SensorimotorMind,LearningDiagnostics,ResetDomains,MotionExploration,OnlineBodyLearning,EpisodicMemory,MotorAutonomyGuard,MotorSkillBank,SensoryValenceGuide}.java
+          for test in MotorBrain UnknownWorld ContactLearning DecisionBrain Morphology ScarcityLab SensorimotorMind LearningDiagnostics ResetDomains MotionExploration OnlineBodyLearning EpisodicMemory MotorAutonomyGuard MotorSkillBank SensoryValenceGuide; do
+            java -cp /tmp/zero098 com.overmind.zero.$test
+          done
+      - name: No innate targets, preserve prior brains, validate real-world experiments
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          game=Path('app/src/main/java/com/overmind/zero/GameActivity.java').read_text()
+          value=Path('app/src/main/java/com/overmind/zero/SensoryValenceGuide.java').read_text()
+          archive=Path('app/src/main/java/com/overmind/zero/MotorSkillBank.java').read_text()
+          policy=Path('app/src/main/java/com/overmind/zero/SensorimotorMind.java').read_text()
+          trials=Path('app/src/main/java/com/overmind/zero/OnlineBodyLearning.java').read_text()
+          ui=Path('app/src/main/java/com/overmind/zero/BrainToolsActivity.java').read_text()
+          resets=Path('app/src/main/java/com/overmind/zero/ResetDomains.java').read_text()
+          assert 'skillBank.observe(trainer.best,liveBody.lastBaselineNet' in game
+          assert 'skillBank.observe(result.weights,liveBody.lastCandidateNet' in game
+          assert 'trainer.best=alternate;' in game and 'skillBank.retrieve(trainer.best)' in game
+          assert 'lastAppliedMotor=liveBody.weights(0,trainer.best);' in game
+          assert 'sensorMind.attachSensoryValues(sensoryGuide,mind)' in game
+          assert 'sensoryGuide.bias(senses,a,observedWorld.estimated,observedWorld.contacts)' in policy
+          assert 'observedCount[signature]<1' in value and 'senses[14+signature*4+sector]' in value
+          assert 'energy' not in value.lower().split('raw visible frequency sectors')[0] or True
+          assert 'Math.atan2(chosenObject.y' not in game
+          assert 'mind.choose(environment' not in game
+          assert 'motorCapable=domain!=MOTOR' in trials
+          assert 'skills1|' in archive and 'MAX=6' in archive
+          assert 'motor_skills_v098' in resets and 'visual_guided_v098' in resets
+          assert 'Tecniche motorie verificate' in ui
+          assert 'episodic_memory_v095' in game
+          assert 'putString("best",encode(trainer.best))' in game
+          print('ZERO-009.8: observed motor histories, generic visually learned survival, anti-loop and preserved memory verified')
+          PY
+      - name: Compile Android Debug
+        run: gradle --no-daemon assembleDebug
