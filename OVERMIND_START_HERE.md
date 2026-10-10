@@ -110,3 +110,13 @@ La v0.9.5 crea ricordi di sequenze **effettivamente vissute** (fino a 9 sensazio
 - La pagina **STATISTICHE 25-vs-25 della 0.10.5 non viene modificata**. In CERVELLO compare soltanto una scheda diagnostica della nuova memoria.
 - Staging: run **38064278116** e **38064377747** verdi. Publisher firmato **38064599838** verde.
 - **OTA pubblico verificato HTTP 200**: versionCode **1055**, versionName **0.10.6-ota.55**, SHA-256 `bdc0dc5fd1dc9dce992d5a9cf139efd560421091f8ada01cec1bcbe47b48ff30`, APK **143.732 byte**. Aggiornare in-place; non disinstallare.
+
+## In sviluppo — ZERO 0.10.7 / skill temporali autonome (10 ottobre 2026)
+- Nuovo `TemporalSkillBank`: fino a **24 skill**, ciascuna composta da **2–8 azioni realmente scelte** insieme al contesto ricorrente della 0.10.6.
+- Una singola conseguenza positiva crea soltanto candidati dormienti. Una sequenza può influenzare le decisioni solo dopo almeno **due ricorrenze compatibili** con conseguenze reali.
+- Il replay non forza ZERO: fornisce un bias limitato alla policy. Se ZERO sceglie altro o il contesto vissuto diverge da quello appreso, la skill viene interrotta.
+- Una skill completata viene rinforzata soltanto se compare di nuovo un effetto positivo reale entro la finestra prevista; assenza dell'effetto o danno riducono affidabilità.
+- Nessun ingresso/etichetta per porta, cancello, oggetto o procedura. La banca vede soltanto hidden temporale + azioni + conseguenze fisiche/energetiche.
+- Persistenza `temporal_skills_v107`; morte cancella solo esecuzione/trace corrente. Reset indipendente **ABILITA TEMPORALI**.
+- STATISTICHE 25-vs-25 e memoria temporale 0.10.6 restano inalterate.
+- Staging run **38065646624** verde: scoperta, consolidamento, replay, interruzione per divergenza, danno, persistenza, regressioni e Android Debug.
