@@ -239,3 +239,10 @@
 - Pacchetto Android firmato pubblicato su Vercel (codice 1060).
 - SHA-256: `076d315c484cd11d695a40219a26a4a30508de1478a3a31b5abee5a488fee84e`.
 - APK: `/apk/overmind-zero-1060-076d315c484c.apk`.
+
+## ZERO 0.11.0-ota.60 — percezione dello spazio circostante (10 ottobre 2026)
+- `SpatialPerception.java`: 16 raggi di prossimità con occlusione reale (176 U) e memoria locale massimo 1024 celle costruite da osservazioni e odometria, non dalla mappa nascosta. Merge simultaneo dei raggi con precedenza a hit fisicamente osservati.
+- Nuovo modello spaziale action-conditioned apprende dalle conseguenze di 16 azioni vere; consigli neutrali finché non migliora su almeno 30 heldout, poi max ±0.19. Nessun percorso/cancello predefinito.
+- `SensorimotorMind` conserva esattamente 26 input e reti vecchie; `GameActivity.save/load` salva `spatial_perception_v110` nel vecchio profilo, disponibile automaticamente ai 12 slot. Reset `SPATIAL` separato, geometria della mappa solo per vita.
+- ANALISI mostra mini-mappa vera delle celle viste, 16 distanze e confidenza; CERVELLO mostra pesi nuovi.
+- Staging `38071087243` SUCCESS, GitHub signed `38071321701` SUCCESS. APK 0.11.0-ota.60 code1060, 162004 B, SHA256 `076d315c484cd11d695a40219a26a4a30508de1478a3a31b5abee5a488fee84e`, Vercel manifest/APK HTTP200. Galaxy S21 test pendente. Paper `docs/EXPERIMENT_0110.md`.
