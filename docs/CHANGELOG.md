@@ -223,3 +223,8 @@ Per prove e prossimi step: `docs/EXPERIMENT_0096.md`. VersionCode e digest relea
 - `SensoryValenceGuide` proietta sugli heading il valore energetico osservato per frequenze visive, senza etichette innate; bisogno energetico aumenta il peso.
 - Nuove statistiche e reset selettivi, vecchie reti/episodi inalterati.
 - Test automatici e Android compilation passati; miglioramento reale ancora da provare. Esperimento: `docs/EXPERIMENT_0098.md`.
+
+## OTA 0.9.8-ota.42 — 2026-10-10T00:40:03.804411+00:00
+- Pacchetto Android firmato pubblicato su Vercel (codice 1042).
+- SHA-256: `81cb0480de8b47e3cf781c6ddc5e771377ebcfa9d811679a6c202d201bfbf124`.
+- APK: `/apk/overmind-zero-1042-81cb0480de8b.apk`.
