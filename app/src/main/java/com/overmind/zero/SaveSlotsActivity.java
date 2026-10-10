@@ -100,7 +100,7 @@ public final class SaveSlotsActivity extends Activity {
         name.setSingleLine(true);
         name.setText(value);
         name.setSelectAllOnFocus(true);
-        name.setTextColor(0xff16242b);
+        name.setTextColor(WHITE);
         name.setHint("Nome del personaggio");
         name.setInputType(InputType.TYPE_CLASS_TEXT|InputType.TYPE_TEXT_FLAG_CAP_SENTENCES);
         name.setFilters(new InputFilter[]{new InputFilter.LengthFilter(36)});
