@@ -466,7 +466,8 @@ jobs:
           assert 'bodySchema.consequence(bodyAfter,trialAction,lastReward,physicalEffect,' in brain
           assert 'bodySchema.restore(prefs.getString(BodyProprioception.KEY,""))' in g
           assert '.putString(BodyProprioception.KEY,bodySchema.encode())' in g
-          assert 'environmentEffectSinceAction,creature,surface);' in g
+          assert 'environmentEffectSinceAction,creature,surface,' in g
+          assert 'chamber,environment);' in g
           assert '.putString("temporal_working_memory_v106",workingMemory.encode())' in g
           assert '.putString("temporal_skills_v107",temporalSkillBank.encode())' in g
           assert '.putString("episodic_memory_v095",episodic.encode())' in g
