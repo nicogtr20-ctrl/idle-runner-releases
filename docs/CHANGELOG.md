@@ -246,3 +246,8 @@ Per prove e prossimi step: `docs/EXPERIMENT_0096.md`. VersionCode e digest relea
 - **Manifest GitHub**: `updater/public/latest.json`; APK in `updater/public/apk/overmind-zero-1042-81cb0480de8b.apk`. Release GitHub con tag `overmind-zero-v0.9.8-ota.42` via pipeline fallback su `main`.
 - Il corretto funzionamento sul Samsung Galaxy S21 **deve ancora essere provato**. L'archivio di skill non può recuperare automaticamente motorii della 0.9.4 già sovrascritti prima di questa versione; potrà salvare quelli efficaci osservati d'ora in poi.
 - **Installare sopra la versione precedente SENZA disinstallare né azzerare alcuna memoria.**
+
+## OTA 0.9.8-ota.43 — 2026-10-10T01:07:29.554019+00:00
+- Pacchetto Android firmato pubblicato su Vercel (codice 1043).
+- SHA-256: `a0c31e1e5fa6a4849bf79dbf3cfd75e8ea5e24ee6256c026380962ad93869082`.
+- APK: `/apk/overmind-zero-1043-a0c31e1e5fa6.apk`.
