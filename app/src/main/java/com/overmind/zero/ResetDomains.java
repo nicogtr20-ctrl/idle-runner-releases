@@ -16,7 +16,8 @@ public final class ResetDomains {
                                        EXPLORATION,ROOM,EPISODES,ALL};
     public static String[] keys(String domain){
         switch(domain){
-            case WORLD:return new String[]{"sensorimotor_model_v09","sensorimotor_diagnostics_v091"};
+            case WORLD:return new String[]{"sensorimotor_model_v09","sensorimotor_diagnostics_v091",
+                "real_energy_credits_v098","real_damage_credits_v098","real_action_credits_v098"};
             case CHOICE:return new String[]{"decision_brain_v05"};
             case MOTOR:return new String[]{"virgin","best","attempts","accepted","original",
                                   "lived_distance_total_v093","lived_distance_record_v093",
