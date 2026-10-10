@@ -2,6 +2,7 @@ package com.overmind.zero;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.Locale;
 import java.util.Map;
@@ -87,17 +88,28 @@ public final class SpatialPerception {
     /** Update only regions actually within line-of-sight, using sensed
      * distances; never look behind the first contact. */
     private void remember(float[] distances){
+        // Integrate this ONE simultaneous scan in two phases. A neighboring
+        // ray may traverse a cell that contains part of an obstacle, but that
+        // free sub-ray must not erase a confirmed hit from the SAME scan.
+        // A later scan that no longer sees the obstacle can clear it.
+        HashSet<Long> blockedThisScan=new HashSet<>();
         putCell(cell(odometryX),cell(odometryY),-1);
         for(int r=0;r<RAYS;r++){
             float theta=rad(r);
             float dx=(float)Math.cos(theta),dy=(float)Math.sin(theta);
             boolean blocked=distances[r]<.999f;
             int hit=blocked?Math.round(distances[r]*(STEPS+1)):STEPS+1;
-            for(int s=1;s<=STEPS;s++){
-                if(blocked&&s>hit)break;
-                float x=odometryX+dx*STEP*s,y=odometryY+dy*STEP*s;
-                putCell(cell(x),cell(y),blocked&&s==hit?2:-1);
+            for(int step=1;step<=STEPS;step++){
+                if(blocked&&step>hit)break;
+                float x=odometryX+dx*STEP*step,y=odometryY+dy*STEP*step;
+                int gx=cell(x),gy=cell(y);
+                if(blocked&&step==hit)blockedThisScan.add(key(gx,gy));
+                else putCell(gx,gy,-1);
             }
+        }
+        for(long k:blockedThisScan){
+            int x=(int)(k>>32),y=(int)k;
+            putCell(x,y,6); // any hit outranks same-scan overlapping free rays
         }
     }
     /** Movement is integrated from the organism's OWN observed displacement.
