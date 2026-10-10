@@ -29,9 +29,16 @@ public final class SensorimotorMind {
     // Performed-action traces give temporally distant actual resource
     // contacts a learning signal. They NEVER add a geometric direction bias.
     private final ExperienceCredit contactCredit=new ExperienceCredit();
-    public synchronized void contactOutcome(float actualEnergyDelta){
-        if(learning)contactCredit.consequence(actualEnergyDelta,value);
+    public synchronized void contactOutcome(float actualEnergyDelta,int visuallyObservedSignature){
+        if(learning)contactCredit.consequence(actualEnergyDelta,visuallyObservedSignature);
     }
+    public synchronized String outcomeModel(){return contactCredit.encode();}
+    public synchronized boolean restoreOutcomeModel(String stored){
+        return contactCredit.restore(stored);
+    }
+    public synchronized int physicalOutcomeEvents(){return contactCredit.physicalEvents;}
+    public synchronized int sourceMatchedEvents(){return contactCredit.sourceMatched;}
+    public synchronized int ambiguousOutcomeEvents(){return contactCredit.ambiguousContacts;}
     public synchronized void restoreContactCounts(int positive,int negative,int credits){
         contactCredit.restoreCounters(positive,negative,credits);
     }
@@ -123,7 +130,11 @@ public final class SensorimotorMind {
             // action-values learned from ZERO's own physical experiences
             // and generic curiosity/memory/anti-stall terms influence choice.
             float diversity=motorGuard==null?0:motorGuard.stagnationBias(a);
-            float score=q+curiosity+jitter+memoryBias+diversity;
+            // Physically observed outcomes maintain INDEPENDENT energetic
+            // and external-displacement values, combined only at choice time.
+            // No hidden object identity, hardcoded heading or navigation.
+            float earnedValue=contactCredit.value(senses,a);
+            float score=q+earnedValue+curiosity+jitter+memoryBias+diversity;
             if(score>best){best=score;chosen=a;}
         }
         float epsilon=Math.max(.09f,.52f/(1+experiences/120f));
@@ -189,17 +200,19 @@ public final class SensorimotorMind {
         predictionError=error;
         averagePredictionError=experiences==0?error:
                 averagePredictionError*.98f+error*.02f;
-        float deltaEnergy=(after[0]-before[0])*10f;
+        // Energy change and external-object displacement are NO LONGER
+        // mixed into this generic TD target. Their actual, source-linked
+        // consequences train independent value channels above.
         // Reward only actual measured velocity aligned with ZERO's own
         // selected action. No target coordinates and no synthetic impulse.
         float ax=(float)Math.cos((trialAction%8)*Math.PI/4);
         float ay=(float)Math.sin((trialAction%8)*Math.PI/4);
         float realForward=Math.max(-1f,Math.min(1f,after[1]*ax+after[2]*ay));
-        lastReward=Math.max(-2,Math.min(2,deltaEnergy))
-                    +.10f*Math.min(2,sensoryChange)
+        lastReward=.10f*Math.min(2,sensoryChange)
                     +.24f*realForward
-                    +.085f*Math.min(16,Math.max(0,physicalEffect))
                     +.3f*progress-.012f;
+        if(learning&&physicalEffect>.015f)
+            contactCredit.displaced(physicalEffect);
         if(learning&&!holdout){
             float td=bounded(lastReward+GAMMA*bestFuture(after)-estimate(before,trialAction));
             int base=trialAction*P;
