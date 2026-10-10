@@ -75,6 +75,8 @@ public final class Morphology {
         public final float[] gripCommand=new float[POINTS];
         /** Tactile contact carried from prior physics frame. */
         public final float[] touchSense=new float[POINTS];
+        /** Real mechanical disk contact, sensor only: never creates a grip. */
+        public final float[] touchPulse=new float[POINTS];
         /** Contact must be accompanied by sustained intentional actuation. */
         public final float[] gripHold=new float[POINTS];
         public int intentionalPoints=0;
@@ -109,7 +111,7 @@ public final class Morphology {
             for(int i=0;i<POINTS;i++){
                 x[i]=ax[i];y[i]=ay[i];
                 vx[i]=vy[i]=extension[i]=0;
-            gripCommand[i]=touchSense[i]=gripHold[i]=0;
+            gripCommand[i]=touchSense[i]=gripHold[i]=touchPulse[i]=0;
             }
         }
         public void step(MotorBrain.Body body,float[] brain,float targetX,float targetY,float dt){
@@ -119,6 +121,9 @@ public final class Morphology {
             Physical adhesive traction STILL requires contact and grip hold. */
         public void step(MotorBrain.Body body,float[] brain,float targetX,float targetY,float dt,float gripDrive){
             t+=dt;anchors(body);
+            // Each new physical slice starts with an empty disk pressure map.
+            // Actual collisions below fill this sensory channel afterward.
+            Arrays.fill(touchPulse,0f);
             float toX=targetX-body.cx,toY=targetY-body.cy;
             float targetD=(float)Math.hypot(toX,toY);
             float dx=targetD>.001f?toX/targetD:0;
@@ -216,6 +221,11 @@ public final class Morphology {
             float nx=distance>.0001f?dx/distance:1f;
             float ny=distance>.0001f?dy/distance:0;
             float penetration=clamp(r-distance,0,11);
+            // Contact on the REAL segment, not the object's class or goal.
+            // Unlike touchSense this does NOT command adhesion.
+            float pressure=clamp(penetration/8f,0,1);
+            s.touchPulse[i]=Math.max(s.touchPulse[i],pressure*(1-t));
+            s.touchPulse[j]=Math.max(s.touchPulse[j],pressure*t);
             float correction=penetration*.55f;
             disk.x+=nx*correction;disk.y+=ny*correction;
             s.x[i]-=nx*correction*(1-t);
