@@ -1,0 +1,57 @@
+name: ZERO 0.10.4 Life Statistics Simulation QA
+on:
+  push:
+    branches: [feature/overmind-v104-life-statistics]
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 35
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with: {distribution: temurin, java-version: '17'}
+      - uses: gradle/actions/setup-gradle@v4
+        with: {gradle-version: '8.11.1'}
+      - name: Run simulated-time statistics and legacy brain regression tests
+        run: |
+          mkdir -p /tmp/zero104
+          javac -d /tmp/zero104 app/src/main/java/com/overmind/zero/{LifeStatistics,MotorBrain,UnknownWorld,ContactLearning,DecisionBrain,Morphology,ScarcityLab,SensorimotorMind,LearnedSequencePlanner,LearningDiagnostics,ResetDomains,OnlineBodyLearning,MotionExploration,EpisodicMemory,MotorAutonomyGuard,MotorSkillBank,ExperienceCredit,GripSkillBank,SaveProfileCodec}.java
+          for test in LifeStatistics EpisodicMemory SensorimotorMind ExperienceCredit LearnedSequencePlanner MotorBrain UnknownWorld ContactLearning DecisionBrain Morphology ScarcityLab OnlineBodyLearning MotionExploration ResetDomains MotorAutonomyGuard MotorSkillBank GripSkillBank SaveProfileCodec; do
+            java -cp /tmp/zero104 com.overmind.zero.$test
+          done
+      - name: Verify observed real physics, mortality, persistence, 5-button UI and unaffected autonomy
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          game=Path('app/src/main/java/com/overmind/zero/GameActivity.java').read_text()
+          stats=Path('app/src/main/java/com/overmind/zero/LifeStatistics.java').read_text()
+          ui=Path('app/src/main/java/com/overmind/zero/StatisticsActivity.java').read_text()
+          manifest=Path('app/src/main/AndroidManifest.xml').read_text()
+          analysis=Path('app/src/main/java/com/overmind/zero/BrainToolsActivity.java').read_text()
+          slot=Path('app/src/main/java/com/overmind/zero/SaveSlotStore.java').read_text()
+          assert 'lifeStats.tick(dt);' in game and 'for(int i=0;i<speed;i++)' in game
+          assert 'if(simulationRunning)' in game and 'float slice=Math.min(dt,.035f)' in game
+          assert 'lifeStats.death();' in game and 'if(reserve<=0)' in game
+          assert 'lifeStats.contact(reserve-before)' in game
+          assert 'lifeStats.contact(reserve-prior)' in game
+          assert 'lifeStats.diskMoved();' in game and 'object.countedAsMoved=true' in game
+          assert 'lifeStats.physical(journey.maxNetLife,journey.lifeCells' in game
+          assert 'putString(LifeStatistics.KEY,lifeStats.encode())' in game
+          assert 'lifeStats.restore(prefs.getString(LifeStatistics.KEY,""))' in game
+          assert 'lifeStats.markPartial();' in game
+          assert 'public static final int HISTORY=50;' in stats
+          assert 'current=new Life();' in stats and 'if(!current.partial&&current.seconds>0)' in stats
+          assert 'stats.average(m,10)' in ui and 'ULTIME 50 VITE COMPLETE' in ui
+          assert 'STATISTICHE' in game and 'StatisticsActivity.class' in game
+          assert 'StatisticsActivity.class' in analysis and 'EVOLUZIONE ERRORE DI PREVISIONE' in analysis
+          assert 'com.overmind.zero.StatisticsActivity' in manifest and 'android:exported="false"' in manifest
+          assert 'zero_save_slots_v100' in slot
+          assert 'episodic.consequenceSeparated(' in game and 'lastAppliedMotor=liveBody.weights(0,trainer.best);' in game
+          assert 'episodic.weights(' not in game
+          print('STATISTICHE observes only real world simulation, retains learned brain and named slot architecture')
+          PY
+      - name: Compile Android APK
+        run: gradle --no-daemon assembleDebug
