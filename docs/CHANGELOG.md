@@ -227,3 +227,10 @@
 - Pacchetto Android firmato pubblicato su Vercel (codice 1058).
 - SHA-256: `9bad1270ef3dae172858d55a1f90e3d92cc44c89e1559c9b18ce508f94b933e5`.
 - APK: `/apk/overmind-zero-1058-9bad1270ef3d.apk`.
+
+## OVERMIND ZERO 0.10.9-ota.58 — propriocezione reale del corpo (10 ottobre 2026)
+- `BodyProprioception.java`: 32 input derivati da 96 punti fisici in 8 settori (pressione/contatto, adesione realmente tenuta, estensione, velocità radiale). Modello indipendente da 3088 pesi, predizioni verificate fuori addestramento e consigli limitati solo dopo gate; nessun concetto di porta/target codificato.
+- `Morphology.Surface.touchPulse` conserva per breve tempo segnali da effettive collisioni con i dischi, senza comandare presa o cambiare forze. Consumo ridotto: scansione completa solo alla decisione.
+- Nella vecchia policy S=26 i pesi e il formato restano. `GameActivity.save/load` e 12 slot includono `body_proprioception_v109`. In ANALISI nuova sezione corpo + reset autonomo; CERVELLO mostra parametri.
+- Staging GitHub Actions 38069416680 SUCCESS; signed 38069513724 SUCCESS. APK 0.10.9-ota.58 code1058, 155816 byte sha256 9bad1270ef3dae172858d55a1f90e3d92cc44c89e1559c9b18ce508f94b933e5. Vercel prima 0.10.8, corretto con deployment Git manuale dpl_CHFimoyKSiLUR7mAn587GexvZypS e verificato HTTP200. S21 prova utente ancora necessaria.
+- Canonical docs/EXPERIMENT_0109.md.
