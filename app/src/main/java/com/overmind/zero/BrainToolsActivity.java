@@ -74,6 +74,11 @@ public final class BrainToolsActivity extends Activity {
         LinearLayout body=vertical();pad(body,17,24);scroll.addView(body);
         TextView title=label("CERVELLO / ANALISI",25,WHITE,true);body.addView(title);
         paragraph(body,"Monitoraggio reale • apprendimento automatico sempre attivo");
+        LinearLayout openLab=panel(body);
+        openLab.addView(label("LABORATORIO COMPORTAMENTALE  ›",17,CYAN,true));
+        paragraph(openLab,"Tre ambienti fisici ripetibili: energia, pericolo, cancello. Confronta lo stesso cervello con e senza influenza della navigazione, senza modificare le partite.");
+        openLab.setOnClickListener(v->
+            startActivity(new Intent(this,BehavioralLabActivity.class)));
         LinearLayout linkStats=panel(body);
         linkStats.addView(label("STATISTICHE DELLE VITE  ›",17,CYAN,true));
         paragraph(linkStats,"Durata simulata della vita in corso, confronto con le ultime 10 vite completate e grafici delle ultime 50. A x5/x20 anche il tempo di gioco accelera.");
