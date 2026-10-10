@@ -35,6 +35,7 @@ public final class BrainStatsActivity extends Activity {
         final float[] choiceStart,choiceNow;
         final DecisionBrain decisions;
         final SensorimotorMind worldMind;
+        final TemporalWorkingMemory temporal;
         final int motorAttempts,motorAccepted,handAttempts,handAccepted;
         final int pushed,collisions,contacts;
         final int exploredCells,motorAccepted094,motorRejected094;
@@ -66,6 +67,8 @@ public final class BrainStatsActivity extends Activity {
             worldMind.restore(pref.getString("sensorimotor_model_v09",""));
             worldMind.diagnostics.restore(
                 pref.getString("sensorimotor_diagnostics_v091",""));
+            temporal=new TemporalWorkingMemory();
+            temporal.restore(pref.getString("temporal_working_memory_v106",""));
             decisions=new DecisionBrain(90517L);
             decisions.restore(pref.getString("decision_brain_v05",""));
             choiceStart=decisions.initialSnapshot();
@@ -192,7 +195,8 @@ public final class BrainStatsActivity extends Activity {
         }
         void drawSkills(Canvas c){
             float y=177;
-            int total=movementNow.length+handNow.length+choiceNow.length+shapeNow.length+worldMind.parameterCount();
+            int total=movementNow.length+handNow.length+choiceNow.length+shapeNow.length+
+                worldMind.parameterCount()+temporal.parameterCount();
             int original=movementStart.length+handStart.length+DecisionBrain.PARAMS;
             y=hero(c,"POTENZA NEURALE / PARAMETRI",String.valueOf(total),
                 original+" PARAMETRI STORICI  •  "+(total-original)+
@@ -202,6 +206,12 @@ public final class BrainStatsActivity extends Activity {
                 worldMind.experiences+" esperienze reali  •  "+
                 worldMind.decisions+" azioni autonome",
                 Math.min(1f,worldMind.experiences/1000f),cyan);
+            y=skill(c,y,"MEMORIA DI LAVORO TEMPORALE",
+                temporal.parameterCount()+" pesi",
+                temporal.transitions+" transizioni  •  "+TemporalWorkingMemory.HIDDEN+
+                " stati interni  •  confidenza "+
+                String.format(Locale.US,"%.0f%%",temporal.confidence()*100f),
+                Math.min(1f,temporal.validationTransitions/100f),purple);
             LearningDiagnostics diag=worldMind.diagnostics;
             y=skill(c,y,"VERIFICA NUOVO MODELLO",
                 diag.heldoutTransitions+" campioni",

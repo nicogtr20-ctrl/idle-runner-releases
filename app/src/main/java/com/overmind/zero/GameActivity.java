@@ -38,6 +38,7 @@ public final class GameActivity extends Activity {
         MotionExploration journey=new MotionExploration();
         LifeStatistics lifeStats=new LifeStatistics();
         EpisodicMemory episodic=new EpisodicMemory();
+        TemporalWorkingMemory workingMemory=new TemporalWorkingMemory();
         MotorAutonomyGuard motorGuard=new MotorAutonomyGuard();
         MotorSkillBank skillBank=new MotorSkillBank();
         GripSkillBank gripBank=new GripSkillBank();
@@ -168,6 +169,9 @@ public final class GameActivity extends Activity {
             sensorMind.restorePlanningStats(prefs.getString("learned_planner_stats_v102",""));
             sensorMind.diagnostics.restore(
                 prefs.getString("sensorimotor_diagnostics_v091",""));
+            workingMemory=new TemporalWorkingMemory();
+            workingMemory.restore(prefs.getString("temporal_working_memory_v106",""));
+            sensorMind.attachWorkingMemory(workingMemory);
             episodic=new EpisodicMemory();
             episodic.restore(prefs.getString("episodic_memory_v095",""));
             sensorMind.attachMemory(episodic);
@@ -347,9 +351,8 @@ public final class GameActivity extends Activity {
                 previousGripHeld=o.getInt("previousGripHeld");
                 previousOpposedFrames=o.getInt("previousOpposedFrames");
                 journey.loadLife(o.getString("journey"));
-                sensorMind.resetEpisode(SensorimotorMind.Senses.read(
-                    creature,surface,chamber,environment,reserve));
-                sensorMind.action=action;
+                sensorMind.resumeEpisode(SensorimotorMind.Senses.read(
+                    creature,surface,chamber,environment,reserve),action);
                 motorGuard.resetLife(creature.cx,creature.cy);
                 lastSkillStall=motorGuard.recoveryActivations;
                 liveBody.abortTrial();

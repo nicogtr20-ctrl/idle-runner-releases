@@ -201,7 +201,7 @@ public final class BrainToolsActivity extends Activity {
         LinearLayout reset=panel(body);
         reset.addView(label("AZZERA APPRENDIMENTO",17,AMBER,true));
         paragraph(reset,"Ogni voce ritorna allo stato vergine SOLO per quel sistema. Altre memorie e reti rimangono. L'azzeramento ricarica il corpo nella mappa per applicare i nuovi parametri in sicurezza.");
-        resetButton(reset,"MODELLO DEL MONDO", "11.664 pesi, errori, grafici, esperienze e decisioni.",ResetDomains.WORLD,false);
+        resetButton(reset,"MODELLO DEL MONDO", "Predizione sensoriale, memoria temporale, errori, esperienze e decisioni.",ResetDomains.WORLD,false);
         resetButton(reset,"SCELTA DEGLI STIMOLI","Pesi, nuovi neuroni, decisioni e tentativi di crescita.",ResetDomains.CHOICE,false);
         resetButton(reset,"CONTROLLO DEL CORPO","62 pesi motori e i relativi tentativi e miglioramenti.",ResetDomains.MOTOR,false);
         resetButton(reset,"MANIPOLAZIONE","18 pesi, urti e contatori di dischi spostati.",ResetDomains.MANIPULATION,false);

@@ -26,6 +26,7 @@ public final class SensorimotorMind {
     private final Random random=new Random(60909);
     private transient EpisodicMemory episodic;
     private transient MotorAutonomyGuard motorGuard;
+    private transient TemporalWorkingMemory temporal;
     // Performed-action traces give temporally distant actual resource
     // contacts a learning signal. They NEVER add a geometric direction bias.
     private final ExperienceCredit contactCredit=new ExperienceCredit();
@@ -34,7 +35,10 @@ public final class SensorimotorMind {
     public synchronized boolean restorePlanningStats(String saved){return planner.restore(saved);}
     public synchronized LearnedSequencePlanner planner(){return planner;}
     public synchronized void contactOutcome(float actualEnergyDelta,int visuallyObservedSignature){
-        if(learning)contactCredit.consequence(actualEnergyDelta,visuallyObservedSignature);
+        if(learning){
+            contactCredit.consequence(actualEnergyDelta,visuallyObservedSignature);
+            if(temporal!=null)temporal.energyOutcome(actualEnergyDelta);
+        }
     }
     public synchronized String outcomeModel(){return contactCredit.encode();}
     public synchronized boolean restoreOutcomeModel(String stored){
@@ -51,6 +55,8 @@ public final class SensorimotorMind {
     public synchronized int historicalActionsCredited(){return contactCredit.updatedActions;}
     public synchronized void attachMemory(EpisodicMemory memory){episodic=memory;}
     public synchronized void attachMotorGuard(MotorAutonomyGuard guard){motorGuard=guard;}
+    public synchronized void attachWorkingMemory(TemporalWorkingMemory memory){temporal=memory;}
+    public synchronized TemporalWorkingMemory workingMemory(){return temporal;}
     private final float[] model=new float[FORWARD_WEIGHTS];
     private final float[] value=new float[VALUE_WEIGHTS];
     private final float[] trialState=new float[S];
@@ -73,11 +79,27 @@ public final class SensorimotorMind {
         System.arraycopy(observation,0,trialState,0,S);
         trialAction=-1;elapsed=0;
         contactCredit.newLife();
+        if(temporal!=null)temporal.resetLife();
     }
     public synchronized void resetEpisode(float[] first){
-        // Mortality resets bodily position, never destroys the learned model.
-        if(first==null){trialAction=-1;elapsed=0;contactCredit.newLife();return;}
+        // Mortality resets bodily position and short-term context, never
+        // destroys learned temporal/world parameters.
+        if(first==null){
+            trialAction=-1;elapsed=0;contactCredit.newLife();
+            if(temporal!=null)temporal.resetLife();
+            return;
+        }
         begin(first);
+    }
+    /** Resume the same persisted physical life without pretending a death
+     * occurred. The saved recurrent context survives app restarts/slot loads. */
+    public synchronized void resumeEpisode(float[] observation,int currentAction){
+        if(observation==null||observation.length!=S||
+           currentAction<0||currentAction>=ACTIONS)
+            throw new IllegalArgumentException("resume");
+        System.arraycopy(observation,0,trialState,0,S);
+        action=currentAction;trialAction=currentAction;elapsed=0;
+        if(temporal!=null)temporal.resumeAction(currentAction);
     }
     public synchronized float motorX(){return (float)Math.cos((action%8)*Math.PI/4);}
     public synchronized float motorY(){return (float)Math.sin((action%8)*Math.PI/4);}
@@ -131,6 +153,7 @@ public final class SensorimotorMind {
         },diagnostics);
         // Exploration is intrinsic to learning; no action is mapped to a
         // named "correct" behavior. Stable choices come from learned value.
+        float largestTemporalBias=0;
         for(int a=0;a<ACTIONS;a++){
             float q=estimate(senses,a);
             float predictedChange=0;
@@ -149,7 +172,11 @@ public final class SensorimotorMind {
             // and external-displacement values, combined only at choice time.
             // No hidden object identity, hardcoded heading or navigation.
             float earnedValue=contactCredit.value(senses,a);
-            float score=q+earnedValue+planned[a]+curiosity+jitter+memoryBias+diversity;
+            // Recurrent recent-history advice is exactly zero until its
+            // temporal prediction wins on held-out real transitions.
+            float temporalBias=temporal==null?0:temporal.choiceBias(a);
+            largestTemporalBias=Math.max(largestTemporalBias,Math.abs(temporalBias));
+            float score=q+earnedValue+planned[a]+curiosity+jitter+memoryBias+diversity+temporalBias;
             if(score>best){best=score;chosen=a;}
         }
         float epsilon=Math.max(.09f,.52f/(1+experiences/120f));
@@ -166,6 +193,10 @@ public final class SensorimotorMind {
         // resource. If later actual contact changes energy, it can be
         // credited retrospectively.
         contactCredit.performed(senses,chosen);
+        if(temporal!=null){
+            temporal.chosen(chosen);
+            temporal.noteDecision(largestTemporalBias);
+        }
         action=chosen;decisions++;
         estimatedValue=estimate(senses,chosen);
         System.arraycopy(senses,0,trialState,0,S);
@@ -226,6 +257,11 @@ public final class SensorimotorMind {
         lastReward=.10f*Math.min(2,sensoryChange)
                     +.24f*realForward
                     +.3f*progress-.012f;
+        if(temporal!=null){
+            temporal.observe(before,trialAction,after,lastReward,error,
+                learning&&!holdout,holdout);
+            if(learning&&physicalEffect>.015f)temporal.physicalOutcome(physicalEffect);
+        }
         if(learning&&physicalEffect>.015f)
             contactCredit.displaced(physicalEffect);
         if(learning&&!holdout){
