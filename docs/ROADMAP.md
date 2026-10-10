@@ -203,3 +203,13 @@ Protocollo nel documento `docs/EXPERIMENT_0097.md`.
 - [ ] Verificare sul Galaxy S21 se aumentano distanza NETTA, sfere raccolte, tempo di sopravvivenza e diminuiscono ritorni allo stesso punto.
 - [ ] A/B con stato e seed uguali; eventuale sensore del moto relativo e apprendimento efficacia tatto/membrana.
 Vedi `docs/EXPERIMENT_0098.md`.
+
+## 0.9.9 — risolvere regressione 0.9.5 senza script
+- [x] Verificare differenza 0.9.4→0.9.5 nel codice GitHub: nessuna modifica alla fisica porta, nuovi controller replay episodici potenzialmente distruttivi.
+- [x] Vietare override episodico dei pesi motore, mano, membrana, ma conservarne l'influenza sulle scelte.
+- [x] Salvare 5 configurazioni di presa/membrana realmente funzionanti sul cancello, recuperarle solo dopo fallimenti reali della presa volontaria.
+- [x] Aggiungere diagnostica di PRESA SCELTA, COMANDO, TENUTA e TECNICHE, rispettando soglia .28 e 0.075s, senza aprire automaticamente la porta.
+- [x] Salvataggio/reset selettivo e test JVM fisici più compilazione Android staging.
+- [ ] Verificare su Galaxy S21 con stesso cervello persistente e screenshot quale stadio fallisce e se ricompare colore arancione.
+- [ ] Se ancora PRESA SCELTA=0 pur con molti TOCCHI, indagare la politica Q e l'influenza delle memorie come suggerimenti, non mutare la fisica per aggirare il problema.
+- [ ] Verificare che movimento netto migliori e porta raggiunga >115U/attraversamento fisico. Documento `docs/EXPERIMENT_0099.md`.
