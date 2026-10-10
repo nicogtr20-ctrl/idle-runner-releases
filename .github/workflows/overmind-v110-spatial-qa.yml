@@ -39,9 +39,10 @@ jobs:
           gradle=Path('app/build.gradle').read_text()
           assert 'RAYS=16, STEPS=8, CELL=36, MAX_CELLS=1024' in p
           assert 'SensorimotorMind.Senses.solid(room,x,y,objects)' in p
-          assert 'if(blocked&&s>hit)break;' in p
+          assert 'if(blocked&&step>hit)break;' in p
           assert 'odometryX+=dx;odometryY+=dy;' in p
           assert 'memory.size()>MAX_CELLS' in p
+          assert 'blockedThisScan.add(' in p and 'for(long k:blockedThisScan)' in p
           assert 'public byte[] localMap(int radius)' in p
           assert 'if(validations<30' in p and 'error>=baseline*.96f' in p
           assert 'return bound(value(current,action,mapAhead(action))*trust*.25f,-.19f,.19f);' in p
