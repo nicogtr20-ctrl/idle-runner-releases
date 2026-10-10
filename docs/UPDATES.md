@@ -26,5 +26,10 @@ La memoria di lavoro temporale ha superato staging **38064278116** e **380643777
 - Manifest e APK verificati HTTP 200.
 È corretto usare **AGGIORNA** nell'app. Installare sopra la versione esistente; non disinstallare.
 
-## Stato 0.10.7 — candidato stabile
-Skill temporali autonome validate su staging **38065646624** e promosse su `feature/overmind-inapp-updater`. Il publisher firmato deve ancora concludere con successo prima di considerare AGGIORNA verificato sulla 0.10.7.
+## Stato 0.10.7-ota.56 — verificato
+Skill temporali autonome validate su staging **38065646624** e publisher firmato **38066032322**.
+- versionCode **1056**, versionName **0.10.7-ota.56**.
+- SHA-256 `a433978f842054c71c2744075f3c5a0105a4bad2f825b7ba7d6a7d1629e2030e`.
+- APK: `https://overmind-zero-updates.vercel.app/apk/overmind-zero-1056-a433978f8420.apk`, **149.392 byte**.
+- Manifest e APK verificati HTTP 200.
+È corretto usare **AGGIORNA** nell'app. Installare sopra la versione esistente; non disinstallare.
