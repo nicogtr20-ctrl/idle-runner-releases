@@ -239,3 +239,11 @@ Il feedback reale della 0.9.4: ZERO era rapido; dalla 0.9.5 quasi fermo. Analisi
 - **Manifest GitHub**: `updater/public/latest.json`; APK in `updater/public/apk/overmind-zero-1042-81cb0480de8b.apk`. Release GitHub con tag `overmind-zero-v0.9.8-ota.42` via pipeline fallback su `main`.
 - Il corretto funzionamento sul Samsung Galaxy S21 **deve ancora essere provato**. L'archivio di skill non può recuperare automaticamente motorii della 0.9.4 già sovrascritti prima di questa versione; potrà salvare quelli efficaci osservati d'ora in poi.
 - **Installare sopra la versione precedente SENZA disinstallare né azzerare alcuna memoria.**
+
+
+### CORREZIONE FIRMATA DISPONIBILE — `0.9.8-ota.43`
+- VersionName **`0.9.8-ota.43`**, versionCode **1043**, package invariato `com.overmind.zero.ota`, **101.868 byte**, SHA256 **`a0c31e1e5fa6a4849bf79dbf3cfd75e8ea5e24ee6256c026380962ad93869082`**.
+- Pipeline JVM/Android staging **38011700356 = SUCCESS**; pipeline APK firmata **38011816381 = SUCCESS**. Il manifesto firmato `main/updater/public/latest.json` include APK `overmind-zero-1043-a0c31e1e5fa6.apk` con stesso digest.
+- Il GitHub Release pubblico per gli utenti autorizzati è tag `overmind-zero-v0.9.8-ota.43` con asset `OVERMIND-ZERO.apk`; verifica effettiva del rilascio e digest da fare prima di condividere il link.
+- L'utente può aggiornare direttamente sopra la vecchia versione **senza azzerare**. Se la 0.9.7 è attualmente in fase di miglioramento spontaneo del movimento, può lasciarla continuare e installare questa patch in un momento successivo; l'APK corretta non forza nuovi obiettivi.
+- Nessun risultato di sopravvivenza o maggiore libertà decisionale del dispositivo ancora osservato sulla patch: i test automatici validano componenti e firma, non intelligenza.
