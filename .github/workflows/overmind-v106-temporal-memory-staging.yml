@@ -1,0 +1,52 @@
+name: ZERO 0.10.6 Temporal Working Memory QA
+on:
+  push:
+    branches: [feature/overmind-v106-temporal-working-memory]
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 35
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with: {distribution: temurin, java-version: '17'}
+      - uses: gradle/actions/setup-gradle@v4
+        with: {gradle-version: '8.11.1'}
+      - name: Run temporal cognition and regression tests
+        run: |
+          mkdir -p /tmp/zero106
+          javac -d /tmp/zero106 app/src/main/java/com/overmind/zero/{TemporalWorkingMemory,LifeStatistics,MotorBrain,UnknownWorld,ContactLearning,DecisionBrain,Morphology,ScarcityLab,SensorimotorMind,LearnedSequencePlanner,LearningDiagnostics,ResetDomains,OnlineBodyLearning,MotionExploration,EpisodicMemory,MotorAutonomyGuard,MotorSkillBank,ExperienceCredit,GripSkillBank,SaveProfileCodec}.java
+          for test in TemporalWorkingMemory SensorimotorMind LearnedSequencePlanner ExperienceCredit EpisodicMemory LearningDiagnostics LifeStatistics MotorBrain UnknownWorld ContactLearning DecisionBrain Morphology ScarcityLab OnlineBodyLearning MotionExploration ResetDomains MotorAutonomyGuard MotorSkillBank GripSkillBank SaveProfileCodec; do
+            java -cp /tmp/zero106 com.overmind.zero.$test
+          done
+      - name: Verify temporal memory is generic, gated and persistent
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          t=Path('app/src/main/java/com/overmind/zero/TemporalWorkingMemory.java').read_text()
+          s=Path('app/src/main/java/com/overmind/zero/SensorimotorMind.java').read_text()
+          g=Path('app/src/main/java/com/overmind/zero/GameActivity.java').read_text()
+          r=Path('app/src/main/java/com/overmind/zero/ResetDomains.java').read_text()
+          b=Path('app/src/main/java/com/overmind/zero/BrainStatsActivity.java').read_text()
+          gradle=Path('app/build.gradle').read_text()
+          assert 'HIDDEN=16' in t and 'PARAMETERS=PREDICTION_WEIGHTS+VALUE_WEIGHTS' in t
+          assert 'validationTransitions<25' in t and 'temporalError>=baselineError*.96f' in t
+          assert 'float[] next=advance(decisionHidden,before,action,after)' in t
+          assert 'delayedOutcome(clamp(actualDelta/20f' in t
+          assert 'ScarcityLab' not in t and 'UnknownWorld.Entity' not in t
+          assert 'temporal.choiceBias(a)' in s
+          assert 'temporal.observe(before,trialAction,after,lastReward,error' in s
+          assert 'temporal.energyOutcome(actualEnergyDelta)' in s
+          assert 'temporal_working_memory_v106' in g
+          assert 'sensorMind.resumeEpisode' in g
+          assert 'sensorMind.resetEpisode' in g
+          assert 'temporal_working_memory_v106' in r
+          assert 'MEMORIA DI LAVORO TEMPORALE' in b
+          assert '0.10.6-ota' in gradle
+          print('ZERO 0.10.6 QA: generic recurrent context, held-out gate, delayed credit, death reset, save continuity')
+          PY
+      - name: Compile Android Debug APK
+        run: gradle --no-daemon assembleDebug
