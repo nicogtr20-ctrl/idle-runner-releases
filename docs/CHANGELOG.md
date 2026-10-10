@@ -204,3 +204,8 @@ Per prove e prossimi step: `docs/EXPERIMENT_0096.md`. VersionCode e digest relea
 - Nuovo `MotorAutonomyGuard`: osserva immobilità netta su due finestre di 7 secondi ed eventuale spostamento utile di oggetti, sopprime temporaneamente i soli suggerimenti positivi in caso di vero stallo, senza direzione predefinita.
 - ANALISI e salvataggi: recuperi `motor_recoveries_v097`, decisioni libere `motor_free_choices_v097`, riprove `physical_replays_v097`, reset selettivi senza alterare il formato em1/em2.
 - Test JVM/Android staging eseguiti; il miglioramento reale sul Galaxy S21 resta da convalidare. Dettaglio `docs/EXPERIMENT_0097.md`.
+
+## OTA 0.9.7-ota.41 — 2026-10-10T00:04:28.555714+00:00
+- Pacchetto Android firmato pubblicato su Vercel (codice 1041).
+- SHA-256: `4de8ef5a9f22dd6e4caf503fc7543410a5e829cab5beb1e9b0a0bcdea3a9bf1d`.
+- APK: `/apk/overmind-zero-1041-4de8ef5a9f22.apk`.
