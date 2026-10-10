@@ -419,6 +419,6 @@ public final class TemporalSkillBank {
         if(copy.restore(saved.replaceFirst("ts1","bad")))
             throw new AssertionError("Corrupt temporal skill bank accepted");
 
-        System.out.println("ZERO 0.10.7 temporal skills: autonomous discovery, repeated consolidation, context-gated replay, divergence abort, persistence passed");
+        System.out.println("ZERO 0.10.7 temporal skills: autonomous discovery, repeated consolidation, context-validated replay, divergence abort, persistence passed");
     }
 }
