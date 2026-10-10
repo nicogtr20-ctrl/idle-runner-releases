@@ -216,3 +216,9 @@
 - Pacchetto Android firmato pubblicato su Vercel (codice 1057).
 - SHA-256: `50b45e37a1cc7d801408c0800000a0f957ea2c89159afbff4fb0ba22df3eddc3`.
 - APK: `/apk/overmind-zero-1057-50b45e37a1cc.apk`.
+
+## ZERO 0.10.8-ota.57 — bug persistenza apprendimento temporale (10 ottobre 2026)
+- GameActivity.save() ora salva temporal_working_memory_v106 tramite workingMemory.encode() e temporal_skills_v107 tramite temporalSkillBank.encode(), per evitare perdite delle nuove memorie al riavvio.
+- Nessun cambiamento al controller fisico, ai salvataggi nominati (12), agli altri cervelli o ai metodi di apprendimento della 0.10.7.
+- Nuovo TemporalPersistenceRegression e CI gate obbligatori: test 38067546249, 38067671221, 38067752564 SUCCESS.
+- APK firmata v1057 da 150816 byte, SHA256 50b45e37a1cc7d801408c0800000a0f957ea2c89159afbff4fb0ba22df3eddc3; manifest e APK Vercel HTTP200. Prova Samsung S21 pendente. Paper docs/EXPERIMENT_0108.md.
