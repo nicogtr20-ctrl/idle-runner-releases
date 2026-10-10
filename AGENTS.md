@@ -1,5 +1,9 @@
 # Istruzioni permanenti agli assistenti che lavorano su questo repository
 
+## AUTONOMIA ZERO — REGOLA PERMANENTE DALLA CORREZIONE 0.9.8
+Consultare `docs/EXPERIMENT_0098.md` sezione **CORREZIONE 0098-A**, che SOPPIANTA le precedenti descrizioni del bonus visivo-direzionale 0.9.8-ota.42. L'utente non vuole che ZERO sia attratto automaticamente da una sfera nota quando ha fame: deve elaborare da sé la decisione. Eliminato `SensoryValenceGuide.java` e chiamata `sensoryGuide.bias`; implementato `ExperienceCredit.java` (ultime 12 azioni realmente eseguite, ricompense solo da energia guadagnata/persa al contatto fisico, Q wm1 esistente; no calcoli coseno heading-stimolo). La memoria delle 6 tecniche motorie e il recupero delle azioni ripetute in stagnazione restano. Attenzione: un rinforzo energetico è una motivazione generica progettata, non «libero arbitrio», né prova di capacità di trovare cibo. Pubblicare APK solo dopo JVM/Android+firma+GitHub Release e verificare SHA/versionCode. Aggiornare `main` documenti a ogni modifica.
+
+
 **PRIMA DI QUALSIASI MODIFICA** apri `OVERMIND_START_HERE.md`, `docs/WHITEPAPER.md`, `docs/ARCHITECTURE.md`, `docs/CHANGELOG.md`, `docs/ROADMAP.md`, `docs/HANDOFF.md`, `docs/UPDATES.md`.
 
 ## Ambito
