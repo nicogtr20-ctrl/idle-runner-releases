@@ -213,3 +213,14 @@ Vedi `docs/EXPERIMENT_0098.md`.
 - [ ] Verificare su Galaxy S21 con stesso cervello persistente e screenshot quale stadio fallisce e se ricompare colore arancione.
 - [ ] Se ancora PRESA SCELTA=0 pur con molti TOCCHI, indagare la politica Q e l'influenza delle memorie come suggerimenti, non mutare la fisica per aggirare il problema.
 - [ ] Verificare che movimento netto migliori e porta raggiunga >115U/attraversamento fisico. Documento `docs/EXPERIMENT_0099.md`.
+
+## OVERMIND ZERO 0.10.0 — complete game save/load system
+- [x] Separate working autosave from 12 permanent named snapshots for independently trained ZERO characters.
+- [x] UI Save, Load, Overwrite, Rename, Delete per slot, New ZERO with double confirmation; named save buttons game/analysis.
+- [x] Automatic one-step recovery backup before any load/new ZERO; saved slot file cannot be wiped by reset ALL.
+- [x] Persist all controllers (62/18/82), 11,664 world weights, Q values, episodic memory, skills, stats/energy and exact physical body/room/gate/objects; life visited cells preserved.
+- [x] Restore active game from named slot before physics/autosave using explicit reload request; checksum and bounds reject corrupted saves.
+- [x] JVM codec large-model integrity test and physical-life restoration, Android Gradle QA, signed OTA gate.
+- [ ] Validate all workflows on Galaxy S21 in-place with 0.9.9 data and 2 named slots: save, new game, load back, rename, overwrite, delete, recovery, reset ALL.
+- [ ] Later: import/export save file for transfer to a different device and deterministic RNG/trial snapshots for scientific A/B testing.
+See `docs/EXPERIMENT_0100.md`.
