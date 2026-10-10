@@ -592,7 +592,8 @@ jobs:
           assert 'navigation.energyOutcome(actualEnergyDelta,' in mind
           assert 'navigation.bias(a,senses[0])' in mind
           assert 'navigation.chosen(chosen,observedBody)' in mind
-          assert 'navigation.consequence(trialAction,body,learning&&!holdout,holdout)' in mind
+          assert 'navigation.consequence(trialAction,body,' in mind
+          assert 'learning&&!holdout&&!earlyPain,holdout&&!earlyPain' in mind
           assert 'actualEnergySinceChoice+=actualEnergyDelta;' in mind
           assert 'lastReward=energyOutcome+' in mind and '.24f*realForward' not in mind
           assert 'navigation.restore(prefs.getString(InstrumentalNavigation.KEY,""))' in game
@@ -629,7 +630,7 @@ jobs:
           game=(root/'GameActivity.java').read_text()
           slots=(root/'SaveSlotStore.java').read_text()
           gradle=Path('app/build.gradle').read_text()
-          assert 'public static final int ENERGY=0,HARM=1,GATE=2,CASES=3,SEEDS=3;' in lab
+          assert 'ENERGY=0,HARM=1,GATE=2,CLUSTER=3,CHOICE=4,CASES=5,SEEDS=3;' in lab
           assert 'public static final int[] VARIANTS={7,19,31};' in lab
           assert 'setNavigationAdviceEnabled(instrument)' in lab
           assert 'room.constrain(body,surface,DT,brain.adhesion())' in lab
@@ -652,7 +653,7 @@ jobs:
           for key in ['"episodic_memory_v095"','"temporal_working_memory_v106"','"temporal_skills_v107"']:
             assert '.putString('+key+',' in game
           assert '0.11.5-ota' in gradle and "applicationId 'com.overmind.zero.ota'" in gradle
-          print('0.11.3 signed: 18 real physics A/B tests, zero live-profile writes, default policy unchanged, 12 saves unchanged')
+          print('Behavioral signed: 30 real physics paired trials, zero live-profile writes, default policy unchanged, 12 saves unchanged')
           PY
       - name: 0.11.4 gate learned intention continuity and physical door diagnostics
         run: |
