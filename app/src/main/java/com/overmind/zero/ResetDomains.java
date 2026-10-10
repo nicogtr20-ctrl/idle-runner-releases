@@ -30,7 +30,8 @@ public final class ResetDomains {
                  "online_accepted_hand_v094","online_rejected_hand_v094"};
             case MEMBRANE:return new String[]{"morph_brain_v07","morph_attempts_v07",
                  "morph_accepted_v07","morph_gate_attempts_v08","morph_gate_success_v08",
-                 "online_accepted_membrane_v094","online_rejected_membrane_v094"};
+                 "online_accepted_membrane_v094","online_rejected_membrane_v094",
+                  "grip_skills_v099"};
             case EXPLORATION:return new String[]{"world_knowledge_v03",
                                                   "visual_guided_v098","visual_avoided_v098"};
             case ROOM:return new String[]{"room_success_v08","finite_energy_eaten_v08",
