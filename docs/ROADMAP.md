@@ -253,3 +253,13 @@ Source/report `docs/EXPERIMENT_0112.md`.
 - [ ] Utente Galaxy S21: installazione in place e completamento benchmark, raccolta screenshot/report dalle tre sezioni + scelte nav.
 - [ ] Dopo esito dei test, correggere i limiti effettivamente osservati e solo **poi** aggiungere continuità di intenzioni apprese, non script a bersagli.
 Limite dichiarato: non comprende le mutazioni fisiche runtime OnlineBodyLearning o il mondo dinamico complesso della partita, e tre coppie non dimostrano causalità statistica. Dettagli `docs/EXPERIMENT_0113.md`.
+
+## 0.11.4 — earned intentions + gate blockage diagnosis
+- [x] Use provided v0.11.3 real A/B report: energy nav improves 1/3, danger 2/3, gate 0/3; identify that prior "min distance" for gate meant distance to hidden energy, NOT actual approach to gate.
+- [x] `GoalContinuity`: transient motivation only after real observed positive sensory progress to signal with energy valence already learned + measured body displacement; bounded decision advice and automatic abandonment on regressions. No gate/color script, no motor reward.
+- [x] `GateBehaviorMetrics`: physical gate distance (not hidden energy), approach threshold 45 U excluding spawn, membrane/core touch, grip command, adhesion, actual hold, bilateral grip, physical door translation/opening/crossing. Observer-only, fed to ANALISI and A/B reports without changing policy.
+- [x] Persist separate `goal_continuity_v114` and `gate_behavior_v114` statistics in original 12 slots and resets; no old brain erased.
+- [x] Staging `38089466225` SUCCESS all old/new JVM tests, 18 A/B and Android debug; signed GitHub `38089553377` SUCCESS version1064 APK190132B SHA256 `255727583121d49c07463a29aea07d4f99db06912cdc2f6aeff40cdd103cdab8`.
+- [ ] **BLOCKER** Vercel production deployment quota 402 >100/day. The Vercel updater still offers 0.11.3, v0.11.4 APK route 404. Re-deploy latest main when quota restored; verify BOTH endpoints HTTP200 before informing user.
+- [ ] Galaxy S21 live test: install GitHub signed APK over existing, backup named slot, inspect live gate diagnostic (is approach/contact possible?), run 18 A/B and share screenshot/report. Correlate tentative intentions with actual energy collected, harm avoided, and room crossing. No claims of solved gate yet.
+See `docs/EXPERIMENT_0114.md`.
