@@ -1,4 +1,5 @@
 name: OVERMIND stable OTA publisher
+# 0.9.9 retry after parallel paper commits changed main during first publish attempt.
 on:
   push:
     branches: [feature/overmind-inapp-updater]
