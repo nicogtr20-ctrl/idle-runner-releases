@@ -244,3 +244,15 @@ See `docs/EXPERIMENT_0100.md`.
 - [ ] Galaxy S21: test tasto AGGIORNA, salvataggi in-place, raccogliere nuovi eventi, verificare conteggi >0 dopo conseguenze idonee e tipo dei ricordi.
 - [ ] Confronto A/B controllato su stessi individui/situazioni: richiamo di memoria vs puro caso, protezione locomozione/presa, danno simultaneo porta/rosso. Non attribuire capacità causali non dimostrate.
 Vedi `docs/EXPERIMENT_0103.md`.
+
+
+## 0.10.4 — Statistic tracking of lived, simulated-time lives
+- [x] Separate **STATISTICHE** dashboard, preserve existing **EVOLUZIONE**.
+- [x] Actual simulation time `x1/x5/x20`, pause does not run clock; separate from legacy scarcity `elapsedLife`.
+- [x] Close a life only at genuine death; separate real positive/negative energy contact from passive hunger, track disks, net, new cells, gate and recalled effects.
+- [x] Rolling last50, previous10 average, completed-life differences green/red, per-minute rates and charts.
+- [x] Store each individual's statistics in the same safe profile and 12 game slots; partial first upgraded life excluded from history.
+- [x] JVM stage regression x1/5/20 + history/persistence and Android compile `38057090717` SUCCESS; signed publisher `38057209555` SUCCESS vCode1052 sha `972209b7554e25f62836b7c475c2178da90acae01b5976516ef6ad29360cb7a3`; Vercel HTTP200 latest/APK verified.
+- [ ] Samsung S21: real button AGGIORNA test, in-game STATISTICHE visual QA, compare elapsed physics time at x1/x5/x20, verify simulated death increments one record and pause none.
+- [ ] Controlled experiments: compare survival/efficiency/energy and skill on matched environments and saved individuals, separate population variance and random seeds before attributing improvement to learning.
+Full instructions `docs/EXPERIMENT_0104.md`.

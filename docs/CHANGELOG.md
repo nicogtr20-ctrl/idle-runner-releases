@@ -340,3 +340,10 @@ Per prove e prossimi step: `docs/EXPERIMENT_0096.md`. VersionCode e digest relea
 - Pacchetto Android firmato pubblicato su Vercel (codice 1052).
 - SHA-256: `972209b7554e25f62836b7c475c2178da90acae01b5976516ef6ad29360cb7a3`.
 - APK: `/apk/overmind-zero-1052-972209b7554e.apk`.
+
+
+## ZERO 0.10.4-ota.52 — STATISTICHE: track simulated lives (10 ottobre 2026)
+- User requested separate STATISTICHE (not already existing EVOLUZIONE), running survival clock based on simulated physics slices x1/x5/x20, averages previous10, recent50 charts, and red/green per-life changes.
+- Added `LifeStatistics.java` metrics positive/harmful actual contact, net/cells/disks, room/door, recall results, mortality-only per-life closure, automatic pause exclusion, save/restore and first upgraded partial-life migration.
+- Added `StatisticsActivity.java`, five-button HUD and link in ANALISI. Original independent neurocontrollers and episodic memory remain unchanged. Save stat history per named active person via `life_statistics_v104` (12 slots).
+- QA JVM + Android staging 38057090717 SUCCESS and signed stable workflow 38057209555 SUCCESS. APK 0.10.4-ota.52 code1052, 136304 bytes SHA `972209b7554e25f62836b7c475c2178da90acae01b5976516ef6ad29360cb7a3`; Vercel latest and APK HTTP 200; test S21 pending. Paper: docs/EXPERIMENT_0104.md.
