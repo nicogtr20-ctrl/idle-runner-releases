@@ -35,6 +35,10 @@ public final class ScarcityLab {
     public float maxDoorTravel=0;
     public int solidLinkCorrections=0;
     private boolean wasGrasping=false;
+    /** Preserve the latch state across named save/reload, preventing a
+     * duplicated grasp event at the first physics frame after restore. */
+    boolean graspingLatch(){return wasGrasping;}
+    void restoreGraspingLatch(boolean held){wasGrasping=held;}
     private final float[] temp=new float[4];
 
     public ScarcityLab(float x,float y){
