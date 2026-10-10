@@ -382,6 +382,19 @@ public final class BrainToolsActivity extends Activity {
         line(gatePanel,"Aperture / attraversamenti",gate.opened+" / "+gate.passages,CYAN);
         paragraph(gatePanel,"Ultimo stadio osservato: "+gate.obstacleStage()+". Le misure derivano dall'ultima copia salvata e non aggiornano la schermata durante il movimento.");
 
+        AdaptiveSafety safety=new AdaptiveSafety();
+        safety.restore(prefs.getString(AdaptiveSafety.KEY,""));
+        LinearLayout injuryPanel=panel(body);
+        injuryPanel.addView(label("RISPOSTA APPRESA AL DANNO",16,CYAN,true));
+        paragraph(injuryPanel,"Dopo perdita energetica reale, ZERO rivaluta prima la scelta e attribuisce temporaneamente maggiore peso ai movimenti verificati che riducono l'esposizione ai segnali che hanno effettivamente provocato danno. Non esistono istruzioni del tipo rosso=scappa.");
+        line(injuryPanel,"Contatti negativi vissuti",String.valueOf(safety.livedDamage),AMBER);
+        line(injuryPanel,"Danni ripetuti durante recupero",String.valueOf(safety.repeatDamage),AMBER);
+        line(injuryPanel,"Allontanamenti fisici verificati",String.valueOf(safety.verifiedWithdrawals),CYAN);
+        line(injuryPanel,"Azioni senza progresso dopo danno",String.valueOf(safety.noProgress),WHITE);
+        line(injuryPanel,"Rivalutazioni ancora irrisolte",String.valueOf(safety.unresolved),AMBER);
+        line(injuryPanel,"Decisioni influenzate da rischio appreso",String.valueOf(safety.advisedDecisions),WHITE);
+        paragraph(injuryPanel,"La misura di allontanamento usa un cambiamento ottico reale, non una distanza perfetta ne' una prova di comprensione. Un valore zero all'inizio e' normale.");
+
         LinearLayout reset=panel(body);
         reset.addView(label("AZZERA APPRENDIMENTO",17,AMBER,true));
         paragraph(reset,"Ogni voce ritorna allo stato vergine SOLO per quel sistema. Altre memorie e reti rimangono. L'azzeramento ricarica il corpo nella mappa per applicare i nuovi parametri in sicurezza.");
@@ -400,6 +413,7 @@ public final class BrainToolsActivity extends Activity {
         resetButton(reset,"NAVIGAZIONE E UTILITA","Azzera solo le associazioni tra energia visiva e moti realmente imparati, non gli altri cervelli.",ResetDomains.NAVIGATION,false);
         resetButton(reset,"CONTINUITA' DELLE INTENZIONI","Azzera solo i tentativi e le statistiche del mantenimento delle intenzioni.",ResetDomains.INTENTION,false);
         resetButton(reset,"DIAGNOSTICA CANCELLO","Azzera soltanto le misure di contatto e presa, non il comportamento fisico o la memoria.",ResetDomains.GATE_METRICS,false);
+        resetButton(reset,"RISPOSTA AL DANNO","Azzera solo i contatori della reazione ai contatti dannosi, senza eliminare i valori energetici appresi.",ResetDomains.SAFETY,false);
         resetButton(reset,"AZZERA TUTTO","CANCELLA tutti i cervelli, statistiche, memoria ed esperienze.",ResetDomains.ALL,true);
         LinearLayout saves=panel(body);
         saves.addView(label("LE TUE PARTITE",17,CYAN,true));
