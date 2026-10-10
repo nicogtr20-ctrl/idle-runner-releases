@@ -122,6 +122,16 @@ public final class MotionExploration {
         m.observe(150,0,80,77);
         if(m.netDistance!=150||m.recordNet<150||m.efficiency()<=10)
             throw new AssertionError("Real movement/energy metrics failed");
-        System.out.println("ZERO-009.4 telemetry: loop suppression, net travel, finite energy, history preserved");
+        String life=m.saveLife();
+        MotionExploration preserved=new MotionExploration();
+        preserved.restore(m.totalCells,m.recordNet,m.totalEnergySpent);
+        if(!preserved.loadLife(life)||preserved.lifeCells!=m.lifeCells||
+           preserved.netDistance!=m.netDistance)
+            throw new AssertionError("Save/load of life's exploration failed");
+        int count=preserved.totalCells;
+        preserved.observe(150,0,75,75);
+        if(preserved.totalCells!=count)
+            throw new AssertionError("Restored cell incorrectly counted twice");
+        System.out.println("ZERO-009.4 telemetry and ZERO-0100 physical-life checkpoint pass");
     }
 }
