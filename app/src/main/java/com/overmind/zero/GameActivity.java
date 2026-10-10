@@ -38,7 +38,6 @@ public final class GameActivity extends Activity {
         EpisodicMemory episodic=new EpisodicMemory();
         MotorAutonomyGuard motorGuard=new MotorAutonomyGuard();
         MotorSkillBank skillBank=new MotorSkillBank();
-        SensoryValenceGuide sensoryGuide=new SensoryValenceGuide();
         int lastSkillStall=0;
         float environmentEffectSinceAction=0,eventEnergyDeltaSinceAction=0;
         boolean recalledManipulationInAction=false;
@@ -142,13 +141,14 @@ public final class GameActivity extends Activity {
             biggestDisplacement=prefs.getFloat("max_displacement_v041",0);
             mind=new UnknownWorld.Mind();
             mind.deserialize(prefs.getString("world_knowledge_v03",""));
-            sensoryGuide=new SensoryValenceGuide();
-            sensoryGuide.restoreCounts(prefs.getInt("visual_guided_v098",0),
-                prefs.getInt("visual_avoided_v098",0));
             decisionBrain=new DecisionBrain(90517L);
             decisionBrain.restore(prefs.getString("decision_brain_v05",""));
             sensorMind=new SensorimotorMind();
             sensorMind.restore(prefs.getString("sensorimotor_model_v09",""));
+            sensorMind.restoreContactCounts(
+                prefs.getInt("real_energy_credits_v098",0),
+                prefs.getInt("real_damage_credits_v098",0),
+                prefs.getInt("real_action_credits_v098",0));
             sensorMind.diagnostics.restore(
                 prefs.getString("sensorimotor_diagnostics_v091",""));
             episodic=new EpisodicMemory();
@@ -158,7 +158,6 @@ public final class GameActivity extends Activity {
             motorGuard.restoreCounts(prefs.getInt("motor_recoveries_v097",0),
                 prefs.getInt("motor_free_choices_v097",0));
             sensorMind.attachMotorGuard(motorGuard);
-            sensorMind.attachSensoryValues(sensoryGuide,mind);
             skillBank=new MotorSkillBank();
             skillBank.restore(prefs.getString("motor_skills_v098",""));
             lastSkillStall=motorGuard.recoveryActivations;
@@ -239,8 +238,9 @@ public final class GameActivity extends Activity {
             prefs.edit().putString("virgin",encode(virgin))
               .putString("best",encode(trainer.best))
               .putString("motor_skills_v098",skillBank.encode())
-              .putInt("visual_guided_v098",sensoryGuide.guidedChoices)
-              .putInt("visual_avoided_v098",sensoryGuide.avoidanceChoices)
+              .putInt("real_energy_credits_v098",sensorMind.positiveContactCredits())
+              .putInt("real_damage_credits_v098",sensorMind.negativeContactCredits())
+              .putInt("real_action_credits_v098",sensorMind.historicalActionsCredited())
               .putInt("attempts",trainer.attempts)
               .putInt("accepted",trainer.accepted)
               .putFloat("original",trainer.initialFitness)
@@ -452,6 +452,9 @@ public final class GameActivity extends Activity {
                     // Only actual physical contact, never passive hunger,
                     // determines positive/negative autobiographical valence.
                     eventEnergyDeltaSinceAction+=reserve-before;
+                    // Actual feedback trains the self-selected motor-action
+                    // history; no color, target angle or food flag passed.
+                    sensorMind.contactOutcome(reserve-before);
                     mind.observe(object.signature,delta,0);
                     decisionBrain.learn(object,before,reserve,0);
                     if(delta>0)energyEaten++;
@@ -573,6 +576,7 @@ public final class GameActivity extends Activity {
                         float prior=reserve;
                         reserve=Math.min(100,reserve+UnknownWorld.RARE_ENERGY);
                         eventEnergyDeltaSinceAction+=reserve-prior;
+                        sensorMind.contactOutcome(reserve-prior);
                         int gained=(int)(reserve-prior);
                         energyEaten++;chambersCleared++;
                         decisionBrain.learn(chamber.food,prior,reserve,0);
