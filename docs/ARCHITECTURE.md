@@ -1,5 +1,9 @@
 # Architettura tecnica di OVERMIND ZERO
 
+## ZERO 0.9.8 PATCH — eliminazione incentivo angolare alle risorse
+`SensoryValenceGuide.java` rimosso, `SensorimotorMind.attachSensoryValues` e `sensoryGuide.bias` rimossi. `SensorimotorMind.choose` usa ora esclusivamente i Q appresi per i 26 sensi/16 azioni, curiosità sensoriale, memoria episodica e penalità temporanea durante stalli, epsilon esplorativo. `ExperienceCredit.java` registra un ring max12 (sensi+azione realmente scelta) in `choose`; `GameActivity.resolveObjects` invia `sensorMind.contactOutcome(reserve-before)` soltanto dopo contatto fisico effettivo, e `chamber.foodTouchedByCore` invia l'analogo delta raro. `ExperienceCredit.consequence` fa l'aggiornamento dei pesi Q `value` nello storico sensoriale realmente visto con fattore di età 0.83; `resetEpisode` azzera solo lo storico transitorio. I nuovi contatori persistent `real_energy_credits_v098`, `real_damage_credits_v098`, `real_action_credits_v098` vengono azzerati solo da RESET WORLD. Non sono apportate modifiche al formato `wm1` delle 11.664 reti, né al `motor_skills_v098` (6 motori), alle 62/18/82 weights, a `em1/em2` o alla firma/package OTA. I precedenti contatori visuali restano residui storici e non vengono più prodotti. Diagnostica e paper `docs/EXPERIMENT_0098.md` correzione 0098-A.
+
+
 ## Applicazione
 - Android Java nativo, Gradle 8.11.1, AGP 8.7.3, Android minSdk 24.
 - Repository `nicogtr20-ctrl/idle-runner-releases` (privato), OVERMIND su branch `experiment/...`.
