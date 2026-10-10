@@ -1,0 +1,60 @@
+name: ZERO 0.10.1 Outcome Attribution and Save-Compatibility QA
+on:
+  push:
+    branches: [feature/overmind-v101-outcome-attribution]
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  audit:
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with: {distribution: temurin, java-version: '17'}
+      - uses: gradle/actions/setup-gradle@v4
+        with: {gradle-version: '8.11.1'}
+      - name: Continuous JVM tests including simultaneous gate movement and red contact
+        run: |
+          mkdir -p /tmp/zero101
+          javac -d /tmp/zero101 app/src/main/java/com/overmind/zero/{SaveProfileCodec,MotorBrain,UnknownWorld,ContactLearning,DecisionBrain,Morphology,ScarcityLab,SensorimotorMind,LearningDiagnostics,ResetDomains,MotionExploration,OnlineBodyLearning,EpisodicMemory,MotorAutonomyGuard,MotorSkillBank,GripSkillBank,ExperienceCredit}.java
+          for test in SaveProfileCodec MotorBrain UnknownWorld ContactLearning DecisionBrain Morphology ScarcityLab SensorimotorMind LearningDiagnostics ResetDomains MotionExploration OnlineBodyLearning EpisodicMemory MotorAutonomyGuard MotorSkillBank GripSkillBank ExperienceCredit; do
+            java -cp /tmp/zero101 com.overmind.zero.$test
+          done
+      - name: Causality provenance anti-contamination and migrated save slot checks
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          game=Path('app/src/main/java/com/overmind/zero/GameActivity.java').read_text()
+          mind=Path('app/src/main/java/com/overmind/zero/SensorimotorMind.java').read_text()
+          credit=Path('app/src/main/java/com/overmind/zero/ExperienceCredit.java').read_text()
+          episodic=Path('app/src/main/java/com/overmind/zero/EpisodicMemory.java').read_text()
+          reset=Path('app/src/main/java/com/overmind/zero/ResetDomains.java').read_text()
+          save=Path('app/src/main/java/com/overmind/zero/SaveSlotStore.java').read_text()
+          scene=Path('app/src/main/java/com/overmind/zero/GameSceneSnapshot.java').read_text()
+          assert 'contactCredit.value(senses,a)' in mind
+          assert 'contactCredit.displaced(physicalEffect)' in mind
+          assert 'contactCredit.consequence(actualEnergyDelta,visuallyObservedSignature)' in mind
+          assert 'energetic[base+k]' in credit and 'mechanical[base+k]' in credit
+          assert 'seen>.06f' in credit and 'sourceMatched++' in credit
+          assert 'StringBuilder b=new StringBuilder("ec2|")' in credit
+          assert 'outcome_credit_v101' in game and 'outcome_credit_v101' in reset
+          assert 'sensorMind.contactOutcome(reserve-before,object.signature);' in game
+          assert 'sensorMind.contactOutcome(reserve-prior,chamber.food.signature);' in game
+          assert 'episodic.consequenceSeparated(' in game and 'energySinceAction' in game
+          assert 'raw.startsWith("em1;")' in episodic
+          assert 'raw.startsWith("em2;")' in episodic
+          assert 'raw.startsWith("em3;")' in episodic
+          assert 'old.kind==kind&&old.source==source' in episodic
+          assert 'if(!relevant(e,senses))continue;' in episodic
+          assert 'Math.atan2(chosenObject.y' not in game
+          assert 'episodic.weights(' not in game
+          assert 'physical_scene_v100' in scene or 'GameSceneSnapshot' in scene
+          assert 'zero_save_slots_v100' in save
+          assert 'SaveSlotStore.PENDING_RELOAD' in game
+          assert 'physical_scene_v100' in game
+          print("Physical vs energy outcomes cannot cancel before learning; visible-source attribution and named save slot preservation verified")
+          PY
+      - name: Android build with 12-slot saved games intact
+        run: gradle --no-daemon assembleDebug
