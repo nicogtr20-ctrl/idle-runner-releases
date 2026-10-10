@@ -1,5 +1,16 @@
 # Roadmap e criteri di accettazione
 
+## Rettifica approvata v0.9.8 — autonomia decisionale
+- [x] Rimuovere il bonus programmato che spinge heading verso/contro una sorgente visuale nota (`SensoryValenceGuide`).
+- [x] Aggiungere `ExperienceCredit`: vere azioni+contesti visivi possono imparare dai contatti energetici con ritardo fino a 12 decisioni, senza direzioni corrette predefinite.
+- [x] Preservare MotorSkillBank max6, anti-loop, mutazioni/rollback e salvataggi storici.
+- [x] Aggiornare CERVELLO/ANALISI con eventi veri energia/danno accreditati, anziché contare un bonus visivo di scelta.
+- [x] Regressione JVM, compilazione Android, avvio firma e OTA.
+- [ ] Verificare su S21 che ZERO mantenga locomozione e si orienti efficacemente con apprendimento NON guidato. È ancora possibile che muoia vicino a una sfera.
+- [ ] Migliorare il modello di conseguenze delle azioni a medio termine attraverso esperienze fisiche, non bonus geometrici.
+Documento chiave: `docs/EXPERIMENT_0098.md` sezione 0098-A. Le righe precedenti della ROADMAP relative al bias angolare descrivono soltanto la prima `0.9.8-ota.42`.
+
+
 ## Priorità immediata — updater e documentazione
 - [x] Whitepaper, architettura, storico e handoff su GitHub.
 - [x] Vercel: endpoint HTTPS stabile `/latest.json` (risponde HTTP 200, manifest disabilitato finché manca signing).
