@@ -139,7 +139,13 @@ public final class EpisodicMemory {
                 stored|=storeEffect(effect,1,signature,motor,hand,membrane,
                                     performedRecall);
         }
-        recent.clear();return stored;
+        // Keep the bounded action history across ordinary decision ticks.
+        // GameActivity checks outcomes after every ~0.65 s action: clearing here
+        // left only one Step for storeEffect (which requires at least two), so
+        // real movement, energy gains and injuries never became memories.
+        // action() already bounds this rolling history to DEPTH=36; resetLife()
+        // still clears it on actual death, without deleting stored episodes.
+        return stored;
     }
     private static boolean seenSource(float[] senses,int signature){
         if(signature<0||signature>=UnknownWorld.SIGNATURES)return false;
@@ -492,6 +498,40 @@ public final class EpisodicMemory {
         if(!persisted.restore(simultaneous.encode())||
            persisted.physicalEpisodes()!=1||persisted.energeticEpisodes()!=1)
             throw new AssertionError("em3 lost independent outcome provenance");
+        // Regression 0.10.3: emulate the REAL game loop (one action followed
+        // by a consequence check on every sensory transition), not an artificial
+        // batch of actions followed by a single check. 0.10.2 silently wiped
+        // the only queued action on each no-effect frame, making 0/24 permanent.
+        EpisodicMemory perDecision=new EpisodicMemory();
+        float[] noOutcome=new float[UnknownWorld.SIGNATURES];
+        for(int i=0;i<DEPTH+8;i++){
+            perDecision.action(safe,i%8);
+            if(perDecision.consequenceSeparated(0,noOutcome,motor,hand,skin,false))
+                throw new AssertionError("Neutral action fabricated a memory");
+        }
+        if(perDecision.recent.size()!=DEPTH||perDecision.stored()!=0)
+            throw new AssertionError("Quiet decisions erased bounded action history");
+        float[] gain=new float[UnknownWorld.SIGNATURES];gain[0]=24;
+        perDecision.action(safe,4);
+        if(!perDecision.consequenceSeparated(0,gain,motor,hand,skin,false)||
+           perDecision.positiveCount()!=1||perDecision.lastTraceLength<2)
+            throw new AssertionError("Real positive contact not remembered after quiet frames");
+        for(int i=0;i<10;i++){
+            perDecision.action(hazard,7);
+            if(perDecision.consequenceSeparated(0,noOutcome,motor,hand,skin,false))
+                throw new AssertionError("Zero-effect interval fabricated an episode");
+        }
+        float[] injury=new float[UnknownWorld.SIGNATURES];injury[1]=-7;
+        perDecision.action(hazard,7);
+        if(!perDecision.consequenceSeparated(0,injury,motor,hand,skin,false)||
+           perDecision.negativeCount()!=1||perDecision.stored()!=2)
+            throw new AssertionError("Real negative contact not remembered after quiet frames");
+        perDecision.resetLife();
+        if(perDecision.recent.size()!=0||perDecision.stored()!=2)
+            throw new AssertionError("Death failed to clear transient trace or erased episodes");
+        EpisodicMemory gameRestored=new EpisodicMemory();
+        if(!gameRestored.restore(perDecision.encode())||gameRestored.stored()!=2)
+            throw new AssertionError("Per-decision memories lost during em3 persistence");
                 System.out.println("ZERO-009.6 passed: varied episodes, beneficial/dangerous recall, consolidation and em1 migration");
     }
 }
