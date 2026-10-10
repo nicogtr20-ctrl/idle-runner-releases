@@ -1,0 +1,74 @@
+name: ZERO 0.11.3 True Behavioral Lab QA
+on:
+  push:
+    branches: [feature/overmind-v113-behavior-lab]
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 35
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+      - uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: '8.11.1'
+      - name: Run true physical A/B scenes and complete prior cognitive regressions
+        run: |
+          mkdir -p /tmp/zero113
+          javac -d /tmp/zero113 app/src/main/java/com/overmind/zero/{MotorBrain,UnknownWorld,ContactLearning,DecisionBrain,Morphology,ScarcityLab,SensorimotorMind,SpatialPerception,CausalExperiments,BodyProprioception,InstrumentalNavigation,BehavioralLaboratory,TemporalWorkingMemory,TemporalSkillBank,TemporalPersistenceRegression,LearnedSequencePlanner,LearningDiagnostics,ResetDomains,OnlineBodyLearning,MotionExploration,EpisodicMemory,MotorAutonomyGuard,MotorSkillBank,ExperienceCredit,GripSkillBank,SaveProfileCodec,LifeStatistics}.java
+          for test in BehavioralLaboratory InstrumentalNavigation CausalExperiments SpatialPerception BodyProprioception TemporalPersistenceRegression TemporalWorkingMemory TemporalSkillBank SaveProfileCodec EpisodicMemory LifeStatistics SensorimotorMind ExperienceCredit LearnedSequencePlanner MotorBrain UnknownWorld ContactLearning DecisionBrain Morphology ScarcityLab OnlineBodyLearning MotionExploration ResetDomains MotorAutonomyGuard MotorSkillBank GripSkillBank; do
+            java -cp /tmp/zero113 com.overmind.zero.$test
+          done
+      - name: Gate no scripted destination, paired ablation and zero writes to user saves
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          d=Path('app/src/main/java/com/overmind/zero')
+          lab=(d/'BehavioralLaboratory.java').read_text()
+          ui=(d/'BehavioralLabActivity.java').read_text()
+          mind=(d/'SensorimotorMind.java').read_text()
+          main=(d/'GameActivity.java').read_text()
+          analysis=(d/'BrainToolsActivity.java').read_text()
+          manifest=Path('app/src/main/AndroidManifest.xml').read_text()
+          gradle=Path('app/build.gradle').read_text()
+          slots=(d/'SaveSlotStore.java').read_text()
+          runtime=lab.split('public static void main(')[0]
+          assert 'public static final int ENERGY=0,HARM=1,GATE=2,CASES=3,SEEDS=3;' in lab
+          assert 'public static final int[] VARIANTS={7,19,31};' in lab
+          assert 'profile' in lab.lower() and 'setNavigationAdviceEnabled(instrument)' in lab
+          assert 'body.step(input.motor,mx,my,DT,input.hands,px,py)' in lab
+          assert 'surface.step(body,input.membrane,px,py,DT,brain.adhesion())' in lab
+          assert 'room.constrain(body,surface,DT,brain.adhesion())' in lab
+          assert 'brain.observe(SensorimotorMind.Senses.read(' in lab
+          assert 'brain.contactOutcome(delta,object.signature)' in lab
+          assert 'rig.episodes.consequenceSeparated(' in lab
+          assert 'room.foodTouchedByCore(body)' in lab
+          assert 'Math.abs(room.doorY-before)' in lab
+          assert 'x=stimulus.x' not in runtime and 'body.cx=stimulus.x' not in runtime
+          assert 'result.trials[s][trial][mode]=measured' in lab
+          assert 'brain.setNavigationAdviceEnabled(instrument)' in lab
+          assert 'if(navigation!=null&&body!=null)' in mind
+          assert 'navigation==null||!navigationAdviceEnabled?0:' in mind
+          assert 'navigationAdviceEnabled=true' in mind
+          assert 'RESULTS="zero_behavior_lab_v113"' in ui
+          assert 'getSharedPreferences("zero_motorbrain_001",MODE_PRIVATE)' in ui
+          assert 'getSharedPreferences(RESULTS,MODE_PRIVATE).edit()' in ui
+          assert 'getSharedPreferences("zero_motorbrain_001",MODE_PRIVATE).edit()' not in ui
+          assert '.putString(' not in ui
+          assert 'new Intent(this,BehavioralLabActivity.class)' in analysis
+          assert 'android:name="com.overmind.zero.BehavioralLabActivity"' in manifest
+          assert '.putString(InstrumentalNavigation.KEY,navigation.encode())' in main
+          assert 'SaveProfileCodec.encode(capture())' in slots and 'SLOTS=12' in slots
+          assert 'lifeStats.tick(dt)' in main
+          assert '0.11.3-ota' in gradle
+          assert "applicationId 'com.overmind.zero.ota'" in gradle
+          print('ZERO 0.11.3 verified: fully isolated reproducible physical A/B, genuine energy and injury, gate physics and crossing, default live behavior unchanged')
+          PY
+      - name: Compile Android app including asynchronous benchmark screen
+        run: gradle --no-daemon assembleDebug
