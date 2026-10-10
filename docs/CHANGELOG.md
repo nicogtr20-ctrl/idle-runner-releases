@@ -281,3 +281,8 @@ Added `InstrumentalNavigation`: energy outcomes per physically observed visual f
 - Pacchetto Android firmato pubblicato su Vercel (codice 1064).
 - SHA-256: `255727583121d49c07463a29aea07d4f99db06912cdc2f6aeff40cdd103cdab8`.
 - APK: `/apk/overmind-zero-1064-255727583121.apk`.
+
+## OTA 0.11.5-ota.66 — 2026-10-10T22:41:25.278498+00:00
+- Pacchetto Android firmato pubblicato su Vercel (codice 1066).
+- SHA-256: `e393e44bdccd68bd6ecb5e9020227a5906760b7ea44e3e6e055e39a16040ec1c`.
+- APK: `/apk/overmind-zero-1066-e393e44bdccd.apk`.
