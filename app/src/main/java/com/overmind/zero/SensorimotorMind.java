@@ -29,6 +29,10 @@ public final class SensorimotorMind {
     // Performed-action traces give temporally distant actual resource
     // contacts a learning signal. They NEVER add a geometric direction bias.
     private final ExperienceCredit contactCredit=new ExperienceCredit();
+    private final LearnedSequencePlanner planner=new LearnedSequencePlanner();
+    public synchronized String planningStats(){return planner.encode();}
+    public synchronized boolean restorePlanningStats(String saved){return planner.restore(saved);}
+    public synchronized LearnedSequencePlanner planner(){return planner;}
     public synchronized void contactOutcome(float actualEnergyDelta,int visuallyObservedSignature){
         if(learning)contactCredit.consequence(actualEnergyDelta,visuallyObservedSignature);
     }
@@ -114,6 +118,17 @@ public final class SensorimotorMind {
         int proposed=episodic==null?-1:episodic.suggested(senses,!protectMotor);
         int chosen=0;
         float best=-Float.MAX_VALUE;
+        // Offline counterfactual predictions never train the world model or
+        // give reward for imagined outcomes. The holdout gate prevents the
+        // planner from amplifying an untrained, inaccurate world model.
+        float[] planned=planner.evaluate(senses,new LearnedSequencePlanner.Model(){
+            @Override public float[] predict(float[] state,int a){
+                return SensorimotorMind.this.prediction(state,a);
+            }
+            @Override public float value(float[] state,int a){
+                return SensorimotorMind.this.estimate(state,a)+contactCredit.value(state,a);
+            }
+        },diagnostics);
         // Exploration is intrinsic to learning; no action is mapped to a
         // named "correct" behavior. Stable choices come from learned value.
         for(int a=0;a<ACTIONS;a++){
@@ -134,7 +149,7 @@ public final class SensorimotorMind {
             // and external-displacement values, combined only at choice time.
             // No hidden object identity, hardcoded heading or navigation.
             float earnedValue=contactCredit.value(senses,a);
-            float score=q+earnedValue+curiosity+jitter+memoryBias+diversity;
+            float score=q+earnedValue+planned[a]+curiosity+jitter+memoryBias+diversity;
             if(score>best){best=score;chosen=a;}
         }
         float epsilon=Math.max(.09f,.52f/(1+experiences/120f));
