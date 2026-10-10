@@ -118,3 +118,12 @@ Le osservazioni sperimentali del Galaxy S21 restano quelle della v0.9.4 (93 disc
 
 ## ULTIMA VERSIONE IN SVILUPPO: ZERO 0.9.8 (10 ottobre 2026)
 **LEGGERE `docs/EXPERIMENT_0098.md`.** Sul Galaxy S21 ZERO torna sempre nella stessa zona, gira in cerchio con bassa distanza netta e spesso muore vicino a sfere energetiche. Sviluppata v0.9.8: archivio max6 tecniche motorie realmente osservate, protezione da mutanti meno mobili, recupero di una tecnica alternativa dopo stallo, diversità di azioni durante stagnazione e bias dei 16 heading da segnali visivi il cui valore energetico è stato appreso per contatto. Nessun colore buono/cattivo, destinazione o procedura di cancello innati. Mantiene pesi di tutte le reti e memorie em1/em2. Non si possono ricostruire vecchie abilità della 0.9.4 eventualmente già sovrascritte. Test sul dispositivo ancora da fare.
+
+
+### RELEASE OTA FIRMATA 0.9.8-ota.42 — 10 ottobre 2026
+- **VersionName** `0.9.8-ota.42`; **versionCode** 1042, package `com.overmind.zero.ota`, peso **101.320 byte**.
+- **Checksum SHA-256 firmato:** `81cb0480de8b47e3cf781c6ddc5e771377ebcfa9d811679a6c202d201bfbf124`.
+- **GitHub Actions** staging `38009632805` = success (JVM, motore, sopravvivenza, Gradle Android) e stable firmata `38009921490` = success (stessa firma e manifest OTA pubblicato).
+- **Manifest GitHub**: `updater/public/latest.json`; APK in `updater/public/apk/overmind-zero-1042-81cb0480de8b.apk`. Release GitHub con tag `overmind-zero-v0.9.8-ota.42` via pipeline fallback su `main`.
+- Il corretto funzionamento sul Samsung Galaxy S21 **deve ancora essere provato**. L'archivio di skill non può recuperare automaticamente motorii della 0.9.4 già sovrascritti prima di questa versione; potrà salvare quelli efficaci osservati d'ora in poi.
+- **Installare sopra la versione precedente SENZA disinstallare né azzerare alcuna memoria.**
