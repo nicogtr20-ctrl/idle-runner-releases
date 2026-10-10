@@ -215,3 +215,11 @@ Per prove e prossimi step: `docs/EXPERIMENT_0096.md`. VersionCode e digest relea
 - **GitHub Actions firmata 38007333273 = SUCCESS**, JVM/staging 38007100048 e 38007156421 = SUCCESS. Package `com.overmind.zero.ota`, **versionCode 1041**, peso **96.936 byte**, checksum SHA-256 `4de8ef5a9f22dd6e4caf503fc7543410a5e829cab5beb1e9b0a0bcdea3a9bf1d`.
 - APK verificata nel repository `updater/public/apk/overmind-zero-1041-4de8ef5a9f22.apk`; manifest `updater/public/latest.json` (GitHub) contiene esattamente SHA, versionCode, versione e dimensioni. GitHub Release fallback `overmind-zero-v0.9.7-ota.41` dopo trigger apposito.
 - **Nessun test di comportamento su Galaxy S21 della v0.9.7 ancora effettuato**. I pesi e le memorie esistenti restano installabili in place, ma recupero della velocità prima vista con 0.9.4 deve essere verificato, non garantito.
+
+## 0.9.8 — ottobre 2026: recupero locomotorio e sopravvivenza appresa
+- `MotorSkillBank` con 6 tecniche verificabili e recupero su stallo, salvataggio `motor_skills_v098`.
+- Nuovo criterio per accettare mutazioni motorie: NETTO>=max(7U,80% precedente).
+- Antiripetizione temporanea delle scelte su stagnazione (senza direzioni programmate).
+- `SensoryValenceGuide` proietta sugli heading il valore energetico osservato per frequenze visive, senza etichette innate; bisogno energetico aumenta il peso.
+- Nuove statistiche e reset selettivi, vecchie reti/episodi inalterati.
+- Test automatici e Android compilation passati; miglioramento reale ancora da provare. Esperimento: `docs/EXPERIMENT_0098.md`.
