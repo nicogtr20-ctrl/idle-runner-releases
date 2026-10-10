@@ -60,7 +60,7 @@ jobs:
           assert 'getSharedPreferences("zero_motorbrain_001",MODE_PRIVATE)' in ui
           assert 'getSharedPreferences(RESULTS,MODE_PRIVATE).edit()' in ui
           assert 'getSharedPreferences("zero_motorbrain_001",MODE_PRIVATE).edit()' not in ui
-          assert '.putString(' not in ui
+          assert '.putString("last",text)' in ui and 'getSharedPreferences(RESULTS,MODE_PRIVATE).edit()' in ui
           assert 'new Intent(this,BehavioralLabActivity.class)' in analysis
           assert 'android:name="com.overmind.zero.BehavioralLabActivity"' in manifest
           assert '.putString(InstrumentalNavigation.KEY,navigation.encode())' in main
