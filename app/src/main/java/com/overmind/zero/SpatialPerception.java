@@ -135,6 +135,23 @@ public final class SpatialPerception {
         int n=0;for(byte v:memory.values())if(v<0)n++;return n;
     }
     public float odometryTravel(){return (float)Math.hypot(odometryX,odometryY);}
+    /** Read-only square centered on ZERO's estimated current position.
+     * 0 unseen, negative confirmed navigable sightline, positive obstacle.
+     * Returns observations, NOT the actual hidden scene. */
+    public byte[] localMap(int radius){
+        if(radius<1||radius>16)throw new IllegalArgumentException("map radius");
+        int n=radius*2+1;
+        byte[] result=new byte[n*n];
+        int x0=cell(odometryX),y0=cell(odometryY);
+        for(int y=-radius;y<=radius;y++){
+            for(int x=-radius;x<=radius;x++){
+                Byte v=memory.get(key(x0+x,y0+y));
+                if(v!=null)result[(y+radius)*n+x+radius]=v;
+            }
+        }
+        return result;
+    }
+
     public void resetLife(){
         memory.clear();odometryX=odometryY=0;
         lastBodyX=lastBodyY=Float.NaN;
