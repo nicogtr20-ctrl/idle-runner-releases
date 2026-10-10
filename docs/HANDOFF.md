@@ -207,3 +207,17 @@ Passi futuri: comparatore veri stati identici (random seed), visione di moviment
 - QA staging run **38059707433** verde: test JVM inclusa migrazione/salvataggio, regression learning, source assertions e `assembleDebug`.
 - **RELEASE FIRMATA E OTA VERIFICATA:** stable `feature/overmind-inapp-updater`; publisher run **38060026469** verde; `0.10.5-ota.54`, versionCode **1054**, SHA-256 `34bd2eb5261f499b196037832dce744f37b7b3822a49a7f655c3b6347f0c4e7a`, **138.636 byte**. Manifest pubblico e APK Vercel verificati HTTP 200. GitHub Release fallback `overmind-zero-v0.10.5-ota.54`.
 - **TEST S21 PENDENTE:** installare in-place tramite AGGIORNA, non disinstallare. Dopo 50 vite complete verificare che 25-vs-25, storico permanente e record siano coerenti e che x5/x20 usi tempo simulato.
+
+## 2026-10-10 — ZERO 0.10.6: memoria di lavoro temporale
+- Richiesta: smettere di lavorare sulle statistiche e aggiungere una capacità realmente necessaria all'obiettivo generale: distinguere il presente in base a ciò che è appena successo.
+- Branch staging: `feature/overmind-v106-temporal-working-memory`, base stable 0.10.5 SHA `b76913be9a6c3edb6fce777ed49db9a46a4f9860`.
+- Nuova classe `TemporalWorkingMemory`: 16 stati interni ricorrenti, reservoir fisso non semantico, readout appresi 7.072 (predizione) + 272 (valore) = 7.344 parametri.
+- Integrazione `SensorimotorMind`: ogni decisione salva il contesto; dopo ~0,65s la transizione reale aggiorna stato e readout. Il bias contestuale entra nel punteggio azione soltanto dopo gate held-out (>=25 validation, errore temporale < 0,96 × baseline), max ±0,45.
+- `contactOutcome` attribuisce energia reale alla trace temporale; `physicalOutcome` usa soltanto spostamento esterno misurato. Trace max 8 azioni con decadimento, nessuna identità di oggetto.
+- Persistenza: chiave `temporal_working_memory_v106`. Alla morte `resetEpisode` cancella hidden/trace ma conserva pesi; caricando una scena salvata `resumeEpisode` mantiene l'hidden serializzato invece di simulare una morte.
+- Reset WORLD include la nuova chiave. Gli slot nominati catturano tutte le SharedPreferences, quindi la nuova memoria viene salvata senza schema slot nuovo.
+- `BrainStatsActivity`: nuova riga MEMORIA DI LAVORO TEMPORALE; il totale parametri include +7.344. Nessuna modifica a `StatisticsActivity`.
+- Staging run **38064278116** verde: `TemporalWorkingMemory.main` dimostra due storie → due hidden/predizioni sulla stessa osservazione, heldout gate, credito ritardato, round-trip serializzazione e reset vita; tutte le regressioni precedenti e `assembleDebug` verdi.
+- Publisher stabile aggiornato per compilare/testare il nuovo modulo e mantenere i gate 0.10.5.
+- **RELEASE FIRMATA E OTA VERIFICATA:** publisher **38064599838** verde; `0.10.6-ota.55`, versionCode **1055**, SHA-256 `bdc0dc5fd1dc9dce992d5a9cf139efd560421091f8ada01cec1bcbe47b48ff30`, **143.732 byte**. Manifest e APK Vercel verificati HTTP 200; GitHub Release `overmind-zero-v0.10.6-ota.55`.
+- **TEST S21:** aggiornare sopra la 0.10.5. In CERVELLO la memoria temporale parte con confidenza 0%; è corretto. Deve restare a 0 finché non accumula almeno 25 campioni held-out e non dimostra una predizione temporale migliore. Non azzerare ZERO per provarla.

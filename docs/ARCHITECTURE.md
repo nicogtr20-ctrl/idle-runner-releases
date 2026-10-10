@@ -113,3 +113,25 @@ Persistenza:
 - flag `lifetimeComplete`: i personaggi che esistevano prima della telemetria non vengono presentati falsamente come storici “dalla nascita”.
 
 `StatisticsActivity` legge questi dati e calcola trend/indice sintetico. Nessun valore della pagina viene restituito a `SensorimotorMind`, `OnlineBodyLearning`, `EpisodicMemory`, planner o reward.
+
+## Memoria di lavoro temporale v0.10.6
+`TemporalWorkingMemory` è collegata a `SensorimotorMind` ma serializzata separatamente nella chiave `temporal_working_memory_v106`.
+
+Struttura:
+- 16 unità di stato ricorrente; input = sensi correnti, delta rispetto al passo precedente e azione autonoma appena eseguita;
+- connessioni del reservoir deterministiche/fisse, senza etichette del mondo;
+- 7.072 pesi appresi per predire 26 delta sensoriali per 16 azioni da 16 stati + bias;
+- 272 pesi appresi di valore contestuale per 16 azioni;
+- totale nuovi parametri appresi: 7.344;
+- traccia ritardata: ultime 8 decisioni contestualizzate, usata solo quando arriva un vero effetto energetico o spostamento fisico.
+
+Gating:
+- le predizioni temporali sono valutate sugli stessi eventi held-out usati per evitare auto-valutazione del modello one-step;
+- minimo 25 campioni held-out;
+- nessuna influenza se errore temporale >= 96% dell'errore del modello istantaneo;
+- confidenza massima 0,70 e contributo alla scelta limitato a ±0,45.
+
+Ciclo vita:
+- `resetEpisode` (morte/nuova vita) azzera stato ricorrente e trace, non i pesi;
+- `resumeEpisode` conserva il contesto serializzato quando si riapre la stessa scena fisica;
+- il reset “MODELLO DEL MONDO” cancella anche la memoria temporale; gli altri domini restano separati.

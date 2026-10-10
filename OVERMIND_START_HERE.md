@@ -99,3 +99,14 @@ La v0.9.5 crea ricordi di sequenze **effettivamente vissute** (fino a 9 sensazio
 - Tutta la statistica resta **observer-only**: non entra in reward, policy, world model, memoria episodica o selezione delle azioni.
 - QA staging: run **38059707433** verde. Publisher stabile firmato **38060026469** verde.
 - **OTA pubblico verificato HTTP 200**: versionCode **1054**, versionName **0.10.5-ota.54**, SHA-256 `34bd2eb5261f499b196037832dce744f37b7b3822a49a7f655c3b6347f0c4e7a`, APK **138.636 byte**. Installare sopra l'app esistente; non disinstallare.
+
+## Release verificata — ZERO 0.10.6-ota.55 / memoria di lavoro temporale (10 ottobre 2026)
+- Obiettivo: dare a ZERO uno stato interno del **prima/dopo** senza insegnargli concetti come porta, trascina, cibo o soluzione.
+- Nuovo `TemporalWorkingMemory`: **16 stati ricorrenti** e **7.344 pesi appresi** di predizione/valore contestuale. Il reservoir ricorrente usa soltanto variazioni dei 26 sensi e azioni realmente scelte; nessuna identità di oggetto o coordinata obiettivo.
+- Due situazioni con sensi istantanei uguali possono produrre stati interni diversi se la storia recente è diversa.
+- Il contesto NON influenza le decisioni all'inizio: serve almeno 25 transizioni held-out e l'errore temporale deve battere il modello one-step di almeno il 4%. Bias massimo sulla scelta: ±0,45.
+- Conseguenze fisiche/energetiche realmente osservate possono dare credito alle ultime 8 azioni contestualizzate; nessuna ricompensa immaginata.
+- Alla morte si cancella solo lo stato di lavoro della vita corrente; i pesi appresi restano. Riavvio/salvataggio della stessa vita conserva il contesto tramite `temporal_working_memory_v106`.
+- La pagina **STATISTICHE 25-vs-25 della 0.10.5 non viene modificata**. In CERVELLO compare soltanto una scheda diagnostica della nuova memoria.
+- Staging: run **38064278116** e **38064377747** verdi. Publisher firmato **38064599838** verde.
+- **OTA pubblico verificato HTTP 200**: versionCode **1055**, versionName **0.10.6-ota.55**, SHA-256 `bdc0dc5fd1dc9dce992d5a9cf139efd560421091f8ada01cec1bcbe47b48ff30`, APK **143.732 byte**. Aggiornare in-place; non disinstallare.

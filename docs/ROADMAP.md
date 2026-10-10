@@ -162,3 +162,16 @@ Documentazione dettagliata e limiti scientifici: `docs/EXPERIMENT_0095.md`.
 - [x] Mantenere l'intero sistema observer-only, invisibile alla policy.
 - [x] Build firmata e OTA pubblica 0.10.5-ota.54 verificata (publisher 38060026469; manifest/APK HTTP 200).
 - [ ] Verifica manuale Galaxy S21 dopo 50 vite: controllare che trend, medie storiche e grafici descrivano correttamente una sessione lunga e che x5/x20 usi esclusivamente tempo simulato.
+
+## ZERO-010.6 — memoria di lavoro temporale
+- [x] Stato ricorrente capace di distinguere due storie recenti con identica percezione presente.
+- [x] Predizione contestuale allenata solo su esperienze vissute e valutata su transizioni held-out.
+- [x] Influenza sulle scelte bloccata finché il modello temporale non batte il modello one-step.
+- [x] Valore contestuale e credito ritardato di effetti fisici/energetici sulle ultime 8 decisioni.
+- [x] Persistenza dei pesi e del contesto nella stessa vita; cancellazione del contesto transitorio alla morte.
+- [x] Reset integrato nel dominio MODELLO DEL MONDO e salvataggi con nome compatibili.
+- [x] STATISTICHE 0.10.5 lasciate inalterate.
+- [x] Build firmata e OTA pubblica 0.10.6-ota.55 verificata (publisher 38064599838; manifest/APK HTTP 200).
+- [ ] Verifica Galaxy S21: dopo abbastanza esperienze, controllare in CERVELLO che la confidenza temporale esca da 0% soltanto se l'errore held-out migliora.
+- [ ] Verificare sul mondo reale simulato se ZERO mantiene più a lungo sequenze con effetto fisico continuativo (es. spostamento progressivo) senza regola specifica.
+- [ ] Solo dopo questa prova: valutare “skill/chunk” di sequenze apprese e successiva integrazione del contesto nel planner multistep.
