@@ -263,3 +263,13 @@ Limite dichiarato: non comprende le mutazioni fisiche runtime OnlineBodyLearning
 - [ ] **BLOCKER** Vercel production deployment quota 402 >100/day. The Vercel updater still offers 0.11.3, v0.11.4 APK route 404. Re-deploy latest main when quota restored; verify BOTH endpoints HTTP200 before informing user.
 - [ ] Galaxy S21 live test: install GitHub signed APK over existing, backup named slot, inspect live gate diagnostic (is approach/contact possible?), run 18 A/B and share screenshot/report. Correlate tentative intentions with actual energy collected, harm avoided, and room crossing. No claims of solved gate yet.
 See `docs/EXPERIMENT_0114.md`.
+
+## 0.11.5 — priorità sicurezza appresa e scelta dopo contatto energetico negativo (10 ottobre 2026)
+- [x] Controllata catena danno reale → `SensorimotorMind.contactOutcome` → valenza strumentale sperimentata → consiglio motorio → successiva decisione.
+- [x] Nuova `AdaptiveSafety`: nessuna fuga prescritta, solo 4.5s di maggiore peso ai 16 movimenti REALMENTE verificati che riducono esposizione a frequenze già sperimentate come dannose; bonus bounded ±0.95, nessun premio per camminare.
+- [x] Accelerare la prossima decisione a >=0.18s simulati dal danno fisico, senza corrompere la raccolta dei modelli motori che richiedono campioni 0.65s; post-danno epsilon sceglie alternative con punteggio totale entro 0.75 dal massimo, lasciando vera esplorazione.
+- [x] Salvare solo contatori `adaptive_safety_v115` nel profilo e 12 slot, lasciare vecchi pesi/cervelli. UI **ANALISI → RISPOSTA APPRESA AL DANNO**, reset isolato SAFETY.
+- [x] Lab 5 scenari ×3 varianti ×2 ablations = **30 prove fisiche**: energia, una fonte nociva, cancello, tre nocivi circostanti, risorsa+pericolo; rileva secondo danno, uscite zona rischio, micro-movimenti, energia recuperata e contatti.
+- [x] Staging `38092034409 SUCCESS`, publisher signed `38092242587 SUCCESS` dopo precedente run65 fermato da assert testuale vecchia; release `0.11.5-ota.66`, code1066 APK194712 byte SHA e393e44bdccd68bd6ecb5e9020227a5906760b7ea44e3e6e055e39a16040ec1c, LIVE Vercel manifest+APK HTTP200.
+- [ ] Galaxy S21: aggiornare in-place nuovo ZERO promettente, confrontare episodi ripetuti e report 30 prove sullo stesso cervello. NON dichiarare fuga, sopravvivenza migliorata o scelta robusta finché non osservati risultati ripetibili.
+Dettagli `docs/EXPERIMENT_0115.md`.
