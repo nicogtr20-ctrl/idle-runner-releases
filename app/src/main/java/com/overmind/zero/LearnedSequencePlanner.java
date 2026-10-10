@@ -21,12 +21,20 @@ public final class LearnedSequencePlanner {
         return Math.max(min,Math.min(max,x));
     }
     public static float confidence(LearningDiagnostics d){
-        if(d==null||d.heldoutTransitions<30||
-           !Float.isFinite(d.modelError)||!Float.isFinite(d.baselineError)||
-           d.baselineError<=.018f||d.modelError>=d.baselineError*.94f)
+        if(d==null||d.heldoutTransitions<30||d.points()<4||
+           !Float.isFinite(d.modelError)||!Float.isFinite(d.baselineError))
             return 0;
-        // Trust only the model's *held-out improvement*, never its training loss.
-        return clamp((d.baselineError-d.modelError)/d.baselineError,0,.75f);
+        // RE-CHECK the most recent held-out windows. Lifetime average may
+        // conceal new learning regressions or broken predictions.
+        float error=0,baseline=0;
+        int samples=Math.min(6,d.points());
+        for(int i=d.points()-samples;i<d.points();i++){
+            error+=d.errorAt(i);
+            baseline+=d.baselineAt(i);
+        }
+        error/=samples;baseline/=samples;
+        if(baseline<=.018f||error>=baseline*.94f)return 0;
+        return clamp((baseline-error)/baseline,0,.75f);
     }
     private static boolean valid(float[] s){
         if(s==null||s.length!=SensorimotorMind.S)return false;
