@@ -1,0 +1,24 @@
+name: ZERO virgin grip gate vs square read-only audit
+on:
+  push:
+    branches: [audit/overmind-virgin-grip-comparison]
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  audit:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+      - name: Compile and compare virgin body grips without policy changes
+        run: |
+          mkdir -p /tmp/zero-virgin-grip
+          javac -d /tmp/zero-virgin-grip app/src/main/java/com/overmind/zero/{MotorBrain,UnknownWorld,OpticalCues,OpticalCueRegression,HabitatContinuity,SquareCollisionSolver,SquareGripPuzzle,VirginGripAudit,WorldPlacement,ContactLearning,DecisionBrain,Morphology,ScarcityLab,SensorimotorMind,DecisionBlackbox,GateLifeJournal,ContextualMotionProbe,ShadowNonInterferenceRegression,SpatialPerception,CausalExperiments,BodyProprioception,InstrumentalNavigation,GoalContinuity,GateBehaviorMetrics,BehavioralLaboratory,TemporalWorkingMemory,TemporalSkillBank,TemporalPersistenceRegression,LearnedSequencePlanner,LearningDiagnostics,ResetDomains,OnlineBodyLearning,MotionExploration,EpisodicMemory,MotorAutonomyGuard,MotorSkillBank,ExperienceCredit,GripSkillBank,SaveProfileCodec,LifeStatistics}.java
+          java -cp /tmp/zero-virgin-grip com.overmind.zero.VirginGripAudit
+          java -cp /tmp/zero-virgin-grip com.overmind.zero.SquareGripPuzzle
+          java -cp /tmp/zero-virgin-grip com.overmind.zero.SquareCollisionSolver
