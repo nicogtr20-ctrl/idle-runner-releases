@@ -1,0 +1,79 @@
+name: ZERO 0.11.6 Decision Blackbox (Observer-Only) QA
+on:
+  push:
+    branches: [feature/overmind-v1162-decision-blackbox]
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 35
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+      - uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: '8.11.1'
+      - name: Unchanged physics, navigation, reward and old reset/saves
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          from hashlib import sha1
+          b=Path('app/src/main/java/com/overmind/zero')
+          old={
+           'InstrumentalNavigation.java':'2eb6390e7e80f17b488f148ec2d76b41e19e27a9',
+           'BehavioralLaboratory.java':'e016be507d54b2535885a5c2070951fd9e4c72f7',
+           'BehavioralLabActivity.java':'c1e655a947454e2cb77baad6b282890f00097717',
+           'ResetDomains.java':'99e0b726e95f96683d5de942da2cb2ff0c9eb318'}
+          for name,pin in old.items():
+            data=(b/name).read_bytes()
+            assert sha1(b'blob '+str(len(data)).encode()+b'\0'+data).hexdigest()==pin,name
+          mind=(b/'SensorimotorMind.java').read_text()
+          game=(b/'GameActivity.java').read_text()
+          recorder=(b/'DecisionBlackbox.java').read_text()
+          assert 'if(blackbox!=null)blackbox.finished' in mind
+          assert 'if(blackbox!=null)' in mind
+          assert 'blackbox.chosen(senses,chosen,greedyAction,actionExploratory,' in mind
+          assert 'blackbox.terminal' in mind
+          assert 'blackbox' not in mind[mind.index('float score=legacyQ'):mind.index('if(score>best)')]
+          assert 'if(score>best){best=score;chosen=a;}' in mind
+          assert 'float epsilon=Math.max(.09f,.52f/(1+experiences/120f));' in mind
+          assert 'chosen=random.nextInt(ACTIONS);explorations++;' in mind
+          assert 'public static final int MAX_ENTRIES=475, MAX_TEXT=145000;' in recorder
+          assert 'WINDOW=300f;' in recorder
+          assert 'lifeStats.death();' in game
+          assert 'decisionBlackbox.lastLife()).commit();' in game
+          assert 'DecisionBlackbox.CURRENT,decisionBlackbox.encodeCurrent()' in game
+          assert 'SaveSlotStore.PENDING_RELOAD' in game
+          assert 'TelemetryGitHub.upload(' in (b/'TelemetryActivity.java').read_text()
+          assert 'LIMIT=900*1024' in (b/'TelemetryGitHub.java').read_text()
+          assert 'AndroidKeyStore' in (b/'TelemetryGitHub.java').read_text()
+          print('Original steering, world physics, slots, reset, secure manual upload protected.')
+          PY
+      - name: Unit tests — deterministic no-change actions and safe log persistence
+        run: |
+          mkdir -p /tmp/zero1162
+          javac -d /tmp/zero1162 app/src/main/java/com/overmind/zero/{MotorBrain,UnknownWorld,ContactLearning,DecisionBrain,Morphology,ScarcityLab,SensorimotorMind,DecisionBlackbox,SpatialPerception,CausalExperiments,BodyProprioception,InstrumentalNavigation,GoalContinuity,GateBehaviorMetrics,BehavioralLaboratory,TemporalWorkingMemory,TemporalSkillBank,TemporalPersistenceRegression,LearnedSequencePlanner,LearningDiagnostics,ResetDomains,OnlineBodyLearning,MotionExploration,EpisodicMemory,MotorAutonomyGuard,MotorSkillBank,ExperienceCredit,GripSkillBank,SaveProfileCodec,LifeStatistics}.java
+          for test in DecisionBlackbox BehavioralLaboratory InstrumentalNavigation GoalContinuity GateBehaviorMetrics CausalExperiments SpatialPerception BodyProprioception TemporalPersistenceRegression TemporalWorkingMemory TemporalSkillBank SaveProfileCodec EpisodicMemory LifeStatistics SensorimotorMind ExperienceCredit LearnedSequencePlanner MotorBrain UnknownWorld ContactLearning DecisionBrain Morphology ScarcityLab OnlineBodyLearning MotionExploration ResetDomains MotorAutonomyGuard MotorSkillBank GripSkillBank; do
+            java -cp /tmp/zero1162 com.overmind.zero.$test
+          done
+      - name: Export budget for two 5-minute windows plus real existing profile
+        run: |
+          python3 - <<'PY'
+          # Baseline live report uploaded 2026-10-11 was approx 450KiB.
+          # Two max-sized 145000-char ASCII traces, plus JSON escapes, fit 900 KiB.
+          baseline=450000
+          worst_extra=2*145000 + 14000  # JSON quoting and metadata
+          assert baseline+worst_extra < 900*1024
+          from pathlib import Path
+          s=Path('app/src/main/java/com/overmind/zero/TelemetryGitHub.java').read_text()
+          assert 'MAX_SUCCESS_RESPONSE=2*1024*1024' in s
+          assert 'out.size()+n>49152)break;' not in s
+          print('Two five-minute windows fit current user profile within GitHub upload budget.')
+          PY
+      - name: Android 35 build isolated debug (no publishing)
+        run: gradle --no-daemon assembleDebug

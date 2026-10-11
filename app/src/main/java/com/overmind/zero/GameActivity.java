@@ -46,6 +46,7 @@ public final class GameActivity extends Activity {
         InstrumentalNavigation navigation=new InstrumentalNavigation();
         GoalContinuity intentions=new GoalContinuity();
         GateBehaviorMetrics gateMetrics=new GateBehaviorMetrics();
+        DecisionBlackbox decisionBlackbox=new DecisionBlackbox();
         MotorAutonomyGuard motorGuard=new MotorAutonomyGuard();
         MotorSkillBank skillBank=new MotorSkillBank();
         GripSkillBank gripBank=new GripSkillBank();
@@ -197,6 +198,11 @@ public final class GameActivity extends Activity {
             intentions=new GoalContinuity();
             intentions.restore(prefs.getString(GoalContinuity.KEY,""));
             sensorMind.attachGoalContinuity(intentions);
+            // Read-only five-minute flight recorder, isolated per working ZERO.
+            decisionBlackbox=new DecisionBlackbox();
+            decisionBlackbox.restoreLast(prefs.getString(DecisionBlackbox.LAST,""));
+            decisionBlackbox.restoreCurrent(prefs.getString(DecisionBlackbox.CURRENT,""));
+            sensorMind.attachDecisionBlackbox(decisionBlackbox);
             gateMetrics=new GateBehaviorMetrics();
             gateMetrics.restore(prefs.getString(GateBehaviorMetrics.KEY,""));
             episodic=new EpisodicMemory();
@@ -327,7 +333,9 @@ public final class GameActivity extends Activity {
                 snapshot.put("chamberMessage",chamberMessage);
                 snapshot.put("lastEvent",lastEvent);
                 snapshot.put("eventTime",eventTime);
-                if(!prefs.edit().putString("physical_scene_v100",snapshot.toString()).commit())
+                if(!prefs.edit().putString("physical_scene_v100",snapshot.toString())
+                    .putString(DecisionBlackbox.CURRENT,decisionBlackbox.encodeCurrent())
+                    .commit())
                     throw new IllegalStateException("Impossibile salvare la scena fisica");
             }catch(Exception e){
                 throw new IllegalStateException("Non riesco a salvare posizione e stanza",e);
@@ -669,6 +677,15 @@ public final class GameActivity extends Activity {
                 }
                 // Close ONE measured life only on real death, never on pause,
                 // scene expansion, app restart or switching named save slots.
+                // Freeze the last real motor choice (possibly shorter than 0.65s)
+                // BEFORE death clears body and transient sensorimotor traces.
+                sensorMind.recordTerminal(SensorimotorMind.Senses.read(
+                    creature,surface,chamber,environment,reserve),
+                    environmentEffectSinceAction,creature);
+                // Save a separate last-life trace even if the app is closed
+                // before the next twelve-second physical-scene checkpoint.
+                prefs.edit().putString(DecisionBlackbox.LAST,
+                    decisionBlackbox.lastLife()).commit();
                 lifeStats.physical(journey.maxNetLife,journey.lifeCells,
                     chamber==null?0:chamber.maxDoorTravel);
                 lifeStats.death();
