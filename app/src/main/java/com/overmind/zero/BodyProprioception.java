@@ -14,11 +14,11 @@ import java.util.Locale;
  * unchanged. The new advice is gated by out-of-training prediction accuracy.
  */
 public final class BodyProprioception {
-    public static final String KEY="body_proprioception_v109";
-    public static final int SECTORS=8,FEATURES=SECTORS*4,ACTIONS=SensorimotorMind.ACTIONS;
+    public static final String KEY="body_proprioception_v120";
+    public static final int SECTORS=8,CHANNELS=6,FEATURES=SECTORS*CHANNELS,ACTIONS=SensorimotorMind.ACTIONS;
     // A predicted feature depends on the other mechanical channels at that
     // same surface sector, not on a label or a predefined object geometry.
-    private static final int HEAD=5;
+    private static final int HEAD=CHANNELS+1;
     private static final int PRED_WEIGHTS=ACTIONS*FEATURES*HEAD;
     private static final int VALUE_WIDTH=FEATURES+1;
     private static final int VALUE_WEIGHTS=ACTIONS*VALUE_WIDTH;
@@ -51,6 +51,8 @@ public final class BodyProprioception {
     public static float[] sense(MotorBrain.Body body,Morphology.Surface skin){
         if(body==null||skin==null)throw new IllegalArgumentException("body");
         float[] v=new float[FEATURES],count=new float[SECTORS];
+        float[] near=new float[SECTORS];
+        java.util.Arrays.fill(near,Float.POSITIVE_INFINITY);
         for(int i=0;i<Morphology.POINTS;i++){
             float dx=skin.x[i]-body.cx,dy=skin.y[i]-body.cy;
             if(!Float.isFinite(dx)||!Float.isFinite(dy))continue;
@@ -60,6 +62,8 @@ public final class BodyProprioception {
             v[SECTORS+k]+=clamp(skin.gripHold[i]/.5f,0,1);
             v[2*SECTORS+k]+=clamp(skin.extension[i]/110f,0,1);
             float radius=(float)Math.hypot(dx,dy);
+            near[k]=Math.min(near[k],radius);
+            v[4*SECTORS+k]=Math.max(v[4*SECTORS+k],clamp(radius/155f,0,1));
             float radial=radius>.01f?
                 ((skin.vx[i]-body.cvx)*dx+(skin.vy[i]-body.cvy)*dy)/(radius*130f):0;
             v[3*SECTORS+k]+=clamp(radial,-1,1);
@@ -68,6 +72,7 @@ public final class BodyProprioception {
             if(count[k]==0)continue;
             for(int channel=0;channel<4;channel++)
                 v[channel*SECTORS+k]=clamp(v[channel*SECTORS+k]/count[k],-1,1);
+            v[5*SECTORS+k]=clamp(near[k]/155f,0,1);
         }
         return v;
     }
@@ -90,8 +95,8 @@ public final class BodyProprioception {
     private float predictedDelta(float[] context,int action,int feature){
         int base=(action*FEATURES+feature)*HEAD;
         int k=feature%SECTORS;
-        float v=prediction[base+4];
-        for(int c=0;c<4;c++)v+=prediction[base+c]*context[c*SECTORS+k];
+        float v=prediction[base+CHANNELS];
+        for(int c=0;c<CHANNELS;c++)v+=prediction[base+c]*context[c*SECTORS+k];
         return clamp(v,-1.5f,1.5f);
     }
     private float value(float[] context,int action){
@@ -131,10 +136,10 @@ public final class BodyProprioception {
             if(learning&&!heldout){
                 int base=(action*FEATURES+j)*HEAD,k=j%SECTORS;
                 float g=PRED_LR*clamp(residual,-1,1);
-                for(int c=0;c<4;c++)
+                for(int c=0;c<CHANNELS;c++)
                     prediction[base+c]=clamp(prediction[base+c]+g*
                         before[c*SECTORS+k],-2.5f,2.5f);
-                prediction[base+4]=clamp(prediction[base+4]+g,-2.5f,2.5f);
+                prediction[base+CHANNELS]=clamp(prediction[base+CHANNELS]+g,-2.5f,2.5f);
             }
         }
         float rmse=(float)Math.sqrt(error/FEATURES);
@@ -220,14 +225,15 @@ public final class BodyProprioception {
         MotorBrain.Body body=new MotorBrain.Body();
         Morphology.Surface skin=new Morphology.Surface(body);
         float[] blank=sense(body,skin);
-        must(blank.length==32,"Wrong proprioceptive field width");
+        must(blank.length==48,"Wrong proprioceptive field width");
         int near=0,opposite=48;
         skin.x[near]=body.cx+100;skin.y[near]=body.cy;
         skin.x[opposite]=body.cx-100;skin.y[opposite]=body.cy;
         skin.touchPulse[near]=1f;
         skin.gripHold[near]=.5f;skin.extension[near]=60f;
         float[] read=sense(body,skin);
-        must(read[0]>blank[0]&&read[8]>0&&read[16]>0,
+        must(read[0]>blank[0]&&read[8]>0&&read[16]>0&&
+             read[32]>blank[32]&&read[40]<read[32],
             "Right-side pressure, holding and stretch not sensed");
         must(read[4]==0,"Other side falsely registered tactile collision");
         must(read[0]!=read[4],"Spatial sectors collapsed into one touch count");
