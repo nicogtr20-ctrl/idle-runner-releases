@@ -140,12 +140,21 @@ final class TelemetryGitHub {
         if(!lab.isEmpty())result.put("lastBehaviorLab",lab);
         return result;
     }
-    private static String readStream(InputStream in)throws Exception{
+    // GitHub Contents GET embeds the entire saved JSON as Base64 in the
+    // metadata response. A 450 KB ZERO report yields >600 KB of API JSON.
+    // Never truncate successful JSON and then attempt to parse it.
+    // The export itself is capped at 900 KiB, so 2 MiB covers Base64 and
+    // metadata while still keeping an explicit memory bound on Android.
+    private static final int MAX_SUCCESS_RESPONSE=2*1024*1024;
+    private static final int MAX_ERROR_RESPONSE=12*1024;
+    private static String readStream(InputStream in,int maxBytes)throws Exception{
         if(in==null)return "";
         try(InputStream stream=in;ByteArrayOutputStream out=new ByteArrayOutputStream()){
-            byte[] buffer=new byte[4096];int n;
+            byte[] buffer=new byte[8192];int n;
             while((n=stream.read(buffer))!=-1){
-                if(out.size()+n>49152)break;
+                if(n>maxBytes-out.size())
+                    throw new IllegalStateException(
+                        "Risposta GitHub troppo grande: caricamento non confermato.");
                 out.write(buffer,0,n);
             }
             return new String(out.toByteArray(),StandardCharsets.UTF_8);
@@ -172,7 +181,9 @@ final class TelemetryGitHub {
         }
         try{
             int code=http.getResponseCode();
-            String body=readStream(code>=400?http.getErrorStream():http.getInputStream());
+            String body=readStream(
+                code>=400?http.getErrorStream():http.getInputStream(),
+                code>=400?MAX_ERROR_RESPONSE:MAX_SUCCESS_RESPONSE);
             if(code==404&&method.equals("GET"))return null;
             if(code<200||code>=300){
                 String reason="HTTP "+code;
