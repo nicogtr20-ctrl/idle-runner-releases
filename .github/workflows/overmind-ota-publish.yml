@@ -709,7 +709,7 @@ jobs:
           'BehavioralLabActivity.java':'c1e655a947454e2cb77baad6b282890f00097717',
           'ResetDomains.java':'99e0b726e95f96683d5de942da2cb2ff0c9eb318',
           'ScarcityLab.java':'330bc76d2621338b4a1a20534fa85e59b83dff46',
-          'UnknownWorld.java':'6100dad05d7dea978f85ba89395c340b9a87a42e',
+          'UnknownWorld.java':'5fa15ab62201e93b4f806b2c76f4791934ca0608',
           'GameSceneSnapshot.java':'4f7652546fcd137c37daea5782300084f24e0785',
           'SquareGripPuzzle.java':'f653640b7f7aafb57e6ee5543a87d5a70f689507',
           'WorldPlacement.java':'2bfdb70334a40341215104a29ef26da5dabc4b25'}
