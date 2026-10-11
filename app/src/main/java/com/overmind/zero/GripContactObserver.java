@@ -140,7 +140,7 @@ final class GripContactObserver {
     void beforeBox(Morphology.Surface skin,UnknownWorld.Entity box){
         pendingBox=box;
         for(int i=0;i<Morphology.POINTS;i++){
-            beforeHold[i]=skin.gripHold[i];
+            beforeHold[i]=box.boxGripHold[i];
             beforeFace[i]=boxFace(box,skin.x[i],skin.y[i]);
         }
     }
