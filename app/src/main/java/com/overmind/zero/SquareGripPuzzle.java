@@ -136,21 +136,11 @@ public final class SquareGripPuzzle {
             box.vy=clamp(box.vy+(desiredY-box.vy)*alpha,-MAX_SPEED,MAX_SPEED);
             box.everCollided=true; // confirmed *bilateral physical grip*
         }
-        // Collision against the core and each of the ten real body masses;
-        // simple pressure corrects penetration but NEVER drives box velocity.
+        // Only ten real living tissue masses collide, not the logical centroid.
+        // Simple pressure NEVER drives box velocity.
         for(int i=0;i<MotorBrain.N;i++)
             pushOut(body.x,body.y,body.vx,body.vy,i,box.x,box.y,1.5f);
-        float dx=body.cx-box.x,dy=body.cy-box.y;
-        if(Math.abs(dx)<HALF+6&&Math.abs(dy)<HALF+6){
-            float m=Math.min(HALF+6-Math.abs(dx),HALF+6-Math.abs(dy));
-            if(HALF+6-Math.abs(dx)<=HALF+6-Math.abs(dy)){
-                if(dx>=0){body.cx+=m;body.cvx=Math.max(0,body.cvx);}
-                else {body.cx-=m;body.cvx=Math.min(0,body.cvx);}
-            }else{
-                if(dy>=0){body.cy+=m;body.cvy=Math.max(0,body.cvy);}
-                else {body.cy-=m;body.cvy=Math.min(0,body.cvy);}
-            }
-        }
+        MaterialGeometry.observe(body);
         // Revalidate the perimeter AFTER ordinary contact/pressure/traction.
         // Those corrections can otherwise introduce new through-wall chords.
         SquareCollisionSolver.finish(body,skin,box);
