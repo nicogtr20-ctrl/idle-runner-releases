@@ -750,7 +750,7 @@ jobs:
           'SpatialPerception.java':'f7f5ba9aafd5494ba5621c78e99a8fd4a191d93b',
           'MotorBrain.java':'a3e0681c595bd1a9d17549c25770f6049c83926f',
           'Morphology.java':'3f2504d47aae8db1e8ac1f82c3ffb68a0a028279',
-          'BodyIntegrity.java':'95449df8db22a7287e7a8e90f0f80f5a9f686799',
+          'BodyIntegrity.java':'e551493723d13006d5e6905690c0ab0ee9e13d17',
           'BodyIntegrityRecoveredSnapshotsRegression.java':'d536451adb05cb742176ec559460066bd637c453',
           'BodyIntegrityObstacleRegression.java':'d9b4b6d1847ea78787dacc531188d2b61318487f'}
           for name,pin in pins.items():
