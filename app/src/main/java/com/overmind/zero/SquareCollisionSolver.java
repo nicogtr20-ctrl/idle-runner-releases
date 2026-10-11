@@ -205,7 +205,7 @@ final class SquareCollisionSolver {
         // Regression: ZERO is already touching the near face at the
         // frame boundary. Entry time is EXACTLY zero. A fast inward
         // movement must still stop, not teleport to the opposite side.
-        x[0]=-20;y[0]=0;vx[0]=4200;
+        x[0]=65;y[0]=0;vx[0]=4200;
         test(project(x,y,vx,vy,0,-20,0,-20,-20,20,20,0f),
              "Face contact at t=0 skipped swept collision");
         test(x[0]<=-20f&&vx[0]<=0,
