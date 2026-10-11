@@ -17,7 +17,8 @@ public final class Morphology {
     public static final int POINTS=96;
     public static final int INPUTS=9,HIDDEN=6,LEGACY_PARAMS=INPUTS*HIDDEN+HIDDEN+2*HIDDEN+2;
     public static final int GRIP_HEAD=HIDDEN+2,PARAMS=LEGACY_PARAMS+GRIP_HEAD;
-    public static final float GRIP_THRESHOLD=.28f,GRIP_HOLD=.075f;
+    // Real contact plus continuously commanded adhesion: no physical hold before 5 simulated seconds.
+    public static final float GRIP_THRESHOLD=.28f,GRIP_HOLD=5f;
     public static final float MAX_REACH=105f,MAX_RADIAL=155f;
     private Morphology(){}
 
