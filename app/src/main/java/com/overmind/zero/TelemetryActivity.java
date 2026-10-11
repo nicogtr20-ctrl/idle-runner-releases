@@ -72,7 +72,10 @@ public final class TelemetryActivity extends Activity {
             "e la SCATOLA NERA degli ultimi 5 minuti simulati: sensi, azioni, "+
             "contributi dei cervelli, scelte casuali e movimento effettivo. "+
             "Se ZERO e' morto, include anche la traccia congelata della "+
-            "sua ultima vita, senza modificare l'apprendimento.");
+            "sua ultima vita, senza modificare l'apprendimento. "+
+            "Include anche l'OSSERVATORE PRESA: confronto cancello/casse, "+
+            "comandi dei punti, contatti, tenute e interruzioni fisiche, "+
+            "senza cambiare i comportamenti di ZERO.");
         body(description,"NON invia i 12 slot separati, nome/ID del telefono, "+
             "account personali o credenziali. Non modifica mai il personaggio, "+
             "non avvia addestramento e non carica nulla automaticamente.");

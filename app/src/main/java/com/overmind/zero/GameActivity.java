@@ -29,6 +29,7 @@ public final class GameActivity extends Activity {
         final Paint paint=new Paint(Paint.ANTI_ALIAS_FLAG);
         final Path path=new Path();
         final SharedPreferences prefs;
+        final SharedPreferences gripPrefs;
         final int TEAL=0xff80f7e2,GOLD=0xfff7c67a,MUTED=0xff95b1bb;
         final float W=480f;
         MotorBrain.Trainer trainer;
@@ -47,6 +48,7 @@ public final class GameActivity extends Activity {
         GoalContinuity intentions=new GoalContinuity();
         GateBehaviorMetrics gateMetrics=new GateBehaviorMetrics();
         GateLifeJournal gateJournal=new GateLifeJournal();
+        GripContactObserver gripObserver=new GripContactObserver();
         ContextualMotionProbe motionShadow=new ContextualMotionProbe();
         DecisionBlackbox decisionBlackbox=new DecisionBlackbox();
         MotorAutonomyGuard motorGuard=new MotorAutonomyGuard();
@@ -114,6 +116,7 @@ public final class GameActivity extends Activity {
         Lab(Context c){
             super(c);setLayerType(View.LAYER_TYPE_HARDWARE,null);setFocusable(true);
             prefs=c.getSharedPreferences("zero_motorbrain_001",Context.MODE_PRIVATE);
+            gripPrefs=c.getSharedPreferences(GripContactObserver.PREFS,Context.MODE_PRIVATE);
             load();
             try {
                 installedVersion=GameActivity.this.getPackageManager().getPackageInfo(
@@ -140,6 +143,8 @@ public final class GameActivity extends Activity {
             return true;
         }
         void load(){
+            gripObserver=new GripContactObserver();
+            gripPrefs.edit().remove(GripContactObserver.KEY).apply();
             // Named slot loads/new-game atomically swap the working profile
             // while this Activity is paused. Discard any stale in-memory
             // controllers BEFORE the next frame or save.
@@ -354,6 +359,7 @@ public final class GameActivity extends Activity {
                     .putString(GateLifeJournal.CURRENT,gateJournal.encode())
                     .commit())
                     throw new IllegalStateException("Impossibile salvare la scena fisica");
+                saveGripObserver();
             }catch(Exception e){
                 throw new IllegalStateException("Non riesco a salvare posizione e stanza",e);
             }
@@ -417,6 +423,10 @@ public final class GameActivity extends Activity {
             }catch(Exception invalid){return false;}
         }
 
+        void saveGripObserver(){
+            gripPrefs.edit().putString(GripContactObserver.KEY,
+                gripObserver.encode()).apply();
+        }
         void save(){
             if(trainer==null)return;
             prefs.edit().putString("virgin",encode(virgin))
@@ -506,6 +516,7 @@ public final class GameActivity extends Activity {
             lastFrame=0;
         }
         void resetEpisode(){
+            gripObserver.newLife();
             // Only initial boot or actual simulated death restarts the body.
             bestLifeDistance=Math.max(bestLifeDistance,lifeDistance);
             lifeDistance=0;travelSinceAction=0;forwardSinceAction=0;
@@ -720,6 +731,8 @@ public final class GameActivity extends Activity {
                 // Save a separate last-life trace even if the app is closed
                 // before the next twelve-second physical-scene checkpoint.
                 gateJournal.terminal(elapsedLife,reserve);
+                gripObserver.terminal();
+                saveGripObserver();
                 // Freeze both complete traces atomically before reincarnation.
                 if(!prefs.edit().putString(DecisionBlackbox.LAST,
                     decisionBlackbox.lastLife())
@@ -787,6 +800,8 @@ public final class GameActivity extends Activity {
                     if(chamber!=null){
                         float doorBefore=chamber.doorY;
                         chamber.constrain(creature,surface,slice,sensorMind.adhesion());
+                        gripObserver.gateFrame(surface,chamber,sensorMind.adhesion(),
+                            elapsedLife,slice);
                         float actuallyMoved=Math.abs(chamber.doorY-doorBefore);
                         if(Float.isFinite(actuallyMoved))
                             environmentEffectSinceAction+=Math.min(2,actuallyMoved);
@@ -853,11 +868,14 @@ public final class GameActivity extends Activity {
                         java.util.Arrays.fill(surface.touchSense,0f);
                     for(UnknownWorld.Entity e:environment){
                         if(!e.isBox())continue;
+                        gripObserver.beforeBox(surface,e);
                         SquareGripPuzzle.Outcome grips=SquareGripPuzzle.constrain(
                             creature,surface,e,slice,
                             squarePrevSkinX,squarePrevSkinY,
                             squarePrevBodyX,squarePrevBodyY,
                             oldCoreX,oldCoreY);
+                        gripObserver.boxFrame(surface,e,sensorMind.adhesion(),
+                            elapsedLife,slice);
                         if(grips.opposingGrip)e.peakDisplacement=Math.max(
                             e.peakDisplacement,e.displacementFromSpawn());
                         if(SquareGripPuzzle.uncover(e,environment)){

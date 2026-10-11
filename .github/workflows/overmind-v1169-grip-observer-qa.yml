@@ -1,0 +1,35 @@
+name: ZERO 1169 Passive Grip Contact Observer QA
+on:
+  push:
+    branches: [feature/overmind-v1169-grip-contact-observer]
+  pull_request:
+    branches: [feature/overmind-inapp-updater]
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  observer:
+    runs-on: ubuntu-latest
+    timeout-minutes: 35
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+      - uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: '8.11.1'
+      - name: Compile passive observer with unchanged native-world regression dependencies
+        run: |
+          mkdir -p /tmp/zero1169
+          javac -d /tmp/zero1169 app/src/main/java/com/overmind/zero/{MotorBrain,UnknownWorld,OpticalCues,OpticalCueRegression,HabitatContinuity,SquareCollisionSolver,SquareGripPuzzle,GripParityRegression,GripContactObserver,GripContactObserverRegression,WorldPlacement,ContactLearning,DecisionBrain,Morphology,ScarcityLab,SensorimotorMind,DecisionBlackbox,GateLifeJournal,ContextualMotionProbe,ShadowNonInterferenceRegression,SpatialPerception,CausalExperiments,BodyProprioception,InstrumentalNavigation,GoalContinuity,GateBehaviorMetrics,BehavioralLaboratory,TemporalWorkingMemory,TemporalSkillBank,TemporalPersistenceRegression,LearnedSequencePlanner,LearningDiagnostics,ResetDomains,OnlineBodyLearning,MotionExploration,EpisodicMemory,MotorAutonomyGuard,MotorSkillBank,ExperienceCredit,GripSkillBank,SaveProfileCodec,LifeStatistics}.java
+      - name: Test passive grip instrumentation
+        run: java -cp /tmp/zero1169 com.overmind.zero.GripContactObserverRegression
+      - name: Check old gate/box physical parity and contact-only non-displacement
+        run: |
+          for test in GripParityRegression SquareCollisionSolver SquareGripPuzzle ShadowNonInterferenceRegression ScarcityLab; do
+            java -cp /tmp/zero1169 com.overmind.zero.$test
+          done
+      - name: Assemble diagnostic APK without publishing it
+        run: gradle --no-daemon assembleDebug
