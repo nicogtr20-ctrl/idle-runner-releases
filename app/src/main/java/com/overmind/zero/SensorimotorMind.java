@@ -581,7 +581,8 @@ public final class SensorimotorMind {
                 float proximity=0;
                 for(int step=1;step<=7;step++){
                     float distance=step*22;
-                    float x=b.cx+vx*distance,y=b.cy+vy*distance;
+                    float[] eye=MaterialGeometry.eye(skin,b.cx,b.cy,vx,vy);
+                    float x=eye[0]+vx*distance,y=eye[1]+vy*distance;
                     if(solid(lab,x,y,objects)){
                         proximity=1-distance/175f;break;
                     }
@@ -597,7 +598,8 @@ public final class SensorimotorMind {
                 if(d>210||d<.1f)continue;
                 int sector=(int)Math.floor((Math.atan2(dy,dx)+Math.PI)/(Math.PI/2));
                 sector=Math.max(0,Math.min(3,sector));
-                if(occluded(lab,b.cx,b.cy,e.x,e.y,objects,e,cueEnabled))continue;
+                float[] sight=MaterialGeometry.eye(skin,b.cx,b.cy,dx,dy);
+                if(occluded(lab,sight[0],sight[1],e.x,e.y,objects,e,cueEnabled))continue;
                 int channel=14+e.signature*4+sector;
                 if(channel<14||channel>=S)continue;
                 float bright=1-d/230f;
@@ -620,7 +622,9 @@ public final class SensorimotorMind {
                     float brightness=OpticalCues.leakBrightness(
                         (float)Math.hypot(dx,dy));
                     if(brightness<=0||
-                       occluded(lab,b.cx,b.cy,px,py,objects,e,true))continue;
+                       occluded(lab,MaterialGeometry.eye(skin,b.cx,b.cy,dx,dy)[0],
+                          MaterialGeometry.eye(skin,b.cx,b.cy,dx,dy)[1],
+                          px,py,objects,e,true))continue;
                     int sector=(int)Math.floor((Math.atan2(dy,dx)+Math.PI)/(Math.PI/2));
                     sector=Math.max(0,Math.min(3,sector));
                     v[14+e.signature*4+sector]=
