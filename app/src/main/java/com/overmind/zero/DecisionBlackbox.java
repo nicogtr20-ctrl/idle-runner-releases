@@ -195,6 +195,21 @@ public final class DecisionBlackbox {
     }
     private static void require(boolean yes,String message){if(!yes)throw new AssertionError(message);}
     public static void main(String[] args){
+        // Same seeded selector, same sensory inputs: logging may not
+        // change a SINGLE selected action, exploration draw or brain weight.
+        SensorimotorMind original=new SensorimotorMind();
+        SensorimotorMind observed=new SensorimotorMind();
+        observed.attachDecisionBlackbox(new DecisionBlackbox());
+        float[] equivalent=new float[SENSES];
+        equivalent[0]=.6f;equivalent[15]=.3f;
+        for(int n=0;n<180;n++){
+            require(original.choose(equivalent)==observed.choose(equivalent),
+                "Passive recorder changed ZERO's decision or epsilon random draw");
+            require(original.explorations==observed.explorations,
+                "Passive recorder changed exploration pattern");
+        }
+        require(original.serialize().equals(observed.serialize()),
+            "Passive recorder altered learned sensorimotor parameters");
         DecisionBlackbox rec=new DecisionBlackbox();
         float[] senses=new float[SENSES],parts=new float[TERMS];
         senses[0]=.7f;senses[14]=.7f;senses[18]=.9f;
