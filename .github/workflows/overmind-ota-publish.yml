@@ -531,10 +531,10 @@ jobs:
           assert 'public static final int S=26;' in m
           assert 'spatial.choiceBias(a)' in m
           assert 'spatial.consequence(trialAction,lastReward,learning&&!holdout,holdout)' in m
-          assert 'spatial.observeEnvironment(body,room,objects)' in m
+          assert 'spatial.observeEnvironment(body,skin,room,objects)' in m
           assert 'spatialMap.restore(prefs.getString(SpatialPerception.KEY,""))' in g
           assert '.putString(SpatialPerception.KEY,spatialMap.encode())' in g
-          assert 'sensorMind.resumeSpatialSense(creature,chamber,environment)' in g
+          assert 'sensorMind.resumeSpatialSense(creature,surface,chamber,environment)' in g
           assert 'sensorMind.updateSpatialSense(creature,chamber,environment)' in g
           assert '.putString(BodyProprioception.KEY,bodySchema.encode())' in g
           assert '.putString("temporal_working_memory_v106",workingMemory.encode())' in g
