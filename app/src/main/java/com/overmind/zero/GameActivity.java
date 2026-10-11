@@ -1045,6 +1045,20 @@ public final class GameActivity extends Activity {
                     cy+ScarcityLab.BOTTOM+9,paint);
                 c.drawRect(cx+ScarcityLab.END_X-ScarcityLab.WALL_HALF_THICKNESS,cy+ScarcityLab.TOP-10,
                     cx+ScarcityLab.END_X+ScarcityLab.WALL_HALF_THICKNESS,cy+ScarcityLab.BOTTOM+10,paint);
+                // A PHYSICALLY SOLID pane in the upper entrance wall.
+                // Only optical occlusion is different; ScarcityLab's five
+                // original solid slabs and gate collision are untouched.
+                float glassX=x,glassTop=cy+OpticalCues.GLASS_TOP,
+                      glassBottom=cy+OpticalCues.GLASS_BOTTOM;
+                paint.setColor(0xff19343f);
+                c.drawRoundRect(glassX-8,glassTop,glassX+8,
+                    glassBottom,2.5f,2.5f,paint);
+                paint.setColor(0xff367b86);
+                c.drawRoundRect(glassX-5.8f,glassTop+2,glassX+5.8f,
+                    glassBottom-2,1.5f,1.5f,paint);
+                paint.setColor(0x88b7f9e9);
+                c.drawLine(glassX-3.7f,glassTop+3,glassX-3.7f,
+                    glassBottom-3,paint);
                 paint.setColor(0xffdfb982);
                 c.drawRoundRect(gx-ScarcityLab.DOOR_HALF_W,chamber.gateTop(),
                     gx+ScarcityLab.DOOR_HALF_W,chamber.gateBottom(),4,4,paint);
@@ -1080,7 +1094,21 @@ public final class GameActivity extends Activity {
                     }
                 }
                 if(object.isBox()){
-                    paint.setShader(null);
+                    // Subtle photons escaping under a REAL, still covering
+                    // square. This matches the optical model's faint cue,
+                    // and never shows the actual full +40 object prematurely.
+                    boolean concealedLight=false;
+                    for(UnknownWorld.Entity source:environment)
+                        if(OpticalCues.coverOf(source,environment)==object){
+                            concealedLight=true;break;
+                        }
+                    if(concealedLight){
+                        paint.setShader(new RadialGradient(x,y,34f,
+                            new int[]{0x5530d9ce,0x2530d9ce,0x0030d9ce},
+                            null,Shader.TileMode.CLAMP));
+                        c.drawRoundRect(x-34,y-34,x+34,y+34,8,8,paint);
+                        paint.setShader(null);
+                    }
                     paint.setColor(0xff0a131e);
                     c.drawRoundRect(x-20.8f,y-20.8f,x+20.8f,y+20.8f,4,4,paint);
                     paint.setColor(0xffcaa875);
