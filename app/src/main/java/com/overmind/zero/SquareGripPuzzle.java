@@ -44,6 +44,38 @@ public final class SquareGripPuzzle {
             default:y[index]=cy+HALF+clearance;vy[index]=Math.max(0,vy[index]);break;
         }
     }
+    /** Non-penetrating membrane edges: opposite contacts count only when
+     * the elastic perimeter does NOT cut through the solid square. */
+    private static void resolveCrossingLinks(Morphology.Surface skin,
+                                             UnknownWorld.Entity box){
+        float l=box.x-HALF,r=box.x+HALF,t=box.y-HALF,b=box.y+HALF;
+        for(int i=0;i<Morphology.POINTS;i++){
+            int j=(i+1)%Morphology.POINTS;
+            if(!ScarcityLab.crossesInterior(skin.x[i],skin.y[i],
+                                            skin.x[j],skin.y[j],l,t,r,b))
+                continue;
+            float costLeft=Math.max(0,skin.x[i]-(l-1.5f))+
+                           Math.max(0,skin.x[j]-(l-1.5f));
+            float costRight=Math.max(0,(r+1.5f)-skin.x[i])+
+                            Math.max(0,(r+1.5f)-skin.x[j]);
+            float costTop=Math.max(0,skin.y[i]-(t-1.5f))+
+                          Math.max(0,skin.y[j]-(t-1.5f));
+            float costBottom=Math.max(0,(b+1.5f)-skin.y[i])+
+                             Math.max(0,(b+1.5f)-skin.y[j]);
+            int side=0;float cost=costLeft;
+            if(costRight<cost){cost=costRight;side=1;}
+            if(costTop<cost){cost=costTop;side=2;}
+            if(costBottom<cost){side=3;}
+            for(int n=0;n<2;n++){
+                int k=n==0?i:j;
+                if(side==0){skin.x[k]=l-1.5f;skin.vx[k]=Math.min(0,skin.vx[k]);}
+                else if(side==1){skin.x[k]=r+1.5f;skin.vx[k]=Math.max(0,skin.vx[k]);}
+                else if(side==2){skin.y[k]=t-1.5f;skin.vy[k]=Math.min(0,skin.vy[k]);}
+                else {skin.y[k]=b+1.5f;skin.vy[k]=Math.max(0,skin.vy[k]);}
+                skin.gripHold[k]=0; // impossible through-solid grip never counts
+            }
+        }
+    }
     private static boolean sufficientlySeparate(int i,int j){
         if(i<0||j<0)return false;
         int d=Math.abs(i-j);
@@ -53,6 +85,7 @@ public final class SquareGripPuzzle {
                                     UnknownWorld.Entity box,float dt){
         if(body==null||skin==null||box==null||!box.isBox()||
            !Float.isFinite(dt)||dt<=0)return new Outcome(false,0,0);
+        resolveCrossingLinks(skin,box);
         int[] sides={-1,-1,-1,-1};
         float sumVx=0,sumVy=0;int held=0,contacts=0;
         for(int i=0;i<Morphology.POINTS;i++){
@@ -159,6 +192,13 @@ public final class SquareGripPuzzle {
         }
         require(box.displacementFromSpawn()<.01f&&!box.everCollided,
                 "One-sided adhesion moved square");
+        // A legal perimeter surrounds the block without traversing its
+        // interior; two genuinely separated points now grip opposite faces.
+        for(int i=0;i<Morphology.POINTS;i++){
+            double angle=Math.PI*2*i/Morphology.POINTS;
+            s.x[i]=box.x+36f*(float)Math.cos(angle);
+            s.y[i]=box.y+36f*(float)Math.sin(angle);
+        }
         // Genuine bilateral adhesion and movement along both x and y.
         for(int j=0;j<85;j++){
             int left=4,right=Morphology.POINTS/2+4;
