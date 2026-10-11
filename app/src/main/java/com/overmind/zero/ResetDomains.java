@@ -44,7 +44,7 @@ public final class ResetDomains {
             case TEMPORAL_SKILLS:return new String[]{"temporal_skills_v107"};
             case PROPRIOCEPTION:return new String[]{BodyProprioception.KEY};
             case SPATIAL:return new String[]{SpatialPerception.KEY};
-            case CAUSAL:return new String[]{CausalExperiments.KEY};
+            case CAUSAL:return new String[]{CausalExperiments.KEY,CausalHorizonProbe.KEY};
             case NAVIGATION:return new String[]{InstrumentalNavigation.KEY};
             case INTENTION:return new String[]{GoalContinuity.KEY};
             case GATE_METRICS:return new String[]{GateBehaviorMetrics.KEY};

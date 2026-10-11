@@ -43,6 +43,7 @@ public final class GameActivity extends Activity {
         BodyProprioception bodySchema=new BodyProprioception();
         SpatialPerception spatialMap=new SpatialPerception();
         CausalExperiments causalExperiments=new CausalExperiments();
+        CausalHorizonProbe causalHorizon=new CausalHorizonProbe();
         InstrumentalNavigation navigation=new InstrumentalNavigation();
         GoalContinuity intentions=new GoalContinuity();
         GateBehaviorMetrics gateMetrics=new GateBehaviorMetrics();
@@ -191,6 +192,10 @@ public final class GameActivity extends Activity {
             causalExperiments=new CausalExperiments();
             causalExperiments.restore(prefs.getString(CausalExperiments.KEY,""));
             sensorMind.attachCausalExperiments(causalExperiments);
+            // Experiment 0117: passive graph restored with this ZERO's named save slot.
+            causalHorizon=new CausalHorizonProbe();
+            causalHorizon.restore(prefs.getString(CausalHorizonProbe.KEY,""));
+            sensorMind.attachCausalHorizon(causalHorizon);
             navigation=new InstrumentalNavigation();
             navigation.restore(prefs.getString(InstrumentalNavigation.KEY,""));
             sensorMind.attachNavigation(navigation);
@@ -437,6 +442,7 @@ public final class GameActivity extends Activity {
               .putString(BodyProprioception.KEY,bodySchema.encode())
               .putString(SpatialPerception.KEY,spatialMap.encode())
               .putString(CausalExperiments.KEY,causalExperiments.encode())
+              .putString(CausalHorizonProbe.KEY,causalHorizon.encode())
               .putString(InstrumentalNavigation.KEY,navigation.encode())
               .putString(GoalContinuity.KEY,intentions.encode())
               .putString(GateBehaviorMetrics.KEY,gateMetrics.encode())
