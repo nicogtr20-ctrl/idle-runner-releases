@@ -1291,7 +1291,7 @@ public final class GameActivity extends Activity {
             rounded(c,12,12,468,145,0xeb0a1420,20);
             rounded(c,27,28,31,55,TEAL,2);
             text(c,"O V E R M I N D",43,39,14,TEAL,false);
-            text(c,"ZERO / ESPERIMENTO 009.9",26,72,21,0xffe9faf6,false);
+            text(c,"ZERO / SIMBIONTE 0120",26,72,21,0xffe9faf6,false);
             rounded(c,339,104,459,138,0xff20444a,11);
             text(c,"AGGIORNA",399,127,12,TEAL,true);
             rounded(c,217,104,333,138,0xff283b58,11);
