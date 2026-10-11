@@ -168,7 +168,15 @@ public final class TelemetryActivity extends Activity {
             }catch(Exception failure){
                 runOnUiThread(()->{
                     if(isFinishing()||isDestroyed())return;
-                    status.setText("CARICAMENTO NON RIUSCITO: "+failure.getMessage()+
+                    // Never place an entire malformed remote JSON or a
+                    // large network payload into the screen's error label.
+                    String reason=failure.getMessage();
+                    if(reason==null||reason.trim().isEmpty())
+                        reason="Errore di rete o lettura risposta GitHub";
+                    reason=reason.replace((char)10,' ').replace((char)13,' ');
+                    if(reason.length()>240)
+                        reason=reason.substring(0,240)+"...";
+                    status.setText("CARICAMENTO NON RIUSCITO: "+reason+
                         ". Il tuo ZERO e' invariato.");
                 });
             }finally{
