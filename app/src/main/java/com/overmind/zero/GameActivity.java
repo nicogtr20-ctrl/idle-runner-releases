@@ -535,21 +535,18 @@ public final class GameActivity extends Activity {
             // Keep the same physical body, velocity, memories and camera.
             // Place additional objects outside the immediate viewport.
             episode++;phase=0;
-            for(int i=environment.size()-1;i>=0;i--){
-                UnknownWorld.Entity e=environment.get(i);
-                if(e!= (chamber!=null?chamber.food:null)
-                        && (e.consumed ||
-                            Math.hypot(e.x-creature.cx,e.y-creature.cy)>600))
-                    environment.remove(i);
-            }
+            // A living ZERO's real contact must not be erased by the
+            // periodic 13-second world-streaming pass. A still-concealed
+            // source stays paired with its physical cover.
+            HabitatContinuity.pruneDistant(environment,creature,surface,
+                chamber==null?null:chamber.food,600f);
             environment.addAll(WorldPlacement.spawn(
                 episode,creature.cx,creature.cy,scarcity,chamber,environment));
             excludeOrdinaryRoomObjects();
-            while(environment.size()>24){
-                if(environment.get(0)==(chamber!=null?chamber.food:null)){
-                    environment.remove(1);
-                }else environment.remove(0);
-            }
+            // Oldest unengaged objects are recycled first; a touched or
+            // currently gripped square never vanishes merely due to cap 24.
+            HabitatContinuity.enforceLimit(environment,creature,surface,
+                chamber==null?null:chamber.food);
             if(chosenObject!=null&&!environment.contains(chosenObject)){
                 decisionBrain.abandon();
                 chosenObject=null;goalTimer=0;
@@ -558,14 +555,20 @@ public final class GameActivity extends Activity {
             eventTime=3;
         }
         void excludeOrdinaryRoomObjects(){
-            if(chamber==null)return;
-            for(int i=environment.size()-1;i>=0;i--){
-                UnknownWorld.Entity e=environment.get(i);
-                if(e!=chamber.food&&chamber.overlapsRoom(e.x,e.y,e.radius))
-                    environment.remove(i);
-            }
+            HabitatContinuity.excludeRoomOverlap(
+                environment,chamber,creature,surface);
         }
         void activateChamber(boolean manual){
+            // Do not materialize a room over an existing box or stimulus:
+            // choose a physically vacant nearby origin (no deletion).
+            ScarcityLab next=HabitatContinuity.clearChamber(
+                creature.cx,creature.cy,environment);
+            if(next==null){
+                nextChamber=elapsedLife+8f;
+                lastEvent="STANZA RINVIATA • SPAZIO OCCUPATO";
+                eventTime=2f;
+                return;
+            }
             if(chamber!=null){
                 gripsEver+=chamber.grasps;
                 farthestGate=Math.max(farthestGate,chamber.maxDoorTravel);
@@ -573,7 +576,7 @@ public final class GameActivity extends Activity {
             }
             scarcity=true;
             // Test the door without a forced energy penalty.
-            chamber=new ScarcityLab(creature.cx,creature.cy);
+            chamber=next;
             previousGripDrive=previousGripHeld=previousOpposedFrames=0;
             gateMetrics.resetLife();
             ongoingUnsuccessfulGrip=0;gripRecoveryCooldown=0;
@@ -1200,7 +1203,8 @@ public final class GameActivity extends Activity {
                 }
                 // Orange sparks show only PHYSICALLY engaged neural adhesion,
                 // not ordinary contacts or the membrane's motor contractions.
-                if(chamber!=null&&surface.gripHold[i]>=Morphology.GRIP_HOLD){
+                if(surface.gripHold[i]>=Morphology.GRIP_HOLD&&
+                   surface.touchSense[i]>.5f){
                     paint.setColor(0xfff8c979);
                     c.drawCircle(xx[i],yy[i],3.15f,paint);
                 }
