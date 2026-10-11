@@ -41,7 +41,7 @@ final class SquareCollisionSolver {
             }else{
                 float t0=(left-priorX)/dx,t1=(right-priorX)/dx;
                 float near=Math.min(t0,t1),far=Math.max(t0,t1);
-                if(near>entry){entry=near;face=dx>0?0:1;}
+                if(near>=entry){entry=near;face=dx>0?0:1;}
                 exit=Math.min(exit,far);
             }
             if(Math.abs(dy)<1e-7f){
@@ -49,7 +49,7 @@ final class SquareCollisionSolver {
             }else{
                 float t0=(top-priorY)/dy,t1=(bottom-priorY)/dy;
                 float near=Math.min(t0,t1),far=Math.max(t0,t1);
-                if(near>entry){entry=near;face=dy>0?2:3;}
+                if(near>=entry){entry=near;face=dy>0?2:3;}
                 exit=Math.min(exit,far);
             }
             if(face>=0 && entry<=exit && entry>=0 && entry<=1){
@@ -202,6 +202,14 @@ final class SquareCollisionSolver {
              "Swept CCD did not detect complete tunneling");
         test(x[0]<=-21.15f&&vx[0]<=0,
              "Swept CCD teleported node to far side of square");
+        // Regression: ZERO is already touching the near face at the
+        // frame boundary. Entry time is EXACTLY zero. A fast inward
+        // movement must still stop, not teleport to the opposite side.
+        x[0]=-20;y[0]=0;vx[0]=4200;
+        test(project(x,y,vx,vy,0,-20,0,-20,-20,20,20,0f),
+             "Face contact at t=0 skipped swept collision");
+        test(x[0]<=-20f&&vx[0]<=0,
+             "Previously touching node teleported through the box");
         // A link with both endpoints outside must not pass through the solid.
         float[] lx={-26,26},ly={0,0},lvx={0,0},lvy={0,0};
         // n=2 ring has two opposite duplicated edges; still must resolve.
