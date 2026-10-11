@@ -111,7 +111,7 @@ public final class SquareGripPuzzle {
                 skin.touchPulse[i]=Math.max(skin.touchPulse[i],.6f);
                 contacts++;
                 if(skin.gripCommand[i]>Morphology.GRIP_THRESHOLD){
-                    skin.gripHold[i]=Math.min(.5f,skin.gripHold[i]+dt);
+                    skin.gripHold[i]=Math.min(Morphology.GRIP_HOLD,skin.gripHold[i]+dt);
                     if(skin.gripHold[i]>=Morphology.GRIP_HOLD){
                         sides[face]=i;
                         sumVx+=skin.vx[i];sumVy+=skin.vy[i];held++;
@@ -211,7 +211,7 @@ public final class SquareGripPuzzle {
         // A legal perimeter surrounds the block without traversing its
         // interior; two genuinely separated points now grip opposite faces.
         // Genuine bilateral adhesion and movement along both x and y.
-        for(int j=0;j<85;j++){
+        for(int j=0;j<(int)(Morphology.GRIP_HOLD/.035f)+85;j++){
             for(int i=0;i<Morphology.POINTS;i++){
                 double angle=Math.PI*2*i/Morphology.POINTS;
                 s.x[i]=box.x+36f*(float)Math.cos(angle);
