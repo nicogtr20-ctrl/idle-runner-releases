@@ -36,6 +36,9 @@ public final class ScarcityLab {
     public float maxDoorTravel=0;
     public int solidLinkCorrections=0;
     private boolean wasGrasping=false;
+    // A patch may instead be holding a separate square. Only the gate owns
+    // gate-contact adhesion and may release its own departing patches.
+    private final boolean[] gateTouchPrevious=new boolean[Morphology.POINTS];
     /** Preserve the latch state across named save/reload, preventing a
      * duplicated grasp event at the first physics frame after restore. */
     boolean graspingLatch(){return wasGrasping;}
@@ -83,10 +86,15 @@ public final class ScarcityLab {
             // The neural policy observes the actual touch on NEXT frame.
             // Touch is a sensor, adhesion is a separate learned command.
             skin.touchSense[i]=inContact?1:0;
+            boolean ownedGate=gateTouchPrevious[i];
+            gateTouchPrevious[i]=inContact;
             if(!inContact){
-                skin.gripHold[i]=0;
+                // A distant box grip belongs to the box solver, NOT the gate.
+                if(ownedGate)skin.gripHold[i]=0;
                 continue;
             }
+            // Prevent a first gate touch borrowing a previously held box grip.
+            if(!ownedGate)skin.gripHold[i]=0;
             tactileFrames++;
             if(left){
                 leftTouch++;
