@@ -82,9 +82,11 @@ public final class BodyIntegrity {
             float ay=body.y[j]*(1-f)+body.y[next]*f;
             float dx=ax-skin.x[i],dy=ay-skin.y[i];
             float distance=(float)Math.hypot(dx,dy);
-            if(!Float.isFinite(distance)||distance<=MAX_SHELL_ANCHOR_STRAIN)continue;
+            // Intentional neural extensions and lateral reach remain free.
+            float allowed=Math.max(MAX_SHELL_ANCHOR_STRAIN,skin.extension[i]+32f);
+            if(!Float.isFinite(distance)||distance<=allowed)continue;
             float shift=Math.min(MAX_SHELL_CORRECTION,
-                (distance-MAX_SHELL_ANCHOR_STRAIN)*.12f);
+                (distance-allowed)*.12f);
             float sx=dx/distance*shift,sy=dy/distance*shift;
             skin.x[i]+=sx;skin.y[i]+=sy;
             skin.vx[i]=limited(skin.vx[i]+sx*dt*35f,230f);
