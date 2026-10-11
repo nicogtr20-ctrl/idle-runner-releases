@@ -50,6 +50,7 @@ public final class GameActivity extends Activity {
         GateLifeJournal gateJournal=new GateLifeJournal();
         GripContactObserver gripObserver=new GripContactObserver();
         ContextualMotionProbe motionShadow=new ContextualMotionProbe();
+        MortalityLearning mortality=new MortalityLearning();
         DecisionBlackbox decisionBlackbox=new DecisionBlackbox();
         MotorAutonomyGuard motorGuard=new MotorAutonomyGuard();
         MotorSkillBank skillBank=new MotorSkillBank();
@@ -220,6 +221,9 @@ public final class GameActivity extends Activity {
             motionShadow=new ContextualMotionProbe();
             motionShadow.restore(prefs.getString(ContextualMotionProbe.KEY,""));
             sensorMind.attachMotionShadow(motionShadow);
+            mortality=new MortalityLearning();
+            mortality.restore(prefs.getString(MortalityLearning.KEY,""));
+            sensorMind.attachMortalityLearning(mortality);
             gateJournal=new GateLifeJournal();
             gateJournal.restoreLast(prefs.getString(GateLifeJournal.LAST,""));
             gateJournal.restoreCurrent(prefs.getString(GateLifeJournal.CURRENT,""));
@@ -476,6 +480,7 @@ public final class GameActivity extends Activity {
               .putString(GoalContinuity.KEY,intentions.encode())
               .putString(GateBehaviorMetrics.KEY,gateMetrics.encode())
               .putString(ContextualMotionProbe.KEY,motionShadow.encode())
+              .putString(MortalityLearning.KEY,mortality.encode())
               .putString(GateLifeJournal.CURRENT,gateJournal.encode())
               .putString(LifeStatistics.KEY,lifeStats.encode())
               .putInt("motor_recoveries_v097",motorGuard.recoveryActivations)
@@ -523,6 +528,7 @@ public final class GameActivity extends Activity {
             environmentEffectSinceAction=0;eventEnergyDeltaSinceAction=0;
             java.util.Arrays.fill(energySinceAction,0f);
             episodic.resetLife(); // Forget transient attempt, NOT learned motor or memories.
+            mortality.newLife(); // Keep learned terminal weights and tested evidence.
             previousGripDrive=previousGripHeld=previousOpposedFrames=0;
             gateMetrics.resetLife();
             gateJournal.newLife(); // Retain previous life snapshot, start clean.
@@ -612,7 +618,9 @@ public final class GameActivity extends Activity {
             if(!scarcity&&elapsedLife>=70f)scarcity=true;
             // Physiological requirement is part of the organism, NOT a
             // scripted plan for solving the current room.
+            float energyBeforeDrain=reserve;
             reserve=Math.max(0,reserve-(scarcity?.30f:.09f)*dt);
+            mortality.energyFlows(dt,energyBeforeDrain-reserve,0,0);
             if(scarcity&&elapsedLife>=nextChamber&&
                 (chamber==null||chamber.reachedEnergy))
                 activateChamber(false);
@@ -691,6 +699,8 @@ public final class GameActivity extends Activity {
                     float delta=object.touch(dx/Math.max(1,dist),dy/Math.max(1,dist));
                     reserve=Math.max(0,Math.min(100,reserve+delta));
                     lifeStats.contact(reserve-before); // actual clamped contact outcome
+                    mortality.energyFlows(0,0,Math.max(0,before-reserve),
+                        Math.max(0,reserve-before));
                     // Only actual physical contact, never passive hunger,
                     // determines positive/negative autobiographical valence.
                     eventEnergyDeltaSinceAction+=reserve-before;
@@ -710,6 +720,9 @@ public final class GameActivity extends Activity {
             }
             eventTime=Math.max(0,eventTime-dt);
             if(reserve<=0){
+                // Terminal supervision is the genuine end of a physical life,
+                // NEVER a negative label on the gate, squares or last action.
+                mortality.terminal(reserve/100f);
                 if(chamber!=null){
                     gripsEver+=chamber.grasps;
                     farthestGate=Math.max(farthestGate,chamber.maxDoorTravel);
@@ -918,6 +931,7 @@ public final class GameActivity extends Activity {
                         float prior=reserve;
                         reserve=Math.min(100,reserve+UnknownWorld.RARE_ENERGY);
                         lifeStats.contact(reserve-prior);
+                        mortality.energyFlows(0,0,0,Math.max(0,reserve-prior));
                         lifeStats.roomSolved();
                         eventEnergyDeltaSinceAction+=reserve-prior;
                         sensorMind.contactOutcome(reserve-prior,chamber.food.signature);
@@ -955,6 +969,7 @@ public final class GameActivity extends Activity {
                         environmentEffectSinceAction,creature,surface,
                         chamber,environment);
                     if(sensorMind.experiences>beforeExperience){
+                        mortality.observed(reserve/100f);
                         episodic.action(observedBefore,actionBefore);
                         int recallsBefore=episodic.repeatEffects;
                         boolean remembered=episodic.consequenceSeparated(

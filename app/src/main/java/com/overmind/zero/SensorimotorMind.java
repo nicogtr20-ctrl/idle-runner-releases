@@ -37,6 +37,8 @@ public final class SensorimotorMind {
     private transient DecisionBlackbox blackbox;
     // Pure empirical observer; its predicted motion is NEVER scored or acted upon.
     private transient ContextualMotionProbe motionShadow;
+    private transient MortalityLearning mortality;
+    public synchronized void attachMortalityLearning(MortalityLearning model){mortality=model;}
     public synchronized void attachMotionShadow(ContextualMotionProbe probe){motionShadow=probe;}
     public synchronized void attachDecisionBlackbox(DecisionBlackbox recorder){blackbox=recorder;}
     public synchronized void attachGoalContinuity(GoalContinuity c){intention=c;}
@@ -281,6 +283,11 @@ public final class SensorimotorMind {
             // and external-displacement values, combined only at choice time.
             // No hidden object identity, hardcoded heading or navigation.
             float earnedValue=contactCredit.value(senses,a);
+            // Only a validated lived-death predictor can modulate energy-
+            // SOURCE evidence. Never assign death to action, grip or geometry.
+            if(mortality!=null)
+                earnedValue+=mortality.energyAdvice(senses[0],
+                    contactCredit.energeticValue(senses,a));
             // Recurrent recent-history advice is exactly zero until its
             // temporal prediction wins on held-out real transitions.
             float temporalBias=temporal==null?0:temporal.choiceBias(a);

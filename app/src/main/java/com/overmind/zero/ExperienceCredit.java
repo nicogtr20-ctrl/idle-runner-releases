@@ -32,6 +32,15 @@ public final class ExperienceCredit {
         if(history.size()==LENGTH)history.removeFirst();
         history.addLast(new Step(senses,action));
     }
+    public float energeticValue(float[] senses,int action){
+        if(senses==null||senses.length!=SensorimotorMind.S||
+            action<0||action>=SensorimotorMind.ACTIONS)return 0;
+        int base=action*SensorimotorMind.P;
+        float energy=0;
+        for(int i=14;i<SensorimotorMind.S;i++)
+            energy+=energetic[base+i]*senses[i];
+        return clip(energy,-1.5f,1.5f);
+    }
     public float value(float[] senses,int action){
         if(senses==null||senses.length!=SensorimotorMind.S||
             action<0||action>=SensorimotorMind.ACTIONS)return 0;

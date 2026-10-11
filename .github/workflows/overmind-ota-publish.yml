@@ -27,7 +27,7 @@ jobs:
       - name: Unit tests
         run: |
           mkdir -p /tmp/overmind
-          javac -d /tmp/overmind app/src/main/java/com/overmind/zero/MotorBrain.java app/src/main/java/com/overmind/zero/OpticalCues.java app/src/main/java/com/overmind/zero/OpticalCueRegression.java app/src/main/java/com/overmind/zero/HabitatContinuity.java app/src/main/java/com/overmind/zero/DecisionBlackbox.java app/src/main/java/com/overmind/zero/GateLifeJournal.java app/src/main/java/com/overmind/zero/ContextualMotionProbe.java app/src/main/java/com/overmind/zero/ShadowNonInterferenceRegression.java app/src/main/java/com/overmind/zero/UnknownWorld.java app/src/main/java/com/overmind/zero/SquareGripPuzzle.java app/src/main/java/com/overmind/zero/SquareCollisionSolver.java app/src/main/java/com/overmind/zero/GripParityRegression.java app/src/main/java/com/overmind/zero/GateBoxGripIsolationRegression.java app/src/main/java/com/overmind/zero/MultiObjectGripRegression.java app/src/main/java/com/overmind/zero/GripSurfaceComposition.java app/src/main/java/com/overmind/zero/WorldPlacement.java app/src/main/java/com/overmind/zero/ContactLearning.java app/src/main/java/com/overmind/zero/DecisionBrain.java app/src/main/java/com/overmind/zero/Morphology.java app/src/main/java/com/overmind/zero/ScarcityLab.java app/src/main/java/com/overmind/zero/SensorimotorMind.java app/src/main/java/com/overmind/zero/GoalContinuity.java app/src/main/java/com/overmind/zero/GateBehaviorMetrics.java app/src/main/java/com/overmind/zero/BehavioralLaboratory.java app/src/main/java/com/overmind/zero/InstrumentalNavigation.java app/src/main/java/com/overmind/zero/SpatialPerception.java app/src/main/java/com/overmind/zero/CausalExperiments.java app/src/main/java/com/overmind/zero/BodyProprioception.java app/src/main/java/com/overmind/zero/TemporalWorkingMemory.java app/src/main/java/com/overmind/zero/TemporalSkillBank.java app/src/main/java/com/overmind/zero/TemporalPersistenceRegression.java app/src/main/java/com/overmind/zero/LearnedSequencePlanner.java app/src/main/java/com/overmind/zero/LearningDiagnostics.java app/src/main/java/com/overmind/zero/ResetDomains.java app/src/main/java/com/overmind/zero/OnlineBodyLearning.java app/src/main/java/com/overmind/zero/MotionExploration.java app/src/main/java/com/overmind/zero/EpisodicMemory.java app/src/main/java/com/overmind/zero/MotorAutonomyGuard.java app/src/main/java/com/overmind/zero/MotorSkillBank.java app/src/main/java/com/overmind/zero/ExperienceCredit.java app/src/main/java/com/overmind/zero/GripSkillBank.java app/src/main/java/com/overmind/zero/SaveProfileCodec.java app/src/main/java/com/overmind/zero/LifeStatistics.java app/src/main/java/com/overmind/zero/GripContactObserver.java app/src/main/java/com/overmind/zero/GripContactObserverRegression.java
+          javac -d /tmp/overmind app/src/main/java/com/overmind/zero/MotorBrain.java app/src/main/java/com/overmind/zero/OpticalCues.java app/src/main/java/com/overmind/zero/OpticalCueRegression.java app/src/main/java/com/overmind/zero/HabitatContinuity.java app/src/main/java/com/overmind/zero/DecisionBlackbox.java app/src/main/java/com/overmind/zero/GateLifeJournal.java app/src/main/java/com/overmind/zero/ContextualMotionProbe.java app/src/main/java/com/overmind/zero/ShadowNonInterferenceRegression.java app/src/main/java/com/overmind/zero/UnknownWorld.java app/src/main/java/com/overmind/zero/SquareGripPuzzle.java app/src/main/java/com/overmind/zero/SquareCollisionSolver.java app/src/main/java/com/overmind/zero/GripParityRegression.java app/src/main/java/com/overmind/zero/GateBoxGripIsolationRegression.java app/src/main/java/com/overmind/zero/MultiObjectGripRegression.java app/src/main/java/com/overmind/zero/GripSurfaceComposition.java app/src/main/java/com/overmind/zero/WorldPlacement.java app/src/main/java/com/overmind/zero/ContactLearning.java app/src/main/java/com/overmind/zero/DecisionBrain.java app/src/main/java/com/overmind/zero/Morphology.java app/src/main/java/com/overmind/zero/ScarcityLab.java app/src/main/java/com/overmind/zero/SensorimotorMind.java app/src/main/java/com/overmind/zero/GoalContinuity.java app/src/main/java/com/overmind/zero/GateBehaviorMetrics.java app/src/main/java/com/overmind/zero/BehavioralLaboratory.java app/src/main/java/com/overmind/zero/InstrumentalNavigation.java app/src/main/java/com/overmind/zero/SpatialPerception.java app/src/main/java/com/overmind/zero/CausalExperiments.java app/src/main/java/com/overmind/zero/BodyProprioception.java app/src/main/java/com/overmind/zero/TemporalWorkingMemory.java app/src/main/java/com/overmind/zero/TemporalSkillBank.java app/src/main/java/com/overmind/zero/TemporalPersistenceRegression.java app/src/main/java/com/overmind/zero/LearnedSequencePlanner.java app/src/main/java/com/overmind/zero/LearningDiagnostics.java app/src/main/java/com/overmind/zero/ResetDomains.java app/src/main/java/com/overmind/zero/OnlineBodyLearning.java app/src/main/java/com/overmind/zero/MotionExploration.java app/src/main/java/com/overmind/zero/EpisodicMemory.java app/src/main/java/com/overmind/zero/MotorAutonomyGuard.java app/src/main/java/com/overmind/zero/MotorSkillBank.java app/src/main/java/com/overmind/zero/ExperienceCredit.java app/src/main/java/com/overmind/zero/GripSkillBank.java app/src/main/java/com/overmind/zero/SaveProfileCodec.java app/src/main/java/com/overmind/zero/LifeStatistics.java app/src/main/java/com/overmind/zero/GripContactObserver.java app/src/main/java/com/overmind/zero/GripContactObserverRegression.java app/src/main/java/com/overmind/zero/MortalityLearning.java
           java -cp /tmp/overmind com.overmind.zero.GripContactObserverRegression
           java -cp /tmp/overmind com.overmind.zero.MotorBrain
           java -cp /tmp/overmind com.overmind.zero.UnknownWorld
@@ -69,6 +69,7 @@ jobs:
           java -cp /tmp/overmind com.overmind.zero.MotorSkillBank
           java -cp /tmp/overmind com.overmind.zero.GripSkillBank
           java -cp /tmp/overmind com.overmind.zero.ExperienceCredit
+          java -cp /tmp/overmind com.overmind.zero.MortalityLearning
           java -cp /tmp/overmind com.overmind.zero.SaveProfileCodec
           java -cp /tmp/overmind com.overmind.zero.LifeStatistics
           # v0.6 includes v0.5 -> v0.6 weight migration and expansion invariants.
@@ -713,12 +714,12 @@ jobs:
           from hashlib import sha1
           root=Path('app/src/main/java/com/overmind/zero')
           pins={
-          'SensorimotorMind.java':'d5f420cf36b1d6efc90fb79547a95884e95399b0',
-          'GameActivity.java':'69636124dd8f28758ea2b571aed107ae35e736f7',
+          'SensorimotorMind.java':'aa17565a413db26fb9ace19eed5cc0b29d0d7e06',
+          'GameActivity.java':'ea37aa195ac80fb48d48aa6743f4257c76e4a612',
           'InstrumentalNavigation.java':'fb95ae5b19a8b2602cb4338641d8851bebf8fa26',
           'BehavioralLaboratory.java':'e016be507d54b2535885a5c2070951fd9e4c72f7',
           'BehavioralLabActivity.java':'c1e655a947454e2cb77baad6b282890f00097717',
-          'ResetDomains.java':'99e0b726e95f96683d5de942da2cb2ff0c9eb318',
+          'ResetDomains.java':'1f809d30d40e83c056b0c7c2c046fa6bc9138dbb',
           'ScarcityLab.java':'17d18926310b9b6d8262fa1a3b3092111e68097f',
           'UnknownWorld.java':'040edbe131f4d6e39b692db6c8c3a4dc02383ff7',
           'GameSceneSnapshot.java':'724f6eeb734f44fb503de4ea84d6c97068c45c83',
@@ -731,7 +732,10 @@ jobs:
           'OpticalCues.java':'c41adea2d29deca1dc0580b44fabb15363fae865',
           'OpticalCueRegression.java':'78a9df279beb12b450f7792b0a3871762ec1d177',
           'HabitatContinuity.java':'c9358785c1df6c5a4a8e5439927dd2eee7917453',
-          'GripSurfaceComposition.java':'2b4f9d0a2f78112d4f06e48d4c2b6c114301854a'}
+          'GripSurfaceComposition.java':'2b4f9d0a2f78112d4f06e48d4c2b6c114301854a',
+          'BrainToolsActivity.java':'219659d13ac13f453146087c53b6bf97051f8d8f',
+          'MortalityLearning.java':'106683098e58d03a1b901fd7293549ebd5bb6715',
+          'ExperienceCredit.java':'5811cd758423e6fa8b4e27a7279fa56a39fbe661'}
           for name,pin in pins.items():
             data=(root/name).read_bytes()
             assert sha1(b'blob '+str(len(data)).encode()+b'\0'+data).hexdigest()==pin,name
