@@ -27,9 +27,11 @@ jobs:
       - name: Unit tests
         run: |
           mkdir -p /tmp/overmind
-          javac -d /tmp/overmind app/src/main/java/com/overmind/zero/MotorBrain.java app/src/main/java/com/overmind/zero/DecisionBlackbox.java app/src/main/java/com/overmind/zero/UnknownWorld.java app/src/main/java/com/overmind/zero/ContactLearning.java app/src/main/java/com/overmind/zero/DecisionBrain.java app/src/main/java/com/overmind/zero/Morphology.java app/src/main/java/com/overmind/zero/ScarcityLab.java app/src/main/java/com/overmind/zero/SensorimotorMind.java app/src/main/java/com/overmind/zero/GoalContinuity.java app/src/main/java/com/overmind/zero/GateBehaviorMetrics.java app/src/main/java/com/overmind/zero/BehavioralLaboratory.java app/src/main/java/com/overmind/zero/InstrumentalNavigation.java app/src/main/java/com/overmind/zero/SpatialPerception.java app/src/main/java/com/overmind/zero/CausalExperiments.java app/src/main/java/com/overmind/zero/BodyProprioception.java app/src/main/java/com/overmind/zero/TemporalWorkingMemory.java app/src/main/java/com/overmind/zero/TemporalSkillBank.java app/src/main/java/com/overmind/zero/TemporalPersistenceRegression.java app/src/main/java/com/overmind/zero/LearnedSequencePlanner.java app/src/main/java/com/overmind/zero/LearningDiagnostics.java app/src/main/java/com/overmind/zero/ResetDomains.java app/src/main/java/com/overmind/zero/OnlineBodyLearning.java app/src/main/java/com/overmind/zero/MotionExploration.java app/src/main/java/com/overmind/zero/EpisodicMemory.java app/src/main/java/com/overmind/zero/MotorAutonomyGuard.java app/src/main/java/com/overmind/zero/MotorSkillBank.java app/src/main/java/com/overmind/zero/ExperienceCredit.java app/src/main/java/com/overmind/zero/GripSkillBank.java app/src/main/java/com/overmind/zero/SaveProfileCodec.java app/src/main/java/com/overmind/zero/LifeStatistics.java
+          javac -d /tmp/overmind app/src/main/java/com/overmind/zero/MotorBrain.java app/src/main/java/com/overmind/zero/DecisionBlackbox.java app/src/main/java/com/overmind/zero/UnknownWorld.java app/src/main/java/com/overmind/zero/SquareGripPuzzle.java app/src/main/java/com/overmind/zero/WorldPlacement.java app/src/main/java/com/overmind/zero/ContactLearning.java app/src/main/java/com/overmind/zero/DecisionBrain.java app/src/main/java/com/overmind/zero/Morphology.java app/src/main/java/com/overmind/zero/ScarcityLab.java app/src/main/java/com/overmind/zero/SensorimotorMind.java app/src/main/java/com/overmind/zero/GoalContinuity.java app/src/main/java/com/overmind/zero/GateBehaviorMetrics.java app/src/main/java/com/overmind/zero/BehavioralLaboratory.java app/src/main/java/com/overmind/zero/InstrumentalNavigation.java app/src/main/java/com/overmind/zero/SpatialPerception.java app/src/main/java/com/overmind/zero/CausalExperiments.java app/src/main/java/com/overmind/zero/BodyProprioception.java app/src/main/java/com/overmind/zero/TemporalWorkingMemory.java app/src/main/java/com/overmind/zero/TemporalSkillBank.java app/src/main/java/com/overmind/zero/TemporalPersistenceRegression.java app/src/main/java/com/overmind/zero/LearnedSequencePlanner.java app/src/main/java/com/overmind/zero/LearningDiagnostics.java app/src/main/java/com/overmind/zero/ResetDomains.java app/src/main/java/com/overmind/zero/OnlineBodyLearning.java app/src/main/java/com/overmind/zero/MotionExploration.java app/src/main/java/com/overmind/zero/EpisodicMemory.java app/src/main/java/com/overmind/zero/MotorAutonomyGuard.java app/src/main/java/com/overmind/zero/MotorSkillBank.java app/src/main/java/com/overmind/zero/ExperienceCredit.java app/src/main/java/com/overmind/zero/GripSkillBank.java app/src/main/java/com/overmind/zero/SaveProfileCodec.java app/src/main/java/com/overmind/zero/LifeStatistics.java
           java -cp /tmp/overmind com.overmind.zero.MotorBrain
           java -cp /tmp/overmind com.overmind.zero.UnknownWorld
+          java -cp /tmp/overmind com.overmind.zero.SquareGripPuzzle
+          java -cp /tmp/overmind com.overmind.zero.WorldPlacement
           java -cp /tmp/overmind com.overmind.zero.ContactLearning
           java -cp /tmp/overmind com.overmind.zero.DecisionBrain
           java -cp /tmp/overmind com.overmind.zero.Morphology
@@ -700,12 +702,17 @@ jobs:
           from hashlib import sha1
           root=Path('app/src/main/java/com/overmind/zero')
           pins={
-          'SensorimotorMind.java':'4defdac3f3255bdb06a1c38cf705908ab530fc50',
-          'GameActivity.java':'56e3099e9dae6b2e24b796131353523d69fad9fa',
+          'SensorimotorMind.java':'805b7d2cbc35028be385de60af67d59931b57936',
+          'GameActivity.java':'133b1a7dafdfadfe9950dad94c4c3fc49d9086f3',
           'InstrumentalNavigation.java':'2eb6390e7e80f17b488f148ec2d76b41e19e27a9',
           'BehavioralLaboratory.java':'e016be507d54b2535885a5c2070951fd9e4c72f7',
           'BehavioralLabActivity.java':'c1e655a947454e2cb77baad6b282890f00097717',
-          'ResetDomains.java':'99e0b726e95f96683d5de942da2cb2ff0c9eb318'}
+          'ResetDomains.java':'99e0b726e95f96683d5de942da2cb2ff0c9eb318',
+          'ScarcityLab.java':'330bc76d2621338b4a1a20534fa85e59b83dff46',
+          'UnknownWorld.java':'5fa15ab62201e93b4f806b2c76f4791934ca0608',
+          'GameSceneSnapshot.java':'4f7652546fcd137c37daea5782300084f24e0785',
+          'SquareGripPuzzle.java':'f653640b7f7aafb57e6ee5543a87d5a70f689507',
+          'WorldPlacement.java':'2bfdb70334a40341215104a29ef26da5dabc4b25'}
           for name,pin in pins.items():
             data=(root/name).read_bytes()
             assert sha1(b'blob '+str(len(data)).encode()+b'\0'+data).hexdigest()==pin,name
@@ -736,7 +743,15 @@ jobs:
           assert 'DecisionBlackbox.CURRENT,decisionBlackbox.encodeCurrent()' in game
           assert 'decisionBlackbox.lastLife()).commit();' in game
           assert 'SCATOLA NERA' in ui
-          print('ZERO 0.11.6 signed: unchanged world mechanics, pinned passive action logger, private consent-only telemetry and named saves')
+          assert 'SquareGripPuzzle.uncover(e,environment)' in game
+          assert 'SquareGripPuzzle.constrain(' in game
+          assert 'WorldPlacement.spawn(' in game
+          assert 'if(object.isBox()||object.concealed)continue;' in game
+          assert 'x.optBoolean("concealed",false)' in (root/'GameSceneSnapshot.java').read_text()
+          assert 'law==4?40f:RARE_ENERGY' in (root/'UnknownWorld.java').read_text()
+          assert 'box.displacementFromSpawn()>=UNCOVER_DISTANCE' in (root/'SquareGripPuzzle.java').read_text()
+          assert 'gateX()-DOOR_HALF_W' in (root/'ScarcityLab.java').read_text()
+          print('ZERO 0.11.6 signed: original cognition and observer, physically bilateral small squares, spawn clearance, hidden finite energy and named saves')
           PY
       - name: Assemble stable signed APK
         if: env.signing_ready == 'true'

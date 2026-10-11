@@ -498,7 +498,7 @@ public final class SensorimotorMind {
             float[] v=new float[UnknownWorld.SIGNATURES*8];
             if(b==null||objects==null)return v;
             for(UnknownWorld.Entity e:objects){
-                if(e.consumed)continue;
+                if(e.consumed||e.concealed)continue;
                 float dx=e.x-b.cx,dy=e.y-b.cy;
                 float d=(float)Math.hypot(dx,dy);
                 if(!Float.isFinite(d)||d<.1f||d>210f)continue;
@@ -542,7 +542,7 @@ public final class SensorimotorMind {
             // Raw channel identities are VISUAL frequencies, not "food",
             // "danger" or action values. Occluded objects are invisible.
             for(UnknownWorld.Entity e:objects){
-                if(e.consumed)continue;
+                if(e.consumed||e.concealed)continue;
                 float dx=e.x-b.cx,dy=e.y-b.cy;
                 float d=(float)Math.hypot(dx,dy);
                 if(d>210||d<.1f)continue;
@@ -590,7 +590,10 @@ public final class SensorimotorMind {
                 if(front||ceiling||floor||back||gate)return true;
             }
             for(UnknownWorld.Entity e:obj){
-                if(e==ignore||!e.isMovable()||!e.ready())continue;
+                if(e==ignore||e.concealed||!e.ready())continue;
+                if(e.isBox()&&Math.abs(x-e.x)<=SquareGripPuzzle.HALF&&
+                   Math.abs(y-e.y)<=SquareGripPuzzle.HALF)return true;
+                if(!e.isMovable())continue;
                 if(Math.hypot(x-e.x,y-e.y)<e.radius)return true;
             }
             return false;

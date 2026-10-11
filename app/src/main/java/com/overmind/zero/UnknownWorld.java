@@ -13,6 +13,8 @@ public final class UnknownWorld {
     public static final class Entity {
         public float x,y,vx,vy,cooldown,contactCooldown;
         public boolean consumed=false;
+        /** A physical cover hides its rare energy until genuinely moved. */
+        public boolean concealed=false;
         public final float spawnX,spawnY;
         public boolean everCollided=false, countedAsMoved=false;
         public float peakDisplacement=0;
@@ -22,7 +24,7 @@ public final class UnknownWorld {
         public Entity(float x,float y,int signature,int physicalLaw) {
             this.x=x;this.y=y;this.spawnX=x;this.spawnY=y;
             this.signature=signature;this.law=physicalLaw;
-            radius=physicalLaw==2?19:15;
+            radius=physicalLaw==2?19:physicalLaw==5?SquareGripPuzzle.DIAGONAL:15;
         }
         /** Serialization uses physical identity without exposing it to policy. */
         int physicalLaw(){return law;}
@@ -30,9 +32,9 @@ public final class UnknownWorld {
         void tick(float dt){
             cooldown=Math.max(0,cooldown-dt);
             contactCooldown=Math.max(0,contactCooldown-dt);
-            if(law==2){
+            if(law==2||law==5){
                 x+=vx*dt;y+=vy*dt;
-                float drag=(float)Math.exp(-2.8f*dt);
+                float drag=(float)Math.exp(-(law==5?4.2f:2.8f)*dt);
                 vx*=drag;vy*=drag;
                 peakDisplacement=Math.max(peakDisplacement,displacementFromSpawn());
             }
@@ -41,12 +43,13 @@ public final class UnknownWorld {
             return (float)Math.hypot(x-spawnX,y-spawnY);
         }
         boolean isMovable(){return law==2;}
-        public boolean isRare(){return law==3;}
+        boolean isBox(){return law==5;}
+        public boolean isRare(){return law==3||law==4;}
         float touch(float directionX,float directionY) {
-            if(law==3){
+            if(law==3||law==4){
                 if(consumed)return 0;
                 consumed=true;cooldown=Float.POSITIVE_INFINITY;
-                return RARE_ENERGY;
+                return law==4?40f:RARE_ENERGY;
             }
             if(law==0){
                 if(consumed)return 0;
@@ -150,6 +153,18 @@ public final class UnknownWorld {
                              originY+(float)Math.sin(angle)*d,
                              signals[i],effects[i]));
         }
+        // One modest four-way movable square with a *concealed* finite energy
+        // source. The source is visible/collectable ONLY after true bilateral
+        // adhesion moves its physical cover; no contact itself pays energy.
+        if(episode%3!=0){
+            float theta=spin+.95f,d=116f;
+            float bx=originX+(float)Math.cos(theta)*d;
+            float by=originY+(float)Math.sin(theta)*d;
+            Entity box=new Entity(bx,by,2,5);
+            Entity hidden=new Entity(bx,by,0,4);
+            hidden.concealed=true;
+            a.add(box);a.add(hidden);
+        }
         return a;
     }
     public static void main(String[] args){
@@ -181,11 +196,18 @@ public final class UnknownWorld {
         Entity rare=new Entity(20,0,0,3);
         if(!rare.isRare()||rare.touch(0,0)!=RARE_ENERGY||rare.touch(0,0)!=0)
             throw new IllegalStateException("Rare reward must be unique, finite and stronger");
+        Entity hiddenSource=new Entity(30,0,0,4);
+        hiddenSource.concealed=true;
+        if(!hiddenSource.isRare()||hiddenSource.touch(0,0)!=40)
+            throw new IllegalStateException("Finite 40-energy source failed");
         Entity finite=new Entity(30,0,0,0);
         if(finite.touch(0,0)!=22||finite.ready()||finite.touch(0,0)!=0)
             throw new IllegalStateException("A consumed energy pulse must disappear");
-        if(newHabitat(7,0,0,true).size()>2)
-            throw new IllegalStateException("Shortage still spawns abundant energy");
+        int exposedEnergy=0;
+        for(Entity item:newHabitat(7,0,0,true))
+            if(item.physicalLaw()==0&&!item.concealed)exposedEnergy++;
+        if(exposedEnergy>1)
+            throw new IllegalStateException("Shortage still spawns abundant free energy");
         System.out.printf(Locale.US,
           "ZERO-002 selftest: known_types=%d contacts=%d learned_values=[%.2f, %.2f, %.2f] preferred_signature=%d%n",
           copy.discoveries,copy.total,copy.estimated[0],copy.estimated[1],copy.estimated[2],chosen.signature);

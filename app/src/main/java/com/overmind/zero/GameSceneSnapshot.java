@@ -49,7 +49,7 @@ public final class GameSceneSnapshot {
         x.put("sx",e.spawnX);x.put("sy",e.spawnY);
         x.put("x",e.x);x.put("y",e.y);x.put("vx",e.vx);x.put("vy",e.vy);
         x.put("signature",e.signature);x.put("law",e.physicalLaw());
-        x.put("consumed",e.consumed);
+        x.put("consumed",e.consumed);x.put("concealed",e.concealed);
         x.put("cooldown",Float.isFinite(e.cooldown)?e.cooldown:1000000000f);
         x.put("contactCooldown",e.contactCooldown);
         x.put("everCollided",e.everCollided);x.put("countedAsMoved",e.countedAsMoved);
@@ -59,7 +59,7 @@ public final class GameSceneSnapshot {
     private static UnknownWorld.Entity loadEntity(JSONObject x,ScarcityLab room)throws Exception{
         boolean isFood=x.getBoolean("food");
         int law=x.getInt("law"),signature=x.getInt("signature");
-        if(law<0||law>3||signature<0||signature>=UnknownWorld.SIGNATURES)
+        if(law<0||law>5||signature<0||signature>=UnknownWorld.SIGNATURES)
             throw new IllegalArgumentException("Invalid physical signature");
         float sx=(float)x.getDouble("sx"),sy=(float)x.getDouble("sy");
         UnknownWorld.Entity e;
@@ -72,6 +72,8 @@ public final class GameSceneSnapshot {
         e.cooldown=(float)x.getDouble("cooldown");
         e.contactCooldown=(float)x.getDouble("contactCooldown");
         e.consumed=x.getBoolean("consumed");
+        // Optional: v1 saves from before the square puzzle remain valid.
+        e.concealed=x.optBoolean("concealed",false);
         e.everCollided=x.getBoolean("everCollided");
         e.countedAsMoved=x.getBoolean("countedAsMoved");
         e.peakDisplacement=(float)x.getDouble("peakDisplacement");
@@ -79,7 +81,8 @@ public final class GameSceneSnapshot {
         if(!Float.isFinite(e.x)||!Float.isFinite(e.y)||
            !Float.isFinite(e.vx)||!Float.isFinite(e.vy)||e.radius<0||
            !Float.isFinite(e.radius)||!Float.isFinite(e.cooldown)||
-           !Float.isFinite(e.contactCooldown))
+           !Float.isFinite(e.contactCooldown)||
+           (e.concealed&&law!=4))
             throw new IllegalArgumentException("Invalid world object");
         return e;
     }
