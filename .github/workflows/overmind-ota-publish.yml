@@ -27,10 +27,11 @@ jobs:
       - name: Unit tests
         run: |
           mkdir -p /tmp/overmind
-          javac -d /tmp/overmind app/src/main/java/com/overmind/zero/MotorBrain.java app/src/main/java/com/overmind/zero/OpticalCues.java app/src/main/java/com/overmind/zero/OpticalCueRegression.java app/src/main/java/com/overmind/zero/HabitatContinuity.java app/src/main/java/com/overmind/zero/DecisionBlackbox.java app/src/main/java/com/overmind/zero/GateLifeJournal.java app/src/main/java/com/overmind/zero/ContextualMotionProbe.java app/src/main/java/com/overmind/zero/ShadowNonInterferenceRegression.java app/src/main/java/com/overmind/zero/UnknownWorld.java app/src/main/java/com/overmind/zero/SquareGripPuzzle.java app/src/main/java/com/overmind/zero/WorldPlacement.java app/src/main/java/com/overmind/zero/ContactLearning.java app/src/main/java/com/overmind/zero/DecisionBrain.java app/src/main/java/com/overmind/zero/Morphology.java app/src/main/java/com/overmind/zero/ScarcityLab.java app/src/main/java/com/overmind/zero/SensorimotorMind.java app/src/main/java/com/overmind/zero/GoalContinuity.java app/src/main/java/com/overmind/zero/GateBehaviorMetrics.java app/src/main/java/com/overmind/zero/BehavioralLaboratory.java app/src/main/java/com/overmind/zero/InstrumentalNavigation.java app/src/main/java/com/overmind/zero/SpatialPerception.java app/src/main/java/com/overmind/zero/CausalExperiments.java app/src/main/java/com/overmind/zero/BodyProprioception.java app/src/main/java/com/overmind/zero/TemporalWorkingMemory.java app/src/main/java/com/overmind/zero/TemporalSkillBank.java app/src/main/java/com/overmind/zero/TemporalPersistenceRegression.java app/src/main/java/com/overmind/zero/LearnedSequencePlanner.java app/src/main/java/com/overmind/zero/LearningDiagnostics.java app/src/main/java/com/overmind/zero/ResetDomains.java app/src/main/java/com/overmind/zero/OnlineBodyLearning.java app/src/main/java/com/overmind/zero/MotionExploration.java app/src/main/java/com/overmind/zero/EpisodicMemory.java app/src/main/java/com/overmind/zero/MotorAutonomyGuard.java app/src/main/java/com/overmind/zero/MotorSkillBank.java app/src/main/java/com/overmind/zero/ExperienceCredit.java app/src/main/java/com/overmind/zero/GripSkillBank.java app/src/main/java/com/overmind/zero/SaveProfileCodec.java app/src/main/java/com/overmind/zero/LifeStatistics.java
+          javac -d /tmp/overmind app/src/main/java/com/overmind/zero/MotorBrain.java app/src/main/java/com/overmind/zero/OpticalCues.java app/src/main/java/com/overmind/zero/OpticalCueRegression.java app/src/main/java/com/overmind/zero/HabitatContinuity.java app/src/main/java/com/overmind/zero/DecisionBlackbox.java app/src/main/java/com/overmind/zero/GateLifeJournal.java app/src/main/java/com/overmind/zero/ContextualMotionProbe.java app/src/main/java/com/overmind/zero/ShadowNonInterferenceRegression.java app/src/main/java/com/overmind/zero/UnknownWorld.java app/src/main/java/com/overmind/zero/SquareGripPuzzle.java app/src/main/java/com/overmind/zero/SquareCollisionSolver.java app/src/main/java/com/overmind/zero/WorldPlacement.java app/src/main/java/com/overmind/zero/ContactLearning.java app/src/main/java/com/overmind/zero/DecisionBrain.java app/src/main/java/com/overmind/zero/Morphology.java app/src/main/java/com/overmind/zero/ScarcityLab.java app/src/main/java/com/overmind/zero/SensorimotorMind.java app/src/main/java/com/overmind/zero/GoalContinuity.java app/src/main/java/com/overmind/zero/GateBehaviorMetrics.java app/src/main/java/com/overmind/zero/BehavioralLaboratory.java app/src/main/java/com/overmind/zero/InstrumentalNavigation.java app/src/main/java/com/overmind/zero/SpatialPerception.java app/src/main/java/com/overmind/zero/CausalExperiments.java app/src/main/java/com/overmind/zero/BodyProprioception.java app/src/main/java/com/overmind/zero/TemporalWorkingMemory.java app/src/main/java/com/overmind/zero/TemporalSkillBank.java app/src/main/java/com/overmind/zero/TemporalPersistenceRegression.java app/src/main/java/com/overmind/zero/LearnedSequencePlanner.java app/src/main/java/com/overmind/zero/LearningDiagnostics.java app/src/main/java/com/overmind/zero/ResetDomains.java app/src/main/java/com/overmind/zero/OnlineBodyLearning.java app/src/main/java/com/overmind/zero/MotionExploration.java app/src/main/java/com/overmind/zero/EpisodicMemory.java app/src/main/java/com/overmind/zero/MotorAutonomyGuard.java app/src/main/java/com/overmind/zero/MotorSkillBank.java app/src/main/java/com/overmind/zero/ExperienceCredit.java app/src/main/java/com/overmind/zero/GripSkillBank.java app/src/main/java/com/overmind/zero/SaveProfileCodec.java app/src/main/java/com/overmind/zero/LifeStatistics.java
           java -cp /tmp/overmind com.overmind.zero.MotorBrain
           java -cp /tmp/overmind com.overmind.zero.UnknownWorld
           java -cp /tmp/overmind com.overmind.zero.SquareGripPuzzle
+          java -cp /tmp/overmind com.overmind.zero.SquareCollisionSolver
           java -cp /tmp/overmind com.overmind.zero.OpticalCues
           java -cp /tmp/overmind com.overmind.zero.OpticalCueRegression
           java -cp /tmp/overmind com.overmind.zero.HabitatContinuity
@@ -709,7 +710,7 @@ jobs:
           root=Path('app/src/main/java/com/overmind/zero')
           pins={
           'SensorimotorMind.java':'d5f420cf36b1d6efc90fb79547a95884e95399b0',
-          'GameActivity.java':'a40bdc9d7a526228513df0923bc916e0e8e2bf2b',
+          'GameActivity.java':'ec673a636ddfd96ecf9171d13a4cadb0f70a5267',
           'InstrumentalNavigation.java':'fb95ae5b19a8b2602cb4338641d8851bebf8fa26',
           'BehavioralLaboratory.java':'e016be507d54b2535885a5c2070951fd9e4c72f7',
           'BehavioralLabActivity.java':'c1e655a947454e2cb77baad6b282890f00097717',
@@ -717,7 +718,8 @@ jobs:
           'ScarcityLab.java':'330bc76d2621338b4a1a20534fa85e59b83dff46',
           'UnknownWorld.java':'5fa15ab62201e93b4f806b2c76f4791934ca0608',
           'GameSceneSnapshot.java':'4f7652546fcd137c37daea5782300084f24e0785',
-          'SquareGripPuzzle.java':'f653640b7f7aafb57e6ee5543a87d5a70f689507',
+          'SquareGripPuzzle.java':'53c17c44cf6dcde678245baa11bf880614661919',
+          'SquareCollisionSolver.java':'70c4419c2870b1ccb72351747b1a8ba218555f37',
           'WorldPlacement.java':'2bfdb70334a40341215104a29ef26da5dabc4b25',
           'GateBehaviorMetrics.java':'44043b418c8bc00cdf7f944673bb168355e44a72',
           'GateLifeJournal.java':'351b1107f90d1dffd91377d1709459324211ef62',
@@ -761,6 +763,12 @@ jobs:
           assert 'motionShadow.finished(' in mind
           assert 'SCATOLA NERA' in ui
           assert 'SquareGripPuzzle.uncover(e,environment)' in game
+          assert 'squarePrevSkinX' in game
+          assert 'squarePrevBodyX' in game
+          assert 'SquareCollisionSolver.constrain' in (root/'SquareGripPuzzle.java').read_text()
+          assert 'SquareCollisionSolver.finish' in (root/'SquareGripPuzzle.java').read_text()
+          assert 'if(opposing&&held>=2)' in (root/'SquareGripPuzzle.java').read_text()
+          assert 'nearSolidSquare' in game
           assert 'OpticalCues.GLASS_TOP' in game
           assert 'concealedLight' in game
           assert 'HabitatContinuity.pruneDistant(' in game
