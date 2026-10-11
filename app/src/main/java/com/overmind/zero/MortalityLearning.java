@@ -219,7 +219,11 @@ public final class MortalityLearning {
                 m.energyFlows(.65f,1.2f,0,0);
                 if(t==25&&life%3==0){
                     e=clamp(e-.04f,0,1);
-                    m.energyFlows(0,0,4,0);
+                    m.energyFlows(0,0,4,0); // distant harm: not blame at death
+                }
+                if(t>=70&&life%4==0){
+                    e=clamp(e-.04f,0,1);
+                    m.energyFlows(0,0,4,0); // contact near terminal
                 }
                 if(e==0)break;
                 m.observed(e);
