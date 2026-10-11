@@ -98,7 +98,7 @@ public final class ScarcityLab {
             peakTouchGripCommand=Math.max(peakTouchGripCommand,skin.gripCommand[i]);
             if(skin.gripCommand[i]>Morphology.GRIP_THRESHOLD){
                 commanded++;
-                skin.gripHold[i]=Math.min(.5f,skin.gripHold[i]+dt);
+                skin.gripHold[i]=Math.min(Morphology.GRIP_HOLD,skin.gripHold[i]+dt);
                 // Report deliberate attempts separately from successful grasp.
                 adhesiveEffort+=dt;
                 adhesiveContactFrames++;
@@ -469,7 +469,7 @@ public final class ScarcityLab {
         // genuinely touching region; the gate can then slide with velocity.
         membrane.gripCommand[0]=1;
         membrane.gripCommand[opposite]=1;
-        for(int i=0;i<130;i++){
+        for(int i=0;i<(int)(Morphology.GRIP_HOLD/MotorBrain.STEP)+240;i++){
             membrane.y[0]=chamber.gateCenterY();
             membrane.y[opposite]=chamber.gateCenterY();
             chamber.solveGate(membrane,MotorBrain.STEP);
