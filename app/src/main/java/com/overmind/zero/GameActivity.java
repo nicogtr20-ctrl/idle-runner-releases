@@ -1178,10 +1178,17 @@ public final class GameActivity extends Activity {
             // perimeter masses; NOT a fixed spider silhouette.
             float[] xx=surface.x, yy=surface.y;
             path.reset();
-            if(chamber!=null){
-                // The 96 physical edges are the visible outline INSIDE the
-                // puzzle. Quadratic rounding between masses used to bleed the
-                // rendered blob through an otherwise-solid door.
+            boolean nearSolidSquare=false;
+            for(UnknownWorld.Entity object:environment){
+                if(object.isBox()&&Math.hypot(object.x-creature.cx,
+                                             object.y-creature.cy)<190f){
+                    nearSolidSquare=true;break;
+                }
+            }
+            if(chamber!=null||nearSolidSquare){
+                // Draw the ACTUAL straight bonded edges near rigid solids.
+                // Quadratic smoothing may visually cut through a solid even
+                // after every physical segment has been collision-corrected.
                 path.moveTo(xx[0],yy[0]);
                 for(int i=1;i<Morphology.POINTS;i++)
                     path.lineTo(xx[i],yy[i]);
