@@ -203,8 +203,11 @@ public final class UnknownWorld {
         Entity finite=new Entity(30,0,0,0);
         if(finite.touch(0,0)!=22||finite.ready()||finite.touch(0,0)!=0)
             throw new IllegalStateException("A consumed energy pulse must disappear");
-        if(newHabitat(7,0,0,true).size()>2)
-            throw new IllegalStateException("Shortage still spawns abundant energy");
+        int exposedEnergy=0;
+        for(Entity item:newHabitat(7,0,0,true))
+            if(item.physicalLaw()==0&&!item.concealed)exposedEnergy++;
+        if(exposedEnergy>1)
+            throw new IllegalStateException("Shortage still spawns abundant free energy");
         System.out.printf(Locale.US,
           "ZERO-002 selftest: known_types=%d contacts=%d learned_values=[%.2f, %.2f, %.2f] preferred_signature=%d%n",
           copy.discoveries,copy.total,copy.estimated[0],copy.estimated[1],copy.estimated[2],chosen.signature);
