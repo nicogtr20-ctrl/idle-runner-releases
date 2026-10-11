@@ -40,6 +40,13 @@ public final class ScarcityLab {
     // gate-contact adhesion and may release its own departing patches.
     private final boolean[] gateTouchPrevious=new boolean[Morphology.POINTS];
     final float[] gateGripHold=new float[Morphology.POINTS];
+    void restoreGateGrip(float[] saved){
+        for(int i=0;i<Morphology.POINTS;i++){
+            float t=saved[i];
+            gateGripHold[i]=Float.isFinite(t)?Math.max(0,Math.min(.5f,t)):0;
+            gateTouchPrevious[i]=gateGripHold[i]>0;
+        }
+    }
     /** Preserve the latch state across named save/reload, preventing a
      * duplicated grasp event at the first physics frame after restore. */
     boolean graspingLatch(){return wasGrasping;}
