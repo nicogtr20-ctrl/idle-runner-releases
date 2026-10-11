@@ -18,6 +18,29 @@ public final class MaterialGeometry {
         float inv=1f/MotorBrain.N;
         b.cx=x*inv;b.cy=y*inv;b.cvx=vx*inv;b.cvy=vy*inv;
     }
+    /** Distributed optical sensor facing a given world direction: physical
+     * membrane patch, not an imaginary central eye/nucleus. Pure readout;
+     * the central sensory weights and visual wavelengths are unchanged.
+     */
+    public static float[] eye(Morphology.Surface s,float cx,float cy,
+                              float dx,float dy){
+        if(s==null)return new float[]{cx,cy};
+        float norm=(float)Math.hypot(dx,dy);
+        if(norm<.00001f)return new float[]{cx,cy};
+        dx/=norm;dy/=norm;
+        float best=-Float.MAX_VALUE,px=cx,py=cy;
+        for(int i=0;i<Morphology.POINTS;i++){
+            float x=s.x[i]-cx,y=s.y[i]-cy;
+            float front=x*dx+y*dy;
+            float sideways=Math.abs(x*dy-y*dx);
+            // A patch has to face the source, not be a remote tentacle
+            // extending at right angles to the intended sight-line.
+            if(front>best&&front>0&&sideways<=Math.max(12f,.38f*front)){
+                best=front;px=s.x[i];py=s.y[i];
+            }
+        }
+        return new float[]{px,py};
+    }
     public static float surfaceDistanceSquared(Morphology.Surface s,float x,float y){
         if(s==null)return Float.POSITIVE_INFINITY;
         float best=Float.POSITIVE_INFINITY;
