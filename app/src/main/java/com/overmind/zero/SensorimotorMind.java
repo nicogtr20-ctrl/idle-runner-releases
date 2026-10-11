@@ -107,8 +107,12 @@ public final class SensorimotorMind {
     }
     public synchronized void resumeSpatialSense(MotorBrain.Body b,ScarcityLab room,
         ArrayList<UnknownWorld.Entity> objects){
+        resumeSpatialSense(b,null,room,objects);
+    }
+    public synchronized void resumeSpatialSense(MotorBrain.Body b,Morphology.Surface skin,
+        ScarcityLab room,ArrayList<UnknownWorld.Entity> objects){
         if(spatial!=null){spatial.resumeLife(b.cx,b.cy);
-            spatial.observeEnvironment(b,room,objects);}
+            spatial.observeEnvironment(b,skin,room,objects);}
     }
     /** Feed the current physical shape at the start/resume of a life. */
     public synchronized void updateBodySense(MotorBrain.Body b,Morphology.Surface skin){
@@ -412,7 +416,7 @@ public final class SensorimotorMind {
             if(bodySchema!=null&&body!=null&&skin!=null)
                 bodySchema.feed(BodyProprioception.sense(body,skin));
             if(spatial!=null&&body!=null&&objects!=null)
-                spatial.observeEnvironment(body,room,objects);
+                spatial.observeEnvironment(body,skin,room,objects);
             updateNavigationSense(body,room,objects);
             choose(after);return;
         }
@@ -426,7 +430,7 @@ public final class SensorimotorMind {
             BodyProprioception.sense(body,skin):null;
         if(bodySchema!=null&&bodyAfter!=null)bodySchema.feed(bodyAfter);
         if(spatial!=null&&body!=null&&objects!=null)
-            spatial.observeEnvironment(body,room,objects);
+            spatial.observeEnvironment(body,skin,room,objects);
         float[] before=trialState;
         boolean holdout=diagnostics.shouldHoldout();
         float err=0,naiveErr=0,sensoryChange=0;
