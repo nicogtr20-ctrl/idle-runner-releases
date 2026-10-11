@@ -290,11 +290,22 @@ public final class BrainToolsActivity extends Activity {
         float[] patch=bodyMap.sensed();
         String[] dir={"E","SE","S","SO","O","NO","N","NE"};
         for(int k=0;k<BodyProprioception.SECTORS;k++){
-            String state=String.format(Locale.US,"T %.2f  P %.2f  E %.2f  V %+.2f",
-                patch[k],patch[8+k],patch[16+k],patch[24+k]);
+            String state=String.format(Locale.US,
+                "T %.2f P %.2f E %.2f V %+.2f | Rmin %.0fU Rmax %.0fU",
+                patch[k],patch[8+k],patch[16+k],patch[24+k],
+                patch[40+k]*155f,patch[32+k]*155f);
             line(proprio,"Settore "+dir[k],state,WHITE);
         }
-        paragraph(proprio,"I sensori leggono dove i 96 punti fisici toccano oggetti, mantengono adesione, si estendono o scorrono radialmente. Gli otto settori non identificano porte o ostacoli: mostrano soltanto segnali locali del corpo. La nuova rete NON influenza le azioni finche' non prevede cambiamenti tattili meglio del riferimento su almeno 30 esperienze escluse dall'addestramento. I precedenti 26 sensi e i vecchi pesi sono conservati.");
+        paragraph(proprio,"ZERO e' una MASSA DISTRIBUITA, priva di nucleo fisico. "+
+            "Il centro e' solo il baricentro osservato delle dieci masse interne, "+
+            "non puo' collidere o raccogliere energia. Sei segnali per ognuno degli "+
+            "otto settori: contatto, presa, estensione, velocita' radiale, "+
+            "raggio piu' lontano e piu' vicino della membrana. Questi 48 "+
+            "segnali derivano soltanto da materia reale e vengono imparati "+
+            "attraverso esperienze vissute, senza nomi di porte o oggetti. "+
+            "Le 26 percezioni e 16 azioni principali conservano i parametri "+
+            "originari. La mappa corporea geometrica 0120 ricomincia vergine "+
+            "perche' il vecchio schema dei sensori aveva 32 dimensioni.");
 
         SpatialPerception space=new SpatialPerception();
         space.restore(prefs.getString(SpatialPerception.KEY,""));
