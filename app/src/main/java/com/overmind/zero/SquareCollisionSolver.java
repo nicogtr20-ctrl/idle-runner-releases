@@ -147,11 +147,34 @@ final class SquareCollisionSolver {
         for(int i=0;i<Morphology.POINTS;i++){
             float px=oldSkinX==null?skin.x[i]:oldSkinX[i];
             float py=oldSkinY==null?skin.y[i]:oldSkinY[i];
+            // A continuously pressing mass is already anchored to the
+            // SAME external face. Correcting a small inward attempt back to
+            // that face is NORMAL sustained contact, not a broken grip.
+            // Only an illegal teleport, embedded origin, face change or
+            // violent crossing should invalidate the accumulated hold.
+            float wantedX=skin.x[i],wantedY=skin.y[i];
+            float ox=px-box.x,oy=py-box.y;
+            final float near=.001f,margin=SquareGripPuzzle.HALF+4f;
+            boolean left=ox<=-SquareGripPuzzle.HALF+near&&
+                         ox>=-margin&&Math.abs(oy)<=margin;
+            boolean right=ox>=SquareGripPuzzle.HALF-near&&
+                          ox<=margin&&Math.abs(oy)<=margin;
+            boolean top=oy<=-SquareGripPuzzle.HALF+near&&
+                        oy>=-margin&&Math.abs(ox)<=margin;
+            boolean bottom=oy>=SquareGripPuzzle.HALF-near&&
+                           oy<=margin&&Math.abs(ox)<=margin;
+            boolean modest=Math.hypot(wantedX-px,wantedY-py)<
+                           SquareGripPuzzle.HALF;
             if(project(skin.x,skin.y,skin.vx,skin.vy,i,px,py,
                        l,t,r,b,POINT_CLEARANCE)){
-                // Proximity/touch is later computed from actual corrected
-                // membrane geometry by SquareGripPuzzle. No synthetic grip.
-                skin.gripHold[i]=0f;
+                float nx=skin.x[i]-box.x,ny=skin.y[i]-box.y;
+                boolean sameFace=(left&&nx<=-SquareGripPuzzle.HALF+near)||
+                      (right&&nx>=SquareGripPuzzle.HALF-near)||
+                      (top&&ny<=-SquareGripPuzzle.HALF+near)||
+                      (bottom&&ny>=SquareGripPuzzle.HALF-near);
+                if(!modest||!sameFace)skin.gripHold[i]=0f;
+                // No grip is granted: the original neural threshold and
+                // 0.075s continuous hold remain strictly necessary.
             }
         }
         for(int i=0;i<MotorBrain.N;i++)
