@@ -154,6 +154,9 @@ public final class MotorBrain {
                 float d=(float)Math.hypot(dx,dy);
                 if(d>88){x[i]=cx+dx*88/d;y[i]=cy+dy*88/d;vx[i]*=.6f;vy[i]*=.6f;}
             }
+            // Passive cohesive tissue keeps the nucleus inside its own
+            // ten-mass body without altering any learned actuator outputs.
+            BodyIntegrity.core(this,dt);
             // Prevent training instability from producing a fake high reward.
             if(!Float.isFinite(cx)||!Float.isFinite(cy)||Math.abs(cx)>10000||Math.abs(cy)>10000)reset();
         }
