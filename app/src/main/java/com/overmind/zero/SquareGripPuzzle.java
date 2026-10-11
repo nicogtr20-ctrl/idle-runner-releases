@@ -194,14 +194,14 @@ public final class SquareGripPuzzle {
                 "One-sided adhesion moved square");
         // A legal perimeter surrounds the block without traversing its
         // interior; two genuinely separated points now grip opposite faces.
-        for(int i=0;i<Morphology.POINTS;i++){
-            double angle=Math.PI*2*i/Morphology.POINTS;
-            s.x[i]=box.x+36f*(float)Math.cos(angle);
-            s.y[i]=box.y+36f*(float)Math.sin(angle);
-        }
         // Genuine bilateral adhesion and movement along both x and y.
         for(int j=0;j<85;j++){
-            int left=4,right=Morphology.POINTS/2+4;
+            for(int i=0;i<Morphology.POINTS;i++){
+                double angle=Math.PI*2*i/Morphology.POINTS;
+                s.x[i]=box.x+36f*(float)Math.cos(angle);
+                s.y[i]=box.y+36f*(float)Math.sin(angle);
+            }
+            int left=Morphology.POINTS/2,right=0;
             s.x[left]=box.x-HALF;s.y[left]=box.y;
             s.x[right]=box.x+HALF;s.y[right]=box.y;
             s.vx[left]=s.vx[right]=75;s.vy[left]=s.vy[right]=12;
