@@ -134,6 +134,10 @@ final class TelemetryGitHub {
         result.put("liveProfileKeys",copied);
         result.put("dataPolicy","Current ZERO working game data only; no named slots, device identifiers, private contacts, user account, or GitHub token");
         result.put("currentZero",values);
+        String grip=c.getSharedPreferences(GripContactObserver.PREFS,
+            Context.MODE_PRIVATE).getString(GripContactObserver.KEY,"");
+        if(grip.startsWith("go1|")&&grip.length()<=60000)
+            result.put("gripContactObserver",grip);
         // The controlled 18-trial A/B report is read-only and separate.
         String lab=c.getSharedPreferences("zero_behavior_lab_v113",
             Context.MODE_PRIVATE).getString("last","");
