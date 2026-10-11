@@ -62,6 +62,7 @@ public final class VirginGripAudit {
         // create sustained local adhesion on EITHER surface.
         place(bs,p,box.x-SquareGripPuzzle.HALF-15,0);
         bs.gripCommand[p]=on;
+        java.util.Arrays.fill(bs.touchSense,0f); // same per-frame clearing as GameActivity
         SquareGripPuzzle.constrain(boxBody,bs,box,dt);
         ok(bs.gripHold[p]<Morphology.GRIP_HOLD,
             "Detached box point retained invalid local adhesion");
@@ -71,6 +72,38 @@ public final class VirginGripAudit {
         boolean orangeGate=gs.gripHold[p]>=Morphology.GRIP_HOLD&&gs.touchSense[p]>.5f;
         boolean orangeBox=bs.gripHold[p]>=Morphology.GRIP_HOLD&&bs.touchSense[p]>.5f;
         ok(orangeGate&&!orangeBox,"Surface UI grip thresholds inconsistent");
+        // Compare small inward motion against stable contact:
+        // the original gate physically projects the surface without
+        // clearing accumulated hold. The new swept box solver may clear
+        // every hold on even tiny repeated face penetration.
+        Morphology.Surface gj=new Morphology.Surface(new MotorBrain.Body());
+        Morphology.Surface bj=new Morphology.Surface(new MotorBrain.Body());
+        MotorBrain.Body bb=new MotorBrain.Body();
+        place(gj,p,gate.gateX()-ScarcityLab.DOOR_HALF_W,0);
+        place(bj,p,box.x-SquareGripPuzzle.HALF,0);
+        int gateOrange=0,boxOrange=0;
+        for(int i=0;i<12;i++){
+            gj.x[p]=gate.gateX()-ScarcityLab.DOOR_HALF_W+.7f;
+            gj.y[p]=gate.gateCenterY();
+            gj.gripCommand[p]=on;
+            gate.solveGate(gj,dt,.82f);
+            if(gj.gripHold[p]>=Morphology.GRIP_HOLD)gateOrange++;
+            float[] priorX=bj.x.clone(),priorY=bj.y.clone();
+            float[] priorBX=bb.x.clone(),priorBY=bb.y.clone();
+            bj.x[p]=box.x-SquareGripPuzzle.HALF+.7f;
+            bj.y[p]=box.y;
+            bj.gripCommand[p]=on;
+            java.util.Arrays.fill(bj.touchSense,0f);
+            SquareGripPuzzle.constrain(bb,bj,box,dt,
+                priorX,priorY,priorBX,priorBY,bb.cx,bb.cy);
+            if(bj.gripHold[p]>=Morphology.GRIP_HOLD)boxOrange++;
+        }
+        System.out.println("VirginGripAudit probe: gentle sustained inward pressure "+
+            "gateOrangeFrames="+gateOrange+", boxOrangeFrames="+boxOrange+
+            ", gateHold="+gj.gripHold[p]+", boxHold="+bj.gripHold[p]);
+        ok(gateOrange>0,"Expected gate orange under sustained adhesion");
+        ok(boxOrange<gateOrange,
+            "Repeated shallow box penetration did not show predicted reset");
         System.out.println("VirginGripAudit PASS: initial neural grip head 0; " +
             "same global PRESA ON yields same local hold with stable " +
             "face contact (gate="+gateHeldFrame+", box="+boxHeldFrame+
