@@ -92,6 +92,21 @@ public final class HabitatContinuity {
         }
     }
 
+    /** Prevent a newly activated room or routine map cleanup from deleting
+     * an object while the real membrane is still touching it. */
+    public static void excludeRoomOverlap(ArrayList<UnknownWorld.Entity> world,
+                            ScarcityLab room,MotorBrain.Body body,
+                            Morphology.Surface skin){
+        if(room==null)return;
+        for(int i=world.size()-1;i>=0;i--){
+            UnknownWorld.Entity e=world.get(i);
+            if(e==room.food)continue;
+            if(room.overlapsRoom(e.x,e.y,e.radius)&&
+               !protectedByInteraction(world,e,body,skin))
+                removePaired(world,e);
+        }
+    }
+
     /** Try nearby physically vacant locations instead of manifesting a room
      * OVER an existing solid that ZERO is currently learning to handle. */
     public static ScarcityLab clearChamber(float x,float y,
