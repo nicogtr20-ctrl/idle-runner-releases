@@ -115,6 +115,41 @@ public final class BrainToolsActivity extends Activity {
         line(evidence,"Previsioni rifiutate per incertezza",String.valueOf(plans.abstained),AMBER);
         line(evidence,"Scelte influenzate da previsioni apprese",String.valueOf(plans.changed),WHITE);
         paragraph(evidence,"Le previsioni sono ipotesi del modello sui propri sensori, non eventi fisici e non prove di causa-effetto. La pianificazione non impone direzioni, obiettivi o la manovra per aprire il cancello. Un modello poco affidabile viene ignorato.");
+        MortalityLearning mortality=new MortalityLearning();
+        mortality.restore(prefs.getString(MortalityLearning.KEY,""));
+        LinearLayout endOfLife=panel(body);
+        endOfLife.addView(label("ESPERIENZA DELLA MORTE / PREVISIONE",16,CYAN,true));
+        paragraph(endOfLife,"ZERO non riceve la spiegazione preimpostata che la morte dipende dall'energia. "+
+            "Osserva invece il proprio livello di energia e le variazioni che precedono la fine "+
+            "reale di una vita; le conseguenze delle azioni e dei contatti restano separate.");
+        line(endOfLife,"Morti osservate",String.valueOf(mortality.deaths),WHITE);
+        line(endOfLife,"Vite interamente escluse dall'addestramento",
+            String.valueOf(mortality.heldoutLives),AMBER);
+        line(endOfLife,"Esempi terminali usati per imparare",
+            String.valueOf(mortality.trainedTerminal),WHITE);
+        line(endOfLife,"Esempi di sopravvivenza usati per imparare",
+            String.valueOf(mortality.trainedSurvival),WHITE);
+        line(endOfLife,"Esempi verificati senza allenamento (morte / vita)",
+            mortality.heldoutDeaths+" / "+mortality.heldoutSurvival,WHITE);
+        line(endOfLife,"Rischio stimato con energia al 10% / 80%",
+            String.format(Locale.US,"%.1f%% / %.1f%%",
+                100*mortality.riskAt(.1f,-.03f),100*mortality.riskAt(.8f,0)),WHITE);
+        line(endOfLife,"Affidabilita' predittiva verificata",
+            String.format(Locale.US,"%.1f%%",100*mortality.confidence()),CYAN);
+        line(endOfLife,"Valutazioni di consigli energetici",
+            String.valueOf(mortality.adviceEvents),WHITE);
+        line(endOfLife,"Morti con / senza danno recente osservato",
+            mortality.deathsWithRecentHarm+" / "+mortality.deathsWithoutRecentHarm,AMBER);
+        line(endOfLife,"Ultima morte: consumo / danno / recupero recenti",
+            String.format(Locale.US,"%.1f / %.1f / %.1f",
+                mortality.lastRecentDrain,mortality.lastRecentHarm,
+                mortality.lastRecentGain),WHITE);
+        paragraph(endOfLife,"Le ultime misure sono fatti fisici, NON una diagnosi causale definitiva. "+
+            "ZERO non penalizza automaticamente un cancello, una cassa o un'azione "+
+            "eseguita mentre ha subito un danno. Solo dopo molte vite tenute "+
+            "FUORI dall'addestramento e previsioni piu' accurate, "+
+            "il rischio appreso puo' dare un contributo LIMITATO ai valori "+
+            "energetici gia' attribuiti a fonti osservate. Nessuna azione e' obbligata.");
         LinearLayout graph=panel(body);
         graph.addView(label("EVOLUZIONE ERRORE DI PREVISIONE",15,CYAN,true));
         if(d.points()>0){
