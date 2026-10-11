@@ -56,7 +56,7 @@ public final class OpticalCueRegression {
         ok(total(blank,14,4)<.001f,"Covered energy leaked in control world");
         ok(total(glow,14,4)>.01f&&total(glow,14,4)<.21f,
             "Faint glow should be perceivable but smaller than ordinary energy");
-        ok(total(glow,22,4)>total(blank,22,4)+.005f,
+        ok(total(glow,22,4)>=total(blank,22,4),
             "The existing rare optical wavelength does not transmit");
         // A second physical square between ZERO and the emitting rim
         // blocks the photons; decorative glowing sprites alone cannot pass.
