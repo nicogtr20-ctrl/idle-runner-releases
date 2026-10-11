@@ -44,6 +44,18 @@ public final class InstrumentalNavigation {
     public float[] visible(){return visual.clone();}
     public int[] spectralContacts(){return effects.clone();}
     public int[] actionTrials(){return trials.clone();}
+    /** Read-only diagnostic baseline. The old policy uses the same means. */
+    public float motionEstimateX(int action){
+        return action<0||action>=ACTIONS?0f:motorDx[action];
+    }
+    public float motionEstimateY(int action){
+        return action<0||action>=ACTIONS?0f:motorDy[action];
+    }
+    public boolean motionEstimateVerified(int action){
+        return action>=0&&action<ACTIONS&&trials[action]>=3&&
+            holdouts[action]>=2&&zeroError[action]>=2f&&
+            testError[action]<zeroError[action]*.99f;
+    }
     public float signalValue(int s){return s<0||s>=SIGNALS?0:valence[s];}
     public int knownEffects(){int n=0;for(int v:effects)n+=v;return n;}
     public int learnedActions(){
