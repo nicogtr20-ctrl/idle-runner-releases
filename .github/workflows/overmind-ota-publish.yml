@@ -478,7 +478,9 @@ jobs:
           a=Path('app/src/main/java/com/overmind/zero/BrainToolsActivity.java').read_text()
           stats=Path('app/src/main/java/com/overmind/zero/BrainStatsActivity.java').read_text()
           code=Path('app/build.gradle').read_text()
-          assert 'SECTORS=8,FEATURES=SECTORS*4' in p
+          assert 'SECTORS=8,CHANNELS=6,FEATURES=SECTORS*CHANNELS' in p
+          assert 'body_proprioception_v120' in p
+          assert 'v[4*SECTORS+k]' in p and 'v[5*SECTORS+k]' in p
           assert 'for(int i=0;i<Morphology.POINTS;i++)' in p
           assert 'skin.touchSense[i]' in p and 'skin.touchPulse[i]' in p
           assert 'skin.gripHold[i]' in p and 'skin.extension[i]' in p
