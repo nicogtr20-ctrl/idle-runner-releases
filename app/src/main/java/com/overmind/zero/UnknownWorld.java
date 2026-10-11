@@ -157,7 +157,7 @@ public final class UnknownWorld {
         // source. The source is visible/collectable ONLY after true bilateral
         // adhesion moves its physical cover; no contact itself pays energy.
         if(episode%3!=0){
-            float theta=spin+1.15f,d=183f;
+            float theta=spin+.95f,d=116f;
             float bx=originX+(float)Math.cos(theta)*d;
             float by=originY+(float)Math.sin(theta)*d;
             Entity box=new Entity(bx,by,2,5);
