@@ -703,7 +703,7 @@ jobs:
           root=Path('app/src/main/java/com/overmind/zero')
           pins={
           'SensorimotorMind.java':'805b7d2cbc35028be385de60af67d59931b57936',
-          'GameActivity.java':'040ff90f69e8153d77da397664e493b512508d6b',
+          'GameActivity.java':'133b1a7dafdfadfe9950dad94c4c3fc49d9086f3',
           'InstrumentalNavigation.java':'2eb6390e7e80f17b488f148ec2d76b41e19e27a9',
           'BehavioralLaboratory.java':'e016be507d54b2535885a5c2070951fd9e4c72f7',
           'BehavioralLabActivity.java':'c1e655a947454e2cb77baad6b282890f00097717',
