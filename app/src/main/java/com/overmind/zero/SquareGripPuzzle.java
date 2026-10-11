@@ -83,8 +83,21 @@ public final class SquareGripPuzzle {
     }
     public static Outcome constrain(MotorBrain.Body body,Morphology.Surface skin,
                                     UnknownWorld.Entity box,float dt){
+        return constrain(body,skin,box,dt,null,null,null,null,
+                         body==null?0f:body.cx,body==null?0f:body.cy);
+    }
+    /** The original bilateral-grip policy is unchanged: extra arguments
+     * are only the prior physical positions for continuous collisions. */
+    public static Outcome constrain(MotorBrain.Body body,Morphology.Surface skin,
+                                    UnknownWorld.Entity box,float dt,
+                                    float[] previousSkinX,float[] previousSkinY,
+                                    float[] previousBodyX,float[] previousBodyY,
+                                    float previousCoreX,float previousCoreY){
         if(body==null||skin==null||box==null||!box.isBox()||
            !Float.isFinite(dt)||dt<=0)return new Outcome(false,0,0);
+        SquareCollisionSolver.constrain(body,skin,box,previousSkinX,
+            previousSkinY,previousBodyX,previousBodyY,
+            previousCoreX,previousCoreY);
         resolveCrossingLinks(skin,box);
         int[] sides={-1,-1,-1,-1};
         float sumVx=0,sumVy=0;int held=0,contacts=0;
@@ -137,6 +150,9 @@ public final class SquareGripPuzzle {
                 else {body.cy-=m;body.cvy=Math.min(0,body.cvy);}
             }
         }
+        // Revalidate the perimeter AFTER ordinary contact/pressure/traction.
+        // Those corrections can otherwise introduce new through-wall chords.
+        SquareCollisionSolver.finish(body,skin,box);
         return new Outcome(opposing,contacts,held);
     }
     public static boolean uncovered(UnknownWorld.Entity box){
