@@ -9,12 +9,13 @@ public final class GripParityRegression {
     static void check(boolean ok,String reason){if(!ok)throw new AssertionError(reason);}
     public static void main(String[] args){
         final float dt=.035f;
+        final int holdFrames=(int)Math.ceil(Morphology.GRIP_HOLD/dt)+12;
         MotorBrain.Body body=new MotorBrain.Body();
         Morphology.Surface skin=new Morphology.Surface(body);
         ScarcityLab gate=new ScarcityLab(0,0);
         int left=Morphology.POINTS/2,right=0;
         int gateHeld=0;
-        for(int frame=0;frame<8;frame++){
+        for(int frame=0;frame<holdFrames;frame++){
             for(int i=0;i<Morphology.POINTS;i++){
                 skin.x[i]=gate.gateX()-85;skin.y[i]=-100;
                 skin.gripCommand[i]=0;
@@ -26,19 +27,31 @@ public final class GripParityRegression {
             skin.gripCommand[left]=.82f;
             skin.gripCommand[right]=.82f;
             gate.solveGate(skin,dt,.82f);
+            // Voluntary grip plus real touch is NOT immediately active.
+            if((frame+1)*dt<Morphology.GRIP_HOLD-.001f)
+                check(skin.gripHold[left]<Morphology.GRIP_HOLD&&
+                      skin.gripHold[right]<Morphology.GRIP_HOLD,
+                      "Gate lit orange before five continuous seconds");
             if(skin.gripHold[left]>=Morphology.GRIP_HOLD&&
                skin.gripHold[right]>=Morphology.GRIP_HOLD)gateHeld++;
         }
-        check(gateHeld>=4,
+        check(gateHeld>0,
             "Even voluntary untouched gate grip cannot engage physically");
         System.out.println("Gate virgin action .82: heldFrames="+gateHeld+
             " latch="+skin.gripHold[left]+","+skin.gripHold[right]);
+        skin.gripCommand[left]=0f;
+        gate.solveGate(skin,dt,0f);
+        check(skin.gripHold[left]==0f,"Gate dwell not reset on released command");
+        skin.gripCommand[left]=.82f;
+        gate.solveGate(skin,dt,.82f);
+        check(skin.gripHold[left]<Morphology.GRIP_HOLD,
+              "Gate regained physical grip immediately after one-frame release");
 
         body=new MotorBrain.Body();
         skin=new Morphology.Surface(body);
         UnknownWorld.Entity box=new UnknownWorld.Entity(110,0,2,5);
         int boxHeld=0,boxTwo=0,contacted=0,edgeFix=0;
-        for(int frame=0;frame<8;frame++){
+        for(int frame=0;frame<holdFrames;frame++){
             for(int i=0;i<Morphology.POINTS;i++){
                 double angle=2*Math.PI*i/Morphology.POINTS;
                 skin.x[i]=box.x+36f*(float)Math.cos(angle);
@@ -61,6 +74,11 @@ public final class GripParityRegression {
             skin.gripCommand[right]=.82f;
             SquareGripPuzzle.Outcome o=SquareGripPuzzle.constrain(body,skin,box,dt,
                   oldX,oldY,body.x.clone(),body.y.clone(),body.cx,body.cy);
+            if((frame+1)*dt<Morphology.GRIP_HOLD-.001f)
+                check(o.held==0&&!o.opposingGrip&&
+                      skin.gripHold[left]<Morphology.GRIP_HOLD&&
+                      skin.gripHold[right]<Morphology.GRIP_HOLD,
+                      "Box lit orange or moved before five continuous seconds");
             if(o.contacts>0)contacted++;
             if(o.held>=2)boxHeld++;
             if(o.opposingGrip)boxTwo++;
@@ -74,12 +92,19 @@ public final class GripParityRegression {
         check(edgeFix==0,"Audit fixture has invalid penetrating links");
         // Deliberately assert the expected physical parity; with defective
         // solver this fails and proves the source of the user's complaint.
-        check(boxHeld>=4&&boxTwo>=4,
+        check(boxHeld>0&&boxTwo>0,
               "BUG: box CCD erases ordinary sustained two-sided adhesive contact");
         check(skin.touchSense[left]>.5f&&skin.touchSense[right]>.5f&&
               skin.gripHold[left]>=Morphology.GRIP_HOLD&&
               skin.gripHold[right]>=Morphology.GRIP_HOLD,
               "Real box hold did not meet orange-render condition");
+        skin.gripCommand[left]=0f;
+        SquareGripPuzzle.constrain(body,skin,box,dt);
+        check(skin.gripHold[left]==0f,"Box dwell not reset on released command");
+        skin.gripCommand[left]=.82f;
+        SquareGripPuzzle.constrain(body,skin,box,dt);
+        check(skin.gripHold[left]<Morphology.GRIP_HOLD,
+              "Box regained physical grip immediately after one-frame release");
         // Opposite test: a particle teleporting straight THROUGH the square
         // cannot keep its accumulated grip. The new exception protects
         // ordinary same-face contact only, not tunneling.
