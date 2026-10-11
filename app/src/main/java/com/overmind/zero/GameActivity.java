@@ -716,7 +716,14 @@ public final class GameActivity extends Activity {
                     contactsThisLife++;chosenObject=null;goalTimer=0;
                     lastEvent="STIMOLO "+(object.signature+1)+"  ENERGIA "+(delta>=0?"+":"")+(int)delta;
                     eventTime=4;
-                    if(delta<0){creature.cvx*=.6f;creature.cvy*=.6f;}
+                    if(delta<0){
+                        // Damage slows actual distributed material, not the
+                        // read-only virtual observation point.
+                        for(int i=0;i<MotorBrain.N;i++){
+                            creature.vx[i]*=.6f;creature.vy[i]*=.6f;
+                        }
+                        MaterialGeometry.observe(creature);
+                    }
                     save();
                 }
             }
