@@ -886,6 +886,7 @@ public final class GameActivity extends Activity {
                             save();
                         }
                     }
+                    gripObserver.pruneBoxes(environment);
                     resolveObjects(slice);
                     if(lifeStamp==episode){
                         float newlyMeasuredEffect=Math.max(0,

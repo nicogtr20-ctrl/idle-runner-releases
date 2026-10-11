@@ -26,6 +26,7 @@ final class GripContactObserver {
     private final float[] beforeHold=new float[Morphology.POINTS];
     private final boolean[] beforeFace=new boolean[Morphology.POINTS];
     private UnknownWorld.Entity pendingBox;
+    private ScarcityLab observedGate;
     private int nextBoxId=1,life=0;
     private String lastLife="";
 
@@ -77,7 +78,7 @@ final class GripContactObserver {
     void newLife(){
         // Preserve the previous complete life and cumulative session totals.
         if(!samples.isEmpty())lastLife=eventText();
-        samples.clear();boxContacts.clear();pendingBox=null;
+        samples.clear();boxContacts.clear();pendingBox=null;observedGate=null;
         for(int i=0;i<Morphology.POINTS;i++)gateContact.touchDwell[i]=0;
         gateContact.active=false;gateContact.nextSample=Float.NEGATIVE_INFINITY;
         life++;
@@ -107,6 +108,12 @@ final class GripContactObserver {
     void gateFrame(Morphology.Surface skin,ScarcityLab room,
                    float drive,float elapsed,float dt){
         if(room==null)return;
+        if(observedGate!=room){
+            observedGate=room;
+            gateContact.active=false;
+            gateContact.nextSample=Float.NEGATIVE_INFINITY;
+            for(int i=0;i<Morphology.POINTS;i++)gateContact.touchDwell[i]=0;
+        }
         int contact=0,cmd=0,held=0,orange=0,veto=0,offCmd=0;
         float longest=0,maxHold=0;
         boolean on=drive>.1f;
@@ -140,8 +147,8 @@ final class GripContactObserver {
     /** Sample immediately AFTER the unmodified square solver. */
     void boxFrame(Morphology.Surface skin,UnknownWorld.Entity box,
                   float drive,float elapsed,float dt){
-        if(box==null||box!=pendingBox)
-            throw new IllegalStateException("Observer snapshot mismatch");
+        // A diagnostic must NEVER abort or alter a running game.
+        if(box==null||box!=pendingBox){pendingBox=null;return;}
         pendingBox=null;
         Contact state=boxContacts.get(box);
         if(state==null){state=new Contact(nextBoxId++);boxContacts.put(box,state);}
@@ -174,6 +181,12 @@ final class GripContactObserver {
                   longest,maxHold,on,box.displacementFromSpawn()>.2f);
         sample(state,"B",on,contact,cmd,held,orange,veto,drop,same,geometry,
                longest,maxHold,box.displacementFromSpawn(),elapsed);
+    }
+    /** Recycle observer-only references when habitat streaming removes boxes. */
+    void pruneBoxes(java.util.ArrayList<UnknownWorld.Entity> living){
+        if(boxContacts.size()<=32||living==null)return;
+        java.util.Iterator<UnknownWorld.Entity> it=boxContacts.keySet().iterator();
+        while(it.hasNext())if(!living.contains(it.next()))it.remove();
     }
     private void sample(Contact state,String kind,boolean on,int touching,
                         int cmd,int held,int orange,int veto,int drop,int same,
