@@ -33,6 +33,9 @@ public final class SensorimotorMind {
     private transient CausalExperiments causal;
     private transient InstrumentalNavigation navigation;
     private transient GoalContinuity intention;
+    // Passive flight recorder: reads EXISTING scores, never changes an action.
+    private transient DecisionBlackbox blackbox;
+    public synchronized void attachDecisionBlackbox(DecisionBlackbox recorder){blackbox=recorder;}
     public synchronized void attachGoalContinuity(GoalContinuity c){intention=c;}
     public synchronized GoalContinuity goalContinuity(){return intention;}
     // Benchmark-only ablation: sensors, learning and all other policy terms
@@ -139,6 +142,7 @@ public final class SensorimotorMind {
         if(causal!=null)causal.resetLife();
         if(navigation!=null)navigation.resetLife();
         if(intention!=null)intention.resetLife();
+        if(blackbox!=null)blackbox.newLife();
         actualEnergySinceChoice=0;
     }
     public synchronized void resetEpisode(float[] first){
@@ -153,6 +157,7 @@ public final class SensorimotorMind {
             if(causal!=null)causal.resetLife();
             if(navigation!=null)navigation.resetLife();
             if(intention!=null)intention.resetLife();
+            if(blackbox!=null)blackbox.newLife();
             actualEnergySinceChoice=0;
             return;
         }
@@ -173,11 +178,18 @@ public final class SensorimotorMind {
         if(causal!=null)causal.resumeLife();
         if(navigation!=null)navigation.resumeLife();
         if(intention!=null)intention.resumeLife();
+        if(blackbox!=null)blackbox.resumeLife();
         actualEnergySinceChoice=0;
     }
     public synchronized float motorX(){return (float)Math.cos((action%8)*Math.PI/4);}
     public synchronized float motorY(){return (float)Math.sin((action%8)*Math.PI/4);}
     public synchronized float adhesion(){return action>=8?.82f:0f;}
+    /** End-of-life logger path, BEFORE the existing transient brain reset. */
+    public synchronized void recordTerminal(float[] observed,float physicalEffect,
+                                            MotorBrain.Body body){
+        if(blackbox!=null)blackbox.terminal(observed,actualEnergySinceChoice,
+                                           physicalEffect,body);
+    }
     public synchronized int decisionCount(){return (int)Math.min(Integer.MAX_VALUE,decisions);}
     public synchronized float[] stateCopy(){return trialState.clone();}
     public synchronized int parameterCount(){return PARAMETERS;}
@@ -217,6 +229,11 @@ public final class SensorimotorMind {
         int proposed=episodic==null?-1:episodic.suggested(senses,!protectMotor);
         int chosen=0;
         float best=-Float.MAX_VALUE;
+        // These arrays are written only when the user enables a recorder.
+        // They are not involved in the policy's comparison or randomness.
+        float[][] traceTerms=blackbox==null?null:
+            new float[ACTIONS][DecisionBlackbox.TERMS];
+        float[] traceScores=blackbox==null?null:new float[ACTIONS];
         float[] temporalContext=temporal==null?null:temporal.contextCopy();
         TemporalSkillBank.Advice skillAdvice=
             temporalSkills==null||temporal==null?null:
@@ -288,14 +305,29 @@ public final class SensorimotorMind {
             float score=legacyQ+earnedValue+planned[a]*.50f+curiosity+jitter+memoryBias+
                         diversity+temporalBias+skillBias+bodyBias+spatialBias+causalBias+
                         instrumental+intentBias;
+            if(traceTerms!=null){
+                traceScores[a]=score;
+                float[] t=traceTerms[a];
+                t[0]=legacyQ;t[1]=earnedValue;t[2]=planned[a]*.50f;
+                t[3]=curiosity;t[4]=jitter;t[5]=memoryBias;t[6]=diversity;
+                t[7]=temporalBias;t[8]=skillBias;t[9]=bodyBias;
+                t[10]=spatialBias;t[11]=causalBias;t[12]=instrumental;
+                t[13]=intentBias;
+            }
             if(score>best){best=score;chosen=a;}
         }
+        int greedyAction=chosen;
         float epsilon=Math.max(.09f,.52f/(1+experiences/120f));
         if(protectMotor)epsilon=Math.max(epsilon,.28f);
         actionExploratory=false;
         if(random.nextFloat()<epsilon){
             chosen=random.nextInt(ACTIONS);explorations++;
             actionExploratory=true;
+        }
+        if(blackbox!=null){
+            blackbox.chosen(senses,chosen,greedyAction,actionExploratory,
+                protectMotor,epsilon,traceScores[chosen],traceScores[greedyAction],
+                traceTerms[chosen],observedBody);
         }
         if(action!=chosen)actionsReconsidered++;
         if(episodic!=null)episodic.chosen(chosen,proposed);
@@ -370,6 +402,7 @@ public final class SensorimotorMind {
             updateNavigationSense(body,room,objects);
             choose(after);return;
         }
+        if(blackbox!=null)blackbox.tick(Math.max(0,dt));
         elapsed+=Math.max(0,dt);
         if(elapsed<.65f)return;
         observedBody=body;
@@ -446,6 +479,8 @@ public final class SensorimotorMind {
         }
         diagnostics.record(error,(float)Math.sqrt(naiveErr/S),
             lastReward,actionExploratory);
+        if(blackbox!=null)blackbox.finished(after,actualEnergySinceChoice,
+            physicalEffect,error,body);
         experiences++;
         learnedControl=(float)Math.min(1,experiences/1500.);
         choose(after);
