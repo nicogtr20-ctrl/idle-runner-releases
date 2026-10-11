@@ -8,8 +8,8 @@ import java.util.*;
  */
 public final class MultiObjectGripRegression {
     private static final float DT=.035f;
-    private static final int[] TOP={8,24,39};
-    private static final int[] BOTTOM={87,71,56};
+    private static final int[] TOP={7,19,32};
+    private static final int[] BOTTOM={80,68,55};
     private static final float[] XX={-130f,0f,130f};
     private static void ok(boolean yes,String why){
         if(!yes)throw new AssertionError(why);
@@ -30,10 +30,19 @@ public final class MultiObjectGripRegression {
             // One continuous rectangular skin perimeter around all 3 solids.
             // Different membrane particles land on opposite real faces.
             for(int i=0;i<Morphology.POINTS;i++){
-                boolean top=i<48;
-                float x=top?-200f+400f*i/47f:200f-400f*(i-48)/47f;
-                skin.x[i]=x;skin.y[i]=top?250f:350f;
+                float x,y;
+                if(i<40){x=-200f+400f*i/39f;y=250f;}
+                else if(i<48){x=200f;y=250f+100f*(i-39)/9f;}
+                else if(i<88){x=200f-400f*(i-48)/39f;y=350f;}
+                else{x=-200f;y=350f-100f*(i-87)/9f;}
+                skin.x[i]=x;skin.y[i]=y;
                 skin.vx[i]=skin.vy[i]=skin.gripCommand[i]=0f;
+            }
+            // Taper the contact indentations so every real membrane link
+            // remains shorter than the unchanged 23-unit material limit.
+            for(int k=0;k<3;k++)for(int d=-2;d<=2;d++){
+                skin.y[TOP[k]+d]=250f+10f*(3-Math.abs(d));
+                skin.y[BOTTOM[k]+d]=350f-10f*(3-Math.abs(d));
             }
             for(int k=0;k<3;k++){
                 skin.x[TOP[k]]=skin.x[BOTTOM[k]]=box[k].x;
