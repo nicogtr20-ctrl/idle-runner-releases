@@ -27,7 +27,7 @@ jobs:
       - name: Unit tests
         run: |
           mkdir -p /tmp/overmind
-          javac -d /tmp/overmind app/src/main/java/com/overmind/zero/MotorBrain.java app/src/main/java/com/overmind/zero/OpticalCues.java app/src/main/java/com/overmind/zero/OpticalCueRegression.java app/src/main/java/com/overmind/zero/HabitatContinuity.java app/src/main/java/com/overmind/zero/DecisionBlackbox.java app/src/main/java/com/overmind/zero/GateLifeJournal.java app/src/main/java/com/overmind/zero/ContextualMotionProbe.java app/src/main/java/com/overmind/zero/ShadowNonInterferenceRegression.java app/src/main/java/com/overmind/zero/UnknownWorld.java app/src/main/java/com/overmind/zero/SquareGripPuzzle.java app/src/main/java/com/overmind/zero/SquareCollisionSolver.java app/src/main/java/com/overmind/zero/GripParityRegression.java app/src/main/java/com/overmind/zero/GateBoxGripIsolationRegression.java app/src/main/java/com/overmind/zero/MultiObjectGripRegression.java app/src/main/java/com/overmind/zero/GripSurfaceComposition.java app/src/main/java/com/overmind/zero/WorldPlacement.java app/src/main/java/com/overmind/zero/ContactLearning.java app/src/main/java/com/overmind/zero/DecisionBrain.java app/src/main/java/com/overmind/zero/Morphology.java app/src/main/java/com/overmind/zero/ScarcityLab.java app/src/main/java/com/overmind/zero/SensorimotorMind.java app/src/main/java/com/overmind/zero/GoalContinuity.java app/src/main/java/com/overmind/zero/GateBehaviorMetrics.java app/src/main/java/com/overmind/zero/BehavioralLaboratory.java app/src/main/java/com/overmind/zero/InstrumentalNavigation.java app/src/main/java/com/overmind/zero/SpatialPerception.java app/src/main/java/com/overmind/zero/CausalExperiments.java app/src/main/java/com/overmind/zero/BodyProprioception.java app/src/main/java/com/overmind/zero/TemporalWorkingMemory.java app/src/main/java/com/overmind/zero/TemporalSkillBank.java app/src/main/java/com/overmind/zero/TemporalPersistenceRegression.java app/src/main/java/com/overmind/zero/LearnedSequencePlanner.java app/src/main/java/com/overmind/zero/LearningDiagnostics.java app/src/main/java/com/overmind/zero/ResetDomains.java app/src/main/java/com/overmind/zero/OnlineBodyLearning.java app/src/main/java/com/overmind/zero/MotionExploration.java app/src/main/java/com/overmind/zero/EpisodicMemory.java app/src/main/java/com/overmind/zero/MotorAutonomyGuard.java app/src/main/java/com/overmind/zero/MotorSkillBank.java app/src/main/java/com/overmind/zero/ExperienceCredit.java app/src/main/java/com/overmind/zero/GripSkillBank.java app/src/main/java/com/overmind/zero/SaveProfileCodec.java app/src/main/java/com/overmind/zero/LifeStatistics.java app/src/main/java/com/overmind/zero/GripContactObserver.java app/src/main/java/com/overmind/zero/GripContactObserverRegression.java app/src/main/java/com/overmind/zero/MortalityLearning.java app/src/main/java/com/overmind/zero/BodyIntegrity.java app/src/main/java/com/overmind/zero/BodyIntegrityRecoveredSnapshotsRegression.java app/src/main/java/com/overmind/zero/BodyIntegrityObstacleRegression.java
+          javac -d /tmp/overmind app/src/main/java/com/overmind/zero/MotorBrain.java app/src/main/java/com/overmind/zero/OpticalCues.java app/src/main/java/com/overmind/zero/OpticalCueRegression.java app/src/main/java/com/overmind/zero/HabitatContinuity.java app/src/main/java/com/overmind/zero/DecisionBlackbox.java app/src/main/java/com/overmind/zero/GateLifeJournal.java app/src/main/java/com/overmind/zero/ContextualMotionProbe.java app/src/main/java/com/overmind/zero/ShadowNonInterferenceRegression.java app/src/main/java/com/overmind/zero/UnknownWorld.java app/src/main/java/com/overmind/zero/SquareGripPuzzle.java app/src/main/java/com/overmind/zero/SquareCollisionSolver.java app/src/main/java/com/overmind/zero/GripParityRegression.java app/src/main/java/com/overmind/zero/GateBoxGripIsolationRegression.java app/src/main/java/com/overmind/zero/MultiObjectGripRegression.java app/src/main/java/com/overmind/zero/GripSurfaceComposition.java app/src/main/java/com/overmind/zero/WorldPlacement.java app/src/main/java/com/overmind/zero/ContactLearning.java app/src/main/java/com/overmind/zero/DecisionBrain.java app/src/main/java/com/overmind/zero/Morphology.java app/src/main/java/com/overmind/zero/ScarcityLab.java app/src/main/java/com/overmind/zero/SensorimotorMind.java app/src/main/java/com/overmind/zero/GoalContinuity.java app/src/main/java/com/overmind/zero/GateBehaviorMetrics.java app/src/main/java/com/overmind/zero/BehavioralLaboratory.java app/src/main/java/com/overmind/zero/InstrumentalNavigation.java app/src/main/java/com/overmind/zero/SpatialPerception.java app/src/main/java/com/overmind/zero/CausalExperiments.java app/src/main/java/com/overmind/zero/BodyProprioception.java app/src/main/java/com/overmind/zero/TemporalWorkingMemory.java app/src/main/java/com/overmind/zero/TemporalSkillBank.java app/src/main/java/com/overmind/zero/TemporalPersistenceRegression.java app/src/main/java/com/overmind/zero/LearnedSequencePlanner.java app/src/main/java/com/overmind/zero/LearningDiagnostics.java app/src/main/java/com/overmind/zero/ResetDomains.java app/src/main/java/com/overmind/zero/OnlineBodyLearning.java app/src/main/java/com/overmind/zero/MotionExploration.java app/src/main/java/com/overmind/zero/EpisodicMemory.java app/src/main/java/com/overmind/zero/MotorAutonomyGuard.java app/src/main/java/com/overmind/zero/MotorSkillBank.java app/src/main/java/com/overmind/zero/ExperienceCredit.java app/src/main/java/com/overmind/zero/GripSkillBank.java app/src/main/java/com/overmind/zero/SaveProfileCodec.java app/src/main/java/com/overmind/zero/LifeStatistics.java app/src/main/java/com/overmind/zero/GripContactObserver.java app/src/main/java/com/overmind/zero/GripContactObserverRegression.java app/src/main/java/com/overmind/zero/MortalityLearning.java app/src/main/java/com/overmind/zero/BodyIntegrity.java app/src/main/java/com/overmind/zero/BodyIntegrityRecoveredSnapshotsRegression.java app/src/main/java/com/overmind/zero/BodyIntegrityObstacleRegression.java app/src/main/java/com/overmind/zero/MaterialGeometry.java app/src/main/java/com/overmind/zero/MaterialSymbioteRegression.java app/src/main/java/com/overmind/zero/MaterialMotionRegression.java app/src/main/java/com/overmind/zero/MaterialVisionRegression.java
           java -cp /tmp/overmind com.overmind.zero.GripContactObserverRegression
           java -cp /tmp/overmind com.overmind.zero.MotorBrain
           java -cp /tmp/overmind com.overmind.zero.UnknownWorld
@@ -70,9 +70,12 @@ jobs:
           java -cp /tmp/overmind com.overmind.zero.GripSkillBank
           java -cp /tmp/overmind com.overmind.zero.ExperienceCredit
           java -cp /tmp/overmind com.overmind.zero.MortalityLearning
-          java -cp /tmp/overmind com.overmind.zero.BodyIntegrity
-          java -cp /tmp/overmind com.overmind.zero.BodyIntegrityRecoveredSnapshotsRegression
-          java -cp /tmp/overmind com.overmind.zero.BodyIntegrityObstacleRegression
+          # The old nuclear containment fixtures intentionally do not apply
+          # to an organism with no inertial nucleus or central collider.
+          java -cp /tmp/overmind com.overmind.zero.MaterialGeometry
+          java -cp /tmp/overmind com.overmind.zero.MaterialSymbioteRegression
+          java -cp /tmp/overmind com.overmind.zero.MaterialMotionRegression
+          java -cp /tmp/overmind com.overmind.zero.MaterialVisionRegression
           java -cp /tmp/overmind com.overmind.zero.SaveProfileCodec
           java -cp /tmp/overmind com.overmind.zero.LifeStatistics
           # v0.6 includes v0.5 -> v0.6 weight migration and expansion invariants.
@@ -129,7 +132,7 @@ jobs:
           world=Path('app/src/main/java/com/overmind/zero/UnknownWorld.java').read_text()
           chamber=Path('app/src/main/java/com/overmind/zero/ScarcityLab.java').read_text()
           assert 'chamber.constrain(creature,surface,slice,sensorMind.adhesion());' in app
-          assert 'foodTouchedByCore(creature)' in app
+          assert 'foodTouchedByBody(creature,surface)' in app
           assert 'consumed=true;cooldown=Float.POSITIVE_INFINITY' in world
           assert 'leftGrip>0&&rightGrip>0' in chamber
           assert 'dualTouchNoGrip' in chamber and 'Morphology.GRIP_HOLD' in chamber
@@ -653,7 +656,7 @@ jobs:
           assert 'surface.step(body,input.membrane,px,py,DT,brain.adhesion())' in lab
           assert 'body.step(input.motor,mx,my,DT,input.hands,px,py)' in lab
           assert 'brain.contactOutcome(delta,object.signature)' in lab
-          assert 'room.foodTouchedByCore(body)' in lab
+          assert 'lab.foodTouchedByBody(body,skin)' in lab
           assert 'brain.observe(SensorimotorMind.Senses.read(' in lab
           assert 'rig.episodes.consequenceSeparated(' in lab
           assert 'public synchronized void setNavigationAdviceEnabled(boolean enabled)' in brain
@@ -717,30 +720,36 @@ jobs:
           from hashlib import sha1
           root=Path('app/src/main/java/com/overmind/zero')
           pins={
-          'SensorimotorMind.java':'aa17565a413db26fb9ace19eed5cc0b29d0d7e06',
-          'GameActivity.java':'ea37aa195ac80fb48d48aa6743f4257c76e4a612',
+          'SensorimotorMind.java':'ba4cf5e2b7b925cf0d9b7025d9f6cd0df6b1f27a',
+          'GameActivity.java':'8bdb1051362b719ab59441a3ddc648ed8eeb73a0',
           'InstrumentalNavigation.java':'fb95ae5b19a8b2602cb4338641d8851bebf8fa26',
           'BehavioralLaboratory.java':'e016be507d54b2535885a5c2070951fd9e4c72f7',
           'BehavioralLabActivity.java':'c1e655a947454e2cb77baad6b282890f00097717',
           'ResetDomains.java':'1f809d30d40e83c056b0c7c2c046fa6bc9138dbb',
-          'ScarcityLab.java':'17d18926310b9b6d8262fa1a3b3092111e68097f',
+          'ScarcityLab.java':'51d04604c79c728c53dd819971116bd7d710dc60',
           'UnknownWorld.java':'040edbe131f4d6e39b692db6c8c3a4dc02383ff7',
           'GameSceneSnapshot.java':'724f6eeb734f44fb503de4ea84d6c97068c45c83',
-          'SquareGripPuzzle.java':'4393921b2b04c2965bcc1b2c6ac144971d6b2b05',
-          'SquareCollisionSolver.java':'9418b907ef14cc55d18c5294befab875a8be8526',
+          'SquareGripPuzzle.java':'b6119773469871e3bb604330b18a265119699df8',
+          'SquareCollisionSolver.java':'88db7fb60d0172ac39c47fcf312ff016b4734465',
           'WorldPlacement.java':'2bfdb70334a40341215104a29ef26da5dabc4b25',
-          'GateBehaviorMetrics.java':'44043b418c8bc00cdf7f944673bb168355e44a72',
+          'GateBehaviorMetrics.java':'9afcdc3889943e76a80ca58f728401bc88eb5502',
           'GateLifeJournal.java':'351b1107f90d1dffd91377d1709459324211ef62',
           'ContextualMotionProbe.java':'064988e420645b7d1c1be3235cb83ca3884e01f8',
           'OpticalCues.java':'c41adea2d29deca1dc0580b44fabb15363fae865',
           'OpticalCueRegression.java':'78a9df279beb12b450f7792b0a3871762ec1d177',
           'HabitatContinuity.java':'c9358785c1df6c5a4a8e5439927dd2eee7917453',
           'GripSurfaceComposition.java':'2b4f9d0a2f78112d4f06e48d4c2b6c114301854a',
-          'BrainToolsActivity.java':'219659d13ac13f453146087c53b6bf97051f8d8f',
+          'BrainToolsActivity.java':'42c043c43c545c60933e9e20881bf9e7251b4585',
           'MortalityLearning.java':'106683098e58d03a1b901fd7293549ebd5bb6715',
           'ExperienceCredit.java':'5811cd758423e6fa8b4e27a7279fa56a39fbe661',
-          'MotorBrain.java':'7bab82a48c688ed3082008c6b8ceb95d6a6c8324',
-          'Morphology.java':'7e309e1f72773492d7b39dc18d45a240e12b5548',
+          'MaterialVisionRegression.java':'0ce4a8420961c27d2959be197f436981790f089e',
+          'MaterialMotionRegression.java':'b601122c97de8cd70159ada49b9cbeb2e5cb4358',
+          'MaterialSymbioteRegression.java':'a162c986395bcc4784401e72a83458b8b93f33da',
+          'MaterialGeometry.java':'46acc9dbd9e75dba803502487ba17dfac7f338f6',
+          'BodyProprioception.java':'2b83452af357a7a3b8c02cee0ba9792ce0b81ada',
+          'SpatialPerception.java':'f7f5ba9aafd5494ba5621c78e99a8fd4a191d93b',
+          'MotorBrain.java':'a3e0681c595bd1a9d17549c25770f6049c83926f',
+          'Morphology.java':'3f2504d47aae8db1e8ac1f82c3ffb68a0a028279',
           'BodyIntegrity.java':'95449df8db22a7287e7a8e90f0f80f5a9f686799',
           'BodyIntegrityRecoveredSnapshotsRegression.java':'d536451adb05cb742176ec559460066bd637c453',
           'BodyIntegrityObstacleRegression.java':'d9b4b6d1847ea78787dacc531188d2b61318487f'}
