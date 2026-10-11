@@ -417,7 +417,7 @@ public final class GameActivity extends Activity {
                 sensorMind.resumeEpisode(SensorimotorMind.Senses.read(
                     creature,surface,chamber,environment,reserve),action);
                 sensorMind.updateBodySense(creature,surface);
-                sensorMind.resumeSpatialSense(creature,chamber,environment);
+                sensorMind.resumeSpatialSense(creature,surface,chamber,environment);
                 sensorMind.updateNavigationSense(creature,chamber,environment);
                 motorGuard.resetLife(creature.cx,creature.cy);
                 lastSkillStall=motorGuard.recoveryActivations;
