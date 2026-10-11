@@ -27,7 +27,7 @@ jobs:
       - name: Unit tests
         run: |
           mkdir -p /tmp/overmind
-          javac -d /tmp/overmind app/src/main/java/com/overmind/zero/MotorBrain.java app/src/main/java/com/overmind/zero/UnknownWorld.java app/src/main/java/com/overmind/zero/ContactLearning.java app/src/main/java/com/overmind/zero/DecisionBrain.java app/src/main/java/com/overmind/zero/Morphology.java app/src/main/java/com/overmind/zero/ScarcityLab.java app/src/main/java/com/overmind/zero/SensorimotorMind.java app/src/main/java/com/overmind/zero/GoalContinuity.java app/src/main/java/com/overmind/zero/GateBehaviorMetrics.java app/src/main/java/com/overmind/zero/BehavioralLaboratory.java app/src/main/java/com/overmind/zero/InstrumentalNavigation.java app/src/main/java/com/overmind/zero/SpatialPerception.java app/src/main/java/com/overmind/zero/CausalExperiments.java app/src/main/java/com/overmind/zero/BodyProprioception.java app/src/main/java/com/overmind/zero/TemporalWorkingMemory.java app/src/main/java/com/overmind/zero/TemporalSkillBank.java app/src/main/java/com/overmind/zero/TemporalPersistenceRegression.java app/src/main/java/com/overmind/zero/LearnedSequencePlanner.java app/src/main/java/com/overmind/zero/LearningDiagnostics.java app/src/main/java/com/overmind/zero/ResetDomains.java app/src/main/java/com/overmind/zero/OnlineBodyLearning.java app/src/main/java/com/overmind/zero/MotionExploration.java app/src/main/java/com/overmind/zero/EpisodicMemory.java app/src/main/java/com/overmind/zero/MotorAutonomyGuard.java app/src/main/java/com/overmind/zero/MotorSkillBank.java app/src/main/java/com/overmind/zero/ExperienceCredit.java app/src/main/java/com/overmind/zero/GripSkillBank.java app/src/main/java/com/overmind/zero/SaveProfileCodec.java app/src/main/java/com/overmind/zero/LifeStatistics.java
+          javac -d /tmp/overmind app/src/main/java/com/overmind/zero/MotorBrain.java app/src/main/java/com/overmind/zero/DecisionBlackbox.java app/src/main/java/com/overmind/zero/UnknownWorld.java app/src/main/java/com/overmind/zero/ContactLearning.java app/src/main/java/com/overmind/zero/DecisionBrain.java app/src/main/java/com/overmind/zero/Morphology.java app/src/main/java/com/overmind/zero/ScarcityLab.java app/src/main/java/com/overmind/zero/SensorimotorMind.java app/src/main/java/com/overmind/zero/GoalContinuity.java app/src/main/java/com/overmind/zero/GateBehaviorMetrics.java app/src/main/java/com/overmind/zero/BehavioralLaboratory.java app/src/main/java/com/overmind/zero/InstrumentalNavigation.java app/src/main/java/com/overmind/zero/SpatialPerception.java app/src/main/java/com/overmind/zero/CausalExperiments.java app/src/main/java/com/overmind/zero/BodyProprioception.java app/src/main/java/com/overmind/zero/TemporalWorkingMemory.java app/src/main/java/com/overmind/zero/TemporalSkillBank.java app/src/main/java/com/overmind/zero/TemporalPersistenceRegression.java app/src/main/java/com/overmind/zero/LearnedSequencePlanner.java app/src/main/java/com/overmind/zero/LearningDiagnostics.java app/src/main/java/com/overmind/zero/ResetDomains.java app/src/main/java/com/overmind/zero/OnlineBodyLearning.java app/src/main/java/com/overmind/zero/MotionExploration.java app/src/main/java/com/overmind/zero/EpisodicMemory.java app/src/main/java/com/overmind/zero/MotorAutonomyGuard.java app/src/main/java/com/overmind/zero/MotorSkillBank.java app/src/main/java/com/overmind/zero/ExperienceCredit.java app/src/main/java/com/overmind/zero/GripSkillBank.java app/src/main/java/com/overmind/zero/SaveProfileCodec.java app/src/main/java/com/overmind/zero/LifeStatistics.java
           java -cp /tmp/overmind com.overmind.zero.MotorBrain
           java -cp /tmp/overmind com.overmind.zero.UnknownWorld
           java -cp /tmp/overmind com.overmind.zero.ContactLearning
@@ -35,6 +35,7 @@ jobs:
           java -cp /tmp/overmind com.overmind.zero.Morphology
           java -cp /tmp/overmind com.overmind.zero.ScarcityLab
           java -cp /tmp/overmind com.overmind.zero.SensorimotorMind
+          java -cp /tmp/overmind com.overmind.zero.DecisionBlackbox
           java -cp /tmp/overmind com.overmind.zero.GoalContinuity
           java -cp /tmp/overmind com.overmind.zero.GateBehaviorMetrics
           java -cp /tmp/overmind com.overmind.zero.BehavioralLaboratory
@@ -692,15 +693,15 @@ jobs:
           assert '0.11.6-ota' in gradle and "applicationId 'com.overmind.zero.ota'" in gradle
           print('0.11.4 approved: actual physical gate-stage diagnostics, observed progress-gated intentions, existing zero user profiles intact')
           PY
-      - name: 0.11.6 critical gate - byte-exact ZERO 0.11.4 behavior and private telemetry
+      - name: 0.11.6 critical gate - pinned observer-only decision recorder and private telemetry
         run: |
           python3 - <<'PY'
           from pathlib import Path
           from hashlib import sha1
           root=Path('app/src/main/java/com/overmind/zero')
           pins={
-          'SensorimotorMind.java':'c16d3f5b8fd81f6060f5ac732d57a46099ed0179',
-          'GameActivity.java':'e7b805047f723f4a528fe05373024382077388ba',
+          'SensorimotorMind.java':'4defdac3f3255bdb06a1c38cf705908ab530fc50',
+          'GameActivity.java':'56e3099e9dae6b2e24b796131353523d69fad9fa',
           'InstrumentalNavigation.java':'2eb6390e7e80f17b488f148ec2d76b41e19e27a9',
           'BehavioralLaboratory.java':'e016be507d54b2535885a5c2070951fd9e4c72f7',
           'BehavioralLabActivity.java':'c1e655a947454e2cb77baad6b282890f00097717',
@@ -723,7 +724,19 @@ jobs:
           assert 'getSharedPreferences(SaveSlotStore.WORKING,Context.MODE_PRIVATE).edit()' not in upload
           assert '0.11.6-ota' in gradle and "applicationId 'com.overmind.zero.ota'" in gradle
           assert 'SLOTS=12' in (root/'SaveSlotStore.java').read_text()
-          print('ZERO 0.11.6 signed: original exact 0.11.4 code, optional consent-only private report upload, 12 slots preserved')
+          blackbox=(root/'DecisionBlackbox.java').read_text()
+          mind=(root/'SensorimotorMind.java').read_text()
+          game=(root/'GameActivity.java').read_text()
+          assert 'MAX_ENTRIES=475, MAX_TEXT=145000;' in blackbox
+          assert 'WINDOW=300f;' in blackbox
+          assert 'if(blackbox!=null)blackbox.finished' in mind
+          assert 'blackbox.chosen(senses,chosen,greedyAction,actionExploratory,' in mind
+          assert 'float epsilon=Math.max(.09f,.52f/(1+experiences/120f));' in mind
+          assert 'if(score>best){best=score;chosen=a;}' in mind
+          assert 'DecisionBlackbox.CURRENT,decisionBlackbox.encodeCurrent()' in game
+          assert 'decisionBlackbox.lastLife()).commit();' in game
+          assert 'SCATOLA NERA' in ui
+          print('ZERO 0.11.6 signed: unchanged world mechanics, pinned passive action logger, private consent-only telemetry and named saves')
           PY
       - name: Assemble stable signed APK
         if: env.signing_ready == 'true'
