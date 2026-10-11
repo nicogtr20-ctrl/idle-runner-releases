@@ -590,7 +590,7 @@ public final class GameActivity extends Activity {
                 // A free box collides with the current room instead of
                 // tunnelling inside its gate. Roll back THIS frame only.
                 if(object.isBox()&&chamber!=null&&
-                   chamber.overlapsRoom(object.x,object.y,SquareGripPuzzle.HALF)){
+                   chamber.overlapsRoom(object.x,object.y,object.radius)){
                     object.x=ox;object.y=oy;object.vx=object.vy=0;
                 }
             }
