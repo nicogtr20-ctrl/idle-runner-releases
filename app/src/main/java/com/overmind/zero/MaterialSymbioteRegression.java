@@ -85,6 +85,7 @@ public final class MaterialSymbioteRegression {
             float[] morph=Morphology.virgin(new Random(260+scenario));
             UnknownWorld.Entity box=new UnknownWorld.Entity(100,0,1,5);
             ScarcityLab gate=new ScarcityLab(0,0);
+            int maxSelfCross=0,observedShapes=0;
             float[] xs=new float[Morphology.POINTS],ys=new float[Morphology.POINTS],
                     bx=new float[MotorBrain.N],by=new float[MotorBrain.N];
             for(int t=0;t<1800;t++){
@@ -104,10 +105,17 @@ public final class MaterialSymbioteRegression {
                         xs,ys,bx,by,oldX,oldY);
                 MaterialGeometry.observe(b);
                 refCheck(b);
+                if(t%67==0){
+                    maxSelfCross=Math.max(maxSelfCross,MaterialGeometry.selfCrossings(s));
+                    observedShapes++;
+                }
                 check(Math.abs(box.vx)<.0001f&&Math.abs(box.vy)<.0001f,
                       "Box moved without two real sustained neural contacts");
                 check(!Float.isNaN(s.x[0]),"Invalid membrane");
             }
+            System.out.println("Rigid obstacle case "+scenario+
+                ": max real silhouette intersections "+maxSelfCross+
+                " among "+observedShapes+" observed outlines");
         }
         System.out.println("Symbiote: 5400 real rigid-solid physical solver steps "+
                            "no core impulse and no uncommanded square motion");
