@@ -218,7 +218,8 @@ final class SquareCollisionSolver {
                 oldBX=body.x.clone(),oldBY=body.y.clone();
         // A material particle shot right across, and a neighbor link
         // passing through, must both end outside.
-        skin.x[0]=59;skin.vx[0]=3800;
+        oldX[0]=-34;oldY[0]=0;
+        skin.x[0]=59;skin.y[0]=0;skin.vx[0]=3800;
         constrain(body,skin,b,oldX,oldY,oldBX,oldBY,body.cx,body.cy);
         finish(body,skin,b);
         test(intersections(skin,b)==0,"Membrane still cuts through box");
