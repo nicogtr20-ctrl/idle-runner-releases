@@ -69,7 +69,11 @@ public final class MultiObjectGripRegression {
             if(commanded[i]){
                 ok(w.box[i].boxGripHold[TOP[i]]>=Morphology.GRIP_HOLD&&
                    w.box[i].boxGripHold[BOTTOM[i]]>=Morphology.GRIP_HOLD,
-                   "Box "+i+" failed to sustain two independent real grip patches");
+                   "Box "+i+" failed holds: top="+w.box[i].boxGripHold[TOP[i]]+
+                   " bottom="+w.box[i].boxGripHold[BOTTOM[i]]+
+                   " x="+w.skin.x[TOP[i]]+" y="+w.skin.y[TOP[i]]+
+                   " boxX="+w.box[i].x+" boxY="+w.box[i].y+
+                   " moved="+moved);
                 ok(moved>0.4f&&w.box[i].everCollided,
                    "Gripped box "+i+" was not moved by its own patch velocities");
                 ok(w.skin.gripHold[TOP[i]]>=Morphology.GRIP_HOLD&&
