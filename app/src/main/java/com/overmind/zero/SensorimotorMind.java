@@ -35,6 +35,9 @@ public final class SensorimotorMind {
     private transient GoalContinuity intention;
     // Passive flight recorder: reads EXISTING scores, never changes an action.
     private transient DecisionBlackbox blackbox;
+    // Pure empirical observer; its predicted motion is NEVER scored or acted upon.
+    private transient ContextualMotionProbe motionShadow;
+    public synchronized void attachMotionShadow(ContextualMotionProbe probe){motionShadow=probe;}
     public synchronized void attachDecisionBlackbox(DecisionBlackbox recorder){blackbox=recorder;}
     public synchronized void attachGoalContinuity(GoalContinuity c){intention=c;}
     public synchronized GoalContinuity goalContinuity(){return intention;}
@@ -143,6 +146,7 @@ public final class SensorimotorMind {
         if(navigation!=null)navigation.resetLife();
         if(intention!=null)intention.resetLife();
         if(blackbox!=null)blackbox.newLife();
+        if(motionShadow!=null)motionShadow.resetLife();
         actualEnergySinceChoice=0;
     }
     public synchronized void resetEpisode(float[] first){
@@ -158,6 +162,7 @@ public final class SensorimotorMind {
             if(navigation!=null)navigation.resetLife();
             if(intention!=null)intention.resetLife();
             if(blackbox!=null)blackbox.newLife();
+            if(motionShadow!=null)motionShadow.resetLife();
             actualEnergySinceChoice=0;
             return;
         }
@@ -179,6 +184,7 @@ public final class SensorimotorMind {
         if(navigation!=null)navigation.resumeLife();
         if(intention!=null)intention.resumeLife();
         if(blackbox!=null)blackbox.resumeLife();
+        if(motionShadow!=null)motionShadow.resetLife();
         actualEnergySinceChoice=0;
     }
     public synchronized float motorX(){return (float)Math.cos((action%8)*Math.PI/4);}
@@ -324,6 +330,7 @@ public final class SensorimotorMind {
             chosen=random.nextInt(ACTIONS);explorations++;
             actionExploratory=true;
         }
+        if(motionShadow!=null)motionShadow.chosen(senses,chosen,observedBody);
         if(blackbox!=null){
             blackbox.chosen(senses,chosen,greedyAction,actionExploratory,
                 protectMotor,epsilon,traceScores[chosen],traceScores[greedyAction],
@@ -466,6 +473,11 @@ public final class SensorimotorMind {
             spatial.consequence(trialAction,lastReward,learning&&!holdout,holdout);
         if(causal!=null&&spatial!=null&&body!=null&&objects!=null)
             causal.consequence(spatial,trialAction,lastReward,learning&&!holdout,holdout);
+        if(motionShadow!=null)motionShadow.finished(
+            trialAction,body,learning,
+            navigation==null?0f:navigation.motionEstimateX(trialAction),
+            navigation==null?0f:navigation.motionEstimateY(trialAction),
+            navigation!=null&&navigation.motionEstimateVerified(trialAction));
         if(navigation!=null&&body!=null)
             navigation.consequence(trialAction,body,learning&&!holdout,holdout);
         if(intention!=null&&navigation!=null&&body!=null&&navigationAdviceEnabled)

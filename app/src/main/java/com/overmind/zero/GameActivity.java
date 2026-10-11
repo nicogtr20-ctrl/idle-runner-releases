@@ -46,6 +46,8 @@ public final class GameActivity extends Activity {
         InstrumentalNavigation navigation=new InstrumentalNavigation();
         GoalContinuity intentions=new GoalContinuity();
         GateBehaviorMetrics gateMetrics=new GateBehaviorMetrics();
+        GateLifeJournal gateJournal=new GateLifeJournal();
+        ContextualMotionProbe motionShadow=new ContextualMotionProbe();
         DecisionBlackbox decisionBlackbox=new DecisionBlackbox();
         MotorAutonomyGuard motorGuard=new MotorAutonomyGuard();
         MotorSkillBank skillBank=new MotorSkillBank();
@@ -204,6 +206,12 @@ public final class GameActivity extends Activity {
             decisionBlackbox.restoreLast(prefs.getString(DecisionBlackbox.LAST,""));
             decisionBlackbox.restoreCurrent(prefs.getString(DecisionBlackbox.CURRENT,""));
             sensorMind.attachDecisionBlackbox(decisionBlackbox);
+            motionShadow=new ContextualMotionProbe();
+            motionShadow.restore(prefs.getString(ContextualMotionProbe.KEY,""));
+            sensorMind.attachMotionShadow(motionShadow);
+            gateJournal=new GateLifeJournal();
+            gateJournal.restoreLast(prefs.getString(GateLifeJournal.LAST,""));
+            gateJournal.restoreCurrent(prefs.getString(GateLifeJournal.CURRENT,""));
             gateMetrics=new GateBehaviorMetrics();
             gateMetrics.restore(prefs.getString(GateBehaviorMetrics.KEY,""));
             episodic=new EpisodicMemory();
@@ -337,6 +345,7 @@ public final class GameActivity extends Activity {
                 snapshot.put("eventTime",eventTime);
                 if(!prefs.edit().putString("physical_scene_v100",snapshot.toString())
                     .putString(DecisionBlackbox.CURRENT,decisionBlackbox.encodeCurrent())
+                    .putString(GateLifeJournal.CURRENT,gateJournal.encode())
                     .commit())
                     throw new IllegalStateException("Impossibile salvare la scena fisica");
             }catch(Exception e){
@@ -450,6 +459,8 @@ public final class GameActivity extends Activity {
               .putString(InstrumentalNavigation.KEY,navigation.encode())
               .putString(GoalContinuity.KEY,intentions.encode())
               .putString(GateBehaviorMetrics.KEY,gateMetrics.encode())
+              .putString(ContextualMotionProbe.KEY,motionShadow.encode())
+              .putString(GateLifeJournal.CURRENT,gateJournal.encode())
               .putString(LifeStatistics.KEY,lifeStats.encode())
               .putInt("motor_recoveries_v097",motorGuard.recoveryActivations)
               .putInt("motor_free_choices_v097",motorGuard.freeChoices)
@@ -497,6 +508,7 @@ public final class GameActivity extends Activity {
             episodic.resetLife(); // Forget transient attempt, NOT learned motor or memories.
             previousGripDrive=previousGripHeld=previousOpposedFrames=0;
             gateMetrics.resetLife();
+            gateJournal.newLife(); // Retain previous life snapshot, start clean.
             ongoingUnsuccessfulGrip=0;gripRecoveryCooldown=0;
             liveBody.abortTrial();
             creature.reset();surface.reset(creature);
@@ -698,8 +710,13 @@ public final class GameActivity extends Activity {
                     environmentEffectSinceAction,creature);
                 // Save a separate last-life trace even if the app is closed
                 // before the next twelve-second physical-scene checkpoint.
-                prefs.edit().putString(DecisionBlackbox.LAST,
-                    decisionBlackbox.lastLife()).commit();
+                gateJournal.terminal(elapsedLife,reserve);
+                // Freeze both complete traces atomically before reincarnation.
+                if(!prefs.edit().putString(DecisionBlackbox.LAST,
+                    decisionBlackbox.lastLife())
+                    .putString(GateLifeJournal.LAST,gateJournal.lastLife())
+                    .commit())
+                    throw new IllegalStateException("Last-life recording failed");
                 lifeStats.physical(journey.maxNetLife,journey.lifeCells,
                     chamber==null?0:chamber.maxDoorTravel);
                 lifeStats.death();
@@ -758,6 +775,7 @@ public final class GameActivity extends Activity {
                             environmentEffectSinceAction+=Math.min(2,actuallyMoved);
                         farthestGate=Math.max(farthestGate,chamber.maxDoorTravel);
                         gateMetrics.observe(creature,chamber);
+                        gateJournal.observe(creature,chamber,gateMetrics,elapsedLife,reserve);
 
                         // Preserve motor apparatus only when the PHYSICS
                         // confirmed adhesion held, not because ZERO touched
@@ -864,6 +882,7 @@ public final class GameActivity extends Activity {
                         energySinceAction[chamber.food.signature]+=reserve-prior;
                         int gained=(int)(reserve-prior);
                         energyEaten++;chambersCleared++;
+                        gateJournal.reward(creature,chamber,elapsedLife,reserve-prior);
                         decisionBrain.learn(chamber.food,prior,reserve,0);
                         chamberMessage="SCOPERTA RARA • RISERVA RIPRISTINATA";
                         lastEvent="SCOPERTA RARA • ENERGIA +"+gained;
