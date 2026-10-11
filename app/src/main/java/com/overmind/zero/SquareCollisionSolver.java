@@ -258,9 +258,15 @@ final class SquareCollisionSolver {
         test(intersections(skin,b)==0,"Membrane still cuts through box");
         test(skin.x[0]<-20||skin.y[0]<=-20||skin.y[0]>=20,
              "Fast material node ended beyond the box");
-        test(body.cx<=-26||body.cx>=26||body.cy<=-26||body.cy>=26,
-             "Physical core remains inside square");
+        // The centroid may lie inside a box even when actual ring material
+        // surrounds it. The centroid is NOT an independent collider.
+        for(int i=0;i<MotorBrain.N;i++){
+            test(Math.abs(body.x[i])>=20+1.5f||
+                 Math.abs(body.y[i])>=20+1.5f,
+                 "Real tissue mass remains embedded in a square");
+        }
+        MaterialGeometry.observe(body);
         System.out.println("SquareCollisionSolver PASS: swept through-box CCD, "+
-            "segments, body masses, core, non-penetrating membrane perimeter");
+            "segments, distributed physical masses, no phantom core");
     }
 }
