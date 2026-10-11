@@ -61,16 +61,22 @@ public final class HabitatContinuity {
     public static void pruneDistant(ArrayList<UnknownWorld.Entity> world,
                                     MotorBrain.Body body,Morphology.Surface skin,
                                     UnknownWorld.Entity roomFood,float maxDist){
-        for(int i=world.size()-1;i>=0;i--){
+        for(int i=world.size()-1;i>=0;){
+            if(i>=world.size()){i=world.size()-1;continue;}
             UnknownWorld.Entity e=world.get(i);
-            if(e==roomFood)continue;
+            if(e==roomFood){i--;continue;}
             // Genuine consumed rewards no longer exist in the world.
             if(e.consumed){
-                world.remove(i);continue;
+                world.remove(i);
+            }else{
+                UnknownWorld.Entity companion=mate(world,e);
+                boolean companionNear=companion!=null&&
+                    Math.hypot(companion.x-body.cx,companion.y-body.cy)<=maxDist;
+                if(Math.hypot(e.x-body.cx,e.y-body.cy)>maxDist&&
+                   !companionNear&&!protectedByInteraction(world,e,body,skin))
+                    removePaired(world,e);
             }
-            if(Math.hypot(e.x-body.cx,e.y-body.cy)>maxDist &&
-               !protectedByInteraction(world,e,body,skin))
-                removePaired(world,e);
+            i=Math.min(i-1,world.size()-1);
         }
     }
 
@@ -98,12 +104,14 @@ public final class HabitatContinuity {
                             ScarcityLab room,MotorBrain.Body body,
                             Morphology.Surface skin){
         if(room==null)return;
-        for(int i=world.size()-1;i>=0;i--){
+        for(int i=world.size()-1;i>=0;){
+            if(i>=world.size()){i=world.size()-1;continue;}
             UnknownWorld.Entity e=world.get(i);
-            if(e==room.food)continue;
+            if(e==room.food){i--;continue;}
             if(room.overlapsRoom(e.x,e.y,e.radius)&&
                !protectedByInteraction(world,e,body,skin))
                 removePaired(world,e);
+            i=Math.min(i-1,world.size()-1);
         }
     }
 
