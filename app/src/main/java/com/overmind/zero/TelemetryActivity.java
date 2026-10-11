@@ -68,7 +68,11 @@ public final class TelemetryActivity extends Activity {
         description.addView(text("Che cosa viene condiviso",16,CYAN,true));
         body(description,"La copia del profilo di gioco ATTUALE: modelli neurali, "+
             "pesi motori, reti sensoriali, memorie, energie, vita e statistiche "+
-            "storiche salvate. Include l'ultimo laboratorio A/B se disponibile.");
+            "storiche salvate. Include l'ultimo laboratorio A/B se disponibile "+
+            "e la SCATOLA NERA degli ultimi 5 minuti simulati: sensi, azioni, "+
+            "contributi dei cervelli, scelte casuali e movimento effettivo. "+
+            "Se ZERO e' morto, include anche la traccia congelata della "+
+            "sua ultima vita, senza modificare l'apprendimento.");
         body(description,"NON invia i 12 slot separati, nome/ID del telefono, "+
             "account personali o credenziali. Non modifica mai il personaggio, "+
             "non avvia addestramento e non carica nulla automaticamente.");
