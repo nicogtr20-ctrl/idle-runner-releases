@@ -71,6 +71,7 @@ public final class ScarcityLab {
     /** The third argument is passive diagnostics of the controller's own
      * chosen adhesion channel. It does NOT command any physical grip. */
     public float solveGate(Morphology.Surface skin,float dt,float chosenGripDrive){
+        System.arraycopy(gateGripHold,0,skin.gripHold,0,Morphology.POINTS);
         float lx=gateX()-DOOR_HALF_W,rx=gateX()+DOOR_HALF_W;
         float cy=gateCenterY();
         int leftTouch=0,rightTouch=0,leftGrip=0,rightGrip=0;
@@ -160,6 +161,7 @@ public final class ScarcityLab {
         if(doorY==0||doorY==DOOR_MAX_TRAVEL)doorVelocity=0;
         maxDoorTravel=Math.max(maxDoorTravel,doorY);
         if(openingFree())everOpened=true;
+        System.arraycopy(skin.gripHold,0,gateGripHold,0,Morphology.POINTS);
         return doorY-previous;
     }
     static float clamp(float x,float a,float b){return Math.min(b,Math.max(a,x));}
