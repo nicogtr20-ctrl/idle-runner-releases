@@ -413,6 +413,7 @@ public final class GameActivity extends Activity {
                 previousGripHeld=o.getInt("previousGripHeld");
                 previousOpposedFrames=o.getInt("previousOpposedFrames");
                 journey.loadLife(o.getString("journey"));
+                MaterialGeometry.observe(creature);
                 sensorMind.resumeEpisode(SensorimotorMind.Senses.read(
                     creature,surface,chamber,environment,reserve),action);
                 sensorMind.updateBodySense(creature,surface);
@@ -685,7 +686,7 @@ public final class GameActivity extends Activity {
                 if(!object.ready())continue;
                 float dx=object.x-creature.cx,dy=object.y-creature.cy;
                 float dist=(float)Math.hypot(dx,dy);
-                float nearest=dist;
+                float nearest=Float.POSITIVE_INFINITY;
                 for(int k=0;k<MotorBrain.N;k++){
                     float d=(float)Math.hypot(object.x-creature.x[k],object.y-creature.y[k]);
                     if(d<nearest)nearest=d;
@@ -694,7 +695,8 @@ public final class GameActivity extends Activity {
                     float d=(float)Math.hypot(object.x-surface.x[k],object.y-surface.y[k]);
                     if(d<nearest)nearest=d;
                 }
-                if(nearest<18+object.radius){
+                if(MaterialGeometry.touches(creature,surface,object.x,object.y,
+                        object.radius+2f)||nearest<18+object.radius){
                     float before=reserve;
                     float delta=object.touch(dx/Math.max(1,dist),dy/Math.max(1,dist));
                     reserve=Math.max(0,Math.min(100,reserve+delta));
@@ -899,6 +901,9 @@ public final class GameActivity extends Activity {
                             save();
                         }
                     }
+                    // Read centroid from ACTUAL muscle material, not a
+                    // simulated nucleus. Collision projection may move it.
+                    MaterialGeometry.observe(creature);
                     // Restore the union of physically valid object-owned holds
                     // for vision and next-frame tactile input only.
                     GripSurfaceComposition.compose(surface,chamber,environment);
@@ -927,7 +932,7 @@ public final class GameActivity extends Activity {
                         }
                     }
                     if(chamber!=null&&!chamber.reachedEnergy&&
-                        chamber.foodTouchedByCore(creature)){
+                        chamber.foodTouchedByBody(creature,surface)){
                         float prior=reserve;
                         reserve=Math.min(100,reserve+UnknownWorld.RARE_ENERGY);
                         lifeStats.contact(reserve-prior);
@@ -1270,11 +1275,8 @@ public final class GameActivity extends Activity {
                     c.drawCircle(xx[i],yy[i],3.15f,paint);
                 }
             }
-            paint.setColor(0x889de5da);
-            c.drawOval(creature.cx-13,creature.cy-17,creature.cx+5,creature.cy-12,paint);
-            paint.setColor(0xff030509);
-            c.drawCircle(creature.cx,creature.cy,5,paint);
-            paint.setColor(0xff9bffee);c.drawCircle(creature.cx-1,creature.cy-2,2.3f,paint);
+            // No nucleus drawn: the entire connected deformable body is ZERO.
+            // cx/cy only follow living tissue for camera and learned odometry.
             c.restore();
             text(c,"ZERO",onScreenX,onScreenY-104,14,0xffd7fff5,true);
         }
