@@ -27,7 +27,7 @@ jobs:
       - name: Unit tests
         run: |
           mkdir -p /tmp/overmind
-          javac -d /tmp/overmind app/src/main/java/com/overmind/zero/MotorBrain.java app/src/main/java/com/overmind/zero/DecisionBlackbox.java app/src/main/java/com/overmind/zero/UnknownWorld.java app/src/main/java/com/overmind/zero/SquareGripPuzzle.java app/src/main/java/com/overmind/zero/WorldPlacement.java app/src/main/java/com/overmind/zero/ContactLearning.java app/src/main/java/com/overmind/zero/DecisionBrain.java app/src/main/java/com/overmind/zero/Morphology.java app/src/main/java/com/overmind/zero/ScarcityLab.java app/src/main/java/com/overmind/zero/SensorimotorMind.java app/src/main/java/com/overmind/zero/GoalContinuity.java app/src/main/java/com/overmind/zero/GateBehaviorMetrics.java app/src/main/java/com/overmind/zero/BehavioralLaboratory.java app/src/main/java/com/overmind/zero/InstrumentalNavigation.java app/src/main/java/com/overmind/zero/SpatialPerception.java app/src/main/java/com/overmind/zero/CausalExperiments.java app/src/main/java/com/overmind/zero/BodyProprioception.java app/src/main/java/com/overmind/zero/TemporalWorkingMemory.java app/src/main/java/com/overmind/zero/TemporalSkillBank.java app/src/main/java/com/overmind/zero/TemporalPersistenceRegression.java app/src/main/java/com/overmind/zero/LearnedSequencePlanner.java app/src/main/java/com/overmind/zero/LearningDiagnostics.java app/src/main/java/com/overmind/zero/ResetDomains.java app/src/main/java/com/overmind/zero/OnlineBodyLearning.java app/src/main/java/com/overmind/zero/MotionExploration.java app/src/main/java/com/overmind/zero/EpisodicMemory.java app/src/main/java/com/overmind/zero/MotorAutonomyGuard.java app/src/main/java/com/overmind/zero/MotorSkillBank.java app/src/main/java/com/overmind/zero/ExperienceCredit.java app/src/main/java/com/overmind/zero/GripSkillBank.java app/src/main/java/com/overmind/zero/SaveProfileCodec.java app/src/main/java/com/overmind/zero/LifeStatistics.java
+          javac -d /tmp/overmind app/src/main/java/com/overmind/zero/MotorBrain.java app/src/main/java/com/overmind/zero/DecisionBlackbox.java app/src/main/java/com/overmind/zero/GateLifeJournal.java app/src/main/java/com/overmind/zero/ContextualMotionProbe.java app/src/main/java/com/overmind/zero/ShadowNonInterferenceRegression.java app/src/main/java/com/overmind/zero/UnknownWorld.java app/src/main/java/com/overmind/zero/SquareGripPuzzle.java app/src/main/java/com/overmind/zero/WorldPlacement.java app/src/main/java/com/overmind/zero/ContactLearning.java app/src/main/java/com/overmind/zero/DecisionBrain.java app/src/main/java/com/overmind/zero/Morphology.java app/src/main/java/com/overmind/zero/ScarcityLab.java app/src/main/java/com/overmind/zero/SensorimotorMind.java app/src/main/java/com/overmind/zero/GoalContinuity.java app/src/main/java/com/overmind/zero/GateBehaviorMetrics.java app/src/main/java/com/overmind/zero/BehavioralLaboratory.java app/src/main/java/com/overmind/zero/InstrumentalNavigation.java app/src/main/java/com/overmind/zero/SpatialPerception.java app/src/main/java/com/overmind/zero/CausalExperiments.java app/src/main/java/com/overmind/zero/BodyProprioception.java app/src/main/java/com/overmind/zero/TemporalWorkingMemory.java app/src/main/java/com/overmind/zero/TemporalSkillBank.java app/src/main/java/com/overmind/zero/TemporalPersistenceRegression.java app/src/main/java/com/overmind/zero/LearnedSequencePlanner.java app/src/main/java/com/overmind/zero/LearningDiagnostics.java app/src/main/java/com/overmind/zero/ResetDomains.java app/src/main/java/com/overmind/zero/OnlineBodyLearning.java app/src/main/java/com/overmind/zero/MotionExploration.java app/src/main/java/com/overmind/zero/EpisodicMemory.java app/src/main/java/com/overmind/zero/MotorAutonomyGuard.java app/src/main/java/com/overmind/zero/MotorSkillBank.java app/src/main/java/com/overmind/zero/ExperienceCredit.java app/src/main/java/com/overmind/zero/GripSkillBank.java app/src/main/java/com/overmind/zero/SaveProfileCodec.java app/src/main/java/com/overmind/zero/LifeStatistics.java
           java -cp /tmp/overmind com.overmind.zero.MotorBrain
           java -cp /tmp/overmind com.overmind.zero.UnknownWorld
           java -cp /tmp/overmind com.overmind.zero.SquareGripPuzzle
@@ -40,6 +40,9 @@ jobs:
           java -cp /tmp/overmind com.overmind.zero.DecisionBlackbox
           java -cp /tmp/overmind com.overmind.zero.GoalContinuity
           java -cp /tmp/overmind com.overmind.zero.GateBehaviorMetrics
+          java -cp /tmp/overmind com.overmind.zero.GateLifeJournal
+          java -cp /tmp/overmind com.overmind.zero.ContextualMotionProbe
+          java -cp /tmp/overmind com.overmind.zero.ShadowNonInterferenceRegression
           java -cp /tmp/overmind com.overmind.zero.BehavioralLaboratory
           java -cp /tmp/overmind com.overmind.zero.InstrumentalNavigation
           java -cp /tmp/overmind com.overmind.zero.CausalExperiments
@@ -702,9 +705,9 @@ jobs:
           from hashlib import sha1
           root=Path('app/src/main/java/com/overmind/zero')
           pins={
-          'SensorimotorMind.java':'805b7d2cbc35028be385de60af67d59931b57936',
-          'GameActivity.java':'133b1a7dafdfadfe9950dad94c4c3fc49d9086f3',
-          'InstrumentalNavigation.java':'2eb6390e7e80f17b488f148ec2d76b41e19e27a9',
+          'SensorimotorMind.java':'73829a2781d0d8f08ac1001263871c8a672d0e0d',
+          'GameActivity.java':'2d1e109d0bb3a5fd950ae88937ad063ab9a967f8',
+          'InstrumentalNavigation.java':'fb95ae5b19a8b2602cb4338641d8851bebf8fa26',
           'BehavioralLaboratory.java':'e016be507d54b2535885a5c2070951fd9e4c72f7',
           'BehavioralLabActivity.java':'c1e655a947454e2cb77baad6b282890f00097717',
           'ResetDomains.java':'99e0b726e95f96683d5de942da2cb2ff0c9eb318',
@@ -712,7 +715,10 @@ jobs:
           'UnknownWorld.java':'5fa15ab62201e93b4f806b2c76f4791934ca0608',
           'GameSceneSnapshot.java':'4f7652546fcd137c37daea5782300084f24e0785',
           'SquareGripPuzzle.java':'f653640b7f7aafb57e6ee5543a87d5a70f689507',
-          'WorldPlacement.java':'2bfdb70334a40341215104a29ef26da5dabc4b25'}
+          'WorldPlacement.java':'2bfdb70334a40341215104a29ef26da5dabc4b25',
+          'GateBehaviorMetrics.java':'44043b418c8bc00cdf7f944673bb168355e44a72',
+          'GateLifeJournal.java':'351b1107f90d1dffd91377d1709459324211ef62',
+          'ContextualMotionProbe.java':'064988e420645b7d1c1be3235cb83ca3884e01f8'}
           for name,pin in pins.items():
             data=(root/name).read_bytes()
             assert sha1(b'blob '+str(len(data)).encode()+b'\0'+data).hexdigest()==pin,name
@@ -741,7 +747,12 @@ jobs:
           assert 'float epsilon=Math.max(.09f,.52f/(1+experiences/120f));' in mind
           assert 'if(score>best){best=score;chosen=a;}' in mind
           assert 'DecisionBlackbox.CURRENT,decisionBlackbox.encodeCurrent()' in game
-          assert 'decisionBlackbox.lastLife()).commit();' in game
+          assert 'decisionBlackbox.lastLife())' in game
+          assert 'GateLifeJournal.LAST,gateJournal.lastLife()' in game
+          assert 'GateLifeJournal.CURRENT,gateJournal.encode()' in game
+          assert 'ContextualMotionProbe.KEY,motionShadow.encode()' in game
+          assert 'motionShadow.chosen(senses,chosen,observedBody)' in mind
+          assert 'motionShadow.finished(' in mind
           assert 'SCATOLA NERA' in ui
           assert 'SquareGripPuzzle.uncover(e,environment)' in game
           assert 'SquareGripPuzzle.constrain(' in game
