@@ -84,6 +84,12 @@ public final class GameActivity extends Activity {
         float eventTime=7;
         MotorBrain.Body creature=new MotorBrain.Body();
         Morphology.Surface surface=new Morphology.Surface(creature);
+        // Frame-start physical positions for continuous collision detection.
+        // These scratch arrays are NEVER part of ZERO's neural state/save.
+        final float[] squarePrevSkinX=new float[Morphology.POINTS];
+        final float[] squarePrevSkinY=new float[Morphology.POINTS];
+        final float[] squarePrevBodyX=new float[MotorBrain.N];
+        final float[] squarePrevBodyY=new float[MotorBrain.N];
         ScarcityLab chamber;
         boolean scarcity=false;
         float elapsedLife=0,nextChamber=70f;
@@ -767,6 +773,14 @@ public final class GameActivity extends Activity {
                     lastAppliedMotor=liveBody.weights(0,trainer.best);
                     lastAppliedHand=liveBody.weights(1,handTrainer.best);
                     lastAppliedMembrane=liveBody.weights(2,shapeTrainer.best);
+                    // Prevent fast material masses from skipping through a
+                    // square between consecutive frames. Snapshot before any
+                    // physical motion, after routine world streaming.
+                    System.arraycopy(surface.x,0,squarePrevSkinX,0,Morphology.POINTS);
+                    System.arraycopy(surface.y,0,squarePrevSkinY,0,Morphology.POINTS);
+                    System.arraycopy(creature.x,0,squarePrevBodyX,0,MotorBrain.N);
+                    System.arraycopy(creature.y,0,squarePrevBodyY,0,MotorBrain.N);
+                    float oldCoreX=creature.cx,oldCoreY=creature.cy;
                     creature.step(lastAppliedMotor,mx,my,slice,lastAppliedHand,px,py);
                     surface.step(creature,lastAppliedMembrane,px,py,slice,
                         sensorMind.adhesion());
@@ -840,7 +854,10 @@ public final class GameActivity extends Activity {
                     for(UnknownWorld.Entity e:environment){
                         if(!e.isBox())continue;
                         SquareGripPuzzle.Outcome grips=SquareGripPuzzle.constrain(
-                            creature,surface,e,slice);
+                            creature,surface,e,slice,
+                            squarePrevSkinX,squarePrevSkinY,
+                            squarePrevBodyX,squarePrevBodyY,
+                            oldCoreX,oldCoreY);
                         if(grips.opposingGrip)e.peakDisplacement=Math.max(
                             e.peakDisplacement,e.displacementFromSpawn());
                         if(SquareGripPuzzle.uncover(e,environment)){
@@ -1161,10 +1178,17 @@ public final class GameActivity extends Activity {
             // perimeter masses; NOT a fixed spider silhouette.
             float[] xx=surface.x, yy=surface.y;
             path.reset();
-            if(chamber!=null){
-                // The 96 physical edges are the visible outline INSIDE the
-                // puzzle. Quadratic rounding between masses used to bleed the
-                // rendered blob through an otherwise-solid door.
+            boolean nearSolidSquare=false;
+            for(UnknownWorld.Entity object:environment){
+                if(object.isBox()&&Math.hypot(object.x-creature.cx,
+                                             object.y-creature.cy)<190f){
+                    nearSolidSquare=true;break;
+                }
+            }
+            if(chamber!=null||nearSolidSquare){
+                // Draw the ACTUAL straight bonded edges near rigid solids.
+                // Quadratic smoothing may visually cut through a solid even
+                // after every physical segment has been collision-corrected.
                 path.moveTo(xx[0],yy[0]);
                 for(int i=1;i<Morphology.POINTS;i++)
                     path.lineTo(xx[i],yy[i]);
