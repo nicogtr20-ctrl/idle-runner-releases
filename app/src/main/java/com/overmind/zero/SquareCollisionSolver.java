@@ -6,7 +6,10 @@ package com.overmind.zero;
  * motor controller, or change a single sensor / decision channel.
  */
 final class SquareCollisionSolver {
-    private static final float POINT_CLEARANCE=1.15f;
+    // Membrane particles are surface sample points, not circles. An exact
+    // face contact at +/-20 is LEGAL and must retain real gripHold.
+    // Non-zero particle clearance would wipe every valid two-sided hold.
+    private static final float POINT_CLEARANCE=0f;
     private static final float CORE_CLEARANCE=6f;
     private static final float BODY_CLEARANCE=1.5f;
     private static final float LINK_CLEARANCE=1.6f;
