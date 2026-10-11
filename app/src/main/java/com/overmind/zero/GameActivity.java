@@ -886,6 +886,9 @@ public final class GameActivity extends Activity {
                             save();
                         }
                     }
+                    // Restore the union of physically valid object-owned holds
+                    // for vision and next-frame tactile input only.
+                    GripSurfaceComposition.compose(surface,chamber,environment);
                     gripObserver.pruneBoxes(environment);
                     resolveObjects(slice);
                     if(lifeStamp==episode){
