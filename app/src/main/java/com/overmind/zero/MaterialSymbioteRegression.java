@@ -30,13 +30,19 @@ public final class MaterialSymbioteRegression {
         // No hard-coded reach; a trained-looking local actuator should
         // physically transmit reaction force to inner tissue nodes.
         morph[72]=.82f;morph[0]=.63f;
-        float[] oldVx=b.vx.clone(),oldVy=b.vy.clone();
+        int maxCross=0,positiveFrames=0,observed=0;
         for(int t=0;t<4800;t++){
             float phase=(float)(t*.013),ux=(float)Math.cos(phase),
                 uy=(float)Math.sin(phase);
             b.step(motor,ux,uy,MotorBrain.STEP);
             s.step(b,morph,b.cx+ux*145,b.cy+uy*145,MotorBrain.STEP);
             refCheck(b);
+            if(t%55==0){
+                int crossing=MaterialGeometry.selfCrossings(s);
+                maxCross=Math.max(maxCross,crossing);
+                if(crossing>0)positiveFrames++;
+                observed++;
+            }
             for(int i=0;i<MotorBrain.N;i++)check(
                 Float.isFinite(b.x[i])&&Float.isFinite(b.y[i]),
                 "Inner mass became nonfinite");
@@ -68,7 +74,8 @@ public final class MaterialSymbioteRegression {
             check(previous[i]==b.x[i],"Moving coordinate estimate moved physical body");
         refCheck(b);
         System.out.println("Symbiote: 4800 material-only real actuator steps, fixed "+
-            "26/16 policy, 48 physical proprioception, no logical collider");
+            "26/16 policy, 48 physical proprioception, no logical collider"+
+            "; self-cross frames "+positiveFrames+"/"+observed+" max="+maxCross);
     }
     private static void obstacleContacts(){
         for(int scenario=0;scenario<3;scenario++){
