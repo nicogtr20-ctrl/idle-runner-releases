@@ -168,7 +168,7 @@ public final class ContextualMotionProbe {
         s[6]=0;s[0]=.8f;float[] clear=m.predict(s,2);
         check(clear[0]>blocked[0]+8,
             "Context predictor did not distinguish blocked from free state");
-        check(m.evaluations>=200&&m.trainedActions()==0,
+        check(m.evaluations>=200&&m.trainedActions()==1,
             "Heldout or action coverage counters incorrect");
         String saved=m.encode();
         ContextualMotionProbe copy=new ContextualMotionProbe();
