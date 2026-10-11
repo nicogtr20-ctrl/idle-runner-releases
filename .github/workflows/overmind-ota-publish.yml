@@ -141,7 +141,7 @@ jobs:
           assert 'GRIP_HEAD=HIDDEN+2' in m
           assert 'out[2]+gripDrive*touchSense[i]' in m
           assert 'grab+=touch*w[LEGACY_PARAMS+HIDDEN+1]' in m
-          assert 'if(chamber!=null&&surface.gripHold[i]>=Morphology.GRIP_HOLD)' in a
+          assert 'if(surface.gripHold[i]>=Morphology.GRIP_HOLD&&' in a
           assert 'dualTouchNoGrip' in s and 'leftGrip>0&&rightGrip>0' in s
           assert 'decision_brain_v05' in a and 'morph_brain_v07' in a
           assert 'if(reserve<=0)' in a and 'resetEpisode();' in a
