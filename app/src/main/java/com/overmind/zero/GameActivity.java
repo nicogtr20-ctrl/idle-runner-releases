@@ -86,6 +86,7 @@ public final class GameActivity extends Activity {
         boolean scarcity=false;
         float elapsedLife=0,nextChamber=70f;
         int chambersCleared=0,energyEaten=0,gripsEver=0;
+        int boxesUncovered=0;
         float farthestGate=0;
         String chamberMessage="LA FAME RENDERA' PREZIOSA L'ENERGIA";
         float[] virgin;
@@ -225,6 +226,7 @@ public final class GameActivity extends Activity {
             scarcity=prefs.getBoolean("scarcity_active_v08",false);
             chambersCleared=prefs.getInt("room_success_v08",0);
             energyEaten=prefs.getInt("finite_energy_eaten_v08",0);
+            boxesUncovered=prefs.getInt("square_uncovered_v1163",0);
             gripsEver=prefs.getInt("grip_events_v08",0);
             farthestGate=prefs.getFloat("gate_travel_v08",0);
             liveBody=new OnlineBodyLearning();
@@ -461,6 +463,7 @@ public final class GameActivity extends Activity {
               .putFloat("scarcity_elapsed_v08",elapsedLife)
               .putInt("room_success_v08",chambersCleared)
               .putInt("finite_energy_eaten_v08",energyEaten)
+              .putInt("square_uncovered_v1163",boxesUncovered)
               .putInt("grip_events_v08",gripsEver+(chamber!=null?chamber.grasps:0))
               .putFloat("gate_travel_v08",Math.max(farthestGate,
                   chamber!=null?chamber.maxDoorTravel:0))
@@ -502,7 +505,8 @@ public final class GameActivity extends Activity {
             journey.newLife(creature.cx,creature.cy);
             episode++;phase=0;trailCount=0;clock=0;
             chamber=null;
-            environment=UnknownWorld.newHabitat(episode,creature.cx,creature.cy,scarcity);
+            environment=WorldPlacement.spawn(episode,creature.cx,creature.cy,
+                scarcity,null,new ArrayList<UnknownWorld.Entity>());
             chosenObject=null;decisionBrain.abandon();
             goalTimer=0;contactsThisLife=0;worldTime=0;
             reserve=Math.max(70,Math.min(92,reserve));
@@ -526,8 +530,8 @@ public final class GameActivity extends Activity {
                             Math.hypot(e.x-creature.cx,e.y-creature.cy)>600))
                     environment.remove(i);
             }
-            environment.addAll(UnknownWorld.newHabitat(
-                episode,creature.cx,creature.cy,scarcity));
+            environment.addAll(WorldPlacement.spawn(
+                episode,creature.cx,creature.cy,scarcity,chamber,environment));
             excludeOrdinaryRoomObjects();
             while(environment.size()>24){
                 if(environment.get(0)==(chamber!=null?chamber.food:null)){
@@ -580,7 +584,16 @@ public final class GameActivity extends Activity {
             if(scarcity&&elapsedLife>=nextChamber&&
                 (chamber==null||chamber.reachedEnergy))
                 activateChamber(false);
-            for(UnknownWorld.Entity object:environment)object.tick(dt);
+            for(UnknownWorld.Entity object:environment){
+                float ox=object.x,oy=object.y;
+                object.tick(dt);
+                // A free box collides with the current room instead of
+                // tunnelling inside its gate. Roll back THIS frame only.
+                if(object.isBox()&&chamber!=null&&
+                   chamber.overlapsRoom(object.x,object.y,SquareGripPuzzle.HALF)){
+                    object.x=ox;object.y=oy;object.vx=object.vy=0;
+                }
+            }
             // Scarcity must not spawn new entities every rendered frame.
             if(environment.size()<3&&phase>=4f)extendHabitat();
             excludeOrdinaryRoomObjects();
@@ -591,6 +604,7 @@ public final class GameActivity extends Activity {
             // Called AFTER the deformable body moves, so contact impulses
             // are consequences of its simulated physical movement.
             for(UnknownWorld.Entity object:environment){
+                if(object.isBox()||object.concealed)continue;
                 if(chamber!=null&&object==chamber.food)continue;
                 if(object.isMovable()){
                     float impulse=Morphology.collide(surface,object,dt)
@@ -794,6 +808,27 @@ public final class GameActivity extends Activity {
                         travelSinceAction+=physicalTravel;
                         forwardSinceAction+=ddx*mx+ddy*my;
                         bestLifeDistance=Math.max(bestLifeDistance,lifeDistance);
+                    }
+                    // The smaller square puzzle has real static collisions
+                    // and requires independent opposing adhesive contacts.
+                    // Unlike round disks, pressing a box cannot translate it.
+                    boolean anyBox=false;
+                    for(UnknownWorld.Entity e:environment)if(e.isBox()){anyBox=true;break;}
+                    if(anyBox&&chamber==null)
+                        java.util.Arrays.fill(surface.touchSense,0f);
+                    for(UnknownWorld.Entity e:environment){
+                        if(!e.isBox())continue;
+                        SquareGripPuzzle.Outcome grips=SquareGripPuzzle.constrain(
+                            creature,surface,e,slice);
+                        if(grips.opposingGrip)e.peakDisplacement=Math.max(
+                            e.peakDisplacement,e.displacementFromSpawn());
+                        if(SquareGripPuzzle.uncover(e,environment)){
+                            boxesUncovered++;
+                            environmentEffectSinceAction+=Math.min(12f,e.displacementFromSpawn());
+                            lastEvent="ENERGIA NASCOSTA SCOPERTA • BLOCCO SPOSTATO";
+                            eventTime=6f;
+                            save();
+                        }
                     }
                     resolveObjects(slice);
                     if(lifeStamp==episode){
@@ -1002,7 +1037,7 @@ public final class GameActivity extends Activity {
             }
             int[] colors={0xff64d8ca,0xffcc7da4,0xffd2b889};
             for(UnknownWorld.Entity object:environment){
-                if(object.consumed)continue;
+                if(object.consumed||object.concealed)continue;
                 float x=object.x,y=object.y;
                 paint.setShader(new RadialGradient(x,y,35,new int[]{(object.ready()?0x2248dfc4:0x113d7377),0x003d7377},null,Shader.TileMode.CLAMP));
                 c.drawCircle(x,y,35,paint);paint.setShader(null);
@@ -1024,6 +1059,21 @@ public final class GameActivity extends Activity {
                             text(c,(int)shifted+" U",x,y-object.radius-10,9,GOLD,true);
                         }
                     }
+                }
+                if(object.isBox()){
+                    paint.setShader(null);
+                    paint.setColor(0xff0a131e);
+                    c.drawRoundRect(x-20.8f,y-20.8f,x+20.8f,y+20.8f,4,4,paint);
+                    paint.setColor(0xffcaa875);
+                    c.drawRoundRect(x-20,y-20,x+20,y+20,3,3,paint);
+                    paint.setColor(0xff544335);
+                    c.drawRoundRect(x-15,y-15,x+15,y+15,2,2,paint);
+                    paint.setColor(0xffd6c7a2);
+                    c.drawLine(x-12,y-12,x+12,y+12,paint);
+                    c.drawLine(x+12,y-12,x-12,y+12,paint);
+                    paint.setColor(0xffe4ce9b);
+                    c.drawCircle(x,y,3,paint);
+                    continue;
                 }
                 paint.setColor(0xff151c26);
                 c.drawCircle(x,y,object.radius,paint);
@@ -1149,7 +1199,7 @@ public final class GameActivity extends Activity {
             rounded(c,25,276,456,287,0xff273746,5);
             rounded(c,25,276,25+431*reserve/100f,287,reserve>30?TEAL:0xffdf7591,5);
             text(c,"ENERGIA "+(int)reserve+"/100",25,307,12,0xffe0f7ed,false);
-            text(c,"DISCHI SPOSTATI "+pushes,261,307,12,GOLD,false);
+            text(c,"DISCHI "+pushes+"  •  BLOCCHI "+boxesUncovered,260,307,11,GOLD,false);
             text(c,"URTI "+physicalContacts+"  •  DISTANZA MASSIMA "+(int)biggestDisplacement+" U  •  TENTATIVI MANIP. "+handTrainer.attempts,
                 25,329,10,0xffa6c7c9,false);
             if(eventTime>0)text(c,lastEvent,25,350,11,0xffc4e5dc,false);
