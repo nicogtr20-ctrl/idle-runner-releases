@@ -182,10 +182,9 @@ final class SquareCollisionSolver {
                     oldBodyX==null?body.x[i]:oldBodyX[i],
                     oldBodyY==null?body.y[i]:oldBodyY[i],
                     l,t,r,b,BODY_CLEARANCE);
-        float[] cx={body.cx},cy={body.cy},cvx={body.cvx},cvy={body.cvy};
-        project(cx,cy,cvx,cvy,0,oldCoreX,oldCoreY,
-                l,t,r,b,CORE_CLEARANCE);
-        body.cx=cx[0];body.cy=cy[0];body.cvx=cvx[0];body.cvy=cvy[0];
+        // The geometric centroid has no mass, cannot collide with a box,
+        // and must never push the distributed organism through a solid.
+        MaterialGeometry.observe(body);
         repairLinks(skin.x,skin.y,skin.vx,skin.vy,Morphology.POINTS,box,
                     LINK_CLEARANCE,skin);
         repairLinks(body.x,body.y,body.vx,body.vy,MotorBrain.N,box,
