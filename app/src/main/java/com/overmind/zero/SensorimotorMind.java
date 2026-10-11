@@ -33,6 +33,9 @@ public final class SensorimotorMind {
     private transient CausalExperiments causal;
     private transient InstrumentalNavigation navigation;
     private transient GoalContinuity intention;
+    // 0117: passive lived-transition graph; NEVER contributes to the action score.
+    private transient CausalHorizonProbe causalHorizon;
+    public synchronized void attachCausalHorizon(CausalHorizonProbe probe){causalHorizon=probe;}
     public synchronized void attachGoalContinuity(GoalContinuity c){intention=c;}
     public synchronized GoalContinuity goalContinuity(){return intention;}
     // Benchmark-only ablation: sensors, learning and all other policy terms
@@ -139,6 +142,7 @@ public final class SensorimotorMind {
         if(causal!=null)causal.resetLife();
         if(navigation!=null)navigation.resetLife();
         if(intention!=null)intention.resetLife();
+        if(causalHorizon!=null)causalHorizon.resetLife();
         actualEnergySinceChoice=0;
     }
     public synchronized void resetEpisode(float[] first){
@@ -153,6 +157,7 @@ public final class SensorimotorMind {
             if(causal!=null)causal.resetLife();
             if(navigation!=null)navigation.resetLife();
             if(intention!=null)intention.resetLife();
+            if(causalHorizon!=null)causalHorizon.resetLife();
             actualEnergySinceChoice=0;
             return;
         }
@@ -173,6 +178,7 @@ public final class SensorimotorMind {
         if(causal!=null)causal.resumeLife();
         if(navigation!=null)navigation.resumeLife();
         if(intention!=null)intention.resumeLife();
+        if(causalHorizon!=null)causalHorizon.resetLife();
         actualEnergySinceChoice=0;
     }
     public synchronized float motorX(){return (float)Math.cos((action%8)*Math.PI/4);}
@@ -298,6 +304,8 @@ public final class SensorimotorMind {
             actionExploratory=true;
         }
         if(action!=chosen)actionsReconsidered++;
+        // Shadow proposal is diagnostic-only; 'chosen' is NEVER overwritten.
+        if(causalHorizon!=null)causalHorizon.shadowChoice(senses,chosen);
         if(episodic!=null)episodic.chosen(chosen,proposed);
         if(motorGuard!=null)motorGuard.action(chosen);
         // This is a *self-selected* real action, not the direction of a
@@ -444,6 +452,9 @@ public final class SensorimotorMind {
                 value[base+k]=Math.max(-4,Math.min(4,value[base+k]+VALUE_LR*td*before[k]));
             value[base+S]=Math.max(-4,Math.min(4,value[base+S]+VALUE_LR*td));
         }
+        if(causalHorizon!=null&&learning)
+            causalHorizon.observe(before,trialAction,after,actualEnergySinceChoice,
+                                  physicalEffect,!holdout,holdout);
         diagnostics.record(error,(float)Math.sqrt(naiveErr/S),
             lastReward,actionExploratory);
         experiences++;
