@@ -25,7 +25,8 @@ public final class MaterialVisionRegression {
         check(occluded<.01f,"Visual wavelengths leaked through opaque box");
         objects.remove(blocker);
         float[] unblocked=SensorimotorMind.Senses.read(b,s,null,objects,50);
-        check(unblocked[14]>hidden[14],
+        float unblockedLight=0;for(int i=14;i<18;i++)unblockedLight+=unblocked[i];
+        check(unblockedLight>occluded+.05f,
             "Removing obstruction failed to uncover photoreceptors");
 
         // The same physical obstacle is at a fixed coordinate in the world.
