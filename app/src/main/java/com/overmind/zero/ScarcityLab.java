@@ -427,7 +427,7 @@ public final class ScarcityLab {
             lab.constrain(body,skin,dt);
             float dist=(float)Math.hypot(body.cx-lab.gateX(),body.cy-lab.gateCenterY());
             minGateDistance=Math.min(minGateDistance,dist);
-            if(lab.foodTouchedByCore(body))break;
+            if(lab.foodTouchedByBody(body,skin))break;
         }
         float approach=clamp(110-minGateDistance,0,110);
         // Small feedback for experimentally activating an adhesive sensor
