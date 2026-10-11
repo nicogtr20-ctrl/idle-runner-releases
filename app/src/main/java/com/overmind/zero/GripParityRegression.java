@@ -76,6 +76,20 @@ public final class GripParityRegression {
         // solver this fails and proves the source of the user's complaint.
         check(boxHeld>=4&&boxTwo>=4,
               "BUG: box CCD erases ordinary sustained two-sided adhesive contact");
-        System.out.println("GripParityRegression PASS: gate and small square accept equally sustained voluntary contact");
+        check(skin.touchSense[left]>.5f&&skin.touchSense[right]>.5f&&
+              skin.gripHold[left]>=Morphology.GRIP_HOLD&&
+              skin.gripHold[right]>=Morphology.GRIP_HOLD,
+              "Real box hold did not meet orange-render condition");
+        // Opposite test: a particle teleporting straight THROUGH the square
+        // cannot keep its accumulated grip. The new exception protects
+        // ordinary same-face contact only, not tunneling.
+        float[] previousX=skin.x.clone(),previousY=skin.y.clone();
+        skin.gripHold[left]=.26f;
+        skin.x[left]=box.x+SquareGripPuzzle.HALF+18f;
+        SquareCollisionSolver.constrain(body,skin,box,previousX,previousY,
+            body.x.clone(),body.y.clone(),body.cx,body.cy);
+        check(skin.gripHold[left]==0f,
+              "Illegal full-width crossing retained adhesive hold");
+        System.out.println("GripParityRegression PASS: both surfaces can hold .82 action, orange at box, crossing cancels illegal hold");
     }
 }
