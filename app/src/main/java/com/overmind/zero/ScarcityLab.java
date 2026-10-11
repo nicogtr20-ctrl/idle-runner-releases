@@ -18,7 +18,8 @@ public final class ScarcityLab {
     public final UnknownWorld.Entity food;
     /** Chamber interior, boundary walls and door approach must be reserved. */
     public boolean overlapsRoom(float x,float y,float radius){
-        return x>=entranceX()-WALL_HALF_THICKNESS-radius &&
+        return x>=Math.min(entranceX()-WALL_HALF_THICKNESS,
+                gateX()-DOOR_HALF_W)-radius &&
             x<=ox+END_X+WALL_HALF_THICKNESS+radius &&
             y>=oy+TOP-10-radius && y<=oy+BOTTOM+10+radius;
     }
