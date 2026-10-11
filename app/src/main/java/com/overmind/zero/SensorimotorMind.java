@@ -507,6 +507,12 @@ public final class SensorimotorMind {
          * A visible inactive (cooling-down) hazard stays optically present. */
         public static float[] spectral8(MotorBrain.Body b,ScarcityLab lab,
                                          ArrayList<UnknownWorld.Entity> objects){
+            return spectral8(b,lab,objects,true);
+        }
+        /** cueEnabled=false is the control for paired perceptual lab tests. */
+        public static float[] spectral8(MotorBrain.Body b,ScarcityLab lab,
+                                         ArrayList<UnknownWorld.Entity> objects,
+                                         boolean cueEnabled){
             float[] v=new float[UnknownWorld.SIGNATURES*8];
             if(b==null||objects==null)return v;
             for(UnknownWorld.Entity e:objects){
@@ -514,18 +520,42 @@ public final class SensorimotorMind {
                 float dx=e.x-b.cx,dy=e.y-b.cy;
                 float d=(float)Math.hypot(dx,dy);
                 if(!Float.isFinite(d)||d<.1f||d>210f)continue;
-                if(occluded(lab,b.cx,b.cy,e.x,e.y,objects,e))continue;
+                if(occluded(lab,b.cx,b.cy,e.x,e.y,objects,e,cueEnabled))continue;
                 int sector=((int)Math.floor((Math.atan2(dy,dx)+Math.PI/8)/
                     (Math.PI/4))+8)%8;
                 float bright=Math.max(0f,1f-d/230f);
                 v[e.signature*8+sector]=Math.max(v[e.signature*8+sector],bright);
                 if(e.isRare())v[2*8+sector]=Math.max(v[2*8+sector],bright*.85f);
             }
+            if(cueEnabled){
+                for(UnknownWorld.Entity e:objects){
+                    UnknownWorld.Entity cover=OpticalCues.coverOf(e,objects);
+                    if(cover==null)continue;
+                    float px=OpticalCues.rimX(b.cx,b.cy,cover),
+                          py=OpticalCues.rimY(b.cx,b.cy,cover);
+                    float dx=px-b.cx,dy=py-b.cy;
+                    float strength=OpticalCues.leakBrightness(
+                        (float)Math.hypot(dx,dy));
+                    if(strength<=0||
+                       occluded(lab,b.cx,b.cy,px,py,objects,e,true))continue;
+                    int sector=((int)Math.floor((Math.atan2(dy,dx)+Math.PI/8)/
+                        (Math.PI/4))+8)%8;
+                    v[e.signature*8+sector]=Math.max(v[e.signature*8+sector],strength);
+                    // Existing rare-wavelength mixing; no new category label.
+                    v[2*8+sector]=Math.max(v[2*8+sector],strength*.85f);
+                }
+            }
             return v;
         }
         public static float[] read(MotorBrain.Body b,Morphology.Surface skin,
                                    ScarcityLab lab,ArrayList<UnknownWorld.Entity> objects,
                                    float energy){
+            return read(b,skin,lab,objects,energy,true);
+        }
+        /** Paired baseline mode is for test fixtures only, not a new motor input. */
+        public static float[] read(MotorBrain.Body b,Morphology.Surface skin,
+                                   ScarcityLab lab,ArrayList<UnknownWorld.Entity> objects,
+                                   float energy,boolean cueEnabled){
             float[] v=new float[S];
             v[0]=Math.max(0,Math.min(1,energy/100));
             v[1]=bounded(b.cvx/150f);
@@ -560,7 +590,7 @@ public final class SensorimotorMind {
                 if(d>210||d<.1f)continue;
                 int sector=(int)Math.floor((Math.atan2(dy,dx)+Math.PI)/(Math.PI/2));
                 sector=Math.max(0,Math.min(3,sector));
-                if(occluded(lab,b.cx,b.cy,e.x,e.y,objects,e))continue;
+                if(occluded(lab,b.cx,b.cy,e.x,e.y,objects,e,cueEnabled))continue;
                 int channel=14+e.signature*4+sector;
                 if(channel<14||channel>=S)continue;
                 float bright=1-d/230f;
@@ -570,29 +600,53 @@ public final class SensorimotorMind {
                 // Existing 26-dimensional weight matrices need no migration.
                 if(e.isRare())v[14+2*4+sector]=Math.max(v[14+2*4+sector],bright*.85f);
             }
+            if(cueEnabled){
+                // Optical source is the same existing +40 energy beneath the
+                // physical square. Only weak light escaping its near rim is
+                // detectable; energy and body cannot cross the cover.
+                for(UnknownWorld.Entity e:objects){
+                    UnknownWorld.Entity cover=OpticalCues.coverOf(e,objects);
+                    if(cover==null)continue;
+                    float px=OpticalCues.rimX(b.cx,b.cy,cover),
+                          py=OpticalCues.rimY(b.cx,b.cy,cover);
+                    float dx=px-b.cx,dy=py-b.cy;
+                    float brightness=OpticalCues.leakBrightness(
+                        (float)Math.hypot(dx,dy));
+                    if(brightness<=0||
+                       occluded(lab,b.cx,b.cy,px,py,objects,e,true))continue;
+                    int sector=(int)Math.floor((Math.atan2(dy,dx)+Math.PI)/(Math.PI/2));
+                    sector=Math.max(0,Math.min(3,sector));
+                    v[14+e.signature*4+sector]=
+                        Math.max(v[14+e.signature*4+sector],brightness);
+                    v[14+2*4+sector]=Math.max(v[14+2*4+sector],brightness*.85f);
+                }
+            }
             return v;
         }
         private static boolean occluded(ScarcityLab lab,float ax,float ay,float bx,float by,
-                                        ArrayList<UnknownWorld.Entity> objects,UnknownWorld.Entity self){
+                                        ArrayList<UnknownWorld.Entity> objects,UnknownWorld.Entity self,
+                                        boolean transparentGlass){
             // Real movable solids occlude light even outside the chamber.
             for(int i=1;i<15;i++){
                 float t=i/15f;
-                if(solid(lab,ax+(bx-ax)*t,ay+(by-ay)*t,objects,self))return true;
+                if(solid(lab,ax+(bx-ax)*t,ay+(by-ay)*t,objects,self,
+                         transparentGlass))return true;
             }
             return false;
         }
         static boolean solid(ScarcityLab lab,float x,float y,ArrayList<UnknownWorld.Entity> obj){
-            return solid(lab,x,y,obj,null);
+            return solid(lab,x,y,obj,null,false);
         }
         private static boolean solid(ScarcityLab lab,float x,float y,ArrayList<UnknownWorld.Entity> obj,
-                                     UnknownWorld.Entity ignore){
+                                     UnknownWorld.Entity ignore,boolean transparentGlass){
             if(lab!=null){
                 float l=lab.entranceX(),r=lab.ox+ScarcityLab.END_X;
                 float t=lab.oy+ScarcityLab.TOP,b=lab.oy+ScarcityLab.BOTTOM;
                 float w=ScarcityLab.WALL_HALF_THICKNESS;
                 boolean front=x>=l-w&&x<=l+w&&y>=t-10&&y<=b+10&&
                     (y<=lab.oy-ScarcityLab.OPEN_HALF_HEIGHT||
-                     y>=lab.oy+ScarcityLab.OPEN_HALF_HEIGHT);
+                     y>=lab.oy+ScarcityLab.OPEN_HALF_HEIGHT)&&
+                    !(transparentGlass&&OpticalCues.frontWindow(lab,x,y));
                 boolean ceiling=x>=l-w&&x<=r+w&&y>=t-10&&y<=t+w;
                 boolean floor=x>=l-w&&x<=r+w&&y>=b-w&&y<=b+10;
                 boolean back=x>=r-w&&x<=r+w&&y>=t-10&&y<=b+10;
