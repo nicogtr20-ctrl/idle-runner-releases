@@ -54,6 +54,7 @@ public final class GameSceneSnapshot {
         x.put("contactCooldown",e.contactCooldown);
         x.put("everCollided",e.everCollided);x.put("countedAsMoved",e.countedAsMoved);
         x.put("peakDisplacement",e.peakDisplacement);x.put("radius",e.radius);
+        if(e.isBox())x.put("boxGripHold",array(e.boxGripHold));
         return x;
     }
     private static UnknownWorld.Entity loadEntity(JSONObject x,ScarcityLab room)throws Exception{
@@ -78,6 +79,8 @@ public final class GameSceneSnapshot {
         e.countedAsMoved=x.getBoolean("countedAsMoved");
         e.peakDisplacement=(float)x.getDouble("peakDisplacement");
         e.radius=(float)x.getDouble("radius");
+        if(e.isBox()&&x.has("boxGripHold"))
+            readArrays(x,new String[]{"boxGripHold"},new float[][]{e.boxGripHold});
         if(!Float.isFinite(e.x)||!Float.isFinite(e.y)||
            !Float.isFinite(e.vx)||!Float.isFinite(e.vy)||e.radius<0||
            !Float.isFinite(e.radius)||!Float.isFinite(e.cooldown)||
@@ -127,6 +130,7 @@ public final class GameSceneSnapshot {
                 r.put("maxDoorTravel",room.maxDoorTravel);
                 r.put("solidLinkCorrections",room.solidLinkCorrections);
                 r.put("graspingLatch",room.graspingLatch());
+                r.put("gateGripHold",array(room.gateGripHold));
                 root.put("room",r);
             }
             JSONArray a=new JSONArray();
@@ -182,6 +186,11 @@ public final class GameSceneSnapshot {
                 out.room.maxDoorTravel=(float)r.getDouble("maxDoorTravel");
                 out.room.solidLinkCorrections=r.getInt("solidLinkCorrections");
                 out.room.restoreGraspingLatch(r.getBoolean("graspingLatch"));
+                if(r.has("gateGripHold")){
+                    float[] hold=new float[Morphology.POINTS];
+                    readArrays(r,new String[]{"gateGripHold"},new float[][]{hold});
+                    out.room.restoreGateGrip(hold);
+                }
                 if(!Float.isFinite(out.room.doorY)||out.room.doorY<0||
                    out.room.doorY>ScarcityLab.DOOR_MAX_TRAVEL)return null;
             }
