@@ -22,6 +22,31 @@ public final class MaterialGeometry {
      * membrane patch, not an imaginary central eye/nucleus. Pure readout;
      * the central sensory weights and visual wavelengths are unchanged.
      */
+    /** Shape diagnostic: count true non-adjacent edge intersections.
+     * A truly filled fluid body should not degenerate into a folded web.
+     * No feedback to the neural agent or reward.
+     */
+    private static float cross(float ax,float ay,float bx,float by,float cx,float cy){
+        return (bx-ax)*(cy-ay)-(by-ay)*(cx-ax);
+    }
+    public static int selfCrossings(Morphology.Surface s){
+        if(s==null)return 0;
+        int count=0,n=Morphology.POINTS;
+        for(int i=0;i<n;i++){
+            int next=(i+1)%n;
+            float ax=s.x[i],ay=s.y[i],bx=s.x[next],by=s.y[next];
+            for(int j=i+2;j<n;j++){
+                int after=(j+1)%n;
+                if(after==i)continue;
+                float cx=s.x[j],cy=s.y[j],dx=s.x[after],dy=s.y[after];
+                float a=cross(ax,ay,bx,by,cx,cy),d=cross(ax,ay,bx,by,dx,dy);
+                float e=cross(cx,cy,dx,dy,ax,ay),g=cross(cx,cy,dx,dy,bx,by);
+                if((a>1e-4f&&d< -1e-4f||a< -1e-4f&&d>1e-4f)&&
+                   (e>1e-4f&&g< -1e-4f||e< -1e-4f&&g>1e-4f))count++;
+            }
+        }
+        return count;
+    }
     public static float[] eye(Morphology.Surface s,float cx,float cy,
                               float dx,float dy){
         if(s==null)return new float[]{cx,cy};
