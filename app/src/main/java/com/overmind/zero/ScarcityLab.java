@@ -39,6 +39,7 @@ public final class ScarcityLab {
     // A patch may instead be holding a separate square. Only the gate owns
     // gate-contact adhesion and may release its own departing patches.
     private final boolean[] gateTouchPrevious=new boolean[Morphology.POINTS];
+    final float[] gateGripHold=new float[Morphology.POINTS];
     /** Preserve the latch state across named save/reload, preventing a
      * duplicated grasp event at the first physics frame after restore. */
     boolean graspingLatch(){return wasGrasping;}
