@@ -1,0 +1,70 @@
+name: ZERO 0.11.7 Causal Horizon Shadow QA
+on:
+  push:
+    branches: [feature/overmind-v117-causal-horizon-shadow]
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 35
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+      - uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: '8.11.1'
+      - name: Safety — experimental-only no actuation or scripted reward
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          base=Path('app/src/main/java/com/overmind/zero')
+          mind=(base/'SensorimotorMind.java').read_text()
+          model=(base/'CausalHorizonProbe.java').read_text()
+          activity=(base/'GameActivity.java').read_text()
+          resets=(base/'ResetDomains.java').read_text()
+          assert 'causalHorizon.shadowChoice(senses,chosen);' in mind
+          assert 'chosen=causalHorizon' not in mind
+          assert 'score+=causalHorizon' not in mind
+          assert 'causalHorizon.observe(before,trialAction,after,actualEnergySinceChoice' in mind
+          assert 'float reward(float energy)' in model
+          assert 'energy/22f' in model
+          assert 'realEnergy' in model and 'physicalEffect' in model
+          assert 'if(holdout)' in model and 'if(!train)return;' in model
+          assert 'lastSuggested=first' in model
+          assert 'CausalHorizonProbe.KEY,causalHorizon.encode()' in activity
+          assert 'attachCausalHorizon(causalHorizon)' in activity
+          assert 'CausalHorizonProbe.KEY' in resets
+          assert 'applicationId' in Path('app/build.gradle').read_text()
+          assert 'com.overmind.zero.ota' in Path('app/build.gradle').read_text()
+          assert 'AdaptiveSafety' not in mind
+          print('0117 shadow only. No direct or indirect actuation.')
+          PY
+      - name: Unit and historical regression tests against real Java game components
+        run: |
+          mkdir -p /tmp/zero117
+          javac -d /tmp/zero117 app/src/main/java/com/overmind/zero/{MotorBrain,UnknownWorld,ContactLearning,DecisionBrain,Morphology,ScarcityLab,SensorimotorMind,SpatialPerception,CausalExperiments,CausalHorizonProbe,BodyProprioception,InstrumentalNavigation,GoalContinuity,GateBehaviorMetrics,BehavioralLaboratory,TemporalWorkingMemory,TemporalSkillBank,TemporalPersistenceRegression,LearnedSequencePlanner,LearningDiagnostics,ResetDomains,OnlineBodyLearning,MotionExploration,EpisodicMemory,MotorAutonomyGuard,MotorSkillBank,ExperienceCredit,GripSkillBank,SaveProfileCodec,LifeStatistics}.java
+          for test in CausalHorizonProbe BehavioralLaboratory InstrumentalNavigation GoalContinuity GateBehaviorMetrics CausalExperiments SpatialPerception BodyProprioception TemporalPersistenceRegression TemporalWorkingMemory TemporalSkillBank SaveProfileCodec EpisodicMemory LifeStatistics SensorimotorMind ExperienceCredit LearnedSequencePlanner MotorBrain UnknownWorld ContactLearning DecisionBrain Morphology ScarcityLab OnlineBodyLearning MotionExploration ResetDomains MotorAutonomyGuard MotorSkillBank GripSkillBank; do
+            java -cp /tmp/zero117 com.overmind.zero.$test
+          done
+      - name: Verify version and safe migration scope
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          source=Path('app/src/main/java/com/overmind/zero/GameActivity.java').read_text()
+          assert 'sensorimotor_model_v09' in source
+          assert 'episodic_memory_v095' in source
+          assert 'temporal_working_memory_v106' in source
+          assert 'physical_scene_v100' in source
+          assert 'SaveSlotStore.PENDING_RELOAD' in source
+          assert 'CausalHorizonProbe.KEY' in source
+          assert 'zero_motorbrain_001' in source
+          assert '.putString(CausalHorizonProbe.KEY,causalHorizon.encode())' in source
+          print('0117 new key is additive; existing profiles and slots retained.')
+          PY
+      - name: Compile isolated staging Android APK only
+        run: gradle --no-daemon assembleDebug
