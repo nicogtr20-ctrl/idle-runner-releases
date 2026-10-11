@@ -205,6 +205,9 @@ public final class Morphology {
                 peakExtension=Math.max(peakExtension,Math.max(0,
                     (x[i]-ax[i])*nx[i]+(y[i]-ay[i])*ny[i]));
             }
+            // The shell follows genuine muscle anchors without overriding
+            // protrusions or real adhesive/physical contact.
+            BodyIntegrity.membrane(body,this,dt);
         }
     }
     /** Collision against the ACTUAL deforming membrane, not a fake reach. */
