@@ -252,6 +252,27 @@ public final class MortalityLearning {
         m.energyFlows(.02f,0,0,0);
         if(Math.abs(noContact-m.riskAt(.39f,-.01f))>1e-8)
             throw new AssertionError("World manipulation altered learned mortality risk");
+        // Exact paired-live regression: attaching an unverified terminal model
+        // cannot influence any of ZERO's stochastic choices or saved weights.
+        SensorimotorMind plain=new SensorimotorMind(),with=new SensorimotorMind();
+        MortalityLearning virginModel=new MortalityLearning();
+        with.attachMortalityLearning(virginModel);
+        float[] state=new float[SensorimotorMind.S];
+        state[0]=.7f;
+        plain.begin(state);with.begin(state);
+        for(int t=0;t<170;t++){
+            float[] after=state.clone();
+            after[0]=clamp(.7f-.004f*(t%80),0,1);
+            after[6+(t%8)]=.3f;
+            plain.observe(after,.7f);
+            with.observe(after,.7f);
+            virginModel.observed(after[0]);
+            if(plain.action!=with.action||
+               !plain.serialize().equals(with.serialize()))
+                throw new AssertionError("Unverified terminal learner changed ZERO's brain or choice at "+t);
+        }
+        if(virginModel.confidence()!=0||virginModel.energyAdvice(.01f,1f)!=0)
+            throw new AssertionError("No terminal observations yet, but steering enabled");
         System.out.println(String.format(Locale.US,
             "Terminal experience pass: deaths=%d holdoutLives=%d risk low %.3f high %.3f confidence %.3f",
             m.deaths,m.heldoutLives,m.riskAt(.05f,-.02f),m.riskAt(.8f,0),m.confidence()));
