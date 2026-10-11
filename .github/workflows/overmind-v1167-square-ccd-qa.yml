@@ -1,0 +1,59 @@
+name: ZERO 0.11.6 Square Continuous Collision Nonpenetration QA
+on:
+  push:
+    branches: [feature/overmind-v1167-square-ccd-nonpenetration]
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 35
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+      - uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: '8.11.1'
+      - name: Assert old brain, rewards, box adhesion and profile save are unchanged
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          import subprocess
+          p=Path('app/src/main/java/com/overmind/zero')
+          unchanged=['MotorBrain.java','Morphology.java','ScarcityLab.java',
+                     'SensorimotorMind.java','DecisionBrain.java','InstrumentalNavigation.java',
+                     'ExperienceCredit.java','ContactLearning.java','OnlineBodyLearning.java',
+                     'GoalContinuity.java','DecisionBlackbox.java','GateLifeJournal.java',
+                     'ContextualMotionProbe.java','OpticalCues.java','UnknownWorld.java',
+                     'SaveSlotStore.java','GameSceneSnapshot.java','TelemetryGitHub.java',
+                     'ResetDomains.java','WorldPlacement.java','HabitatContinuity.java']
+          for name in unchanged:
+            baseline=subprocess.check_output(['git','show','HEAD^:app/src/main/java/com/overmind/zero/'+name])
+            assert (p/name).read_bytes()==baseline,name+' changed accidentally'
+          sq=(p/'SquareGripPuzzle.java').read_text()
+          game=(p/'GameActivity.java').read_text()
+          assert 'if(opposing&&held>=2)' in sq
+          assert 'sufficientlySeparate(sides[0],sides[1])' in sq
+          assert 'box.everCollided=true' in sq
+          assert 'SquareCollisionSolver.constrain' in sq
+          assert 'SquareCollisionSolver.finish' in sq
+          assert 'squarePrevSkinX' in game and 'oldCoreX' in game
+          assert 'SquareGripPuzzle.uncover(e,environment)' in game
+          assert 'if(surface.gripHold[i]>=Morphology.GRIP_HOLD&&' in game
+          print('Brain, motor actuator, box bilateral grip policy, rewards, saves, optics unchanged.')
+          PY
+      - name: Test swept particle paths, impossible shell edges and all historical regressions
+        run: |
+          mkdir -p /tmp/zero1167
+          javac -d /tmp/zero1167 app/src/main/java/com/overmind/zero/{MotorBrain,UnknownWorld,OpticalCues,OpticalCueRegression,HabitatContinuity,SquareCollisionSolver,SquareGripPuzzle,WorldPlacement,ContactLearning,DecisionBrain,Morphology,ScarcityLab,SensorimotorMind,DecisionBlackbox,GateLifeJournal,ContextualMotionProbe,ShadowNonInterferenceRegression,SpatialPerception,CausalExperiments,BodyProprioception,InstrumentalNavigation,GoalContinuity,GateBehaviorMetrics,BehavioralLaboratory,TemporalWorkingMemory,TemporalSkillBank,TemporalPersistenceRegression,LearnedSequencePlanner,LearningDiagnostics,ResetDomains,OnlineBodyLearning,MotionExploration,EpisodicMemory,MotorAutonomyGuard,MotorSkillBank,ExperienceCredit,GripSkillBank,SaveProfileCodec,LifeStatistics}.java
+          for test in SquareCollisionSolver SquareGripPuzzle HabitatContinuity OpticalCues OpticalCueRegression ShadowNonInterferenceRegression GateLifeJournal ContextualMotionProbe GateBehaviorMetrics WorldPlacement UnknownWorld ScarcityLab BehavioralLaboratory InstrumentalNavigation GoalContinuity CausalExperiments SpatialPerception BodyProprioception TemporalPersistenceRegression TemporalWorkingMemory TemporalSkillBank SaveProfileCodec EpisodicMemory LifeStatistics SensorimotorMind ExperienceCredit LearnedSequencePlanner MotorBrain ContactLearning DecisionBrain Morphology OnlineBodyLearning MotionExploration ResetDomains MotorAutonomyGuard MotorSkillBank GripSkillBank DecisionBlackbox; do
+            java -cp /tmp/zero1167 com.overmind.zero.$test
+          done
+      - name: Compile APK with same package and signature compatibility
+        run: gradle --no-daemon assembleDebug
