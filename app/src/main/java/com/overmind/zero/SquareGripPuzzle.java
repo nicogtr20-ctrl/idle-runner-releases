@@ -95,6 +95,8 @@ public final class SquareGripPuzzle {
                                     float previousCoreX,float previousCoreY){
         if(body==null||skin==null||box==null||!box.isBox()||
            !Float.isFinite(dt)||dt<=0)return new Outcome(false,0,0);
+        // The scratch surface is shared, but this timer belongs ONLY to box.
+        System.arraycopy(box.boxGripHold,0,skin.gripHold,0,Morphology.POINTS);
         SquareCollisionSolver.constrain(body,skin,box,previousSkinX,
             previousSkinY,previousBodyX,previousBodyY,
             previousCoreX,previousCoreY);
@@ -118,10 +120,9 @@ public final class SquareGripPuzzle {
                     }
                 }else skin.gripHold[i]=0;
             }else{
-                // Do not retain an adhesive hold after leaving the square.
-                // The gate runs before this solver when one is present, and
-                // square placements cannot overlap it.
-                if(skin.touchSense[i]<.5f)skin.gripHold[i]=0;
+                // Holding another box or the gate cannot retain THIS box's
+                // timer when its own face contact is no longer present.
+                skin.gripHold[i]=0f;
             }
             pushOut(skin.x,skin.y,skin.vx,skin.vy,i,box.x,box.y,1.15f);
         }
@@ -153,6 +154,7 @@ public final class SquareGripPuzzle {
         // Revalidate the perimeter AFTER ordinary contact/pressure/traction.
         // Those corrections can otherwise introduce new through-wall chords.
         SquareCollisionSolver.finish(body,skin,box);
+        System.arraycopy(skin.gripHold,0,box.boxGripHold,0,Morphology.POINTS);
         return new Outcome(opposing,contacts,held);
     }
     public static boolean uncovered(UnknownWorld.Entity box){

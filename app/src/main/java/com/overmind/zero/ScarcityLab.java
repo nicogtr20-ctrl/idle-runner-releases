@@ -39,6 +39,14 @@ public final class ScarcityLab {
     // A patch may instead be holding a separate square. Only the gate owns
     // gate-contact adhesion and may release its own departing patches.
     private final boolean[] gateTouchPrevious=new boolean[Morphology.POINTS];
+    final float[] gateGripHold=new float[Morphology.POINTS];
+    void restoreGateGrip(float[] saved){
+        for(int i=0;i<Morphology.POINTS;i++){
+            float t=saved[i];
+            gateGripHold[i]=Float.isFinite(t)?Math.max(0,Math.min(.5f,t)):0;
+            gateTouchPrevious[i]=gateGripHold[i]>0;
+        }
+    }
     /** Preserve the latch state across named save/reload, preventing a
      * duplicated grasp event at the first physics frame after restore. */
     boolean graspingLatch(){return wasGrasping;}
@@ -70,6 +78,7 @@ public final class ScarcityLab {
     /** The third argument is passive diagnostics of the controller's own
      * chosen adhesion channel. It does NOT command any physical grip. */
     public float solveGate(Morphology.Surface skin,float dt,float chosenGripDrive){
+        System.arraycopy(gateGripHold,0,skin.gripHold,0,Morphology.POINTS);
         float lx=gateX()-DOOR_HALF_W,rx=gateX()+DOOR_HALF_W;
         float cy=gateCenterY();
         int leftTouch=0,rightTouch=0,leftGrip=0,rightGrip=0;
@@ -159,6 +168,7 @@ public final class ScarcityLab {
         if(doorY==0||doorY==DOOR_MAX_TRAVEL)doorVelocity=0;
         maxDoorTravel=Math.max(maxDoorTravel,doorY);
         if(openingFree())everOpened=true;
+        System.arraycopy(skin.gripHold,0,gateGripHold,0,Morphology.POINTS);
         return doorY-previous;
     }
     static float clamp(float x,float a,float b){return Math.min(b,Math.max(a,x));}

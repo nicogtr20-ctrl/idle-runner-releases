@@ -17,6 +17,8 @@ public final class UnknownWorld {
         public boolean concealed=false;
         public final float spawnX,spawnY;
         public boolean everCollided=false, countedAsMoved=false;
+        /** Physics-only adhesion timers, scoped to this box's 96 possible patches. */
+        final float[] boxGripHold=new float[Morphology.POINTS];
         public float peakDisplacement=0;
         public final int signature;
         private final int law;

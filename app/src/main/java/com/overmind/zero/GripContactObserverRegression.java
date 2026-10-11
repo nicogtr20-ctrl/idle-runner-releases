@@ -23,6 +23,7 @@ public final class GripContactObserverRegression {
             "Local veto of global ON must be observable");
         // A positive actuated hold should satisfy the exact render condition.
         skin.gripCommand[a]=.82f;skin.gripHold[a]=.10f;
+        box.boxGripHold[a]=.10f;
         monitor.beforeBox(skin,box);
         monitor.boxFrame(skin,box,0f,1.04f,.035f);
         ok(monitor.boxTotals().offCommandPoints==1,
@@ -33,6 +34,7 @@ public final class GripContactObserverRegression {
         monitor.beforeBox(skin,box);
         float originalX=skin.x[a],originalY=skin.y[a],originalCommand=skin.gripCommand[a];
         skin.gripHold[a]=0;
+        box.boxGripHold[a]=0;
         monitor.boxFrame(skin,box,.82f,1.08f,.035f);
         ok(monitor.boxTotals().interruptedHolds==1 &&
            monitor.boxTotals().sameFaceDrops==1,

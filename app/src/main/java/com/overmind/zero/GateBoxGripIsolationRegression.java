@@ -41,10 +41,10 @@ public final class GateBoxGripIsolationRegression {
             "Processing gate destroys sustained grip on distant square");
         ok(gate.gateHeldFrames==0,"Square grip falsely counted at gate");
         // Gate cannot erase an unrelated square's established grip.
-        float prior=skin.gripHold[a];
+        float prior=box.boxGripHold[a];
         gate.solveGate(skin,dt,0f);
-        ok(skin.gripHold[a]==prior,
-            "Gate cleared a square grip while the patch was away");
+        ok(box.boxGripHold[a]==prior,
+            "Gate cleared a square's independently owned hold");
 
         Morphology.Surface other=new Morphology.Surface(new MotorBrain.Body());
         ScarcityLab door=new ScarcityLab(0,0);
@@ -65,9 +65,10 @@ public final class GateBoxGripIsolationRegression {
         door.solveGate(other,dt,.82f);
         ok(other.gripHold[a]==0,
             "Lost gate touch must immediately release gate hold");
-        other.gripHold[a]=.5f;
+        UnknownWorld.Entity independentBox=new UnknownWorld.Entity(-120,0,2,5);
+        independentBox.boxGripHold[a]=.5f;
         door.solveGate(other,dt,0f);
-        ok(other.gripHold[a]==.5f,
+        ok(independentBox.boxGripHold[a]==.5f,
             "Distant square grip must not be erased by the gate");
         other.x[a]=door.gateX()+ScarcityLab.DOOR_HALF_W;
         other.y[a]=door.gateCenterY();
