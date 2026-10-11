@@ -182,7 +182,9 @@ public final class GateBehaviorMetrics {
         MotorBrain.Body b=new MotorBrain.Body();
         ScarcityLab gate=new ScarcityLab(0,0);
         m.observe(b,gate);
-        if(m.passages!=0||m.opened!=0||m.maxTravel!=0||m.nearbyFrames!=0)
+        // Physical material can be within 45U of the door even while its
+        // centroid is further away. Mere proximity is not an opening.
+        if(m.passages!=0||m.opened!=0||m.maxTravel!=0)
             throw new AssertionError("Invented opening with untouched door");
         float deltaX=gate.gateX()-ScarcityLab.DOOR_HALF_W-10-b.cx;
         for(int i=0;i<MotorBrain.N;i++)b.x[i]+=deltaX;
