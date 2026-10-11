@@ -1,0 +1,62 @@
+name: ZERO 0.11.6 Physical Object Retention and Grip UI QA
+on:
+  push:
+    branches: [feature/overmind-v1166-visible-grip-and-object-retention]
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 35
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+      - uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: '8.11.1'
+      - name: Compare cognitive code and actual grip physics against OTA.72
+        run: |
+          python3 - <<'PY'
+          import subprocess
+          from pathlib import Path
+          base=Path('app/src/main/java/com/overmind/zero')
+          protected=[
+           'MotorBrain.java','SensorimotorMind.java','Morphology.java',
+           'SquareGripPuzzle.java','ScarcityLab.java','UnknownWorld.java',
+           'WorldPlacement.java','ExperienceCredit.java','GoalContinuity.java',
+           'InstrumentalNavigation.java','DecisionBrain.java','SaveSlotStore.java',
+           'ResetDomains.java','TelemetryGitHub.java','GameSceneSnapshot.java',
+           'OpticalCues.java','OpticalCueRegression.java','ContextualMotionProbe.java',
+           'DecisionBlackbox.java','GateLifeJournal.java','GateBehaviorMetrics.java']
+          for name in protected:
+            original=subprocess.check_output(['git','show',
+              'd47cf4195e3cb14e9c4235ed0e7ad1abe82fa470:app/src/main/java/com/overmind/zero/'+name])
+            assert original==(base/name).read_bytes(),name+' changed cognitive or physics source'
+          game=(base/'GameActivity.java').read_text()
+          lifecycle=(base/'HabitatContinuity.java').read_text()
+          assert 'if(surface.gripHold[i]>=Morphology.GRIP_HOLD&&' in game
+          assert 'surface.touchSense[i]>.5f' in game
+          assert 'HabitatContinuity.enforceLimit' in game
+          assert 'HabitatContinuity.clearChamber' in game
+          assert 'HabitatContinuity.excludeRoomOverlap' in game
+          assert 'removePaired' in lifecycle and 'protectedByInteraction' in lifecycle
+          assert 'sensorMind.contactOutcome(reserve-before,object.signature)' in game
+          assert 'SquareGripPuzzle.constrain(' in game
+          assert 'SquareGripPuzzle.uncover(e,environment)' in game
+          print('ZERO neural code, adhesion actuators and energy rewards are byte-identical to signed OTA.72.')
+          PY
+      - name: Real world retention test and all old Java regressions
+        run: |
+          mkdir -p /tmp/zero1166
+          javac -d /tmp/zero1166 app/src/main/java/com/overmind/zero/{MotorBrain,UnknownWorld,OpticalCues,OpticalCueRegression,HabitatContinuity,SquareGripPuzzle,WorldPlacement,ContactLearning,DecisionBrain,Morphology,ScarcityLab,SensorimotorMind,DecisionBlackbox,GateLifeJournal,ContextualMotionProbe,ShadowNonInterferenceRegression,SpatialPerception,CausalExperiments,BodyProprioception,InstrumentalNavigation,GoalContinuity,GateBehaviorMetrics,BehavioralLaboratory,TemporalWorkingMemory,TemporalSkillBank,TemporalPersistenceRegression,LearnedSequencePlanner,LearningDiagnostics,ResetDomains,OnlineBodyLearning,MotionExploration,EpisodicMemory,MotorAutonomyGuard,MotorSkillBank,ExperienceCredit,GripSkillBank,SaveProfileCodec,LifeStatistics}.java
+          for test in HabitatContinuity OpticalCues OpticalCueRegression ShadowNonInterferenceRegression GateLifeJournal ContextualMotionProbe GateBehaviorMetrics SquareGripPuzzle WorldPlacement UnknownWorld ScarcityLab BehavioralLaboratory InstrumentalNavigation GoalContinuity CausalExperiments SpatialPerception BodyProprioception TemporalPersistenceRegression TemporalWorkingMemory TemporalSkillBank SaveProfileCodec EpisodicMemory LifeStatistics SensorimotorMind ExperienceCredit LearnedSequencePlanner MotorBrain ContactLearning DecisionBrain Morphology OnlineBodyLearning MotionExploration ResetDomains MotorAutonomyGuard MotorSkillBank GripSkillBank DecisionBlackbox; do
+            java -cp /tmp/zero1166 com.overmind.zero.$test
+          done
+      - name: Android debug build
+        run: gradle --no-daemon assembleDebug
