@@ -758,8 +758,10 @@ public final class SensorimotorMind {
         objects.clear();
         objects.add(lab.food);
         // Move ACTUAL tissue + 96 physical eyes, not a nonexistent core.
-        for(int k=0;k<MotorBrain.N;k++)body.x[k]-=55;
-        for(int k=0;k<Morphology.POINTS;k++)skin.x[k]-=55;
+        // Material radius ~27: stay OUTSIDE the solid gate [-48,-20].
+        // Food at +127 remains barely within the 210-unit visual range.
+        for(int k=0;k<MotorBrain.N;k++)body.x[k]-=81;
+        for(int k=0;k<Morphology.POINTS;k++)skin.x[k]-=81;
         MaterialGeometry.observe(body);
         float[] hidden=Senses.read(body,skin,lab,objects,55);
         float sum=0;for(int i=14;i<S;i++)sum+=hidden[i];
