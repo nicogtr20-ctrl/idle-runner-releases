@@ -210,6 +210,22 @@ public final class DecisionBlackbox {
         }
         require(original.serialize().equals(observed.serialize()),
             "Passive recorder altered learned sensorimotor parameters");
+        // Stronger invariant: REAL transition learning, prediction updates,
+        // exploration and action choices must remain byte-identical as well.
+        for(int n=0;n<240;n++){
+            equivalent[0]=Math.max(.05f,.95f-n*.003f);
+            equivalent[6]=(n%13)/16f;
+            equivalent[14]=(n%7)/8f;
+            equivalent[18]=(n%11)/12f;
+            original.observe(equivalent,.68f);
+            observed.observe(equivalent,.68f);
+            require(original.action==observed.action,
+                "Recorder changed decisions after online experience "+n);
+            require(original.experiences==observed.experiences,
+                "Recorder changed transition count");
+        }
+        require(original.serialize().equals(observed.serialize()),
+            "Recorder changed trained Q or predictive weights");
         DecisionBlackbox rec=new DecisionBlackbox();
         float[] senses=new float[SENSES],parts=new float[TERMS];
         senses[0]=.7f;senses[14]=.7f;senses[18]=.9f;
