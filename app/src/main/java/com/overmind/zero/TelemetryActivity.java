@@ -173,7 +173,7 @@ public final class TelemetryActivity extends Activity {
                     String reason=failure.getMessage();
                     if(reason==null||reason.trim().isEmpty())
                         reason="Errore di rete o lettura risposta GitHub";
-                    reason=reason.replace('\\n',' ').replace('\\r',' ');
+                    reason=reason.replace((char)10,' ').replace((char)13,' ');
                     if(reason.length()>240)
                         reason=reason.substring(0,240)+"...";
                     status.setText("CARICAMENTO NON RIUSCITO: "+reason+
