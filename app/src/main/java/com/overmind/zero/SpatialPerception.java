@@ -87,7 +87,8 @@ public final class SpatialPerception {
     }
     /** Update only regions actually within line-of-sight, using sensed
      * distances; never look behind the first contact. */
-    private void remember(float[] distances){
+    private void remember(float[] distances){remember(distances,null);}
+    private void remember(float[] distances,float[] physicalOrigins){
         // Integrate this ONE simultaneous scan in two phases. A neighboring
         // ray may traverse a cell that contains part of an obstacle, but that
         // free sub-ray must not erase a confirmed hit from the SAME scan.
@@ -101,7 +102,10 @@ public final class SpatialPerception {
             int hit=blocked?Math.round(distances[r]*(STEPS+1)):STEPS+1;
             for(int step=1;step<=STEPS;step++){
                 if(blocked&&step>hit)break;
-                float x=odometryX+dx*STEP*step,y=odometryY+dy*STEP*step;
+                float offsetX=physicalOrigins==null?0:physicalOrigins[2*r];
+                float offsetY=physicalOrigins==null?0:physicalOrigins[2*r+1];
+                float x=odometryX+offsetX+dx*STEP*step,
+                      y=odometryY+offsetY+dy*STEP*step;
                 int gx=cell(x),gy=cell(y);
                 if(blocked&&step==hit)blockedThisScan.add(key(gx,gy));
                 else putCell(gx,gy,-1);
@@ -112,11 +116,37 @@ public final class SpatialPerception {
             putCell(x,y,6); // any hit outranks same-scan overlapping free rays
         }
     }
+    /** True distributed photoreceptors: sixteen physical membrane patches
+     * inspect the exterior. For memory registration preserve EACH patch's
+     * offset from the material centroid, not an invented central eye.
+     */
+    private static float[] senseMaterial(MotorBrain.Body body,Morphology.Surface skin,
+                                         ScarcityLab room,ArrayList<UnknownWorld.Entity> objects,
+                                         float[] origins){
+        float[] result=new float[RAYS];Arrays.fill(result,1f);
+        if(body==null||skin==null)return result;
+        for(int r=0;r<RAYS;r++){
+            float angle=rad(r),dx=(float)Math.cos(angle),dy=(float)Math.sin(angle);
+            float[] eye=MaterialGeometry.eye(skin,body.cx,body.cy,dx,dy);
+            origins[2*r]=eye[0]-body.cx;origins[2*r+1]=eye[1]-body.cy;
+            for(int step=1;step<=STEPS;step++){
+                float x=eye[0]+dx*step*STEP,y=eye[1]+dy*step*STEP;
+                if(SensorimotorMind.Senses.solid(room,x,y,objects)){
+                    result[r]=step/(float)(STEPS+1);break;
+                }
+            }
+        }
+        return result;
+    }
     /** Movement is integrated from the organism's OWN observed displacement.
      * World coordinates are used only by the low-level ray sensor and the
      * body odometry anchor, NOT supplied to the learner as object identity. */
     public void observeEnvironment(MotorBrain.Body body,ScarcityLab room,
                                    ArrayList<UnknownWorld.Entity> objects){
+        observeEnvironment(body,null,room,objects);
+    }
+    public void observeEnvironment(MotorBrain.Body body,Morphology.Surface skin,
+                                   ScarcityLab room,ArrayList<UnknownWorld.Entity> objects){
         if(body==null||objects==null)return;
         float x=body.cx,y=body.cy;
         if(Float.isFinite(lastBodyX)&&Float.isFinite(lastBodyY)){
@@ -130,9 +160,11 @@ public final class SpatialPerception {
             }
         }
         lastBodyX=x;lastBodyY=y;
-        float[] rays=sense(x,y,room,objects);
+        float[] origins=skin==null?null:new float[RAYS*2];
+        float[] rays=skin==null?sense(x,y,room,objects):
+            senseMaterial(body,skin,room,objects,origins);
         feed(rays);
-        remember(rays);
+        remember(rays,origins);
         sweeps++;
     }
     public void feed(float[] rays){

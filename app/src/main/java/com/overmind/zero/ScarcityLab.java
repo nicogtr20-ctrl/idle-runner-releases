@@ -187,11 +187,9 @@ public final class ScarcityLab {
         // an appendage legitimately placed on its opposite face.
         resolveSolidLinks(skin);
         solveGate(skin,dt,chosenGripDrive);
-        // Gate is an actual physical barrier for the body center and old
-        // motor particles, even when its movement is still locked.
+        // Only actual tissue is a collider: the observed centroid is not
+        // a nucleus and may even lie outside a highly concave organism.
         float x=gateX(),yc=gateCenterY();
-        applyToCore(body,x-DOOR_HALF_W,yc-DOOR_HALF_H,
-            x+DOOR_HALF_W,yc+DOOR_HALF_H,10,dt);
         for(int k=0;k<MotorBrain.N;k++){
             for(int w=0;w<5;w++){
                 boundaries(w,temp);
@@ -211,10 +209,7 @@ public final class ScarcityLab {
             sweptProject(skin.x,skin.y,skin.vx,skin.vy,i,
                 x-DOOR_HALF_W,yc-DOOR_HALF_H,x+DOOR_HALF_W,yc+DOOR_HALF_H,1.5f,dt);
         }
-        for(int w=0;w<5;w++){
-            boundaries(w,temp);
-            applyToCore(body,temp[0],temp[1],temp[2],temp[3],10,dt);
-        }
+        MaterialGeometry.observe(body);
         // A point may be outside a solid while the edge between two points
         // cuts straight through it. Never render or simulate such a crossing.
         resolveSolidLinks(skin);
@@ -396,6 +391,14 @@ public final class ScarcityLab {
             b.cx=px[0];b.cy=py[0];b.cvx=vx[0];b.cvy=vy[0];
         }
     }
+    public boolean foodTouchedByBody(MotorBrain.Body body,Morphology.Surface skin){
+        if(reachedEnergy||!food.ready())return false;
+        if(MaterialGeometry.touches(body,skin,food.x,food.y,food.radius+2f)){
+            reachedEnergy=true;food.touch(0,0);return true;
+        }
+        return false;
+    }
+    /** Legacy test/rollout interface, never used by the live distributed organism. */
     public boolean foodTouchedByCore(MotorBrain.Body body){
         if(reachedEnergy||!food.ready())return false;
         if((float)Math.hypot(body.cx-food.x,body.cy-food.y)<food.radius+9){
@@ -424,7 +427,7 @@ public final class ScarcityLab {
             lab.constrain(body,skin,dt);
             float dist=(float)Math.hypot(body.cx-lab.gateX(),body.cy-lab.gateCenterY());
             minGateDistance=Math.min(minGateDistance,dist);
-            if(lab.foodTouchedByCore(body))break;
+            if(lab.foodTouchedByBody(body,skin))break;
         }
         float approach=clamp(110-minGateDistance,0,110);
         // Small feedback for experimentally activating an adhesive sensor

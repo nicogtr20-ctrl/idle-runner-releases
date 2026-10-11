@@ -205,9 +205,24 @@ public final class Morphology {
                 peakExtension=Math.max(peakExtension,Math.max(0,
                     (x[i]-ax[i])*nx[i]+(y[i]-ay[i])*ny[i]));
             }
-            // The shell follows genuine muscle anchors without overriding
-            // protrusions or real adhesive/physical contact.
+            // Equal and opposite tissue reaction: the independently trained
+            // 96 actuators now influence REAL inner tissue instead of pulling
+            // against an immovable invisible nucleus. Small material masses
+            // and damping avoid ballistic acceleration; no preferred target.
+            for(int i=0;i<POINTS;i++){
+                float u=i*(float)MotorBrain.N/POINTS;
+                int j=(int)u,next=(j+1)%MotorBrain.N;
+                float f=u-j;
+                float gain=dt*.0025f;
+                body.vx[j]=clamp(body.vx[j]-fx[i]*gain*(1-f),-280,280);
+                body.vy[j]=clamp(body.vy[j]-fy[i]*gain*(1-f),-280,280);
+                body.vx[next]=clamp(body.vx[next]-fx[i]*gain*f,-280,280);
+                body.vy[next]=clamp(body.vy[next]-fy[i]*gain*f,-280,280);
+            }
+            // Excess anchor strain is relaxed softly only for free tissue.
+            // This is local cohesion, NOT nucleus centering.
             BodyIntegrity.membrane(body,this,dt);
+            MaterialGeometry.observe(body);
         }
     }
     /** Collision against the ACTUAL deforming membrane, not a fake reach. */

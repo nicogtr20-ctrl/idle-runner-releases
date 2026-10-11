@@ -69,6 +69,7 @@ public final class MotorBrain {
                 y[i]=(float)Math.sin(a)*R;
                 vx[i]=vy[i]=act[i]=grip[i]=0;
             }
+            MaterialGeometry.observe(this);
         }
         public void step(float[] weights,float dirX,float dirY,float dt){
             step(weights,dirX,dirY,dt,null,0,0);
@@ -82,7 +83,7 @@ public final class MotorBrain {
                          float[] contactWeights,float objectX,float objectY){
             time+=dt;
             for(int i=0;i<N;i++){fx[i]=0;fy[i]=0;}
-            float fcx=0,fcy=0;
+            // No core mass. Forces are exchanged among actual material nodes.
             for(int i=0;i<N;i++){
                 float dx=x[i]-cx,dy=y[i]-cy;
                 float dist=(float)Math.sqrt(dx*dx+dy*dy+1e-5f);
@@ -119,7 +120,11 @@ public final class MotorBrain {
                 float springForce=(dist-length)*stiffness+radialVelocity*8.5f;
                 float sx=-springForce*nx,sy=-springForce*ny;
                 fx[i]+=sx;fy[i]+=sy;
-                fcx-=sx;fcy-=sy;
+                // Equal/opposite reaction is shared through the material;
+                // a mathematical centroid cannot absorb physical impulse.
+                for(int k=0;k<N;k++)if(k!=i){
+                    fx[k]-=sx/(N-1);fy[k]-=sy/(N-1);
+                }
                 totalWork+=Math.abs(dist-length)*.00018f*dt;
             }
             // Adjacent particle springs keep the material cohesive while allowing
@@ -134,14 +139,9 @@ public final class MotorBrain {
                 float sx=f*dx/d,sy=f*dy/d;
                 fx[i]+=sx;fy[i]+=sy;fx[j]-=sx;fy[j]-=sy;
             }
-            // The only permitted forces are elastic forces, muscle contraction
-            // and variable adhesion. No scripted displacement is added.
-            cvx+=(fcx/3.7f)*dt;
-            cvy+=(fcy/3.7f)*dt;
+            // Integrate only the ten actual tissue masses. Center is an
+            // instantaneous odometry estimate, NEVER accelerated or pushed.
             float drag=(float)Math.exp(-2.0f*dt);
-            cvx=clamp(cvx*drag,-280,280);
-            cvy=clamp(cvy*drag,-280,280);
-            cx+=cvx*dt;cy+=cvy*dt;
             for(int i=0;i<N;i++){
                 vx[i]+=fx[i]*dt;
                 vy[i]+=fy[i]*dt;
@@ -152,11 +152,9 @@ public final class MotorBrain {
                 x[i]+=vx[i]*dt;y[i]+=vy[i]*dt;
                 float dx=x[i]-cx,dy=y[i]-cy;
                 float d=(float)Math.hypot(dx,dy);
-                if(d>88){x[i]=cx+dx*88/d;y[i]=cy+dy*88/d;vx[i]*=.6f;vy[i]*=.6f;}
+                if(d>105){x[i]=cx+dx*105/d;y[i]=cy+dy*105/d;vx[i]*=.6f;vy[i]*=.6f;}
             }
-            // Passive cohesive tissue keeps the nucleus inside its own
-            // ten-mass body without altering any learned actuator outputs.
-            BodyIntegrity.core(this,dt);
+            MaterialGeometry.observe(this);
             // Prevent training instability from producing a fake high reward.
             if(!Float.isFinite(cx)||!Float.isFinite(cy)||Math.abs(cx)>10000||Math.abs(cy)>10000)reset();
         }

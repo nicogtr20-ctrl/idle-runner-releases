@@ -107,8 +107,12 @@ public final class SensorimotorMind {
     }
     public synchronized void resumeSpatialSense(MotorBrain.Body b,ScarcityLab room,
         ArrayList<UnknownWorld.Entity> objects){
+        resumeSpatialSense(b,null,room,objects);
+    }
+    public synchronized void resumeSpatialSense(MotorBrain.Body b,Morphology.Surface skin,
+        ScarcityLab room,ArrayList<UnknownWorld.Entity> objects){
         if(spatial!=null){spatial.resumeLife(b.cx,b.cy);
-            spatial.observeEnvironment(b,room,objects);}
+            spatial.observeEnvironment(b,skin,room,objects);}
     }
     /** Feed the current physical shape at the start/resume of a life. */
     public synchronized void updateBodySense(MotorBrain.Body b,Morphology.Surface skin){
@@ -412,7 +416,7 @@ public final class SensorimotorMind {
             if(bodySchema!=null&&body!=null&&skin!=null)
                 bodySchema.feed(BodyProprioception.sense(body,skin));
             if(spatial!=null&&body!=null&&objects!=null)
-                spatial.observeEnvironment(body,room,objects);
+                spatial.observeEnvironment(body,skin,room,objects);
             updateNavigationSense(body,room,objects);
             choose(after);return;
         }
@@ -426,7 +430,7 @@ public final class SensorimotorMind {
             BodyProprioception.sense(body,skin):null;
         if(bodySchema!=null&&bodyAfter!=null)bodySchema.feed(bodyAfter);
         if(spatial!=null&&body!=null&&objects!=null)
-            spatial.observeEnvironment(body,room,objects);
+            spatial.observeEnvironment(body,skin,room,objects);
         float[] before=trialState;
         boolean holdout=diagnostics.shouldHoldout();
         float err=0,naiveErr=0,sensoryChange=0;
@@ -581,7 +585,8 @@ public final class SensorimotorMind {
                 float proximity=0;
                 for(int step=1;step<=7;step++){
                     float distance=step*22;
-                    float x=b.cx+vx*distance,y=b.cy+vy*distance;
+                    float[] eye=MaterialGeometry.eye(skin,b.cx,b.cy,vx,vy);
+                    float x=eye[0]+vx*distance,y=eye[1]+vy*distance;
                     if(solid(lab,x,y,objects)){
                         proximity=1-distance/175f;break;
                     }
@@ -597,7 +602,8 @@ public final class SensorimotorMind {
                 if(d>210||d<.1f)continue;
                 int sector=(int)Math.floor((Math.atan2(dy,dx)+Math.PI)/(Math.PI/2));
                 sector=Math.max(0,Math.min(3,sector));
-                if(occluded(lab,b.cx,b.cy,e.x,e.y,objects,e,cueEnabled))continue;
+                float[] sight=MaterialGeometry.eye(skin,b.cx,b.cy,dx,dy);
+                if(occluded(lab,sight[0],sight[1],e.x,e.y,objects,e,cueEnabled))continue;
                 int channel=14+e.signature*4+sector;
                 if(channel<14||channel>=S)continue;
                 float bright=1-d/230f;
@@ -620,7 +626,9 @@ public final class SensorimotorMind {
                     float brightness=OpticalCues.leakBrightness(
                         (float)Math.hypot(dx,dy));
                     if(brightness<=0||
-                       occluded(lab,b.cx,b.cy,px,py,objects,e,true))continue;
+                       occluded(lab,MaterialGeometry.eye(skin,b.cx,b.cy,dx,dy)[0],
+                          MaterialGeometry.eye(skin,b.cx,b.cy,dx,dy)[1],
+                          px,py,objects,e,true))continue;
                     int sector=(int)Math.floor((Math.atan2(dy,dx)+Math.PI)/(Math.PI/2));
                     sector=Math.max(0,Math.min(3,sector));
                     v[14+e.signature*4+sector]=
@@ -749,7 +757,12 @@ public final class SensorimotorMind {
         ScarcityLab lab=new ScarcityLab(-115,0);
         objects.clear();
         objects.add(lab.food);
-        body.cx=-55;body.cy=0;
+        // Move ACTUAL tissue + 96 physical eyes, not a nonexistent core.
+        // Material radius ~27: stay OUTSIDE the solid gate [-48,-20].
+        // Food at +127 remains barely within the 210-unit visual range.
+        for(int k=0;k<MotorBrain.N;k++)body.x[k]-=81;
+        for(int k=0;k<Morphology.POINTS;k++)skin.x[k]-=81;
+        MaterialGeometry.observe(body);
         float[] hidden=Senses.read(body,skin,lab,objects,55);
         float sum=0;for(int i=14;i<S;i++)sum+=hidden[i];
         if(sum>.01f)throw new IllegalStateException("Learner can see through closed barrier");

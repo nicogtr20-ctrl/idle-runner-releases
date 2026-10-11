@@ -3,13 +3,10 @@ package com.overmind.zero;
 import java.util.Random;
 
 /**
- * Passive cohesive material mechanics, NOT a neuron, action, reward or
- * scripted locomotion. The nucleus is a mass attached to the ten body nodes;
- * each of the 96 membrane nodes is elastically attached to the SAME actual
- * interpolated body ring. Old separated bodies are repaired gradually.
- *
- * Every displacement is limited per physics substep. Collision solvers still
- * own the final no-penetration decisions. No new contact or grip is created.
+ * 0120: local cohesion of 96 independent physical perimeter patches.
+ * NO physical nucleus exists. The saved body centroid is a read-only
+ * measurement of ten real tissue masses, and NEVER receives an impulse.
+ * Neural membrane extension and real solid contacts retain priority.
  */
 public final class BodyIntegrity {
     private BodyIntegrity(){}
@@ -29,39 +26,11 @@ public final class BodyIntegrity {
      * already existing ten actual ring masses. Intact muscle identity and
      * free contraction/extension remain unchanged.
      */
-    public static void core(MotorBrain.Body body,float dt){
-        if(body==null||!Float.isFinite(dt)||dt<=0)return;
-        float sx=0,sy=0;
-        for(int i=0;i<MotorBrain.N;i++){sx+=body.x[i];sy+=body.y[i];}
-        float mx=sx/MotorBrain.N,my=sy/MotorBrain.N;
-        if(!finite(mx,my)||!finite(body.cx,body.cy))return;
-        float dx=mx-body.cx,dy=my-body.cy;
-        float distance=(float)Math.hypot(dx,dy);
-        // Material response damps core drift. It does not seek any world
-        // position or destination and does not modify the neural commands.
-        if(distance>.3f){
-            float step=Math.min(MAX_CORE_CORRECTION,distance*.09f);
-            float cx=dx/distance*step,cy=dy/distance*step;
-            body.cx+=cx;body.cy+=cy;
-            body.cvx=limited(body.cvx+cx*dt*55f,280);
-            body.cvy=limited(body.cvy+cy*dt*55f,280);
-        }
-        // Body node angular ordering is an actual material property of the
-        // closed ten-node ring. Prevent all ten nodes from migrating to one
-        // side of the nucleus; this is symmetric over the whole body and
-        // does not create preferred "arms" or a scripted walking direction.
-        for(int i=0;i<MotorBrain.N;i++){
-            float angle=TWO_PI*i/MotorBrain.N;
-            float ux=(float)Math.cos(angle),uy=(float)Math.sin(angle);
-            float rx=body.x[i]-body.cx,ry=body.y[i]-body.cy;
-            float outward=rx*ux+ry*uy;
-            if(outward>=MIN_CORE_SPOKE)continue;
-            float correction=Math.min(1.8f,(MIN_CORE_SPOKE-outward)*.24f);
-            body.x[i]+=ux*correction;body.y[i]+=uy*correction;
-            // The existing solid collision solvers have the final word.
-            float vn=body.vx[i]*ux+body.vy[i]*uy;
-            if(vn<0){body.vx[i]-=vn*ux*.6f;body.vy[i]-=vn*uy*.6f;}
-        }
+    /** Compatibility-only logical coordinate synchronization. This cannot
+     * pull an invisible nucleus, position tissue, or apply physical forces.
+     */
+    @Deprecated public static void core(MotorBrain.Body body,float dt){
+        MaterialGeometry.observe(body);
     }
 
     /** The same actual interpolation anchors used by Morphology.Surface.
@@ -118,47 +87,16 @@ public final class BodyIntegrity {
         if(!value)throw new AssertionError(message);
     }
     public static void main(String[] args){
-        Random random=new Random(119090);
-        int outsideInner=0,outsideOuter=0,frames=0;
-        for(int run=0;run<7;run++){
-            MotorBrain.Body body=new MotorBrain.Body();
-            Morphology.Surface skin=new Morphology.Surface(body);
-            float[] motor=MotorBrain.virgin(new Random(810+run));
-            float[] membrane=Morphology.virgin(new Random(610+run));
-            for(int i=0;i<850;i++){
-                float a=(float)(Math.sin((i+run*83)*.015)*Math.PI);
-                float ux=(float)Math.cos(a),uy=(float)Math.sin(a);
-                float tx=body.cx+145*ux,ty=body.cy+145*uy;
-                body.step(motor,ux,uy,.025f);
-                skin.step(body,membrane,tx,ty,.025f);
-                if(i>150){
-                    if(!innerEncloses(body))outsideInner++;
-                    if(!outerEncloses(body,skin))outsideOuter++;
-                    frames++;
-                }
-            }
-        }
-        System.out.println("Body integrity long trials: frames="+frames+
-            " innerOutside="+outsideInner+" outerOutside="+outsideOuter);
-        expect(outsideInner<frames/20,"Core too frequently escapes muscle ring");
-        expect(outsideOuter<frames/20,"Core too frequently escapes physical membrane");
-        // A previously separated life must progressively recover without
-        // rewriting ANY saved brain, surface command or adhesive force.
         MotorBrain.Body body=new MotorBrain.Body();
-        Morphology.Surface skin=new Morphology.Surface(body);
-        for(int i=0;i<MotorBrain.N;i++)body.x[i]+=35;
-        for(int i=0;i<Morphology.POINTS;i++)skin.x[i]+=57;
-        expect(!innerEncloses(body)&&!outerEncloses(body,skin),
-            "Fixture should begin with detached core");
-        float[] motor=MotorBrain.virgin(new Random(7));
-        float[] morph=Morphology.virgin(new Random(9));
-        int first=-1;
-        for(int i=0;i<450;i++){
-            body.step(motor,0,0,.025f);
-            skin.step(body,morph,body.cx,body.cy,.025f);
-            if(innerEncloses(body)&&outerEncloses(body,skin)&&first<0)first=i;
-        }
-        expect(first>=0,"Detached saved body never regained containment");
-        System.out.println("Legacy detached body self-repaired by step "+first);
+        float[] positions=body.x.clone();
+        body.cx+=987f;body.cy-=754f;
+        core(body,.025f);
+        for(int i=0;i<MotorBrain.N;i++)
+            expect(body.x[i]==positions[i],
+                "Compatibility call moved real material to a ghost center");
+        float x=0;for(float v:positions)x+=v/MotorBrain.N;
+        expect(Math.abs(body.cx-x)<.001f,
+            "Logical center did not derive from physical material");
+        System.out.println("Fluid cohesion: no physical nucleus or rigid centering");
     }
 }

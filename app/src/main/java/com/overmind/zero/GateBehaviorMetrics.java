@@ -19,6 +19,7 @@ public final class GateBehaviorMetrics {
                questionableEntrances=0;
     private float previousCoreX=Float.NaN;
     private boolean crossedGatePlane=false;
+    private boolean priorActualMaterialAcross=false;
     public float closest=Float.POSITIVE_INFINITY,maxTravel=0;
     private boolean wasOpened=false,wasInside=false;
     public void resetLife(){
@@ -26,11 +27,27 @@ public final class GateBehaviorMetrics {
         prevContact=prevDrive=prevCommand=prevHeld=prevOpposed=0;
         wasOpened=false;wasInside=false;
         previousCoreX=Float.NaN;crossedGatePlane=false;
+        priorActualMaterialAcross=false;
     }
     private static float distanceToGate(MotorBrain.Body b,ScarcityLab r){
-        float dx=Math.max(0,Math.abs(b.cx-r.gateX())-ScarcityLab.DOOR_HALF_W);
-        float dy=Math.max(0,Math.abs(b.cy-r.gateCenterY())-ScarcityLab.DOOR_HALF_H);
-        return (float)Math.hypot(dx,dy);
+        float best=Float.POSITIVE_INFINITY;
+        for(int i=0;i<MotorBrain.N;i++){
+            float dx=Math.max(0,Math.abs(b.x[i]-r.gateX())-ScarcityLab.DOOR_HALF_W);
+            float dy=Math.max(0,Math.abs(b.y[i]-r.gateCenterY())-ScarcityLab.DOOR_HALF_H);
+            best=Math.min(best,(float)Math.hypot(dx,dy));
+        }
+        return best;
+    }
+    /** A geometric reference point cannot cross a wall: count actual
+     * distributed masses, and require them to be physically in the opening.
+     */
+    private static int beyondOpening(MotorBrain.Body b,float plane,ScarcityLab r){
+        int count=0;
+        float top=r.oy-ScarcityLab.OPEN_HALF_HEIGHT+2f;
+        float bottom=r.oy+ScarcityLab.OPEN_HALF_HEIGHT-2f;
+        for(int i=0;i<MotorBrain.N;i++)
+            if(b.x[i]>=plane&&b.y[i]>top&&b.y[i]<bottom)count++;
+        return count;
     }
     /** Called AFTER chamber.constrain, with no reward or action output. */
     public void observe(MotorBrain.Body body,ScarcityLab r){
@@ -45,10 +62,12 @@ public final class GateBehaviorMetrics {
             prevHeld=r.gateHeldFrames;
             prevOpposed=r.opposedContactFrames;
             wasOpened=r.openingFree();
-            wasInside=body.cx>r.entranceX()+ScarcityLab.WALL_HALF_THICKNESS+2&&
-                Math.abs(body.cy-r.oy)<ScarcityLab.OPEN_HALF_HEIGHT;
-            previousCoreX=body.cx;crossedGatePlane=
-                body.cx>=r.gateX()+ScarcityLab.DOOR_HALF_W+MotorBrain.R;
+            wasInside=beyondOpening(body,r.entranceX()+
+                ScarcityLab.WALL_HALF_THICKNESS+2f,r)>=6;
+            previousCoreX=body.cx;
+            priorActualMaterialAcross=beyondOpening(body,
+                r.gateX()+ScarcityLab.DOOR_HALF_W+2f,r)>=6;
+            crossedGatePlane=priorActualMaterialAcross;
         }else{
             skinTouchFrames+=Math.max(0,r.gateContactFrames-prevContact);
             driveFrames+=Math.max(0,r.gateDriveFrames-prevDrive);
@@ -64,38 +83,45 @@ public final class GateBehaviorMetrics {
         // The spawn itself is ~67 units from the rectangular gate.
         // 45 units requires real approach, not merely spawning nearby.
         if(dist<=45f)nearbyFrames++;
-        if(dist<=MotorBrain.R+3f)coreTouchFrames++;
+        if(dist<=3f)coreTouchFrames++;
         maxTravel=Math.max(maxTravel,r.maxDoorTravel);
         boolean open=r.openingFree();
         if(open&&!wasOpened)opened++;
         wasOpened=open;
-        float atGate=r.gateX()+ScarcityLab.DOOR_HALF_W+MotorBrain.R;
+        float atGate=r.gateX()+ScarcityLab.DOOR_HALF_W+2f;
         float atWall=r.entranceX()+ScarcityLab.WALL_HALF_THICKNESS+2f;
         boolean plausible=Float.isFinite(previousCoreX)&&
             Math.abs(body.cx-previousCoreX)<12f;
-        if(plausible&&previousCoreX<atGate&&body.cx>=atGate){
+        boolean actualAcross=beyondOpening(body,atGate,r)>=6;
+        if(plausible&&!priorActualMaterialAcross&&actualAcross){
             crossedGatePlane=true;
             gatePlaneCrossings++;
         }
-        boolean inside=body.cx>atWall&&
-            Math.abs(body.cy-r.oy)<ScarcityLab.OPEN_HALF_HEIGHT;
-        if(!inside&&body.cx<r.gateX()-ScarcityLab.DOOR_HALF_W-MotorBrain.R)
-            crossedGatePlane=false;
+        boolean inside=beyondOpening(body,atWall,r)>=6;
+        if(!inside&&beyondOpening(body,r.gateX()-
+             ScarcityLab.DOOR_HALF_W-2f,r)==0)crossedGatePlane=false;
         if(inside&&!wasInside&&plausible&&crossedGatePlane){
             realEntrances++;
             if(!open)partialEntrances++;
-            // Detect a successful-looking entrance even if the recorded
-            // aperture was too small for the 54-unit nucleus. This is
-            // evidence for a possible collision defect, not a victory flag.
-            float upperGap=r.gateTop()-(r.oy-ScarcityLab.OPEN_HALF_HEIGHT);
-            float lowerGap=(r.oy+ScarcityLab.OPEN_HALF_HEIGHT)-r.gateBottom();
-            boolean clearance=Math.max(upperGap,lowerGap)>=2f*MotorBrain.R;
+            // The virtual center has no width. Verify actual material
+            // vertical span at the plane instead of a fictional 54U nucleus.
+            float minY=Float.POSITIVE_INFINITY,maxY=Float.NEGATIVE_INFINITY;
+            for(int i=0;i<MotorBrain.N;i++){
+                if(body.x[i]>=r.gateX()-ScarcityLab.DOOR_HALF_W-6f&&
+                   body.x[i]<=r.gateX()+ScarcityLab.DOOR_HALF_W+6f){
+                    minY=Math.min(minY,body.y[i]);maxY=Math.max(maxY,body.y[i]);
+                }
+            }
+            boolean clearance=!Float.isFinite(minY)||
+                (minY>=r.oy-ScarcityLab.OPEN_HALF_HEIGHT&&
+                 maxY<=r.oy+ScarcityLab.OPEN_HALF_HEIGHT);
             if(!clearance)questionableEntrances++;
             if(open)passages++;
             crossedGatePlane=false;
         }
         wasInside=inside;
         previousCoreX=body.cx;
+        priorActualMaterialAcross=actualAcross;
     }
     public float closestDistance(){return Float.isFinite(closest)?closest:-1;}
     public String obstacleStage(){
@@ -156,9 +182,13 @@ public final class GateBehaviorMetrics {
         MotorBrain.Body b=new MotorBrain.Body();
         ScarcityLab gate=new ScarcityLab(0,0);
         m.observe(b,gate);
-        if(m.passages!=0||m.opened!=0||m.maxTravel!=0||m.nearbyFrames!=0)
+        // Physical material can be within 45U of the door even while its
+        // centroid is further away. Mere proximity is not an opening.
+        if(m.passages!=0||m.opened!=0||m.maxTravel!=0)
             throw new AssertionError("Invented opening with untouched door");
-        b.cx=gate.gateX()-ScarcityLab.DOOR_HALF_W-10;
+        float deltaX=gate.gateX()-ScarcityLab.DOOR_HALF_W-10-b.cx;
+        for(int i=0;i<MotorBrain.N;i++)b.x[i]+=deltaX;
+        MaterialGeometry.observe(b);
         m.observe(b,gate);
         if(m.nearbyFrames<1||m.coreTouchFrames<1)
             throw new AssertionError("Failed to count proximity and core contact");
@@ -183,10 +213,16 @@ public final class GateBehaviorMetrics {
         ScarcityLab room=new ScarcityLab(0,0);
         MotorBrain.Body core=new MotorBrain.Body();
         room.doorY=95;
-        core.cx=room.gateX()-70;core.cy=room.oy-24;
+        float toX=room.gateX()-70-core.cx,toY=room.oy-24-core.cy;
+        for(int i=0;i<MotorBrain.N;i++){core.x[i]+=toX;core.y[i]+=toY;}
+        MaterialGeometry.observe(core);
         partial.observe(core,room);
-        for(float x=core.cx+4;x<=room.entranceX()+20;x+=4){
-            core.cx=x;partial.observe(core,room);
+        float stop=room.entranceX()+55;
+        for(float x=core.cx+4;x<=stop;x+=4){
+            float change=x-core.cx;
+            for(int i=0;i<MotorBrain.N;i++)core.x[i]+=change;
+            MaterialGeometry.observe(core);
+            partial.observe(core,room);
         }
         if(partial.gatePlaneCrossings!=1||partial.realEntrances!=1||
            partial.partialEntrances!=1||partial.opened!=0)
