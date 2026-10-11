@@ -1,0 +1,43 @@
+name: ZERO 118 Learned Terminal Experience QA
+on:
+  push:
+    branches: [feature/zero-terminal-learning-v118]
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  physics:
+    runs-on: ubuntu-latest
+    timeout-minutes: 35
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+      - uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: '8.11.1'
+      - name: Compile real world solvers and cognitive regressions
+        run: |
+          mkdir -p /tmp/zero118
+          javac -d /tmp/zero118 app/src/main/java/com/overmind/zero/{MotorBrain,UnknownWorld,OpticalCues,OpticalCueRegression,HabitatContinuity,SquareCollisionSolver,SquareGripPuzzle,GripParityRegression,GateBoxGripIsolationRegression,MultiObjectGripRegression,GripSurfaceComposition,GripContactObserver,GripContactObserverRegression,WorldPlacement,ContactLearning,DecisionBrain,Morphology,ScarcityLab,SensorimotorMind,DecisionBlackbox,GateLifeJournal,ContextualMotionProbe,ShadowNonInterferenceRegression,SpatialPerception,CausalExperiments,BodyProprioception,InstrumentalNavigation,GoalContinuity,GateBehaviorMetrics,BehavioralLaboratory,TemporalWorkingMemory,TemporalSkillBank,TemporalPersistenceRegression,LearnedSequencePlanner,LearningDiagnostics,ResetDomains,OnlineBodyLearning,MotionExploration,EpisodicMemory,MotorAutonomyGuard,MotorSkillBank,ExperienceCredit,GripSkillBank,MortalityLearning,SaveProfileCodec,LifeStatistics}.java
+      - name: Verify terminal lifetime learning and physical independence
+        run: |
+          java -cp /tmp/zero118 com.overmind.zero.MortalityLearning
+          java -cp /tmp/zero118 com.overmind.zero.ExperienceCredit
+          java -cp /tmp/zero118 com.overmind.zero.EpisodicMemory
+      - name: Verify coexistence, independent commands, legal physics
+        run: |
+          java -cp /tmp/zero118 com.overmind.zero.MultiObjectGripRegression
+          java -cp /tmp/zero118 com.overmind.zero.GateBoxGripIsolationRegression
+          java -cp /tmp/zero118 com.overmind.zero.GripParityRegression
+          java -cp /tmp/zero118 com.overmind.zero.SquareCollisionSolver
+          java -cp /tmp/zero118 com.overmind.zero.SquareGripPuzzle
+      - name: Check diagnostic and neural non-interference regressions
+        run: |
+          for test in GripContactObserverRegression ShadowNonInterferenceRegression ScarcityLab SensorimotorMind; do
+            java -cp /tmp/zero118 com.overmind.zero.$test
+          done
+      - name: Assemble unchanged-identity Android debug build
+        run: gradle --no-daemon assembleDebug
