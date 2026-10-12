@@ -90,6 +90,33 @@ public final class PredictiveWorldV20Regression {
         String broken=beforeCorruption.replaceFirst("\\|0\\.0\\|","|NaN|");
         check(!loaded.restore(broken)&&beforeCorruption.equals(loaded.encode()),
             "Nonfinite state corrupted previously learned weights");
+        // Most important integration property: the original learned model,
+        // motor decisions and exploration RNG must remain BIT-FOR-BIT unchanged
+        // while the optional ZERO 2.0 brain is merely observing.
+        SensorimotorMind baseline=new SensorimotorMind();
+        SensorimotorMind experimental=new SensorimotorMind();
+        PredictiveWorldV20 shadow=new PredictiveWorldV20();
+        experimental.attachPredictiveWorldV20(shadow);
+        Random stimuli=new Random(781222);
+        float[] initial=scenario(stimuli,0);
+        baseline.resetEpisode(initial);
+        experimental.resetEpisode(initial);
+        baseline.choose(initial);experimental.choose(initial);
+        check(baseline.action==experimental.action,
+            "Virgin shadow module altered first live action");
+        for(int i=0;i<360;i++){
+            float[] sensed=scenario(stimuli,i%16);
+            // Mix known and newly observed outcomes; must not change the old
+            // world model or the old action RNG in the shadow branch.
+            baseline.observe(sensed,.70f);
+            experimental.observe(sensed,.70f);
+            check(baseline.action==experimental.action,
+                "ZERO 2.0 shadow altered decision "+i);
+            check(baseline.serialize().equals(experimental.serialize()),
+                "ZERO 2.0 shadow corrupted baseline learned weights "+i);
+        }
+        check(shadow.transitions()>300,
+            "Shadow model did not receive genuine chosen action intervals");
         System.out.println("ZERO 2.0 GATE A PASS: action-specific forecasts, validated holdout, no motor outputs, death/resume, corrupt/old save isolation; "+loaded.summary());
     }
 }
