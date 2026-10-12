@@ -401,3 +401,10 @@ Implementation on experimental `feature/zero-20-hierarchical-intelligence` only:
 - `TelemetryActivity` explains passivity, evidence and deliberate manual upload. No new background sync, raw 35ms frame log, simulator-driven phantom reward or special-case auto-grip.
 - `Zero20PassiveSnapshotRegression` verifies virgin and corrupt optional saves, truthful status/reason reporting, raw weight exclusion from the compact digest and no mutation of the saved profile. The consolidated Java/Android workflow compiles and runs this regression and checks the hard device boundary before assembling an APK.
 - **Production/OTA gate:** PR #31 remains draft; no merge, signed release, install, OTA publish or overwrite of the current phone brain. Even when the CI is green, actual Android runtime, preserved user slots, real-game FPS/CPU impact, upload consent and network behavior still require physical device testing before promotion.
+
+### Verified private Android passive export build — 2026-10-13
+
+- Consolidated GitHub Actions run [38315627020](https://github.com/nicogtr20-ctrl/idle-runner-releases/actions/runs/38315627020), commit `f49712cc8e9c815911d5e5d180f9391e36560780`, **completed success**.
+- All 59 Java regression invocations, including `Zero20PassiveSnapshotRegression`, passed; source assertions confirmed the consented `zero20Passive` field and the explicit Android `sensorMind.enableZero20ExperimentalAdvice(false)` hard boundary.
+- Full Android debug `assembleDebug` completed successfully with the experimental observer/report code. The subsequent commit only updated research documentation.
+- This **does not** validate phone install/signature, 12 existing save-slot migration, real-device performance, or actual phone-to-private-GitHub upload. Those must be tested before a user-facing OTA. The branch remains draft and unpublished; no current ZERO brain, saves or OTA altered.
