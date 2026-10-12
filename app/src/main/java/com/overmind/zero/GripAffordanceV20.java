@@ -128,6 +128,10 @@ public final class GripAffordanceV20 {
             invalid++;
             return;
         }
+        // Learning-disabled intervals are not training or validation
+        // examples. Otherwise saved observed!=trained+heldout after pausing
+        // learning, making an intact named brain fail its own restore.
+        if(!training&&!holdout)return;
         if(ctx>=3&&startState<3)fleetingHeldIntervals++;
         if(ctx>=5&&startState<5)fleetingSpreadIntervals++;
         boolean changed=actualExternalDisplacement>.015f;
