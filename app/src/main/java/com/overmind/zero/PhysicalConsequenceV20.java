@@ -28,6 +28,7 @@ public final class PhysicalConsequenceV20 {
     public long trained(){return trainIntervals;}
     public long validations(){return heldoutIntervals;}
     public long physicalEvents(){return physicalEvents;}
+    public long actualEnergyContacts(){return actualEnergyContacts;}
     public long adjacentEnergy(){return adjacentEnergy;}
     public long ambiguousEnergy(){return ambiguousEnergy;}
     public long unlinkedEnergy(){return energyWithoutMove;}
