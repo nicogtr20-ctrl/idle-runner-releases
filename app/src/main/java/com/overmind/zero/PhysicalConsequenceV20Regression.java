@@ -92,9 +92,9 @@ public final class PhysicalConsequenceV20Regression {
         saved.chosen(2,held);
         saved.resumeLife();
         saved.consequence(2,1f,true,false);
-        check(stored.equals(saved.encode().replaceAll("\\|[0-9]+\\|[0-9]+$", ""))==false|| // Non-normative; no state should be added by resume
-              saved.trained()==learning.trained(),
-              "Restored unobserved action altered physical evidence");
+        check(saved.trained()==learning.trained()&&
+              saved.physicalEvents()==learning.physicalEvents(),
+              "Restored unobserved action altered trained physical evidence");
         String before=saved.encode();
         check(!saved.restore(before+"|extra")&&before.equals(saved.encode()),
             "Trailing corruption damaged good save");
