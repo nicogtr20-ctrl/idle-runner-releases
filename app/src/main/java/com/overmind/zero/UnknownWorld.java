@@ -38,6 +38,9 @@ public final class UnknownWorld {
             cooldown=Math.max(0,cooldown-dt);
             contactCooldown=Math.max(0,contactCooldown-dt);
             if(law==2||law==5||law==6){
+                // No stored velocity may move a plate without a RED grip.
+                if(law==6&&!PanelPhysics.anyHeld(this))
+                    vx=vy=angularVelocity=0f;
                 x+=vx*dt;y+=vy*dt;
                 float drag=(float)Math.exp(-((law==5||law==6)?4.2f:2.8f)*dt);
                 vx*=drag;vy*=drag;

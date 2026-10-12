@@ -31,9 +31,17 @@ final class GripSurfaceComposition {
                 if(local)hold=Math.max(hold,gate.gateGripHold[i]);
             }
             if(objects!=null)for(UnknownWorld.Entity box:objects){
-                if(!box.isBilateralBox()||!boxFace(box,skin.x[i],skin.y[i]))continue;
-                touch=true;
-                if(local)hold=Math.max(hold,box.boxGripHold[i]);
+                if(box.isBilateralBox()&&boxFace(box,skin.x[i],skin.y[i])){
+                    touch=true;
+                    if(local)hold=Math.max(hold,box.boxGripHold[i]);
+                }else if(box.isConstruction()&&
+                         PanelPhysics.touching(box,skin.x[i],skin.y[i])){
+                    touch=true;
+                    // Same material-owned timer as the real one-point plate
+                    // actuator: red LED cannot light for someone else's grip.
+                    if(PanelPhysics.held(box,i,skin))
+                        hold=Math.max(hold,box.boxGripHold[i]);
+                }
             }
             // Shared fields are OUTPUTS of physics, never storage for any one
             // object's actual accumulated adhesive timer.
