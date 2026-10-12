@@ -735,8 +735,8 @@ jobs:
           'BehavioralLabActivity.java':'c1e655a947454e2cb77baad6b282890f00097717',
           'ResetDomains.java':'7d12cff5f85bc0d60677dc486a101c6206c887fc',
           'ScarcityLab.java':'51d04604c79c728c53dd819971116bd7d710dc60',
-          'UnknownWorld.java':'180999ef9f9edeb028e9051cce94f3df0f790ee5',
-          'GameSceneSnapshot.java':'f23f9e7cbf2bfb8825e086bf2dfa19ce3ac6828b',
+          'UnknownWorld.java':'950c8ab5d888095ae3e21f7517c8a0573e356e54',
+          'GameSceneSnapshot.java':'e38c0b8def6c363af74dfabdd4eac96bf95ac2d8',
           'SquareGripPuzzle.java':'daaf7fc73586fd7e1e9c6075fc34bebfc6d91348',
           'SquareCollisionSolver.java':'88db7fb60d0172ac39c47fcf312ff016b4734465',
           'WorldPlacement.java':'2bfdb70334a40341215104a29ef26da5dabc4b25',
@@ -746,7 +746,7 @@ jobs:
           'OpticalCues.java':'c41adea2d29deca1dc0580b44fabb15363fae865',
           'OpticalCueRegression.java':'78a9df279beb12b450f7792b0a3871762ec1d177',
           'HabitatContinuity.java':'d08aafff5ffa93380384fc427ad1095b93316467',
-          'GripSurfaceComposition.java':'2db2930b56ed5f147788ef48b11c70ba4184c960',
+          'GripSurfaceComposition.java':'04847c6180ee638961d033e8b4ac01fd574dd312',
           'BrainToolsActivity.java':'42c043c43c545c60933e9e20881bf9e7251b4585',
           'MortalityLearning.java':'106683098e58d03a1b901fd7293549ebd5bb6715',
           'ExperienceCredit.java':'5811cd758423e6fa8b4e27a7279fa56a39fbe661',
@@ -761,8 +761,8 @@ jobs:
           'LocalImpedanceRegression.java':'210835bd51e8319725a85d5435f74bb0dcd84100',
           'ShelterEcology.java':'984579efcd400083f972f7e257f96acb4001d960',
           'ShelterEcologyRegression.java':'6ea0952bbefbc8a5c33435f4f4d243b2b7177295',
-          'PanelPhysics.java':'4432ca481714e7b29c245cbc5224413337087bdd',
-          'PanelPhysicsRegression.java':'1d8af03b398cee9acdab7ca23b4ecbb911c5a6b3',
+          'PanelPhysics.java':'3798f684da9cf980da2d0983d23d6fad7fb4379d',
+          'PanelPhysicsRegression.java':'7a02ddc38cff0db6bbdeb4e63770e7f939fd3cca',
           'WindArt.java':'1fba6d3437c42f6f5c9068f0d22a1111c14ce7b4',
           'TelemetryGitHub.java':'b8735c8c5ef55633987e9a53378a98c591973e0c',
           'TelemetryChunks.java':'9f8af4e550db409098e16f51b948fde699e5e67d',
@@ -836,6 +836,14 @@ jobs:
           assert 'law<0||law>6' in (root/'GameSceneSnapshot.java').read_text()
           assert 'boolean isConstruction(){return law==6;}' in (root/'UnknownWorld.java').read_text()
           assert 'PanelPhysics.constrain(' in game
+          panel=(root/'PanelPhysics.java').read_text()
+          composition=(root/'GripSurfaceComposition.java').read_text()
+          assert 'panel.boxGripHold[i]>=Morphology.GRIP_HOLD' in panel
+          assert 'if(red&&s.hasValidMotorTargets()&&impulse>.055f)' in panel
+          assert 'if(confirmed==0)' in panel
+          assert 'panel.vx=panel.vy=panel.angularVelocity=0f;' in panel
+          assert 'PanelPhysics.held(box,i,skin)' in composition
+          assert 'if(law==6&&!PanelPhysics.anyHeld(this))' in (root/'UnknownWorld.java').read_text()
           assert 'WindArt.draw(c,paint,minX,maxX,minY,maxY,worldTime,uiTime,' in game
           assert 'panel.angularVelocity=clip(' in (root/'PanelPhysics.java').read_text()
           assert 'return PanelPhysics.shadow(x,y,wind,box,SHADOW_RANGE)' in (root/'ShelterEcology.java').read_text()
