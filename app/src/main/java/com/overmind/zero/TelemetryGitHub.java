@@ -330,6 +330,67 @@ final class TelemetryGitHub {
             throw new IllegalStateException("Numero sezioni non valido");
         return parts;
     }
+
+    private static final class Archive {
+        final String index,history;
+        final ArrayList<String> paths;
+        final List<Piece> parts;
+        Archive(String full,String old,ArrayList<String> files,List<Piece> payloads){
+            index=full;history=old;paths=files;parts=payloads;
+        }
+    }
+    /** Construct the COMPLETE manifest and verify every part BEFORE upload. */
+    private static Archive prepare(JSONObject data)throws Exception{
+        int rawSize=TelemetryChunks.size(data.toString());
+        if(rawSize>MAX_EXPORT_BYTES)
+            throw new IllegalStateException("Dati oltre il limite di 32 MiB");
+        SimpleDateFormat format=new SimpleDateFormat("yyyyMMdd-HHmmss",Locale.US);
+        format.setTimeZone(TimeZone.getTimeZone("UTC"));
+        String id=format.format(new Date())+"-"+Long.toHexString(System.nanoTime());
+        JSONObject inline=new JSONObject();
+        List<Piece> pieces=partition(data,inline,id);
+        ArrayList<String> paths=new ArrayList<>();
+        JSONArray entries=new JSONArray();
+        for(int i=0;i<pieces.size();i++){
+            Piece part=pieces.get(i);
+            String path="zero-telemetry/reports/"+id+"/part-"+
+                String.format(Locale.US,"%03d",i+1)+".json";
+            paths.add(path);
+            JSONObject item=new JSONObject();
+            item.put("path",path);item.put("kind",part.kind);
+            item.put("bytes",TelemetryChunks.size(part.json));
+            item.put("sha256",digest(part.json));
+            JSONArray names=new JSONArray();
+            for(String n:part.names)names.put(n);
+            item.put("keys",names);
+            if("fragment".equals(part.kind)){
+                item.put("field",part.field);item.put("key",part.key);
+                item.put("fragmentIndex",part.number);
+                item.put("fragmentCount",part.total);
+            }
+            entries.put(item);
+        }
+        JSONObject index=new JSONObject();
+        index.put("schema","overmind-zero-telemetry-index-v2");
+        index.put("reportId",id);
+        index.put("recordedAtUtc",data.getLong("recordedAtUtc"));
+        index.put("source",data.getString("source"));
+        index.put("dataPolicy",data.getString("dataPolicy"));
+        index.put("gameplayBaseline",data.getString("gameplayBaseline"));
+        index.put("liveProfileKeys",data.getInt("liveProfileKeys"));
+        index.put("currentZero",inline);
+        index.put("parts",entries);
+        index.put("partCount",pieces.size());
+        index.put("fullReportBytes",rawSize);
+        index.put("assembly","Merge currentZero and extras from listed values parts. "+
+            "For oversized keys concatenate jsonFragment in fragmentIndex order "+
+            "and parse the one-key JSON. Verify each SHA-256.");
+        String text=index.toString();
+        if(TelemetryChunks.size(text)>TelemetryChunks.PART_BYTES)
+            throw new IllegalStateException("Indice report troppo grande");
+        return new Archive(text,"zero-telemetry/history/"+id+".json",
+                           paths,pieces);
+    }
     interface Progress {void update(String label);}
     static String upload(Context context,Progress progress)throws Exception{
         String token=secret(context);
