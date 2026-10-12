@@ -42,6 +42,19 @@ public final class PanelPhysicsRegression {
         must(result.points>0&&result.pressureImpulse>.1f&&
              PanelPhysics.held(panel,i,tissue),
              "A single confirmed RED membrane point could not move a plate");
+        java.util.ArrayList<UnknownWorld.Entity> realPlate=
+            new java.util.ArrayList<>();
+        realPlate.add(panel);
+        GripSurfaceComposition.compose(tissue,null,realPlate);
+        must(tissue.gripHold[i]>=Morphology.GRIP_HOLD&&
+             tissue.touchSense[i]>.5f,
+             "Real plate moved but the EXACT same held point did not turn RED");
+        // Another nearby, unrelated plate cannot lend its timer to this one.
+        UnknownWorld.Entity stranger=new UnknownWorld.Entity(panel.x+220,
+                                                             panel.y,2,6);
+        realPlate.add(stranger);
+        must(!PanelPhysics.held(stranger,i,tissue),
+             "Adhesive timer leaked across different physical panels");
         must(panel.vy>0&&panel.vx==0&&panel.angularVelocity==0f,
             "Centered single-side push did not translate thin panel");
         must(panel.x==oldX&&panel.y==oldY,"Collision teleported a rigid plate");
@@ -83,6 +96,9 @@ public final class PanelPhysicsRegression {
         must(panel.boxGripHold[i]==0&&panel.vx==0&&panel.vy==0&&
              panel.angularVelocity==0,
              "Plate continued drifting or spinning after the last RED point released");
+        GripSurfaceComposition.compose(tissue,null,realPlate);
+        must(tissue.gripHold[i]==0,
+             "Panel remained visibly RED after its actual grip was released");
         // A new physics tick cannot resurrect unsanctioned loaded momentum.
         panel.vx=50;panel.angularVelocity=.5f;
         panel.tick(.025f);
