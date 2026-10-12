@@ -956,6 +956,7 @@ public final class GameActivity extends Activity {
                     if(weather.energyLoss>0){
                         float actual=Math.min(reserve,weather.energyLoss);
                         reserve-=actual;
+                        sensorMind.ambientDamage(actual);
                         mortality.energyFlows(0f,0f,actual,0f);
                         // Real experienced energy drain; never assign to a
                         // red resource signature or to moving a block.
