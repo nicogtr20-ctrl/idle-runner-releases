@@ -84,12 +84,47 @@ public final class PredictiveWorldV20Regression {
         check(!loaded.restore(beforeCorruption+"|0")&&
             beforeCorruption.equals(loaded.encode()),
             "Truncated/extended serialization modified learned state");
-        check(!loaded.restore(beforeCorruption.replaceFirst("pw20","pw19"))&&
+        check(!loaded.restore(beforeCorruption.replaceFirst("pw21","pw19"))&&
             beforeCorruption.equals(loaded.encode()),
             "Invalid version modified learned state");
         String broken=beforeCorruption.replaceFirst("\\|0\\.0\\|","|NaN|");
         check(!loaded.restore(broken)&&beforeCorruption.equals(loaded.encode()),
             "Nonfinite state corrupted previously learned weights");
+        // Read and preserve the exact previous v20 weight schema. A legacy
+        // profile MUST NOT wipe the user's learned old motor or brain.
+        String[] parts=saved.split("\\|",-1);
+        StringBuilder old=new StringBuilder("pw20");
+        for(int i=1;i<7+PredictiveWorldV20.WEIGHTS;i++)
+            old.append('|').append(parts[i]);
+        PredictiveWorldV20 migrated=new PredictiveWorldV20();
+        check(migrated.restore(old.toString())&&
+            migrated.trained()==model.trained()&&
+            migrated.validations()==model.validations()&&
+            migrated.encode().startsWith("pw21|")&&
+            migrated.evidenceForAction(2)==0,
+            "Optional pw20->pw21 migration lost weights/counters or hallucinated readiness");
+        migrated.resetLife();
+        check(Math.abs(migrated.predictedObservation(2,now)[7]-now[7])<1e-6f,
+            "Uncalibrated migrated profile fabricated motion from old weights");
+        // A stationary sensor stream should learn NO action-caused changes.
+        PredictiveWorldV20 stationary=new PredictiveWorldV20();
+        for(int i=0;i<2000;i++){
+            float[] still=scenario(r,i%2);
+            stationary.chosen(2,still);
+            stationary.consequence(still,2,i%5!=0,i%5==0);
+        }
+        float[] noChange=stationary.predictedObservation(2,now);
+        check(noChange!=null&&Math.abs(noChange[7]-now[7])<.005f&&
+            stationary.confidence()==0&&stationary.nonChangeReadouts()>0,
+            "Selective model hallucinated dynamics in a no-change world");
+        // Cross-life/heldout examples may change EVALUATION counters but
+        // cannot alter training-only sample count or change-rate weights.
+        int trainEvidence=stationary.evidenceForAction(2);
+        stationary.resetLife();
+        stationary.chosen(2,now);
+        stationary.consequence(after(now,2),2,false,true);
+        check(stationary.evidenceForAction(2)==trainEvidence,
+            "Holdout leaked outcome into selective train-only motion gate");
         // Most important integration property: the original learned model,
         // motor decisions and exploration RNG must remain BIT-FOR-BIT unchanged
         // while the optional ZERO 2.0 brain is merely observing.
