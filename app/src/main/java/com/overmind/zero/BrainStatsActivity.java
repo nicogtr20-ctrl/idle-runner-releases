@@ -38,6 +38,7 @@ public final class BrainStatsActivity extends Activity {
         final TemporalWorkingMemory temporal;
         final TemporalSkillBank temporalSkills;
         final BodyProprioception bodyMap;
+        final LocalImpedanceSense localImpedance;
         final SpatialPerception spatial;
         final CausalExperiments causal;
         final InstrumentalNavigation navigation;
@@ -78,6 +79,8 @@ public final class BrainStatsActivity extends Activity {
             temporalSkills.restore(pref.getString("temporal_skills_v107",""));
             bodyMap=new BodyProprioception();
             bodyMap.restore(pref.getString(BodyProprioception.KEY,""));
+            localImpedance=new LocalImpedanceSense();
+            localImpedance.restore(pref.getString(LocalImpedanceSense.KEY,""));
             spatial=new SpatialPerception();
             spatial.restore(pref.getString(SpatialPerception.KEY,""));
             causal=new CausalExperiments();
@@ -211,7 +214,9 @@ public final class BrainStatsActivity extends Activity {
         void drawSkills(Canvas c){
             float y=177;
             int total=movementNow.length+handNow.length+choiceNow.length+shapeNow.length+
-                worldMind.parameterCount()+temporal.parameterCount()+bodyMap.parameterCount()+spatial.parameterCount()+causal.learnedParameters()+navigation.parameterCount();
+                worldMind.parameterCount()+temporal.parameterCount()+bodyMap.parameterCount()+
+                DistributedBodySense.PARAMETERS+LocalImpedanceSense.PARAMETERS+
+                spatial.parameterCount()+causal.learnedParameters()+navigation.parameterCount();
             int original=movementStart.length+handStart.length+DecisionBrain.PARAMS;
             y=hero(c,"POTENZA NEURALE / PARAMETRI",String.valueOf(total),
                 original+" PARAMETRI STORICI  •  "+(total-original)+
@@ -233,6 +238,13 @@ public final class BrainStatsActivity extends Activity {
                 " settori  •  confidenza "+
                 String.format(Locale.US,"%.0f%%",bodyMap.confidence()*100f),
                 Math.min(1f,bodyMap.validations/100f),cyan);
+            y=skill(c,y,"TENSIONE / RESISTENZA DEI 96 PUNTI",
+                LocalImpedanceSense.PARAMETERS+" parametri",
+                localImpedance.transitions+" transizioni  •  "+
+                localImpedance.localResistances+" pressioni locali  •  "+
+                "fiducia "+String.format(Locale.US,"%.0f%%",
+                  localImpedance.confidence()*100f),
+                Math.min(1f,localImpedance.validations/100f),gold);
             y=skill(c,y,"PERCEZIONE DELLO SPAZIO",
                 spatial.parameterCount()+" pesi",
                 spatial.transitions+" azioni osservate  •  "+SpatialPerception.RAYS+
