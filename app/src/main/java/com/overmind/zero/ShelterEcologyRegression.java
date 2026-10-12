@@ -89,6 +89,7 @@ public final class ShelterEcologyRegression {
             left.x==0f&&!SquareGripPuzzle.uncovered(right),
             "Passive panel collision moved or rewarded old energy cover");
         left.boxGripHold[0]=Morphology.GRIP_HOLD;
+        left.panelHeldNow=true;
         yes(ShelterEcology.separateBoxes(pair)==1&&
             PanelPhysics.separate(pair)==0&&right.x==25f&&
             ShelterEcology.separateBoxes(pair)==0,
