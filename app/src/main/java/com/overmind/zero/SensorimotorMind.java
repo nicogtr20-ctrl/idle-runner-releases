@@ -35,6 +35,9 @@ public final class SensorimotorMind {
     private transient PredictiveWorldV20 worldV20;
     private transient TransferSkillsV20 transferV20;
     private transient FuturePlannerV20 futureV20;
+    /** Never set by GameActivity. Sandbox arena may test bounded advice. */
+    private transient boolean zero20ExperimentalAdvice=false;
+    private transient int zero20DecisionsInfluenced=0;
     private transient SpatialPerception spatial;
     private transient CausalExperiments causal;
     private transient InstrumentalNavigation navigation;
@@ -111,6 +114,12 @@ public final class SensorimotorMind {
     public synchronized void attachPredictiveWorldV20(PredictiveWorldV20 model){worldV20=model;}
     public synchronized void attachTransferSkillsV20(TransferSkillsV20 model){transferV20=model;}
     public synchronized void attachFuturePlannerV20(FuturePlannerV20 model){futureV20=model;}
+    /** Experimental research only; OFF by default in every actual app profile. */
+    public synchronized void enableZero20ExperimentalAdvice(boolean enabled){
+        zero20ExperimentalAdvice=enabled;
+        if(!enabled)zero20DecisionsInfluenced=0;
+    }
+    public synchronized int zero20DecisionsInfluenced(){return zero20DecisionsInfluenced;}
     public synchronized LocalImpedanceSense impedance(){return impedance;}
     /** Read after body and collision geometry has been restored. */
     public synchronized void updateImpedanceSense(MotorBrain.Body b,Morphology.Surface s){
@@ -310,6 +319,26 @@ public final class SensorimotorMind {
                 return SensorimotorMind.this.estimate(state,a)+contactCredit.value(state,a);
             }
         },diagnostics);
+        // Policy A/B TEST ONLY: query a learned, uncertainty-gated future
+        // BEFORE comparing action scores, at most once every eight decisions.
+        // The normal game always leaves zero20ExperimentalAdvice=false.
+        int v20Recommended=-1;
+        float v20Bias=0f;
+        if(zero20ExperimentalAdvice&&futureV20!=null&&worldV20!=null&&
+           decisions%8==0){
+            futureV20.evaluate(senses,worldV20,new FuturePlannerV20.Value(){
+                @Override public float value(float[] observed,int candidate){
+                    return SensorimotorMind.this.estimate(observed,candidate)+
+                           contactCredit.value(observed,candidate);
+                }
+            },transferV20);
+            if(futureV20.latestMargin()>.02f&&
+               futureV20.latestConfidence()>.10f){
+                v20Recommended=futureV20.shadowSuggestion();
+                v20Bias=.18f*futureV20.latestConfidence()*
+                    Math.min(1f,futureV20.latestMargin()/.35f);
+            }
+        }
         // Exploration is intrinsic to learning; no action is mapped to a
         // named "correct" behavior. Stable choices come from learned value.
         float largestTemporalBias=0;
@@ -379,7 +408,8 @@ public final class SensorimotorMind {
             largestIntentionBias=Math.max(largestIntentionBias,Math.abs(intentBias));
             float score=legacyQ+earnedValue+planned[a]*.50f+curiosity+jitter+memoryBias+
                         diversity+temporalBias+skillBias+fullBodyBias+spatialBias+causalBias+
-                        instrumental+intentBias;
+                        instrumental+intentBias+
+                        (zero20ExperimentalAdvice&&a==v20Recommended?v20Bias:0f);
             if(traceTerms!=null){
                 traceScores[a]=score;
                 float[] t=traceTerms[a];
@@ -392,6 +422,8 @@ public final class SensorimotorMind {
             if(score>best){best=score;chosen=a;}
         }
         int greedyAction=chosen;
+        if(zero20ExperimentalAdvice&&v20Recommended>=0&&
+           chosen==v20Recommended&&v20Bias>0)zero20DecisionsInfluenced++;
         float epsilon=Math.max(.09f,.52f/(1+experiences/120f));
         if(protectMotor)epsilon=Math.max(epsilon,.28f);
         actionExploratory=false;
@@ -455,7 +487,7 @@ public final class SensorimotorMind {
         // Heavy world-model lookahead is deliberately capped at ONE pass per
         // eight REAL decisions and evaluated only AFTER the old action was
         // chosen. No score or RNG in the original decision is modified.
-        if(futureV20!=null&&decisions%8==0){
+        if(!zero20ExperimentalAdvice&&futureV20!=null&&decisions%8==0){
             futureV20.evaluate(senses,worldV20,new FuturePlannerV20.Value(){
                 @Override public float value(float[] observed,int candidate){
                     return SensorimotorMind.this.estimate(observed,candidate)+
