@@ -42,6 +42,7 @@ public final class GameActivity extends Activity {
         TemporalWorkingMemory workingMemory=new TemporalWorkingMemory();
         TemporalSkillBank temporalSkillBank=new TemporalSkillBank();
         BodyProprioception bodySchema=new BodyProprioception();
+        ShelterEcology shelter=new ShelterEcology();
         DistributedBodySense distributedSense=new DistributedBodySense();
         SpatialPerception spatialMap=new SpatialPerception();
         CausalExperiments causalExperiments=new CausalExperiments();
@@ -149,6 +150,7 @@ public final class GameActivity extends Activity {
             return true;
         }
         void load(){
+            shelter=new ShelterEcology();
             java.util.Arrays.fill(cyanLeds,0f);
             java.util.Arrays.fill(redLeds,0f);
             lastLedFrame=0;
@@ -369,6 +371,8 @@ public final class GameActivity extends Activity {
                 snapshot.put("chamberMessage",chamberMessage);
                 snapshot.put("lastEvent",lastEvent);
                 snapshot.put("eventTime",eventTime);
+                shelter.capture(environment);
+                snapshot.put(ShelterEcology.SNAPSHOT,shelter.encode());
                 if(!prefs.edit().putString("physical_scene_v100",snapshot.toString())
                     .putString(DecisionBlackbox.CURRENT,decisionBlackbox.encodeCurrent())
                     .putString(GateLifeJournal.CURRENT,gateJournal.encode())
@@ -389,6 +393,9 @@ public final class GameActivity extends Activity {
                 GameSceneSnapshot.Scene scene=GameSceneSnapshot.restore(
                     o.getJSONObject("physical").toString());
                 if(scene==null)return false;
+                ShelterEcology decodedShelter=new ShelterEcology();
+                if(o.has(ShelterEcology.SNAPSHOT)&&
+                   !decodedShelter.restore(o.getString(ShelterEcology.SNAPSHOT)))return false;
                 int savedEpisode=o.getInt("episode");
                 int action=o.getInt("currentAction");
                 float savedPhase=(float)o.getDouble("phase");
@@ -400,6 +407,7 @@ public final class GameActivity extends Activity {
                 // Only after the complete physical structure was verified.
                 creature=scene.body;surface=scene.skin;
                 chamber=scene.room;environment=scene.objects;
+                shelter=decodedShelter;
                 episode=savedEpisode;phase=savedPhase;
                 speed=o.optInt("speed",1);
                 if(speed!=1&&speed!=5&&speed!=20)speed=1;
@@ -535,6 +543,8 @@ public final class GameActivity extends Activity {
             lastFrame=0;
         }
         void resetEpisode(){
+            shelter.capture(environment);
+            shelter.newLife();
             gripObserver.newLife();
             // Only initial boot or actual simulated death restarts the body.
             bestLifeDistance=Math.max(bestLifeDistance,lifeDistance);
@@ -558,6 +568,7 @@ public final class GameActivity extends Activity {
             chamber=null;
             environment=WorldPlacement.spawn(episode,creature.cx,creature.cy,
                 scarcity,null,new ArrayList<UnknownWorld.Entity>());
+            shelter.rehydrate(environment,creature.cx,creature.cy,null);
             chosenObject=null;decisionBrain.abandon();
             goalTimer=0;contactsThisLife=0;worldTime=0;
             reserve=Math.max(70,Math.min(92,reserve));
@@ -573,6 +584,7 @@ public final class GameActivity extends Activity {
             heading=(float)Math.atan2(sensorMind.motorY(),sensorMind.motorX());
         }
         void extendHabitat(){
+            shelter.capture(environment);
             // Keep the same physical body, velocity, memories and camera.
             // Place additional objects outside the immediate viewport.
             episode++;phase=0;
@@ -588,6 +600,7 @@ public final class GameActivity extends Activity {
             // currently gripped square never vanishes merely due to cap 24.
             HabitatContinuity.enforceLimit(environment,creature,surface,
                 chamber==null?null:chamber.food);
+            shelter.rehydrate(environment,creature.cx,creature.cy,chamber);
             if(chosenObject!=null&&!environment.contains(chosenObject)){
                 decisionBrain.abandon();
                 chosenObject=null;goalTimer=0;
@@ -652,6 +665,8 @@ public final class GameActivity extends Activity {
                     object.x=ox;object.y=oy;object.vx=object.vy=0;
                 }
             }
+            // Real AABB barrier/barrier contacts. No displacement bonus.
+            ShelterEcology.separateBoxes(environment);
             // Scarcity must not spawn new entities every rendered frame.
             if(environment.size()<3&&phase>=4f)extendHabitat();
             excludeOrdinaryRoomObjects();
@@ -933,6 +948,18 @@ public final class GameActivity extends Activity {
                     GripSurfaceComposition.compose(surface,chamber,environment);
                     gripObserver.pruneBoxes(environment);
                     resolveObjects(slice);
+                    // Weather reaches the actual deformable tissue AFTER
+                    // solid collisions. Physical shadows protect only the
+                    // points behind genuinely placed/solid blockers.
+                    ShelterEcology.Exposure weather=shelter.step(
+                        creature,surface,environment,chamber,worldTime,slice);
+                    if(weather.energyLoss>0){
+                        float actual=Math.min(reserve,weather.energyLoss);
+                        reserve-=actual;
+                        mortality.energyFlows(0f,0f,actual,0f);
+                        // Real experienced energy drain; never assign to a
+                        // red resource signature or to moving a block.
+                    }
                     if(lifeStamp==episode){
                         float newlyMeasuredEffect=Math.max(0,
                             environmentEffectSinceAction-worldEffectAtFrameStart);
@@ -1154,6 +1181,27 @@ public final class GameActivity extends Activity {
                     text(c,"APERTA",gx,cy-87,10,TEAL,true);
                 else text(c,"BLOCCATA",gx,cy-87,9,GOLD,true);
             }
+            // Read-only wind and material shadows: geometry, not a build
+            // target or a scripted path. Blasts are visible BEFORE impact.
+            boolean windActive=shelter.storm(worldTime);
+            if(windActive||shelter.warning(worldTime)){
+                int direction=shelter.wind(worldTime);
+                paint.setColor(windActive?0x355b9db4:0x14498195);
+                paint.setStrokeWidth(windActive?1.05f:.65f);
+                for(int v=-5;v<8;v++){
+                    float sy=minY+v*37f+(worldTime*4f)%37f;
+                    for(int k=0;k<6;k++){
+                        float sx=minX+k*62f;
+                        c.drawLine(sx,sy,sx+direction*24f,sy+7f,paint);
+                    }
+                }
+                if(windActive){
+                    paint.setColor(0x2138b5aa);
+                    for(UnknownWorld.Entity e:environment)if(e.isBox()&&!e.consumed)
+                        c.drawRect(direction>0?e.x+20:e.x-165,
+                            e.y-20,direction>0?e.x+165:e.x-20,e.y+20,paint);
+                }
+            }
             int[] colors={0xff64d8ca,0xffcc7da4,0xffd2b889};
             for(UnknownWorld.Entity object:environment){
                 if(object.consumed||object.concealed)continue;
@@ -1197,14 +1245,14 @@ public final class GameActivity extends Activity {
                     }
                     paint.setColor(0xff0a131e);
                     c.drawRoundRect(x-20.8f,y-20.8f,x+20.8f,y+20.8f,4,4,paint);
-                    paint.setColor(0xffcaa875);
+                    paint.setColor(object.isConstruction()?0xff4f7680:0xffcaa875);
                     c.drawRoundRect(x-20,y-20,x+20,y+20,3,3,paint);
-                    paint.setColor(0xff544335);
+                    paint.setColor(object.isConstruction()?0xff162a35:0xff544335);
                     c.drawRoundRect(x-15,y-15,x+15,y+15,2,2,paint);
-                    paint.setColor(0xffd6c7a2);
+                    paint.setColor(object.isConstruction()?0xff85b9c5:0xffd6c7a2);
                     c.drawLine(x-12,y-12,x+12,y+12,paint);
                     c.drawLine(x+12,y-12,x-12,y+12,paint);
-                    paint.setColor(0xffe4ce9b);
+                    paint.setColor(object.isConstruction()?0xffbde7f1:0xffe4ce9b);
                     c.drawCircle(x,y,3,paint);
                     continue;
                 }
@@ -1344,7 +1392,7 @@ public final class GameActivity extends Activity {
             rounded(c,12,12,468,145,0xeb0a1420,20);
             rounded(c,27,28,31,55,TEAL,2);
             text(c,"O V E R M I N D",43,39,14,TEAL,false);
-            text(c,"ZERO / SIMBIONTE 0120",26,72,21,0xffe9faf6,false);
+            text(c,"ZERO / ECOLOGIA 0122",26,72,21,0xffe9faf6,false);
             rounded(c,339,104,459,138,0xff20444a,11);
             text(c,"AGGIORNA",399,127,12,TEAL,true);
             rounded(c,217,104,333,138,0xff283b58,11);
@@ -1374,6 +1422,11 @@ public final class GameActivity extends Activity {
             rounded(c,25,276,25+431*reserve/100f,287,reserve>30?TEAL:0xffdf7591,5);
             text(c,"ENERGIA "+(int)reserve+"/100",25,307,12,0xffe0f7ed,false);
             text(c,"DISCHI "+pushes+"  •  BLOCCHI "+boxesUncovered,260,307,11,GOLD,false);
+            String windText=shelter.storm(worldTime)?"TEMPESTA "+(shelter.wind(worldTime)>0?"→":"←"):
+                shelter.warning(worldTime)?"VENTO IN ARRIVO":"VENTO FRA "+(int)shelter.untilStorm(worldTime)+"s";
+            text(c,"TESSUTO "+(int)shelter.integrity+"/100  •  "+windText+
+                "  •  MATERIALI POSATI "+shelter.placedCount(),25,544,10,
+                shelter.storm(worldTime)?0xffe2a6bf:TEAL,false);
             text(c,"URTI "+physicalContacts+"  •  DISTANZA MASSIMA "+(int)biggestDisplacement+" U  •  TENTATIVI MANIP. "+handTrainer.attempts,
                 25,329,10,0xffa6c7c9,false);
             if(eventTime>0)text(c,lastEvent,25,350,11,0xffc4e5dc,false);
