@@ -51,6 +51,11 @@ public final class PanelPhysics {
             float oldX=skinPrevX==null?x:skinPrevX[i],
                   oldY=skinPrevY==null?y:skinPrevY[i];
             if(segmentNear(oldX,oldY,x,y,panel.x,panel.y,rr))return true;
+            // Body segment can cross a thin panel even when neither
+            // endpoint is nearby. Never discard those constraints.
+            int j=(i+1)%Morphology.POINTS;
+            if(segmentNear(x,y,skin.x[j],skin.y[j],
+                           panel.x,panel.y,rr))return true;
         }
         for(int i=0;i<MotorBrain.N;i++){
             float x=body.x[i],y=body.y[i];
