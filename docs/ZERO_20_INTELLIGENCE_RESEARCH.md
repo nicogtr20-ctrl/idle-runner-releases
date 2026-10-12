@@ -49,9 +49,30 @@ Main `SensorimotorMind`: 26 sensory features and 16 discrete heading/adhesion ac
 |---|---|---|---|---|
 | 2026-10-12 | Planning | Created isolated ZERO 2.0 branch and this paper | Initial review of core source and current telemetry | No stable code, brain, saved profile or production OTA changed |
 | 2026-10-12 | Gate A implementation | `PredictiveWorldV20`: 20 real sensory channels, 5-parameter predictor per action/channel, actual-only recurrent context, heldout forecast error vs unchanged baseline, atomic versioned serialization, confidence/uncertainty shadow output | Java `PredictiveWorldV20Regression` and 12 historical physics/cognition regressions; Android assembleDebug, GitHub Actions run [38291504234](https://github.com/nicogtr20-ctrl/idle-runner-releases/actions/runs/38291504234) **SUCCESS** | No command, learned policy score, motor or source reward changed |
-| 2026-10-12 | Gate A integration | Attached after real `SensorimotorMind` chosen actions, observed consequences on existing heldout split; saved optional `predictive_world_v20` in working profile / 12 slots; selective WORLD reset only; dashboard real confidence and transitions | Extended 360 paired baseline-vs-shadow decision/serialized-brain invariance checks; rerun of full Android QA after dashboard integration | **Verification in progress; experimental branch only** |
+| 2026-10-12 | Gate A integration | Attached after real `SensorimotorMind` chosen actions, observed consequences on existing heldout split; saved optional `predictive_world_v20` in working profile / 12 slots; selective WORLD reset only; dashboard real confidence and transitions | Extended 360 paired baseline-vs-shadow decision/serialized-brain invariance checks; rerun of full Android QA after dashboard integration | **Verification completed on code SHA 90edd7d; experimental branch only** |
 | 2026-10-12 | Legacy QA integration | Five pre-existing PR `javac` workflows had explicit fixed source lists and initially failed `PredictiveWorldV20` dependency resolution; appended new class to their compile inputs **without deleting a single assertion** | New `zero-20-shadow-qa` push run [38292243013](https://github.com/nicogtr20-ctrl/idle-runner-releases/actions/runs/38292243013) **SUCCESS**; historical PR rerun queued | No production OTA, no removal of legacy QA |
-| 2026-10-12 | Phase A accountability | Draft PR [#31](https://github.com/nicogtr20-ctrl/idle-runner-releases/pull/31), new dashboard evidence counters and exact 360-decision same-model comparison | Full pull-request historical QA running | Draft; **not mergeable as production-ready** |
+| 2026-10-12 | Phase A accountability | Draft PR [#31](https://github.com/nicogtr20-ctrl/idle-runner-releases/pull/31), new dashboard evidence counters and exact 360-decision same-model comparison | All 8 historical/new workflows passed on code SHA 90edd7d | Draft; **not mergeable as production-ready** |
+
+## Verified Phase A build and controls — 2026-10-12
+
+**Latest code-tested SHA: `90edd7d487d7db5ee56f625d94ab74ac68264fb5`.** Nine matched real-physics A/B pairs use `BehavioralLaboratory` with three scenarios (energy, danger and locked gate) × three seeds. Both agents use exactly the same virgin motor/hand/membrane baselines and identical sensory state; one additionally trains the new shadow-world model. Regression asserts exact equality of actual traveled distance (within 0.0001 units), real energy gained/lost, physical resource and hazard contacts, gate openings, gate passages, and decisions. **All 9 pairs PASS**. Another 360 deterministic paired model-decision transitions PASS; the complete old `SensorimotorMind.serialize()` strings remain identical across shadow-on/off.
+
+All eight checks for experimental code commit `90edd7d` completed with SUCCESS:
+- New integration PR QA: [38292626247](https://github.com/nicogtr20-ctrl/idle-runner-releases/actions/runs/38292626247)
+- New integration push QA: [38292621192](https://github.com/nicogtr20-ctrl/idle-runner-releases/actions/runs/38292621192)
+- Historic spatial/physical recovery QA: [38292628152](https://github.com/nicogtr20-ctrl/idle-runner-releases/actions/runs/38292628152)
+- Historic 0126 confirmed single-red plate QA: [38292626398](https://github.com/nicogtr20-ctrl/idle-runner-releases/actions/runs/38292626398)
+- Historic 0122 ecology/motor QA: [38292626445](https://github.com/nicogtr20-ctrl/idle-runner-releases/actions/runs/38292626445)
+- Historic 0125 telemetry Android QA: [38292626385](https://github.com/nicogtr20-ctrl/idle-runner-releases/actions/runs/38292626385)
+- Historic 0121 independence QA: [38292626431](https://github.com/nicogtr20-ctrl/idle-runner-releases/actions/runs/38292626431)
+- Historic passive grip observer QA: [38292626313](https://github.com/nicogtr20-ctrl/idle-runner-releases/actions/runs/38292626313)
+
+Each Java workflow's existing assertions were kept. Old hardcoded javac dependencies were *extended* to add `PredictiveWorldV20.java` instead of removing checks. No signed stable OTA workflow ran on the branch.
+
+### Exactly what this proves — and what it does NOT
+- Proves trained action-conditioned sensory forecasts improve on a controlled synthetic heldout dataset, optional persistence survives death and corrupt input is rejected, production shadow integration has no measured effect on the old policy in our paired scenarios, existing Java physics QA and Android **build** are successful.
+- Does **NOT** prove novel hierarchical reasoning, more real-world energy, better survival in an unseen habitat, a complete long-life replay of the user's saved agent, or no runtime problems on the Galaxy S21. These are still explicit gates B–E.
+- Thus **ZERO 2.0 is an experimental research branch**, not an APK/release ready to replace OTA99 or a completed intelligence upgrade.
 
 ## Non-negotiable invariants
 1. No destroying/mutating real ZERO brain; no copying historical profiles into production automatically; optional legacy default safe.
