@@ -91,6 +91,7 @@ jobs:
           java -cp /tmp/overmind com.overmind.zero.SaveProfileCodec
           java -cp /tmp/overmind com.overmind.zero.LifeStatistics
           java -cp /tmp/overmind com.overmind.zero.DistributedBodyRegression
+          java -cp /tmp/overmind com.overmind.zero.TelemetryChunksRegression
       - name: Ensure new module cannot override score or physics
         run: |
           python3 - <<'PY'
