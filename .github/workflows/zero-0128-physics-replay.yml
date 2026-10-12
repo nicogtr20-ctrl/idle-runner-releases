@@ -33,7 +33,8 @@ jobs:
           old="20261012-134843-3f9f02712cf8"
           now="20261012-163858-48e97da70734"
           a=grab(now,1);b=grab(now,3)
-          p={"model.motor":a["best"],"model.hand":a["hand_brain_v04"],"model.morph":b["morph_brain_v07"]}
+          index=json.loads(subprocess.check_output(["git","show","origin/zero-telemetry:zero-telemetry/current.json"],text=True))["currentZero"]
+          p={"model.motor":a["best"],"model.hand":index["hand_brain_v04"],"model.morph":b["morph_brain_v07"]}
           for name,src in [("mid",grab(old,3)),("latest",grab(now,4))]:
               s=json.loads(src["physical_scene_v100"]);f=s["physical"];prefix="scene."+name+"."
               p[prefix+"heading"]=str(s["heading"])
