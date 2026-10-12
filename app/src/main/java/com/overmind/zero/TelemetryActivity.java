@@ -63,9 +63,11 @@ public final class TelemetryActivity extends Activity {
         root.setOrientation(LinearLayout.VERTICAL);
         root.setPadding(dp(18),dp(30),dp(18),dp(24));scroll.addView(root);
         root.addView(text("CONDIVIDI DATI CON GPT",23,WHITE,true));
-        body(root,"ZERO 0.11.6 • Sola lettura • GitHub privato");
+        body(root,"ZERO 2.0 • osservazione passiva • GitHub privato");
         LinearLayout description=group(root);
         description.addView(text("Che cosa viene condiviso",16,CYAN,true));
+        body(description,"ZERO 2.0 analizza le esperienze REALI di ZERO ma NON decide i movimenti, non aggiunge energia e non cambia le leggi fisiche. Il cervello originale resta l\u0027unico a controllare il corpo.");
+        body(description,"Insieme al profilo di gioco inviamo un riassunto dedicato: errori di previsione, affidabilita\u0027 contro il modello invariato, contatti energetici verificati, movimenti fisici, prese simultanee e motivi per cui il pianificatore si astiene. I dati grezzi dei 96 punti non vengono duplicati a ogni fotogramma.");
         body(description,"La copia del profilo di gioco ATTUALE: modelli neurali, "+
             "pesi motori, reti sensoriali, memorie, energie, vita e statistiche "+
             "storiche salvate. Include l'ultimo laboratorio A/B se disponibile "+

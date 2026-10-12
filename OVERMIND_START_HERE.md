@@ -125,3 +125,11 @@ La v0.9.5 crea ricordi di sequenze **effettivamente vissute** (fino a 9 sensazio
 - STATISTICHE 25-vs-25 e memoria temporale 0.10.6 restano inalterate.
 - Staging run **38065646624** verde; publisher firmato **38066032322** verde.
 - **OTA pubblico verificato HTTP 200**: versionCode **1056**, versionName **0.10.7-ota.56**, SHA-256 `a433978f842054c71c2744075f3c5a0105a4bad2f825b7ba7d6a7d1629e2030e`, APK **149.392 byte**. Aggiornare in-place; non disinstallare.
+
+## Release preparation — ZERO 2.0 passive observation, OTA 100 candidate (2026-10-13)
+
+Official OTA path is `feature/overmind-inapp-updater` → `.github/workflows/overmind-ota-publish.yml` → owner-key signed APK → GitHub Release → `main/updater/public/latest.json` and immutable APK → Vercel manifest consumed by in-app AGGIORNA. This candidate is staged separately from research PR #31. Original `com.overmind.zero.ota` signature and persistent 12 saved slots must remain intact. VersionCode derives from the next official publisher run number (expected ≥1100), not the old signed experimental preview 1099.
+
+The candidate includes exactly the already tested v20 passive observers, existing base motor policy, and `TelemetryGitHub.partition()` fix preserving `extras.zero20Passive` after multipart upload. No model advice biases the motor controller; no change to energy rules or sensor physics. Source-pinned stable checks are UPDATED to the SHA of the actually reviewed source files, never disabled; five new JVM regressions are added before official release signing.
+
+The initial Galaxy S21 report confirms the original working profile is still present and v20 models have collected real observations. No independent skill or survival improvement is established. Release acceptance: independent staging JVM/Android QA GREEN, official stable publisher GREEN, signed APK certificate/package/version and SHA verified, downloadable manifest/APK responsive, user-controlled install and slot continuity confirmed on phone. If any gate fails, **do not claim availability through Aggiorna**.

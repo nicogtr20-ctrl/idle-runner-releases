@@ -36,6 +36,8 @@ public final class BehavioralLaboratory {
         public float[] motor=MotorBrain.virgin(new Random(918273));
         public float[] hands=ContactLearning.virgin();
         public float[] membrane=Morphology.virgin(new Random(14790));
+        /** Bench-only switch: attach passive ZERO 2.0 world to cloned controller. */
+        public boolean shadowWorldV20=false;
         public String world="",navigation="",outcome="",diagnostics="",planning="",
             memory="",temporal="",skills="",body="",spatial="",causal="",intent="";
         public Profile copy(){
@@ -44,7 +46,7 @@ public final class BehavioralLaboratory {
             r.world=world;r.navigation=navigation;r.outcome=outcome;r.planning=planning;
             r.diagnostics=diagnostics;r.memory=memory;r.temporal=temporal;
             r.skills=skills;r.body=body;r.spatial=spatial;r.causal=causal;
-            r.intent=intent;
+            r.intent=intent;r.shadowWorldV20=shadowWorldV20;
             return r;
         }
     }
@@ -180,6 +182,13 @@ public final class BehavioralLaboratory {
         brain.diagnostics.restore(p.diagnostics);
         brain.restorePlanningStats(p.planning);
         brain.setNavigationAdviceEnabled(instrument);
+        if(p.shadowWorldV20){
+            // Reproduce EXACTLY the new optional hierarchy on a cloned
+            // embodied agent, without touching the live named ZERO slot.
+            brain.attachPredictiveWorldV20(new PredictiveWorldV20());
+            brain.attachTransferSkillsV20(new TransferSkillsV20());
+            brain.attachFuturePlannerV20(new FuturePlannerV20());
+        }
         EpisodicMemory events=new EpisodicMemory();
         events.restore(p.memory);
         brain.attachMemory(events);

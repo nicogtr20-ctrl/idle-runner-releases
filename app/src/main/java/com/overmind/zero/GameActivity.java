@@ -45,6 +45,11 @@ public final class GameActivity extends Activity {
         ShelterEcology shelter=new ShelterEcology();
         DistributedBodySense distributedSense=new DistributedBodySense();
         LocalImpedanceSense localImpedance=new LocalImpedanceSense();
+        PredictiveWorldV20 predictiveWorldV20=new PredictiveWorldV20();
+        TransferSkillsV20 transferV20=new TransferSkillsV20();
+        FuturePlannerV20 futureV20=new FuturePlannerV20();
+        PhysicalConsequenceV20 physicalConsequenceV20=new PhysicalConsequenceV20();
+        GripAffordanceV20 gripAffordanceV20=new GripAffordanceV20();
         SpatialPerception spatialMap=new SpatialPerception();
         CausalExperiments causalExperiments=new CausalExperiments();
         InstrumentalNavigation navigation=new InstrumentalNavigation();
@@ -218,6 +223,24 @@ public final class GameActivity extends Activity {
             localImpedance=new LocalImpedanceSense();
             localImpedance.restore(prefs.getString(LocalImpedanceSense.KEY,""));
             sensorMind.attachImpedance(localImpedance);
+            predictiveWorldV20=new PredictiveWorldV20();
+            predictiveWorldV20.restore(prefs.getString(PredictiveWorldV20.KEY,""));
+            sensorMind.attachPredictiveWorldV20(predictiveWorldV20);
+            transferV20=new TransferSkillsV20();
+            transferV20.restore(prefs.getString(TransferSkillsV20.KEY,""));
+            sensorMind.attachTransferSkillsV20(transferV20);
+            futureV20=new FuturePlannerV20();
+            futureV20.restore(prefs.getString(FuturePlannerV20.KEY,""));
+            sensorMind.attachFuturePlannerV20(futureV20);
+            physicalConsequenceV20=new PhysicalConsequenceV20();
+            physicalConsequenceV20.restore(prefs.getString(PhysicalConsequenceV20.KEY,""));
+            sensorMind.attachPhysicalConsequenceV20(physicalConsequenceV20);
+            gripAffordanceV20=new GripAffordanceV20();
+            gripAffordanceV20.restore(prefs.getString(GripAffordanceV20.KEY,""));
+            sensorMind.attachGripAffordanceV20(gripAffordanceV20);
+            // Hard device boundary: ZERO 2.0 can LEARN and REPORT but may not
+            // bias any live motor decision. Advisory A/B is laboratory-only.
+            sensorMind.enableZero20ExperimentalAdvice(false);
             spatialMap=new SpatialPerception();
             spatialMap.restore(prefs.getString(SpatialPerception.KEY,""));
             sensorMind.attachSpatialPerception(spatialMap);
@@ -502,6 +525,12 @@ public final class GameActivity extends Activity {
               .putString(BodyProprioception.KEY,bodySchema.encode())
               .putString(DistributedBodySense.KEY,distributedSense.encode())
               .putString(LocalImpedanceSense.KEY,localImpedance.encode())
+              // ZERO 2.0 shadow brain: optional independent persistence; no legacy changes.
+              .putString(PredictiveWorldV20.KEY,predictiveWorldV20.encode())
+              .putString(TransferSkillsV20.KEY,transferV20.encode())
+              .putString(FuturePlannerV20.KEY,futureV20.encode())
+              .putString(PhysicalConsequenceV20.KEY,physicalConsequenceV20.encode())
+              .putString(GripAffordanceV20.KEY,gripAffordanceV20.encode())
               .putString(SpatialPerception.KEY,spatialMap.encode())
               .putString(CausalExperiments.KEY,causalExperiments.encode())
               .putString(InstrumentalNavigation.KEY,navigation.encode())
@@ -973,6 +1002,11 @@ public final class GameActivity extends Activity {
                     // Restore the union of physically valid object-owned holds
                     // for vision and next-frame tactile input only.
                     GripSurfaceComposition.compose(surface,chamber,environment);
+                    // ZERO2 shadow: actual 96-site, simultaneously composed
+                    // physics-owned holds sampled at every 35ms substep,
+                    // including grips shorter than the ~650ms decision tick.
+                    // This cannot command a hold or modify physical forces.
+                    if(slice>0f)sensorMind.sampleGripPhysicsFrame(surface);
                     gripObserver.pruneBoxes(environment);
                     resolveObjects(slice);
                     // Weather reaches the actual deformable tissue AFTER
