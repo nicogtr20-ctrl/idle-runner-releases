@@ -353,3 +353,26 @@ Latest experimental source changed as follows:
 - This trade-off deliberately separates rapid regression (on each code push) from heavyweight statistical A/B (before any promotion). A/B trials remain **mandatory** before claiming actual energy/survival improvement or proposing integration.
 - All edits were made to the experimental branch, still behind draft PR #31. No personal saved weights are baked into a public repository or APK. No change to installed OTA99 or to physical grip/energy rules.
 - **Validation status:** Static workflow/source inspections and GitHub updates completed. Observed GitHub PR workflow conclusions `skipped` on the experimental head confirm elimination of duplicate runner allocations. Java runtime regressions, actual Android compile and new Gate G A/B remain **unverified until a runner is allocated**. A skipped check is not a passing test.
+ 
+## 2026-10-12 — Gate G post-upgrade verified CI and 48-pair physical A/B
+
+**Actual execution evidence, not just static code review.** First consolidated Java/Android run [38314214696](https://github.com/nicogtr20-ctrl/idle-runner-releases/actions/runs/38314214696), head `92dd9ef8a5e339fd9f0b8fe211b06682c18aca84`, completed **successfully** after account owner upgraded GitHub Actions entitlement. JDK17 + Gradle setup, compilation of 74 Java sources, 58 individual Java regression invocations (including all earlier legacy suites), source non-interference assertions and Android debug `assembleDebug` all reported **success**. Six separate duplicate PR workflows were correctly skipped. No APK was released, installed, OTA-signed or distributed.
+
+Explicit heldout simulator gate run [38314359632](https://github.com/nicogtr20-ctrl/idle-runner-releases/actions/runs/38314359632), head `63f19848a31d618268559cfc042f33e39bd0ad38`, completed **successfully in all four jobs** on two pinned private-brain snapshots and two splits each (12 matched pairs per job; **48 total**). The later commit only added a CI marker doc and did not change executable learning code.
+
+| Private snapshot | Split | Pairs | Wins / losses / ties | Changed paths | Candidate eligible plans | World confidence | Grip confidence | Mean energy / survival / damage delta |
+|---|---|---:|---|---:|---:|---:|---:|---|
+| original-1838 | historical | 12 | 0 / 0 / 12 | 0 | 0 | 0 | 0 | 0 / 0 / 0 |
+| original-1838 | fresh | 12 | 0 / 0 / 12 | 0 | 0 | 0 | 0 | 0 / 0 / 0 |
+| later-2227 | historical | 12 | 0 / 0 / 12 | 0 | 0 | 0 | 0 | 0 / 0 / 0 |
+| later-2227 | fresh | 12 | 0 / 0 / 12 | 0 | 0 | 0 | 0 | 0 / 0 / 0 |
+
+Additional diagnostic outcomes (same on each split of a given snapshot):
+
+- **original-1838:** 2,150 observed training actions; 538 world/grip heldout samples; 51,184 35ms microframes, 10,275 held-grip frames, 272 simultaneously spread-grip frames, 56 fleeting spread actions, 95 observed physical movement events, **0 observed linked-energy events**. World heldout prediction error `0.095126` vs unchanged baseline `0.095045` (worse); grip error `0.041331` vs baseline `0.041714` (slightly lower, but still zero usable confidence).
+- **later-2227:** 2,150 training actions; 538 heldout samples; 51,184 microframes, 21,925 held-grip frames, 318 simultaneously spread-grip frames, 86 fleeting spread actions, 327 physical movements, **1 linked-energy event**. World error `0.206494` vs unchanged baseline `0.208619` (slightly lower); grip error `0.120599` vs baseline `0.120159` (worse). World and grip confidence both stayed `0.00000`.
+- Both snapshot groups: `corroboratedSkills=0`; `candidateEligiblePlans=0`; no model-driven behavior change. Thus this validates **physics-frame instrumentation, preservation of the original policy, and reproducibility** but shows **no empirical energetic or survival advantage**. Ties are expected for a shadow-only architecture; this is not a success of intelligence transfer.
+- **Promotion decision: BLOCKED.** No claim of generalization, autonomous causal understanding, improved full-life survival, or better on-device performance. The A/B arena has genuine, finite, hidden bilateral-cover energy sources, but does not simulate the full continuous Android ecosystem/season/phone runtime.
+- **Research priority next:** increase quality and attribution of *real source-confirmed energy and verified physical consequences*; inspect confidence-gate calibration and rarity of linked-energy training signals; distinguish insufficient evidence from code faults. Design a small, strictly gated advisory experiment **only after** heldout predictive confidence improves and independent ablations can prove better genuine energy/survival outcomes, with default shadow and immediate fallback. Do not compensate by inventing reward, forcing the red grip or bypassing obstacle physics.
+
+All user device saves, learning profiles, stable OTA99 and original decision policy remain unchanged. No new OTA.
