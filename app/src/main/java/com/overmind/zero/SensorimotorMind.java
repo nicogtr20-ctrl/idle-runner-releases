@@ -51,6 +51,12 @@ public final class SensorimotorMind {
         navigationAdviceEnabled=enabled;
     }
     private float actualEnergySinceChoice=0f;
+    private float actualAmbientLossSinceChoice=0f;
+    /** Physically measured wind exposure, not a red resource or a build bonus. */
+    public synchronized void ambientDamage(float actualEnergyLoss){
+        if(learning&&Float.isFinite(actualEnergyLoss)&&actualEnergyLoss>0)
+            actualAmbientLossSinceChoice+=actualEnergyLoss;
+    }
     private transient MotorBrain.Body observedBody;
     // Performed-action traces give temporally distant actual resource
     // contacts a learning signal. They NEVER add a geometric direction bias.
@@ -156,6 +162,7 @@ public final class SensorimotorMind {
         if(observation.length!=S)throw new IllegalArgumentException("sensory width");
         System.arraycopy(observation,0,trialState,0,S);
         trialAction=-1;elapsed=0;
+        actualAmbientLossSinceChoice=0f;
         contactCredit.newLife();
         if(temporal!=null)temporal.resetLife();
         if(temporalSkills!=null)temporalSkills.resetLife();
@@ -197,6 +204,7 @@ public final class SensorimotorMind {
             throw new IllegalArgumentException("resume");
         System.arraycopy(observation,0,trialState,0,S);
         action=currentAction;trialAction=currentAction;elapsed=0;
+        actualAmbientLossSinceChoice=0f;
         if(temporal!=null)temporal.resumeAction(currentAction);
         if(temporalSkills!=null)temporalSkills.resumeLife();
         if(bodySchema!=null)bodySchema.resumeLife();
@@ -406,6 +414,7 @@ public final class SensorimotorMind {
             intention.noteDecision(largestIntentionBias);
         }
         actualEnergySinceChoice=0f;
+        actualAmbientLossSinceChoice=0f;
         action=chosen;decisions++;
         estimatedValue=estimate(senses,chosen);
         System.arraycopy(senses,0,trialState,0,S);
@@ -494,7 +503,8 @@ public final class SensorimotorMind {
         // energy; a very small genuine sensory learning-progress term
         // remains for exploration in the absence of known resources.
         float energyOutcome=clampEnergyReward(actualEnergySinceChoice);
-        lastReward=energyOutcome+.025f*Math.min(2,sensoryChange)
+        lastReward=energyOutcome-Math.min(.16f,actualAmbientLossSinceChoice*.45f)
+                    +.025f*Math.min(2,sensoryChange)
                     +.15f*progress-.018f;
         if(temporal!=null){
             temporal.observe(before,trialAction,after,lastReward,error,
