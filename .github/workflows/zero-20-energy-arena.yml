@@ -4,6 +4,9 @@ on:
     branches: [feature/zero-20-hierarchical-intelligence]
     paths:
       - "app/src/main/java/com/overmind/zero/Zero20CoveredEnergyBenchmark.java"
+      - "app/src/main/java/com/overmind/zero/PredictiveWorldV20.java"
+      - "app/src/main/java/com/overmind/zero/PredictiveWorldV20Regression.java"
+      - "app/src/main/java/com/overmind/zero/FuturePlannerV20.java"
       - ".github/workflows/zero-20-energy-arena.yml"
   workflow_dispatch:
 permissions:
