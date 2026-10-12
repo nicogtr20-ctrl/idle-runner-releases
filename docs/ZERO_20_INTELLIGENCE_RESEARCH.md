@@ -185,6 +185,30 @@ Verified GitHub CI [38301753150](https://github.com/nicogtr20-ctrl/idle-runner-r
 
 **Success levels:** (1) lower real heldout prediction error (calibrated forecast); (2) enough out-of-sample gain to pass conservative planner eligibility; (3) **independently** better actual hidden-energy retrieval/survival on new unseen habitats with no costlier harm. Each level reported separately; a pass in (1) is *not* evidence for (2) or (3).
 
+## Gate D selective change model — tested on pinned real saved brains, 2026-10-12
+
+### Implementation
+- Existing `PredictiveWorldV20` upgraded to **selective `pw21` state** while preserving the optional external save key `predictive_world_v20`: per-action/per-visual-feature count and *training-only* physical-change frequency (16 actions × 20 sensed channels), regularized residual weights, and a conservative unchanged-state prior for unsupported action-feature pairs.
+- Spectral prediction is also limited by actual sensed spectral-band visibility, preventing a blank, unobserved patch from acquiring an imaginary wavelength. No hidden entity identity, goal position, free energy or physics rewrite. Original `SensorimotorMind` stays unchanged except for an explicitly sandbox-only pre-existing A/B advisory switch (always OFF in `GameActivity`).
+- **Transactional backward migration** from `pw20` to `pw21`: retain historical model weights/counters, reset only uncalibrated new readiness to zero until real experience supports changes. Reject malformed, NaN and unsupported payloads without overwriting the last intact state. Restore, death/resume, spectral-zero/no-change behavior and heldout isolation have independent regressions.
+- TWO distinct, **pinned** actual telemetry profiles: 18:38 Italy report `20261012-163858-48e97da70734`, and newly shared 22:27 Italy report `20261012-202752-55671d9a33fd`. Earlier "latest" references were mutable and risked comparing different brains; archived `zero-telemetry/history/` report IDs now fix each experimental version. Each profile uses 14 training scenarios and 24 heldout matched A/B trials (12 development layouts + **12 previously unseen layout/seed combinations**), total 48 A/B pairs. All recorded via physical bilateral covers, real finite source contact and the previous strict grip restrictions.
+
+### Quantitative results, no false success claims
+
+Verified independent experiment: [GitHub Actions 38304623281](https://github.com/nicogtr20-ctrl/idle-runner-releases/actions/runs/38304623281), **4 jobs SUCCESS** (two fixed archived brains × two layout splits). All differences in this table are real trained sensory model RMSE on the corresponding 14-scenario training experiment's heldout decision windows; the second split tests downstream behavior without retraining.
+
+| Archived real ZERO checkpoint | Before selective change (where separately measured) | Selective `pw21` prediction error | Unchanged-state baseline | Confidence | Energy/survival A/B |
+|---|---:|---:|---:|---:|---|
+| 18:38 / `163858` | 0.052731 | **0.047851** | **0.047759** | **0** | 0 wins, 0 losses, 24 ties |
+| 22:27 / `202752` | *not measured on old model with same archived weights* | **0.182019** | **0.182899** | **0** | 0 wins, 0 losses, 24 ties |
+
+The 18:38 model's error dropped about **9.3%** relative to its earlier model version but remains *0.19% worse* than the trivial unchanged-state prediction. On the 22:27 saved brain the new predictor is **0.48% better** than unchanged-state, far less than the strict ~8% heldout margin required for safe planning. **0 actions were influenced, no matched scenario found an additional hidden energy cover, no actual survival advantage.** Zero eligible plans and zero sufficiently confirmed long-term skill options.
+
+This was iterative development: the old historical split has already informed debugging; it is not independent proof of generalization. The fresh heldout layouts/seeds were never used for training, but share the same heldout RMSE estimate from the training experiment. Do not conflate test families or pretend two identical RMSE numbers are 2 independent sensory-model validations.
+
+### Research decision
+**Do NOT promote, do NOT merge PR #31 or publish a new OTA.** Runtime mobile performance and real 105-minute survival remain unverified. Further work needs (a) actually predictable delayed physical state features beyond the coarse 26 aggregated senses; (b) attribution of real bilateral grip, object movement and delayed source contact; (c) unseen life-length physical benchmarks that improve energy without extra death or hidden reward. A predictor that merely approaches or equals no-change is not a demonstrated increase in intelligence.
+
 ## Non-negotiable invariants
 1. No destroying/mutating real ZERO brain; no copying historical profiles into production automatically; optional legacy default safe.
 2. No privileged semantic target coordinates or scripted correct actions in learning code.
