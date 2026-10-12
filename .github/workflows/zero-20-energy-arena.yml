@@ -13,13 +13,14 @@ permissions:
   contents: read
 jobs:
   private-profile:
-    name: ${{ matrix.split }} real-cover A/B
+    name: ${{ matrix.snapshot }} / ${{ matrix.split }} real-cover A/B
     runs-on: ubuntu-latest
     timeout-minutes: 45
     strategy:
       fail-fast: false
       matrix:
         split: [historical, fresh]
+        snapshot: [original-1838, later-2227]
     steps:
       - uses: actions/checkout@v4
         with:
@@ -38,7 +39,15 @@ jobs:
           def read(path):
               return json.loads(subprocess.check_output(
                   ["git","show","origin/zero-telemetry:"+path],text=True))
-          index=read("zero-telemetry/current.json")
+          # Never silently change the brain version half way through an
+          # experimental A/B series because telemetry has been uploaded.
+          report={
+              "original-1838":"20261012-163858-48e97da70734",
+              "later-2227":"20261012-202752-55671d9a33fd"
+          }["${{ matrix.snapshot }}"]
+          index=read("zero-telemetry/history/"+report+".json")
+          if index["reportId"]!=report:
+              raise AssertionError("Versioned telemetry index mismatch")
           fields=dict(index.get("currentZero",{}))
           paths=[p["path"] for p in index.get("parts",[])]
           if len(paths)<3:
@@ -62,7 +71,7 @@ jobs:
               if isinstance(v,str) and "\n" not in v and "\r" not in v:
                   values.append(k+"="+v.replace("\\","\\\\"))
           p.write_text("\n".join(values)+"\n",encoding="utf-8")
-          print("Read-only true ZERO snapshot loaded from",len(paths),"private multipart shards",
+          print("Pinned brain snapshot: ${{ matrix.snapshot }}; report id: "+report+"; shards: "+str(len(paths)),
                 "- no model/weights printed or uploaded")
           PY
       - name: Compile true physical benchmark without Android UI
