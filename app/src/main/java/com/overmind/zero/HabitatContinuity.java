@@ -42,6 +42,10 @@ public final class HabitatContinuity {
     private static boolean protectedByInteraction(ArrayList<UnknownWorld.Entity> world,
                           UnknownWorld.Entity e,MotorBrain.Body body,Morphology.Surface skin){
         if(engaged(e,body,skin))return true;
+        // Real placed building materials remain present for manipulation near
+        // ZERO; more distant ones are archived and streamed back on return.
+        if(e.isConstruction()&&e.displacementFromSpawn()>=12f&&
+           Math.hypot(e.x-body.cx,e.y-body.cy)<400f)return true;
         if(e.concealed ||e.isBox()){
             UnknownWorld.Entity other=mate(world,e);
             return other!=null&&engaged(other,body,skin);
