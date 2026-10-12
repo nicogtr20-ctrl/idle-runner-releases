@@ -60,6 +60,18 @@ public final class WorldPlacement {
                        Math.hypot(e.x-q.x,e.y-q.y)<e.radius+q.radius+70f)
                         nearEnergyBox=true;
                 if(nearEnergyBox)continue;
+                // Scarce free food must have a navigable contact area.
+                // This is world generation only; ZERO sees no food label.
+                boolean nearFreeEnergy=false;
+                for(UnknownWorld.Entity q:existing)
+                    if(!q.consumed&&!q.concealed&&q.physicalLaw()==0&&
+                       Math.hypot(e.x-q.x,e.y-q.y)<e.radius+q.radius+65f)
+                        nearFreeEnergy=true;
+                for(UnknownWorld.Entity q:safe)
+                    if(!q.consumed&&!q.concealed&&q.physicalLaw()==0&&
+                       Math.hypot(e.x-q.x,e.y-q.y)<e.radius+q.radius+65f)
+                        nearFreeEnergy=true;
+                if(nearFreeEnergy)continue;
             }
             boolean valid=free(e,originX,originY,room,existing,safe);
             if(!valid)continue;
