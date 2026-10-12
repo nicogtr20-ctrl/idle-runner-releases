@@ -138,5 +138,5 @@ jobs:
           assert "futureV20.value" not in policy and "transferV20.bias" not in policy
           print("ZERO 2.0 B/C shadow verified: zero original policy score/force/reward override")
           PY
-      - name: Compile full Android APK without publication
+      - name: Compile full Android APK without publication (single consolidated debug build)
         run: gradle --no-daemon assembleDebug
