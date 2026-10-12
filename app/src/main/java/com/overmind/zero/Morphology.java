@@ -91,6 +91,15 @@ public final class Morphology {
         public float t=0;
 
         public Surface(MotorBrain.Body body){reset(body);}
+        // 0123: read-only motor-intention and elastic-anchor probes.
+        // These expose the LAST ACTUALLY COMMANDED targets calculated by
+        // step(), never alter motor forces, collisions, grip or neurons.
+        public float anchorX(int i){return ax[i];}
+        public float anchorY(int i){return ay[i];}
+        public float normalX(int i){return nx[i];}
+        public float normalY(int i){return ny[i];}
+        public float targetX(int i){return ax[i]+extension[i]*nx[i]-gx[i]*ny[i];}
+        public float targetY(int i){return ay[i]+extension[i]*ny[i]+gx[i]*nx[i];}
         private void anchors(MotorBrain.Body body){
             for(int i=0;i<POINTS;i++){
                 // Continuous interpolation over the existing soft body; there
