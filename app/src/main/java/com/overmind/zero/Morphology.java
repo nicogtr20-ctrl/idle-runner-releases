@@ -81,6 +81,7 @@ public final class Morphology {
         public final float[] gripHold=new float[POINTS];
         public int intentionalPoints=0;
         private final float[] ax=new float[POINTS],ay=new float[POINTS];
+        private boolean lastActuationValid=false;
         private final float[] nx=new float[POINTS],ny=new float[POINTS];
         private final float[] gx=new float[POINTS],gy=new float[POINTS];
         private final float[] fx=new float[POINTS],fy=new float[POINTS];
@@ -91,6 +92,16 @@ public final class Morphology {
         public float t=0;
 
         public Surface(MotorBrain.Body body){reset(body);}
+        // 0123: read-only motor-intention and elastic-anchor probes.
+        // These expose the LAST ACTUALLY COMMANDED targets calculated by
+        // step(), never alter motor forces, collisions, grip or neurons.
+        public boolean hasValidMotorTargets(){return lastActuationValid;}
+        public float anchorX(int i){return ax[i];}
+        public float anchorY(int i){return ay[i];}
+        public float normalX(int i){return nx[i];}
+        public float normalY(int i){return ny[i];}
+        public float targetX(int i){return ax[i]+extension[i]*nx[i]-gx[i]*ny[i];}
+        public float targetY(int i){return ay[i]+extension[i]*ny[i]+gx[i]*nx[i];}
         private void anchors(MotorBrain.Body body){
             for(int i=0;i<POINTS;i++){
                 // Continuous interpolation over the existing soft body; there
@@ -107,7 +118,8 @@ public final class Morphology {
             }
         }
         public void reset(MotorBrain.Body body){
-            anchors(body);t=0;totalEffort=0;peakExtension=0;maxExtension=0;stretchedPoints=0;
+            anchors(body);lastActuationValid=false;
+            t=0;totalEffort=0;peakExtension=0;maxExtension=0;stretchedPoints=0;
             for(int i=0;i<POINTS;i++){
                 x[i]=ax[i];y[i]=ay[i];
                 vx[i]=vy[i]=extension[i]=0;
@@ -223,6 +235,7 @@ public final class Morphology {
             // This is local cohesion, NOT nucleus centering.
             BodyIntegrity.membrane(body,this,dt);
             MaterialGeometry.observe(body);
+            lastActuationValid=true;
         }
     }
     /** Collision against the ACTUAL deforming membrane, not a fake reach. */
