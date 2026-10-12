@@ -91,6 +91,23 @@ public final class PanelPhysicsRegression {
         crate.x=2;crate.y=1;
         must(PanelPhysics.separate(pair)==1&&PanelPhysics.separate(pair)==0,
              "SAT failed for rotated construction plate against crate");
+        // A REAL elastic skin EDGE must not tunnel through a thin plate
+        // while both endpoint particles remain outside its opposite sides.
+        UnknownWorld.Entity thin=new UnknownWorld.Entity(110,75,2,6);
+        Morphology.Surface crossed=new Morphology.Surface(body);
+        crossed.step(body,Morphology.virgin(new Random(11)),0,0,MotorBrain.STEP);
+        int edge=20,next=edge+1;
+        crossed.x[edge]=thin.x;crossed.y[edge]=thin.y-16f;
+        crossed.x[next]=thin.x;crossed.y[next]=thin.y+16f;
+        float[] sx=crossed.x.clone(),sy=crossed.y.clone();
+        PanelPhysics.constrain(body,crossed,thin,.025f,sx,sy,
+                               body.x.clone(),body.y.clone());
+        float[] l=PanelPhysics.local(thin,crossed.x[edge],crossed.y[edge]);
+        float[] h=PanelPhysics.local(thin,crossed.x[next],crossed.y[next]);
+        must(!ScarcityLab.crossesInterior(l[0],l[1],h[0],h[1],
+                 -PanelPhysics.halfLength(thin),-PanelPhysics.HALF_THICKNESS,
+                  PanelPhysics.halfLength(thin),PanelPhysics.HALF_THICKNESS),
+             "Skin membrane edge still tunnels through the thin construction plate");
         // A save with orientation and spin must survive normal persistence.
         ShelterEcology archive=new ShelterEcology();
         wall.x+=30f;wall.angularVelocity=.42f;
