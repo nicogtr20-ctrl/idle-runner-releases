@@ -104,6 +104,17 @@ public final class PanelPhysicsRegression {
         panel.tick(.025f);
         must(panel.vx==0f&&panel.angularVelocity==0f,
              "Saved free-spinning construction plate ignored the red-grip rule");
+        // A restored scene can carry historical timers but has not yet
+        // revalidated a RED point on the actual current membrane.
+        UnknownWorld.Entity stale=new UnknownWorld.Entity(110,75,2,6);
+        stale.boxGripHold[4]=Morphology.GRIP_HOLD;
+        stale.vy=20f;stale.angularVelocity=1.1f;
+        float staleAngle=stale.angle,staleY=stale.y;
+        stale.tick(.025f);
+        must(stale.y==staleY&&stale.angle==staleAngle&&
+             stale.vy==0f&&stale.angularVelocity==0f&&
+             !PanelPhysics.anyHeld(stale),
+             "Serialized grip timer moved a plate before real RED validation");
         // Old energy-cover puzzle must retain its hard bilateral rule.
         UnknownWorld.Entity oldBox=new UnknownWorld.Entity(110,75,2,5);
         must(oldBox.isBilateralBox()&&!oldBox.isConstruction(),
