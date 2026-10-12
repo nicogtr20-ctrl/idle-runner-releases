@@ -148,8 +148,11 @@ public final class ShelterEcology {
         float before=integrity;
         integrity=Math.max(0f,Math.min(100f,integrity+
             (.22f*sheltered-.48f*exposedFraction)*dt));
-        float loss=(.23f*exposedFraction+
-            .11f*(1-integrity/100f))*dt;
+        // Slightly softer metabolic penalty restores time to explore
+        // after 0124 clutter; the real unshielded tissue injury and
+        // geometric storm-shield benefit remain untouched.
+        float loss=(.18f*exposedFraction+
+            .09f*(1-integrity/100f))*dt;
         stormDamage+=Math.max(0,before-integrity);
         stormSeconds+=dt;shieldedSeconds+=sheltered*dt;
         stormEnergyCost+=loss;
@@ -218,16 +221,26 @@ public final class ShelterEcology {
                 float px=SquareGripPuzzle.HALF*2-Math.abs(dx);
                 float py=SquareGripPuzzle.HALF*2-Math.abs(dy);
                 if(px<=0||py<=0)continue;
+                // Prior code moved BOTH energy covers on any overlap,
+                // bypassing their bilateral-grip law and revealing rewards.
+                boolean moveA=a.bilateralHeldNow,moveB=b.bilateralHeldNow;
+                if(!moveA&&!moveB)continue;
+                float shareA=moveA?(moveB?.5f:1f):0f;
+                float shareB=moveB?(moveA?.5f:1f):0f;
                 if(px<py){
                     float signed=dx>=0?1f:-1f;
-                    a.x-=signed*px*.5f;b.x+=signed*px*.5f;
-                    float avg=(a.vx+b.vx)*.5f;
-                    a.vx=avg;b.vx=avg;
+                    a.x-=signed*px*shareA;b.x+=signed*px*shareB;
+                    if(moveA&&moveB){
+                        float avg=(a.vx+b.vx)*.5f;a.vx=avg;b.vx=avg;
+                    }else if(moveA)a.vx=0f;
+                    else b.vx=0f;
                 }else{
                     float signed=dy>=0?1f:-1f;
-                    a.y-=signed*py*.5f;b.y+=signed*py*.5f;
-                    float avg=(a.vy+b.vy)*.5f;
-                    a.vy=avg;b.vy=avg;
+                    a.y-=signed*py*shareA;b.y+=signed*py*shareB;
+                    if(moveA&&moveB){
+                        float avg=(a.vy+b.vy)*.5f;a.vy=avg;b.vy=avg;
+                    }else if(moveA)a.vy=0f;
+                    else b.vy=0f;
                 }
                 collisions++;
             }

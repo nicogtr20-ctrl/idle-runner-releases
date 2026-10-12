@@ -1,6 +1,16 @@
 # HANDOFF — punto di ripresa per un'altra chat o agente
 
-**Ultimo aggiornamento:** 2026-10-09
+**Ultimo aggiornamento:** 2026-10-12
+
+### Stato attuale prioritario — ZERO 0127 / OTA 97
+
+- L'utente sta usando **OTA 97**; non è stata prodotta né verificata una nuova APK.
+- Branch di lavoro: `feature/zero-0127-spatial-persistence-box-recovery` basato su `feature/overmind-inapp-updater`. Il branch `main` appartiene al vecchio Idle Runner e non va modificato.
+- Diagnosi: vecchie celle zero invalidavano tutto il checkpoint di SpatialPerception (transizioni e pesi); collisioni SAT tra lastre/coperchi e AABB fra casse potevano muovere casse energetiche senza doppia presa.
+- Fix staged: migrazione lossless celle neutrali; rigida separazione delle prese fisiche transitorie (un RED per lastra, due lati per cassa); controllo anti-ripartenza con timer ri-caricati, spawn limitato e lontano dalle fonti energetiche.
+- Bilanciamento sperimentale staged: una opportunità di cibo finito ogni quattro espansioni in scarsità; lieve riduzione drenaggio energetico da vento (0.23→0.18, burden 0.11→0.09). Nessuna ricompensa gratis, nessuna guida alla policy.
+- **DA FARE**: PR con CI completa JVM + Android, risoluzione regressioni, firma stabile, OTA SHA/Vercel e reale upgrade APK sul Galaxy S21 preservando slot e cervello. **NON rilasciare soltanto perché i commit esistono.**
+- Paper completo e criteri di falsificazione: [EXPERIMENT_0127](EXPERIMENT_0127.md).
 
 ### Riferimenti
 Repository: `nicogtr20-ctrl/idle-runner-releases` (privato).

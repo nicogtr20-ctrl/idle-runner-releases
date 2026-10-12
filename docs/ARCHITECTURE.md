@@ -150,3 +150,11 @@ Scoperta: dopo un effetto positivo energetico/fisico reale vengono estratti i su
 Replay: richiede anche `TemporalWorkingMemory.confidence()>0`; bias massimo **0,64**, mai azione forzata. Divergenza del nuovo hidden rispetto al passo successivo appreso causa abort + fallimento. Dopo l'ultima azione attende al massimo 3 decisioni per una conseguenza positiva reale; danno o timeout abbassano l'affidabilità.
 
 Persistenza: `temporal_skills_v107`. Reset vita/ripresa cancella soltanto la trace e l'esecuzione in corso; l'archivio consolidato persiste. Reset selettivo dedicato disponibile.
+
+
+## ZERO 0127 — separazione fra contatto, presa e correzione di collisione
+- Le `UnknownWorld.Entity` di legge 5 espongono `bilateralHeldNow` **solo durante la vita fisica corrente**, dopo `SquareGripPuzzle.constrain` e due lati opposti effettivamente confermati. Una cassa energetica non può essere traslata da un risolutore di overlap soltanto per essere una square.
+- Le costruzioni di legge 6 espongono `panelHeldNow` **solo dopo il vero contatto e il comando locale RED verificato** da `PanelPhysics.constrain`. Il vecchio `boxGripHold` serializzato resta informazione storica per la ripresa ma non autorizza una spinta dopo reload finché non riconfermato.
+- I risolutori `ShelterEcology.separateBoxes` e `PanelPhysics.separate` proiettano solo corpi con una propria presa corrente; correggere geometria non genera reward, spostamento non autorizzato o un sigillo energetico aperto.
+- `SpatialPerception` canonizza celle neutre zero durante encode, accetta vecchie snapshot sp1 contenenti zero e non perde le reti di predizione/valore.
+- Modifiche conservative a spawn/fame/vento sono leggi ambientali, senza cambiare gli input sensoriali o insegnare una procedura. Vedi [EXPERIMENT_0127](EXPERIMENT_0127.md) per test e limiti.

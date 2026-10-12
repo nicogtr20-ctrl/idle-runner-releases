@@ -78,16 +78,36 @@ public final class ShelterEcologyRegression {
         resumed.newLife();
         yes(resumed.placedCount()==1&&resumed.integrity==100,
             "Death erased real constructions or retained old tissue wounds");
-        // Real square-square collision, not a scripted arrangement reward.
+        // ZERO 0127: NEVER force the energy cover out of an overlapping
+        // plate merely because it is a square. A no-grip collision must
+        // produce neither a displacement nor a revealed energy reward.
         UnknownWorld.Entity left=new UnknownWorld.Entity(0,0,2,6);
         UnknownWorld.Entity right=new UnknownWorld.Entity(25,0,2,5);
         ArrayList<UnknownWorld.Entity> pair=new ArrayList<>();
         pair.add(left);pair.add(right);
+        yes(ShelterEcology.separateBoxes(pair)==0&&right.x==25f&&
+            left.x==0f&&!SquareGripPuzzle.uncovered(right),
+            "Passive panel collision moved or rewarded old energy cover");
+        left.boxGripHold[0]=Morphology.GRIP_HOLD;
+        left.panelHeldNow=true;
         yes(ShelterEcology.separateBoxes(pair)==1&&
-            PanelPhysics.separate(pair)==0,
-            "Rotated plates and old crates still physically overlap");
-        yes(ShelterEcology.separateBoxes(pair)==0,
-            "Separated materials gained repeated phantom impulses");
+            PanelPhysics.separate(pair)==0&&right.x==25f&&
+            ShelterEcology.separateBoxes(pair)==0,
+            "Only RED-gripped panel may separate without moving fixed cover");
+        // Two legacy energy covers also require their OWN confirmed
+        // opposing adhesion; touching or an overlapping pair is not enough.
+        UnknownWorld.Entity fixed=new UnknownWorld.Entity(0,0,2,5);
+        UnknownWorld.Entity moving=new UnknownWorld.Entity(25,0,2,5);
+        ArrayList<UnknownWorld.Entity> covers=new ArrayList<>();
+        covers.add(fixed);covers.add(moving);
+        yes(ShelterEcology.separateBoxes(covers)==0&&
+            fixed.x==0f&&moving.x==25f,
+            "Legacy crate-crate solver moved an ungripped cover");
+        moving.bilateralHeldNow=true;
+        yes(ShelterEcology.separateBoxes(covers)==1&&
+            fixed.x==0f&&moving.x>25f&&
+            ShelterEcology.separateBoxes(covers)==0,
+            "Legitimately held crate must separate from an ungripped crate");
         // Standard spawn yields raw construction material in same world.
         ArrayList<UnknownWorld.Entity> spawned=UnknownWorld.newHabitat(1,0,0,false);
         int blank=0;for(UnknownWorld.Entity e:spawned)if(e.isConstruction())blank++;

@@ -211,3 +211,11 @@
 - Publisher stabile firmato **38066032322** verde; versionCode **1056**.
 - APK pubblica `/apk/overmind-zero-1056-a433978f8420.apk`, **149.392 byte**, SHA-256 `a433978f842054c71c2744075f3c5a0105a4bad2f825b7ba7d6a7d1629e2030e`.
 - Manifest/APK Vercel verificati HTTP 200; GitHub Release `overmind-zero-v0.10.7-ota.56` creata.
+
+
+## Staging ZERO 0127 — 12 ottobre 2026 (NON pubblicato)
+- Corretto il caricamento dei vecchi checkpoint spaziali con celle occupazione neutra `0`: le predizioni apprese e i contatori vengono recuperati, non azzerati silenziosamente.
+- Isolati gli spostamenti energetici illegittimi dalle collisioni lastra/cassa e cassa/cassa: vecchi coperchi mobili soltanto con presa bilaterale reale; lastre soltanto con presa rossa reale confermata. Timer caricati non costituiscono prova di presa.
+- Ridotta densità di lastre procedurali presso gli oggetti vitali senza rimuovere le costruzioni persistenti.
+- Bilanciamento sperimentale: opportunità di nutrimento finito in scarsità ogni quattro espansioni; costo metabolico di tempesta da 0.23 a 0.18 e burden injury da 0.11 a 0.09 per secondo.
+- Documentazione [EXPERIMENT_0127](EXPERIMENT_0127.md); test JVM, Android, firma APK, deploy OTA, prova reale S21 **ancora da certificare**. Ultima installazione confermata dall'utente: OTA 97.

@@ -1,5 +1,16 @@
 # Roadmap e criteri di accettazione
 
+## Priorità immediata ZERO 0127 — recupero prima di altre capacità
+
+- [x] Riparare la compatibilità con celle neutre 0 nella memoria spaziale senza perdere pesi appresi (codice su branch 0127).
+- [x] Isolare i coperchi energetici dal SAT e collisioni AABB senza rispettiva presa bilaterale; imporre controllo reale RED alle lastre (codice staged).
+- [x] Predisporre minore densità materiale, opportunità di cibo in scarsità e vento meno costoso, senza introdurre obiettivi o reward (codice staged).
+- [ ] Eseguire regressioni fisiche e cognitive con Android debug su PR; verificare nessun test vecchio fallisce.
+- [ ] Pubblicare OTA successiva alla 97 solo dopo build firmata stabile e controlli SHA/manifest Vercel.
+- [ ] Controllare installazione sopra OTA 97, conservazione slot e pesi; osservare 25+ vite comparabili su Galaxy S21 prima di proclamare il recupero.
+- [ ] Test A/B con scene e condizioni fisiche realmente accoppiate per isolare regressione da rumore.
+- Documento: [EXPERIMENT_0127](EXPERIMENT_0127.md).
+
 ## Priorità immediata — updater e documentazione
 - [x] Whitepaper, architettura, storico e handoff su GitHub.
 - [x] Vercel: endpoint HTTPS stabile `/latest.json` (risponde HTTP 200, manifest disabilitato finché manca signing).

@@ -1,8 +1,12 @@
 # OVERMIND: ZERO — punto di ingresso per tutte le nuove chat
 
-> Ultimo aggiornamento della documentazione: 9 ottobre 2026.
+> Ultimo aggiornamento della documentazione: 12 ottobre 2026.
 >
 > **OBIETTIVO DEL PROGETTO:** creare su Android una forma di vita artificiale ("ZERO"), rappresentata da una macchia nera simile a ferrofluido, con corpo deformabile e apprendimento autonomo da esperienze in un mondo simulato. Il giocatore è una presenza invisibile, non impartisce ordini alla creatura e ne modifica il mondo.
+
+## Ripresa immediata — ZERO 0127
+
+Per la versione osservata dall'utente (OTA 97), il fix recupero memoria, l'isolamento delle prese reali delle lastre e delle vecchie casse energetiche, il bilanciamento prudente delle tempeste e la pipeline di test non ancora eseguita, iniziare da [EXPERIMENT_0127](docs/EXPERIMENT_0127.md) e dalla sezione aggiornata di [HANDOFF](docs/HANDOFF.md). Il rilascio APK non è ancora certificato.
 
 ## Leggi in quest'ordine
 1. [Whitepaper](docs/WHITEPAPER.md) — visione e limiti scientifici.
