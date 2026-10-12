@@ -161,6 +161,16 @@ public final class GripAffordanceV20Regression {
         check(!recovered.restore(String.join("|",malformed))&&
               microSaved.equals(recovered.encode()),
               "Microcounter overflow corrupted previously saved learning");
+        // Pausing learning cannot silently create unlabeled experience
+        // that makes a valid save fail to reload.
+        GripAffordanceV20 stopped=new GripAffordanceV20();
+        stopped.chosen(2,touchOnly);
+        stopped.physicsFrame(spread);
+        stopped.consequence(2,1f,false,false);
+        GripAffordanceV20 reloaded=new GripAffordanceV20();
+        check(stopped.observed()==0&&
+              reloaded.restore(stopped.encode()),
+              "Paused learning produced non-restorable shadow outcomes");
         // Exact body and exact old motor weights: the optional researcher
         // module must not change a SINGLE selected action or learned neuron.
         SensorimotorMind oldMind=new SensorimotorMind(),newMind=new SensorimotorMind();
