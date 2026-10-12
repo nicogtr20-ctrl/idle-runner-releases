@@ -599,7 +599,7 @@ jobs:
           assert '.putString("temporal_skills_v107",temporalSkillBank.encode())' in g
           assert '.putString("episodic_memory_v095",episodic.encode())' in g
           assert '.putString(LifeStatistics.KEY,lifeStats.encode())' in g
-          assert 'case CAUSAL:return new String[]{CausalExperiments.KEY};' in reset
+          assert 'case CAUSAL:return new String[]{CausalExperiments.KEY,PhysicalConsequenceV20.KEY};' in reset
           assert 'ResetDomains.CAUSAL' in analyze
           assert 'causal.learnedParameters()' in stats
           assert 'SaveProfileCodec.encode(capture())' in slots and 'SLOTS=12' in slots
