@@ -93,7 +93,7 @@ public final class SquareGripPuzzle {
                                     float[] previousSkinX,float[] previousSkinY,
                                     float[] previousBodyX,float[] previousBodyY,
                                     float previousCoreX,float previousCoreY){
-        if(body==null||skin==null||box==null||!box.isBox()||
+        if(body==null||skin==null||box==null||!box.isBilateralBox()||
            !Float.isFinite(dt)||dt<=0)return new Outcome(false,0,0);
         // The scratch surface is shared, but this timer belongs ONLY to box.
         System.arraycopy(box.boxGripHold,0,skin.gripHold,0,Morphology.POINTS);
@@ -148,7 +148,7 @@ public final class SquareGripPuzzle {
         return new Outcome(opposing,contacts,held);
     }
     public static boolean uncovered(UnknownWorld.Entity box){
-        return box!=null&&box.isBox()&&box.everCollided&&
+        return box!=null&&box.isBilateralBox()&&box.everCollided&&
                box.displacementFromSpawn()>=UNCOVER_DISTANCE;
     }
     /** Reward source must be pre-existing, invisible and same exact anchor.
