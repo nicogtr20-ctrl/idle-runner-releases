@@ -2,11 +2,16 @@ name: ZERO 2.0 validated shadow-world integration
 on:
   push:
     branches: [feature/zero-20-hierarchical-intelligence]
-  pull_request:
-    branches: [feature/overmind-inapp-updater]
+    paths-ignore:
+      - 'docs/**'
+      - '**/*.md'
+      - 'scripts/**'
   workflow_dispatch:
 permissions:
   contents: read
+concurrency:
+  group: zero20-shadow-${{ github.ref }}
+  cancel-in-progress: true
 jobs:
   regression:
     runs-on: ubuntu-latest
@@ -44,6 +49,48 @@ jobs:
           java -cp /tmp/overmind com.overmind.zero.PanelPhysicsRegression
           java -cp /tmp/overmind com.overmind.zero.ShelterEcologyRegression
           java -cp /tmp/overmind com.overmind.zero.BodyIntegrityObstacleRegression
+          # Consolidated legacy regression suite: no skipped independent Java tests.
+          java -cp /tmp/overmind com.overmind.zero.GripContactObserverRegression
+          java -cp /tmp/overmind com.overmind.zero.MotorBrain
+          java -cp /tmp/overmind com.overmind.zero.UnknownWorld
+          java -cp /tmp/overmind com.overmind.zero.SquareGripPuzzle
+          java -cp /tmp/overmind com.overmind.zero.SquareCollisionSolver
+          java -cp /tmp/overmind com.overmind.zero.GripParityRegression
+          java -cp /tmp/overmind com.overmind.zero.OpticalCues
+          java -cp /tmp/overmind com.overmind.zero.OpticalCueRegression
+          java -cp /tmp/overmind com.overmind.zero.HabitatContinuity
+          java -cp /tmp/overmind com.overmind.zero.WorldPlacement
+          java -cp /tmp/overmind com.overmind.zero.ContactLearning
+          java -cp /tmp/overmind com.overmind.zero.DecisionBrain
+          java -cp /tmp/overmind com.overmind.zero.Morphology
+          java -cp /tmp/overmind com.overmind.zero.ScarcityLab
+          java -cp /tmp/overmind com.overmind.zero.DecisionBlackbox
+          java -cp /tmp/overmind com.overmind.zero.GoalContinuity
+          java -cp /tmp/overmind com.overmind.zero.GateBehaviorMetrics
+          java -cp /tmp/overmind com.overmind.zero.GateLifeJournal
+          java -cp /tmp/overmind com.overmind.zero.ContextualMotionProbe
+          java -cp /tmp/overmind com.overmind.zero.ShadowNonInterferenceRegression
+          java -cp /tmp/overmind com.overmind.zero.BehavioralLaboratory
+          java -cp /tmp/overmind com.overmind.zero.InstrumentalNavigation
+          java -cp /tmp/overmind com.overmind.zero.BodyProprioception
+          java -cp /tmp/overmind com.overmind.zero.TemporalSkillBank
+          java -cp /tmp/overmind com.overmind.zero.TemporalPersistenceRegression
+          java -cp /tmp/overmind com.overmind.zero.LearningDiagnostics
+          java -cp /tmp/overmind com.overmind.zero.OnlineBodyLearning
+          java -cp /tmp/overmind com.overmind.zero.MotionExploration
+          java -cp /tmp/overmind com.overmind.zero.EpisodicMemory
+          java -cp /tmp/overmind com.overmind.zero.MotorAutonomyGuard
+          java -cp /tmp/overmind com.overmind.zero.MotorSkillBank
+          java -cp /tmp/overmind com.overmind.zero.GripSkillBank
+          java -cp /tmp/overmind com.overmind.zero.ExperienceCredit
+          java -cp /tmp/overmind com.overmind.zero.MortalityLearning
+          java -cp /tmp/overmind com.overmind.zero.MaterialGeometry
+          java -cp /tmp/overmind com.overmind.zero.MaterialSymbioteRegression
+          java -cp /tmp/overmind com.overmind.zero.MaterialMotionRegression
+          java -cp /tmp/overmind com.overmind.zero.MaterialVisionRegression
+          java -cp /tmp/overmind com.overmind.zero.SaveProfileCodec
+          java -cp /tmp/overmind com.overmind.zero.LifeStatistics
+          java -cp /tmp/overmind com.overmind.zero.DistributedBodyRegression
       - name: Ensure new module cannot override score or physics
         run: |
           python3 - <<'PY'
