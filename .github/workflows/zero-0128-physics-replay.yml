@@ -1,0 +1,109 @@
+name: ZERO 0128 historical physics replay
+on:
+  push:
+    branches: [experiment/zero-0128-ota-regression-replay]
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  replay:
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+    strategy:
+      fail-fast: false
+      matrix:
+        tag: [overmind-zero-v0.11.6-ota.93, overmind-zero-v0.11.6-ota.94, overmind-zero-v0.11.6-ota.95, overmind-zero-v0.11.6-ota.97, overmind-zero-v0.11.6-ota.99]
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+      - name: Read only original private snapshots
+        run: |
+          set -euo pipefail
+          git fetch --no-tags origin zero-telemetry:refs/remotes/origin/zero-telemetry
+          python3 - <<'PY'
+          import json,subprocess,pathlib
+          def grab(r,n):
+              x=subprocess.check_output(["git","show",f"origin/zero-telemetry:zero-telemetry/reports/{r}/part-{n:03d}.json"],text=True)
+              return json.loads(x)["currentZero"]
+          old="20261012-134843-3f9f02712cf8"
+          now="20261012-163858-48e97da70734"
+          a=grab(now,1);b=grab(now,3)
+          p={"model.motor":a["best"],"model.hand":a["hand_brain_v04"],"model.morph":b["morph_brain_v07"]}
+          for name,src in [("mid",grab(old,3)),("latest",grab(now,4))]:
+              s=json.loads(src["physical_scene_v100"]);f=s["physical"];prefix="scene."+name+"."
+              p[prefix+"heading"]=str(s["heading"])
+              p[prefix+"body.time"]=str(f["body"]["time"])
+              for k in ["x","y","vx","vy"]:p[prefix+"body."+k]=",".join(map(str,f["body"][k]))
+              for k in ["x","y","vx","vy","extension","command","sense","hold"]:
+                  p[prefix+"surface."+k]=",".join(map(str,f["surface"][k]))
+              p[prefix+"surface.t"]=str(f["surface"]["t"])
+              p[prefix+"objects"]=str(len(f["objects"]))
+              for i,o in enumerate(f["objects"]):
+                  v=prefix+f"object.{i}."
+                  p[v+"law"]=str(o["law"])
+                  if o["law"] not in (5,6):continue
+                  for k in ["sx","sy","x","y","vx","vy"]:p[v+k]=str(o[k])
+                  p[v+"peak"]=str(o.get("peakDisplacement",0))
+                  p[v+"collided"]=str(int(o.get("everCollided",False)))
+                  p[v+"counted"]=str(int(o.get("countedAsMoved",False)))
+                  p[v+"angle"]=str(o.get("panelAngle",0))
+                  p[v+"spin"]=str(o.get("panelSpin",0))
+                  p[v+"holds"]=",".join(map(str,o.get("boxGripHold",[0.0]*96)))
+          pathlib.Path("/tmp/zero128-fixture.properties").write_text(
+              "\n".join(k+"="+v for k,v in p.items())+"\n",encoding="utf-8")
+          print("Two complete scene snapshots loaded, original brain held only in runner")
+          PY
+      - name: Compile exact historical physics and run 32 paired scenarios
+        shell: bash
+        run: |
+          set -euo pipefail
+          TAG='${{ matrix.tag }}'
+          git worktree add --detach /tmp/zero128-tag "refs/tags/$TAG"
+          mkdir -p /tmp/zero128-classes
+          cd /tmp/zero128-tag/app/src/main/java/com/overmind/zero
+          src=(MotorBrain.java MaterialGeometry.java ContactLearning.java UnknownWorld.java Morphology.java SquareCollisionSolver.java SquareGripPuzzle.java GripSurfaceComposition.java ScarcityLab.java BodyIntegrity.java ShelterEcology.java)
+          if [[ -f PanelPhysics.java ]]; then src+=(PanelPhysics.java); fi
+          javac -encoding UTF-8 -d /tmp/zero128-classes ${src[@]} "$GITHUB_WORKSPACE/tools/zero128/ZeroPhysicsReplay.java"
+          java -Xmx2g -cp /tmp/zero128-classes com.overmind.zero.ZeroPhysicsReplay /tmp/zero128-fixture.properties "$TAG" | tee "$GITHUB_WORKSPACE/zero128-results.jsonl"
+          grep 'ZERO128 FINISHED' "$GITHUB_WORKSPACE/zero128-results.jsonl"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: zero128-${{ matrix.tag }}
+          path: zero128-results.jsonl
+          retention-days: 7
+  aggregate:
+    runs-on: ubuntu-latest
+    needs: replay
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: zero128-overmind-zero-*
+          path: /tmp/zero128-results
+      - name: Compare all historical results
+        run: |
+          python3 - <<'PY' | tee "$GITHUB_STEP_SUMMARY"
+          import pathlib,json,statistics
+          rows=[]
+          for f in pathlib.Path("/tmp/zero128-results").glob("*/zero128-results.jsonl"):
+              for l in f.read_text().splitlines():
+                  if l.startswith("ZERO128 {"):rows.append(json.loads(l[8:]))
+          assert len(rows)==160,len(rows)
+          metrics=["bilateralFrames","singleFaceFrames","uncovered","boxMotion","travel"]
+          print("# ZERO 0128 - 160 matched physical counterfactuals\n")
+          print("True release code, original trained motors, two saved scenes, four identical command directions, two adhesion strengths. Not a full autonomous food-search test.\n")
+          print("| OTA | Scene | Materials | Grip | "+" | ".join(metrics)+" |")
+          print("|---|---|---|---|"+ "|".join(["---:"]*len(metrics))+"|")
+          for tag in sorted(set(r["tag"] for r in rows)):
+              for scene in ("mid","latest"):
+                  for env in ("COVERS","FULL"):
+                      for g in (0,.65):
+                          v=[r for r in rows if r["tag"]==tag and r["scene"]==scene and r["environment"]==env and r["gripDrive"]==g]
+                          assert len(v)==4
+                          vals=[statistics.mean(x[m] for x in v) for m in metrics]
+                          print("| "+tag.split(".")[-1]+" | "+scene+" | "+env+" | "+str(g)+" | "+" | ".join(f"{x:.2f}" for x in vals)+" |")
+          PY
