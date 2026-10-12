@@ -82,7 +82,9 @@ public final class SpatialPerception {
         int prior=memory.containsKey(k)?memory.get(k):0;
         int next=Math.max(-3,Math.min(3,prior+sign));
         memory.remove(k);
-        memory.put(k,(byte)next);
+        // Zero means unknown, not occupied or navigable. Previously it was
+        // serialized but rejected by restore(), wiping ALL spatial weights.
+        if(next!=0)memory.put(k,(byte)next);
         if(memory.size()>MAX_CELLS)memory.remove(memory.keySet().iterator().next());
     }
     /** Update only regions actually within line-of-sight, using sensed
@@ -367,7 +369,11 @@ public final class SpatialPerception {
                 if(e2.length!=2)return false;
                 long k=Long.parseLong(e2[0],36);
                 byte v=Byte.parseByte(e2[1]);
-                if(v< -3||v>3||v==0||loaded.put(k,v)!=null)return false;
+                if(v< -3||v>3||loaded.containsKey(k))return false;
+                // Accept legacy valid saves containing neutral 0 evidence,
+                // produced by our own older putCell() logic. It is simply
+                // omitted when re-encoding; predictor/value weights survive.
+                if(v!=0)loaded.put(k,v);
             }
             System.arraycopy(rays,0,current,0,RAYS);
             System.arraycopy(pred,0,prediction,0,pred.length);
@@ -418,6 +424,24 @@ public final class SpatialPerception {
         restored.resetLife();
         require(restored.mappedCells()==0&&restored.transitions==map.transitions,
             "Death failed to clear life-local geometry or erased long-term learning");
+        // Regression: historical 0121-0126 spatial profiles could encode
+        // actual zero cell evidence, then reject their OWN valid checkpoint.
+        String[] tokens=saved.split("\\|",-1);
+        int cellCountIndex=9+RAYS+PARAMETERS;
+        require(Integer.parseInt(tokens[cellCountIndex])>0,
+            "Test map needs at least one historical spatial cell");
+        String priorCell=tokens[cellCountIndex+1];
+        tokens[cellCountIndex+1]=priorCell.substring(0,priorCell.indexOf(':'))+":0";
+        String legacy=String.join("|",tokens);
+        SpatialPerception recovered=new SpatialPerception();
+        require(recovered.restore(legacy)&&recovered.transitions==map.transitions&&
+            recovered.validations==map.validations&&
+            recovered.mappedCells()==map.mappedCells()-1,
+            "Historical zero-cell checkpoint rejected and learned weights lost");
+        SpatialPerception clean=new SpatialPerception();
+        require(clean.restore(recovered.encode())&&
+            clean.encode().equals(recovered.encode()),
+            "Recovered zero-cell map cannot save atomically a second time");
         require(!new SpatialPerception().restore(saved.replaceFirst("sp1","sp0")),
             "Corrupted map format was accepted");
         require(map.parameterCount()==PARAMETERS&&PARAMETERS>1000,
