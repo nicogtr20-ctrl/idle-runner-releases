@@ -52,6 +52,7 @@ public final class EcologyStabilityRegression {
         for(int i=0;i<Morphology.POINTS;i++){
             skin.x[i]=1000+i;skin.y[i]=500;
         }
+        for(int i=0;i<MotorBrain.N;i++){body.x[i]=1000+i;body.y[i]=500;}
         skin.x[0]=-100;skin.x[1]=100;
         skin.y[0]=skin.y[1]=0;
         require(PanelPhysics.near(body,skin,crossing,null,null,null,null),
