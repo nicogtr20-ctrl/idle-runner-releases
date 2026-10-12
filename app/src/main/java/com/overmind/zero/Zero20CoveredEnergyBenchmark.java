@@ -24,7 +24,7 @@ public final class Zero20CoveredEnergyBenchmark {
         float[] membrane=Morphology.virgin(new Random(14790));
         String world="",outcome="",diagnostics="",planner="",temporal="",
             skills="",episodes="",body="",spatial="",causal="",nav="",
-            intention="",v20="",transfer="",future="",physicalChain="";
+            intention="",v20="",transfer="",future="",physicalChain="",gripAffordance="";
         Profile copy(){
             Profile o=new Profile();
             o.motor=motor.clone();o.hand=hand.clone();o.membrane=membrane.clone();
@@ -32,7 +32,7 @@ public final class Zero20CoveredEnergyBenchmark {
             o.temporal=temporal;o.skills=skills;o.episodes=episodes;o.body=body;
             o.spatial=spatial;o.causal=causal;o.nav=nav;o.intention=intention;
             o.v20=v20;o.transfer=transfer;o.future=future;
-            o.physicalChain=physicalChain;return o;
+            o.physicalChain=physicalChain;o.gripAffordance=gripAffordance;return o;
         }
     }
     static float[] floats(String raw){
@@ -75,7 +75,8 @@ public final class Zero20CoveredEnergyBenchmark {
             {PredictiveWorldV20.KEY,"v20"},
             {TransferSkillsV20.KEY,"transfer"},
             {FuturePlannerV20.KEY,"future"},
-            {PhysicalConsequenceV20.KEY,"physicalChain"}
+            {PhysicalConsequenceV20.KEY,"physicalChain"},
+            {GripAffordanceV20.KEY,"gripAffordance"}
         };
         for(String[] entry:names){
             String raw=props.getProperty(entry[0],"");
@@ -95,6 +96,7 @@ public final class Zero20CoveredEnergyBenchmark {
             else if("transfer".equals(entry[1]))p.transfer=raw;
             else if("future".equals(entry[1]))p.future=raw;
             else if("physicalChain".equals(entry[1]))p.physicalChain=raw;
+            else if("gripAffordance".equals(entry[1]))p.gripAffordance=raw;
         }
         return p;
     }
@@ -104,6 +106,7 @@ public final class Zero20CoveredEnergyBenchmark {
         final TransferSkillsV20 transfer=new TransferSkillsV20();
         final FuturePlannerV20 future=new FuturePlannerV20();
         final PhysicalConsequenceV20 physicalChain=new PhysicalConsequenceV20();
+        final GripAffordanceV20 gripAffordance=new GripAffordanceV20();
         final TemporalWorkingMemory temporal=new TemporalWorkingMemory();
         final TemporalSkillBank skills=new TemporalSkillBank();
         final EpisodicMemory episodes=new EpisodicMemory();
@@ -121,6 +124,7 @@ public final class Zero20CoveredEnergyBenchmark {
             mind.restorePlanningStats(p.planner);
             world.restore(p.v20);transfer.restore(p.transfer);future.restore(p.future);
             physicalChain.restore(p.physicalChain);
+            gripAffordance.restore(p.gripAffordance);
             temporal.restore(p.temporal);skills.restore(p.skills);
             episodes.restore(p.episodes);body.restore(p.body);
             spatial.restore(p.spatial);causal.restore(p.causal);
@@ -129,6 +133,7 @@ public final class Zero20CoveredEnergyBenchmark {
             mind.attachTransferSkillsV20(transfer);
             mind.attachFuturePlannerV20(future);
             mind.attachPhysicalConsequenceV20(physicalChain);
+            mind.attachGripAffordanceV20(gripAffordance);
             mind.attachWorkingMemory(temporal);
             mind.attachTemporalSkills(skills);
             mind.attachMemory(episodes);
@@ -151,6 +156,7 @@ public final class Zero20CoveredEnergyBenchmark {
             out.nav=nav.encode();out.intention=intention.encode();
             out.v20=world.encode();out.transfer=transfer.encode();
             out.future=future.encode();out.physicalChain=physicalChain.encode();
+            out.gripAffordance=gripAffordance.encode();
             return out;
         }
     }
@@ -392,6 +398,10 @@ public final class Zero20CoveredEnergyBenchmark {
             "\"trainingHeldoutSamples\":%d,\"trainedWorldActions\":%d,"+
             "\"corroboratedSkills\":%d,\"trainingPhysicalEvents\":%d,"+
             "\"linkedEnergyEvents\":%d,"+
+            "\"gripTrainIntervals\":%d,\"gripHeldSnapshots\":%d,"+
+            "\"gripSpreadSnapshots\":%d,\"gripObservedMoves\":%d,"+
+            "\"gripHeldoutSamples\":%d,\"gripError\":%.6f,"+
+            "\"gripBaselineError\":%.6f,\"gripConfidence\":%.5f,"+
             "\"meanEnergyDelta\":%.4f,\"meanSurvivalDeltaSec\":%.4f,"+
             "\"meanDamageDelta\":%.4f,\"promotable\":false}%n",
             label,fresh?"FRESH":"HISTORICAL",pairs,wins,losses,ties,changed,eligible,training.world.confidence(),
@@ -399,6 +409,10 @@ public final class Zero20CoveredEnergyBenchmark {
             training.world.validations(),training.world.trained(),
             training.transfer.confirmed(),training.physicalChain.physicalEvents(),
             training.physicalChain.adjacentEnergy(),
+            training.gripAffordance.trained(),training.gripAffordance.realHeld(),
+            training.gripAffordance.spreadHeld(),training.gripAffordance.motionEvents(),
+            training.gripAffordance.validations(),training.gripAffordance.heldoutError(),
+            training.gripAffordance.baselineError(),training.gripAffordance.confidence(),
             changeEnergy/pairs,changeTime/pairs,changeDamage/pairs);
         // NEVER claim readiness automatically from a small heldout suite.
         System.out.println("ZERO20_ARENA FINISHED: Real bilateral covers, hidden finite sources, no oracle actions; sandbox-only evidence; no APK");
