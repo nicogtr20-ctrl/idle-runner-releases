@@ -103,7 +103,7 @@ public final class GripAffordanceV20Regression {
         String priorValid=read.encode();
         check(!read.restore(priorValid+"|0")&&read.encode().equals(priorValid),
             "Trailing corruption modified prior intact profile");
-        check(!read.restore(priorValid.replaceFirst("ga20","ga19"))&&
+        check(!read.restore(priorValid.replaceFirst("ga21","ga19"))&&
               read.encode().equals(priorValid),"Unsupported version accepted");
         String[] fields=priorValid.split("\\|",-1);
         fields[8]="NaN";
