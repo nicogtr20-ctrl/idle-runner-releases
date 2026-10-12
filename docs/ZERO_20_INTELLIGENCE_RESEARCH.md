@@ -221,6 +221,37 @@ This was iterative development: the old historical split has already informed de
 
 **Success conditions:** (a) pass isolated falsifiable synthetic intervention/no-op/holdout/corruption tests; (b) 96-site real-cover sandbox benchmark with trained latest and archived checkpoint, actual exterior movement counted, repeatable stable outcomes, exact parity with shadow observer; (c) demonstrate out-of-training effect prediction improves the same-context no-change baseline. Only after (c), and independent actual positive energy/survival results on another untouched split, consider learned causal advice. No APK publication or stable merge on compilation alone.
 
+## Gate E — real contact/physical effect attribution: implemented and measured, 2026-10-12
+
+**Experimental source commit:** `028b73e45ea9172167ce35a3fe1f0872fac28967`; protected by independent draft PR #31. **No stable code, live save, main release, or OTA modified.**
+
+### Changes and integrity
+
+1. Added optional `PhysicalConsequenceV20.java` (`physical_consequence_v20`), a small bounded empirical model of **chosen actual action + own touched/held surface context → observed external movement**, and temporal proximity of physical movement followed by **actual** positive/negative resource contact. It never receives object identity, hidden resource locations, cover semantics or learned "correct" motor commands; it never changes action score, actuator, physics or reward.
+2. A genuine measured external movement is **not** a tap/press command, a contact attempt, or an impulse with no displacement. Its independent action-conditional movement predictor is evaluated against the *same tactile-context* general reference on heldout decision intervals. Confidence is **zero** without enough independently supported actions and clear error improvement. Delayed energy with one recent movement is labelled **temporal association**; multiple possible movements remain **ambiguous**, not a proven cause.
+3. Full optional model serialization with finite/count bounds and all-or-nothing recovery; pending unfinished movements discarded on death, scene/saved-profile resume. Reset lives in `CAUSAL` only; motor, world, self-body and other skill domains unchanged. Brain dashboard shows real observed displacement, energy proximity, ambiguity and calibrated confidence, explicitly **SHADOW**.
+4. Repaired a consequential error in the **headless lab**: `Zero20CoveredEnergyBenchmark` previously always passed `physicalEffect=0` into the sensorimotor learner, even while its physics could move and uncover boxes. It now records **actual position updates caused by a prior correctly held cover's velocity** and mimics the live game by crediting externally verified actual uncover displacement. Nothing rewards merely issuing a grip command. Both control and experimental agents receive the same correct physical effect stream. The real game already recorded external effect, so this fix is to the research fixture, NOT a production physics change.
+5. Preserved all prior fixed-source historical build lists by extending them to include the new class; no assertions removed. New regression checks action specificity, absence of movement on mere red/touch, real energy ambiguity, holdout exclusion, nonfinite/truncated profile rejection, death/resume and **440** exact original-policy parity actions.
+
+### Actual CI evidence — successful and negative where applicable
+
+- Entire true-cover replay: [GitHub Actions **38306317255**](https://github.com/nicogtr20-ctrl/idle-runner-releases/actions/runs/38306317255), **4/4 jobs green**. 2 fixed, privately archived saved brains (18:38 and 22:27 local) × 2 layout/seed splits × 12 heldout paired trials = **48 comparisons**. Physical-cover solver includes 96 body contact points, strict opposite real grip, concealed finite resource. Neither alternative receives a scripted route.
+- New learning/cognition/Android regression: [**38306317222**](https://github.com/nicogtr20-ctrl/idle-runner-releases/actions/runs/38306317222), **PASS**, includes `PhysicalConsequenceV20Regression`, 440 original-model decisions, reset isolation, lost/corrupt saves, old contact/grip QA and Android `assembleDebug`.
+- Full historic pull request QA on source commit `028b73e45`: [0121 independent](https://github.com/nicogtr20-ctrl/idle-runner-releases/actions/runs/38306321800), [0122 ecology](https://github.com/nicogtr20-ctrl/idle-runner-releases/actions/runs/38306321813), [0125 telemetry](https://github.com/nicogtr20-ctrl/idle-runner-releases/actions/runs/38306321851), [0126 single-red grip](https://github.com/nicogtr20-ctrl/idle-runner-releases/actions/runs/38306321775), [0127 recovery](https://github.com/nicogtr20-ctrl/idle-runner-releases/actions/runs/38306321824), [1169 observer](https://github.com/nicogtr20-ctrl/idle-runner-releases/actions/runs/38306321901), [new B/C/E](https://github.com/nicogtr20-ctrl/idle-runner-releases/actions/runs/38306321786): **all passed**.
+
+| Frozen original ZERO checkpoint | External physical effects observed in each 14-scene *training* lab | Recorded actual movement → energy proximity in training | Heldout predictive sensory error vs unchanged state | 24 heldout A/B |
+|---|---:|---:|---|---|
+| 18:38 Italy (`163858`) | **95** actual external movement observations | 0 | 0.095126 vs 0.095045 | 0 wins / **24 ties** / 0 losses |
+| 22:27 Italy (`202752`) | **327** actual external movement observations | **1** temporally associated energy contact, *not proven causal* | 0.206494 vs 0.208619 | 0 wins / **24 ties** / 0 losses |
+
+Why are model error numbers different from the last paper section? Previously the lab fed **zero** to the old cognition for every physical change, causing different future actions and sensed states. The fixed experiment has materially different *correct* training/trajectory feedback. Comparing predictive RMSE before/after this lab fix as though it were a pure weight-ablation result would be **invalid**. The old v21 versus no-change reference on this fixed action stream is still narrowly worse for the 18:38 brain and only ~1.0% better for the 22:27 brain, below the existing conservative deployment gate.
+
+These positive event counters are **not** evidence of more food or better manipulation; the same real physics ran in baseline and experimental groups. The new physical consequence estimator still has **zero empirically certified influence** in real saved-brain runs and the v2 planner remains abstaining. Real prolonged survival, heldout cause-to-effect advantages and on-phone runtime parity **not yet demonstrated**.
+
+### Next experiment; no arbitrary release
+
+Use *actual* relative-geometry, tactile force and short temporal sequences to estimate whether a **newly learned physical-change predictor** beats "no movement" and same-contact baselines on untouched heldout habitats; compare matched episodic energy/survival when (and only when) this predictive gate is satisfied. Preserve control, red holds and the user's current brain. **Do not publish ZERO 2.0** on the basis of this observational foundation alone.
+
 ## Non-negotiable invariants
 1. No destroying/mutating real ZERO brain; no copying historical profiles into production automatically; optional legacy default safe.
 2. No privileged semantic target coordinates or scripted correct actions in learning code.
