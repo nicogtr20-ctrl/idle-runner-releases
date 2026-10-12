@@ -148,8 +148,11 @@ public final class ShelterEcology {
         float before=integrity;
         integrity=Math.max(0f,Math.min(100f,integrity+
             (.22f*sheltered-.48f*exposedFraction)*dt));
-        float loss=(.23f*exposedFraction+
-            .11f*(1-integrity/100f))*dt;
+        // Slightly softer metabolic penalty restores time to explore
+        // after 0124 clutter; the real unshielded tissue injury and
+        // geometric storm-shield benefit remain untouched.
+        float loss=(.18f*exposedFraction+
+            .09f*(1-integrity/100f))*dt;
         stormDamage+=Math.max(0,before-integrity);
         stormSeconds+=dt;shieldedSeconds+=sheltered*dt;
         stormEnergyCost+=loss;
