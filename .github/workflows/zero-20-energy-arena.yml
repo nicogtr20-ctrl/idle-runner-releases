@@ -5,6 +5,7 @@ on:
     paths:
       - "app/src/main/java/com/overmind/zero/Zero20CoveredEnergyBenchmark.java"
       - "app/src/main/java/com/overmind/zero/PhysicalConsequenceV20.java"
+      - "app/src/main/java/com/overmind/zero/GripAffordanceV20.java"
       - "app/src/main/java/com/overmind/zero/SensorimotorMind.java"
       - "app/src/main/java/com/overmind/zero/PredictiveWorldV20.java"
       - "app/src/main/java/com/overmind/zero/PredictiveWorldV20Regression.java"
@@ -111,6 +112,9 @@ jobs:
                       "trainingHeldoutError","trainingUnchangedError",
                       "trainingHeldoutSamples","trainedWorldActions","corroboratedSkills",
                       "trainingPhysicalEvents","linkedEnergyEvents",
+                      "gripTrainIntervals","gripHeldSnapshots","gripSpreadSnapshots",
+                      "gripObservedMoves","gripHeldoutSamples","gripError",
+                      "gripBaselineError","gripConfidence",
                       "meanEnergyDelta","meanSurvivalDeltaSec","meanDamageDelta"):
               summary.append("| "+key+" | "+str(s[key])+" |")
           summary+=["\nPromotion **blocked by design** until unseen-habitat lifetime/energy advantages are established. These scores do not prove greater intelligence."]
