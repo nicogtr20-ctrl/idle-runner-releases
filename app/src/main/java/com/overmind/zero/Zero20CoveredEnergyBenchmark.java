@@ -182,19 +182,19 @@ public final class Zero20CoveredEnergyBenchmark {
         float theta=(seed*.247f)+(layout*.33f);
         addCover(objects,theta,113+(seed%3)*7);
         if(layout!=0)addCover(objects,theta+1.25f,143);
-        if(layout==2||layout==4){
+        if(layout==2||layout==4||layout==5||layout==6){
             float x=(float)Math.cos(theta+2.15f)*175f;
             float y=(float)Math.sin(theta+2.15f)*175f;
             objects.add(new UnknownWorld.Entity(x,y,2,6));
         }
-        if(layout==3||layout==4){
+        if(layout==3||layout==4||layout==6){
             float a=theta+2.6f;
             objects.add(new UnknownWorld.Entity((float)Math.cos(a)*138,
                                                  (float)Math.sin(a)*138,1,1));
         }
         // During training, renewable ground stimulus varies. Still finite
         // and touch-only; zero free energy per tick and no scripted directions.
-        if(layout==0||layout==3){
+        if(layout==0||layout==3||layout==5){
             float a=theta-1.65f;
             objects.add(new UnknownWorld.Entity((float)Math.cos(a)*128,
                                                  (float)Math.sin(a)*128,0,0));
@@ -291,6 +291,8 @@ public final class Zero20CoveredEnergyBenchmark {
     public static void main(String[] args)throws Exception{
         Profile source=load(args.length>0?args[0]:null);
         String label=args.length>0?"LATEST_SAVED_BRAIN":"VIRGIN_SANITY";
+        boolean fresh=args.length>1&&"--fresh".equals(args[1]);
+        if(args.length>1&&!fresh)throw new IllegalArgumentException("Unknown split");
         // TRAIN: only the control agent learns in first set of seed/layout
         // pairs. The shared resulting checkpoint is then cloned ONCE.
         Rig training=new Rig(source,false);
@@ -307,9 +309,12 @@ public final class Zero20CoveredEnergyBenchmark {
         int pairs=0,wins=0,losses=0,ties=0,changed=0;
         float changeEnergy=0,changeTime=0,changeDamage=0;
         long eligible=0;
-        // Never re-use train seeds (11+4n) or train's 0/1/2 layouts.
-        for(int layout=3;layout<=4;layout++){
-            for(int seed:new int[]{101,113,127,139,151,163}){
+        // Original historical splits are development diagnostics and have
+        // already been inspected. NEW split is independent and is never
+        // used to tune the tested model in this same immutable run.
+        for(int layout=fresh?5:3;layout<=(fresh?6:4);layout++){
+            for(int seed:(fresh?new int[]{173,181,197,211,223,239}:
+                                 new int[]{101,113,127,139,151,163})){
                 Rig control=new Rig(shared,false);
                 Rig candidate=new Rig(shared,true);
                 Outcome base=episode(control,shared,seed,layout);
@@ -332,7 +337,7 @@ public final class Zero20CoveredEnergyBenchmark {
         }
         if(pairs!=12)throw new AssertionError("Missing matched pairs");
         System.out.printf(Locale.US,
-            "ZERO20_SUMMARY {\"profile\":\"%s\",\"pairs\":%d,\"wins\":%d,"+
+            "ZERO20_SUMMARY {\"profile\":\"%s\",\"split\":\"%s\",\"pairs\":%d,\"wins\":%d,"+
             "\"losses\":%d,\"ties\":%d,\"changedPaths\":%d,"+
             "\"candidateEligiblePlans\":%d,\"trainingWorldConfidence\":%.5f,"+
             "\"trainingHeldoutError\":%.6f,\"trainingUnchangedError\":%.6f,"+
@@ -340,7 +345,7 @@ public final class Zero20CoveredEnergyBenchmark {
             "\"corroboratedSkills\":%d,"+
             "\"meanEnergyDelta\":%.4f,\"meanSurvivalDeltaSec\":%.4f,"+
             "\"meanDamageDelta\":%.4f,\"promotable\":false}%n",
-            label,pairs,wins,losses,ties,changed,eligible,training.world.confidence(),
+            label,fresh?"FRESH":"HISTORICAL",pairs,wins,losses,ties,changed,eligible,training.world.confidence(),
             training.world.heldoutError(),training.world.baselineError(),
             training.world.validations(),training.world.trained(),
             training.transfer.confirmed(),
