@@ -46,6 +46,8 @@ public final class GameActivity extends Activity {
         DistributedBodySense distributedSense=new DistributedBodySense();
         LocalImpedanceSense localImpedance=new LocalImpedanceSense();
         PredictiveWorldV20 predictiveWorldV20=new PredictiveWorldV20();
+        TransferSkillsV20 transferV20=new TransferSkillsV20();
+        FuturePlannerV20 futureV20=new FuturePlannerV20();
         SpatialPerception spatialMap=new SpatialPerception();
         CausalExperiments causalExperiments=new CausalExperiments();
         InstrumentalNavigation navigation=new InstrumentalNavigation();
@@ -222,6 +224,12 @@ public final class GameActivity extends Activity {
             predictiveWorldV20=new PredictiveWorldV20();
             predictiveWorldV20.restore(prefs.getString(PredictiveWorldV20.KEY,""));
             sensorMind.attachPredictiveWorldV20(predictiveWorldV20);
+            transferV20=new TransferSkillsV20();
+            transferV20.restore(prefs.getString(TransferSkillsV20.KEY,""));
+            sensorMind.attachTransferSkillsV20(transferV20);
+            futureV20=new FuturePlannerV20();
+            futureV20.restore(prefs.getString(FuturePlannerV20.KEY,""));
+            sensorMind.attachFuturePlannerV20(futureV20);
             spatialMap=new SpatialPerception();
             spatialMap.restore(prefs.getString(SpatialPerception.KEY,""));
             sensorMind.attachSpatialPerception(spatialMap);
@@ -508,6 +516,8 @@ public final class GameActivity extends Activity {
               .putString(LocalImpedanceSense.KEY,localImpedance.encode())
               // ZERO 2.0 shadow brain: optional independent persistence; no legacy changes.
               .putString(PredictiveWorldV20.KEY,predictiveWorldV20.encode())
+              .putString(TransferSkillsV20.KEY,transferV20.encode())
+              .putString(FuturePlannerV20.KEY,futureV20.encode())
               .putString(SpatialPerception.KEY,spatialMap.encode())
               .putString(CausalExperiments.KEY,causalExperiments.encode())
               .putString(InstrumentalNavigation.KEY,navigation.encode())
