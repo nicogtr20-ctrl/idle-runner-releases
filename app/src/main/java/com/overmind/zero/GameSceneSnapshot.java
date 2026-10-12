@@ -54,7 +54,11 @@ public final class GameSceneSnapshot {
         x.put("contactCooldown",e.contactCooldown);
         x.put("everCollided",e.everCollided);x.put("countedAsMoved",e.countedAsMoved);
         x.put("peakDisplacement",e.peakDisplacement);x.put("radius",e.radius);
-        if(e.isBox())x.put("boxGripHold",array(e.boxGripHold));
+        if(e.isBilateralBox())x.put("boxGripHold",array(e.boxGripHold));
+        if(e.isConstruction()){
+            x.put("panelAngle",e.angle);
+            x.put("panelSpin",e.angularVelocity);
+        }
         return x;
     }
     private static UnknownWorld.Entity loadEntity(JSONObject x,ScarcityLab room)throws Exception{
@@ -79,9 +83,18 @@ public final class GameSceneSnapshot {
         e.countedAsMoved=x.getBoolean("countedAsMoved");
         e.peakDisplacement=(float)x.getDouble("peakDisplacement");
         e.radius=(float)x.getDouble("radius");
-        if(e.isBox()&&x.has("boxGripHold"))
+        if(e.isBilateralBox()&&x.has("boxGripHold"))
             readArrays(x,new String[]{"boxGripHold"},new float[][]{e.boxGripHold});
-        if(!Float.isFinite(e.x)||!Float.isFinite(e.y)||
+        if(e.isConstruction()){
+            // Historic OTA 93 construction squares migrate to thin plates in
+            // their ACTUAL saved position; no new objects are fabricated.
+            e.angle=(float)x.optDouble("panelAngle",0);
+            e.angularVelocity=(float)x.optDouble("panelSpin",0);
+            e.radius=PanelPhysics.bound(e);
+        }
+        if(!Float.isFinite(e.angle)||!Float.isFinite(e.angularVelocity)||
+           Math.abs(e.angularVelocity)>20f||
+           !Float.isFinite(e.x)||!Float.isFinite(e.y)||
            !Float.isFinite(e.vx)||!Float.isFinite(e.vy)||e.radius<0||
            !Float.isFinite(e.radius)||!Float.isFinite(e.cooldown)||
            !Float.isFinite(e.contactCooldown)||
