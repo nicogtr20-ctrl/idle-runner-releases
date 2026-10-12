@@ -379,3 +379,8 @@ Nuova `AdaptiveSafety`: solo dopo contatto con perdita energetica reale e freque
 - Pacchetto Android firmato pubblicato su Vercel (codice 1093).
 - SHA-256: `060c51fb3c2fb6f865c5728b529e368f681e4747fd3d51453afd46e416804206`.
 - APK: `/apk/overmind-zero-1093-060c51fb3c2f.apk`.
+
+## OTA 0.11.6-ota.94 — 2026-10-12T12:23:38.664422+00:00
+- Pacchetto Android firmato pubblicato su Vercel (codice 1094).
+- SHA-256: `df0ceb1b00934f0180c343b83793631aa2e4ec950a7301308696ef3431f78c3f`.
+- APK: `/apk/overmind-zero-1094-df0ceb1b0093.apk`.
