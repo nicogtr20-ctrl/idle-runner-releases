@@ -72,39 +72,33 @@ jobs:
           javac -encoding UTF-8 -d /tmp/zero128-classes ${src[@]} "$GITHUB_WORKSPACE/tools/zero128/ZeroPhysicsReplay.java"
           java -Xmx2g -cp /tmp/zero128-classes com.overmind.zero.ZeroPhysicsReplay /tmp/zero128-fixture.properties "$TAG" | tee "$GITHUB_WORKSPACE/zero128-results.jsonl"
           grep 'ZERO128 FINISHED' "$GITHUB_WORKSPACE/zero128-results.jsonl"
-      - uses: actions/upload-artifact@v4
-        with:
-          name: zero128-${{ matrix.tag }}
-          path: zero128-results.jsonl
-          retention-days: 7
-  aggregate:
-    runs-on: ubuntu-latest
-    needs: replay
-    steps:
-      - uses: actions/download-artifact@v4
-        with:
-          pattern: zero128-overmind-zero-*
-          path: /tmp/zero128-results
-      - name: Compare all historical results
+      - name: Summarize replay without artifact quota or user data export
         run: |
           python3 - <<'PY' | tee "$GITHUB_STEP_SUMMARY"
-          import pathlib,json,statistics
-          rows=[]
-          for f in pathlib.Path("/tmp/zero128-results").glob("*/zero128-results.jsonl"):
-              for l in f.read_text().splitlines():
-                  if l.startswith("ZERO128 {"):rows.append(json.loads(l[8:]))
-          assert len(rows)==160,len(rows)
-          metrics=["bilateralFrames","singleFaceFrames","uncovered","boxMotion","travel"]
-          print("# ZERO 0128 - 160 matched physical counterfactuals\n")
-          print("True release code, original trained motors, two saved scenes, four identical command directions, two adhesion strengths. Not a full autonomous food-search test.\n")
-          print("| OTA | Scene | Materials | Grip | "+" | ".join(metrics)+" |")
-          print("|---|---|---|---|"+ "|".join(["---:"]*len(metrics))+"|")
-          for tag in sorted(set(r["tag"] for r in rows)):
-              for scene in ("mid","latest"):
-                  for env in ("COVERS","FULL"):
-                      for g in (0,.65):
-                          v=[r for r in rows if r["tag"]==tag and r["scene"]==scene and r["environment"]==env and r["gripDrive"]==g]
-                          assert len(v)==4
-                          vals=[statistics.mean(x[m] for x in v) for m in metrics]
-                          print("| "+tag.split(".")[-1]+" | "+scene+" | "+env+" | "+str(g)+" | "+" | ".join(f"{x:.2f}" for x in vals)+" |")
+          import json,pathlib,statistics
+          text=pathlib.Path("zero128-results.jsonl").read_text().splitlines()
+          rows=[json.loads(l[8:]) for l in text if l.startswith("ZERO128 {")]
+          pairs=[json.loads(l[13:]) for l in text if l.startswith("ZERO128_PAIR {")]
+          assert len(rows)==32,(len(rows),rows[-1:] if rows else [])
+          assert len(pairs)==3,len(pairs)
+          tag=rows[0]["tag"]
+          print("# ZERO 0128 - "+tag+"\n")
+          print("32 authentic-physics, identical-motor counterfactuals. Does NOT simulate learned food-seeking or an entire life.\n")
+          fields=["bilateralFrames","singleFaceFrames","uncovered","boxPath","boxMotion","travel"]
+          print("| Scene | Materials | Grip | "+" | ".join(fields)+" |")
+          print("|---|---|---|"+ "|".join(["---:"]*len(fields))+"|")
+          for scene in ("mid","latest"):
+              for env in ("COVERS","FULL"):
+                  for g in (0,.65):
+                      values=[x for x in rows if x["scene"]==scene and x["environment"]==env and x["gripDrive"]==g]
+                      assert len(values)==4
+                      means=[statistics.mean(x[k] for x in values) for k in fields]
+                      print("| "+scene+" | "+env+" | "+str(g)+" | "+
+                          " | ".join(f"{v:.3f}" for v in means)+" |")
+          print("\n## Two-box overlap probe")
+          for p in pairs:
+              print("Held covers: "+str(p["held"])+", first shift: "+
+                    str(p["firstDx"])+", second shift: "+str(p["secondDx"])+
+                    ", remaining overlap: "+str(p["remainingOverlap"]))
+          print("\nSnapshots are read-only; no user brain or physical scene is uploaded as an artifact.")
           PY
