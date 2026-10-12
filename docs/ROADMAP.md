@@ -200,3 +200,11 @@ Documentazione dettagliata e limiti scientifici: `docs/EXPERIMENT_0095.md`.
 - [ ] Test Galaxy S21: lasciare vivere ZERO abbastanza da ottenere confidenza temporale >0 e osservare se compaiono skill consolidate.
 - [ ] Verificare se una skill viene richiamata in un contesto simile e mantiene un effetto fisico progressivo senza essere stata programmata per quell'oggetto.
 - [ ] Passo successivo solo dopo verifica: permettere al planner di valutare skill consolidate come macro-azioni.
+
+## Release preparation — ZERO 2.0 passive observation, OTA 100 candidate (2026-10-13)
+
+Official OTA path is `feature/overmind-inapp-updater` → `.github/workflows/overmind-ota-publish.yml` → owner-key signed APK → GitHub Release → `main/updater/public/latest.json` and immutable APK → Vercel manifest consumed by in-app AGGIORNA. This candidate is staged separately from research PR #31. Original `com.overmind.zero.ota` signature and persistent 12 saved slots must remain intact. VersionCode derives from the next official publisher run number (expected ≥1100), not the old signed experimental preview 1099.
+
+The candidate includes exactly the already tested v20 passive observers, existing base motor policy, and `TelemetryGitHub.partition()` fix preserving `extras.zero20Passive` after multipart upload. No model advice biases the motor controller; no change to energy rules or sensor physics. Source-pinned stable checks are UPDATED to the SHA of the actually reviewed source files, never disabled; five new JVM regressions are added before official release signing.
+
+The initial Galaxy S21 report confirms the original working profile is still present and v20 models have collected real observations. No independent skill or survival improvement is established. Release acceptance: independent staging JVM/Android QA GREEN, official stable publisher GREEN, signed APK certificate/package/version and SHA verified, downloadable manifest/APK responsive, user-controlled install and slot continuity confirmed on phone. If any gate fails, **do not claim availability through Aggiorna**.

@@ -139,6 +139,9 @@ final class TelemetryGitHub {
         result.put("liveProfileKeys",copied);
         result.put("dataPolicy","Current ZERO working game data only; no named slots, device identifiers, private contacts, user account, or GitHub token");
         result.put("currentZero",values);
+        // ZERO 2.0 observer metrics are reconstructed from the saved copy,
+        // only on a user-initiated upload thread. No live brain is touched.
+        result.put("zero20Passive",new JSONObject(Zero20PassiveSnapshot.fromSaved(all)));
         String grip=c.getSharedPreferences(GripContactObserver.PREFS,
             Context.MODE_PRIVATE).getString(GripContactObserver.KEY,"");
         if(grip.startsWith("go1|")&&grip.length()<=60000)
@@ -265,6 +268,12 @@ final class TelemetryGitHub {
             if(group==0)source=data.getJSONObject("currentZero");
             else {
                 source=new JSONObject();
+                // Keep ZERO 2.0's compact explanatory digest as part of the
+                // multipart archive, not merely in the in-memory report().
+                // The previous whitelist silently dropped this optional
+                // section while still uploading all raw model preferences.
+                if(data.has("zero20Passive"))
+                    source.put("zero20Passive",data.get("zero20Passive"));
                 if(data.has("gripContactObserver"))
                     source.put("gripContactObserver",data.get("gripContactObserver"));
                 if(data.has("lastBehaviorLab"))

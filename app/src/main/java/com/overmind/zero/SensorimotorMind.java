@@ -31,6 +31,16 @@ public final class SensorimotorMind {
     private transient BodyProprioception bodySchema;
     private transient DistributedBodySense distributedBody;
     private transient LocalImpedanceSense impedance;
+    /** ZERO 2.0: shadow-only learned world; NEVER actuates or scores actions. */
+    private transient PredictiveWorldV20 worldV20;
+    private transient TransferSkillsV20 transferV20;
+    private transient FuturePlannerV20 futureV20;
+    private transient PhysicalConsequenceV20 physicalChainV20;
+    private transient GripAffordanceV20 gripAffordanceV20;
+    private transient Morphology.Surface lastActualGripSurface;
+    /** Never set by GameActivity. Sandbox arena may test bounded advice. */
+    private transient boolean zero20ExperimentalAdvice=false;
+    private transient int zero20DecisionsInfluenced=0;
     private transient SpatialPerception spatial;
     private transient CausalExperiments causal;
     private transient InstrumentalNavigation navigation;
@@ -71,6 +81,8 @@ public final class SensorimotorMind {
             contactCredit.consequence(actualEnergyDelta,visuallyObservedSignature);
             if(temporal!=null)temporal.energyOutcome(actualEnergyDelta);
             if(temporalSkills!=null)temporalSkills.energyOutcome(actualEnergyDelta);
+            if(transferV20!=null)transferV20.energyOutcome(actualEnergyDelta);
+            if(physicalChainV20!=null)physicalChainV20.energyOutcome(actualEnergyDelta);
             if(bodySchema!=null)bodySchema.actualEnergy(actualEnergyDelta);
             if(distributedBody!=null)distributedBody.actualEnergy(actualEnergyDelta);
             if(impedance!=null)impedance.actualEnergy(actualEnergyDelta);
@@ -103,6 +115,17 @@ public final class SensorimotorMind {
     public synchronized void attachDistributedBody(DistributedBodySense map){distributedBody=map;}
     public synchronized DistributedBodySense distributedBody(){return distributedBody;}
     public synchronized void attachImpedance(LocalImpedanceSense model){impedance=model;}
+    public synchronized void attachPredictiveWorldV20(PredictiveWorldV20 model){worldV20=model;}
+    public synchronized void attachTransferSkillsV20(TransferSkillsV20 model){transferV20=model;}
+    public synchronized void attachFuturePlannerV20(FuturePlannerV20 model){futureV20=model;}
+    public synchronized void attachPhysicalConsequenceV20(PhysicalConsequenceV20 model){physicalChainV20=model;}
+    public synchronized void attachGripAffordanceV20(GripAffordanceV20 model){gripAffordanceV20=model;}
+    /** Experimental research only; OFF by default in every actual app profile. */
+    public synchronized void enableZero20ExperimentalAdvice(boolean enabled){
+        zero20ExperimentalAdvice=enabled;
+        if(!enabled)zero20DecisionsInfluenced=0;
+    }
+    public synchronized int zero20DecisionsInfluenced(){return zero20DecisionsInfluenced;}
     public synchronized LocalImpedanceSense impedance(){return impedance;}
     /** Read after body and collision geometry has been restored. */
     public synchronized void updateImpedanceSense(MotorBrain.Body b,Morphology.Surface s){
@@ -176,7 +199,12 @@ public final class SensorimotorMind {
         if(temporalSkills!=null)temporalSkills.resetLife();
         if(bodySchema!=null)bodySchema.resetLife();
         if(distributedBody!=null)distributedBody.resetLife();
-            if(impedance!=null)impedance.resetLife();
+        if(impedance!=null)impedance.resetLife();
+        if(worldV20!=null)worldV20.resetLife();
+        if(transferV20!=null)transferV20.resetLife();
+        if(physicalChainV20!=null)physicalChainV20.resetLife();
+        if(gripAffordanceV20!=null)gripAffordanceV20.resetLife();
+        lastActualGripSurface=null;
         if(spatial!=null)spatial.resetLife();
         if(causal!=null)causal.resetLife();
         if(navigation!=null)navigation.resetLife();
@@ -195,6 +223,11 @@ public final class SensorimotorMind {
             if(bodySchema!=null)bodySchema.resetLife();
         if(distributedBody!=null)distributedBody.resetLife();
             if(impedance!=null)impedance.resetLife();
+            if(worldV20!=null)worldV20.resetLife();
+            if(transferV20!=null)transferV20.resetLife();
+        if(physicalChainV20!=null)physicalChainV20.resetLife();
+        if(gripAffordanceV20!=null)gripAffordanceV20.resetLife();
+        lastActualGripSurface=null;
             if(spatial!=null)spatial.resetLife();
             if(causal!=null)causal.resetLife();
             if(navigation!=null)navigation.resetLife();
@@ -220,6 +253,11 @@ public final class SensorimotorMind {
         if(bodySchema!=null)bodySchema.resumeLife();
         if(distributedBody!=null)distributedBody.resumeLife();
         if(impedance!=null)impedance.resumeLife();
+        if(worldV20!=null)worldV20.resumeLife();
+        if(transferV20!=null)transferV20.resumeLife();
+        if(physicalChainV20!=null)physicalChainV20.resumeLife();
+        if(gripAffordanceV20!=null)gripAffordanceV20.resumeLife();
+        lastActualGripSurface=null;
         // Spatial map is reinstated with the saved physical body separately.
         if(causal!=null)causal.resumeLife();
         if(navigation!=null)navigation.resumeLife();
@@ -296,6 +334,26 @@ public final class SensorimotorMind {
                 return SensorimotorMind.this.estimate(state,a)+contactCredit.value(state,a);
             }
         },diagnostics);
+        // Policy A/B TEST ONLY: query a learned, uncertainty-gated future
+        // BEFORE comparing action scores, at most once every eight decisions.
+        // The normal game always leaves zero20ExperimentalAdvice=false.
+        int v20Recommended=-1;
+        float v20Bias=0f;
+        if(zero20ExperimentalAdvice&&futureV20!=null&&worldV20!=null&&
+           decisions%8==0){
+            futureV20.evaluate(senses,worldV20,new FuturePlannerV20.Value(){
+                @Override public float value(float[] observed,int candidate){
+                    return SensorimotorMind.this.estimate(observed,candidate)+
+                           contactCredit.value(observed,candidate);
+                }
+            },transferV20);
+            if(futureV20.latestMargin()>.02f&&
+               futureV20.latestConfidence()>.10f){
+                v20Recommended=futureV20.shadowSuggestion();
+                v20Bias=.18f*futureV20.latestConfidence()*
+                    Math.min(1f,futureV20.latestMargin()/.35f);
+            }
+        }
         // Exploration is intrinsic to learning; no action is mapped to a
         // named "correct" behavior. Stable choices come from learned value.
         float largestTemporalBias=0;
@@ -365,7 +423,8 @@ public final class SensorimotorMind {
             largestIntentionBias=Math.max(largestIntentionBias,Math.abs(intentBias));
             float score=legacyQ+earnedValue+planned[a]*.50f+curiosity+jitter+memoryBias+
                         diversity+temporalBias+skillBias+fullBodyBias+spatialBias+causalBias+
-                        instrumental+intentBias;
+                        instrumental+intentBias+
+                        (zero20ExperimentalAdvice&&a==v20Recommended?v20Bias:0f);
             if(traceTerms!=null){
                 traceScores[a]=score;
                 float[] t=traceTerms[a];
@@ -378,6 +437,8 @@ public final class SensorimotorMind {
             if(score>best){best=score;chosen=a;}
         }
         int greedyAction=chosen;
+        if(zero20ExperimentalAdvice&&v20Recommended>=0&&
+           chosen==v20Recommended&&v20Bias>0)zero20DecisionsInfluenced++;
         float epsilon=Math.max(.09f,.52f/(1+experiences/120f));
         if(protectMotor)epsilon=Math.max(epsilon,.28f);
         actionExploratory=false;
@@ -435,11 +496,35 @@ public final class SensorimotorMind {
         actualEnergySinceChoice=0f;
         actualAmbientLossSinceChoice=0f;
         action=chosen;decisions++;
+        // Observe only the chosen REAL action; forecasts are never executions.
+        if(worldV20!=null)worldV20.chosen(chosen,senses);
+        if(transferV20!=null)transferV20.chosen(chosen,senses);
+        if(physicalChainV20!=null)physicalChainV20.chosen(chosen,senses);
+        if(gripAffordanceV20!=null)gripAffordanceV20.chosen(chosen,lastActualGripSurface);
+        // Heavy world-model lookahead is deliberately capped at ONE pass per
+        // eight REAL decisions and evaluated only AFTER the old action was
+        // chosen. No score or RNG in the original decision is modified.
+        if(!zero20ExperimentalAdvice&&futureV20!=null&&decisions%8==0){
+            futureV20.evaluate(senses,worldV20,new FuturePlannerV20.Value(){
+                @Override public float value(float[] observed,int candidate){
+                    return SensorimotorMind.this.estimate(observed,candidate)+
+                           contactCredit.value(observed,candidate);
+                }
+            },transferV20);
+        }
         estimatedValue=estimate(senses,chosen);
         System.arraycopy(senses,0,trialState,0,S);
         trialAction=chosen;
         elapsed=0;
         return chosen;
+    }
+
+    /** Passive 96-point readout at the PHYSICS rate. Reuses already
+     * composed tissue only, never mutates holds, contact or learned motor.
+     * Thread synchronized with real decision interval; zero action bias. */
+    public synchronized void sampleGripPhysicsFrame(Morphology.Surface skin){
+        if(gripAffordanceV20!=null&&trialAction>=0&&skin!=null)
+            gripAffordanceV20.physicsFrame(skin);
     }
 
     /** Called with one observed outcome of a real action, not an off-screen
@@ -465,6 +550,9 @@ public final class SensorimotorMind {
                                      MotorBrain.Body body,Morphology.Surface skin,
                                      ScarcityLab room,ArrayList<UnknownWorld.Entity> objects){
         if(after.length!=S)throw new IllegalArgumentException("sensory width");
+        // Sensor-only view of the REAL 96-point membrane at the decision
+        // boundary. Previous-lifetime tissue is never reused after reset.
+        if(skin!=null)lastActualGripSurface=skin;
         if(trialAction<0){
             if(bodySchema!=null&&body!=null&&skin!=null)
                 bodySchema.feed(BodyProprioception.sense(body,skin));
@@ -551,6 +639,16 @@ public final class SensorimotorMind {
         if(impedance!=null&&impedanceAfter!=null)
             impedance.consequence(impedanceAfter,trialAction,lastReward,physicalEffect,
                                   learning&&!holdout,holdout);
+        // Isolated predictive readout. No change to reward, action scoring or
+        // any motor learning; sharing ONLY the pre-existing heldout split.
+        if(worldV20!=null)
+            worldV20.consequence(after,trialAction,learning&&!holdout,holdout);
+        if(physicalChainV20!=null)
+            physicalChainV20.consequence(trialAction,Math.max(0f,physicalEffect),
+                learning&&!holdout,holdout);
+        if(gripAffordanceV20!=null)
+            gripAffordanceV20.consequence(trialAction,Math.max(0f,physicalEffect),
+                learning&&!holdout,holdout);
         if(spatial!=null&&body!=null&&objects!=null)
             spatial.consequence(trialAction,lastReward,learning&&!holdout,holdout);
         if(causal!=null&&spatial!=null&&body!=null&&objects!=null)
