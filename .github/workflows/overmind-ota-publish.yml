@@ -725,8 +725,8 @@ jobs:
           from hashlib import sha1
           root=Path('app/src/main/java/com/overmind/zero')
           pins={
-          'SensorimotorMind.java':'87d92efabd249789f8fc49710d19aa014fb1fc65',
-          'GameActivity.java':'734f1d0f9b16b02fbd2e30069e0d6b8685a0d94a',
+          'SensorimotorMind.java':'3d1ee0ccff4bc7e19d658250b9c11179df7bc84a',
+          'GameActivity.java':'59f639527bcc45dc5503f3c005cfa3d6c84c4c80',
           'InstrumentalNavigation.java':'fb95ae5b19a8b2602cb4338641d8851bebf8fa26',
           'BehavioralLaboratory.java':'d9430cbea62debac6fd69a660b829595a4af7456',
           'BehavioralLabActivity.java':'c1e655a947454e2cb77baad6b282890f00097717',
@@ -755,7 +755,7 @@ jobs:
           'DistributedBodySense.java':'75c1561436fef92f07b7fcb339f1a36eb87e7c62',
           'DistributedBodyRegression.java':'e575ec3f4a0a05ce3c32001f6b7026bbbcd0f2f2',
           'ShelterEcology.java':'12ed474afb61dee5ab60723efc0bcdd65f4b313a',
-          'ShelterEcologyRegression.java':'49b8d03454e5baef175972cd77992bfc0b20df66',
+          'ShelterEcologyRegression.java':'c2a5f0a7ab147da0f602d5069a6b49fae4799fdf',
           'SpatialPerception.java':'f7f5ba9aafd5494ba5621c78e99a8fd4a191d93b',
           'MotorBrain.java':'a3e0681c595bd1a9d17549c25770f6049c83926f',
           'Morphology.java':'3f2504d47aae8db1e8ac1f82c3ffb68a0a028279',
