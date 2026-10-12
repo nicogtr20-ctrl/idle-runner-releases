@@ -48,6 +48,7 @@ public final class GameActivity extends Activity {
         PredictiveWorldV20 predictiveWorldV20=new PredictiveWorldV20();
         TransferSkillsV20 transferV20=new TransferSkillsV20();
         FuturePlannerV20 futureV20=new FuturePlannerV20();
+        PhysicalConsequenceV20 physicalConsequenceV20=new PhysicalConsequenceV20();
         SpatialPerception spatialMap=new SpatialPerception();
         CausalExperiments causalExperiments=new CausalExperiments();
         InstrumentalNavigation navigation=new InstrumentalNavigation();
@@ -230,6 +231,9 @@ public final class GameActivity extends Activity {
             futureV20=new FuturePlannerV20();
             futureV20.restore(prefs.getString(FuturePlannerV20.KEY,""));
             sensorMind.attachFuturePlannerV20(futureV20);
+            physicalConsequenceV20=new PhysicalConsequenceV20();
+            physicalConsequenceV20.restore(prefs.getString(PhysicalConsequenceV20.KEY,""));
+            sensorMind.attachPhysicalConsequenceV20(physicalConsequenceV20);
             spatialMap=new SpatialPerception();
             spatialMap.restore(prefs.getString(SpatialPerception.KEY,""));
             sensorMind.attachSpatialPerception(spatialMap);
@@ -518,6 +522,7 @@ public final class GameActivity extends Activity {
               .putString(PredictiveWorldV20.KEY,predictiveWorldV20.encode())
               .putString(TransferSkillsV20.KEY,transferV20.encode())
               .putString(FuturePlannerV20.KEY,futureV20.encode())
+              .putString(PhysicalConsequenceV20.KEY,physicalConsequenceV20.encode())
               .putString(SpatialPerception.KEY,spatialMap.encode())
               .putString(CausalExperiments.KEY,causalExperiments.encode())
               .putString(InstrumentalNavigation.KEY,navigation.encode())
