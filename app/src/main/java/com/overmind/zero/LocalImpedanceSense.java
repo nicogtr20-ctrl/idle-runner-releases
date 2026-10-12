@@ -47,6 +47,9 @@ public final class LocalImpedanceSense {
     public static float[] sense(MotorBrain.Body body,Morphology.Surface tissue){
         if(body==null||tissue==null)throw new IllegalArgumentException("Missing body");
         float[] result=new float[FEATURES];
+        // After an old profile or live-scene resume, physical coordinates
+        // restore before the NEXT actual actuator step. Never invent targets.
+        if(!tissue.hasValidMotorTargets())return result;
         for(int i=0;i<POINTS;i++){
             int prev=(i+POINTS-1)%POINTS,next=(i+1)%POINTS;
             float nx=tissue.normalX(i),ny=tissue.normalY(i);
