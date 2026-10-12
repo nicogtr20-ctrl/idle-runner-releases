@@ -30,7 +30,8 @@ public final class GripAffordanceV20 {
     private final int[] count=new int[CELLS],moved=new int[CELLS];
     private final int[] contextCount=new int[STATES],contextMoved=new int[STATES];
     private int pendingAction=-1,pendingState=-1;
-    private int peakState=-1,intervalSamples=0;
+    private int peakState=-1,intervalSamples=0,lastMicroState=-1;
+    private boolean sawHeldRelease=false,sawSpreadRelease=false;
     // Honest frequency-resolved, globally bounded counters, no frame arrays.
     private long physicsSamples=0,physicsHeldFrames=0,physicsSpreadFrames=0;
     private long fleetingHeldIntervals=0,fleetingSpreadIntervals=0;
@@ -104,7 +105,8 @@ public final class GripAffordanceV20 {
         pendingAction=action;pendingState=state;
         // Starting posture is an observation at the decision boundary,
         // not evidence of a grip during the NEW action's physical frames.
-        peakState=-1;intervalSamples=0;
+        peakState=-1;intervalSamples=0;lastMicroState=-1;
+        sawHeldRelease=false;sawSpreadRelease=false;
         if(state>=3)realHeldSnapshots++;
         if(state>=5)spreadHeldSnapshots++;
     }
@@ -116,6 +118,12 @@ public final class GripAffordanceV20 {
         if(pendingAction<0)return;
         int state=selfState(skin);
         if(state<0){invalid++;return;}
+        // A momentary hold is only counted as transient if its genuine
+        // release is observed BEFORE the same action interval ends.
+        // A newly engaged grip that remains held is not a "brief" one.
+        if(lastMicroState>=3&&state<3)sawHeldRelease=true;
+        if(lastMicroState>=5&&state<5)sawSpreadRelease=true;
+        lastMicroState=state;
         physicsSamples++;intervalSamples++;
         peakState=Math.max(peakState,state);
         if(state>=3)physicsHeldFrames++;
@@ -129,10 +137,10 @@ public final class GripAffordanceV20 {
     public void consequence(int action,float actualExternalDisplacement,
                             boolean training,boolean holdout){
         if(pendingAction<0)return;
-        int startState=pendingState;
         int ctx=intervalSamples>0?peakState:pendingState;
         int chosenAction=pendingAction;
-        pendingAction=-1;pendingState=-1;peakState=-1;intervalSamples=0;
+        boolean heldReleased=sawHeldRelease,spreadReleased=sawSpreadRelease;
+        resetLife();
         if(ctx<0||action<0||action>=ACTIONS||action!=chosenAction||
            !Float.isFinite(actualExternalDisplacement)||
            actualExternalDisplacement<0||actualExternalDisplacement>1e7f){
@@ -143,8 +151,8 @@ public final class GripAffordanceV20 {
         // examples. Otherwise saved observed!=trained+heldout after pausing
         // learning, making an intact named brain fail its own restore.
         if(!training&&!holdout)return;
-        if(ctx>=3&&startState<3)fleetingHeldIntervals++;
-        if(ctx>=5&&startState<5)fleetingSpreadIntervals++;
+        if(heldReleased)fleetingHeldIntervals++;
+        if(spreadReleased)fleetingSpreadIntervals++;
         boolean changed=actualExternalDisplacement>.015f;
         float label=changed?1f:0f;
         int slot=ctx*ACTIONS+action;
@@ -167,7 +175,10 @@ public final class GripAffordanceV20 {
         observed++;
         if(changed)moveEvents++;
     }
-    public void resetLife(){pendingAction=-1;pendingState=-1;peakState=-1;intervalSamples=0;}
+    public void resetLife(){
+        pendingAction=-1;pendingState=-1;peakState=-1;intervalSamples=0;
+        lastMicroState=-1;sawHeldRelease=false;sawSpreadRelease=false;
+    }
     public void resumeLife(){resetLife();}
     public long observed(){return observed;}
     public long trained(){return trained;}
