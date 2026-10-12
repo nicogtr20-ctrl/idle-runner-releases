@@ -7,6 +7,8 @@ permissions:
   contents: read
 jobs:
   test:
+    # ZERO 2.0 uses the consolidated push QA instead of duplicate PR Android builds.
+    if: ${{ github.event_name != 'pull_request' || github.head_ref != 'feature/zero-20-hierarchical-intelligence' }}
     runs-on: ubuntu-latest
     timeout-minutes: 25
     steps:
