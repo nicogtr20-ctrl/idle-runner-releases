@@ -491,7 +491,8 @@ public final class SensorimotorMind {
         if(distributedBody!=null&&distributedAfter!=null)distributedBody.feed(distributedAfter);
         float[] impedanceAfter=impedance!=null&&body!=null&&skin!=null?
             LocalImpedanceSense.sense(body,skin):null;
-        if(impedance!=null&&impedanceAfter!=null)impedance.feed(impedanceAfter);
+        // Feed exactly once in consequence(): a duplicated sample would
+        // fabricate a sustained local blockage within one decision interval.
         if(spatial!=null&&body!=null&&objects!=null)
             spatial.observeEnvironment(body,skin,room,objects);
         float[] before=trialState;
