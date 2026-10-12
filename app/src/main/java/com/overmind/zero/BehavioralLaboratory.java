@@ -266,7 +266,7 @@ public final class BehavioralLaboratory {
                    Math.abs(body.cy-room.oy)<ScarcityLab.OPEN_HALF_HEIGHT&&!entered){
                     entered=true;r.gatePassages++;
                 }
-                if(!room.reachedEnergy&&room.foodTouchedByCore(body)){
+                if(!room.reachedEnergy&&room.foodTouchedByBody(body,surface)){
                     float prior=reserve;
                     reserve=Math.min(100,reserve+UnknownWorld.RARE_ENERGY);
                     float gain=reserve-prior;
