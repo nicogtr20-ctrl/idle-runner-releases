@@ -164,8 +164,9 @@ public final class UnknownWorld {
         int[] effects={0,1,2,0,1,2};
         for(int i=0;i<angles.length;i++){
             if(scarce){
-                // 1 supply every fifth expansion, not infinite energy.
-                if(signals[i]==0&&(episode%5!=0||i!=0))continue;
+                // One finite 22-energy supply every fourth expansion, not a
+                // guaranteed grant; it must still be physically reached.
+                if(signals[i]==0&&(episode%4!=0||i!=0))continue;
                 if(signals[i]==1&&i!=1)continue;
                 if(signals[i]==2&&i!=2)continue;
             }
@@ -231,11 +232,13 @@ public final class UnknownWorld {
         Entity finite=new Entity(30,0,0,0);
         if(finite.touch(0,0)!=22||finite.ready()||finite.touch(0,0)!=0)
             throw new IllegalStateException("A consumed energy pulse must disappear");
-        int exposedEnergy=0;
-        for(Entity item:newHabitat(7,0,0,true))
-            if(item.physicalLaw()==0&&!item.concealed)exposedEnergy++;
-        if(exposedEnergy>1)
-            throw new IllegalStateException("Shortage still spawns abundant free energy");
+        for(int episode=1;episode<=12;episode++){
+            int exposedEnergy=0;
+            for(Entity item:newHabitat(episode,0,0,true))
+                if(item.physicalLaw()==0&&!item.concealed)exposedEnergy++;
+            if(exposedEnergy!=(episode%4==0?1:0))
+                throw new IllegalStateException("Finite famine supply cadence wrong at episode "+episode);
+        }
         System.out.printf(Locale.US,
           "ZERO-002 selftest: known_types=%d contacts=%d learned_values=[%.2f, %.2f, %.2f] preferred_signature=%d%n",
           copy.discoveries,copy.total,copy.estimated[0],copy.estimated[1],copy.estimated[2],chosen.signature);
