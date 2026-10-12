@@ -1,5 +1,9 @@
 # OVERMIND ZERO — aggiornamenti Android / OTA
 
+## Stato 12 ottobre 2026 — ZERO 0127
+
+Il branch `feature/zero-0127-spatial-persistence-box-recovery` contiene modifiche sperimentali di ripristino fisica, memoria e bilanciamento. **Non esiste ancora una release APK firmata/verificata per ZERO 0127**. Conservare OTA 97 e gli slot nominati; non disinstallare, non azzerare. Prima della pubblicazione bisogna superare PR QA, Android debug, publisher firmato, verifica SHA-256 ed endpoint Vercel. Le bozze e i merge senza prova non sono release.
+
 ## Invarianti
 - Package Android: `com.overmind.zero.ota`.
 - Gli aggiornamenti devono essere installati **sopra** l'app esistente; non disinstallare se si vogliono conservare i dati.
