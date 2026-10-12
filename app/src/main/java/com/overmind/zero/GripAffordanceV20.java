@@ -95,9 +95,9 @@ public final class GripAffordanceV20 {
     public void consequence(int action,float actualExternalDisplacement,
                             boolean training,boolean holdout){
         if(pendingAction<0)return;
-        int ctx=pendingState;
+        int ctx=pendingState,chosenAction=pendingAction;
         pendingAction=-1;pendingState=-1;
-        if(ctx<0||action<0||action>=ACTIONS||action!=pendingActionBefore(action,ctx)||
+        if(ctx<0||action<0||action>=ACTIONS||action!=chosenAction||
            !Float.isFinite(actualExternalDisplacement)||
            actualExternalDisplacement<0||actualExternalDisplacement>1e7f){
             invalid++;
@@ -124,11 +124,6 @@ public final class GripAffordanceV20 {
         }
         observed++;
         if(changed)moveEvents++;
-    }
-    // Kept separate to reject incorrectly paired pending decisions without
-    // exposing any environmental ground truth to the feature encoder.
-    private int pendingActionBefore(int observedAction,int observedState){
-        return observedAction;
     }
     public void resetLife(){pendingAction=-1;pendingState=-1;}
     public void resumeLife(){resetLife();}
