@@ -5,8 +5,9 @@ import java.util.ArrayList;
 /**
  * ZERO 0124: genuinely thin rigid construction panels. The legacy 40x40
  * energy-cover square retains its strict bilateral adhesive requirement.
- * A panel moves with ordinary unilateral material impulse and rotates if
- * pressed away from its center. No motor command or construction bonus.
+ * A panel moves ONLY after ONE local, physically touching, autonomously
+ * commanded RED adhesive grip. Uncommanded tissue/mass pressure is solid
+ * collision only, never translation or rotation. No construction bonus.
  */
 public final class PanelPhysics {
     private PanelPhysics(){}
@@ -45,6 +46,31 @@ public final class PanelPhysics {
     }
     private static boolean within(float u,float v,float a,float b,float clearance){
         return Math.abs(u)<=a+clearance&&Math.abs(v)<=b+clearance;
+    }
+    /**
+     * A genuinely touching tissue patch; use the exact rotated-plate
+     * geometry, not the old square or another object's adhesion timer.
+     */
+    public static boolean touching(UnknownWorld.Entity panel,float x,float y){
+        if(panel==null||!panel.isConstruction()||panel.consumed)return false;
+        float[] uv=local(panel,x,y);
+        float a=halfLength(panel),b=HALF_THICKNESS,m=2.8f;
+        return Math.abs(uv[0])<=a+m&&Math.abs(uv[1])<=b+m&&
+             (Math.abs(uv[0])>=a-m||Math.abs(uv[1])>=b-m);
+    }
+    /** One confirmed adhesive point is enough; this predicate is shared
+     * by the physics and the red-LED compositor. */
+    public static boolean held(UnknownWorld.Entity panel,int index,
+                               Morphology.Surface tissue){
+        return panel!=null&&panel.isConstruction()&&
+            tissue.gripCommand[index]>Morphology.GRIP_THRESHOLD&&
+            panel.boxGripHold[index]>=Morphology.GRIP_HOLD&&
+            touching(panel,tissue.x[index],tissue.y[index]);
+    }
+    public static boolean anyHeld(UnknownWorld.Entity panel){
+        if(panel==null||!panel.isConstruction())return false;
+        for(float t:panel.boxGripHold)if(t>=Morphology.GRIP_HOLD)return true;
+        return false;
     }
     /** True geometric wind shade projected from rotated thin material. */
     public static boolean shadow(float x,float y,int direction,UnknownWorld.Entity p,
@@ -138,11 +164,21 @@ public final class PanelPhysics {
            !Float.isFinite(dt)||dt<=0)return out;
         float[] sample=new float[4];
         float spin=0,forceX=0,forceY=0;
+        int confirmed=0;
         for(int i=0;i<Morphology.POINTS;i++){
             float x=s.x[i],y=s.y[i],vx=s.vx[i],vy=s.vy[i];
             float priorX=priorSkinX==null?x-vx*dt:priorSkinX[i];
             float priorY=priorSkinY==null?y-vy*dt:priorSkinY[i];
-            if(!hit(panel,priorX,priorY,x,y,0.45f,sample))continue;
+            boolean collision=hit(panel,priorX,priorY,x,y,0.45f,sample);
+            boolean contact=collision||touching(panel,x,y);
+            boolean commanded=s.gripCommand[i]>Morphology.GRIP_THRESHOLD;
+            if(contact&&commanded){
+                panel.boxGripHold[i]=Math.min(.5f,panel.boxGripHold[i]+dt);
+            }else panel.boxGripHold[i]=0f;
+            boolean red=contact&&commanded&&
+                panel.boxGripHold[i]>=Morphology.GRIP_HOLD;
+            if(red)confirmed++;
+            if(!collision)continue;
             float[] n=worldVector(panel,sample[2],sample[3]);
             float cx=panel.x+worldVector(panel,sample[0],sample[1])[0];
             float cy=panel.y+worldVector(panel,sample[0],sample[1])[1];
@@ -155,8 +191,10 @@ public final class PanelPhysics {
             float motorPush=Math.max(0,-((s.targetX(i)-x)*n[0]+
                                         (s.targetY(i)-y)*n[1]));
             float impulse=clip(inward*.08f+motorPush*.045f,0,1.6f);
-            // A nearly stationary touch with no motor drive never moves panel.
-            if(s.hasValidMotorTargets()&&impulse>.055f){
+            // A push has NO force unless this exact membrane patch is
+            // confirmed adhered to THIS panel, the same condition that
+            // makes it visibly red. One point is enough; no opposed grip.
+            if(red&&s.hasValidMotorTargets()&&impulse>.055f){
                 forceX-=n[0]*impulse;forceY-=n[1]*impulse;
                 spin+=(armX*(-n[1])-armY*(-n[0]))*impulse;
                 out.pressureImpulse+=impulse;
@@ -164,7 +202,8 @@ public final class PanelPhysics {
                 panel.everCollided=true;
             }
             s.touchSense[i]=1;
-            s.touchPulse[i]=Math.max(s.touchPulse[i],Math.min(1f,.2f+impulse*.3f));
+            s.touchPulse[i]=Math.max(s.touchPulse[i],Math.min(1f,.2f+
+                (red?impulse*.3f:0f)));
             project(s.x,s.y,s.vx,s.vy,i,sample,panel);
             out.points++;
         }
@@ -218,17 +257,19 @@ public final class PanelPhysics {
             float[] n=worldVector(panel,sample[2],sample[3]);
             float inward=Math.max(0,-((vx-panel.vx)*n[0]+(vy-panel.vy)*n[1]));
             float impulse=clip(inward*.07f,0,1.2f);
-            if(impulse>.08f){
-                forceX-=n[0]*impulse;forceY-=n[1]*impulse;
-                float[] at=worldVector(panel,sample[0],sample[1]);
-                spin+=(at[0]*(-n[1])-at[1]*(-n[0]))*impulse;
-                panel.everCollided=true;
-            }
+            // Internal masses are SOLID but cannot activate adhesion
+            // or push a panel by themselves; only a red tissue point can.
             project(body.x,body.y,body.vx,body.vy,i,sample,panel);
             out.solidNodes++;
         }
         // A physically displaced plate retains momentum with friction;
         // off-center impulses generate signed angular motion.
+        if(confirmed==0){
+            // Strict game rule: a panel no longer coasts/rotates after
+            // the last red point releases. Keep it solid and stationary.
+            panel.vx=panel.vy=panel.angularVelocity=0f;
+            return out;
+        }
         panel.vx=clip(panel.vx+forceX*.64f,-MAX_SPEED,MAX_SPEED);
         panel.vy=clip(panel.vy+forceY*.64f,-MAX_SPEED,MAX_SPEED);
         float inertia=halfLength(panel)*halfLength(panel)*.35f+
