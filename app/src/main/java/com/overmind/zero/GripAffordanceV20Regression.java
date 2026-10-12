@@ -121,6 +121,17 @@ public final class GripAffordanceV20Regression {
         check(fleeting.physicsSamples()==2&&fleeting.physicsHeldFrames()==1&&
               fleeting.physicsSpreadFrames()==1&&fleeting.fleetingSpreadIntervals()==1,
               "Brief physically valid hold lost between decisions");
+        // A grip which begins but remains engaged at the next decision
+        // is NOT a fleeting grip. This prevents falsely inflating results.
+        GripAffordanceV20 persistent=new GripAffordanceV20();
+        persistent.chosen(2,touchOnly);
+        persistent.physicsFrame(spread);
+        persistent.physicsFrame(spread);
+        persistent.consequence(2,1f,true,false);
+        check(persistent.physicsSpreadFrames()==2&&
+              persistent.fleetingSpreadIntervals()==0&&
+              persistent.fleetingHeldIntervals()==0,
+              "Persistently held grip mislabelled transient");
         // Never pretend that two individually held points separated in time
         // constituted ONE distributed grip at the same physical instant.
         GripAffordanceV20 disjoint=new GripAffordanceV20();
