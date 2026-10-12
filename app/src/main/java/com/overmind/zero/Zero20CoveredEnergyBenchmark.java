@@ -110,7 +110,8 @@ public final class Zero20CoveredEnergyBenchmark {
         final GoalContinuity intention=new GoalContinuity();
         final MotorAutonomyGuard guard=new MotorAutonomyGuard();
         Rig(Profile p,boolean experiment){
-            mind.restore(p.world);
+            if(!p.world.isEmpty()&&!mind.restore(p.world))
+                throw new IllegalArgumentException("Original saved ZERO brain failed validation");
             mind.restoreOutcomeModel(p.outcome);
             mind.diagnostics.restore(p.diagnostics);
             mind.restorePlanningStats(p.planner);
@@ -334,9 +335,15 @@ public final class Zero20CoveredEnergyBenchmark {
             "ZERO20_SUMMARY {\"profile\":\"%s\",\"pairs\":%d,\"wins\":%d,"+
             "\"losses\":%d,\"ties\":%d,\"changedPaths\":%d,"+
             "\"candidateEligiblePlans\":%d,\"trainingWorldConfidence\":%.5f,"+
+            "\"trainingHeldoutError\":%.6f,\"trainingUnchangedError\":%.6f,"+
+            "\"trainingHeldoutSamples\":%d,\"trainedWorldActions\":%d,"+
+            "\"corroboratedSkills\":%d,"+
             "\"meanEnergyDelta\":%.4f,\"meanSurvivalDeltaSec\":%.4f,"+
             "\"meanDamageDelta\":%.4f,\"promotable\":false}%n",
             label,pairs,wins,losses,ties,changed,eligible,training.world.confidence(),
+            training.world.heldoutError(),training.world.baselineError(),
+            training.world.validations(),training.world.trained(),
+            training.transfer.confirmed(),
             changeEnergy/pairs,changeTime/pairs,changeDamage/pairs);
         // NEVER claim readiness automatically from a small heldout suite.
         System.out.println("ZERO20_ARENA FINISHED: Real bilateral covers, hidden finite sources, no oracle actions; sandbox-only evidence; no APK");
