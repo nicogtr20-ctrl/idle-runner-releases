@@ -68,7 +68,7 @@ public final class PanelPhysics {
             touching(panel,tissue.x[index],tissue.y[index]);
     }
     public static boolean anyHeld(UnknownWorld.Entity panel){
-        if(panel==null||!panel.isConstruction())return false;
+        if(panel==null||!panel.isConstruction()||!panel.panelHeldNow)return false;
         for(float t:panel.boxGripHold)if(t>=Morphology.GRIP_HOLD)return true;
         return false;
     }
@@ -264,6 +264,7 @@ public final class PanelPhysics {
         }
         // A physically displaced plate retains momentum with friction;
         // off-center impulses generate signed angular motion.
+        panel.panelHeldNow=confirmed>0;
         if(confirmed==0){
             // Strict game rule: a panel no longer coasts/rotates after
             // the last red point releases. Keep it solid and stationary.
