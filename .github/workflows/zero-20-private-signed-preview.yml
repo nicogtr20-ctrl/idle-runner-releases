@@ -106,16 +106,28 @@ jobs:
           TOOL="$(find "$ANDROID_HOME/build-tools" -name apksigner -type f | sort -V | tail -1)"
           AAPT="$(find "$ANDROID_HOME/build-tools" -name aapt -type f | sort -V | tail -1)"
           test -x "$TOOL" && test -x "$AAPT"
-          "$TOOL" verify --verbose --print-certs "$APK" > "$RUNNER_TEMP/preview-cert.txt"
-          "$TOOL" verify --verbose --print-certs "$STABLE" > "$RUNNER_TEMP/stable-cert.txt"
+          "$TOOL" verify --verbose --print-certs "$APK" > "$RUNNER_TEMP/preview-cert.txt" 2>&1
+          "$TOOL" verify --verbose --print-certs "$STABLE" > "$RUNNER_TEMP/stable-cert.txt" 2>&1
           python3 - <<'PY'
           import os,pathlib,re
           t=pathlib.Path(os.environ['RUNNER_TEMP'])
           def certificate(filename):
-              text=(t/filename).read_text()
-              match=re.search(r'Signer #1 certificate SHA-256 digest:\s*([0-9a-fA-F]+)',text)
-              if not match:raise AssertionError('APK certificate fingerprint unavailable')
-              return match.group(1).lower()
+              lines=(t/filename).read_text().splitlines()
+              for line in lines:
+                  if 'sha-256' not in line.lower() and 'sha256' not in line.lower():
+                      continue
+                  if 'certificate' not in line.lower() and 'cert' not in line.lower():
+                      continue
+                  # Handle current and older Android Build Tools' certificate
+                  # output formats without assuming a fixed signer label.
+                  match=re.search(r'(?i)(?:sha-256|sha256)[^:]*:\s*([a-f0-9: ]+)',line)
+                  if match:
+                      value=re.sub(r'[^0-9a-f]','',match.group(1).lower())
+                      if len(value)==64:return value
+              # Only print non-secret field labels, never private keystore data.
+              labels=[re.sub(r'[0-9a-fA-F]{32,}','<fingerprint>',line)[:130]
+                      for line in lines[:16]]
+              raise AssertionError('APK SHA256 certificate format unsupported: '+repr(labels))
           if certificate('preview-cert.txt')!=certificate('stable-cert.txt'):
               raise AssertionError('Official stable signing certificate DOES NOT MATCH')
           print('PASS: preview certificate exactly matches installed stable OTA99 signing certificate')
