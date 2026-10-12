@@ -658,7 +658,7 @@ jobs:
           assert 'surface.step(body,input.membrane,px,py,DT,brain.adhesion())' in lab
           assert 'body.step(input.motor,mx,my,DT,input.hands,px,py)' in lab
           assert 'brain.contactOutcome(delta,object.signature)' in lab
-          assert 'lab.foodTouchedByBody(body,skin)' in lab
+          assert 'room.foodTouchedByBody(body,surface)' in lab
           assert 'brain.observe(SensorimotorMind.Senses.read(' in lab
           assert 'rig.episodes.consequenceSeparated(' in lab
           assert 'public synchronized void setNavigationAdviceEnabled(boolean enabled)' in brain
@@ -725,7 +725,7 @@ jobs:
           'SensorimotorMind.java':'ba4cf5e2b7b925cf0d9b7025d9f6cd0df6b1f27a',
           'GameActivity.java':'8bdb1051362b719ab59441a3ddc648ed8eeb73a0',
           'InstrumentalNavigation.java':'fb95ae5b19a8b2602cb4338641d8851bebf8fa26',
-          'BehavioralLaboratory.java':'e016be507d54b2535885a5c2070951fd9e4c72f7',
+          'BehavioralLaboratory.java':'d9430cbea62debac6fd69a660b829595a4af7456',
           'BehavioralLabActivity.java':'c1e655a947454e2cb77baad6b282890f00097717',
           'ResetDomains.java':'1f809d30d40e83c056b0c7c2c046fa6bc9138dbb',
           'ScarcityLab.java':'51d04604c79c728c53dd819971116bd7d710dc60',
