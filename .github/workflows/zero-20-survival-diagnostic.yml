@@ -1,0 +1,107 @@
+name: ZERO 2.0 survival-window research diagnostic
+on:
+  push:
+    branches: [feature/zero-20-hierarchical-intelligence]
+    paths:
+      - 'docs/ZERO20_SURVIVAL_DIAGNOSTIC_REQUEST.md'
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: zero20-long-survival-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  extended-real-physics:
+    runs-on: ubuntu-latest
+    timeout-minutes: 35
+    strategy:
+      fail-fast: false
+      matrix:
+        snapshot: [original-1838, later-2227]
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+      - name: Fetch latest explicitly uploaded ZERO report read-only
+        shell: bash
+        run: |
+          set -euo pipefail
+          git fetch --no-tags origin zero-telemetry:refs/remotes/origin/zero-telemetry
+          python3 - <<'PY'
+          import json, pathlib, subprocess
+          def read(path):
+              return json.loads(subprocess.check_output(
+                  ["git","show","origin/zero-telemetry:"+path],text=True))
+          # Never silently change the brain version half way through an
+          # experimental A/B series because telemetry has been uploaded.
+          report={
+              "original-1838":"20261012-163858-48e97da70734",
+              "later-2227":"20261012-202752-55671d9a33fd"
+          }["${{ matrix.snapshot }}"]
+          index=read("zero-telemetry/history/"+report+".json")
+          if index["reportId"]!=report:
+              raise AssertionError("Versioned telemetry index mismatch")
+          fields=dict(index.get("currentZero",{}))
+          paths=[p["path"] for p in index.get("parts",[])]
+          if len(paths)<3:
+              raise AssertionError("Telemetry index does not contain a complete multipart report")
+          for path in paths:
+              d=read(path)
+              src=d.get("currentZero",{})
+              for k,v in src.items():
+                  if k in fields and fields[k]!=v:
+                      raise AssertionError("Conflicting data for "+k)
+                  fields[k]=v
+          needed=("best","hand_brain_v04","morph_brain_v07",
+                  "sensorimotor_model_v09")
+          absent=[k for k in needed if k not in fields]
+          if absent:raise AssertionError("Incomplete true brain report: "+str(absent))
+          # User's private brain never appears in logs, CI artifacts,
+          # GitHub commit or an Android app.
+          p=pathlib.Path("/tmp/zero20-realbrain.properties")
+          values=[]
+          for k,v in fields.items():
+              if isinstance(v,str) and "\n" not in v and "\r" not in v:
+                  values.append(k+"="+v.replace("\\","\\\\"))
+          p.write_text("\n".join(values)+"\n",encoding="utf-8")
+          print("Pinned brain snapshot: ${{ matrix.snapshot }}; report id: "+report+"; shards: "+str(len(paths)),
+                "- no model/weights printed or uploaded")
+          PY
+      - name: Compile same physical benchmark with opt-in extended survival window
+        run: |
+          set -euo pipefail
+          mkdir -p /tmp/zero20-classes
+          javac -encoding UTF-8 -sourcepath app/src/main/java -d /tmp/zero20-classes app/src/main/java/com/overmind/zero/Zero20CoveredEnergyBenchmark.java
+      - name: Run authentic 170-second starvation-capable heldout scenarios
+        run: |
+          set -euo pipefail
+          java -Xmx2g -Dzero20.longSurvivalDiagnostic=true -cp /tmp/zero20-classes com.overmind.zero.Zero20CoveredEnergyBenchmark /tmp/zero20-realbrain.properties --fresh | tee /tmp/zero20-survival-audit.log
+          grep '^ZERO20_SURVIVAL_AUDIT' /tmp/zero20-survival-audit.log
+          grep '^ZERO20_SUMMARY' /tmp/zero20-survival-audit.log
+          grep '^ZERO20_ARENA FINISHED' /tmp/zero20-survival-audit.log
+      - name: Calculate death, uncensoring and source counts
+        run: |
+          python3 - <<'PY'
+          import json,os
+          from pathlib import Path
+          lines=Path('/tmp/zero20-survival-audit.log').read_text().splitlines()
+          parsed=[json.loads(line.split('ZERO20_ARENA ',1)[1]) for line in lines if line.startswith('ZERO20_AB ZERO20_ARENA ')]
+          stats=[json.loads(line.split('ZERO20_SUMMARY ',1)[1]) for line in lines if line.startswith('ZERO20_SUMMARY ')]
+          if len(parsed)!=24 or len(stats)!=1: raise AssertionError('Expected 12 paired runs and one summary')
+          audit=[json.loads(line.split(' ',1)[1]) for line in lines if line.startswith('ZERO20_SURVIVAL_AUDIT ')]
+          if len(audit)!=1 or audit[0]['windowSeconds'] <= audit[0]['untouchedDepletionSeconds']: raise AssertionError('Window is still right censored')
+          lines_out=['# 170s survival stress, pinned private brain', 'Full 96-site authentic physics, but abbreviated Android ecosystem.',
+                     '| Mode | Runs | Deaths | Completed full 170s | Revealed covers | Positive energy contacts |',
+                     '|---|---:|---:|---:|---:|---:|']
+          for mode in ('CONTROL','ACTIVE'):
+              rows=[r for r in parsed if r['phase']==mode]
+              lines_out.append(f"| {mode} | {len(rows)} | {sum(bool(r['died']) for r in rows)} | {sum(r['seconds']>169.96 for r in rows)} | {sum(r['covers'] for r in rows)} | {sum(r['positiveContacts'] for r in rows)} |")
+          s=stats[0]
+          lines_out += [f"\nA/B: {s['wins']} wins / {s['losses']} losses / {s['ties']} ties. Planner eligible: {s['candidateEligiblePlans']}. No claim of intelligence promotion."]
+          Path(os.environ['GITHUB_STEP_SUMMARY']).write_text('\n'.join(lines_out)+'\n')
+          print('\n'.join(lines_out))
+          PY

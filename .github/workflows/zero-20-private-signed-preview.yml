@@ -1,0 +1,159 @@
+name: ZERO 2.0 PRIVATE signed shadow-preview (NO OTA)
+on:
+  push:
+    branches: [feature/zero-20-hierarchical-intelligence]
+    paths:
+      - 'docs/ZERO20_SIGNED_PREVIEW_REQUEST.md'
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: zero20-signed-preview
+  cancel-in-progress: true
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 35
+    # Signing is available to the private owner's branch only. Never use pull_request.
+    env:
+      OVERMIND_BUILD_NUMBER: '99'
+    steps:
+      - name: Checkout locked experimental branch
+        uses: actions/checkout@v4
+        with:
+          persist-credentials: true
+          fetch-depth: 1
+      - name: Setup JDK17 and Gradle
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+      - uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: '8.11.1'
+      - name: Confirm source and OTA safety boundaries
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          from pathlib import Path
+          base=Path('app/src/main/java/com/overmind/zero')
+          game=(base/'GameActivity.java').read_text()
+          mind=(base/'SensorimotorMind.java').read_text()
+          telemetry=(base/'TelemetryGitHub.java').read_text()
+          gradle=Path('app/build.gradle').read_text()
+          assert 'sensorMind.enableZero20ExperimentalAdvice(false);' in game
+          assert 'private transient boolean zero20ExperimentalAdvice=false;' in mind
+          assert 'new JSONObject(Zero20PassiveSnapshot.fromSaved(all))' in telemetry
+          assert 'result.put("zero20Passive"' in telemetry
+          assert "applicationId 'com.overmind.zero.ota'" in gradle
+          assert "1000 + ciBuildNumber.toInteger()" in gradle
+          assert 'new PredictiveWorldV20()' in game
+          assert 'new GripAffordanceV20()' in game
+          assert 'new PhysicalConsequenceV20()' in game
+          print('PASS: real ZERO motor policy preserved; passive report only; stable package identity')
+          PY
+      - name: Retrieve stable OTA99 reference APK without release mutations
+        shell: bash
+        run: |
+          set -euo pipefail
+          git fetch --no-tags --depth=1 origin main
+          git show FETCH_HEAD:updater/public/apk/overmind-zero-1099-02c667030576.apk > "$RUNNER_TEMP/zero-stable-ota99.apk"
+          echo '02c6670305764209eb6d3daff9805a33a131a264e2bc2a917925b1f8f19376f6  '"$RUNNER_TEMP/zero-stable-ota99.apk" | sha256sum -c -
+          test -s "$RUNNER_TEMP/zero-stable-ota99.apk"
+      - name: Restore existing official app-signing key only within ephemeral runner
+        shell: bash
+        env:
+          SIGNING_BUNDLE: ${{ secrets.OVERMIND_SIGNING_BUNDLE }}
+        run: |
+          set -euo pipefail
+          if [[ -z "$SIGNING_BUNDLE" ]]; then
+            echo "::error::The official signing bundle is missing. No APK is eligible for install."
+            exit 1
+          fi
+          printf '%s' "$SIGNING_BUNDLE" | base64 --decode > "$RUNNER_TEMP/overmind-signing.json"
+          python3 - <<'PY'
+          import json,base64,os,pathlib
+          temp=pathlib.Path(os.environ["RUNNER_TEMP"])
+          signing=temp/"overmind-signing.json"
+          obj=json.loads(signing.read_text("utf-8"))
+          key=temp/"overmind-release.p12"
+          key.write_bytes(base64.b64decode(obj["keyStoreBase64"],validate=True))
+          key.chmod(0o600)
+          pwd=obj["password"];alias=obj["alias"]
+          print("::add-mask::"+pwd)
+          print("::add-mask::"+alias)
+          with open(os.environ["GITHUB_ENV"],"a",encoding="utf-8") as fh:
+            fh.write("OVERMIND_KEYSTORE_FILE="+str(key)+"\n")
+            fh.write("OVERMIND_KEYSTORE_PASSWORD="+pwd+"\n")
+            fh.write("OVERMIND_KEY_PASSWORD="+pwd+"\n")
+            fh.write("OVERMIND_KEY_ALIAS="+alias+"\n")
+          signing.unlink()
+          print("Official certificate restored to transient runner; secrets not uploaded.")
+          PY
+      - name: Build production-signed preview with stable OTA99 version code
+        shell: bash
+        run: |
+          set -euo pipefail
+          gradle --no-daemon assembleRelease
+          test -s app/build/outputs/apk/release/app-release.apk
+      - name: Compare exact installed-app identity and actual signing certificate
+        shell: bash
+        run: |
+          set -euo pipefail
+          APK=app/build/outputs/apk/release/app-release.apk
+          STABLE="$RUNNER_TEMP/zero-stable-ota99.apk"
+          TOOL="$(find "$ANDROID_HOME/build-tools" -name apksigner -type f | sort -V | tail -1)"
+          AAPT="$(find "$ANDROID_HOME/build-tools" -name aapt -type f | sort -V | tail -1)"
+          test -x "$TOOL" && test -x "$AAPT"
+          "$TOOL" verify --verbose --print-certs "$APK" > "$RUNNER_TEMP/preview-cert.txt" 2>&1
+          "$TOOL" verify --verbose --print-certs "$STABLE" > "$RUNNER_TEMP/stable-cert.txt" 2>&1
+          python3 - <<'PY'
+          import os,pathlib,re
+          t=pathlib.Path(os.environ['RUNNER_TEMP'])
+          def certificate(filename):
+              lines=(t/filename).read_text().splitlines()
+              for line in lines:
+                  if 'sha-256' not in line.lower() and 'sha256' not in line.lower():
+                      continue
+                  if 'certificate' not in line.lower() and 'cert' not in line.lower():
+                      continue
+                  # Handle current and older Android Build Tools' certificate
+                  # output formats without assuming a fixed signer label.
+                  match=re.search(r'(?i)(?:sha-256|sha256)[^:]*:\s*([a-f0-9: ]+)',line)
+                  if match:
+                      value=re.sub(r'[^0-9a-f]','',match.group(1).lower())
+                      if len(value)==64:return value
+              # Only print non-secret field labels, never private keystore data.
+              labels=[re.sub(r'[0-9a-fA-F]{32,}','<fingerprint>',line)[:130]
+                      for line in lines[:16]]
+              raise AssertionError('APK SHA256 certificate format unsupported: '+repr(labels))
+          if certificate('preview-cert.txt')!=certificate('stable-cert.txt'):
+              raise AssertionError('Official stable signing certificate DOES NOT MATCH')
+          print('PASS: preview certificate exactly matches installed stable OTA99 signing certificate')
+          PY
+          "$AAPT" dump badging "$APK" | grep "^package: name='com.overmind.zero.ota' versionCode='1099'"
+          "$AAPT" dump badging "$STABLE" | grep "^package: name='com.overmind.zero.ota' versionCode='1099'"
+          # The preview shares Android's existing app data container; no new package ID.
+          mkdir -p "$RUNNER_TEMP/export"
+          cp "$APK" "$RUNNER_TEMP/export/ZERO20-PASSIVE-SIGNED-PREVIEW-1099.apk"
+          sha256sum "$RUNNER_TEMP/export/"*.apk
+          echo "PASS: preview APK is installable over compatible OTA99 identity without a version-code jump."
+      - name: Upload only the verified signed APK privately (3 day retention)
+        uses: actions/upload-artifact@v4
+        with:
+          name: ZERO20-PASSIVE-SIGNED-PREVIEW-1099
+          path: ${{ runner.temp }}/export/ZERO20-PASSIVE-SIGNED-PREVIEW-1099.apk
+          retention-days: 3
+          if-no-files-found: error
+          compression-level: 0
+      - name: Explain non-production boundary
+        shell: bash
+        run: |
+          echo '## ZERO 2.0 PASSIVE signed preview — APK ready for supervised PHONE test' >> "$GITHUB_STEP_SUMMARY"
+          echo '- Same package com.overmind.zero.ota / same 1099 versionCode as OTA99' >> "$GITHUB_STEP_SUMMARY"
+          echo '- Same signing certificate as the real verified stable OTA99 APK (SHA256 compared)' >> "$GITHUB_STEP_SUMMARY"
+          echo '- Passive ZERO 2.0 only, never steers motor output; original slots intentionally preserved' >> "$GITHUB_STEP_SUMMARY"
+          echo '- Private action artifact, expires after 3 days; **NOT** an OTA or GitHub release' >> "$GITHUB_STEP_SUMMARY"
+          echo '- Before installing on phone, save a named slot and upload a private backup report; stop if Android says signature mismatch' >> "$GITHUB_STEP_SUMMARY"
+          echo '- Actual Android on-device upgrade, FPS and saved-slot migration require supervised human verification' >> "$GITHUB_STEP_SUMMARY"

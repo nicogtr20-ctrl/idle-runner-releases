@@ -39,6 +39,11 @@ public final class BrainStatsActivity extends Activity {
         final TemporalSkillBank temporalSkills;
         final BodyProprioception bodyMap;
         final LocalImpedanceSense localImpedance;
+        final PredictiveWorldV20 predictiveWorldV20;
+        final TransferSkillsV20 transferV20;
+        final FuturePlannerV20 futureV20;
+        final PhysicalConsequenceV20 physicalConsequenceV20;
+        final GripAffordanceV20 gripAffordanceV20;
         final SpatialPerception spatial;
         final CausalExperiments causal;
         final InstrumentalNavigation navigation;
@@ -81,6 +86,17 @@ public final class BrainStatsActivity extends Activity {
             bodyMap.restore(pref.getString(BodyProprioception.KEY,""));
             localImpedance=new LocalImpedanceSense();
             localImpedance.restore(pref.getString(LocalImpedanceSense.KEY,""));
+            predictiveWorldV20=new PredictiveWorldV20();
+            predictiveWorldV20.restore(pref.getString(PredictiveWorldV20.KEY,""));
+            transferV20=new TransferSkillsV20();
+            transferV20.restore(pref.getString(TransferSkillsV20.KEY,""));
+            futureV20=new FuturePlannerV20();
+            futureV20.restore(pref.getString(FuturePlannerV20.KEY,""));
+            physicalConsequenceV20=new PhysicalConsequenceV20();
+            physicalConsequenceV20.restore(
+                pref.getString(PhysicalConsequenceV20.KEY,""));
+            gripAffordanceV20=new GripAffordanceV20();
+            gripAffordanceV20.restore(pref.getString(GripAffordanceV20.KEY,""));
             spatial=new SpatialPerception();
             spatial.restore(pref.getString(SpatialPerception.KEY,""));
             causal=new CausalExperiments();
@@ -216,6 +232,7 @@ public final class BrainStatsActivity extends Activity {
             int total=movementNow.length+handNow.length+choiceNow.length+shapeNow.length+
                 worldMind.parameterCount()+temporal.parameterCount()+bodyMap.parameterCount()+
                 DistributedBodySense.PARAMETERS+LocalImpedanceSense.PARAMETERS+
+                PredictiveWorldV20.WEIGHTS+
                 spatial.parameterCount()+causal.learnedParameters()+navigation.parameterCount();
             int original=movementStart.length+handStart.length+DecisionBrain.PARAMS;
             y=hero(c,"POTENZA NEURALE / PARAMETRI",String.valueOf(total),
@@ -245,6 +262,40 @@ public final class BrainStatsActivity extends Activity {
                 "fiducia "+String.format(Locale.US,"%.0f%%",
                   localImpedance.confidence()*100f),
                 Math.min(1f,localImpedance.validations/100f),gold);
+            y=skill(c,y,"ZERO 2.0 / MODELLO PREDITTIVO",
+                PredictiveWorldV20.WEIGHTS+" pesi",
+                predictiveWorldV20.transitions()+" eventi reali • "+
+                predictiveWorldV20.validations()+" verifiche • fiducia "+
+                String.format(Locale.US,"%.0f%%",
+                    predictiveWorldV20.confidence()*100f)+" • solo osservazione",
+                Math.min(1f,predictiveWorldV20.validations()/120f),cyan);
+            y=skill(c,y,"ZERO 2.0 / STRATEGIE TRA VITE",
+                transferV20.confirmed()+" corroborate",
+                transferV20.candidates()+" candidate  •  fino a "+
+                transferV20.longestConfirmed()+" azioni  •  solo osservazione",
+                Math.min(1f,transferV20.confirmed()/5f),purple);
+            y=skill(c,y,"ZERO 2.0 / FUTURI IPOTETICI",
+                futureV20.eligible()+" valutati",
+                futureV20.checks()+" controlli  •  orizzonte 5  •  nessuna guida motoria",
+                futureV20.checks()==0?0f:
+                    Math.min(1f,(float)futureV20.eligible()/futureV20.checks()),gold);
+            y=skill(c,y,"ZERO 2.0 / CONSEGUENZE FISICHE",
+                physicalConsequenceV20.physicalEvents()+" movimenti reali",
+                physicalConsequenceV20.adjacentEnergy()+" contatti energetici temporalmente vicini"+
+                "  •  "+physicalConsequenceV20.ambiguousEnergy()+" ambigui"+
+                "  •  fiducia "+String.format(Locale.US,"%.0f%%",
+                    physicalConsequenceV20.confidence()*100f)+"  •  solo osservazione",
+                Math.min(1f,physicalConsequenceV20.validations()/120f),gold);
+            y=skill(c,y,"ZERO 2.0 / PRESA CORPOREA APPRESA",
+                gripAffordanceV20.realHeld()+" configurazioni con presa valida",
+                gripAffordanceV20.spreadHeld()+" prese distribuite  •  "+
+                gripAffordanceV20.motionEvents()+" cambiamenti osservati  •  "+
+                gripAffordanceV20.physicsHeldFrames()+" fotogrammi con presa, "+
+                gripAffordanceV20.physicsSpreadFrames()+" distribuiti  •  "+
+                gripAffordanceV20.fleetingSpreadIntervals()+" prese brevi rilevate"+
+                "  •  fiducia "+String.format(Locale.US,"%.0f%%",
+                    gripAffordanceV20.confidence()*100f)+"  •  nessuna guida motoria",
+                Math.min(1f,gripAffordanceV20.validations()/150f),purple);
             y=skill(c,y,"PERCEZIONE DELLO SPAZIO",
                 spatial.parameterCount()+" pesi",
                 spatial.transitions+" azioni osservate  •  "+SpatialPerception.RAYS+
