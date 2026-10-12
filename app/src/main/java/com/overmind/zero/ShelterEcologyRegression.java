@@ -92,6 +92,21 @@ public final class ShelterEcologyRegression {
         ArrayList<UnknownWorld.Entity> spawned=UnknownWorld.newHabitat(1,0,0,false);
         int blank=0;for(UnknownWorld.Entity e:spawned)if(e.isConstruction())blank++;
         yes(blank>0,"No inert material is available for independent building");
+        // Only REAL storm energy cost, not placing/moving a cube, should
+        // enter the learned action reward. No colored source is credited.
+        SensorimotorMind calm=new SensorimotorMind();
+        SensorimotorMind windy=new SensorimotorMind();
+        float[] sensed=new float[SensorimotorMind.S];
+        sensed[0]=.75f;
+        calm.resetEpisode(sensed);windy.resetEpisode(sensed);
+        calm.observe(sensed,.7f);windy.observe(sensed,.7f);
+        windy.ambientDamage(.3f);
+        calm.observe(sensed,.7f);windy.observe(sensed,.7f);
+        yes(windy.lastReward<calm.lastReward-.06f,
+            "Weather damage was not learned as an actual action consequence");
+        yes(windy.positiveContactCredits()==0&&windy.negativeContactCredits()==0,
+            "Atmospheric damage was falsely attributed to colored objects");
+        System.out.println("ZERO-0122 SHELTER PASS: real atmosphere-linked action loss, no synthetic source credit");
         System.out.println("ZERO-0122 SHELTER PASS: active weather, correct opaque direction, "+
             "real tissue pressure, lower damage behind moved solids, "+
             "no free energy, material streaming, save/death persistence, "+
