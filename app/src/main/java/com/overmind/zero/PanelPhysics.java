@@ -28,11 +28,45 @@ public final class PanelPhysics {
         return (float)Math.hypot(halfLength(p),HALF_THICKNESS);
     }
     public static final class Contact {
+        public boolean broadphaseSkipped=false;
         public int points=0,solidNodes=0;
         public float pressureImpulse=0,torqueImpulse=0;
     }
     private static float norm(float x,float y){
         return (float)Math.hypot(x,y);
+    }
+    /** Conservative swept-circle broad phase. Detailed rotated-plate
+     * collision is evaluated ONLY when some physical membrane node or one
+     * of the 10 body masses may reach the panel. Segment-to-center minimum
+     * also retains fast crossing CCD with endpoints on opposite sides.
+     * No rewards, sense or motor commands are inferred from this shortcut.
+     */
+    static boolean near(MotorBrain.Body body,Morphology.Surface skin,
+                        UnknownWorld.Entity panel,
+                        float[] skinPrevX,float[] skinPrevY,
+                        float[] bodyPrevX,float[] bodyPrevY){
+        float r=bound(panel)+7f,rr=r*r;
+        for(int i=0;i<Morphology.POINTS;i++){
+            float x=skin.x[i],y=skin.y[i];
+            float oldX=skinPrevX==null?x:skinPrevX[i],
+                  oldY=skinPrevY==null?y:skinPrevY[i];
+            if(segmentNear(oldX,oldY,x,y,panel.x,panel.y,rr))return true;
+        }
+        for(int i=0;i<MotorBrain.N;i++){
+            float x=body.x[i],y=body.y[i];
+            float oldX=bodyPrevX==null?x:bodyPrevX[i],
+                  oldY=bodyPrevY==null?y:bodyPrevY[i];
+            if(segmentNear(oldX,oldY,x,y,panel.x,panel.y,rr))return true;
+        }
+        return false;
+    }
+    private static boolean segmentNear(float ax,float ay,float bx,float by,
+                                       float cx,float cy,float radius2){
+        float dx=bx-ax,dy=by-ay;
+        float den=dx*dx+dy*dy;
+        float t=den<1.e-8f?0f:clip(((cx-ax)*dx+(cy-ay)*dy)/den,0,1);
+        float ex=ax+dx*t-cx,ey=ay+dy*t-cy;
+        return ex*ex+ey*ey<=radius2;
     }
     /** Signed OBB local coordinates of any world-space point. */
     static float[] local(UnknownWorld.Entity p,float x,float y){
@@ -162,6 +196,12 @@ public final class PanelPhysics {
         Contact out=new Contact();
         if(body==null||s==null||panel==null||!panel.isConstruction()||
            !Float.isFinite(dt)||dt<=0)return out;
+        if(!near(body,s,panel,priorSkinX,priorSkinY,priorBodyX,priorBodyY)){
+            java.util.Arrays.fill(panel.boxGripHold,0f);
+            panel.vx=panel.vy=panel.angularVelocity=0f;
+            out.broadphaseSkipped=true;
+            return out;
+        }
         float[] sample=new float[4];
         float spin=0,forceX=0,forceY=0;
         int confirmed=0;
