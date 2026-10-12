@@ -62,7 +62,12 @@ public final class Zero20HierarchicalRegression {
             "Corrupted option storage partly overwrote intact brain");
         yes(!restored.restore(before.replaceFirst("tv20","tv19"))&&
             before.equals(restored.encode()),"Wrong option schema accepted");
-        yes(!restored.restore(before.replaceFirst(",0\\.0",",NaN"))&&
+        String[] fields=before.split("\\|",-1);
+        String[] motif=fields[8].split(",",-1);
+        motif[4]="NaN"; // Guaranteed corruption of a REAL energy field.
+        fields[8]=String.join(",",motif);
+        String corrupted=String.join("|",fields);
+        yes(!corrupted.equals(before)&&!restored.restore(corrupted)&&
             before.equals(restored.encode()),"Invalid motif corrupted profile");
         TransferSkillsV20 resume=new TransferSkillsV20();
         resume.resetLife();
