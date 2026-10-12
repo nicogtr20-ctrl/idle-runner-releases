@@ -112,6 +112,55 @@ public final class GripAffordanceV20Regression {
               "Nonfinite validation metric erased learning");
         check(!read.restore(virginSaved.substring(0,virginSaved.length()/2))&&
               read.encode().equals(priorValid),"Truncated old save overwrote model");
+        // A single 35ms real grip must survive an otherwise unheld action.
+        GripAffordanceV20 fleeting=new GripAffordanceV20();
+        fleeting.chosen(2,touchOnly);
+        fleeting.physicsFrame(spread);
+        fleeting.physicsFrame(touchOnly);
+        fleeting.consequence(2,1f,true,false);
+        check(fleeting.physicsSamples()==2&&fleeting.physicsHeldFrames()==1&&
+              fleeting.physicsSpreadFrames()==1&&fleeting.fleetingSpreadIntervals()==1,
+              "Brief physically valid hold lost between decisions");
+        // Never pretend that two individually held points separated in time
+        // constituted ONE distributed grip at the same physical instant.
+        GripAffordanceV20 disjoint=new GripAffordanceV20();
+        disjoint.chosen(2,touchOnly);
+        disjoint.physicsFrame(skin(new int[]{0},0,true,false));
+        disjoint.physicsFrame(skin(new int[]{48},0,true,false));
+        disjoint.consequence(2,0f,true,false);
+        check(disjoint.physicsHeldFrames()==2&&disjoint.physicsSpreadFrames()==0&&
+              disjoint.fleetingSpreadIntervals()==0,
+              "Different-time holds became a fake simultaneous grasp");
+        GripAffordanceV20 commandOnly=new GripAffordanceV20();
+        commandOnly.chosen(2,touchOnly);
+        for(int i=0;i<20;i++)commandOnly.physicsFrame(touchOnly);
+        commandOnly.consequence(2,0f,true,false);
+        check(commandOnly.physicsHeldFrames()==0&&
+              commandOnly.physicsSpreadFrames()==0,
+              "Repeated grip commands counted as real adhesive holds");
+        // Newly encoded ga21 must accept a real old ga20 model payload.
+        String[] newParts=model.encode().split("\\|",-1);
+        StringBuilder legacy=new StringBuilder("ga20");
+        for(int i=1;i<newParts.length-5;i++)legacy.append('|').append(newParts[i]);
+        GripAffordanceV20 upgraded=new GripAffordanceV20();
+        check(upgraded.restore(legacy.toString())&&
+              upgraded.trained()==model.trained()&&upgraded.physicsSamples()==0,
+              "ga20 backward migration loses learning or invents microframes");
+        fleeting.chosen(2,touchOnly);
+        fleeting.physicsFrame(spread);
+        fleeting.resumeLife();
+        long priorTrain=fleeting.trained();
+        fleeting.consequence(2,1f,true,false);
+        check(fleeting.trained()==priorTrain,"Resume invented a completed micro-grip");
+        String microSaved=fleeting.encode();
+        GripAffordanceV20 recovered=new GripAffordanceV20();
+        check(recovered.restore(microSaved)&&microSaved.equals(recovered.encode()),
+              "Microframe counters failed roundtrip");
+        String[] malformed=microSaved.split("\\|",-1);
+        malformed[malformed.length-1]="999999";
+        check(!recovered.restore(String.join("|",malformed))&&
+              microSaved.equals(recovered.encode()),
+              "Microcounter overflow corrupted previously saved learning");
         // Exact body and exact old motor weights: the optional researcher
         // module must not change a SINGLE selected action or learned neuron.
         SensorimotorMind oldMind=new SensorimotorMind(),newMind=new SensorimotorMind();
