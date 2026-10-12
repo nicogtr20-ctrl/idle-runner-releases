@@ -87,6 +87,7 @@ public final class GameActivity extends Activity {
         float reserve=57,goalTimer=0,worldTime=0;
         int contactsThisLife=0;
         String lastEvent="ZERO NON CONOSCE QUESTO MONDO";
+        boolean spatialRestoreWarning=false,spatialRestoredFromBackup=false;
         float eventTime=7;
         MotorBrain.Body creature=new MotorBrain.Body();
         Morphology.Surface surface=new Morphology.Surface(creature);
@@ -219,7 +220,25 @@ public final class GameActivity extends Activity {
             localImpedance.restore(prefs.getString(LocalImpedanceSense.KEY,""));
             sensorMind.attachImpedance(localImpedance);
             spatialMap=new SpatialPerception();
-            spatialMap.restore(prefs.getString(SpatialPerception.KEY,""));
+            String spatialRaw=prefs.getString(SpatialPerception.KEY,"");
+            if(!spatialMap.restore(prefs.getString(SpatialPerception.KEY,"")) &&
+               !spatialRaw.isEmpty()){
+                // If a checkpoint cannot be read, try its independent
+                // last-known-good copy. Legacy zero cells are now accepted.
+                String backup=prefs.getString(SpatialCheckpoint.BACKUP,"");
+                if(!backup.isEmpty()&&spatialMap.restore(backup)){
+                    spatialRestoredFromBackup=true;
+                    lastEvent="MEMORIA SPAZIALE RIPRISTINATA DAL BACKUP";
+                    eventTime=9;
+                }else{
+                    spatialRestoreWarning=true;
+                    // Preserve the malformed original BEFORE an autosave.
+                    prefs.edit().putString(SpatialCheckpoint.QUARANTINE,
+                        spatialRaw).commit();
+                    lastEvent="ATTENZIONE • SALVATAGGIO SPAZIALE DA RECUPERARE";
+                    eventTime=12;
+                }
+            }
             sensorMind.attachSpatialPerception(spatialMap);
             causalExperiments=new CausalExperiments();
             causalExperiments.restore(prefs.getString(CausalExperiments.KEY,""));
@@ -503,6 +522,7 @@ public final class GameActivity extends Activity {
               .putString(DistributedBodySense.KEY,distributedSense.encode())
               .putString(LocalImpedanceSense.KEY,localImpedance.encode())
               .putString(SpatialPerception.KEY,spatialMap.encode())
+               .putString(SpatialCheckpoint.BACKUP,spatialMap.encode())
               .putString(CausalExperiments.KEY,causalExperiments.encode())
               .putString(InstrumentalNavigation.KEY,navigation.encode())
               .putString(GoalContinuity.KEY,intentions.encode())
