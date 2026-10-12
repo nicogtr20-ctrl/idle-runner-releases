@@ -13,8 +13,13 @@ permissions:
   contents: read
 jobs:
   private-profile:
+    name: ${{ matrix.split }} real-cover A/B
     runs-on: ubuntu-latest
     timeout-minutes: 45
+    strategy:
+      fail-fast: false
+      matrix:
+        split: [historical, fresh]
     steps:
       - uses: actions/checkout@v4
         with:
@@ -70,9 +75,11 @@ jobs:
       - name: Run learned real-profile A/B on heldout box habitats
         run: |
           set -euo pipefail
+          splitArg=""
+          if [[ "${{ matrix.split }}" == "fresh" ]]; then splitArg="--fresh"; fi
           java -Xmx2g -cp /tmp/zero20-classes \
             com.overmind.zero.Zero20CoveredEnergyBenchmark \
-            /tmp/zero20-realbrain.properties \
+            /tmp/zero20-realbrain.properties $splitArg \
             | tee /tmp/zero20-benchmark-log.txt
           grep '^ZERO20_SUMMARY' /tmp/zero20-benchmark-log.txt
           grep '^ZERO20_ARENA FINISHED' /tmp/zero20-benchmark-log.txt
@@ -85,10 +92,10 @@ jobs:
           sums=[json.loads(l.split(" ",1)[1]) for l in lines if l.startswith("ZERO20_SUMMARY ")]
           if len(rows)!=24 or len(sums)!=1:raise AssertionError("Missing controlled trials")
           s=sums[0]
-          summary=["# ZERO 2.0 bilateral-cover A/B — experimental\n",
+          summary=["# ZERO 2.0 bilateral-cover A/B — "+s["split"]+" experimental\n",
                    "**Not** a full Android lifetime: real body and bilateral cover physics, finite hidden sources, but no continuous habitat streaming, weather, online morphology mutation or chamber ecology.\n",
                    "| Metric | Value |","|---|---:|"]
-          for key in ("profile","pairs","wins","losses","ties","changedPaths",
+          for key in ("profile","split","pairs","wins","losses","ties","changedPaths",
                       "candidateEligiblePlans","trainingWorldConfidence",
                       "trainingHeldoutError","trainingUnchangedError",
                       "trainingHeldoutSamples","trainedWorldActions","corroboratedSkills",
