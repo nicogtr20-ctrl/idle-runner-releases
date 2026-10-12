@@ -238,6 +238,9 @@ public final class GameActivity extends Activity {
             gripAffordanceV20=new GripAffordanceV20();
             gripAffordanceV20.restore(prefs.getString(GripAffordanceV20.KEY,""));
             sensorMind.attachGripAffordanceV20(gripAffordanceV20);
+            // Hard device boundary: ZERO 2.0 can LEARN and REPORT but may not
+            // bias any live motor decision. Advisory A/B is laboratory-only.
+            sensorMind.enableZero20ExperimentalAdvice(false);
             spatialMap=new SpatialPerception();
             spatialMap.restore(prefs.getString(SpatialPerception.KEY,""));
             sensorMind.attachSpatialPerception(spatialMap);
