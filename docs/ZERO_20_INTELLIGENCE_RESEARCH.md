@@ -142,6 +142,39 @@ Two ablations: original brain + passive v2.0 modules, and same brain + **sandbox
 
 Benchmark is limited by its episode duration and approximations; it does NOT prove that a 105-minute Android life behaves the same. Preserve real captured profile privately, never include secret user memories in GitHub workflow logs.
 
+## Gate D actual-headless bilateral cover A/B — 2026-10-12: NEGATIVE (safety block correctly maintained)
+
+### What was implemented
+- `Zero20CoveredEnergyBenchmark.java`: standalone deterministic Android-free physical simulator, **real** `MotorBrain.Body`, `Morphology.Surface` (96 sites), `SquareGripPuzzle.constrain/uncover` (strict two-sided energy-cover grip), `PanelPhysics`, `ShelterEcology.separateBoxes`, post-contact finite hidden resources, harmful contacts, real sensed visual/tactile features, original policy and optional ZERO2 shadow/experimental advice.
+- 14 *training* scenarios with preserved cloned original profile and V2 model state; then twelve **previously unseen** paired A/B configurations (2 layout families × 6 distinct seed values) using a **single identical learned post-training snapshot**. Experimental bounded planner advice is guarded and **only enabled by the benchmark**, never by `GameActivity`. It is OFF by default in `SensorimotorMind`.
+- GitHub Actions `zero-20-energy-arena.yml` fetches latest user-voluntary uploaded **private telemetry profile**, merges all multipart parts *without showing weights*, compiles real Java physics, writes only numeric outcomes to run logs and human-readable summary. No APK artifact, OTA or profile mutation.
+- Lab caveats: ~128 simulated seconds per test, static resource layout; **not** full Android streaming/weather/mutation/chamber ecology, not proof of full-life 105-minute performance.
+
+### Reproducible result
+Verified GitHub CI [38301753150](https://github.com/nicogtr20-ctrl/idle-runner-releases/actions/runs/38301753150) **SUCCESS**, using all five private report parts. Earlier run [38301526258](https://github.com/nicogtr20-ctrl/idle-runner-releases/actions/runs/38301526258) successfully ran all 12 A/B paired scenarios but FAILED its final GitHub-summary parser because `ZERO20_AB ZERO20_ARENA` had two log prefixes. Fixed parser without modifying trial code or discarding any verification.
+
+| Outcome (latest real trained original brain) | Experimental ZERO2 minus original |
+|---|---:|
+| Matched heldout paired cases | 12 |
+| ZERO2 wins / losses / ties | 0 / 0 / **12** |
+| Different executed paths | **0** |
+| Eligible reliable speculative plans | **0** |
+| Mean real collected energy delta | **0.0** |
+| Mean physical survival delta | **0.0 seconds** |
+| Mean harmful contact energy delta | **0.0** |
+| Fully uncovered hidden-energy covers across the 12 candidate heldout scenes | **0** |
+| New world-model actions trained in lab | 2,150 |
+| Independent world-model heldout samples | 538 |
+| World-model heldout predictive error | **0.052731** |
+| Unchanged-state baseline predictive error | **0.047759** |
+| Independently corroborated long action options | **0** |
+
+**Interpretation:** New learned world model performs approximately **10.4% worse** than predicting unchanged physical sensory state in this *actual* sampled setting. The confidence gate appropriately returns zero; consequently the opt-in experimental policy abstains. Neither "more intelligent" nor "less intelligent" in these 12 cases—ZERO2 produces **identical actions**, so we cannot claim a benefit. Several test cases include actual opposing grip frames but **no completed cover displacement/uncover**; this echoes the original box-manipulation difficulty rather than proving a planning cure.
+
+### Research decision: DO NOT PROMOTE
+
+**The deployment threshold FAILED.** Retain production OTA99 unmodified; keep PR #31 draft and no automatic decision influence. The next research revision must validate a *selective* dynamics/no-change predictor on truly different real physical habitats and independently measured action-to-consequence calibration. Repeated real energy contact and real spatial exploration should be learned as delayed outcomes without assuming that any press, touch, or ordinary body travel earns food. Only after this predictor beats the unchanged-world baseline **on untouched heldout scenes**, and real ablated paired outcomes improve, may any planner policy be considered for stable deployment.
+
 ## Non-negotiable invariants
 1. No destroying/mutating real ZERO brain; no copying historical profiles into production automatically; optional legacy default safe.
 2. No privileged semantic target coordinates or scripted correct actions in learning code.
