@@ -40,6 +40,8 @@ public final class BrainStatsActivity extends Activity {
         final BodyProprioception bodyMap;
         final LocalImpedanceSense localImpedance;
         final PredictiveWorldV20 predictiveWorldV20;
+        final TransferSkillsV20 transferV20;
+        final FuturePlannerV20 futureV20;
         final SpatialPerception spatial;
         final CausalExperiments causal;
         final InstrumentalNavigation navigation;
@@ -84,6 +86,10 @@ public final class BrainStatsActivity extends Activity {
             localImpedance.restore(pref.getString(LocalImpedanceSense.KEY,""));
             predictiveWorldV20=new PredictiveWorldV20();
             predictiveWorldV20.restore(pref.getString(PredictiveWorldV20.KEY,""));
+            transferV20=new TransferSkillsV20();
+            transferV20.restore(pref.getString(TransferSkillsV20.KEY,""));
+            futureV20=new FuturePlannerV20();
+            futureV20.restore(pref.getString(FuturePlannerV20.KEY,""));
             spatial=new SpatialPerception();
             spatial.restore(pref.getString(SpatialPerception.KEY,""));
             causal=new CausalExperiments();
@@ -256,6 +262,16 @@ public final class BrainStatsActivity extends Activity {
                 String.format(Locale.US,"%.0f%%",
                     predictiveWorldV20.confidence()*100f)+" • solo osservazione",
                 Math.min(1f,predictiveWorldV20.validations()/120f),cyan);
+            y=skill(c,y,"ZERO 2.0 / STRATEGIE TRA VITE",
+                transferV20.confirmed()+" corroborate",
+                transferV20.candidates()+" candidate  •  fino a "+
+                transferV20.longestConfirmed()+" azioni  •  solo osservazione",
+                Math.min(1f,transferV20.confirmed()/5f),purple);
+            y=skill(c,y,"ZERO 2.0 / FUTURI IPOTETICI",
+                futureV20.eligible()+" valutati",
+                futureV20.checks()+" controlli  •  orizzonte 5  •  nessuna guida motoria",
+                futureV20.checks()==0?0f:
+                    Math.min(1f,(float)futureV20.eligible()/futureV20.checks()),gold);
             y=skill(c,y,"PERCEZIONE DELLO SPAZIO",
                 spatial.parameterCount()+" pesi",
                 spatial.transitions+" azioni osservate  •  "+SpatialPerception.RAYS+
