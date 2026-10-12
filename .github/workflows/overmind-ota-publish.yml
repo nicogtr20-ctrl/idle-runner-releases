@@ -801,8 +801,6 @@ jobs:
           assert 'if(size>LIMIT)' not in upload
           assert 'SaveSlotStore.WORKING' in upload
           # ZERO 2.0 must remain passive on device, and multipart export MUST retain the digest.
-          assert 'sensorMind.enableZero20ExperimentalAdvice(false);' in game
-          assert 'private transient boolean zero20ExperimentalAdvice=false;' in mind
           assert 'result.put("zero20Passive",new JSONObject(Zero20PassiveSnapshot.fromSaved(all)))' in upload
           assert 'source.put("zero20Passive",data.get("zero20Passive"))' in upload
           assert 'getSharedPreferences(SaveSlotStore.WORKING,Context.MODE_PRIVATE).edit()' not in upload
@@ -811,6 +809,8 @@ jobs:
           blackbox=(root/'DecisionBlackbox.java').read_text()
           mind=(root/'SensorimotorMind.java').read_text()
           game=(root/'GameActivity.java').read_text()
+          assert 'sensorMind.enableZero20ExperimentalAdvice(false);' in game
+          assert 'private transient boolean zero20ExperimentalAdvice=false;' in mind
           assert 'MAX_ENTRIES=475, MAX_TEXT=145000;' in blackbox
           assert 'WINDOW=300f;' in blackbox
           assert 'if(blackbox!=null)blackbox.finished' in mind
