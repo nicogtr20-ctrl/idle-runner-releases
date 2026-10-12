@@ -168,6 +168,47 @@ public final class PanelPhysics {
             project(s.x,s.y,s.vx,s.vy,i,sample,panel);
             out.points++;
         }
+        // A thin plate also blocks real membrane SEGMENTS whose two end
+        // particles happen to lie on opposing faces. Project both endpoints
+        // onto the nearest shared supporting face, just as old square/room
+        // membrane anti-penetration already does. This is geometry only:
+        // no automatic sheet motion, no reward and no new grip command.
+        float length=halfLength(panel),thick=HALF_THICKNESS;
+        for(int pass=0;pass<2;pass++){
+            boolean changed=false;
+            for(int i=0;i<Morphology.POINTS;i++){
+                int j=(i+1)%Morphology.POINTS;
+                float[] a=local(panel,s.x[i],s.y[i]);
+                float[] b=local(panel,s.x[j],s.y[j]);
+                if(!ScarcityLab.crossesInterior(a[0],a[1],b[0],b[1],
+                    -length,-thick,length,thick))continue;
+                float[] scores={
+                    Math.max(0,a[0]+length)+Math.max(0,b[0]+length),
+                    Math.max(0,length-a[0])+Math.max(0,length-b[0]),
+                    Math.max(0,a[1]+thick)+Math.max(0,b[1]+thick),
+                    Math.max(0,thick-a[1])+Math.max(0,thick-b[1])
+                };
+                int face=0;
+                for(int k=1;k<4;k++)if(scores[k]<scores[face])face=k;
+                for(int p=0;p<2;p++){
+                    int at=p==0?i:j;
+                    float[] point=p==0?a:b;
+                    float xx=face==0?-length-.8f:face==1?length+.8f:point[0];
+                    float yy=face==2?-thick-.8f:face==3?thick+.8f:point[1];
+                    float[] pos=worldVector(panel,xx,yy);
+                    s.x[at]=panel.x+pos[0];s.y[at]=panel.y+pos[1];
+                    float[] n=worldVector(panel,
+                        face==0?-1f:face==1?1f:0,
+                        face==2?-1f:face==3?1f:0);
+                    float inward=s.vx[at]*n[0]+s.vy[at]*n[1];
+                    if(inward<0){
+                        s.vx[at]-=inward*n[0];s.vy[at]-=inward*n[1];
+                    }
+                }
+                changed=true;
+            }
+            if(!changed)break;
+        }
         // Preserve legitimate internal mass collisions with thin panels too.
         for(int i=0;i<MotorBrain.N;i++){
             float x=body.x[i],y=body.y[i],vx=body.vx[i],vy=body.vy[i];
