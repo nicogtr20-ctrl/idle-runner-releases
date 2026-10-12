@@ -17,6 +17,16 @@ public final class GripAffordanceV20 {
     public static final String KEY="grip_affordance_v20";
     static final int ACTIONS=SensorimotorMind.ACTIONS;
     static final int STATES=7,CELLS=ACTIONS*STATES;
+    // No trigonometric work or per-frame allocation on the S21 35ms path.
+    private static final float[] SIN=new float[Morphology.POINTS];
+    private static final float[] COS=new float[Morphology.POINTS];
+    static {
+        for(int i=0;i<Morphology.POINTS;i++){
+            double a=2.0*Math.PI*i/Morphology.POINTS;
+            SIN[i]=(float)Math.sin(a);
+            COS[i]=(float)Math.cos(a);
+        }
+    }
     private final int[] count=new int[CELLS],moved=new int[CELLS];
     private final int[] contextCount=new int[STATES],contextMoved=new int[STATES];
     private int pendingAction=-1,pendingState=-1;
@@ -59,9 +69,8 @@ public final class GripAffordanceV20 {
             if(skin.gripHold[i]>=Morphology.GRIP_HOLD&&
                skin.gripCommand[i]>Morphology.GRIP_THRESHOLD){
                 held++;
-                float angle=(float)(2*Math.PI*i/Morphology.POINTS);
-                cos+=(float)Math.cos(angle);
-                sin+=(float)Math.sin(angle);
+                cos+=COS[i];
+                sin+=SIN[i];
             }
         }
         if(held==0){
