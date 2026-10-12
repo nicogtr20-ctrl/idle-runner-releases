@@ -132,6 +132,16 @@ Notable test output:
 
 **Do NOT merge or publish ZERO 2.0 merely because these tests are green.**
 
+## Gate D — benchmark and experimental-policy protocol (2026-10-12; pre-registered, results pending)
+
+**Warning about earlier 32-second lab:** `BehavioralLaboratory` tests a visible resource, red hazard, or a gate. It does NOT simulate real energy covers requiring two opposing red grips. Those 9 paired scenes are useful for no-interference regression, but NOT evidence of recovering old two-box capability. We must explicitly benchmark full cover/hidden-energy physics.
+
+New independent headless **real-cover arena** uses `MotorBrain.Body`, all 96 `Morphology.Surface` points, `SquareGripPuzzle.constrain/uncover`, `ShelterEcology.separateBoxes`, hidden energy touching, cost from time, real damages, and exact original `SensorimotorMind`. The examiner chooses layouts and records energy and movement, but the agent receives only genuine sensed vectors/contact consequences (no access to examiner target positions). Train on one set of configurations, evaluate on separately withheld orientations/layouts, paired seeds, identical initial saved brain/physical body for both policies.
+
+Two ablations: original brain + passive v2.0 modules, and same brain + **sandbox-only** capped experimental planning advice. The latter is disabled by default, never enabled or surfaced in `GameActivity`. No release/merge without actual gain across holdout layouts AND no degradation in damage/survival (not merely different action counts). Threshold and decision effect must be recorded, including abstentions. Both sides can fail or tie; report inconclusive honestly.
+
+Benchmark is limited by its episode duration and approximations; it does NOT prove that a 105-minute Android life behaves the same. Preserve real captured profile privately, never include secret user memories in GitHub workflow logs.
+
 ## Non-negotiable invariants
 1. No destroying/mutating real ZERO brain; no copying historical profiles into production automatically; optional legacy default safe.
 2. No privileged semantic target coordinates or scripted correct actions in learning code.
