@@ -4,6 +4,8 @@ on:
     branches: [feature/zero-20-hierarchical-intelligence]
     paths:
       - "app/src/main/java/com/overmind/zero/Zero20CoveredEnergyBenchmark.java"
+      - "app/src/main/java/com/overmind/zero/PhysicalConsequenceV20.java"
+      - "app/src/main/java/com/overmind/zero/SensorimotorMind.java"
       - "app/src/main/java/com/overmind/zero/PredictiveWorldV20.java"
       - "app/src/main/java/com/overmind/zero/PredictiveWorldV20Regression.java"
       - "app/src/main/java/com/overmind/zero/FuturePlannerV20.java"
@@ -108,6 +110,7 @@ jobs:
                       "candidateEligiblePlans","trainingWorldConfidence",
                       "trainingHeldoutError","trainingUnchangedError",
                       "trainingHeldoutSamples","trainedWorldActions","corroboratedSkills",
+                      "trainingPhysicalEvents","linkedEnergyEvents",
                       "meanEnergyDelta","meanSurvivalDeltaSec","meanDamageDelta"):
               summary.append("| "+key+" | "+str(s[key])+" |")
           summary+=["\nPromotion **blocked by design** until unseen-habitat lifetime/energy advantages are established. These scores do not prove greater intelligence."]
