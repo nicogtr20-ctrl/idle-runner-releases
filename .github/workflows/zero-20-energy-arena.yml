@@ -1,0 +1,95 @@
+name: ZERO 2.0 true bilateral energy-cover autonomous A/B
+on:
+  push:
+    branches: [feature/zero-20-hierarchical-intelligence]
+    paths:
+      - "app/src/main/java/com/overmind/zero/Zero20CoveredEnergyBenchmark.java"
+      - ".github/workflows/zero-20-energy-arena.yml"
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  private-profile:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+      - name: Fetch latest explicitly uploaded ZERO report read-only
+        shell: bash
+        run: |
+          set -euo pipefail
+          git fetch --no-tags origin zero-telemetry:refs/remotes/origin/zero-telemetry
+          python3 - <<'PY'
+          import json, pathlib, subprocess
+          def read(path):
+              return json.loads(subprocess.check_output(
+                  ["git","show","origin/zero-telemetry:"+path],text=True))
+          index=read("zero-telemetry/current.json")
+          fields=dict(index.get("currentZero",{}))
+          paths=[p["path"] for p in index.get("parts",[])]
+          if len(paths)<3:
+              raise AssertionError("Telemetry index does not contain a complete multipart report")
+          for path in paths:
+              d=read(path)
+              src=d.get("currentZero",{})
+              for k,v in src.items():
+                  if k in fields and fields[k]!=v:
+                      raise AssertionError("Conflicting data for "+k)
+                  fields[k]=v
+          needed=("best","hand_brain_v04","morph_brain_v07",
+                  "sensorimotor_model_v09")
+          absent=[k for k in needed if k not in fields]
+          if absent:raise AssertionError("Incomplete true brain report: "+str(absent))
+          # User's private brain never appears in logs, CI artifacts,
+          # GitHub commit or an Android app.
+          p=pathlib.Path("/tmp/zero20-realbrain.properties")
+          values=[]
+          for k,v in fields.items():
+              if isinstance(v,str) and "\n" not in v and "\r" not in v:
+                  values.append(k+"="+v.replace("\\","\\\\"))
+          p.write_text("\n".join(values)+"\n",encoding="utf-8")
+          print("Read-only true ZERO snapshot loaded from",len(paths),"private multipart shards",
+                "- no model/weights printed or uploaded")
+          PY
+      - name: Compile true physical benchmark without Android UI
+        run: |
+          set -euo pipefail
+          mkdir -p /tmp/zero20-classes
+          javac -encoding UTF-8 -sourcepath app/src/main/java \
+            -d /tmp/zero20-classes \
+            app/src/main/java/com/overmind/zero/Zero20CoveredEnergyBenchmark.java
+      - name: Run learned real-profile A/B on heldout box habitats
+        run: |
+          set -euo pipefail
+          java -Xmx2g -cp /tmp/zero20-classes \
+            com.overmind.zero.Zero20CoveredEnergyBenchmark \
+            /tmp/zero20-realbrain.properties \
+            | tee /tmp/zero20-benchmark-log.txt
+          grep '^ZERO20_SUMMARY' /tmp/zero20-benchmark-log.txt
+          grep '^ZERO20_ARENA FINISHED' /tmp/zero20-benchmark-log.txt
+      - name: Publish aggregated evidence in GitHub run summary (no brain values)
+        run: |
+          python3 - <<'PY'
+          import json,os
+          lines=open("/tmp/zero20-benchmark-log.txt").read().splitlines()
+          rows=[json.loads(l.split(" ",1)[1]) for l in lines if l.startswith("ZERO20_AB ")]
+          sums=[json.loads(l.split(" ",1)[1]) for l in lines if l.startswith("ZERO20_SUMMARY ")]
+          if len(rows)!=24 or len(sums)!=1:raise AssertionError("Missing controlled trials")
+          s=sums[0]
+          summary=["# ZERO 2.0 bilateral-cover A/B — experimental\n",
+                   "**Not** a full Android lifetime: real body and bilateral cover physics, finite hidden sources, but no continuous habitat streaming, weather, online morphology mutation or chamber ecology.\n",
+                   "| Metric | Value |","|---|---:|"]
+          for key in ("profile","pairs","wins","losses","ties","changedPaths",
+                      "candidateEligiblePlans","trainingWorldConfidence",
+                      "meanEnergyDelta","meanSurvivalDeltaSec","meanDamageDelta"):
+              summary.append("| "+key+" | "+str(s[key])+" |")
+          summary+=["\nPromotion **blocked by design** until unseen-habitat lifetime/energy advantages are established. These scores do not prove greater intelligence."]
+          with open(os.environ["GITHUB_STEP_SUMMARY"],"a") as f:
+              f.write("\n".join(summary)+"\n")
+          PY
