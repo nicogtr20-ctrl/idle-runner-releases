@@ -1003,7 +1003,7 @@ public final class GameActivity extends Activity {
                     // physics-owned holds sampled at every 35ms substep,
                     // including grips shorter than the ~650ms decision tick.
                     // This cannot command a hold or modify physical forces.
-                    sensorMind.sampleGripPhysicsFrame(surface);
+                    if(slice>0f)sensorMind.sampleGripPhysicsFrame(surface);
                     gripObserver.pruneBoxes(environment);
                     resolveObjects(slice);
                     // Weather reaches the actual deformable tissue AFTER
