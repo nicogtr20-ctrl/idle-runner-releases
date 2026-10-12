@@ -1,0 +1,140 @@
+package com.overmind.zero;
+
+import java.util.Arrays;
+import java.util.Random;
+
+/** Falsifiable 96-site real-self affordance readouts. No object/category oracle. */
+public final class GripAffordanceV20Regression {
+    private static void check(boolean yes,String why){
+        if(!yes)throw new AssertionError(why);
+    }
+    private static Morphology.Surface skin(int[] sites,int rotate,boolean held,boolean extended){
+        Morphology.Surface s=new Morphology.Surface(new MotorBrain.Body());
+        Arrays.fill(s.touchSense,0);
+        Arrays.fill(s.gripCommand,0);
+        Arrays.fill(s.gripHold,0);
+        Arrays.fill(s.extension,0);
+        for(int k:sites){
+            int i=(k+rotate)%Morphology.POINTS;
+            s.touchSense[i]=.9f;
+            s.gripCommand[i]=.75f;
+            if(held)s.gripHold[i]=.15f;
+            if(extended)s.extension[i]=50f;
+        }
+        return s;
+    }
+    private static void observe(GripAffordanceV20 g,int action,
+                                Morphology.Surface self,float movement,
+                                boolean training,boolean holdout){
+        g.chosen(action,self);
+        g.consequence(action,movement,training,holdout);
+    }
+    public static void main(String[] argv){
+        MotorBrain.Body body=new MotorBrain.Body();
+        Morphology.Surface virgin=new Morphology.Surface(body);
+        Morphology.Surface touchOnly=skin(new int[]{0,1,2},0,false,false);
+        Morphology.Surface cluster=skin(new int[]{1,2,3,4},0,true,false);
+        Morphology.Surface extended=skin(new int[]{1,2,3,4},0,true,true);
+        Morphology.Surface spread=skin(new int[]{0,48},0,true,false);
+        Morphology.Surface spreadRotated=skin(new int[]{0,48},27,true,false);
+        check(GripAffordanceV20.selfState(virgin)==0,
+            "Virgin body invented a contact");
+        check(GripAffordanceV20.selfState(touchOnly)==2,
+            "Adhesion COMMAND without actual hold must not be called a grasp");
+        check(GripAffordanceV20.selfState(cluster)==3&&
+              GripAffordanceV20.selfState(extended)==4,
+            "Morphological stretch information lost");
+        check(GripAffordanceV20.selfState(spread)==5&&
+              GripAffordanceV20.selfState(spreadRotated)==5,
+            "Circular hold dispersion depends on world rotation");
+        GripAffordanceV20 model=new GripAffordanceV20();
+        check(model.confidence()==0&&!model.restore(""),
+            "Legacy/vacant model must abstain");
+        String virginSaved=model.encode();
+        observe(model,2,touchOnly,0,true,false);
+        check(model.motionEvents()==0&&model.realHeld()==0,
+            "Touch or red command alone fabricated a moved body");
+        observe(model,2,cluster,0,true,false);
+        check(model.motionEvents()==0,
+            "Concentrated grip without displacement fabricated world change");
+        // Same bodily shape; different truly executed action, externally
+        // measured movement, and no fictitious energy reward.
+        for(int i=0;i<200;i++){
+            observe(model,2,spreadRotated,1,true,false);
+            observe(model,7,spread,0,true,false);
+            if(i%5==0)model.resetLife(); // trained data survives across lives
+        }
+        float b=model.forecast(2,spread),c=model.forecast(7,spread);
+        check(b>c+.70f,"Own body and action failed to predict real movement");
+        check(model.forecast(2,cluster)<model.forecast(2,spread),
+            "Held distribution ignored in transfer of learned experience");
+        long trained=model.trained(),moves=model.motionEvents();
+        for(int i=0;i<240;i++)
+            observe(model,i%2==0?2:7,
+                    i%2==0?spread:spreadRotated,i%2==0?1f:0f,
+                    false,true);
+        check(model.trained()==trained&&model.moveEventsUnused()==moves,
+            "Heldout model mutated training-only affordance weights");
+        check(model.validations()==240&&model.confidence()>.10f&&
+              model.heldoutError()<model.baselineError()*.8f,
+            "Physical grip predictor failed independent same-configuration baseline");
+        int prior=(int)model.observed();
+        model.chosen(2,spread);
+        model.consequence(7,1f,true,false);
+        check(model.observed()==prior&&model.invalid()>0,
+            "Outcome for a DIFFERENT motor action trained previous grip");
+        Morphology.Surface broken=skin(new int[]{0,48},0,true,false);
+        broken.extension[2]=Float.NaN;
+        model.chosen(2,broken);
+        model.consequence(2,1f,true,false);
+        check(model.trained()==trained,"Nonfinite membrane data fabricated a memory");
+        String checkpoint=model.encode();
+        GripAffordanceV20 read=new GripAffordanceV20();
+        check(read.restore(checkpoint)&&checkpoint.equals(read.encode()),
+            "96-site model did not survive named profile serialization");
+        read.resetLife();
+        check(read.trained()==trained,"Death erased confirmed learned grip outcomes");
+        read.chosen(2,spread);
+        read.resumeLife();
+        long old=read.observed();
+        read.consequence(2,1f,true,false);
+        check(read.observed()==old,"Restored uncompleted actuation invented real effect");
+        String priorValid=read.encode();
+        check(!read.restore(priorValid+"|0")&&read.encode().equals(priorValid),
+            "Trailing corruption modified prior intact profile");
+        check(!read.restore(priorValid.replaceFirst("ga20","ga19"))&&
+              read.encode().equals(priorValid),"Unsupported version accepted");
+        String[] fields=priorValid.split("\\|",-1);
+        fields[8]="NaN";
+        check(!read.restore(String.join("|",fields))&&
+              read.encode().equals(priorValid),
+              "Nonfinite validation metric erased learning");
+        check(!read.restore(virginSaved.substring(0,virginSaved.length()/2))&&
+              read.encode().equals(priorValid),"Truncated old save overwrote model");
+        // Exact body and exact old motor weights: the optional researcher
+        // module must not change a SINGLE selected action or learned neuron.
+        SensorimotorMind oldMind=new SensorimotorMind(),newMind=new SensorimotorMind();
+        GripAffordanceV20 observer=new GripAffordanceV20();
+        newMind.attachGripAffordanceV20(observer);
+        float[] first=new float[SensorimotorMind.S];
+        first[0]=.7f;
+        oldMind.resetEpisode(first);newMind.resetEpisode(first);
+        oldMind.choose(first);newMind.choose(first);
+        Random r=new Random(2020020);
+        for(int i=0;i<440;i++){
+            float[] senses=new float[SensorimotorMind.S];
+            senses[0]=.62f;
+            for(int j=6;j<senses.length;j++)senses[j]=r.nextFloat()*.8f;
+            Morphology.Surface own=i%3==0?spread:
+                    (i%3==1?cluster:touchOnly);
+            oldMind.observe(senses,.70f,0f,body,own);
+            newMind.observe(senses,.70f,0f,body,own);
+            check(oldMind.action==newMind.action&&
+                    oldMind.serialize().equals(newMind.serialize()),
+                    "Shadow grip learner interfered with live motor choice "+i);
+        }
+        check(observer.observed()>400,
+            "Actual physical membrane snapshot not linked to decision boundary");
+        System.out.println("ZERO20 F PASS: 96 self sites, dispersed-vs-clustered grips, rotation, heldout, safe resumes, corrupt profiles and 440 old motor choices; "+observer.summary());
+    }
+}
