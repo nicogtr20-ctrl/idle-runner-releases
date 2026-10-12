@@ -117,6 +117,37 @@ public final class PredictiveWorldV20Regression {
         }
         check(shadow.transitions()>300,
             "Shadow model did not receive genuine chosen action intervals");
+        // True embodiment A/B, not synthetic sensor injection: same body,
+        // 96-point membrane, energy/hazard/gate challenges, seeds and motors.
+        // Shadow learning MUST NEVER affect the executed path or earned energy.
+        BehavioralLaboratory.Profile profile=new BehavioralLaboratory.Profile();
+        float maxPathDifference=0f;
+        int physicalPairs=0;
+        for(int scene=0;scene<BehavioralLaboratory.CASES;scene++){
+            for(int seed:BehavioralLaboratory.VARIANTS){
+                profile.shadowWorldV20=false;
+                BehavioralLaboratory.Trial oldZero=BehavioralLaboratory.simulate(
+                    profile,scene,seed,true,null);
+                profile.shadowWorldV20=true;
+                BehavioralLaboratory.Trial zero20=BehavioralLaboratory.simulate(
+                    profile,scene,seed,true,null);
+                check(oldZero!=null&&zero20!=null,"Physical scene not completed");
+                float distance=Math.abs(oldZero.traveled-zero20.traveled);
+                maxPathDifference=Math.max(maxPathDifference,distance);
+                check(distance<.0001f&&
+                      Math.abs(oldZero.gain-zero20.gain)<.0001f&&
+                      Math.abs(oldZero.damage-zero20.damage)<.0001f&&
+                      oldZero.actualDecisions==zero20.actualDecisions&&
+                      oldZero.energeticContacts==zero20.energeticContacts&&
+                      oldZero.damagingContacts==zero20.damagingContacts&&
+                      oldZero.gateOpenings==zero20.gateOpenings&&
+                      oldZero.gatePassages==zero20.gatePassages,
+                      "Physically lived control vs ZERO 2.0 shadow diverged in "+
+                       "scene "+scene+" seed "+seed);
+                physicalPairs++;
+            }
+        }
+        check(physicalPairs==9,"Unmatched physical pairs");
         System.out.println("ZERO 2.0 GATE A PASS: action-specific forecasts, validated holdout, no motor outputs, death/resume, corrupt/old save isolation; "+loaded.summary());
     }
 }
