@@ -40,6 +40,27 @@ public final class WorldPlacement {
         for(int i=0;i<proposed.size();i++){
             UnknownWorld.Entity e=proposed.get(i);
             if(e.concealed)continue;
+            if(e.isConstruction()){
+                // A new panel must not crowd the life-saving old bilateral
+                // energy boxes. Keep existing PLACED panels intact; throttle
+                // only brand-new procedural sheet spawns.
+                int nearby=0;
+                for(UnknownWorld.Entity q:existing)
+                    if(q.isConstruction()&&!q.consumed)nearby++;
+                for(UnknownWorld.Entity q:safe)
+                    if(q.isConstruction()&&!q.consumed)nearby++;
+                if(episode%3!=0||nearby>=3)continue;
+                boolean nearEnergyBox=false;
+                for(UnknownWorld.Entity q:existing)
+                    if(q.isBilateralBox()&&!q.consumed&&
+                       Math.hypot(e.x-q.x,e.y-q.y)<e.radius+q.radius+70f)
+                        nearEnergyBox=true;
+                for(UnknownWorld.Entity q:safe)
+                    if(q.isBilateralBox()&&!q.consumed&&
+                       Math.hypot(e.x-q.x,e.y-q.y)<e.radius+q.radius+70f)
+                        nearEnergyBox=true;
+                if(nearEnergyBox)continue;
+            }
             boolean valid=free(e,originX,originY,room,existing,safe);
             if(!valid)continue;
             safe.add(e);
