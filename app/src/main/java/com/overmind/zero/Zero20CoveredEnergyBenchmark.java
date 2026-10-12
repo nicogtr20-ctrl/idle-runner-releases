@@ -221,7 +221,20 @@ public final class Zero20CoveredEnergyBenchmark {
             float t=frame*DT;
             if(reserve<=0){out.died=true;break;}
             reserve=Math.max(0,reserve-DRAIN*DT);
-            for(UnknownWorld.Entity e:objects)e.tick(DT);
+            for(UnknownWorld.Entity e:objects){
+                float previousX=e.x,previousY=e.y;
+                // A bilateral grip from the PRIOR solved frame may have
+                // supplied the physical velocity integrated by tick().
+                boolean heldInLastFrame=e.isBilateralBox()&&e.bilateralHeldNow;
+                e.tick(DT);
+                if(heldInLastFrame){
+                    float reallyMoved=(float)Math.hypot(e.x-previousX,e.y-previousY);
+                    if(Float.isFinite(reallyMoved)&&reallyMoved>.015f){
+                        effect+=Math.min(18f,reallyMoved);
+                        out.physicallyConfirmedCoverMotionFrames++;
+                    }
+                }
+            }
             // Only the examiner records world-space object motion. Neither
             // cover identity nor source coordinates are given to ZERO policy.
             float[] coverX=new float[objects.size()],coverY=new float[objects.size()];
@@ -244,7 +257,13 @@ public final class Zero20CoveredEnergyBenchmark {
                     body,skin,e,DT,sx,sy,bx,by,oldX,oldY);
                 heldThis+=grab.held;contactThis+=grab.contacts;
                 if(grab.opposingGrip)opposedThis++;
-                if(SquareGripPuzzle.uncover(e,objects))out.uncovered++;
+                if(SquareGripPuzzle.uncover(e,objects)){
+                    out.uncovered++;
+                    // Exactly mirrors live GameActivity: a physically
+                    // verified cover displacement is an environmental effect,
+                    // never an invented energy reward for grip alone.
+                    effect+=Math.min(12f,e.displacementFromSpawn());
+                }
             }
             for(UnknownWorld.Entity e:objects){
                 if(e.isConstruction()&&!e.consumed)
