@@ -17,7 +17,14 @@ import java.util.Random;
  */
 public final class Zero20CoveredEnergyBenchmark {
     static final float DT=.035f, MAX_SECONDS=128f, DRAIN=.31f;
+    // Research-only alternative duration: observe genuine energy depletion.
+    // Normal 128s runs remain bit-for-bit unchanged; Android never calls this.
+    static final float LONG_SURVIVAL_SECONDS=170f;
     static final int FRAMES=(int)(MAX_SECONDS/DT);
+    static int episodeFrames(){
+        return Boolean.getBoolean("zero20.longSurvivalDiagnostic")
+            ?(int)(LONG_SURVIVAL_SECONDS/DT):FRAMES;
+    }
     static class Profile {
         float[] motor=MotorBrain.virgin(new Random(918273));
         float[] hand=ContactLearning.virgin();
@@ -223,7 +230,7 @@ public final class Zero20CoveredEnergyBenchmark {
         rig.mind.updateNavigationSense(body,null,objects);
         long before=rig.mind.decisions,beforeValid=rig.future.eligible();
         float[] effects=new float[UnknownWorld.SIGNATURES];
-        for(int frame=0;frame<FRAMES;frame++){
+        for(int frame=0;frame<episodeFrames();frame++){
             float t=frame*DT;
             if(reserve<=0){out.died=true;break;}
             reserve=Math.max(0,reserve-DRAIN*DT);
@@ -350,6 +357,13 @@ public final class Zero20CoveredEnergyBenchmark {
         String label=args.length>0?"LATEST_SAVED_BRAIN":"VIRGIN_SANITY";
         boolean fresh=args.length>1&&"--fresh".equals(args[1]);
         if(args.length>1&&!fresh)throw new IllegalArgumentException("Unknown split");
+        if(Boolean.getBoolean("zero20.longSurvivalDiagnostic")){
+            if(LONG_SURVIVAL_SECONDS<=40f/DRAIN)
+                throw new AssertionError("Long survival scenario does not reach natural depletion");
+            System.out.printf(Locale.US,
+                "ZERO20_SURVIVAL_AUDIT {\"windowSeconds\":%.1f,\"initialEnergy\":40.0,\"drainPerSecond\":%.2f,\"untouchedDepletionSeconds\":%.3f}%n",
+                LONG_SURVIVAL_SECONDS,DRAIN,40f/DRAIN);
+        }
         // TRAIN: only the control agent learns in first set of seed/layout
         // pairs. The shared resulting checkpoint is then cloned ONCE.
         Rig training=new Rig(source,false);
