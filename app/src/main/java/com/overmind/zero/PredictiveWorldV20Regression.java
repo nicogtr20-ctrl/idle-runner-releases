@@ -106,6 +106,12 @@ public final class PredictiveWorldV20Regression {
         migrated.resetLife();
         check(Math.abs(migrated.predictedObservation(2,now)[7]-now[7])<1e-6f,
             "Uncalibrated migrated profile fabricated motion from old weights");
+        float[] blankSpectral=now.clone();
+        for(int k=14;k<26;k++)blankSpectral[k]=0f;
+        float[] noPhantom=model.predictedObservation(2,blankSpectral);
+        for(int k=14;k<26;k++)
+            check(noPhantom[k]==0f,
+                "Predictor hallucinated spectral resource in a completely unseen band");
         // A stationary sensor stream should learn NO action-caused changes.
         PredictiveWorldV20 stationary=new PredictiveWorldV20();
         for(int i=0;i<2000;i++){
