@@ -1,0 +1,27 @@
+name: ZERO 0125 multipart telemetry and Android QA
+on:
+  pull_request:
+    branches: [feature/overmind-inapp-updater]
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+      - uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: '8.11.1'
+      - name: Lossless Unicode archive unit test
+        run: |
+          mkdir -p /tmp/zero-telemetry
+          javac -d /tmp/zero-telemetry app/src/main/java/com/overmind/zero/TelemetryChunks.java app/src/main/java/com/overmind/zero/TelemetryChunksRegression.java
+          java -cp /tmp/zero-telemetry com.overmind.zero.TelemetryChunksRegression
+      - name: Compile full Android APK with existing brains untouched
+        run: gradle --no-daemon assembleDebug
