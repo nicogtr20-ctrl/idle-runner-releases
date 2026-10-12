@@ -42,6 +42,7 @@ public final class GameActivity extends Activity {
         TemporalWorkingMemory workingMemory=new TemporalWorkingMemory();
         TemporalSkillBank temporalSkillBank=new TemporalSkillBank();
         BodyProprioception bodySchema=new BodyProprioception();
+        DistributedBodySense distributedSense=new DistributedBodySense();
         SpatialPerception spatialMap=new SpatialPerception();
         CausalExperiments causalExperiments=new CausalExperiments();
         InstrumentalNavigation navigation=new InstrumentalNavigation();
@@ -108,6 +109,10 @@ public final class GameActivity extends Activity {
         float H=850,clock=0,phase=0,uiTime=0,heading=0,trailClock=0;
         float[] trailX=new float[46],trailY=new float[46];
         int trailCount=0,speed=1,episode=0;
+        // Rendering-only light adaptation. Never persisted or fed to physics.
+        final float[] cyanLeds=new float[Morphology.POINTS];
+        final float[] redLeds=new float[Morphology.POINTS];
+        long lastLedFrame=0;
         volatile float benchStart=Float.NaN,benchNow=Float.NaN;
         boolean benchWorking=false;
         float onScreenX=240,onScreenY=420;
@@ -144,6 +149,9 @@ public final class GameActivity extends Activity {
             return true;
         }
         void load(){
+            java.util.Arrays.fill(cyanLeds,0f);
+            java.util.Arrays.fill(redLeds,0f);
+            lastLedFrame=0;
             gripObserver=new GripContactObserver();
             gripPrefs.edit().remove(GripContactObserver.KEY).apply();
             // Named slot loads/new-game atomically swap the working profile
@@ -201,6 +209,9 @@ public final class GameActivity extends Activity {
             bodySchema=new BodyProprioception();
             bodySchema.restore(prefs.getString(BodyProprioception.KEY,""));
             sensorMind.attachBodySchema(bodySchema);
+            distributedSense=new DistributedBodySense();
+            distributedSense.restore(prefs.getString(DistributedBodySense.KEY,""));
+            sensorMind.attachDistributedBody(distributedSense);
             spatialMap=new SpatialPerception();
             spatialMap.restore(prefs.getString(SpatialPerception.KEY,""));
             sensorMind.attachSpatialPerception(spatialMap);
@@ -417,6 +428,7 @@ public final class GameActivity extends Activity {
                 sensorMind.resumeEpisode(SensorimotorMind.Senses.read(
                     creature,surface,chamber,environment,reserve),action);
                 sensorMind.updateBodySense(creature,surface);
+                sensorMind.updateDistributedSense(creature,surface,chamber,environment);
                 sensorMind.resumeSpatialSense(creature,surface,chamber,environment);
                 sensorMind.updateNavigationSense(creature,chamber,environment);
                 motorGuard.resetLife(creature.cx,creature.cy);
@@ -475,6 +487,7 @@ public final class GameActivity extends Activity {
               .putString("temporal_working_memory_v106",workingMemory.encode())
               .putString("temporal_skills_v107",temporalSkillBank.encode())
               .putString(BodyProprioception.KEY,bodySchema.encode())
+              .putString(DistributedBodySense.KEY,distributedSense.encode())
               .putString(SpatialPerception.KEY,spatialMap.encode())
               .putString(CausalExperiments.KEY,causalExperiments.encode())
               .putString(InstrumentalNavigation.KEY,navigation.encode())
@@ -536,6 +549,8 @@ public final class GameActivity extends Activity {
             ongoingUnsuccessfulGrip=0;gripRecoveryCooldown=0;
             liveBody.abortTrial();
             creature.reset();surface.reset(creature);
+            java.util.Arrays.fill(cyanLeds,0f);
+            java.util.Arrays.fill(redLeds,0f);
             motorGuard.resetLife(creature.cx,creature.cy);
             lastSkillStall=motorGuard.recoveryActivations;
             journey.newLife(creature.cx,creature.cy);
@@ -551,7 +566,9 @@ public final class GameActivity extends Activity {
             sensorMind.resetEpisode(SensorimotorMind.Senses.read(
                 creature,surface,chamber,environment,reserve));
             sensorMind.updateBodySense(creature,surface);
-            sensorMind.updateSpatialSense(creature,chamber,environment);
+            sensorMind.updateDistributedSense(creature,surface,chamber,environment);
+            // The newborn sees from actual membrane sites, never a centroid eye.
+            sensorMind.updateSpatialSense(creature,surface,chamber,environment);
             sensorMind.updateNavigationSense(creature,chamber,environment);
             heading=(float)Math.atan2(sensorMind.motorY(),sensorMind.motorX());
         }
@@ -1220,6 +1237,13 @@ public final class GameActivity extends Activity {
             text(c,"MONDO SCONOSCIUTO • STIMOLO",24,H-189,10,0xff718f99,false);
         }
         void renderBody(Canvas c){
+            // Gentle independent LED easing in WALL time, not x20 simulation time.
+            // Lights expose already measured physical state; they do not learn
+            // or manipulate a single motor, tactile or policy weight.
+            long frame=System.nanoTime();
+            float ledDt=lastLedFrame==0?1f/60f:
+                Math.max(.004f,Math.min(.07f,(frame-lastLedFrame)*1e-9f));
+            lastLedFrame=frame;
             c.save();
             c.translate(onScreenX-creature.cx*2.3f,onScreenY-creature.cy*2.3f);
             c.scale(2.3f,2.3f);
@@ -1256,30 +1280,59 @@ public final class GameActivity extends Activity {
             paint.setShadowLayer(13,0,4,0x7b000000);
             paint.setColor(0xff000208);c.drawPath(path,paint);paint.clearShadowLayer();
             paint.setShader(new RadialGradient(creature.cx-9,creature.cy-15,52,
-                new int[]{0xff50656b,0xff172a31,0xff030509,0xff000207},
+                new int[]{0xff242629,0xff121417,0xff060709,0xff010203},
                 new float[]{0f,.34f,.74f,1f},Shader.TileMode.CLAMP));
             c.drawPath(path,paint);paint.setShader(null);
-            paint.setColor(0xaa55a49b);paint.setStyle(Paint.Style.STROKE);paint.setStrokeWidth(.75f);
+            paint.setColor(0xff06080b);paint.setStyle(Paint.Style.STROKE);paint.setStrokeWidth(.9f);
             c.drawPath(path,paint);paint.setStyle(Paint.Style.FILL);
-            // Metallic ferrofluid glints react to local strain and real actuation.
+            // Each of the 96 black points lights ONLY from real signals:
+            // cyan = actuation / local velocity / tactile pressure / local sight;
+            // red = confirmed physically HELD adhesion, never mere press-on.
             for(int i=0;i<Morphology.POINTS;i++){
-                float dx=xx[i]-creature.cx,dy=yy[i]-creature.cy;
-                float r=(float)Math.hypot(dx,dy);
-                float stretch=surface.extension[i];
-                float glowRadius=.55f+Math.min(2.5f,stretch*.035f);
-                if(i%2==0){
-                    paint.setColor(0x8867f6d5);
-                    c.drawCircle(xx[i]-dx*.04f,yy[i]-dy*.04f,glowRadius,paint);
-                }
-                if(r>48){
-                    paint.setColor(0x8c97f5dc);c.drawCircle(xx[i],yy[i],1.65f,paint);
-                }
-                // Orange sparks show only PHYSICALLY engaged neural adhesion,
-                // not ordinary contacts or the membrane's motor contractions.
+                float xxLocal=xx[i],yyLocal=yy[i];
+                float relativeSpeed=(float)Math.hypot(
+                    surface.vx[i]-creature.cvx,surface.vy[i]-creature.cvy);
+                float pressure=Math.max(surface.touchSense[i],surface.touchPulse[i]);
+                float localEye=distributedSense.node(i,DistributedBodySense.OPTIC);
+                float activation=Math.min(1f,
+                    .37f*Math.min(1f,surface.extension[i]/Morphology.MAX_REACH)+
+                    .44f*Math.min(1f,relativeSpeed/120f)+
+                    .65f*Math.min(1f,pressure)+
+                    .20f*localEye);
+                boolean holding=false;
                 if(surface.gripHold[i]>=Morphology.GRIP_HOLD&&
-                   surface.touchSense[i]>.5f){
-                    paint.setColor(0xfff8c979);
-                    c.drawCircle(xx[i],yy[i],3.15f,paint);
+                   surface.touchSense[i]>.5f)holding=true;
+                float blueTarget=holding?activation*.24f:activation;
+                float blueRate=1f-(float)Math.exp(-ledDt/
+                    (blueTarget>cyanLeds[i]?.11f:.32f));
+                cyanLeds[i]+=(blueTarget-cyanLeds[i])*blueRate;
+                float redTarget=holding?1f:0f;
+                float redRate=1f-(float)Math.exp(-ledDt/
+                    (holding?.15f:.27f));
+                redLeds[i]+=(redTarget-redLeds[i])*redRate;
+                // Every point is black at rest. No alternating decorative LEDs.
+                paint.setShader(null);paint.setAlpha(255);
+                paint.setColor(0xff030508);
+                c.drawCircle(xxLocal,yyLocal,1.2f,paint);
+                float blue=Math.max(0,cyanLeds[i])*(1-.8f*redLeds[i]);
+                if(blue>.015f){
+                    paint.setColor(((int)(58*blue)<<24)|0x009ad8);
+                    c.drawCircle(xxLocal,yyLocal,3.1f+blue*2.1f,paint);
+                    paint.setColor(((int)(228*blue)<<24)|0x50deff);
+                    c.drawCircle(xxLocal,yyLocal,1.1f+blue*.9f,paint);
+                }
+                if(redLeds[i]>.015f){
+                    float red=redLeds[i];
+                    paint.setShader(new RadialGradient(xxLocal,yyLocal,7.7f,
+                        new int[]{0xffffb1a8,0xffff3041,0x99e70c26,0x00b00000},
+                        new float[]{0f,.20f,.49f,1f},Shader.TileMode.CLAMP));
+                    paint.setAlpha(Math.max(0,Math.min(255,(int)(red*255f))));
+                    c.drawCircle(xxLocal,yyLocal,7.7f,paint);
+                    paint.setShader(null);paint.setAlpha(255);
+                    paint.setColor(((int)(240*red)<<24)|0xff263c);
+                    c.drawCircle(xxLocal,yyLocal,1.8f,paint);
+                    paint.setColor(((int)(230*red)<<24)|0xffd6c8);
+                    c.drawCircle(xxLocal-.44f,yyLocal-.5f,.65f,paint);
                 }
             }
             // No nucleus drawn: the entire connected deformable body is ZERO.
