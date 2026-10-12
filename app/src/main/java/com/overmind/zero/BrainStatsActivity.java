@@ -42,6 +42,7 @@ public final class BrainStatsActivity extends Activity {
         final PredictiveWorldV20 predictiveWorldV20;
         final TransferSkillsV20 transferV20;
         final FuturePlannerV20 futureV20;
+        final PhysicalConsequenceV20 physicalConsequenceV20;
         final SpatialPerception spatial;
         final CausalExperiments causal;
         final InstrumentalNavigation navigation;
@@ -90,6 +91,9 @@ public final class BrainStatsActivity extends Activity {
             transferV20.restore(pref.getString(TransferSkillsV20.KEY,""));
             futureV20=new FuturePlannerV20();
             futureV20.restore(pref.getString(FuturePlannerV20.KEY,""));
+            physicalConsequenceV20=new PhysicalConsequenceV20();
+            physicalConsequenceV20.restore(
+                pref.getString(PhysicalConsequenceV20.KEY,""));
             spatial=new SpatialPerception();
             spatial.restore(pref.getString(SpatialPerception.KEY,""));
             causal=new CausalExperiments();
@@ -272,6 +276,13 @@ public final class BrainStatsActivity extends Activity {
                 futureV20.checks()+" controlli  •  orizzonte 5  •  nessuna guida motoria",
                 futureV20.checks()==0?0f:
                     Math.min(1f,(float)futureV20.eligible()/futureV20.checks()),gold);
+            y=skill(c,y,"ZERO 2.0 / CONSEGUENZE FISICHE",
+                physicalConsequenceV20.physicalEvents()+" movimenti reali",
+                physicalConsequenceV20.adjacentEnergy()+" contatti energetici temporalmente vicini"+
+                "  •  "+physicalConsequenceV20.ambiguousEnergy()+" ambigui"+
+                "  •  fiducia "+String.format(Locale.US,"%.0f%%",
+                    physicalConsequenceV20.confidence()*100f)+"  •  solo osservazione",
+                Math.min(1f,physicalConsequenceV20.validations()/120f),gold);
             y=skill(c,y,"PERCEZIONE DELLO SPAZIO",
                 spatial.parameterCount()+" pesi",
                 spatial.transitions+" azioni osservate  •  "+SpatialPerception.RAYS+
