@@ -76,6 +76,16 @@ jobs:
           assert "attachGripAffordanceV20(gripAffordanceV20)" in game
           assert "GripAffordanceV20.KEY" in Path("app/src/main/java/com/overmind/zero/ResetDomains.java").read_text()
           assert "gripAffordanceV20.choiceBias" not in policy
+          lab=Path("app/src/main/java/com/overmind/zero/Zero20CoveredEnergyBenchmark.java").read_text()
+          selfgrip=Path("app/src/main/java/com/overmind/zero/GripAffordanceV20.java").read_text()
+          assert "sampleGripPhysicsFrame(surface)" in game
+          assert "rig.mind.sampleGripPhysicsFrame(skin)" in lab
+          assert "gripAffordanceV20.physicsFrame(skin)" in mind
+          assert "GripSurfaceComposition.compose(surface,chamber,environment);" in game
+          assert "GripSurfaceComposition.compose(skin,null,objects);" in lab
+          assert 'new StringBuilder("ga21|")' in selfgrip
+          assert 'raw.startsWith("ga20|")' in selfgrip
+          assert "gripAffordanceV20.physicsFrame(skin)" not in policy
           assert "score=legacyQ+earnedValue" in policy
           assert "futureV20.value" not in policy and "transferV20.bias" not in policy
           print("ZERO 2.0 B/C shadow verified: zero original policy score/force/reward override")
