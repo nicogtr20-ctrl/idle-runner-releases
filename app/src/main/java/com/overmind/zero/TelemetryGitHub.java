@@ -268,6 +268,12 @@ final class TelemetryGitHub {
             if(group==0)source=data.getJSONObject("currentZero");
             else {
                 source=new JSONObject();
+                // Keep ZERO 2.0's compact explanatory digest as part of the
+                // multipart archive, not merely in the in-memory report().
+                // The previous whitelist silently dropped this optional
+                // section while still uploading all raw model preferences.
+                if(data.has("zero20Passive"))
+                    source.put("zero20Passive",data.get("zero20Passive"));
                 if(data.has("gripContactObserver"))
                     source.put("gripContactObserver",data.get("gripContactObserver"));
                 if(data.has("lastBehaviorLab"))
