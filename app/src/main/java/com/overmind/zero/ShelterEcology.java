@@ -163,7 +163,7 @@ public final class ShelterEcology {
         if(active==null)return;
         for(UnknownWorld.Entity e:active){
             if(e==null||!e.isConstruction()||e.consumed||
-               e.displacementFromSpawn()<12f)continue;
+               e.displacementFromSpawn()<12f&&Math.abs(e.angle)<.22f)continue;
             String key=id(e.spawnX,e.spawnY);
             if(!placed.containsKey(key)&&placed.size()>=MAX_PLACED){
                 String oldest=placed.keySet().iterator().next();
@@ -280,8 +280,8 @@ public final class ShelterEcology {
                 float rotation=legacy?0f:Float.parseFloat(a[8]);
                 float spin=legacy?0f:Float.parseFloat(a[9]);
                 if(!valid(rotation)||!valid(spin)||Math.abs(spin)>20f)return false;
-                if(Math.hypot(v[2]-v[0],v[3]-v[1])<11.9f||
-                   v[6]<0)return false;
+                if(Math.hypot(v[2]-v[0],v[3]-v[1])<11.9f&&
+                   (legacy||Math.abs(rotation)<.22f)||v[6]<0)return false;
                 UnknownWorld.Entity e=new UnknownWorld.Entity(v[0],v[1],2,6);
                 e.x=v[2];e.y=v[3];e.vx=v[4];e.vy=v[5];
                 e.peakDisplacement=v[6];e.everCollided="1".equals(a[7]);
