@@ -30,7 +30,7 @@ public final class ResetDomains {
                                   "motor_skills_v098"};
             case MANIPULATION:return new String[]{"hand_brain_v04","hand_attempts_v04",
                  "hand_successes_v04","objects_displaced_v041","collisions_v041","max_displacement_v041",
-                 "online_accepted_hand_v094","online_rejected_hand_v094"};
+                 "online_accepted_hand_v094","online_rejected_hand_v094",GripAffordanceV20.KEY};
             case MEMBRANE:return new String[]{"morph_brain_v07","morph_attempts_v07",
                  "morph_accepted_v07","morph_gate_attempts_v08","morph_gate_success_v08",
                  "online_accepted_membrane_v094","online_rejected_membrane_v094",
