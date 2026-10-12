@@ -73,8 +73,9 @@ public final class GripAffordanceV20Regression {
             observe(model,i%2==0?2:7,
                     i%2==0?spread:spreadRotated,i%2==0?1f:0f,
                     false,true);
-        check(model.trained()==trained&&model.moveEventsUnused()==moves,
-            "Heldout model mutated training-only affordance weights");
+        check(model.trained()==trained&&
+              model.forecast(2,spread)==b&&model.forecast(7,spread)==c,
+            "Heldout observations leaked into learned grip predictors");
         check(model.validations()==240&&model.confidence()>.10f&&
               model.heldoutError()<model.baselineError()*.8f,
             "Physical grip predictor failed independent same-configuration baseline");
