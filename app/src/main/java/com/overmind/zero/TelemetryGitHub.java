@@ -16,6 +16,10 @@ import java.net.URL;
 import java.nio.charset.StandardCharsets;
 import java.security.KeyStore;
 import java.text.SimpleDateFormat;
+import java.security.MessageDigest;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
 import java.util.Date;
 import java.util.Locale;
 import java.util.Map;
@@ -43,7 +47,8 @@ final class TelemetryGitHub {
     static final String SETTINGS="zero_share_gpt_v116";
     private static final String KEY_ALIAS="zero_github_report_key_v116";
     private static final String API="https://api.github.com/repos/"+REPO+"/contents/";
-    private static final int LIMIT=900*1024;
+    // Safety bound on the complete memory snapshot; NO truncation to 900 KB.
+    private static final int MAX_EXPORT_BYTES=32*1024*1024;
     private TelemetryGitHub(){}
 
     static boolean hasToken(Context c){
@@ -144,11 +149,8 @@ final class TelemetryGitHub {
         if(!lab.isEmpty())result.put("lastBehaviorLab",lab);
         return result;
     }
-    // GitHub Contents GET embeds the entire saved JSON as Base64 in the
-    // metadata response. A 450 KB ZERO report yields >600 KB of API JSON.
-    // Never truncate successful JSON and then attempt to parse it.
-    // The export itself is capped at 900 KiB, so 2 MiB covers Base64 and
-    // metadata while still keeping an explicit memory bound on Android.
+    // Each independent upload is <=256 KiB; metadata for a previous legacy
+    // current.json can nevertheless still exceed 1 MiB in GitHub's Base64 GET.
     private static final int MAX_SUCCESS_RESPONSE=2*1024*1024;
     private static final int MAX_ERROR_RESPONSE=12*1024;
     private static String readStream(InputStream in,int maxBytes)throws Exception{
@@ -212,27 +214,206 @@ final class TelemetryGitHub {
         }catch(Exception e){throw new IllegalStateException(e);}
         return req;
     }
+
+    private static final class Piece {
+        final String json,kind,field,key;
+        final int number,total;
+        final ArrayList<String> names;
+        Piece(String j,String type,String group,String name,
+              int part,int count,ArrayList<String> included){
+            json=j;kind=type;field=group;key=name;
+            number=part;total=count;names=included;
+        }
+    }
+    private static JSONObject page(String id,JSONObject main,JSONObject extra)
+        throws Exception{
+        JSONObject p=new JSONObject();
+        p.put("schema","overmind-zero-telemetry-part-v2");
+        p.put("reportId",id);
+        p.put("currentZero",main);
+        p.put("extras",extra);
+        return p;
+    }
+    private static void emitPage(List<Piece> out,String id,
+                                 JSONObject main,JSONObject extra,
+                                 ArrayList<String> keys)throws Exception{
+        if(keys.isEmpty())return;
+        String text=page(id,main,extra).toString();
+        if(TelemetryChunks.size(text)>TelemetryChunks.PART_BYTES)
+            throw new IllegalStateException("Sezione dati troppo grande");
+        out.add(new Piece(text,"values","","",-1,0,new ArrayList<>(keys)));
+    }
+    private static String digest(String value)throws Exception{
+        byte[] checksum=MessageDigest.getInstance("SHA-256").digest(
+            value.getBytes(StandardCharsets.UTF_8));
+        StringBuilder b=new StringBuilder(64);
+        for(byte part:checksum)b.append(String.format(Locale.US,"%02x",part&255));
+        return b.toString();
+    }
+    /** Immutable, independently readable JSON parts: each full preference
+     * belongs to exactly one file (or an ordered lossless fragment sequence).
+     * The old complete live profile remains INTACT in Android SharedPrefs.
+     */
+    private static List<Piece> partition(JSONObject data,JSONObject quick,
+                                          String id)throws Exception{
+        ArrayList<Piece> parts=new ArrayList<>();
+        JSONObject current=new JSONObject(),extra=new JSONObject();
+        ArrayList<String> included=new ArrayList<>();
+        for(int group=0;group<2;group++){
+            String groupName=group==0?"currentZero":"extras";
+            JSONObject source;
+            if(group==0)source=data.getJSONObject("currentZero");
+            else {
+                source=new JSONObject();
+                if(data.has("gripContactObserver"))
+                    source.put("gripContactObserver",data.get("gripContactObserver"));
+                if(data.has("lastBehaviorLab"))
+                    source.put("lastBehaviorLab",data.get("lastBehaviorLab"));
+            }
+            ArrayList<String> names=new ArrayList<>();
+            java.util.Iterator<String> iterator=source.keys();
+            while(iterator.hasNext())names.add(iterator.next());
+            Collections.sort(names);
+            for(String name:names){
+                Object value=source.get(name);
+                JSONObject entry=new JSONObject();entry.put(name,value);
+                String encoded=entry.toString();
+                // Preserve small scalar measurements directly in the index;
+                // full large models and historical strings go into the parts.
+                if(group==0&&TelemetryChunks.size(encoded)<=280){
+                    quick.put(name,value);continue;
+                }
+                JSONObject destination=group==0?current:extra;
+                destination.put(name,value);
+                if(TelemetryChunks.size(page(id,current,extra).toString())<=
+                    TelemetryChunks.PART_BYTES){
+                    included.add(groupName+"."+name);continue;
+                }
+                destination.remove(name);
+                emitPage(parts,id,current,extra,included);
+                current=new JSONObject();extra=new JSONObject();
+                included=new ArrayList<>();
+                destination=group==0?current:extra;
+                destination.put(name,value);
+                if(TelemetryChunks.size(page(id,current,extra).toString())<=
+                    TelemetryChunks.PART_BYTES){
+                    included.add(groupName+"."+name);continue;
+                }
+                // Arbitrarily large single value, never silently truncated.
+                destination.remove(name);
+                List<String> fragments=TelemetryChunks.split(
+                    encoded,TelemetryChunks.FRAGMENT_BYTES);
+                for(int i=0;i<fragments.size();i++){
+                    JSONObject fragment=new JSONObject();
+                    fragment.put("schema","overmind-zero-telemetry-fragment-v2");
+                    fragment.put("reportId",id);
+                    fragment.put("field",groupName);
+                    fragment.put("key",name);
+                    fragment.put("fragmentIndex",i);
+                    fragment.put("fragmentCount",fragments.size());
+                    fragment.put("jsonFragment",fragments.get(i));
+                    String content=fragment.toString();
+                    if(TelemetryChunks.size(content)>TelemetryChunks.PART_BYTES)
+                        throw new IllegalStateException("Frammento troppo grande");
+                    ArrayList<String> one=new ArrayList<>();
+                    one.add(groupName+"."+name);
+                    parts.add(new Piece(content,"fragment",groupName,name,
+                                         i,fragments.size(),one));
+                    if(parts.size()>TelemetryChunks.MAX_PARTS)
+                        throw new IllegalStateException(
+                            "Troppe sezioni: nessun report parziale pubblicato");
+                }
+            }
+        }
+        emitPage(parts,id,current,extra,included);
+        if(parts.isEmpty()||parts.size()>TelemetryChunks.MAX_PARTS)
+            throw new IllegalStateException("Numero sezioni non valido");
+        return parts;
+    }
+
+    private static final class Archive {
+        final String index,history;
+        final ArrayList<String> paths;
+        final List<Piece> parts;
+        Archive(String full,String old,ArrayList<String> files,List<Piece> payloads){
+            index=full;history=old;paths=files;parts=payloads;
+        }
+    }
+    /** Construct the COMPLETE manifest and verify every part BEFORE upload. */
+    private static Archive prepare(JSONObject data)throws Exception{
+        int rawSize=TelemetryChunks.size(data.toString());
+        if(rawSize>MAX_EXPORT_BYTES)
+            throw new IllegalStateException("Dati oltre il limite di 32 MiB");
+        SimpleDateFormat format=new SimpleDateFormat("yyyyMMdd-HHmmss",Locale.US);
+        format.setTimeZone(TimeZone.getTimeZone("UTC"));
+        String id=format.format(new Date())+"-"+Long.toHexString(System.nanoTime());
+        JSONObject inline=new JSONObject();
+        List<Piece> pieces=partition(data,inline,id);
+        ArrayList<String> paths=new ArrayList<>();
+        JSONArray entries=new JSONArray();
+        for(int i=0;i<pieces.size();i++){
+            Piece part=pieces.get(i);
+            String path="zero-telemetry/reports/"+id+"/part-"+
+                String.format(Locale.US,"%03d",i+1)+".json";
+            paths.add(path);
+            JSONObject item=new JSONObject();
+            item.put("path",path);item.put("kind",part.kind);
+            item.put("bytes",TelemetryChunks.size(part.json));
+            item.put("sha256",digest(part.json));
+            JSONArray names=new JSONArray();
+            for(String n:part.names)names.put(n);
+            item.put("keys",names);
+            if("fragment".equals(part.kind)){
+                item.put("field",part.field);item.put("key",part.key);
+                item.put("fragmentIndex",part.number);
+                item.put("fragmentCount",part.total);
+            }
+            entries.put(item);
+        }
+        JSONObject index=new JSONObject();
+        index.put("schema","overmind-zero-telemetry-index-v2");
+        index.put("reportId",id);
+        index.put("recordedAtUtc",data.getLong("recordedAtUtc"));
+        index.put("source",data.getString("source"));
+        index.put("dataPolicy",data.getString("dataPolicy"));
+        index.put("gameplayBaseline",data.getString("gameplayBaseline"));
+        index.put("liveProfileKeys",data.getInt("liveProfileKeys"));
+        index.put("currentZero",inline);
+        index.put("parts",entries);
+        index.put("partCount",pieces.size());
+        index.put("fullReportBytes",rawSize);
+        index.put("assembly","Merge currentZero and extras from listed values parts. "+
+            "For oversized keys concatenate jsonFragment in fragmentIndex order "+
+            "and parse the one-key JSON. Verify each SHA-256.");
+        String text=index.toString();
+        if(TelemetryChunks.size(text)>TelemetryChunks.PART_BYTES)
+            throw new IllegalStateException("Indice report troppo grande");
+        return new Archive(text,"zero-telemetry/history/"+id+".json",
+                           paths,pieces);
+    }
     interface Progress {void update(String label);}
     static String upload(Context context,Progress progress)throws Exception{
         String token=secret(context);
         if(progress!=null)progress.update("Raccolta dati in sola lettura...");
         JSONObject data=report(context);
-        String json=data.toString();
-        int size=json.getBytes(StandardCharsets.UTF_8).length;
-        if(size>LIMIT)throw new IllegalStateException(
-            "Il report supera 900 KB ("+size+"): nessun dato caricato.");
-        SimpleDateFormat fmt=new SimpleDateFormat("yyyyMMdd-HHmmss",Locale.US);
-        fmt.setTimeZone(TimeZone.getTimeZone("UTC"));
-        String suffix=Long.toHexString(System.nanoTime());
-        String history="zero-telemetry/history/"+fmt.format(new Date())+"-"+suffix+".json";
-        if(progress!=null)progress.update("Upload storico privato su GitHub...");
-        call("PUT",history,token,commitBody(json,
-            "ZERO voluntary telemetry snapshot: "+fmt.format(new Date()),null));
-        if(progress!=null)progress.update("Aggiornamento ultimo report...");
-        JSONObject current=call("GET",LATEST+"?ref="+BRANCH,token,null);
-        String oldSha=current==null?null:current.optString("sha","");
-        call("PUT",LATEST,token,commitBody(json,
-            "ZERO latest voluntary gameplay report",oldSha));
+        Archive archive=prepare(data);
+        // Publish ALL immutable shards before switching either index.
+        // Failed partial uploads leave the previous current.json untouched.
+        for(int i=0;i<archive.parts.size();i++){
+            if(progress!=null)progress.update("Invio sezione "+(i+1)+"/"+
+                archive.parts.size()+" su GitHub...");
+            call("PUT",archive.paths.get(i),token,
+                commitBody(archive.parts.get(i).json,
+                           "ZERO complete telemetry part "+(i+1),null));
+        }
+        if(progress!=null)progress.update("Salvataggio indice storico...");
+        call("PUT",archive.history,token,
+            commitBody(archive.index,"ZERO full private report index",null));
+        if(progress!=null)progress.update("Verifica ultimo report...");
+        JSONObject previous=call("GET",LATEST+"?ref="+BRANCH,token,null);
+        String oldSha=previous==null?null:previous.optString("sha","");
+        call("PUT",LATEST,token,
+            commitBody(archive.index,"ZERO latest complete report",oldSha));
         context.getSharedPreferences(SETTINGS,Context.MODE_PRIVATE).edit()
             .putLong("last_success",System.currentTimeMillis()).apply();
         // Stable path can always be fetched by a connected GitHub plugin.
