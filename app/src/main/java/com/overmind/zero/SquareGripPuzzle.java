@@ -128,7 +128,11 @@ public final class SquareGripPuzzle {
         }
         boolean opposing=sufficientlySeparate(sides[0],sides[1])||
                          sufficientlySeparate(sides[2],sides[3]);
-        if(opposing&&held>=2){
+        // Collision solvers may reposition a cover ONLY when its own
+        // physical opposite-side grip was confirmed. Past everCollided
+        // history and a single red point never authorize displacement.
+        box.bilateralHeldNow=opposing&&held>=2;
+        if(box.bilateralHeldNow){
             float desiredX=clamp(sumVx/held,-MAX_SPEED,MAX_SPEED);
             float desiredY=clamp(sumVy/held,-MAX_SPEED,MAX_SPEED);
             float alpha=Math.min(1,dt*5f);
