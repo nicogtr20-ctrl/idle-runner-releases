@@ -999,6 +999,11 @@ public final class GameActivity extends Activity {
                     // Restore the union of physically valid object-owned holds
                     // for vision and next-frame tactile input only.
                     GripSurfaceComposition.compose(surface,chamber,environment);
+                    // ZERO2 shadow: actual 96-site, simultaneously composed
+                    // physics-owned holds sampled at every 35ms substep,
+                    // including grips shorter than the ~650ms decision tick.
+                    // This cannot command a hold or modify physical forces.
+                    sensorMind.sampleGripPhysicsFrame(surface);
                     gripObserver.pruneBoxes(environment);
                     resolveObjects(slice);
                     // Weather reaches the actual deformable tissue AFTER
