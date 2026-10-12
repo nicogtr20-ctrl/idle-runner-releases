@@ -29,6 +29,7 @@ public final class SensorimotorMind {
     private transient TemporalWorkingMemory temporal;
     private transient TemporalSkillBank temporalSkills;
     private transient BodyProprioception bodySchema;
+    private transient DistributedBodySense distributedBody;
     private transient SpatialPerception spatial;
     private transient CausalExperiments causal;
     private transient InstrumentalNavigation navigation;
@@ -64,6 +65,7 @@ public final class SensorimotorMind {
             if(temporal!=null)temporal.energyOutcome(actualEnergyDelta);
             if(temporalSkills!=null)temporalSkills.energyOutcome(actualEnergyDelta);
             if(bodySchema!=null)bodySchema.actualEnergy(actualEnergyDelta);
+            if(distributedBody!=null)distributedBody.actualEnergy(actualEnergyDelta);
             if(causal!=null)causal.energyOutcome(actualEnergyDelta);
             if(navigation!=null)navigation.energyOutcome(actualEnergyDelta,
                 visuallyObservedSignature,true);
@@ -90,6 +92,8 @@ public final class SensorimotorMind {
     public synchronized void attachTemporalSkills(TemporalSkillBank bank){temporalSkills=bank;}
     public synchronized void attachBodySchema(BodyProprioception map){bodySchema=map;}
     public synchronized BodyProprioception bodySchema(){return bodySchema;}
+    public synchronized void attachDistributedBody(DistributedBodySense map){distributedBody=map;}
+    public synchronized DistributedBodySense distributedBody(){return distributedBody;}
     public synchronized void attachSpatialPerception(SpatialPerception model){spatial=model;}
     public synchronized SpatialPerception spatialPerception(){return spatial;}
     public synchronized void attachCausalExperiments(CausalExperiments model){causal=model;}
@@ -103,7 +107,11 @@ public final class SensorimotorMind {
     }
     public synchronized void updateSpatialSense(MotorBrain.Body b,ScarcityLab room,
         ArrayList<UnknownWorld.Entity> objects){
-        if(spatial!=null)spatial.observeEnvironment(b,room,objects);
+        updateSpatialSense(b,null,room,objects);
+    }
+    public synchronized void updateSpatialSense(MotorBrain.Body b,Morphology.Surface skin,
+        ScarcityLab room,ArrayList<UnknownWorld.Entity> objects){
+        if(spatial!=null)spatial.observeEnvironment(b,skin,room,objects);
     }
     public synchronized void resumeSpatialSense(MotorBrain.Body b,ScarcityLab room,
         ArrayList<UnknownWorld.Entity> objects){
@@ -117,6 +125,11 @@ public final class SensorimotorMind {
     /** Feed the current physical shape at the start/resume of a life. */
     public synchronized void updateBodySense(MotorBrain.Body b,Morphology.Surface skin){
         if(bodySchema!=null)bodySchema.feed(BodyProprioception.sense(b,skin));
+    }
+    public synchronized void updateDistributedSense(MotorBrain.Body b,Morphology.Surface skin,
+        ScarcityLab room,ArrayList<UnknownWorld.Entity> objects){
+        if(distributedBody!=null)
+            distributedBody.feed(DistributedBodySense.sense(b,skin,room,objects));
     }
     public synchronized TemporalSkillBank temporalSkills(){return temporalSkills;}
     public synchronized boolean takeTemporalSkillsDirty(){
@@ -147,6 +160,7 @@ public final class SensorimotorMind {
         if(temporal!=null)temporal.resetLife();
         if(temporalSkills!=null)temporalSkills.resetLife();
         if(bodySchema!=null)bodySchema.resetLife();
+        if(distributedBody!=null)distributedBody.resetLife();
         if(spatial!=null)spatial.resetLife();
         if(causal!=null)causal.resetLife();
         if(navigation!=null)navigation.resetLife();
@@ -163,6 +177,7 @@ public final class SensorimotorMind {
             if(temporal!=null)temporal.resetLife();
             if(temporalSkills!=null)temporalSkills.resetLife();
             if(bodySchema!=null)bodySchema.resetLife();
+        if(distributedBody!=null)distributedBody.resetLife();
             if(spatial!=null)spatial.resetLife();
             if(causal!=null)causal.resetLife();
             if(navigation!=null)navigation.resetLife();
@@ -185,6 +200,7 @@ public final class SensorimotorMind {
         if(temporal!=null)temporal.resumeAction(currentAction);
         if(temporalSkills!=null)temporalSkills.resumeLife();
         if(bodySchema!=null)bodySchema.resumeLife();
+        if(distributedBody!=null)distributedBody.resumeLife();
         // Spatial map is reinstated with the saved physical body separately.
         if(causal!=null)causal.resumeLife();
         if(navigation!=null)navigation.resumeLife();
@@ -265,6 +281,7 @@ public final class SensorimotorMind {
         // named "correct" behavior. Stable choices come from learned value.
         float largestTemporalBias=0;
         float largestBodyBias=0;
+        float largestDetailBias=0;
         float largestSpatialBias=0;
         float largestCausalBias=0;
         float largestInstrumentalBias=0;
@@ -299,7 +316,11 @@ public final class SensorimotorMind {
             // action advice is zero until its held-out predictions beat
             // the unchanged-body baseline on real future contacts.
             float bodyBias=bodySchema==null?0:bodySchema.choiceBias(a);
-            largestBodyBias=Math.max(largestBodyBias,Math.abs(bodyBias));
+            float detailBias=distributedBody==null?0:distributedBody.choiceBias(a);
+            // The existing blackbox body channel captures both held-out models.
+            float fullBodyBias=Math.max(-.35f,Math.min(.35f,bodyBias+detailBias));
+            largestBodyBias=Math.max(largestBodyBias,Math.abs(fullBodyBias));
+            largestDetailBias=Math.max(largestDetailBias,Math.abs(detailBias));
             // Learned values from observed 16-direction geometry. Absolutely
             // no spatial policy bias until out-of-training predictions win.
             float spatialBias=spatial==null?0:spatial.choiceBias(a);
@@ -320,14 +341,14 @@ public final class SensorimotorMind {
                 intention.bias(navigation,a,senses[0]);
             largestIntentionBias=Math.max(largestIntentionBias,Math.abs(intentBias));
             float score=legacyQ+earnedValue+planned[a]*.50f+curiosity+jitter+memoryBias+
-                        diversity+temporalBias+skillBias+bodyBias+spatialBias+causalBias+
+                        diversity+temporalBias+skillBias+fullBodyBias+spatialBias+causalBias+
                         instrumental+intentBias;
             if(traceTerms!=null){
                 traceScores[a]=score;
                 float[] t=traceTerms[a];
                 t[0]=legacyQ;t[1]=earnedValue;t[2]=planned[a]*.50f;
                 t[3]=curiosity;t[4]=jitter;t[5]=memoryBias;t[6]=diversity;
-                t[7]=temporalBias;t[8]=skillBias;t[9]=bodyBias;
+                t[7]=temporalBias;t[8]=skillBias;t[9]=fullBodyBias;
                 t[10]=spatialBias;t[11]=causalBias;t[12]=instrumental;
                 t[13]=intentBias;
             }
@@ -363,6 +384,10 @@ public final class SensorimotorMind {
         if(bodySchema!=null){
             bodySchema.chosen(chosen);
             bodySchema.noteDecision(largestBodyBias);
+        }
+        if(distributedBody!=null){
+            distributedBody.chosen(chosen);
+            distributedBody.noteDecision(largestDetailBias);
         }
         if(spatial!=null){
             spatial.chosen(chosen);
@@ -415,6 +440,8 @@ public final class SensorimotorMind {
         if(trialAction<0){
             if(bodySchema!=null&&body!=null&&skin!=null)
                 bodySchema.feed(BodyProprioception.sense(body,skin));
+            if(distributedBody!=null&&body!=null&&skin!=null)
+                distributedBody.feed(DistributedBodySense.sense(body,skin,room,objects));
             if(spatial!=null&&body!=null&&objects!=null)
                 spatial.observeEnvironment(body,skin,room,objects);
             updateNavigationSense(body,room,objects);
@@ -429,6 +456,9 @@ public final class SensorimotorMind {
         float[] bodyAfter=bodySchema!=null&&body!=null&&skin!=null?
             BodyProprioception.sense(body,skin):null;
         if(bodySchema!=null&&bodyAfter!=null)bodySchema.feed(bodyAfter);
+        float[] distributedAfter=distributedBody!=null&&body!=null&&skin!=null?
+            DistributedBodySense.sense(body,skin,room,objects):null;
+        if(distributedBody!=null&&distributedAfter!=null)distributedBody.feed(distributedAfter);
         if(spatial!=null&&body!=null&&objects!=null)
             spatial.observeEnvironment(body,skin,room,objects);
         float[] before=trialState;
@@ -480,6 +510,9 @@ public final class SensorimotorMind {
         if(bodySchema!=null&&bodyAfter!=null)
             bodySchema.consequence(bodyAfter,trialAction,lastReward,physicalEffect,
                                    learning&&!holdout,holdout);
+        if(distributedBody!=null&&distributedAfter!=null)
+            distributedBody.consequence(distributedAfter,trialAction,lastReward,physicalEffect,
+                                        learning&&!holdout,holdout);
         if(spatial!=null&&body!=null&&objects!=null)
             spatial.consequence(trialAction,lastReward,learning&&!holdout,holdout);
         if(causal!=null&&spatial!=null&&body!=null&&objects!=null)
