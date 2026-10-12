@@ -23,12 +23,12 @@ Main `SensorimotorMind`: 26 sensory features and 16 discrete heading/adhesion ac
 - Persist learned readouts across death/scene saves/named slot copies; transient pending actions reset or resume conservatively; reject malformed/truncated/nonfinite models atomically; bounded memory and compute.
 - Shadow statistics only. The stable `SensorimotorMind` must make **exactly the same decisions** as baseline for a matched external run until real benchmarks justify explicit learned-model advice. Any future advisory needs an ablation switch, evidence gate, shadow-only calibration and automatic failure-safe rollback.
 
-### Gate B — Discovered temporal skills [PLANNED]
+### Gate B — Discovered temporal skills [IMPLEMENTING — separate cross-life evidence, no policy influence]
 - Detect repeated *actually lived* multi-action subsequences with verified delayed energetic/environmental outcomes, never a fixed handcrafted "open the box" routine.
 - Prefer evidence across different lives and physical contexts; suppress memorized false correlations. Learned skills should be discoverable, interruptible and context-specific, tested against historical `TemporalSkillBank` and `EpisodicMemory`.
 - No actuator overwrite, no motor replay simply on position match; learned suggestion only after independent validation.
 
-### Gate C — Hierarchical uncertain planning [PLANNED]
+### Gate C — Hierarchical uncertain planning [IMPLEMENTING — shadow rollouts only]
 - Decision horizon >3 through learned option structure and learned world transitions; model-rollout is hypothetical, never counted as an actual experience.
 - Calibrated uncertainty penalizes unrealistic futures; planning can abstain and fall back to original policy. Measured compute budget for Galaxy S21, slower brain tick than 40Hz mechanics.
 
@@ -73,6 +73,13 @@ Each Java workflow's existing assertions were kept. Old hardcoded javac dependen
 - Proves trained action-conditioned sensory forecasts improve on a controlled synthetic heldout dataset, optional persistence survives death and corrupt input is rejected, production shadow integration has no measured effect on the old policy in our paired scenarios, existing Java physics QA and Android **build** are successful.
 - Does **NOT** prove novel hierarchical reasoning, more real-world energy, better survival in an unseen habitat, a complete long-life replay of the user's saved agent, or no runtime problems on the Galaxy S21. These are still explicit gates B–E.
 - Thus **ZERO 2.0 is an experimental research branch**, not an APK/release ready to replace OTA99 or a completed intelligence upgrade.
+
+## Gate B/C implementation protocol — 2026-10-12
+
+1. **Long-horizon behavior traces**: learn reusable action motifs from executed decisions and consequences, not from suggested actions. Distinguish positive and negative *real* energy contacts, no credit for idle motion, and require corroboration in more than one physical life before describing a motif as transferable. Keep the existing 2–8-action TemporalSkillBank intact and compare evidence instead of silently rewriting it. Start as shadow, zero policy bias.
+2. **Uncertain counterfactual planning**: score up to 5 future decisions with the action-conditioned v2.0 sensory predictor, pre-existing learned action values, pessimistic uncertainty penalties and an empirical heldout gate. Hypothetical states never become observations or rewards. Start as shadow only, bounded compute, rollback/abstain on uncertain/out-of-distribution states.
+3. **QA**: exact decision/persistence parity on original ZERO, genuine 96-point paired physical scenarios, negative contact without learned positive bias, repeated cross-life motifs, model corruption/restore, all legacy GitHub workflows and Android build. No user profile migration or OTA before real lifespan benchmarks and demonstrated benefits.
+4. **Evidence**: append each GitHub run ID, failures, mitigations and actual results to this paper; do not call a completed compilation proof of more intelligence.
 
 ## Non-negotiable invariants
 1. No destroying/mutating real ZERO brain; no copying historical profiles into production automatically; optional legacy default safe.
