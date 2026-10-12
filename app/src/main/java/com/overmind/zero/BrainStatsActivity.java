@@ -39,6 +39,7 @@ public final class BrainStatsActivity extends Activity {
         final TemporalSkillBank temporalSkills;
         final BodyProprioception bodyMap;
         final LocalImpedanceSense localImpedance;
+        final PredictiveWorldV20 predictiveWorldV20;
         final SpatialPerception spatial;
         final CausalExperiments causal;
         final InstrumentalNavigation navigation;
@@ -81,6 +82,8 @@ public final class BrainStatsActivity extends Activity {
             bodyMap.restore(pref.getString(BodyProprioception.KEY,""));
             localImpedance=new LocalImpedanceSense();
             localImpedance.restore(pref.getString(LocalImpedanceSense.KEY,""));
+            predictiveWorldV20=new PredictiveWorldV20();
+            predictiveWorldV20.restore(pref.getString(PredictiveWorldV20.KEY,""));
             spatial=new SpatialPerception();
             spatial.restore(pref.getString(SpatialPerception.KEY,""));
             causal=new CausalExperiments();
@@ -216,6 +219,7 @@ public final class BrainStatsActivity extends Activity {
             int total=movementNow.length+handNow.length+choiceNow.length+shapeNow.length+
                 worldMind.parameterCount()+temporal.parameterCount()+bodyMap.parameterCount()+
                 DistributedBodySense.PARAMETERS+LocalImpedanceSense.PARAMETERS+
+                PredictiveWorldV20.WEIGHTS+
                 spatial.parameterCount()+causal.learnedParameters()+navigation.parameterCount();
             int original=movementStart.length+handStart.length+DecisionBrain.PARAMS;
             y=hero(c,"POTENZA NEURALE / PARAMETRI",String.valueOf(total),
@@ -245,6 +249,13 @@ public final class BrainStatsActivity extends Activity {
                 "fiducia "+String.format(Locale.US,"%.0f%%",
                   localImpedance.confidence()*100f),
                 Math.min(1f,localImpedance.validations/100f),gold);
+            y=skill(c,y,"ZERO 2.0 / MODELLO PREDITTIVO",
+                PredictiveWorldV20.WEIGHTS+" pesi",
+                predictiveWorldV20.transitions()+" eventi reali • "+
+                predictiveWorldV20.validations()+" verifiche • fiducia "+
+                String.format(Locale.US,"%.0f%%",
+                    predictiveWorldV20.confidence()*100f)+" • solo osservazione",
+                Math.min(1f,predictiveWorldV20.validations()/120f),cyan);
             y=skill(c,y,"PERCEZIONE DELLO SPAZIO",
                 spatial.parameterCount()+" pesi",
                 spatial.transitions+" azioni osservate  •  "+SpatialPerception.RAYS+
