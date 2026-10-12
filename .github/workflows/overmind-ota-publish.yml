@@ -618,7 +618,7 @@ jobs:
           assert 'navigation.chosen(chosen,observedBody)' in mind
           assert 'navigation.consequence(trialAction,body,learning&&!holdout,holdout)' in mind
           assert 'actualEnergySinceChoice+=actualEnergyDelta;' in mind
-          assert 'lastReward=energyOutcome+' in mind and '.24f*realForward' not in mind
+          assert 'lastReward=energyOutcome-Math.min(.16f,actualAmbientLossSinceChoice*.45f)' in mind and '.24f*realForward' not in mind
           assert 'navigation.restore(prefs.getString(InstrumentalNavigation.KEY,""))' in game
           assert '.putString(InstrumentalNavigation.KEY,navigation.encode())' in game
           assert 'sensorMind.attachNavigation(navigation)' in game
@@ -701,7 +701,7 @@ jobs:
           assert 'intention.bias(navigation,a,senses[0])' in mind
           assert 'intention.consequence(navigation,trialAction,navigation.latestMovement)' in mind
           assert 'navigationAdviceEnabled=true' in mind
-          assert 'lastReward=energyOutcome+' in mind
+          assert 'lastReward=energyOutcome-Math.min(.16f,actualAmbientLossSinceChoice*.45f)' in mind
           assert '.putString(GoalContinuity.KEY,intentions.encode())' in game
           assert '.putString(GateBehaviorMetrics.KEY,gateMetrics.encode())' in game
           assert 'gateMetrics.observe(creature,chamber)' in game
