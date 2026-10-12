@@ -78,7 +78,7 @@ jobs:
           python3 - <<'PY'
           import json,os
           lines=open("/tmp/zero20-benchmark-log.txt").read().splitlines()
-          rows=[json.loads(l.split(" ",1)[1]) for l in lines if l.startswith("ZERO20_AB ")]
+          rows=[json.loads(l.split("ZERO20_ARENA ",1)[1]) for l in lines if l.startswith("ZERO20_AB ZERO20_ARENA ")]
           sums=[json.loads(l.split(" ",1)[1]) for l in lines if l.startswith("ZERO20_SUMMARY ")]
           if len(rows)!=24 or len(sums)!=1:raise AssertionError("Missing controlled trials")
           s=sums[0]
@@ -87,6 +87,8 @@ jobs:
                    "| Metric | Value |","|---|---:|"]
           for key in ("profile","pairs","wins","losses","ties","changedPaths",
                       "candidateEligiblePlans","trainingWorldConfidence",
+                      "trainingHeldoutError","trainingUnchangedError",
+                      "trainingHeldoutSamples","trainedWorldActions","corroboratedSkills",
                       "meanEnergyDelta","meanSurvivalDeltaSec","meanDamageDelta"):
               summary.append("| "+key+" | "+str(s[key])+" |")
           summary+=["\nPromotion **blocked by design** until unseen-habitat lifetime/energy advantages are established. These scores do not prove greater intelligence."]
