@@ -12,6 +12,8 @@ public final class UnknownWorld {
     public static final float RARE_ENERGY=80f;
     public static final class Entity {
         public float x,y,vx,vy,cooldown,contactCooldown;
+        /** Real rigid panel attitude and angular velocity (law 6 only). */
+        public float angle=0f,angularVelocity=0f;
         public boolean consumed=false;
         /** A physical cover hides its rare energy until genuinely moved. */
         public boolean concealed=false;
@@ -26,7 +28,8 @@ public final class UnknownWorld {
         public Entity(float x,float y,int signature,int physicalLaw) {
             this.x=x;this.y=y;this.spawnX=x;this.spawnY=y;
             this.signature=signature;this.law=physicalLaw;
-            radius=physicalLaw==2?19:(physicalLaw==5||physicalLaw==6)?SquareGripPuzzle.DIAGONAL:15;
+            radius=physicalLaw==2?19:physicalLaw==5?SquareGripPuzzle.DIAGONAL:
+                   physicalLaw==6?PanelPhysics.halfLength(x,y)+2f:15;
         }
         /** Serialization uses physical identity without exposing it to policy. */
         int physicalLaw(){return law;}
@@ -38,6 +41,11 @@ public final class UnknownWorld {
                 x+=vx*dt;y+=vy*dt;
                 float drag=(float)Math.exp(-((law==5||law==6)?4.2f:2.8f)*dt);
                 vx*=drag;vy*=drag;
+                if(law==6){
+                    angle+=angularVelocity*dt;
+                    angle=(float)Math.atan2(Math.sin(angle),Math.cos(angle));
+                    angularVelocity*=(float)Math.exp(-4.4f*dt);
+                }
                 peakDisplacement=Math.max(peakDisplacement,displacementFromSpawn());
             }
         }
@@ -48,6 +56,7 @@ public final class UnknownWorld {
         boolean isBox(){return law==5||law==6;}
         /** Blank, physically graspable material; never covers hidden energy. */
         boolean isConstruction(){return law==6;}
+        boolean isBilateralBox(){return law==5;}
         public boolean isRare(){return law==3||law==4;}
         float touch(float directionX,float directionY) {
             if(law==3||law==4){
@@ -169,8 +178,8 @@ public final class UnknownWorld {
             hidden.concealed=true;
             a.add(box);a.add(hidden);
         }
-        // Blank, bilateral-grip building material. It has NO energy hidden
-        // underneath and gives no direct reward for being moved.
+        // Thin construction PANEL: translates from single-sided physical pressure
+        // and rotates under off-center impulse. No hidden energy or bonus.
         float theta=spin+2.0f;
         float px=originX+(float)Math.cos(theta)*172f;
         float py=originY+(float)Math.sin(theta)*172f;

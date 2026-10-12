@@ -31,7 +31,7 @@ final class GripSurfaceComposition {
                 if(local)hold=Math.max(hold,gate.gateGripHold[i]);
             }
             if(objects!=null)for(UnknownWorld.Entity box:objects){
-                if(!box.isBox()||!boxFace(box,skin.x[i],skin.y[i]))continue;
+                if(!box.isBilateralBox()||!boxFace(box,skin.x[i],skin.y[i]))continue;
                 touch=true;
                 if(local)hold=Math.max(hold,box.boxGripHold[i]);
             }

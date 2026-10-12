@@ -25,16 +25,18 @@ public final class ShelterEcology {
     private final LinkedHashMap<String,Stored> placed=new LinkedHashMap<>();
 
     private static final class Stored {
-        float sx,sy,x,y,vx,vy,peak;
+        float sx,sy,x,y,vx,vy,peak,angle,angularVelocity;
         boolean touched;
         Stored(UnknownWorld.Entity e){
             sx=e.spawnX;sy=e.spawnY;x=e.x;y=e.y;
             vx=e.vx;vy=e.vy;peak=e.peakDisplacement;
+            angle=e.angle;angularVelocity=e.angularVelocity;
             touched=e.everCollided;
         }
         UnknownWorld.Entity entity(){
             UnknownWorld.Entity e=new UnknownWorld.Entity(sx,sy,2,6);
             e.x=x;e.y=y;e.vx=vx;e.vy=vy;
+            e.angle=angle;e.angularVelocity=angularVelocity;
             e.peakDisplacement=peak;e.everCollided=touched;
             // A blank building material NEVER conceals a reward.
             e.countedAsMoved=true;
@@ -66,6 +68,7 @@ public final class ShelterEcology {
     public static boolean boxBlocks(float x,float y,int wind,
                                     UnknownWorld.Entity box){
         if(box==null||box.consumed||!box.isBox()||box.concealed)return false;
+        if(box.isConstruction())return PanelPhysics.shadow(x,y,wind,box,SHADOW_RANGE);
         float dx=(x-box.x)*wind;
         return dx>BARRIER_HALF+1.5f&&dx<SHADOW_RANGE&&
                Math.abs(y-box.y)<BARRIER_HALF+1f;
@@ -160,7 +163,7 @@ public final class ShelterEcology {
         if(active==null)return;
         for(UnknownWorld.Entity e:active){
             if(e==null||!e.isConstruction()||e.consumed||
-               e.displacementFromSpawn()<12f)continue;
+               e.displacementFromSpawn()<12f&&Math.abs(e.angle)<.22f)continue;
             String key=id(e.spawnX,e.spawnY);
             if(!placed.containsKey(key)&&placed.size()>=MAX_PLACED){
                 String oldest=placed.keySet().iterator().next();
@@ -183,13 +186,15 @@ public final class ShelterEcology {
                     exists=true;break;
                 }
             }
-            if(exists||room!=null&&room.overlapsRoom(s.x,s.y,SquareGripPuzzle.DIAGONAL+8))
+            if(exists||room!=null&&room.overlapsRoom(s.x,s.y,
+                PanelPhysics.halfLength(s.sx,s.sy)+8))
                 continue;
             boolean overlaps=false;
             for(UnknownWorld.Entity e:active)
                 if(!e.consumed&&!e.concealed&&e.isBox()&&
-                   Math.abs(e.x-s.x)<SquareGripPuzzle.HALF*2f+2&&
-                   Math.abs(e.y-s.y)<SquareGripPuzzle.HALF*2f+2){overlaps=true;break;}
+                   Math.hypot(e.x-s.x,e.y-s.y)<
+                      (e.isConstruction()?PanelPhysics.bound(e):SquareGripPuzzle.DIAGONAL)+
+                       PanelPhysics.halfLength(s.sx,s.sy)+3f){overlaps=true;break;}
             if(overlaps)continue;
             active.add(s.entity());added++;
             if(added>=8||active.size()>=30)break;
@@ -205,10 +210,10 @@ public final class ShelterEcology {
         int collisions=0;
         for(int i=0;i<active.size();i++){
             UnknownWorld.Entity a=active.get(i);
-            if(!a.isBox()||a.consumed)continue;
+            if(!a.isBilateralBox()||a.consumed)continue;
             for(int j=i+1;j<active.size();j++){
                 UnknownWorld.Entity b=active.get(j);
-                if(!b.isBox()||b.consumed)continue;
+                if(!b.isBilateralBox()||b.consumed)continue;
                 float dx=b.x-a.x,dy=b.y-a.y;
                 float px=SquareGripPuzzle.HALF*2-Math.abs(dx);
                 float py=SquareGripPuzzle.HALF*2-Math.abs(dy);
@@ -227,13 +232,13 @@ public final class ShelterEcology {
                 collisions++;
             }
         }
-        return collisions;
+        return collisions+PanelPhysics.separate(active);
     }
     private static boolean valid(float n){
         return Float.isFinite(n)&&Math.abs(n)<1000000f;
     }
     public String encode(){
-        StringBuilder b=new StringBuilder("se1|").append(integrity).append('|')
+        StringBuilder b=new StringBuilder("se2|").append(integrity).append('|')
             .append(stormDamage).append('|').append(shieldedSeconds).append('|')
             .append(stormSeconds).append('|').append(stormEnergyCost).append('|')
             .append(placed.size());
@@ -241,12 +246,15 @@ public final class ShelterEcology {
             b.append('|').append(s.sx).append(',').append(s.sy).append(',')
              .append(s.x).append(',').append(s.y).append(',')
              .append(s.vx).append(',').append(s.vy).append(',')
-             .append(s.peak).append(',').append(s.touched?1:0);
+             .append(s.peak).append(',').append(s.touched?1:0).append(',')
+             .append(s.angle).append(',').append(s.angularVelocity);
         }
         return b.toString();
     }
     public boolean restore(String serial){
-        if(serial==null||serial.length()>80000||!serial.startsWith("se1|"))return false;
+        if(serial==null||serial.length()>80000||
+           (!serial.startsWith("se1|")&&!serial.startsWith("se2|")))return false;
+        boolean legacy=serial.startsWith("se1|");
         try{
             String[] p=serial.split("\\|",-1);
             if(p.length<7)return false;
@@ -262,18 +270,22 @@ public final class ShelterEcology {
             LinkedHashMap<String,Stored> temp=new LinkedHashMap<>();
             for(int i=0;i<count;i++){
                 String[] a=p[7+i].split(",",-1);
-                if(a.length!=8)return false;
+                if(a.length!=(legacy?8:10))return false;
                 float[] v=new float[7];
                 for(int k=0;k<7;k++){
                     v[k]=Float.parseFloat(a[k]);
                     if(!valid(v[k]))return false;
                 }
                 if(!"0".equals(a[7])&&!"1".equals(a[7]))return false;
-                if(Math.hypot(v[2]-v[0],v[3]-v[1])<11.9f||
-                   v[6]<0)return false;
+                float rotation=legacy?0f:Float.parseFloat(a[8]);
+                float spin=legacy?0f:Float.parseFloat(a[9]);
+                if(!valid(rotation)||!valid(spin)||Math.abs(spin)>20f)return false;
+                if(Math.hypot(v[2]-v[0],v[3]-v[1])<11.9f&&
+                   (legacy||Math.abs(rotation)<.22f)||v[6]<0)return false;
                 UnknownWorld.Entity e=new UnknownWorld.Entity(v[0],v[1],2,6);
                 e.x=v[2];e.y=v[3];e.vx=v[4];e.vy=v[5];
                 e.peakDisplacement=v[6];e.everCollided="1".equals(a[7]);
+                e.angle=rotation;e.angularVelocity=spin;
                 String key=id(e.spawnX,e.spawnY);
                 if(temp.containsKey(key))return false;
                 temp.put(key,new Stored(e));

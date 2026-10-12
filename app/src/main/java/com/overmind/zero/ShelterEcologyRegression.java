@@ -84,8 +84,8 @@ public final class ShelterEcologyRegression {
         ArrayList<UnknownWorld.Entity> pair=new ArrayList<>();
         pair.add(left);pair.add(right);
         yes(ShelterEcology.separateBoxes(pair)==1&&
-            Math.abs(right.x-left.x)>=SquareGripPuzzle.HALF*2-.001f,
-            "Material blocks still pass through one another");
+            PanelPhysics.separate(pair)==0,
+            "Rotated plates and old crates still physically overlap");
         yes(ShelterEcology.separateBoxes(pair)==0,
             "Separated materials gained repeated phantom impulses");
         // Standard spawn yields raw construction material in same world.
@@ -110,6 +110,6 @@ public final class ShelterEcologyRegression {
         System.out.println("ZERO-0122 SHELTER PASS: active weather, correct opaque direction, "+
             "real tissue pressure, lower damage behind moved solids, "+
             "no free energy, material streaming, save/death persistence, "+
-            "one-time material collisions and blank procedural supplies");
+            "one-time SAT solid material collisions and blank procedural supplies");
     }
 }
