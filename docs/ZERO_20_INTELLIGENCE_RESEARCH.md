@@ -16,7 +16,7 @@ Main `SensorimotorMind`: 26 sensory features and 16 discrete heading/adhesion ac
 
 ## Architecture / delivery gates
 
-### Gate A — Validated latent world model [START HERE]
+### Gate A — Validated latent world model [IMPLEMENTED IN SHADOW, QA IN PROGRESS]
 - Dedicated nonsemantic, action-conditioned, low-dimensional world-state prediction constructed **only from actually sensed vectors and executed actions**, no hidden object IDs or scene state.
 - Separate train vs real heldout observations, compare prediction against unchanged/last-state baseline, no training on heldout.
 - Estimate novelty/uncertainty from observed residuals; NO automatic curiosity reward, steering or physics modifications in initial rollout.
@@ -48,6 +48,8 @@ Main `SensorimotorMind`: 26 sensory features and 16 discrete heading/adhesion ac
 | Date | Phase | Change | Tests | Outcome |
 |---|---|---|---|---|
 | 2026-10-12 | Planning | Created isolated ZERO 2.0 branch and this paper | Initial review of core source and current telemetry | No stable code, brain, saved profile or production OTA changed |
+| 2026-10-12 | Gate A implementation | `PredictiveWorldV20`: 20 real sensory channels, 5-parameter predictor per action/channel, actual-only recurrent context, heldout forecast error vs unchanged baseline, atomic versioned serialization, confidence/uncertainty shadow output | Java `PredictiveWorldV20Regression` and 12 historical physics/cognition regressions; Android assembleDebug, GitHub Actions run [38291504234](https://github.com/nicogtr20-ctrl/idle-runner-releases/actions/runs/38291504234) **SUCCESS** | No command, learned policy score, motor or source reward changed |
+| 2026-10-12 | Gate A integration | Attached after real `SensorimotorMind` chosen actions, observed consequences on existing heldout split; saved optional `predictive_world_v20` in working profile / 12 slots; selective WORLD reset only; dashboard real confidence and transitions | Extended 360 paired baseline-vs-shadow decision/serialized-brain invariance checks; rerun of full Android QA after dashboard integration | **Verification in progress; experimental branch only** |
 
 ## Non-negotiable invariants
 1. No destroying/mutating real ZERO brain; no copying historical profiles into production automatically; optional legacy default safe.
