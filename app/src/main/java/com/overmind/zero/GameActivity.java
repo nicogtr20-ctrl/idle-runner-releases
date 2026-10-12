@@ -45,6 +45,7 @@ public final class GameActivity extends Activity {
         ShelterEcology shelter=new ShelterEcology();
         DistributedBodySense distributedSense=new DistributedBodySense();
         LocalImpedanceSense localImpedance=new LocalImpedanceSense();
+        PredictiveWorldV20 predictiveWorldV20=new PredictiveWorldV20();
         SpatialPerception spatialMap=new SpatialPerception();
         CausalExperiments causalExperiments=new CausalExperiments();
         InstrumentalNavigation navigation=new InstrumentalNavigation();
@@ -218,6 +219,9 @@ public final class GameActivity extends Activity {
             localImpedance=new LocalImpedanceSense();
             localImpedance.restore(prefs.getString(LocalImpedanceSense.KEY,""));
             sensorMind.attachImpedance(localImpedance);
+            predictiveWorldV20=new PredictiveWorldV20();
+            predictiveWorldV20.restore(prefs.getString(PredictiveWorldV20.KEY,""));
+            sensorMind.attachPredictiveWorldV20(predictiveWorldV20);
             spatialMap=new SpatialPerception();
             spatialMap.restore(prefs.getString(SpatialPerception.KEY,""));
             sensorMind.attachSpatialPerception(spatialMap);
@@ -502,6 +506,8 @@ public final class GameActivity extends Activity {
               .putString(BodyProprioception.KEY,bodySchema.encode())
               .putString(DistributedBodySense.KEY,distributedSense.encode())
               .putString(LocalImpedanceSense.KEY,localImpedance.encode())
+              // ZERO 2.0 shadow brain: optional independent persistence; no legacy changes.
+              .putString(PredictiveWorldV20.KEY,predictiveWorldV20.encode())
               .putString(SpatialPerception.KEY,spatialMap.encode())
               .putString(CausalExperiments.KEY,causalExperiments.encode())
               .putString(InstrumentalNavigation.KEY,navigation.encode())
