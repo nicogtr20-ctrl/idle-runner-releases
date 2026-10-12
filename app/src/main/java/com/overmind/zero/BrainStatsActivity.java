@@ -289,7 +289,10 @@ public final class BrainStatsActivity extends Activity {
             y=skill(c,y,"ZERO 2.0 / PRESA CORPOREA APPRESA",
                 gripAffordanceV20.realHeld()+" configurazioni con presa valida",
                 gripAffordanceV20.spreadHeld()+" prese distribuite  •  "+
-                gripAffordanceV20.motionEvents()+" cambiamenti osservati"+
+                gripAffordanceV20.motionEvents()+" cambiamenti osservati  •  "+
+                gripAffordanceV20.physicsHeldFrames()+" fotogrammi con presa, "+
+                gripAffordanceV20.physicsSpreadFrames()+" distribuiti  •  "+
+                gripAffordanceV20.fleetingSpreadIntervals()+" prese brevi rilevate"+
                 "  •  fiducia "+String.format(Locale.US,"%.0f%%",
                     gripAffordanceV20.confidence()*100f)+"  •  nessuna guida motoria",
                 Math.min(1f,gripAffordanceV20.validations()/150f),purple);
