@@ -277,6 +277,9 @@ public final class Zero20CoveredEnergyBenchmark {
             }
             MaterialGeometry.observe(body);
             GripSurfaceComposition.compose(skin,null,objects);
+            // Match the real app exactly: one simultaneous 96-site tissue
+            // reading per physical substep AFTER owned hold composition.
+            rig.mind.sampleGripPhysicsFrame(skin);
             ShelterEcology.separateBoxes(objects);
             // FIX: previous research arena always passed physicalEffect=0,
             // losing actual physical feedback even after confirmed adhesion.
@@ -402,6 +405,8 @@ public final class Zero20CoveredEnergyBenchmark {
             "\"gripSpreadSnapshots\":%d,\"gripObservedMoves\":%d,"+
             "\"gripHeldoutSamples\":%d,\"gripError\":%.6f,"+
             "\"gripBaselineError\":%.6f,\"gripConfidence\":%.5f,"+
+            "\"microGripFrames\":%d,\"microHeldFrames\":%d,"+
+            "\"microSpreadFrames\":%d,\"fleetingSpreadActions\":%d,"+
             "\"meanEnergyDelta\":%.4f,\"meanSurvivalDeltaSec\":%.4f,"+
             "\"meanDamageDelta\":%.4f,\"promotable\":false}%n",
             label,fresh?"FRESH":"HISTORICAL",pairs,wins,losses,ties,changed,eligible,training.world.confidence(),
@@ -413,6 +418,9 @@ public final class Zero20CoveredEnergyBenchmark {
             training.gripAffordance.spreadHeld(),training.gripAffordance.motionEvents(),
             training.gripAffordance.validations(),training.gripAffordance.heldoutError(),
             training.gripAffordance.baselineError(),training.gripAffordance.confidence(),
+            training.gripAffordance.physicsSamples(),training.gripAffordance.physicsHeldFrames(),
+            training.gripAffordance.physicsSpreadFrames(),
+            training.gripAffordance.fleetingSpreadIntervals(),
             changeEnergy/pairs,changeTime/pairs,changeDamage/pairs);
         // NEVER claim readiness automatically from a small heldout suite.
         System.out.println("ZERO20_ARENA FINISHED: Real bilateral covers, hidden finite sources, no oracle actions; sandbox-only evidence; no APK");
