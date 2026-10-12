@@ -175,6 +175,16 @@ Verified GitHub CI [38301753150](https://github.com/nicogtr20-ctrl/idle-runner-r
 
 **The deployment threshold FAILED.** Retain production OTA99 unmodified; keep PR #31 draft and no automatic decision influence. The next research revision must validate a *selective* dynamics/no-change predictor on truly different real physical habitats and independently measured action-to-consequence calibration. Repeated real energy contact and real spatial exploration should be learned as delayed outcomes without assuming that any press, touch, or ordinary body travel earns food. Only after this predictor beats the unchanged-world baseline **on untouched heldout scenes**, and real ablated paired outcomes improve, may any planner policy be considered for stable deployment.
 
+## Gate D revision — selective change prediction (pre-registered, 2026-10-12)
+
+**Motivation:** original real-saved-brain benchmark gave `0.052731` holdout error vs `0.047759` trivial unchanged-sensation predictor, so 0 trustworthy plans and 0 A/B advantages. A new model is not promoted until true independent test improvement. This revision is committed *before new experiment runs*.
+
+**Candidate:** replace indiscriminate residual updates with *per-action/per-sensory-channel, train-observation-only estimates of consequential change frequency*, including a conservative action sample count. Blend learned delta toward the unchanged-state prior when sensory consequences have not been repeatedly observed; zero-improvement/unknown channels return prior rather than fabricate motion. Add bounded weight decay and an explicit measured-no-change diagnostic. Serialized independently in `pw21` while safely migrating prior `pw20` optional knowledge without touching any original cognitive/motor weights or counted observations. Keep the exact same confidence threshold, original brain policy and intact baseline controls.
+
+**Falsifiable evaluation:** use identical `Zero20CoveredEnergyBenchmark` seeds, original last uploaded private brain and 14 train/12 unseen layouts; compare model holdout RMSE with baseline. Include training-only calibration and *separate* scene-family evaluation; no selecting candidate based on private heldout outcome without documenting and rerunning a fresh untouched split. Gate remains off unless it beats the no-change benchmark. Also verify stationary environments do not hallucinate effects, changed sensory channels retain learning, data corruption atomicity, migration and mortality, eight historical regressions and Android assembleDebug.
+
+**Success levels:** (1) lower real heldout prediction error (calibrated forecast); (2) enough out-of-sample gain to pass conservative planner eligibility; (3) **independently** better actual hidden-energy retrieval/survival on new unseen habitats with no costlier harm. Each level reported separately; a pass in (1) is *not* evidence for (2) or (3).
+
 ## Non-negotiable invariants
 1. No destroying/mutating real ZERO brain; no copying historical profiles into production automatically; optional legacy default safe.
 2. No privileged semantic target coordinates or scripted correct actions in learning code.
