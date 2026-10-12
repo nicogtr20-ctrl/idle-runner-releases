@@ -182,7 +182,13 @@ public final class BehavioralLaboratory {
         brain.diagnostics.restore(p.diagnostics);
         brain.restorePlanningStats(p.planning);
         brain.setNavigationAdviceEnabled(instrument);
-        if(p.shadowWorldV20)brain.attachPredictiveWorldV20(new PredictiveWorldV20());
+        if(p.shadowWorldV20){
+            // Reproduce EXACTLY the new optional hierarchy on a cloned
+            // embodied agent, without touching the live named ZERO slot.
+            brain.attachPredictiveWorldV20(new PredictiveWorldV20());
+            brain.attachTransferSkillsV20(new TransferSkillsV20());
+            brain.attachFuturePlannerV20(new FuturePlannerV20());
+        }
         EpisodicMemory events=new EpisodicMemory();
         events.restore(p.memory);
         brain.attachMemory(events);
