@@ -24,14 +24,15 @@ public final class Zero20CoveredEnergyBenchmark {
         float[] membrane=Morphology.virgin(new Random(14790));
         String world="",outcome="",diagnostics="",planner="",temporal="",
             skills="",episodes="",body="",spatial="",causal="",nav="",
-            intention="",v20="",transfer="",future="";
+            intention="",v20="",transfer="",future="",physicalChain="";
         Profile copy(){
             Profile o=new Profile();
             o.motor=motor.clone();o.hand=hand.clone();o.membrane=membrane.clone();
             o.world=world;o.outcome=outcome;o.diagnostics=diagnostics;o.planner=planner;
             o.temporal=temporal;o.skills=skills;o.episodes=episodes;o.body=body;
             o.spatial=spatial;o.causal=causal;o.nav=nav;o.intention=intention;
-            o.v20=v20;o.transfer=transfer;o.future=future;return o;
+            o.v20=v20;o.transfer=transfer;o.future=future;
+            o.physicalChain=physicalChain;return o;
         }
     }
     static float[] floats(String raw){
@@ -73,7 +74,8 @@ public final class Zero20CoveredEnergyBenchmark {
             {GoalContinuity.KEY,"intention"},
             {PredictiveWorldV20.KEY,"v20"},
             {TransferSkillsV20.KEY,"transfer"},
-            {FuturePlannerV20.KEY,"future"}
+            {FuturePlannerV20.KEY,"future"},
+            {PhysicalConsequenceV20.KEY,"physicalChain"}
         };
         for(String[] entry:names){
             String raw=props.getProperty(entry[0],"");
@@ -92,6 +94,7 @@ public final class Zero20CoveredEnergyBenchmark {
             else if("v20".equals(entry[1]))p.v20=raw;
             else if("transfer".equals(entry[1]))p.transfer=raw;
             else if("future".equals(entry[1]))p.future=raw;
+            else if("physicalChain".equals(entry[1]))p.physicalChain=raw;
         }
         return p;
     }
@@ -100,6 +103,7 @@ public final class Zero20CoveredEnergyBenchmark {
         final PredictiveWorldV20 world=new PredictiveWorldV20();
         final TransferSkillsV20 transfer=new TransferSkillsV20();
         final FuturePlannerV20 future=new FuturePlannerV20();
+        final PhysicalConsequenceV20 physicalChain=new PhysicalConsequenceV20();
         final TemporalWorkingMemory temporal=new TemporalWorkingMemory();
         final TemporalSkillBank skills=new TemporalSkillBank();
         final EpisodicMemory episodes=new EpisodicMemory();
@@ -116,6 +120,7 @@ public final class Zero20CoveredEnergyBenchmark {
             mind.diagnostics.restore(p.diagnostics);
             mind.restorePlanningStats(p.planner);
             world.restore(p.v20);transfer.restore(p.transfer);future.restore(p.future);
+            physicalChain.restore(p.physicalChain);
             temporal.restore(p.temporal);skills.restore(p.skills);
             episodes.restore(p.episodes);body.restore(p.body);
             spatial.restore(p.spatial);causal.restore(p.causal);
@@ -123,6 +128,7 @@ public final class Zero20CoveredEnergyBenchmark {
             mind.attachPredictiveWorldV20(world);
             mind.attachTransferSkillsV20(transfer);
             mind.attachFuturePlannerV20(future);
+            mind.attachPhysicalConsequenceV20(physicalChain);
             mind.attachWorkingMemory(temporal);
             mind.attachTemporalSkills(skills);
             mind.attachMemory(episodes);
@@ -144,12 +150,13 @@ public final class Zero20CoveredEnergyBenchmark {
             out.spatial=spatial.encode();out.causal=causal.encode();
             out.nav=nav.encode();out.intention=intention.encode();
             out.v20=world.encode();out.transfer=transfer.encode();
-            out.future=future.encode();
+            out.future=future.encode();out.physicalChain=physicalChain.encode();
             return out;
         }
     }
     static final class Outcome {
         int seed,layout,positive,harmful,uncovered,opposedFrames,failedFrames;
+        int physicallyConfirmedCoverMotionFrames;
         float duration,net,positiveEnergy,damage,travel,remaining;
         long decisions,eligible;int advised;
         boolean died;
@@ -159,10 +166,12 @@ public final class Zero20CoveredEnergyBenchmark {
                 "\"seconds\":%.3f,\"gain\":%.3f,\"damage\":%.3f,"+
                 "\"net\":%.3f,\"reserve\":%.3f,\"travel\":%.3f,"+
                 "\"covers\":%d,\"opposedFrames\":%d,\"failedFrames\":%d,"+
+                "\"physicalCoverMoveFrames\":%d,"+
                 "\"positiveContacts\":%d,\"harmfulContacts\":%d,"+
                 "\"died\":%s,\"decisions\":%d,\"validatedPlans\":%d,\"adviceChoices\":%d}",
                 phase,seed,layout,duration,positiveEnergy,damage,net,
-                remaining,travel,uncovered,opposedFrames,failedFrames,positive,
+                remaining,travel,uncovered,opposedFrames,failedFrames,
+                physicallyConfirmedCoverMotionFrames,positive,
                 harmful,died,decisions,eligible,advised);
         }
     }
@@ -213,6 +222,13 @@ public final class Zero20CoveredEnergyBenchmark {
             if(reserve<=0){out.died=true;break;}
             reserve=Math.max(0,reserve-DRAIN*DT);
             for(UnknownWorld.Entity e:objects)e.tick(DT);
+            // Only the examiner records world-space object motion. Neither
+            // cover identity nor source coordinates are given to ZERO policy.
+            float[] coverX=new float[objects.size()],coverY=new float[objects.size()];
+            for(int k=0;k<objects.size();k++){
+                UnknownWorld.Entity o=objects.get(k);
+                if(o.isBilateralBox()){coverX[k]=o.x;coverY[k]=o.y;}
+            }
             float[] sx=skin.x.clone(),sy=skin.y.clone();
             float[] bx=body.x.clone(),by=body.y.clone();
             float oldX=body.cx,oldY=body.cy;
@@ -237,6 +253,19 @@ public final class Zero20CoveredEnergyBenchmark {
             MaterialGeometry.observe(body);
             GripSurfaceComposition.compose(skin,null,objects);
             ShelterEcology.separateBoxes(objects);
+            // FIX: previous research arena always passed physicalEffect=0,
+            // losing actual physical feedback even after confirmed adhesion.
+            // Use ONLY genuine integrated motion of a held cover (not a
+            // velocity command, pressure event, suggested grip or source).
+            for(int k=0;k<objects.size();k++){
+                UnknownWorld.Entity o=objects.get(k);
+                if(!o.isBilateralBox()||!o.bilateralHeldNow)continue;
+                float delta=(float)Math.hypot(o.x-coverX[k],o.y-coverY[k]);
+                if(Float.isFinite(delta)&&delta>.015f){
+                    effect+=Math.min(18f,delta);
+                    out.physicallyConfirmedCoverMotionFrames++;
+                }
+            }
             if(opposedThis>0)out.opposedFrames++;
             if(contactThis>0&&heldThis>0&&opposedThis==0)out.failedFrames++;
             // Collision did not invent energy. The source pays only when
@@ -342,13 +371,15 @@ public final class Zero20CoveredEnergyBenchmark {
             "\"candidateEligiblePlans\":%d,\"trainingWorldConfidence\":%.5f,"+
             "\"trainingHeldoutError\":%.6f,\"trainingUnchangedError\":%.6f,"+
             "\"trainingHeldoutSamples\":%d,\"trainedWorldActions\":%d,"+
-            "\"corroboratedSkills\":%d,"+
+            "\"corroboratedSkills\":%d,\"trainingPhysicalEvents\":%d,"+
+            "\"linkedEnergyEvents\":%d,"+
             "\"meanEnergyDelta\":%.4f,\"meanSurvivalDeltaSec\":%.4f,"+
             "\"meanDamageDelta\":%.4f,\"promotable\":false}%n",
             label,fresh?"FRESH":"HISTORICAL",pairs,wins,losses,ties,changed,eligible,training.world.confidence(),
             training.world.heldoutError(),training.world.baselineError(),
             training.world.validations(),training.world.trained(),
-            training.transfer.confirmed(),
+            training.transfer.confirmed(),training.physicalChain.physicalEvents(),
+            training.physicalChain.adjacentEnergy(),
             changeEnergy/pairs,changeTime/pairs,changeDamage/pairs);
         // NEVER claim readiness automatically from a small heldout suite.
         System.out.println("ZERO20_ARENA FINISHED: Real bilateral covers, hidden finite sources, no oracle actions; sandbox-only evidence; no APK");
