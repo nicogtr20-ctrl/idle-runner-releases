@@ -21,7 +21,7 @@ jobs:
       - name: Checkout locked experimental branch
         uses: actions/checkout@v4
         with:
-          persist-credentials: false
+          persist-credentials: true
           fetch-depth: 1
       - name: Setup JDK17 and Gradle
         uses: actions/setup-java@v4
@@ -113,7 +113,7 @@ jobs:
           t=pathlib.Path(os.environ['RUNNER_TEMP'])
           def certificate(filename):
               text=(t/filename).read_text()
-              match=re.search(r'Signer #1 certificate SHA-256 digest:\\s*([0-9a-fA-F]+)',text)
+              match=re.search(r'Signer #1 certificate SHA-256 digest:\s*([0-9a-fA-F]+)',text)
               if not match:raise AssertionError('APK certificate fingerprint unavailable')
               return match.group(1).lower()
           if certificate('preview-cert.txt')!=certificate('stable-cert.txt'):
