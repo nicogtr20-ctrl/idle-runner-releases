@@ -59,7 +59,7 @@ public final class ZeroPhysicsReplay {
     }
     static class Measurements{
         String scene,environment,tag;int angleIndex;
-        float drive,travel,boxMovement,maxBoxChange,panelMovement;
+        float drive,travel,boxMovement,boxPath,maxBoxChange,panelMovement;
         int contactFrames,bilateralFrames,activeGripFrames,uncovered,
             oneFaceFrames,activeFrames,invalidFrames;
         String json(){
@@ -67,11 +67,11 @@ public final class ZeroPhysicsReplay {
                 "{\"tag\":\"%s\",\"scene\":\"%s\",\"environment\":\"%s\",\"angle\":%d,\"gripDrive\":%.2f,"+
                 "\"frames\":%d,\"contactFrames\":%d,\"bilateralFrames\":%d,"+
                 "\"singleFaceFrames\":%d,\"gripFrames\":%d,\"uncovered\":%d,"+
-                "\"boxMotion\":%.4f,\"maxBoxMotion\":%.4f,\"panelMotion\":%.4f,"+
+                "\"boxMotion\":%.4f,\"boxPath\":%.4f,\"maxBoxMotion\":%.4f,\"panelMotion\":%.4f,"+
                 "\"travel\":%.4f,\"invalidFrames\":%d}",
                 tag,scene,environment,angleIndex,drive,activeFrames,contactFrames,
                 bilateralFrames,oneFaceFrames,activeGripFrames,uncovered,
-                boxMovement,maxBoxChange,panelMovement,travel,invalidFrames);
+                boxMovement,boxPath,maxBoxChange,panelMovement,travel,invalidFrames);
         }
     }
     static Measurements run(Properties p,String name,boolean withPanels,
@@ -136,7 +136,12 @@ public final class ZeroPhysicsReplay {
             if(e.physicalLaw()==6)plates.add(e);
         }
         float[] original=new float[covers.size()];
-        for(int i=0;i<covers.size();i++)original[i]=covers.get(i).displacementFromSpawn();
+        float[][] boxPrior=new float[covers.size()][2];
+        for(int i=0;i<covers.size();i++){
+            original[i]=covers.get(i).displacementFromSpawn();
+            boxPrior[i][0]=covers.get(i).x;
+            boxPrior[i][1]=covers.get(i).y;
+        }
         float[] panelsOriginal=new float[plates.size()];
         for(int i=0;i<plates.size();i++)panelsOriginal[i]=plates.get(i).displacementFromSpawn();
         Measurements m=new Measurements();
@@ -183,6 +188,13 @@ public final class ZeroPhysicsReplay {
             GripSurfaceComposition.compose(skin,null,objects);
             ShelterEcology.separateBoxes(objects);
             for(UnknownWorld.Entity o:objects)o.tick(DT);
+            // Measure ACTUAL integrated cover travel (not merely increased
+            // distance from its spawn). A held box can move toward its origin.
+            for(int j=0;j<covers.size();j++){
+                UnknownWorld.Entity b=covers.get(j);
+                m.boxPath+=(float)Math.hypot(b.x-boxPrior[j][0],b.y-boxPrior[j][1]);
+                boxPrior[j][0]=b.x;boxPrior[j][1]=b.y;
+            }
             m.activeFrames++;
             if(contactsThisFrame>0)m.contactFrames++;
             if(heldThisFrame>0)m.activeGripFrames++;
@@ -201,6 +213,32 @@ public final class ZeroPhysicsReplay {
             m.panelMovement+=Math.max(0,plates.get(i).displacementFromSpawn()-panelsOriginal[i]);
         return m;
     }
+    static void pairProbe(String tag){
+        for(int mode=0;mode<3;mode++){
+            UnknownWorld.Entity a=new UnknownWorld.Entity(0,0,2,5);
+            UnknownWorld.Entity b=new UnknownWorld.Entity(32,0,2,5);
+            // Controlled existing overlap: same solid contact in every
+            // version, separate from body movement, learning and rewards.
+            if(mode>0)markAuthorized(a);
+            if(mode>1)markAuthorized(b);
+            ArrayList<UnknownWorld.Entity> pair=new ArrayList<>();
+            pair.add(a);pair.add(b);
+            int collided=ShelterEcology.separateBoxes(pair);
+            System.out.printf(Locale.US,
+                "ZERO128_PAIR {\"tag\":\"%s\",\"held\":%d,\"collisions\":%d,"+
+                "\"firstDx\":%.5f,\"secondDx\":%.5f,\"remainingOverlap\":%.5f}%n",
+                tag,mode,collided,a.x,b.x-32,
+                Math.max(0,40-Math.abs(b.x-a.x)));
+        }
+    }
+    static void markAuthorized(UnknownWorld.Entity b){
+        try{
+            Field f=UnknownWorld.Entity.class.getDeclaredField("bilateralHeldNow");
+            f.setAccessible(true);f.setBoolean(b,true);
+        }catch(NoSuchFieldException ignored){
+            // Older releases permitted unsourced overlap correction.
+        }catch(ReflectiveOperationException e){throw new RuntimeException(e);}
+    }
     public static void main(String[] args)throws Exception{
         if(args.length!=2)throw new IllegalArgumentException("Fixture path and OTA tag required");
         Properties p=new Properties();
@@ -216,6 +254,7 @@ public final class ZeroPhysicsReplay {
                 n++;
             }
         if(n!=32)throw new AssertionError("Incomplete matched replay");
+        pairProbe(tag);
         System.out.println("ZERO128 FINISHED "+tag+" "+n+" matched physical cases");
     }
 }
