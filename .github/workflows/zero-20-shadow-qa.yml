@@ -128,6 +128,7 @@ jobs:
           uploader=Path('app/src/main/java/com/overmind/zero/TelemetryGitHub.java').read_text()
           assert 'new JSONObject(Zero20PassiveSnapshot.fromSaved(all))' in uploader
           assert 'result.put("zero20Passive"' in uploader
+          assert 'sensorMind.enableZero20ExperimentalAdvice(false);' in game
           assert 'zero20ExperimentalAdvice=false' in mind
           lab=Path("app/src/main/java/com/overmind/zero/Zero20CoveredEnergyBenchmark.java").read_text()
           selfgrip=Path("app/src/main/java/com/overmind/zero/GripAffordanceV20.java").read_text()
