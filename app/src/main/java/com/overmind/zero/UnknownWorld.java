@@ -24,6 +24,9 @@ public final class UnknownWorld {
         /** Transient proof that THIS energy cover has two opposing held faces
          * in the most recently solved physical frame. Not a learned state. */
         boolean bilateralHeldNow=false;
+        /** One fully validated panel hold from physical contact THIS frame;
+         * unlike serialized timers this never survives loading a scene. */
+        boolean panelHeldNow=false;
         public float peakDisplacement=0;
         public final int signature;
         private final int law;
