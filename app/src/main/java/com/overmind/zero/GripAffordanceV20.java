@@ -20,6 +20,10 @@ public final class GripAffordanceV20 {
     private final int[] count=new int[CELLS],moved=new int[CELLS];
     private final int[] contextCount=new int[STATES],contextMoved=new int[STATES];
     private int pendingAction=-1,pendingState=-1;
+    private int peakState=-1,intervalSamples=0;
+    // Honest frequency-resolved, globally bounded counters, no frame arrays.
+    private long physicsSamples=0,physicsHeldFrames=0,physicsSpreadFrames=0;
+    private long fleetingHeldIntervals=0,fleetingSpreadIntervals=0;
     private long observed=0,trained=0,heldout=0,moveEvents=0;
     private long realHeldSnapshots=0,spreadHeldSnapshots=0,invalid=0;
     private float modelErr=Float.NaN,referenceErr=Float.NaN;
@@ -89,20 +93,43 @@ public final class GripAffordanceV20 {
             return;
         }
         pendingAction=action;pendingState=state;
+        peakState=state;intervalSamples=0;
         if(state>=3)realHeldSnapshots++;
         if(state>=5)spreadHeldSnapshots++;
     }
+    /** One complete physical frame AFTER true collision/grip composition.
+     * Samples 96 sites simultaneously, never merging held points from
+     * different moments into one fictional distributed grip. No motor effect.
+     * Executes without heap allocation at each subframe. */
+    public void physicsFrame(Morphology.Surface skin){
+        if(pendingAction<0)return;
+        int state=selfState(skin);
+        if(state<0){invalid++;return;}
+        physicsSamples++;intervalSamples++;
+        peakState=Math.max(peakState,state);
+        if(state>=3)physicsHeldFrames++;
+        if(state>=5)physicsSpreadFrames++;
+    }
+    public long physicsSamples(){return physicsSamples;}
+    public long physicsHeldFrames(){return physicsHeldFrames;}
+    public long physicsSpreadFrames(){return physicsSpreadFrames;}
+    public long fleetingHeldIntervals(){return fleetingHeldIntervals;}
+    public long fleetingSpreadIntervals(){return fleetingSpreadIntervals;}
     public void consequence(int action,float actualExternalDisplacement,
                             boolean training,boolean holdout){
         if(pendingAction<0)return;
-        int ctx=pendingState,chosenAction=pendingAction;
-        pendingAction=-1;pendingState=-1;
+        int startState=pendingState;
+        int ctx=intervalSamples>0?peakState:pendingState;
+        int chosenAction=pendingAction;
+        pendingAction=-1;pendingState=-1;peakState=-1;intervalSamples=0;
         if(ctx<0||action<0||action>=ACTIONS||action!=chosenAction||
            !Float.isFinite(actualExternalDisplacement)||
            actualExternalDisplacement<0||actualExternalDisplacement>1e7f){
             invalid++;
             return;
         }
+        if(ctx>=3&&startState<3)fleetingHeldIntervals++;
+        if(ctx>=5&&startState<5)fleetingSpreadIntervals++;
         boolean changed=actualExternalDisplacement>.015f;
         float label=changed?1f:0f;
         int slot=ctx*ACTIONS+action;
@@ -125,7 +152,7 @@ public final class GripAffordanceV20 {
         observed++;
         if(changed)moveEvents++;
     }
-    public void resetLife(){pendingAction=-1;pendingState=-1;}
+    public void resetLife(){pendingAction=-1;pendingState=-1;peakState=-1;intervalSamples=0;}
     public void resumeLife(){resetLife();}
     public long observed(){return observed;}
     public long trained(){return trained;}
@@ -153,7 +180,7 @@ public final class GripAffordanceV20 {
         return clamp((referenceErr-modelErr)/referenceErr,0,.38f);
     }
     public String encode(){
-        StringBuilder out=new StringBuilder("ga20|").append(observed)
+        StringBuilder out=new StringBuilder("ga21|").append(observed)
             .append('|').append(trained).append('|').append(heldout)
             .append('|').append(moveEvents).append('|').append(realHeldSnapshots)
             .append('|').append(spreadHeldSnapshots).append('|').append(invalid)
@@ -163,12 +190,18 @@ public final class GripAffordanceV20 {
         for(int n:moved)out.append('|').append(n);
         for(int n:contextCount)out.append('|').append(n);
         for(int n:contextMoved)out.append('|').append(n);
+        out.append('|').append(physicsSamples).append('|').append(physicsHeldFrames)
+            .append('|').append(physicsSpreadFrames)
+            .append('|').append(fleetingHeldIntervals)
+            .append('|').append(fleetingSpreadIntervals);
         return out.toString();
     }
     public boolean restore(String raw){
-        if(raw==null||raw.length()>24000||!raw.startsWith("ga20|"))return false;
+        if(raw==null||raw.length()>24000)return false;
+        boolean legacy=raw.startsWith("ga20|"),newVersion=raw.startsWith("ga21|");
+        if(!legacy&&!newVersion)return false;
         String[] p=raw.split("\\|",-1);
-        if(p.length!=10+2*CELLS+2*STATES)return false;
+        if(p.length!=10+2*CELLS+2*STATES+(newVersion?5:0))return false;
         try{
             long[] h=new long[7];
             for(int i=0;i<h.length;i++){
@@ -200,6 +233,16 @@ public final class GripAffordanceV20 {
                 total+=nc;
             }
             if(total!=h[1])return false;
+            long[] micro=new long[5];
+            if(newVersion){
+                for(int i=0;i<5;i++){
+                    micro[i]=Long.parseLong(p[k++]);
+                    if(micro[i]<0)return false;
+                }
+                if(micro[1]>micro[0]||micro[2]>micro[1]||
+                   micro[3]>h[0]||micro[4]>micro[3]||
+                   micro[4]>micro[2])return false;
+            }
             System.arraycopy(cn,0,count,0,CELLS);
             System.arraycopy(mv,0,moved,0,CELLS);
             System.arraycopy(cc,0,contextCount,0,STATES);
@@ -207,15 +250,20 @@ public final class GripAffordanceV20 {
             observed=h[0];trained=h[1];heldout=h[2];moveEvents=h[3];
             realHeldSnapshots=h[4];spreadHeldSnapshots=h[5];invalid=h[6];
             modelErr=error<0?Float.NaN:error;referenceErr=base<0?Float.NaN:base;
+            physicsSamples=micro[0];physicsHeldFrames=micro[1];
+            physicsSpreadFrames=micro[2];
+            fleetingHeldIntervals=micro[3];fleetingSpreadIntervals=micro[4];
             resetLife();return true;
         }catch(RuntimeException bad){return false;}
     }
     public String summary(){
         return String.format(Locale.US,
             "ZERO2 grasp self-model: %d observed, %d real environmental moves, "+
-            "%d held snapshots (%d distributed), heldout %.5f vs %.5f "+
+            "%d held snapshots (%d distributed), subframes %d held %d spread %d, "+
+            "heldout %.5f vs %.5f "+
             "confidence %.3f (SHADOW, NO ACTUATION)",
             observed,moveEvents,realHeldSnapshots,spreadHeldSnapshots,
+            physicsSamples,physicsHeldFrames,physicsSpreadFrames,
             modelErr,referenceErr,confidence());
     }
 }
