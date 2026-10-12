@@ -932,7 +932,7 @@ public final class GameActivity extends Activity {
                     if(anyBox&&chamber==null)
                         java.util.Arrays.fill(surface.touchSense,0f);
                     for(UnknownWorld.Entity e:environment){
-                        if(!e.isBox())continue;
+                        if(!e.isBilateralBox())continue;
                         gripObserver.beforeBox(surface,e);
                         SquareGripPuzzle.Outcome grips=SquareGripPuzzle.constrain(
                             creature,surface,e,slice,
@@ -950,6 +950,22 @@ public final class GameActivity extends Activity {
                             eventTime=6f;
                             save();
                         }
+                    }
+                    // Only INERT construction plates receive the unilateral
+                    // physical pressure response. Energy-cover squares and
+                    // the existing gate retain their two-sided adhesion.
+                    for(UnknownWorld.Entity panel:environment){
+                        if(!panel.isConstruction()||panel.consumed)continue;
+                        PanelPhysics.Contact pushed=PanelPhysics.constrain(
+                            creature,surface,panel,slice,
+                            squarePrevSkinX,squarePrevSkinY,
+                            squarePrevBodyX,squarePrevBodyY);
+                        // No artificial reward on mere contact: displacement
+                        // of a real material counts only through existing
+                        // observed physical world outcomes.
+                        if(pushed.pressureImpulse>0)
+                            panel.peakDisplacement=Math.max(panel.peakDisplacement,
+                                panel.displacementFromSpawn());
                     }
                     // Read centroid from ACTUAL muscle material, not a
                     // simulated nucleus. Collision projection may move it.
@@ -1193,27 +1209,10 @@ public final class GameActivity extends Activity {
                     text(c,"APERTA",gx,cy-87,10,TEAL,true);
                 else text(c,"BLOCCATA",gx,cy-87,9,GOLD,true);
             }
-            // Read-only wind and material shadows: geometry, not a build
-            // target or a scripted path. Blasts are visible BEFORE impact.
-            boolean windActive=shelter.storm(worldTime);
-            if(windActive||shelter.warning(worldTime)){
-                int direction=shelter.wind(worldTime);
-                paint.setColor(windActive?0x355b9db4:0x14498195);
-                paint.setStrokeWidth(windActive?1.05f:.65f);
-                for(int v=-5;v<8;v++){
-                    float sy=minY+v*37f+(worldTime*4f)%37f;
-                    for(int k=0;k<6;k++){
-                        float sx=minX+k*62f;
-                        c.drawLine(sx,sy,sx+direction*24f,sy+7f,paint);
-                    }
-                }
-                if(windActive){
-                    paint.setColor(0x2138b5aa);
-                    for(UnknownWorld.Entity e:environment)if(e.isBox()&&!e.consumed)
-                        c.drawRect(direction>0?e.x+20:e.x-165,
-                            e.y-20,direction>0?e.x+165:e.x-20,e.y+20,paint);
-                }
-            }
+            // Read-only, filmic wind: calm ribbons and air motes follow the
+            // ACTUAL storm direction. No gameplay physics adjusted by view.
+            WindArt.draw(c,paint,minX,maxX,minY,maxY,worldTime,uiTime,
+                         shelter,environment);
             int[] colors={0xff64d8ca,0xffcc7da4,0xffd2b889};
             for(UnknownWorld.Entity object:environment){
                 if(object.consumed||object.concealed)continue;
@@ -1239,6 +1238,45 @@ public final class GameActivity extends Activity {
                         }
                     }
                 }
+                if(object.isConstruction()){
+                    // Thin rigid metal plate, visually AND physically rotated.
+                    // A clean bevel, directional brushed-metal reflection,
+                    // three retaining ribs and small fasteners. No crate X.
+                    float half=PanelPhysics.halfLength(object);
+                    float thick=PanelPhysics.HALF_THICKNESS;
+                    c.save();
+                    c.rotate((float)Math.toDegrees(object.angle),x,y);
+                    paint.setShader(null);
+                    paint.setShadowLayer(9f,0f,3f,0x88000000);
+                    paint.setColor(0xff06131d);
+                    c.drawRoundRect(x-half-2.2f,y-thick-2.4f,
+                                    x+half+2.2f,y+thick+2.4f,3.8f,3.8f,paint);
+                    paint.clearShadowLayer();
+                    paint.setShader(new LinearGradient(x-half,y-thick,
+                       x-half,y+thick,new int[]{0xffa6d0dc,0xff466b80,
+                                              0xff1d394b,0xff6f9bad},
+                       new float[]{0,.22f,.78f,1f},Shader.TileMode.CLAMP));
+                    c.drawRoundRect(x-half,y-thick,x+half,y+thick,2.9f,2.9f,paint);
+                    paint.setShader(null);
+                    paint.setColor(0x889bd6de);paint.setStrokeWidth(.65f);
+                    c.drawLine(x-half+5,y-thick+2.5f,
+                               x+half-5,y-thick+2.5f,paint);
+                    paint.setColor(0xff264658);
+                    for(int ribs=-1;ribs<=1;ribs++){
+                        float px=x+ribs*half*.48f;
+                        c.drawRoundRect(px-1.5f,y-thick+2,
+                            px+1.5f,y+thick-2,.8f,.8f,paint);
+                    }
+                    paint.setColor(0xffbce0eb);
+                    c.drawCircle(x-half+4.5f,y,1.35f,paint);
+                    c.drawCircle(x+half-4.5f,y,1.35f,paint);
+                    paint.setColor(0x775a9aab);
+                    c.drawLine(x-half+6,y+thick-2.7f,
+                               x+half-6,y+thick-2.7f,paint);
+                    c.restore();
+                    paint.setShader(null);paint.setStrokeWidth(1f);
+                    continue;
+                }
                 if(object.isBox()){
                     // Subtle photons escaping under a REAL, still covering
                     // square. This matches the optical model's faint cue,
@@ -1257,14 +1295,14 @@ public final class GameActivity extends Activity {
                     }
                     paint.setColor(0xff0a131e);
                     c.drawRoundRect(x-20.8f,y-20.8f,x+20.8f,y+20.8f,4,4,paint);
-                    paint.setColor(object.isConstruction()?0xff4f7680:0xffcaa875);
+                    paint.setColor(0xffcaa875);
                     c.drawRoundRect(x-20,y-20,x+20,y+20,3,3,paint);
-                    paint.setColor(object.isConstruction()?0xff162a35:0xff544335);
+                    paint.setColor(0xff544335);
                     c.drawRoundRect(x-15,y-15,x+15,y+15,2,2,paint);
-                    paint.setColor(object.isConstruction()?0xff85b9c5:0xffd6c7a2);
+                    paint.setColor(0xffd6c7a2);
                     c.drawLine(x-12,y-12,x+12,y+12,paint);
                     c.drawLine(x+12,y-12,x-12,y+12,paint);
-                    paint.setColor(object.isConstruction()?0xffbde7f1:0xffe4ce9b);
+                    paint.setColor(0xffe4ce9b);
                     c.drawCircle(x,y,3,paint);
                     continue;
                 }
@@ -1404,7 +1442,7 @@ public final class GameActivity extends Activity {
             rounded(c,12,12,468,145,0xeb0a1420,20);
             rounded(c,27,28,31,55,TEAL,2);
             text(c,"O V E R M I N D",43,39,14,TEAL,false);
-            text(c,"ZERO / ECOLOGIA 0122",26,72,21,0xffe9faf6,false);
+            text(c,"ZERO / LASTRE 0124",26,72,21,0xffe9faf6,false);
             rounded(c,339,104,459,138,0xff20444a,11);
             text(c,"AGGIORNA",399,127,12,TEAL,true);
             rounded(c,217,104,333,138,0xff283b58,11);
