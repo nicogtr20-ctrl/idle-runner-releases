@@ -396,22 +396,24 @@ final class TelemetryGitHub {
         String token=secret(context);
         if(progress!=null)progress.update("Raccolta dati in sola lettura...");
         JSONObject data=report(context);
-        String json=data.toString();
-        int size=json.getBytes(StandardCharsets.UTF_8).length;
-        if(size>LIMIT)throw new IllegalStateException(
-            "Il report supera 900 KB ("+size+"): nessun dato caricato.");
-        SimpleDateFormat fmt=new SimpleDateFormat("yyyyMMdd-HHmmss",Locale.US);
-        fmt.setTimeZone(TimeZone.getTimeZone("UTC"));
-        String suffix=Long.toHexString(System.nanoTime());
-        String history="zero-telemetry/history/"+fmt.format(new Date())+"-"+suffix+".json";
-        if(progress!=null)progress.update("Upload storico privato su GitHub...");
-        call("PUT",history,token,commitBody(json,
-            "ZERO voluntary telemetry snapshot: "+fmt.format(new Date()),null));
-        if(progress!=null)progress.update("Aggiornamento ultimo report...");
-        JSONObject current=call("GET",LATEST+"?ref="+BRANCH,token,null);
-        String oldSha=current==null?null:current.optString("sha","");
-        call("PUT",LATEST,token,commitBody(json,
-            "ZERO latest voluntary gameplay report",oldSha));
+        Archive archive=prepare(data);
+        // Publish ALL immutable shards before switching either index.
+        // Failed partial uploads leave the previous current.json untouched.
+        for(int i=0;i<archive.parts.size();i++){
+            if(progress!=null)progress.update("Invio sezione "+(i+1)+"/"+
+                archive.parts.size()+" su GitHub...");
+            call("PUT",archive.paths.get(i),token,
+                commitBody(archive.parts.get(i).json,
+                           "ZERO complete telemetry part "+(i+1),null));
+        }
+        if(progress!=null)progress.update("Salvataggio indice storico...");
+        call("PUT",archive.history,token,
+            commitBody(archive.index,"ZERO full private report index",null));
+        if(progress!=null)progress.update("Verifica ultimo report...");
+        JSONObject previous=call("GET",LATEST+"?ref="+BRANCH,token,null);
+        String oldSha=previous==null?null:previous.optString("sha","");
+        call("PUT",LATEST,token,
+            commitBody(archive.index,"ZERO latest complete report",oldSha));
         context.getSharedPreferences(SETTINGS,Context.MODE_PRIVATE).edit()
             .putLong("last_success",System.currentTimeMillis()).apply();
         // Stable path can always be fetched by a connected GitHub plugin.
