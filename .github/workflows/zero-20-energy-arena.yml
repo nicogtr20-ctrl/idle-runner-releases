@@ -1,16 +1,10 @@
 name: ZERO 2.0 true bilateral energy-cover autonomous A/B
 on:
+  # Run expensive four-job A/B only on an explicitly requested QA marker.
   push:
     branches: [feature/zero-20-hierarchical-intelligence]
     paths:
-      - "app/src/main/java/com/overmind/zero/Zero20CoveredEnergyBenchmark.java"
-      - "app/src/main/java/com/overmind/zero/PhysicalConsequenceV20.java"
-      - "app/src/main/java/com/overmind/zero/GripAffordanceV20.java"
-      - "app/src/main/java/com/overmind/zero/SensorimotorMind.java"
-      - "app/src/main/java/com/overmind/zero/PredictiveWorldV20.java"
-      - "app/src/main/java/com/overmind/zero/PredictiveWorldV20Regression.java"
-      - "app/src/main/java/com/overmind/zero/FuturePlannerV20.java"
-      - ".github/workflows/zero-20-energy-arena.yml"
+      - 'docs/ZERO20_ARENA_REQUEST.md'
   workflow_dispatch:
 permissions:
   contents: read
