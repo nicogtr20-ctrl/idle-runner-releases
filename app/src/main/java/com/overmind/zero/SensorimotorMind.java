@@ -519,6 +519,14 @@ public final class SensorimotorMind {
         return chosen;
     }
 
+    /** Passive 96-point readout at the PHYSICS rate. Reuses already
+     * composed tissue only, never mutates holds, contact or learned motor.
+     * Thread synchronized with real decision interval; zero action bias. */
+    public synchronized void sampleGripPhysicsFrame(Morphology.Surface skin){
+        if(gripAffordanceV20!=null&&trialAction>=0&&skin!=null)
+            gripAffordanceV20.physicsFrame(skin);
+    }
+
     /** Called with one observed outcome of a real action, not an off-screen
         scripted training example. One action has enough time for motor force
         to affect the body (approx 0.65 simulation seconds). */
