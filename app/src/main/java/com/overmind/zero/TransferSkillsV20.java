@@ -126,7 +126,7 @@ public final class TransferSkillsV20 {
                             candidate.harmfulLives*4;
                         if(importance<lowest){lowest=importance;worst=i;}
                     }
-                    if(worst>=0&&lowest>=4)continue; // never evict proven
+                    if(worst>=0&&lowest>=7)continue; // evict unconfirmed single-life candidates only
                     skills.remove(worst);
                     retired++;
                 }
