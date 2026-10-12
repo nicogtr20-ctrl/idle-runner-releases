@@ -31,6 +31,8 @@ public final class SensorimotorMind {
     private transient BodyProprioception bodySchema;
     private transient DistributedBodySense distributedBody;
     private transient LocalImpedanceSense impedance;
+    /** ZERO 2.0: shadow-only learned world; NEVER actuates or scores actions. */
+    private transient PredictiveWorldV20 worldV20;
     private transient SpatialPerception spatial;
     private transient CausalExperiments causal;
     private transient InstrumentalNavigation navigation;
@@ -103,6 +105,7 @@ public final class SensorimotorMind {
     public synchronized void attachDistributedBody(DistributedBodySense map){distributedBody=map;}
     public synchronized DistributedBodySense distributedBody(){return distributedBody;}
     public synchronized void attachImpedance(LocalImpedanceSense model){impedance=model;}
+    public synchronized void attachPredictiveWorldV20(PredictiveWorldV20 model){worldV20=model;}
     public synchronized LocalImpedanceSense impedance(){return impedance;}
     /** Read after body and collision geometry has been restored. */
     public synchronized void updateImpedanceSense(MotorBrain.Body b,Morphology.Surface s){
@@ -177,6 +180,8 @@ public final class SensorimotorMind {
         if(bodySchema!=null)bodySchema.resetLife();
         if(distributedBody!=null)distributedBody.resetLife();
             if(impedance!=null)impedance.resetLife();
+            if(worldV20!=null)worldV20.resetLife();
+        if(worldV20!=null)worldV20.resetLife();
         if(spatial!=null)spatial.resetLife();
         if(causal!=null)causal.resetLife();
         if(navigation!=null)navigation.resetLife();
@@ -220,6 +225,7 @@ public final class SensorimotorMind {
         if(bodySchema!=null)bodySchema.resumeLife();
         if(distributedBody!=null)distributedBody.resumeLife();
         if(impedance!=null)impedance.resumeLife();
+        if(worldV20!=null)worldV20.resumeLife();
         // Spatial map is reinstated with the saved physical body separately.
         if(causal!=null)causal.resumeLife();
         if(navigation!=null)navigation.resumeLife();
@@ -435,6 +441,8 @@ public final class SensorimotorMind {
         actualEnergySinceChoice=0f;
         actualAmbientLossSinceChoice=0f;
         action=chosen;decisions++;
+        // Observe only the chosen REAL action; forecasts are never executions.
+        if(worldV20!=null)worldV20.chosen(chosen,senses);
         estimatedValue=estimate(senses,chosen);
         System.arraycopy(senses,0,trialState,0,S);
         trialAction=chosen;
@@ -551,6 +559,10 @@ public final class SensorimotorMind {
         if(impedance!=null&&impedanceAfter!=null)
             impedance.consequence(impedanceAfter,trialAction,lastReward,physicalEffect,
                                   learning&&!holdout,holdout);
+        // Isolated predictive readout. No change to reward, action scoring or
+        // any motor learning; sharing ONLY the pre-existing heldout split.
+        if(worldV20!=null)
+            worldV20.consequence(after,trialAction,learning&&!holdout,holdout);
         if(spatial!=null&&body!=null&&objects!=null)
             spatial.consequence(trialAction,lastReward,learning&&!holdout,holdout);
         if(causal!=null&&spatial!=null&&body!=null&&objects!=null)
