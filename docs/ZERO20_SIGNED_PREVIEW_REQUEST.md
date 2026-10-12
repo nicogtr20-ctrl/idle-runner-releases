@@ -8,3 +8,5 @@ The preview must match **the exact stable signing certificate**, package ID and 
 **Forbidden:** automatic OTA publication, Github release, repository merging, modifying the current user device/profile/slot, importing user brain in APK, faking signing, using a temporary/self-signed key or making ZERO 2.0 influence body motion.
 
 Only upload the final APK as a private 3-day GitHub Actions artifact if all gates pass. On-phone safety and performance checks remain required before any stable rollout.
+
+Retry the safe certificate-parser validation after successful OTA99 SHA check and successful signed assembleRelease. Do not release anything before fingerprint parity.
