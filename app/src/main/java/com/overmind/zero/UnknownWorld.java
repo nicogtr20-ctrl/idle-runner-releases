@@ -26,7 +26,7 @@ public final class UnknownWorld {
         public Entity(float x,float y,int signature,int physicalLaw) {
             this.x=x;this.y=y;this.spawnX=x;this.spawnY=y;
             this.signature=signature;this.law=physicalLaw;
-            radius=physicalLaw==2?19:physicalLaw==5?SquareGripPuzzle.DIAGONAL:15;
+            radius=physicalLaw==2?19:(physicalLaw==5||physicalLaw==6)?SquareGripPuzzle.DIAGONAL:15;
         }
         /** Serialization uses physical identity without exposing it to policy. */
         int physicalLaw(){return law;}
@@ -34,9 +34,9 @@ public final class UnknownWorld {
         void tick(float dt){
             cooldown=Math.max(0,cooldown-dt);
             contactCooldown=Math.max(0,contactCooldown-dt);
-            if(law==2||law==5){
+            if(law==2||law==5||law==6){
                 x+=vx*dt;y+=vy*dt;
-                float drag=(float)Math.exp(-(law==5?4.2f:2.8f)*dt);
+                float drag=(float)Math.exp(-((law==5||law==6)?4.2f:2.8f)*dt);
                 vx*=drag;vy*=drag;
                 peakDisplacement=Math.max(peakDisplacement,displacementFromSpawn());
             }
@@ -45,7 +45,9 @@ public final class UnknownWorld {
             return (float)Math.hypot(x-spawnX,y-spawnY);
         }
         boolean isMovable(){return law==2;}
-        boolean isBox(){return law==5;}
+        boolean isBox(){return law==5||law==6;}
+        /** Blank, physically graspable material; never covers hidden energy. */
+        boolean isConstruction(){return law==6;}
         public boolean isRare(){return law==3||law==4;}
         float touch(float directionX,float directionY) {
             if(law==3||law==4){
@@ -167,6 +169,12 @@ public final class UnknownWorld {
             hidden.concealed=true;
             a.add(box);a.add(hidden);
         }
+        // Blank, bilateral-grip building material. It has NO energy hidden
+        // underneath and gives no direct reward for being moved.
+        float theta=spin+2.0f;
+        float px=originX+(float)Math.cos(theta)*172f;
+        float py=originY+(float)Math.sin(theta)*172f;
+        a.add(new Entity(px,py,2,6));
         return a;
     }
     public static void main(String[] args){
