@@ -17,11 +17,15 @@ public final class PredictiveWorldV20 {
     public static final String KEY="predictive_world_v20";
     public static final int S=SensorimotorMind.S,A=SensorimotorMind.ACTIONS;
     public static final int OFFSET=6,D=S-OFFSET,HEAD=5,WEIGHTS=A*D*HEAD;
-    private static final float LR=.012f,CONTEXT_ALPHA=.16f;
+    private static final float LR=.010f,CONTEXT_ALPHA=.16f;
+    /** Pure observed sensor dynamics; absence of change is the default. */
+    private final float[] changeRate=new float[A*D];
+    private final int[] actionSamples=new int[A];
     private final float[] weights=new float[WEIGHTS];
     private final float[] trace=new float[D],before=new float[D],pendingContext=new float[D];
     private int pending=-1,validationCount=0;
     private long transitions=0,trainCount=0,invalidSamples=0;
+    private long nonChangeReadouts=0,selectiveReadouts=0;
     private float heldoutError=Float.NaN,unchangedError=Float.NaN,
                   lastNovelty=0f,lastForecastError=Float.NaN;
     private static float clip(float x,float lo,float hi){
@@ -40,6 +44,15 @@ public final class PredictiveWorldV20 {
     public float baselineError(){return unchangedError;}
     public float latestNovelty(){return lastNovelty;}
     public float forecastError(){return lastForecastError;}
+    public long nonChangeReadouts(){return nonChangeReadouts;}
+    public long selectiveReadouts(){return selectiveReadouts;}
+    public int evidenceForAction(int action){return action>=0&&action<A?actionSamples[action]:0;}
+    /** Train-only change propensity, never supplied by game/world semantics. */
+    private float gate(int action,int output){
+        float occurrences=clip((actionSamples[action]-5f)/32f,0f,1f);
+        float frequency=clip((changeRate[action*D+output]-.06f)*1.12f,0f,1f);
+        return occurrences*frequency;
+    }
     /** Reported as evidence, never converted into steering or reward. */
     public float confidence(){
         if(validationCount<40||!Float.isFinite(heldoutError)||
@@ -76,7 +89,14 @@ public final class PredictiveWorldV20 {
         float[] result=sensed.clone(),instant=new float[D];
         System.arraycopy(sensed,OFFSET,instant,0,D);
         for(int j=0;j<D;j++)
-            result[OFFSET+j]=clip(instant[j]+delta(action,j,instant,trace),-1.6f,1.6f);
+            result[OFFSET+j]=clip(instant[j]+gate(action,j)*
+                delta(action,j,instant,trace),-1.6f,1.6f);
+        // An unknown action/channel remains unchanged until repeatedly
+        // witnessed consequences earn the right to predict a difference.
+        for(int j=0;j<D;j++){
+            if(gate(action,j)<.025f)nonChangeReadouts++;
+            else selectiveReadouts++;
+        }
         return result;
     }
     public void consequence(float[] observation,int action,boolean train,boolean heldout){
@@ -89,7 +109,7 @@ public final class PredictiveWorldV20 {
         float[] residual=new float[D];
         for(int j=0;j<D;j++){
             float change=observation[OFFSET+j]-before[j];
-            float prediction=delta(action,j,before,pendingContext);
+            float prediction=gate(action,j)*delta(action,j,before,pendingContext);
             residual[j]=change-prediction;
             sq+=residual[j]*residual[j];
             unchanged+=change*change;
@@ -108,13 +128,24 @@ public final class PredictiveWorldV20 {
             for(int j=0;j<D;j++){
                 int prev=(j+D-1)%D,next=(j+1)%D;
                 int off=(action*D+j)*HEAD;
-                float g=clip(LR*residual[j],-.025f,.025f);
-                weights[off]=clip(weights[off]+g*before[j],-2,2);
-                weights[off+1]=clip(weights[off+1]+g*before[prev],-2,2);
-                weights[off+2]=clip(weights[off+2]+g*before[next],-2,2);
-                weights[off+3]=clip(weights[off+3]+g*pendingContext[j],-2,2);
-                weights[off+4]=clip(weights[off+4]+g,-2,2);
+                float changed=Math.abs(observation[OFFSET+j]-before[j]);
+                float event=clip((changed-.025f)/.075f,0f,1f);
+                int at=action*D+j;
+                // Separate test-life observations NEVER update propensity.
+                changeRate[at]=clip(changeRate[at]*.965f+
+                                    event*.035f,0f,1f);
+                // The predictor can only move gradually against a strong
+                // no-change prior. Weight decay prevents repeated idle
+                // motion from accumulating a phantom sensory transition.
+                float g=clip(LR*residual[j]*(.25f+.75f*gate(action,j)),
+                             -.018f,.018f);
+                weights[off]=clip(weights[off]*.9998f+g*before[j],-2,2);
+                weights[off+1]=clip(weights[off+1]*.9998f+g*before[prev],-2,2);
+                weights[off+2]=clip(weights[off+2]*.9998f+g*before[next],-2,2);
+                weights[off+3]=clip(weights[off+3]*.9998f+g*pendingContext[j],-2,2);
+                weights[off+4]=clip(weights[off+4]*.9998f+g,-2,2);
             }
+            if(actionSamples[action]<Integer.MAX_VALUE)actionSamples[action]++;
             trainCount++;
         }
         // Temporal context is only from an ACTUAL new observation, never
@@ -125,20 +156,26 @@ public final class PredictiveWorldV20 {
         }
         transitions++;pending=-1;
     }
+    /** Retains previous v20 key, upgrades payload atomically to pw21. */
     public String encode(){
-        StringBuilder b=new StringBuilder("pw20|").append(transitions).append('|')
+        StringBuilder b=new StringBuilder("pw21|").append(transitions).append('|')
             .append(trainCount).append('|').append(validationCount).append('|')
             .append(invalidSamples).append('|')
             .append(Float.isFinite(heldoutError)?heldoutError:-1f).append('|')
             .append(Float.isFinite(unchangedError)?unchangedError:-1f);
         for(float w:weights)b.append('|').append(w);
+        for(int n:actionSamples)b.append('|').append(n);
+        for(float rate:changeRate)b.append('|').append(rate);
         return b.toString();
     }
-    /** All-or-nothing validation: a corrupt slot must NEVER partly mutate. */
+    /** All-or-nothing; legacy pw20 weights restored with zero speculative
+     * readiness until sufficient NEW actual train observations are seen. */
     public boolean restore(String raw){
-        if(raw==null||raw.length()>140000||!raw.startsWith("pw20|"))return false;
+        if(raw==null||raw.length()>160000)return false;
+        boolean old=raw.startsWith("pw20|"),next=raw.startsWith("pw21|");
+        if(!old&&!next)return false;
         String[] s=raw.split("\\|",-1);
-        if(s.length!=7+WEIGHTS)return false;
+        if(s.length!=(old?7+WEIGHTS:7+WEIGHTS+A+A*D))return false;
         try{
             long t=Long.parseLong(s[1]),trained=Long.parseLong(s[2]),
                 invalid=Long.parseLong(s[4]);
@@ -147,24 +184,39 @@ public final class PredictiveWorldV20 {
             if(t<0||trained<0||trained>t||val<0||val>t||
                 invalid<0||!Float.isFinite(err)||!Float.isFinite(base)||
                 err< -1||err>3||base< -1||base>3)return false;
-            float[] candidate=new float[WEIGHTS];
+            float[] candidate=new float[WEIGHTS],activity=new float[A*D];
+            int[] counts=new int[A];
             for(int i=0;i<WEIGHTS;i++){
                 candidate[i]=Float.parseFloat(s[i+7]);
                 if(!Float.isFinite(candidate[i])||Math.abs(candidate[i])>2.001f)
                     return false;
             }
+            if(next){
+                for(int i=0;i<A;i++){
+                    counts[i]=Integer.parseInt(s[7+WEIGHTS+i]);
+                    if(counts[i]<0||counts[i]>trained)return false;
+                }
+                for(int i=0;i<A*D;i++){
+                    activity[i]=Float.parseFloat(s[7+WEIGHTS+A+i]);
+                    if(!Float.isFinite(activity[i])||activity[i]<0||
+                        activity[i]>1.0001f)return false;
+                }
+            }
             System.arraycopy(candidate,0,weights,0,WEIGHTS);
+            System.arraycopy(activity,0,changeRate,0,A*D);
+            System.arraycopy(counts,0,actionSamples,0,A);
             transitions=t;trainCount=trained;validationCount=val;
             invalidSamples=invalid;
             heldoutError=err<0?Float.NaN:err;
             unchangedError=base<0?Float.NaN:base;
+            nonChangeReadouts=selectiveReadouts=0;
             resetLife();
             return true;
         }catch(RuntimeException malformed){return false;}
     }
     public String summary(){
         return String.format(Locale.US,
-            "ZERO 2.0 shadow world: lived=%d train=%d heldout=%d e=%.5f baseline=%.5f confidence=%.3f (NO action influence)",
+            "ZERO 2.0 selective change: lived=%d train=%d heldout=%d e=%.5f baseline=%.5f confidence=%.3f (SHADOW ONLY)",
             transitions,trainCount,validationCount,
             heldoutError,unchangedError,confidence());
     }
