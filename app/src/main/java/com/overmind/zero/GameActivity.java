@@ -566,9 +566,11 @@ public final class GameActivity extends Activity {
             journey.newLife(creature.cx,creature.cy);
             episode++;phase=0;trailCount=0;clock=0;
             chamber=null;
-            environment=WorldPlacement.spawn(episode,creature.cx,creature.cy,
-                scarcity,null,new ArrayList<UnknownWorld.Entity>());
+            // Existing placed materials have priority over newly generated props.
+            environment=new ArrayList<UnknownWorld.Entity>();
             shelter.rehydrate(environment,creature.cx,creature.cy,null);
+            environment.addAll(WorldPlacement.spawn(episode,creature.cx,creature.cy,
+                scarcity,null,environment));
             chosenObject=null;decisionBrain.abandon();
             goalTimer=0;contactsThisLife=0;worldTime=0;
             reserve=Math.max(70,Math.min(92,reserve));
@@ -593,6 +595,9 @@ public final class GameActivity extends Activity {
             // source stays paired with its physical cover.
             HabitatContinuity.pruneDistant(environment,creature,surface,
                 chamber==null?null:chamber.food,600f);
+            // Revisited player-placed materials preclude overlapping
+            // procedural spawns, never the other way around.
+            shelter.rehydrate(environment,creature.cx,creature.cy,chamber);
             environment.addAll(WorldPlacement.spawn(
                 episode,creature.cx,creature.cy,scarcity,chamber,environment));
             excludeOrdinaryRoomObjects();
@@ -600,7 +605,6 @@ public final class GameActivity extends Activity {
             // currently gripped square never vanishes merely due to cap 24.
             HabitatContinuity.enforceLimit(environment,creature,surface,
                 chamber==null?null:chamber.food);
-            shelter.rehydrate(environment,creature.cx,creature.cy,chamber);
             if(chosenObject!=null&&!environment.contains(chosenObject)){
                 decisionBrain.abandon();
                 chosenObject=null;goalTimer=0;
