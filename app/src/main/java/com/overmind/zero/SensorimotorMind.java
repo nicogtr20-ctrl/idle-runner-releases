@@ -33,6 +33,8 @@ public final class SensorimotorMind {
     private transient LocalImpedanceSense impedance;
     /** ZERO 2.0: shadow-only learned world; NEVER actuates or scores actions. */
     private transient PredictiveWorldV20 worldV20;
+    private transient TransferSkillsV20 transferV20;
+    private transient FuturePlannerV20 futureV20;
     private transient SpatialPerception spatial;
     private transient CausalExperiments causal;
     private transient InstrumentalNavigation navigation;
@@ -73,6 +75,7 @@ public final class SensorimotorMind {
             contactCredit.consequence(actualEnergyDelta,visuallyObservedSignature);
             if(temporal!=null)temporal.energyOutcome(actualEnergyDelta);
             if(temporalSkills!=null)temporalSkills.energyOutcome(actualEnergyDelta);
+            if(transferV20!=null)transferV20.energyOutcome(actualEnergyDelta);
             if(bodySchema!=null)bodySchema.actualEnergy(actualEnergyDelta);
             if(distributedBody!=null)distributedBody.actualEnergy(actualEnergyDelta);
             if(impedance!=null)impedance.actualEnergy(actualEnergyDelta);
@@ -106,6 +109,8 @@ public final class SensorimotorMind {
     public synchronized DistributedBodySense distributedBody(){return distributedBody;}
     public synchronized void attachImpedance(LocalImpedanceSense model){impedance=model;}
     public synchronized void attachPredictiveWorldV20(PredictiveWorldV20 model){worldV20=model;}
+    public synchronized void attachTransferSkillsV20(TransferSkillsV20 model){transferV20=model;}
+    public synchronized void attachFuturePlannerV20(FuturePlannerV20 model){futureV20=model;}
     public synchronized LocalImpedanceSense impedance(){return impedance;}
     /** Read after body and collision geometry has been restored. */
     public synchronized void updateImpedanceSense(MotorBrain.Body b,Morphology.Surface s){
@@ -179,9 +184,9 @@ public final class SensorimotorMind {
         if(temporalSkills!=null)temporalSkills.resetLife();
         if(bodySchema!=null)bodySchema.resetLife();
         if(distributedBody!=null)distributedBody.resetLife();
-            if(impedance!=null)impedance.resetLife();
-            if(worldV20!=null)worldV20.resetLife();
+        if(impedance!=null)impedance.resetLife();
         if(worldV20!=null)worldV20.resetLife();
+        if(transferV20!=null)transferV20.resetLife();
         if(spatial!=null)spatial.resetLife();
         if(causal!=null)causal.resetLife();
         if(navigation!=null)navigation.resetLife();
@@ -200,6 +205,8 @@ public final class SensorimotorMind {
             if(bodySchema!=null)bodySchema.resetLife();
         if(distributedBody!=null)distributedBody.resetLife();
             if(impedance!=null)impedance.resetLife();
+            if(worldV20!=null)worldV20.resetLife();
+            if(transferV20!=null)transferV20.resetLife();
             if(spatial!=null)spatial.resetLife();
             if(causal!=null)causal.resetLife();
             if(navigation!=null)navigation.resetLife();
@@ -226,6 +233,7 @@ public final class SensorimotorMind {
         if(distributedBody!=null)distributedBody.resumeLife();
         if(impedance!=null)impedance.resumeLife();
         if(worldV20!=null)worldV20.resumeLife();
+        if(transferV20!=null)transferV20.resumeLife();
         // Spatial map is reinstated with the saved physical body separately.
         if(causal!=null)causal.resumeLife();
         if(navigation!=null)navigation.resumeLife();
@@ -443,6 +451,18 @@ public final class SensorimotorMind {
         action=chosen;decisions++;
         // Observe only the chosen REAL action; forecasts are never executions.
         if(worldV20!=null)worldV20.chosen(chosen,senses);
+        if(transferV20!=null)transferV20.chosen(chosen,senses);
+        // Heavy world-model lookahead is deliberately capped at ONE pass per
+        // eight REAL decisions and evaluated only AFTER the old action was
+        // chosen. No score or RNG in the original decision is modified.
+        if(futureV20!=null&&decisions%8==0){
+            futureV20.evaluate(senses,worldV20,new FuturePlannerV20.Value(){
+                @Override public float value(float[] observed,int candidate){
+                    return SensorimotorMind.this.estimate(observed,candidate)+
+                           contactCredit.value(observed,candidate);
+                }
+            },transferV20);
+        }
         estimatedValue=estimate(senses,chosen);
         System.arraycopy(senses,0,trialState,0,S);
         trialAction=chosen;
