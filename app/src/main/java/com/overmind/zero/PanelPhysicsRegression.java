@@ -22,10 +22,26 @@ public final class PanelPhysicsRegression {
         float[] px=tissue.x.clone(),py=tissue.y.clone();
         px[i]=110;py[i]=75-PanelPhysics.HALF_THICKNESS-12;
         float[] bx=body.x.clone(),by=body.y.clone();
+        // Ordinary collision WITHOUT commanded adhesion must never
+        // move/rotate the plate (even when the muscle pushes hard).
+        tissue.gripCommand[i]=0f;
+        PanelPhysics.Contact beforeRed=PanelPhysics.constrain(body,tissue,panel,.025f,
+                                                               px,py,bx,by);
+        must(beforeRed.points>0&&beforeRed.pressureImpulse==0f&&
+             panel.vx==0f&&panel.vy==0f&&panel.angularVelocity==0f&&
+             panel.boxGripHold[i]==0f,
+             "An unlit tissue contact spontaneously moved the plate");
+        // Exactly ONE point with a genuine accumulated grip timer is
+        // sufficient; no second point/opposing side is supplied.
+        tissue.x[i]=110;tissue.y[i]=75-PanelPhysics.HALF_THICKNESS+.2f;
+        tissue.vx[i]=0;tissue.vy[i]=51;
+        tissue.gripCommand[i]=1f;
+        panel.boxGripHold[i]=Morphology.GRIP_HOLD-.020f;
         PanelPhysics.Contact result=PanelPhysics.constrain(body,tissue,panel,.025f,
                                                             px,py,bx,by);
-        must(result.points>0&&result.pressureImpulse>.1f,
-            "One real tissue contact produced no unilateral force");
+        must(result.points>0&&result.pressureImpulse>.1f&&
+             PanelPhysics.held(panel,i,tissue),
+             "A single confirmed RED membrane point could not move a plate");
         must(panel.vy>0&&panel.vx==0&&panel.angularVelocity==0f,
             "Centered single-side push did not translate thin panel");
         must(panel.x==oldX&&panel.y==oldY,"Collision teleported a rigid plate");
@@ -40,10 +56,13 @@ public final class PanelPhysicsRegression {
         far.vy[3]=56;
         float[] oldSX=far.x.clone(),oldSY=far.y.clone();
         oldSY[3]-=13;
+        far.gripCommand[3]=1f;
+        off.boxGripHold[3]=Morphology.GRIP_HOLD-.020f;
         PanelPhysics.Contact offResult=PanelPhysics.constrain(body,far,off,.025f,
                    oldSX,oldSY,body.x.clone(),body.y.clone());
-        must(offResult.pressureImpulse>0&&Math.abs(off.angularVelocity)>.001f,
-             "An off-center one-sided real push cannot rotate a plate");
+        must(offResult.pressureImpulse>0&&Math.abs(off.angularVelocity)>.001f&&
+             PanelPhysics.held(off,3,far),
+             "A single off-center RED point cannot rotate the plate");
         float previousAngle=off.angle;off.tick(.035f);
         must(off.angle!=previousAngle,"Plate spin not integrated in live physics");
         // No impact + no muscle demand gives zero propulsion.
@@ -57,6 +76,18 @@ public final class PanelPhysicsRegression {
                               body.x.clone(),body.y.clone());
         must(untouched.vx==0&&untouched.vy==0&&untouched.angularVelocity==0,
              "Mere touching a plate fabricated propulsion");
+        // Grip release must stop BOTH velocity components and spinning.
+        tissue.gripCommand[i]=0f;
+        panel.vx=38;panel.vy=-6;panel.angularVelocity=1.2f;
+        PanelPhysics.constrain(body,tissue,panel,.025f,px,py,bx,by);
+        must(panel.boxGripHold[i]==0&&panel.vx==0&&panel.vy==0&&
+             panel.angularVelocity==0,
+             "Plate continued drifting or spinning after the last RED point released");
+        // A new physics tick cannot resurrect unsanctioned loaded momentum.
+        panel.vx=50;panel.angularVelocity=.5f;
+        panel.tick(.025f);
+        must(panel.vx==0f&&panel.angularVelocity==0f,
+             "Saved free-spinning construction plate ignored the red-grip rule");
         // Old energy-cover puzzle must retain its hard bilateral rule.
         UnknownWorld.Entity oldBox=new UnknownWorld.Entity(110,75,2,5);
         must(oldBox.isBilateralBox()&&!oldBox.isConstruction(),
@@ -84,8 +115,10 @@ public final class PanelPhysicsRegression {
         UnknownWorld.Entity plate=new UnknownWorld.Entity(0,0,2,6);
         UnknownWorld.Entity crate=new UnknownWorld.Entity(16,0,2,5);
         pair.add(plate);pair.add(crate);
-        must(PanelPhysics.separate(pair)==1&&PanelPhysics.separate(pair)==0,
-             "Rotated panel/box SAT failed to separate real solids");
+        float staticX=plate.x,staticY=plate.y;
+        must(PanelPhysics.separate(pair)==1&&PanelPhysics.separate(pair)==0&&
+             plate.x==staticX&&plate.y==staticY,
+             "Passive box overlap translated an ungripped panel");
         // Oblique panel near rigid square with significant tilt.
         plate.angle=.8f;
         crate.x=2;crate.y=1;
@@ -136,7 +169,7 @@ public final class PanelPhysicsRegression {
         // Blank materials never grant energy or discovery simply by moving.
         must(panel.touch(1,0)==0f&&panel.physicalLaw()==6,
              "One-sided sheet grants synthetic energy");
-        System.out.println("ZERO 0124 PASS: real unilateral push, off-center spin, "+
+        System.out.println("ZERO 0126 PASS: only one RED adhesive hold moves plates, off-center spin, "+
             "no free drift, bilateral-cover isolation, orientation-correct "+
             "shadows, rotated SAT solids, angle/velocity persistence and OTA93 migration");
     }
