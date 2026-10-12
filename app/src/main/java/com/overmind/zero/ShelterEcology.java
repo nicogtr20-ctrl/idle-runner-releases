@@ -75,13 +75,22 @@ public final class ShelterEcology {
         // A solid room wall casts the same shadow as a real opaque object.
         // Inspect continuous wall segments, not a class label or reward cue.
         float from=x-wind*SHADOW_RANGE;
-        for(int w=0;w<5;w++){
-            float[] bounds=new float[4];
-            room.boundaries(w,bounds);
-            float l=Math.min(bounds[0],bounds[2]),r=Math.max(bounds[0],bounds[2]);
-            float top=Math.min(bounds[1],bounds[3]),bottom=Math.max(bounds[1],bounds[3]);
-            if(y>top&&y<bottom&&
-               (wind>0 ? r<x-2&&r>from : l>x+2&&l<from))return true;
+        float entry=room.entranceX(),far=room.ox+ScarcityLab.END_X;
+        float top=room.oy+ScarcityLab.TOP,bottom=room.oy+ScarcityLab.BOTTOM;
+        float w=ScarcityLab.WALL_HALF_THICKNESS;
+        // Physical rectangles from ScarcityLab.boundaries(), replicated as
+        // a pure readout to avoid invoking its private collision method.
+        for(int slab=0;slab<5;slab++){
+            float left,right,high,low;
+            switch(slab){
+                case 0:left=entry-w;right=entry+w;high=top-10;low=room.oy-ScarcityLab.OPEN_HALF_HEIGHT;break;
+                case 1:left=entry-w;right=entry+w;high=room.oy+ScarcityLab.OPEN_HALF_HEIGHT;low=bottom+10;break;
+                case 2:left=entry-w;right=far+w;high=top-10;low=top+w;break;
+                case 3:left=entry-w;right=far+w;high=bottom-w;low=bottom+10;break;
+                default:left=far-w;right=far+w;high=top-10;low=bottom+10;break;
+            }
+            if(y>high&&y<low&&
+               (wind>0?right<x-2&&right>from:left>x+2&&left<from))return true;
         }
         float l=room.gateX()-ScarcityLab.DOOR_HALF_W,
               right=room.gateX()+ScarcityLab.DOOR_HALF_W;
