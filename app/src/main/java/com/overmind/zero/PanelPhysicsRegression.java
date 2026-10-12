@@ -126,20 +126,34 @@ public final class PanelPhysicsRegression {
              "A short sheet shields arbitrarily distant vertical space");
         must(!PanelPhysics.shadow(0,0,-1,wall,165),
              "Panel shields wind from the wrong direction");
-        // True SAT: a rotated panel and an old crate cannot overlap.
+        // ZERO 0127: penetration corrections cannot smuggle movement into
+        // the old covered energy square or a panel with no RED point.
         ArrayList<UnknownWorld.Entity> pair=new ArrayList<>();
         UnknownWorld.Entity plate=new UnknownWorld.Entity(0,0,2,6);
         UnknownWorld.Entity crate=new UnknownWorld.Entity(16,0,2,5);
         pair.add(plate);pair.add(crate);
-        float staticX=plate.x,staticY=plate.y;
+        float staticX=plate.x,staticY=plate.y,crateX=crate.x;
+        must(PanelPhysics.separate(pair)==0&&
+             plate.x==staticX&&plate.y==staticY&&crate.x==crateX,
+             "Overlapping passive obstacles moved an ungripped energy cover");
+        // A real RED-held panel may back away from a fixed, unheld cover;
+        // the old hidden-energy box must remain at its exact location.
+        plate.boxGripHold[0]=Morphology.GRIP_HOLD;
         must(PanelPhysics.separate(pair)==1&&PanelPhysics.separate(pair)==0&&
-             plate.x==staticX&&plate.y==staticY,
-             "Passive box overlap translated an ungripped panel");
-        // Oblique panel near rigid square with significant tilt.
-        plate.angle=.8f;
-        crate.x=2;crate.y=1;
-        must(PanelPhysics.separate(pair)==1&&PanelPhysics.separate(pair)==0,
-             "SAT failed for rotated construction plate against crate");
+             crate.x==crateX&&crate.y==0f,
+             "A RED panel displaced a cover without its own bilateral grip");
+        // With a tilted passive panel only a legitimately bilateral-held
+        // old cover may be geometrically corrected; never move the sheet.
+        plate.boxGripHold[0]=0f;
+        plate.angle=.8f;plate.x=0;plate.y=0;
+        crate.x=2;crate.y=1;crate.bilateralHeldNow=false;
+        must(PanelPhysics.separate(pair)==0&&
+             plate.x==0f&&plate.y==0f&&crate.x==2f&&crate.y==1f,
+             "Rotated panel produced a hidden one-sided cover push");
+        crate.bilateralHeldNow=true;
+        must(PanelPhysics.separate(pair)==1&&PanelPhysics.separate(pair)==0&&
+             plate.x==0f&&plate.y==0f,
+             "Valid bilateral cover cannot separate from rotated panel");
         // A REAL elastic skin EDGE must not tunnel through a thin plate
         // while both endpoint particles remain outside its opposite sides.
         UnknownWorld.Entity thin=new UnknownWorld.Entity(110,75,2,6);
