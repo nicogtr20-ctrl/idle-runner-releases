@@ -21,6 +21,9 @@ public final class UnknownWorld {
         public boolean everCollided=false, countedAsMoved=false;
         /** Physics-only adhesion timers, scoped to this box's 96 possible patches. */
         final float[] boxGripHold=new float[Morphology.POINTS];
+        /** Transient proof that THIS energy cover has two opposing held faces
+         * in the most recently solved physical frame. Not a learned state. */
+        boolean bilateralHeldNow=false;
         public float peakDisplacement=0;
         public final int signature;
         private final int law;
