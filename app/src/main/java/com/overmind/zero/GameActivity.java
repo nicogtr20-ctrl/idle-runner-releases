@@ -44,6 +44,7 @@ public final class GameActivity extends Activity {
         BodyProprioception bodySchema=new BodyProprioception();
         ShelterEcology shelter=new ShelterEcology();
         DistributedBodySense distributedSense=new DistributedBodySense();
+        LocalImpedanceSense localImpedance=new LocalImpedanceSense();
         SpatialPerception spatialMap=new SpatialPerception();
         CausalExperiments causalExperiments=new CausalExperiments();
         InstrumentalNavigation navigation=new InstrumentalNavigation();
@@ -214,6 +215,9 @@ public final class GameActivity extends Activity {
             distributedSense=new DistributedBodySense();
             distributedSense.restore(prefs.getString(DistributedBodySense.KEY,""));
             sensorMind.attachDistributedBody(distributedSense);
+            localImpedance=new LocalImpedanceSense();
+            localImpedance.restore(prefs.getString(LocalImpedanceSense.KEY,""));
+            sensorMind.attachImpedance(localImpedance);
             spatialMap=new SpatialPerception();
             spatialMap.restore(prefs.getString(SpatialPerception.KEY,""));
             sensorMind.attachSpatialPerception(spatialMap);
@@ -437,6 +441,7 @@ public final class GameActivity extends Activity {
                     creature,surface,chamber,environment,reserve),action);
                 sensorMind.updateBodySense(creature,surface);
                 sensorMind.updateDistributedSense(creature,surface,chamber,environment);
+                sensorMind.updateImpedanceSense(creature,surface);
                 sensorMind.resumeSpatialSense(creature,surface,chamber,environment);
                 sensorMind.updateNavigationSense(creature,chamber,environment);
                 motorGuard.resetLife(creature.cx,creature.cy);
@@ -496,6 +501,7 @@ public final class GameActivity extends Activity {
               .putString("temporal_skills_v107",temporalSkillBank.encode())
               .putString(BodyProprioception.KEY,bodySchema.encode())
               .putString(DistributedBodySense.KEY,distributedSense.encode())
+              .putString(LocalImpedanceSense.KEY,localImpedance.encode())
               .putString(SpatialPerception.KEY,spatialMap.encode())
               .putString(CausalExperiments.KEY,causalExperiments.encode())
               .putString(InstrumentalNavigation.KEY,navigation.encode())
@@ -580,6 +586,7 @@ public final class GameActivity extends Activity {
                 creature,surface,chamber,environment,reserve));
             sensorMind.updateBodySense(creature,surface);
             sensorMind.updateDistributedSense(creature,surface,chamber,environment);
+                sensorMind.updateImpedanceSense(creature,surface);
             // The newborn sees from actual membrane sites, never a centroid eye.
             sensorMind.updateSpatialSense(creature,surface,chamber,environment);
             sensorMind.updateNavigationSense(creature,chamber,environment);
