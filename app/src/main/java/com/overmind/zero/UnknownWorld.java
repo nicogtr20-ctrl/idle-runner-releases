@@ -183,10 +183,17 @@ public final class UnknownWorld {
         }
         // Thin construction PANEL: translates from single-sided physical pressure
         // and rotates under off-center impulse. No hidden energy or bonus.
-        float theta=spin+2.0f;
-        float px=originX+(float)Math.cos(theta)*172f;
-        float py=originY+(float)Math.sin(theta)*172f;
-        a.add(new Entity(px,py,2,6));
+        // Building materials used to appear EVERY 13-second habitat
+        // expansion, crowding out food covers and forcing the expensive
+        // full-body solid solver even in areas where ZERO sought energy.
+        // Offer one genuine panel every FOUR expansions instead. Already
+        // moved/placed panels persist in the ecology archive unchanged.
+        if(Math.floorMod(episode-1,4)==0){
+            float theta=spin+2.0f;
+            float px=originX+(float)Math.cos(theta)*172f;
+            float py=originY+(float)Math.sin(theta)*172f;
+            a.add(new Entity(px,py,2,6));
+        }
         return a;
     }
     public static void main(String[] args){
