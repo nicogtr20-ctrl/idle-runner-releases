@@ -502,7 +502,7 @@ jobs:
           assert '.putString("episodic_memory_v095",episodic.encode())' in g
           assert '.putString(LifeStatistics.KEY,lifeStats.encode())' in g
           assert 'ResetDomains.PROPRIOCEPTION' in a
-          assert 'case PROPRIOCEPTION:return new String[]{BodyProprioception.KEY};' in reset
+          assert 'case PROPRIOCEPTION:return new String[]{BodyProprioception.KEY,DistributedBodySense.KEY};' in reset
           assert 'bodyMap.parameterCount()' in stats
           assert 'lifeStats.tick(dt);' in g and 'for(int i=0;i<speed;i++)' in g
           assert '0.11.6-ota' in code and "applicationId 'com.overmind.zero.ota'" in code
@@ -536,7 +536,7 @@ jobs:
           assert 'spatialMap.restore(prefs.getString(SpatialPerception.KEY,""))' in g
           assert '.putString(SpatialPerception.KEY,spatialMap.encode())' in g
           assert 'sensorMind.resumeSpatialSense(creature,surface,chamber,environment)' in g
-          assert 'sensorMind.updateSpatialSense(creature,chamber,environment)' in g
+          assert 'sensorMind.updateSpatialSense(creature,surface,chamber,environment)' in g
           assert '.putString(BodyProprioception.KEY,bodySchema.encode())' in g
           assert '.putString("temporal_working_memory_v106",workingMemory.encode())' in g
           assert '.putString("temporal_skills_v107",temporalSkillBank.encode())' in g
