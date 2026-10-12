@@ -23,12 +23,12 @@ Main `SensorimotorMind`: 26 sensory features and 16 discrete heading/adhesion ac
 - Persist learned readouts across death/scene saves/named slot copies; transient pending actions reset or resume conservatively; reject malformed/truncated/nonfinite models atomically; bounded memory and compute.
 - Shadow statistics only. The stable `SensorimotorMind` must make **exactly the same decisions** as baseline for a matched external run until real benchmarks justify explicit learned-model advice. Any future advisory needs an ablation switch, evidence gate, shadow-only calibration and automatic failure-safe rollback.
 
-### Gate B — Discovered temporal skills [IMPLEMENTING — separate cross-life evidence, no policy influence]
+### Gate B — Discovered temporal skills [CODED AND CI VERIFIED IN SHADOW — generalization not yet established]
 - Detect repeated *actually lived* multi-action subsequences with verified delayed energetic/environmental outcomes, never a fixed handcrafted "open the box" routine.
 - Prefer evidence across different lives and physical contexts; suppress memorized false correlations. Learned skills should be discoverable, interruptible and context-specific, tested against historical `TemporalSkillBank` and `EpisodicMemory`.
 - No actuator overwrite, no motor replay simply on position match; learned suggestion only after independent validation.
 
-### Gate C — Hierarchical uncertain planning [IMPLEMENTING — shadow rollouts only]
+### Gate C — Hierarchical uncertain planning [CODED AND CI VERIFIED IN SHADOW — benefit not yet established]
 - Decision horizon >3 through learned option structure and learned world transitions; model-rollout is hypothetical, never counted as an actual experience.
 - Calibrated uncertainty penalizes unrealistic futures; planning can abstain and fall back to original policy. Measured compute budget for Galaxy S21, slower brain tick than 40Hz mechanics.
 
@@ -80,6 +80,57 @@ Each Java workflow's existing assertions were kept. Old hardcoded javac dependen
 2. **Uncertain counterfactual planning**: score up to 5 future decisions with the action-conditioned v2.0 sensory predictor, pre-existing learned action values, pessimistic uncertainty penalties and an empirical heldout gate. Hypothetical states never become observations or rewards. Start as shadow only, bounded compute, rollback/abstain on uncertain/out-of-distribution states.
 3. **QA**: exact decision/persistence parity on original ZERO, genuine 96-point paired physical scenarios, negative contact without learned positive bias, repeated cross-life motifs, model corruption/restore, all legacy GitHub workflows and Android build. No user profile migration or OTA before real lifespan benchmarks and demonstrated benefits.
 4. **Evidence**: append each GitHub run ID, failures, mitigations and actual results to this paper; do not call a completed compilation proof of more intelligence.
+
+## Gate B/C delivery — 2026-10-12: implemented, tested, intentionally not promoted
+
+**Latest measured production-neutral code SHA:** `3e7d5078942b858b7ed76c694d84acc2e73952fe`, on `feature/zero-20-hierarchical-intelligence`. The active stable OTA remains unchanged.
+
+### B — Cross-life discovered action motifs (`TransferSkillsV20`)
+
+- Observes ZERO's **actually selected** heading/adhesion actions and actual positive/negative **clamped contact energy**; never reads object labels, food positions, gate flags, or synthetic reward. Stores a bounded 32-motif library, with motifs spanning **3–12** real actions, coarse learned context and raw exemplar actions.
+- Separate whole-life holdouts (`life % 4 == 0`), positive evidence must be corroborated across at least two training lives **plus a heldout life**; harmful real consequences decrease certification. New candidates are not created from holdout lives. Repeated contributions from one life cannot masquerade as independent corroboration.
+- Unseen-context matches are rejected; no silent override of legacy 2–8-action `TemporalSkillBank`. Old and new memories are independently serialized and selectively reset. **This is an observational association, not proof that a sequence caused its reward.**
+- New read-only suggestion is **not used as a motor choice** and never enters the old score or reward.
+
+### C — Uncertainty-gated five-decision lookahead (`FuturePlannerV20`)
+
+- Uses only the separately learned `PredictiveWorldV20` action-conditioned **sensory** predictions and existing *experienced* action values. Horizon **5** vs original depth **3**, beam **2**, up to **256** leaf paths. Hypothetical rollouts never train any model or count as lived episodes.
+- Abstains until ≥60 heldout observations, predictive confidence ≥0.10 and absolute heldout error ≤0.18. Pessimistically subtracts error-proportional penalties increasing with depth. Evaluates only every **8 real decisions**, **after** the original action was already selected, to bound S21 load and preserve decision timing.
+- Stores **statistics only**; imagined next action is discarded upon restore. New explicit independent save keys: `transfer_skills_v20`, `future_planner_v20`; existing sensorimotor, motor and membrane keys untouched.
+- The new dashboard reports corroborated candidates and valid hypothetical forecasts, explicitly tagged as shadow-only.
+
+### Real CI evidence and initial issue
+
+The first B/C dedicated run [38300171336](https://github.com/nicogtr20-ctrl/idle-runner-releases/actions/runs/38300171336) failed because a **corruption-test fixture attempted to substitute a literal numeric string that was absent from the actual serialized sample**. That test did not corrupt the input. Fixed by mutating the known existing serialized positive-energy field to NaN before asserting atomic rejection. **No protection was disabled**. No claim of successful regression is based on this earlier failed run.
+
+All eight workflows **SUCCESS** on corrected code SHA `3e7d507`:
+
+| Check | GitHub Actions execution |
+|---|---|
+| New shadow Gate A/B/C Java regressions + debug APK | [38300317519](https://github.com/nicogtr20-ctrl/idle-runner-releases/actions/runs/38300317519) |
+| New independent pull-request integration check | [38300322509](https://github.com/nicogtr20-ctrl/idle-runner-releases/actions/runs/38300322509) |
+| Historic 0127 persistence, physical invariants and survival QA | [38300322557](https://github.com/nicogtr20-ctrl/idle-runner-releases/actions/runs/38300322557) |
+| Historic 0126 single-red construction grip QA | [38300322515](https://github.com/nicogtr20-ctrl/idle-runner-releases/actions/runs/38300322515) |
+| Historic 0122 ecology, autonomy and Android QA | [38300322507](https://github.com/nicogtr20-ctrl/idle-runner-releases/actions/runs/38300322507) |
+| Historic 0125 telemetry and Android QA | [38300322576](https://github.com/nicogtr20-ctrl/idle-runner-releases/actions/runs/38300322576) |
+| Historic 0121 old/new independence and Android QA | [38300322561](https://github.com/nicogtr20-ctrl/idle-runner-releases/actions/runs/38300322561) |
+| Historic passive grip observer and Android QA | [38300323263](https://github.com/nicogtr20-ctrl/idle-runner-releases/actions/runs/38300323263) |
+
+Notable test output:
+- Gate A synthesized holdout model: **12,501** action transitions, 2,085 heldout, forecast error **0.00304** vs unchanged-state reference **0.10997** (synthetic fixture; not a real-life performance measurement).
+- Gate B synthetic demonstration: a **12-action** repeatedly observed sequence is corroborated across separate train and holdout *synthetic* lives; real negative energy devalues motifs, novel contexts do not trigger replay, truncated/nonfinite save rejected transactionally.
+- Gate C synthetic world-model fixture: five-step counterfactual scoring, evidence abstention, real learned model state remains **byte-identical** after hypothetical evaluation.
+- **440** deterministic old-versus-new policy choices and old brain serialization remain identical, despite observed real energetic contact injection; **nine** matched genuine body/membrane physics simulations (energy, hazard, gate across three seeds) remain identical with and without shadow modules.
+- All legacy regression assertions and original physical constraints remain active. Full Android debug APK **compiles**. GitHub artifact storage is quota-limited and this workflow does not publish APKs.
+
+### Acceptance still outstanding
+
+1. Neither the historical 105-minute life nor current autonomous lifespan has been recreated with the restored user checkpoint under matched seeds.
+2. No demonstration yet of transfer in *unseen physical habitats*; recurring motifs are observable correlations, not yet proven causally useful strategies.
+3. No proof that the new five-step forecast improves real energy/survival; there is **zero policy influence by design**.
+4. Gate D information-gain experiments, long-life matched A/B evaluation, computation/memory profiling on Galaxy S21, and a signed release decision all remain pending.
+
+**Do NOT merge or publish ZERO 2.0 merely because these tests are green.**
 
 ## Non-negotiable invariants
 1. No destroying/mutating real ZERO brain; no copying historical profiles into production automatically; optional legacy default safe.
