@@ -309,11 +309,13 @@ public final class PanelPhysics {
                     }
                 }
                 if(!overlap||!Float.isFinite(pen))continue;
-                // Collisions never translate an UNGRIPPED construction
-                // plate. Project the other movable solid around the fixed
-                // material. Two ungripped panels cannot push each other.
-                boolean moveA=!a.isConstruction()||anyHeld(a);
-                boolean moveB=!b.isConstruction()||anyHeld(b);
+                // SAT is a geometric safety correction, NEVER a new source of
+                // box manipulation. Old hidden-energy covers may move only
+                // after their OWN two-face physical grip; plates only after
+                // their OWN red hold. An overlap without either valid hold
+                // is not permission to move the passive energy cover.
+                boolean moveA=a.isConstruction()?anyHeld(a):a.bilateralHeldNow;
+                boolean moveB=b.isConstruction()?anyHeld(b):b.bilateralHeldNow;
                 if(!moveA&&!moveB)continue;
                 float shareA=moveA?(moveB?.5f:1f):0f;
                 float shareB=moveB?(moveA?.5f:1f):0f;
