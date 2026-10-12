@@ -93,7 +93,9 @@ public final class GripAffordanceV20 {
             return;
         }
         pendingAction=action;pendingState=state;
-        peakState=state;intervalSamples=0;
+        // Starting posture is an observation at the decision boundary,
+        // not evidence of a grip during the NEW action's physical frames.
+        peakState=-1;intervalSamples=0;
         if(state>=3)realHeldSnapshots++;
         if(state>=5)spreadHeldSnapshots++;
     }
