@@ -821,7 +821,8 @@ jobs:
           assert 'SquareCollisionSolver.constrain' in (root/'SquareGripPuzzle.java').read_text()
           assert 'if(!modest||!sameFace)skin.gripHold[i]=0f;' in (root/'SquareCollisionSolver.java').read_text()
           assert 'SquareCollisionSolver.finish' in (root/'SquareGripPuzzle.java').read_text()
-          assert 'if(opposing&&held>=2)' in (root/'SquareGripPuzzle.java').read_text()
+          assert 'box.bilateralHeldNow=opposing&&held>=2;' in (root/'SquareGripPuzzle.java').read_text()
+          assert 'if(box.bilateralHeldNow)' in (root/'SquareGripPuzzle.java').read_text()
           assert 'nearSolidSquare' in game
           assert 'OpticalCues.GLASS_TOP' in game
           assert 'concealedLight' in game
