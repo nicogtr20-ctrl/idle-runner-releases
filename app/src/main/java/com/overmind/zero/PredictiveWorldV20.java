@@ -48,10 +48,21 @@ public final class PredictiveWorldV20 {
     public long selectiveReadouts(){return selectiveReadouts;}
     public int evidenceForAction(int action){return action>=0&&action<A?actionSamples[action]:0;}
     /** Train-only change propensity, never supplied by game/world semantics. */
-    private float gate(int action,int output){
+    private float gate(int action,int output,float[] observed){
         float occurrences=clip((actionSamples[action]-5f)/32f,0f,1f);
         float frequency=clip((changeRate[action*D+output]-.06f)*1.12f,0f,1f);
-        return occurrences*frequency;
+        float visibility=1f;
+        if(output>=8){
+            // Spectral channels are grouped in fours per perceived wavelength.
+            // A prediction of new spectral activity in a completely blank
+            // patch is an unsupported hypothesis, not learned body motion.
+            int first=8+((output-8)/4)*4;
+            float strength=0;
+            for(int k=first;k<first+4;k++)
+                strength=Math.max(strength,observed[k]);
+            visibility=clip((strength-.025f)/.20f,0f,1f);
+        }
+        return occurrences*frequency*visibility;
     }
     /** Reported as evidence, never converted into steering or reward. */
     public float confidence(){
@@ -89,12 +100,12 @@ public final class PredictiveWorldV20 {
         float[] result=sensed.clone(),instant=new float[D];
         System.arraycopy(sensed,OFFSET,instant,0,D);
         for(int j=0;j<D;j++)
-            result[OFFSET+j]=clip(instant[j]+gate(action,j)*
+            result[OFFSET+j]=clip(instant[j]+gate(action,j,instant)*
                 delta(action,j,instant,trace),-1.6f,1.6f);
         // An unknown action/channel remains unchanged until repeatedly
         // witnessed consequences earn the right to predict a difference.
         for(int j=0;j<D;j++){
-            if(gate(action,j)<.025f)nonChangeReadouts++;
+            if(gate(action,j,instant)<.025f)nonChangeReadouts++;
             else selectiveReadouts++;
         }
         return result;
@@ -109,7 +120,7 @@ public final class PredictiveWorldV20 {
         float[] residual=new float[D];
         for(int j=0;j<D;j++){
             float change=observation[OFFSET+j]-before[j];
-            float prediction=gate(action,j)*delta(action,j,before,pendingContext);
+            float prediction=gate(action,j,before)*delta(action,j,before,pendingContext);
             residual[j]=change-prediction;
             sq+=residual[j]*residual[j];
             unchanged+=change*change;
@@ -137,7 +148,7 @@ public final class PredictiveWorldV20 {
                 // The predictor can only move gradually against a strong
                 // no-change prior. Weight decay prevents repeated idle
                 // motion from accumulating a phantom sensory transition.
-                float g=clip(LR*residual[j]*(.25f+.75f*gate(action,j)),
+                float g=clip(LR*residual[j]*(.25f+.75f*gate(action,j,before)),
                              -.018f,.018f);
                 weights[off]=clip(weights[off]*.9998f+g*before[j],-2,2);
                 weights[off+1]=clip(weights[off+1]*.9998f+g*before[prev],-2,2);
