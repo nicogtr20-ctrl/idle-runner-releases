@@ -36,6 +36,8 @@ public final class SensorimotorMind {
     private transient TransferSkillsV20 transferV20;
     private transient FuturePlannerV20 futureV20;
     private transient PhysicalConsequenceV20 physicalChainV20;
+    private transient GripAffordanceV20 gripAffordanceV20;
+    private transient Morphology.Surface lastActualGripSurface;
     /** Never set by GameActivity. Sandbox arena may test bounded advice. */
     private transient boolean zero20ExperimentalAdvice=false;
     private transient int zero20DecisionsInfluenced=0;
@@ -117,6 +119,7 @@ public final class SensorimotorMind {
     public synchronized void attachTransferSkillsV20(TransferSkillsV20 model){transferV20=model;}
     public synchronized void attachFuturePlannerV20(FuturePlannerV20 model){futureV20=model;}
     public synchronized void attachPhysicalConsequenceV20(PhysicalConsequenceV20 model){physicalChainV20=model;}
+    public synchronized void attachGripAffordanceV20(GripAffordanceV20 model){gripAffordanceV20=model;}
     /** Experimental research only; OFF by default in every actual app profile. */
     public synchronized void enableZero20ExperimentalAdvice(boolean enabled){
         zero20ExperimentalAdvice=enabled;
@@ -200,6 +203,8 @@ public final class SensorimotorMind {
         if(worldV20!=null)worldV20.resetLife();
         if(transferV20!=null)transferV20.resetLife();
         if(physicalChainV20!=null)physicalChainV20.resetLife();
+        if(gripAffordanceV20!=null)gripAffordanceV20.resetLife();
+        lastActualGripSurface=null;
         if(spatial!=null)spatial.resetLife();
         if(causal!=null)causal.resetLife();
         if(navigation!=null)navigation.resetLife();
@@ -221,6 +226,8 @@ public final class SensorimotorMind {
             if(worldV20!=null)worldV20.resetLife();
             if(transferV20!=null)transferV20.resetLife();
         if(physicalChainV20!=null)physicalChainV20.resetLife();
+        if(gripAffordanceV20!=null)gripAffordanceV20.resetLife();
+        lastActualGripSurface=null;
             if(spatial!=null)spatial.resetLife();
             if(causal!=null)causal.resetLife();
             if(navigation!=null)navigation.resetLife();
@@ -249,6 +256,8 @@ public final class SensorimotorMind {
         if(worldV20!=null)worldV20.resumeLife();
         if(transferV20!=null)transferV20.resumeLife();
         if(physicalChainV20!=null)physicalChainV20.resumeLife();
+        if(gripAffordanceV20!=null)gripAffordanceV20.resumeLife();
+        lastActualGripSurface=null;
         // Spatial map is reinstated with the saved physical body separately.
         if(causal!=null)causal.resumeLife();
         if(navigation!=null)navigation.resumeLife();
@@ -491,6 +500,7 @@ public final class SensorimotorMind {
         if(worldV20!=null)worldV20.chosen(chosen,senses);
         if(transferV20!=null)transferV20.chosen(chosen,senses);
         if(physicalChainV20!=null)physicalChainV20.chosen(chosen,senses);
+        if(gripAffordanceV20!=null)gripAffordanceV20.chosen(chosen,lastActualGripSurface);
         // Heavy world-model lookahead is deliberately capped at ONE pass per
         // eight REAL decisions and evaluated only AFTER the old action was
         // chosen. No score or RNG in the original decision is modified.
@@ -532,6 +542,9 @@ public final class SensorimotorMind {
                                      MotorBrain.Body body,Morphology.Surface skin,
                                      ScarcityLab room,ArrayList<UnknownWorld.Entity> objects){
         if(after.length!=S)throw new IllegalArgumentException("sensory width");
+        // Sensor-only view of the REAL 96-point membrane at the decision
+        // boundary. Previous-lifetime tissue is never reused after reset.
+        if(skin!=null)lastActualGripSurface=skin;
         if(trialAction<0){
             if(bodySchema!=null&&body!=null&&skin!=null)
                 bodySchema.feed(BodyProprioception.sense(body,skin));
@@ -624,6 +637,9 @@ public final class SensorimotorMind {
             worldV20.consequence(after,trialAction,learning&&!holdout,holdout);
         if(physicalChainV20!=null)
             physicalChainV20.consequence(trialAction,Math.max(0f,physicalEffect),
+                learning&&!holdout,holdout);
+        if(gripAffordanceV20!=null)
+            gripAffordanceV20.consequence(trialAction,Math.max(0f,physicalEffect),
                 learning&&!holdout,holdout);
         if(spatial!=null&&body!=null&&objects!=null)
             spatial.consequence(trialAction,lastReward,learning&&!holdout,holdout);
