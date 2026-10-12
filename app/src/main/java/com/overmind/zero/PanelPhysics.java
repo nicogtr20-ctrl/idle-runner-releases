@@ -309,12 +309,23 @@ public final class PanelPhysics {
                     }
                 }
                 if(!overlap||!Float.isFinite(pen))continue;
-                a.x-=ex*pen*.5f;a.y-=ey*pen*.5f;
-                b.x+=ex*pen*.5f;b.y+=ey*pen*.5f;
-                float normalAvg=(a.vx*ex+a.vy*ey+b.vx*ex+b.vy*ey)*.5f;
-                float an=a.vx*ex+a.vy*ey,bn=b.vx*ex+b.vy*ey;
-                a.vx+=(normalAvg-an)*ex;a.vy+=(normalAvg-an)*ey;
-                b.vx+=(normalAvg-bn)*ex;b.vy+=(normalAvg-bn)*ey;
+                // Collisions never translate an UNGRIPPED construction
+                // plate. Project the other movable solid around the fixed
+                // material. Two ungripped panels cannot push each other.
+                boolean moveA=!a.isConstruction()||anyHeld(a);
+                boolean moveB=!b.isConstruction()||anyHeld(b);
+                if(!moveA&&!moveB)continue;
+                float shareA=moveA?(moveB?.5f:1f):0f;
+                float shareB=moveB?(moveA?.5f:1f):0f;
+                a.x-=ex*pen*shareA;a.y-=ey*pen*shareA;
+                b.x+=ex*pen*shareB;b.y+=ey*pen*shareB;
+                if(moveA&&moveB){
+                    float normalAvg=(a.vx*ex+a.vy*ey+
+                                     b.vx*ex+b.vy*ey)*.5f;
+                    float an=a.vx*ex+a.vy*ey,bn=b.vx*ex+b.vy*ey;
+                    a.vx+=(normalAvg-an)*ex;a.vy+=(normalAvg-an)*ey;
+                    b.vx+=(normalAvg-bn)*ex;b.vy+=(normalAvg-bn)*ey;
+                }
                 hits++;
             }
         }
