@@ -240,7 +240,7 @@ public final class GripAffordanceV20 {
                     if(micro[i]<0)return false;
                 }
                 if(micro[1]>micro[0]||micro[2]>micro[1]||
-                   micro[3]>h[0]||micro[4]>micro[3]||
+                   micro[3]>h[0]||micro[4]>h[0]||
                    micro[4]>micro[2])return false;
             }
             System.arraycopy(cn,0,count,0,CELLS);
