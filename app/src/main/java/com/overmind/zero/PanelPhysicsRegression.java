@@ -139,12 +139,15 @@ public final class PanelPhysicsRegression {
         // A real RED-held panel may back away from a fixed, unheld cover;
         // the old hidden-energy box must remain at its exact location.
         plate.boxGripHold[0]=Morphology.GRIP_HOLD;
+        // The light/timer must be validated against a real touch in this life.
+        plate.panelHeldNow=true;
         must(PanelPhysics.separate(pair)==1&&PanelPhysics.separate(pair)==0&&
              crate.x==crateX&&crate.y==0f,
              "A RED panel displaced a cover without its own bilateral grip");
         // With a tilted passive panel only a legitimately bilateral-held
         // old cover may be geometrically corrected; never move the sheet.
         plate.boxGripHold[0]=0f;
+        plate.panelHeldNow=false;
         plate.angle=.8f;plate.x=0;plate.y=0;
         crate.x=2;crate.y=1;crate.bilateralHeldNow=false;
         must(PanelPhysics.separate(pair)==0&&
