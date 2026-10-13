@@ -165,7 +165,11 @@ jobs:
           assert 'unifiedCognition.chosen(chosen,senses' in mind
           assert 'unifiedCognition.consequence(' in mind
           assert 'unifiedCognition.energyContact(actualEnergyDelta)' in mind
-          assert 'unifiedCognition.chosen' not in policy
+          # The observer is required AFTER final choice, inside choose().
+          # Reject any use in the action scoring loop or before final choice.
+          scoreloop=policy[policy.index('for(int a=0;a<ACTIONS;a++){'):policy.index('int greedyAction=chosen')]
+          assert 'unifiedCognition' not in scoreloop
+          assert policy.index('int greedyAction=chosen') < policy.index('unifiedCognition.chosen(chosen,senses')
           assert 'unifiedCognition.consequence' not in policy
           assert 'unifiedCognition.confidence' not in policy
           assert 'UnifiedCognitionV21.KEY,unifiedCognitionV21.encode()' in game
