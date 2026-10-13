@@ -203,7 +203,15 @@ public final class OnlineBodyLearning {
         // Preserve locomotor translation while other domains may optimize
         // stationary manipulation; don't accept a motor that slows to zero.
         boolean motorCapable=domain!=MOTOR||net>=Math.max(7f,baseNet*.80f);
-        boolean acceptedTrial=comparable&&useful&&motorCapable&&score>baseScore+.30f;
+        // Protect previously demonstrated translation in ALL three domains.
+        // A hand/membrane "improvement" that barely moves can be admitted
+        // only when it produces a new physically measured interaction/gain.
+        // Otherwise a novel touch/rotation must not erase an effective gait.
+        boolean materialMotionRegression=domain!=MOTOR&&baseNet>25f&&
+            net<baseNet*.65f&&gain<=baseGain+3f&&
+            effect<=basePhysicalEffect+2f;
+        boolean acceptedTrial=comparable&&useful&&motorCapable&&
+                              !materialMotionRegression&&score>baseScore+.30f;
         // A demonstrably successful previous HAND or MEMBRANE configuration
         // must not be overwritten by a candidate rewarded only for walking,
         // finding energy elsewhere or touching unrelated discs. Sequential
