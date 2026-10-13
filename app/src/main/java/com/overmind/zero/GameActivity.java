@@ -119,7 +119,7 @@ public final class GameActivity extends Activity {
         volatile boolean learning=true,enabled=true;
         Thread worker;
         boolean showHelp=true,resetArmed=false,simulationRunning=true,showBenchmark=false;
-        boolean detailsExpanded=false;
+        boolean detailsExpanded=false,settingsExpanded=false;
         long lastFrame=0,lastSave=0;
         float H=850,clock=0,phase=0,uiTime=0,heading=0,trailClock=0;
         float[] trailX=new float[46],trailY=new float[46];
@@ -1547,188 +1547,317 @@ public final class GameActivity extends Activity {
             c.restore();
             text(c,"ZERO",onScreenX,onScreenY-104,14,0xffd7fff5,true);
         }
-        /** Dashboard only. ZERO's learned motor policy is never called by the UI. */
+        /**
+         * OTA 112: sparse game HUD. All text is diagnostic; the entire UI
+         * must remain downstream of physics/brain, never feeding the policy.
+         * Coordinates are logical (W=480), scaling automatically on Android.
+         */
         void renderHud(Canvas c){
-            rounded(c,12,12,468,145,0xeb0a1420,20);
-            rounded(c,27,28,31,55,TEAL,2);
-            text(c,"O V E R M I N D",43,39,14,TEAL,false);
-            text(c,"ZERO / LASTRE 0124",26,72,21,0xffe9faf6,false);
-            rounded(c,339,104,459,138,0xff20444a,11);
-            text(c,"AGGIORNA",399,127,12,TEAL,true);
-            rounded(c,217,104,333,138,0xff283b58,11);
-            text(c,"CERVELLO",275,127,12,0xffd2c4fc,true);
-            text(c,"AZIONI AUTONOME • PREVISIONI APPRESE",27,99,11,MUTED,false);
-            text(c,"VERSIONE "+installedVersion+"  •  OTA",27,120,10,0xff708d9d,false);
-            text(c,"TENTATIVI",377,34,11,MUTED,false);
-            text(c,String.valueOf(trainer.attempts),380,71,22,GOLD,false);
-
-            // Three genuine contact-type totals, scoped to the current ZERO
-            // and preserved across every death and named-slot restoration.
-            rounded(c,13,153,467,235,0xf00c1a26,16);
-            text(c,"CONTATTI ENERGETICI CUMULATIVI",26,172,11,MUTED,false);
-            energyCount(c,38,194,"BLU",energyTotals.blue,0xff54cff9);
-            energyCount(c,192,194,"ROSSA",energyTotals.red,0xffff738a);
-            energyCount(c,347,194,"VIOLA",energyTotals.violet,0xffc7a2ff);
+            // Energy dots are vertically stacked over the transparent world.
+            hudEnergy(c,37,46,"BLU",energyTotals.blue,0xff58d4ff);
+            hudEnergy(c,37,95,"ROSSA",energyTotals.red,0xffff5789);
+            hudEnergy(c,37,144,"VIOLA",energyTotals.violet,0xffbc8bff);
             if(energyTotals.legacyPositive>0){
-                text(c,"PRECEDENTI NON DIVISIBILI: "+
-                    energyTotals.legacyPositive+" POSITIVI",26,228,9,GOLD,false);
+                text(c,"PRECEDENTI +"+energyTotals.legacyPositive,20,181,8,GOLD,false);
             }else if(!energyTotals.complete){
-                text(c,"STORICO ANTERIORE INCOMPLETO",26,228,9,GOLD,false);
+                text(c,"STORICO PARZIALE",20,181,8,GOLD,false);
             }
 
-            rounded(c,13,241,467,296,0xed111e2b,15);
-            text(c,"NETTO "+(int)journey.netDistance+" U • VIA "+(int)lifeDistance+" U",
-                26,262,17,0xffeffff8,false);
-            text(c,"MAX "+(int)journey.recordNet+" U   •   VITA "+
-                LifeStatistics.duration(lifeStats.current().seconds),26,282,11,GOLD,false);
-            rounded(c,402,247,462,283,0xff233944,10);
-            text(c,simulationRunning?"Ⅱ":"▶",432,271,18,0xffe0f7f3,true);
-
-            // Actual reserve and actual storm-damaged tissue integrity. Neither
-            // gauge introduces a second simulated stamina resource.
-            bar(c,25,305,455,319,reserve,TEAL);
-            text(c,"ENERGIA "+(int)reserve+"/100",27,301,12,0xffd8fff3,false);
-            String windText=shelter.storm(worldTime)?
-                "TEMPESTA "+(shelter.wind(worldTime)>0?"→":"←"):
+            // Top-right transparent/holographic vital panel, not a header.
+            neonFrame(c,157,14,471,221,18);
+            text(c,"NETTO "+(int)journey.netDistance+" U",172,40,13,0xffefffff,false);
+            text(c,"VIA "+(int)lifeDistance+" U",303,40,12,0xffe8fbff,false);
+            text(c,"MAX "+(int)journey.recordNet+" U • VITA "+
+                LifeStatistics.duration(lifeStats.current().seconds),
+                172,62,10,GOLD,false);
+            neonOrb(c,438,48,20,0xff83eaff,simulationRunning);
+            text(c,simulationRunning?"Ⅱ":"▶",438,55,15,0xffe8fdff,true);
+            text(c,"ENERGIA "+(int)reserve+"/100",172,88,11,0xffc0fff3,false);
+            neonBar(c,173,96,456,108,reserve,0xff63fff0,0xff28cbbb);
+            String wind=shelter.storm(worldTime)?"TEMPESTA":
                 shelter.warning(worldTime)?"VENTO VICINO":
                 "VENTO FRA "+(int)shelter.untilStorm(worldTime)+"s";
-            int tissueColor=shelter.integrity>40?0xff9cb9ff:0xffdf829e;
-            text(c,"TESSUTO "+(int)shelter.integrity+"/100",27,337,12,tissueColor,false);
-            text(c,windText,452,337,10,MUTED,true);
-            bar(c,25,341,455,355,shelter.integrity,tissueColor);
+            text(c,"TESSUTO "+(int)shelter.integrity+"/100",172,128,11,0xffc2cdff,false);
+            text(c,wind,450,128,9,0xff97a8c9,true);
+            neonBar(c,173,137,456,149,shelter.integrity,0xffb4b9ff,0xff648fea);
+            dividerHud(c,171,161,453);
+            text(c,"ESPERIENZE "+sensorMind.experiences+" • DECISIONI "+sensorMind.decisions,
+                173,179,10,0xffb3ced7,false);
+            text(c,"DISCHI "+pushes+" • BLOCCHI "+boxesUncovered+" • ZONE "+journey.lifeCells+
+                " • STANZE "+chambersCleared,173,195,9,GOLD,false);
+            text(c,"ABILITA "+skillBank.count()+" • RICORDI "+episodic.stored()+
+                " • TECNICHE "+gripBank.count(),173,210,9,TEAL,false);
 
-            // Only high-value telemetry is always visible.
-            text(c,"ESPERIENZE "+sensorMind.experiences+"   •   DECISIONI "+sensorMind.decisions,
-                26,375,11,0xffc3d8df,false);
-            text(c,"DISCHI "+pushes+"   •   BLOCCHI "+boxesUncovered+
-                "   •   ZONE "+journey.lifeCells+"   •   STANZE "+chambersCleared,
-                26,392,10,GOLD,false);
-            text(c,"ABILITA "+skillBank.count()+"   •   RICORDI "+episodic.stored()+
-                "   •   TECNICHE "+gripBank.count()+"   •   ENERGIE "+energyEaten,
-                26,408,10,TEAL,false);
-
-            rounded(c,13,416,467,450,0xec142938,10);
-            text(c,"DETTAGLI AVANZATI",28,438,12,0xffe0f5f3,false);
-            // Tiny chevron is a clear explicit touch target, unlike the
-            // historical invisible 'touch here to spawn a room' hotspot.
-            paint.setShader(null);paint.setStyle(Paint.Style.STROKE);
-            paint.setColor(TEAL);paint.setStrokeWidth(2.2f);
-            float yc=433f;
-            c.drawLine(429,yc+(detailsExpanded?4:-3),438,yc+(detailsExpanded?-4:4),paint);
-            c.drawLine(438,yc+(detailsExpanded?-4:4),447,yc+(detailsExpanded?4:-3),paint);
-            paint.setStyle(Paint.Style.FILL);
-
+            // Only a small floating chevron, with no surrounding toolbar.
+            smallChevron(c,447,250,detailsExpanded);
             if(detailsExpanded)renderDetails(c);
-            // Small temporary event toast, not a permanent technical log.
-            if(eventTime>0&&!detailsExpanded&&H>700){
-                float y=H-208;
-                rounded(c,30,y-17,450,y+12,0xe81b343e,9);
-                text(c,lastEvent.length()>51?lastEvent.substring(0,51):lastEvent,
-                     240,y+2,10,0xffdbf9ee,true);
-            }
 
-            float y=H-168;
-            rounded(c,12,y,468,H-12,0xe00d1923,21);
-            text(c,"APPRENDIMENTO DA ZERO",25,y+25,13,TEAL,false);
-            text(c,"MONDO + CORPO + PRESA • APPRENDIMENTO ON",
-                25,y+45,11,0xffacc5ca,false);
-            button(c,18,y+61,100,H-26,"PARTITE",GOLD);
-            button(c,106,y+61,188,H-26,"ANALISI",TEAL);
-            button(c,194,y+61,276,H-26,"STATISTICHE",TEAL);
-            button(c,282,y+61,364,H-26,"TEMPO x"+speed,0xffbfdaec);
-            button(c,370,y+61,463,H-26,"PROVE",GOLD);
+            // Bottom three-stop dock. Large thumb targets and central x1/x5/x20.
+            renderDock(c);
 
+            if(settingsExpanded)renderSettings(c);
             if(uiTime<updaterStatusUntil&&updaterStatus.length()>0){
-                float sy=Math.max(457,H-235);
-                rounded(c,13,sy,467,sy+47,0xf01f3944,13);
-                text(c,updaterStatus.length()>52?updaterStatus.substring(0,52):updaterStatus,
-                     240,sy+28,11,0xffd5fff4,true);
+                float ty=H-173;
+                rounded(c,52,ty-28,428,ty+7,0xf21c3945,11);
+                text(c,updaterStatus.length()>47?updaterStatus.substring(0,47):updaterStatus,
+                    240,ty-5,10,0xffdcfdf5,true);
             }
-            if(showBenchmark){
-                float top=H*.32f;
-                rounded(c,20,top,460,top+294,0xf20e222e,22);
-                text(c,"ESPERIMENTI CORPOREI REALI",240,top+31,15,TEAL,true);
-                String d=liveBody.lastDomain==0?"MOTORE":
-                         liveBody.lastDomain==1?"MANIPOLAZIONE":
-                         liveBody.lastDomain==2?"MEMBRANA":"IN ATTESA";
-                text(c,"ULTIMA PROVA: "+d,240,top+69,13,GOLD,true);
-                text(c,"PESI SALVATI: "+String.format(Locale.US,"%.2f",liveBody.lastBaselineScore),
-                    240,top+101,14,MUTED,true);
-                text(c,"PESI SPERIMENTALI: "+String.format(Locale.US,"%.2f",liveBody.lastCandidateScore),
-                    240,top+132,14,TEAL,true);
-                text(c,"NETTO "+(int)liveBody.lastBaselineNet+" U → "+
-                    (int)liveBody.lastCandidateNet+" U",240,top+162,14,0xffd9e8e6,true);
-                text(c,liveBody.lastDomain<0?"NESSUNA PROVA COMPLETATA":
-                    liveBody.lastWasAccepted?"VARIANTE CONSERVATA":"VARIANTE SCARTATA",
-                    240,top+195,14,liveBody.lastWasAccepted?TEAL:GOLD,true);
-                text(c,"Finestre reali successive, NON A/B identico.",
-                    240,top+229,11,MUTED,true);
-                text(c,"TOCCA PER CHIUDERE",240,top+278,11,MUTED,true);
-            }
-            if(resetNotice>0)
-                text(c,"TOCCA DI NUOVO IL TITOLO PER AZZERARE LA MEMORIA",
-                    240,H-196,11,GOLD,true);
-            if(showHelp&&mind.total<3&&!detailsExpanded&&eventTime<=0)
-                text(c,"Non sa ancora quali stimoli lo aiutano o danneggiano.",
-                    240,H-188,11,0xffb9cfd2,true);
+            if(showBenchmark)renderBenchmark(c);
         }
 
-        void energyCount(Canvas c,float x,float cy,String label,long count,int color){
-            paint.setShader(null);paint.setColor(0xff081421);
-            c.drawCircle(x,cy,11f,paint);
-            paint.setColor(color);
-            c.drawCircle(x,cy,7.5f,paint);
-            paint.setColor(0x66ffffff);c.drawCircle(x-2.2f,cy-2.2f,2.1f,paint);
-            text(c,String.valueOf(count),x+17,cy+6,19,0xfff0fafa,false);
-            text(c,label,x+17,cy+18,9,color,false);
+        void hudEnergy(Canvas c,float x,float cy,String label,long total,int color){
+            // Radial light over an otherwise transparent background.
+            paint.setStyle(Paint.Style.FILL);
+            paint.setShader(new RadialGradient(x,cy,24,
+                new int[]{color&0x00ffffff|0x44000000,0x07162331,0x00000000},
+                null,Shader.TileMode.CLAMP));
+            c.drawCircle(x,cy,24,paint);paint.setShader(null);
+            paint.setColor(0xc7081523);c.drawCircle(x,cy,14.5f,paint);
+            paint.setStyle(Paint.Style.STROKE);paint.setStrokeWidth(1.4f);
+            paint.setColor(color);c.drawCircle(x,cy,13.2f,paint);
+            paint.setStyle(Paint.Style.FILL);paint.setColor(color);
+            c.drawCircle(x,cy,9.4f,paint);
+            paint.setColor(0x99ffffff);c.drawCircle(x-3,cy-3,3.1f,paint);
+            text(c,String.valueOf(total),61,cy+4,17,0xfff4faff,false);
+            text(c,label,61,cy+18,8,color,false);
         }
-        void bar(Canvas c,float l,float top,float r,float bottom,
-                 float amount,int color){
-            rounded(c,l,top,r,bottom,0xff263848,7);
-            float fraction=Math.max(0,Math.min(1,amount/100f));
-            if(fraction>.002f)rounded(c,l,top,l+(r-l)*fraction,bottom,color,7);
+        void neonFrame(Canvas c,float l,float t,float r,float b,float radius){
+            paint.setStyle(Paint.Style.FILL);
+            paint.setShader(new LinearGradient(l,t,r,b,
+                new int[]{0xe0091928,0xba061522,0xe0081422},null,Shader.TileMode.CLAMP));
+            c.drawRoundRect(l,t,r,b,radius,radius,paint);
+            paint.setShader(null);paint.setStyle(Paint.Style.STROKE);
+            paint.setStrokeWidth(1.2f);paint.setColor(0x9947bbd6);
+            c.drawRoundRect(l,t,r,b,radius,radius,paint);
+            paint.setStrokeWidth(2.0f);paint.setColor(0xff7bf4f5);
+            c.drawLine(l+24,t,l+108,t,paint);
+            c.drawLine(r-67,b,r-19,b,paint);
+            paint.setStyle(Paint.Style.FILL);
+        }
+        void neonOrb(Canvas c,float x,float y,float radius,int accent,
+                     boolean luminous){
+            paint.setShader(new RadialGradient(x,y,radius+7f,
+                new int[]{luminous?0x6624eeed:0x4624a8c5,0x280a3147,0x00101926},
+                null,Shader.TileMode.CLAMP));
+            c.drawCircle(x,y,radius+7f,paint);paint.setShader(null);
+            paint.setColor(0xec0c2530);c.drawCircle(x,y,radius,paint);
+            paint.setColor(accent);paint.setStyle(Paint.Style.STROKE);
+            paint.setStrokeWidth(luminous?2.2f:1.4f);
+            c.drawCircle(x,y,radius,paint);paint.setStyle(Paint.Style.FILL);
+        }
+        void neonBar(Canvas c,float l,float t,float r,float b,
+                     float percent,int head,int tail){
+            rounded(c,l,t,r,b,0xe2223446,7);
+            float fraction=Math.max(0,Math.min(1,percent/100f));
+            float end=l+(r-l)*fraction;
+            if(end-l>.5f){
+                paint.setShader(new LinearGradient(l,t,end,b,
+                    new int[]{tail,head},null,Shader.TileMode.CLAMP));
+                c.drawRoundRect(l,t,end,b,6,6,paint);
+                paint.setShader(null);
+            }
+            paint.setColor(0x553e8195);paint.setStyle(Paint.Style.STROKE);
+            paint.setStrokeWidth(.8f);c.drawRoundRect(l,t,r,b,7,7,paint);
+            paint.setStyle(Paint.Style.FILL);
+        }
+        void dividerHud(Canvas c,float l,float y,float r){
+            paint.setShader(new LinearGradient(l,y,r,y,
+                new int[]{0x006af4ee,0x7554c3df,0x006af4ee},null,Shader.TileMode.CLAMP));
+            paint.setStrokeWidth(1f);c.drawLine(l,y,r,y,paint);paint.setShader(null);
+        }
+        void smallChevron(Canvas c,float x,float y,boolean up){
+            paint.setShader(null);
+            paint.setColor(0x333c7485);c.drawCircle(x,y,23,paint);
+            paint.setStyle(Paint.Style.STROKE);
+            paint.setStrokeWidth(1.2f);paint.setColor(0x807adee9);
+            c.drawCircle(x,y,19,paint);
+            paint.setStrokeWidth(2.8f);paint.setColor(0xff6cfcf0);
+            int sign=up?-1:1;
+            c.drawLine(x-8,y-3*sign,x,y+5*sign,paint);
+            c.drawLine(x,y+5*sign,x+8,y-3*sign,paint);
+            paint.setStyle(Paint.Style.FILL);
+        }
+        void renderDock(Canvas c){
+            float top=H-143f,bottom=H-16f,centerY=H-77f;
+            paint.setShader(new LinearGradient(0,top,W,bottom,
+                new int[]{0xc8051320,0xe80c1e2e,0xc8051320},
+                null,Shader.TileMode.CLAMP));
+            c.drawRoundRect(12,top,468,bottom,38,38,paint);
+            paint.setShader(null);paint.setStyle(Paint.Style.STROKE);
+            paint.setStrokeWidth(1.2f);paint.setColor(0x7659c9e6);
+            c.drawRoundRect(12,top,468,bottom,38,38,paint);
+            paint.setStyle(Paint.Style.FILL);
+            dockButton(c,29,top+17,179,bottom-13,0xffa49dff,false,"CERVELLO");
+            dockButton(c,300,top+17,450,bottom-13,0xff9fb5df,true,"IMPOSTAZIONI");
+            neonOrb(c,240,centerY,49,0xff71ffee,true);
+            paint.setColor(0x551deacb);paint.setStyle(Paint.Style.STROKE);
+            paint.setStrokeWidth(4);c.drawCircle(240,centerY,54,paint);
+            paint.setStyle(Paint.Style.FILL);
+            // Play/fast-forward symbol: icon drawn as geometry, not emoji font.
+            fastArrow(c,240,centerY-8,0xff83ffeb);
+            text(c,"TEMPO x"+speed,240,centerY+35,12,0xffebfffc,true);
+        }
+        void dockButton(Canvas c,float l,float t,float r,float b,int tint,
+                        boolean gear,String caption){
+            paint.setShader(new LinearGradient(l,t,r,b,
+                new int[]{0xde132d40,0xd909182a},null,Shader.TileMode.CLAMP));
+            c.drawRoundRect(l,t,r,b,26,26,paint);paint.setShader(null);
+            paint.setStyle(Paint.Style.STROKE);paint.setStrokeWidth(1.4f);
+            paint.setColor(0x9772aac4);c.drawRoundRect(l,t,r,b,26,26,paint);
+            paint.setStyle(Paint.Style.FILL);
+            float x=(l+r)*.5f,y=t+29;
+            if(gear)gearIcon(c,x,y,tint);else brainIcon(c,x,y,tint);
+            text(c,caption,x,b-16,11,0xffe1f1fa,true);
+        }
+        void brainIcon(Canvas c,float x,float y,int tint){
+            paint.setStyle(Paint.Style.STROKE);paint.setStrokeWidth(2.4f);
+            paint.setColor(tint);
+            for(int side=-1;side<=1;side+=2){
+                c.drawArc(x+side*12-8,y-13,x+side*12+8,y+3,
+                    side<0?125:235,205,false,paint);
+                c.drawCircle(x+side*7,y+6,8,paint);
+                c.drawLine(x+side*3,y-8,x+side*3,y+12,paint);
+            }
+            paint.setStyle(Paint.Style.FILL);
+        }
+        void gearIcon(Canvas c,float x,float y,int tint){
+            paint.setColor(tint);paint.setStrokeWidth(2.6f);
+            paint.setStyle(Paint.Style.STROKE);
+            c.drawCircle(x,y,11,paint);c.drawCircle(x,y,4.2f,paint);
+            for(int i=0;i<8;i++){
+                double a=i*Math.PI/4;
+                c.drawLine(x+(float)Math.cos(a)*12,y+(float)Math.sin(a)*12,
+                           x+(float)Math.cos(a)*17,y+(float)Math.sin(a)*17,paint);
+            }
+            paint.setStyle(Paint.Style.FILL);
+        }
+        void fastArrow(Canvas c,float x,float y,int color){
+            paint.setColor(color);paint.setStyle(Paint.Style.FILL);
+            for(int i=0;i<2;i++){
+                float offset=i*15-15;
+                path.reset();
+                path.moveTo(x+offset-8,y-11);
+                path.lineTo(x+offset+7,y);
+                path.lineTo(x+offset-8,y+11);
+                path.close();c.drawPath(path,paint);
+            }
         }
         void renderDetails(Canvas c){
-            float bottom=Math.min(710,Math.max(477,H-180));
-            rounded(c,13,455,467,bottom,0xf30b1a25,15);
-            c.save();
-            c.clipRect(19,459,461,bottom-6);
-            text(c,"MOVIMENTO E MEMORIA",27,479,11,TEAL,false);
+            float bottom=Math.min(H-155,648);
+            if(bottom<320)return;
+            neonFrame(c,158,278,471,bottom,16);
+            c.save();c.clipRect(164,283,465,bottom-8);
+            text(c,"DATI TECNICI",174,303,12,TEAL,false);
             text(c,"AZIONE "+(sensorMind.action%8+1)+"/8 • PRESA "+
                 (sensorMind.adhesion()>0?"ON":"OFF")+
                 " • ERRORE "+format(sensorMind.averagePredictionError),
-                27,495,10,0xffbfd9d7,false);
-            text(c,"URTI "+physicalContacts+" • DISTANZA MAX "+(int)biggestDisplacement+
-                " U • PROVE MANIP. "+handTrainer.attempts,27,511,10,MUTED,false);
-            text(c,"RICHIAMI "+episodic.replayed+" • ESTENSIONE "+
-                (int)surface.peakExtension+" U • MEMBRANA "+Morphology.POINTS,27,527,10,MUTED,false);
-            text(c,"PRESA E CONTATTO",27,547,11,TEAL,false);
-            text(c,"PROVE PRESA "+shapeTrainer.gateAttempts+
-                " • TECNICHE "+gripBank.count()+
-                " • PRESE "+(gripsEver+(chamber!=null?chamber.grasps:0)),27,563,10,GOLD,false);
+                174,324,9,0xffc3dee2,false);
+            text(c,"URTI "+physicalContacts+" • DIST MAX "+(int)biggestDisplacement+
+                " U • PROVE "+handTrainer.attempts,174,341,9,MUTED,false);
+            text(c,"RICHIAMI "+episodic.replayed+" • MEMBRANA "+Morphology.POINTS+
+                " • EST "+(int)surface.peakExtension,174,357,9,MUTED,false);
+            text(c,"PRESA E MANIPOLAZIONE",174,384,10,TEAL,false);
+            text(c,"PROVE "+shapeTrainer.gateAttempts+" • PRESE "+
+                (gripsEver+(chamber!=null?chamber.grasps:0)),174,403,9,GOLD,false);
             if(chamber!=null){
                 text(c,"PORTA "+(int)chamber.doorY+" U • DUE LATI "+
-                    chamber.opposedContactFrames+" • TENUTA "+chamber.gateHeldFrames,
-                    27,578,10,MUTED,false);
+                    chamber.opposedContactFrames,174,421,9,MUTED,false);
                 text(c,"TOCCHI "+chamber.tactileFrames+" • ADESIONI "+
-                    chamber.adhesiveContactFrames+" • SENZA PRESA "+
-                    chamber.dualTouchNoGrip,27,594,10,MUTED,false);
+                    chamber.adhesiveContactFrames,174,437,9,MUTED,false);
+                text(c,"SENZA PRESA "+chamber.dualTouchNoGrip+" • TENUTA "+
+                    chamber.gateHeldFrames,174,453,9,MUTED,false);
                 text(c,"PRESA SCELTA "+chamber.gateDriveFrames+
-                    " • COMANDO "+chamber.gateCommandFrames,27,610,10,MUTED,false);
+                    " • COMANDO "+chamber.gateCommandFrames,174,469,9,MUTED,false);
             }else{
-                rounded(c,27,580,453,607,0xff26414a,8);
-                text(c,"ATTIVA PROVA STANZA",240,599,11,TEAL,true);
+                text(c,"NESSUNA STANZA ATTIVA",174,424,9,MUTED,false);
             }
-            text(c,"AMBIENTE",27,623,11,TEAL,false);
+            text(c,"AMBIENTE E RISORSE",174,496,10,TEAL,false);
             text(c,(scarcity?"SCARSITA ATTIVA":"SCORTE NORMALI")+
-                " • MATERIALI "+shelter.placedCount()+
-                " • TEMPESTA "+(shelter.storm(worldTime)?"SI":"NO"),27,639,10,MUTED,false);
-            if(energyTotals.legacyPositive>0||!energyTotals.complete)
-                text(c,"STORICO PRE-111: "+energyTotals.legacyPositive+
-                    " POSITIVI NON SEPARABILI"+(energyTotals.complete?"":" • PARZIALE"),
-                    27,654,9,GOLD,false);
-
+                " • MATERIALI "+shelter.placedCount(),174,515,9,MUTED,false);
+            text(c,"ENERGIE "+energyEaten+" • STANZE "+chambersCleared+
+                " • TECNICHE "+gripBank.count(),174,531,9,MUTED,false);
+            if(energyTotals.legacyPositive>0)
+                text(c,"POSITIVI STORICI NON DIVISIBILI "+
+                    energyTotals.legacyPositive,174,547,9,GOLD,false);
             c.restore();
+        }
+        float settingsTop(){
+            return Math.max(75,Math.min(150,H*.13f));
+        }
+        void renderSettings(Canvas c){
+            // In-app navigation. No new Activity; existing screens/OTA stay
+            // intact and use their original brain-save transitions.
+            paint.setShader(null);paint.setColor(0xdf020a12);
+            c.drawRect(0,0,W,H,paint);
+            float top=settingsTop(),bottom=Math.min(H-155,top+488);
+            neonFrame(c,30,top,450,bottom,23);
+            text(c,"IMPOSTAZIONI",56,top+36,21,0xfff0fff9,false);
+            text(c,"GESTIONE • ANALISI • APP",56,top+55,10,TEAL,false);
+            smallChevron(c,419,top+32,true);
+            String[] names={
+                "PARTITE E SALVATAGGI",
+                "ANALISI",
+                "STATISTICHE",
+                "CERVELLO • PARAMETRI",
+                "PROVE CORPOREE",
+                "PROVA STANZA",
+                "AGGIORNA APP"
+            };
+            String[] hints={
+                "Slot, carica, nuovo ZERO",
+                "Dati e apprendimento",
+                "Vite, record e andamento",
+                "Dettagli del cervello",
+                "Confronto fisico dei pesi",
+                "Ambiente e cancello",
+                "Controlla la prossima OTA"
+            };
+            float first=top+78f,rowHeight=52f;
+            c.save();c.clipRect(34,top+68,447,bottom-49);
+            for(int i=0;i<names.length;i++){
+                float y=first+i*rowHeight;
+                rounded(c,44,y,436,y+47,0xba142c39,10);
+                paint.setColor(0x6045a1b2);paint.setStyle(Paint.Style.STROKE);
+                paint.setStrokeWidth(.8f);
+                c.drawRoundRect(44,y,436,y+47,10,10,paint);
+                paint.setStyle(Paint.Style.FILL);
+                text(c,names[i],59,y+20,12,0xffeff9fa,false);
+                text(c,hints[i],59,y+36,9,MUTED,false);
+                text(c,"›",414,y+30,23,TEAL,true);
+            }
+            c.restore();
+            dividerHud(c,48,bottom-49,433);
+            text(c,"VERSIONE "+installedVersion+" • OTA",55,bottom-23,11,GOLD,false);
+            // Footer navigation remains visible; only its right side is active.
+            paint.setColor(0xeb061320);
+            rounded(c,12,H-143,468,H-16,0xeb071621,35);
+            dockButton(c,29,H-126,179,H-29,0xffa49dff,false,"CERVELLO");
+            neonOrb(c,240,H-77,49,0xff71ffee,true);
+            fastArrow(c,240,H-86,0xff83ffeb);
+            text(c,"TEMPO x"+speed,240,H-42,12,0xffebfffc,true);
+            dockButton(c,300,H-126,450,H-29,0xff9fb5df,true,"CHIUDI");
+        }
+        void renderBenchmark(Canvas c){
+            float top=H*.32f;
+            rounded(c,20,top,460,top+294,0xf20e222e,22);
+            text(c,"ESPERIMENTI CORPOREI REALI",240,top+31,15,TEAL,true);
+            String d=liveBody.lastDomain==0?"MOTORE":
+                     liveBody.lastDomain==1?"MANIPOLAZIONE":
+                     liveBody.lastDomain==2?"MEMBRANA":"IN ATTESA";
+            text(c,"ULTIMA PROVA: "+d,240,top+69,13,GOLD,true);
+            text(c,"PESI SALVATI: "+String.format(Locale.US,"%.2f",liveBody.lastBaselineScore),
+                 240,top+101,14,MUTED,true);
+            text(c,"PESI SPERIMENTALI: "+String.format(Locale.US,"%.2f",liveBody.lastCandidateScore),
+                 240,top+132,14,TEAL,true);
+            text(c,"NETTO "+(int)liveBody.lastBaselineNet+" U → "+
+                 (int)liveBody.lastCandidateNet+" U",
+                 240,top+162,14,0xffd9e8e6,true);
+            text(c,liveBody.lastDomain<0?"NESSUNA PROVA COMPLETATA":
+                 liveBody.lastWasAccepted?"VARIANTE CONSERVATA":"VARIANTE SCARTATA",
+                 240,top+195,14,liveBody.lastWasAccepted?TEAL:GOLD,true);
+            text(c,"Finestre reali successive, NON A/B identico.",
+                 240,top+229,11,MUTED,true);
+            text(c,"TOCCA PER CHIUDERE",240,top+278,11,MUTED,true);
         }
         String format(float x){return String.format(Locale.US,"%+.1f",x);}
         void button(Canvas c,float l,float t,float r,float b,String caption,int color){
@@ -1746,55 +1875,97 @@ public final class GameActivity extends Activity {
             if(ev.getActionMasked()!=MotionEvent.ACTION_UP)return true;
             float scale=getWidth()/W;
             float x=ev.getX()/scale,y=ev.getY()/scale;
-            if(showBenchmark){showBenchmark=false;return true;}
-            if(y>=416&&y<=451){
-                detailsExpanded=!detailsExpanded;
+            if(showBenchmark){
+                showBenchmark=false;invalidate();return true;
+            }
+            // Modal settings intercepts all taps outside explicit menu items.
+            if(settingsExpanded){
+                float top=settingsTop(),first=top+78f;
+                if(y>top&&y<top+65&&x>382){
+                    settingsExpanded=false;invalidate();return true;
+                }
+                if(y>=H-151){
+                    if(x<179){
+                        settingsExpanded=false;
+                        save();
+                        GameActivity.this.startActivity(new android.content.Intent(
+                            GameActivity.this,BrainToolsActivity.class));
+                    }else if(x<301){
+                        speed=speed==1?5:speed==5?20:1;
+                        settingsExpanded=false;
+                    }else settingsExpanded=false;
+                    invalidate();return true;
+                }
+                if(x>=44&&x<=436&&y>=first&&y<first+7*52f){
+                    int index=(int)((y-first)/52f);
+                    settingsChoice(index);
+                    invalidate();return true;
+                }
+                if(x<30||x>450||y<top||y>Math.min(H-155,top+488))
+                    settingsExpanded=false;
                 invalidate();return true;
             }
-            if(detailsExpanded&&chamber==null&&
-               y>=580&&y<=608&&x>=20&&x<=460){
-                activateChamber(true);
-                invalidate();return true;
-            }
-            if(y>=H-108){
-                if(x<104){
-                    save();
-                    saveScene();
-                    GameActivity.this.startActivity(new android.content.Intent(
-                        GameActivity.this,SaveSlotsActivity.class));
-                }else if(x<192){
+            // Full-width bottom navigation, with central speed control.
+            if(y>=H-147){
+                if(x<180){
                     save();
                     GameActivity.this.startActivity(new android.content.Intent(
                         GameActivity.this,BrainToolsActivity.class));
-                }else if(x<280){
-                    save();saveScene();
-                    GameActivity.this.startActivity(new android.content.Intent(
-                        GameActivity.this,StatisticsActivity.class));
-                }else if(x<368){speed=speed==1?5:speed==5?20:1;}
-                else compare();
-                return true;
+                }else if(x<300){
+                    speed=speed==1?5:speed==5?20:1;
+                }else{
+                    detailsExpanded=false;settingsExpanded=true;
+                }
+                invalidate();return true;
             }
-            if(y>=104&&y<145&&x>=339){
-                updater.checkAndInstall();
-                return true;
+            // The top vital panel contains the only always-visible pause.
+            if(x>=405&&y>=17&&y<=82){
+                simulationRunning=!simulationRunning;
+                lastFrame=0;invalidate();return true;
             }
-            if(y>=104&&y<145&&x>=217&&x<334){
-                save();
-                GameActivity.this.startActivity(
-                    new android.content.Intent(GameActivity.this,BrainStatsActivity.class));
-                return true;
-            }
-            if(y<137&&x<217){
-                save();
-                GameActivity.this.startActivity(new android.content.Intent(
-                    GameActivity.this,BrainToolsActivity.class));
-                return true;
-            }
-            if(y>=242&&y<291&&x>398){
-                simulationRunning=!simulationRunning;lastFrame=0;return true;
+            // Tiny transparent diagnostics chevron, hitbox larger than icon.
+            if(x>=408&&y>=224&&y<=279){
+                detailsExpanded=!detailsExpanded;
+                invalidate();return true;
             }
             showHelp=false;
             return true;
+        }
+        void settingsChoice(int index){
+            switch(index){
+                case 0:
+                    save();saveScene();
+                    GameActivity.this.startActivity(new android.content.Intent(
+                        GameActivity.this,SaveSlotsActivity.class));
+                    break;
+                case 1:
+                    save();
+                    GameActivity.this.startActivity(new android.content.Intent(
+                        GameActivity.this,BrainToolsActivity.class));
+                    break;
+                case 2:
+                    save();saveScene();
+                    GameActivity.this.startActivity(new android.content.Intent(
+                        GameActivity.this,StatisticsActivity.class));
+                    break;
+                case 3:
+                    save();
+                    GameActivity.this.startActivity(new android.content.Intent(
+                        GameActivity.this,BrainStatsActivity.class));
+                    break;
+                case 4:
+                    settingsExpanded=false;
+                    compare();
+                    break;
+                case 5:
+                    settingsExpanded=false;
+                    if(chamber==null)activateChamber(true);
+                    break;
+                case 6:
+                    updater.checkAndInstall();
+                    break;
+                default:break;
+            }
         }
     }
 }
