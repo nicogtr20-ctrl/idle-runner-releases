@@ -102,6 +102,7 @@ jobs:
           assert 'ObjectExperienceV20.KEY' in r
           assert 'objectExperience.consequence(' in b
           assert 'objectExperience.choiceBias(' in b
-          assert 'if(grips.opposingGrip&&e.displacementFromSpawn()>1f)' in g
+          assert 'if(grips.opposingGrip&&actualBoxMotion>.005f)' in g
+          assert 'if(grips.held>0)boxAnyHeldThisFrame=true;' in g
           print('Object learning, grip archive, reset and save connections PASS')
           PY
