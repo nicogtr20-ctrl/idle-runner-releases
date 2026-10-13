@@ -575,7 +575,7 @@ jobs:
           assert '.putString("episodic_memory_v095",episodic.encode())' in g
           assert '.putString(LifeStatistics.KEY,lifeStats.encode())' in g
           assert 'ResetDomains.SPATIAL' in ui and 'SpatialMapView extends View' in ui
-          assert 'case SPATIAL:return new String[]{SpatialPerception.KEY,PerceptualAssociationsV20.KEY};' in reset
+          assert 'case SPATIAL:return new String[]{SpatialPerception.KEY,PerceptualAssociationsV20.KEY,ObjectExperienceV20.KEY};' in reset
           assert 'spatial.parameterCount()' in brain
           assert 'SaveProfileCodec.encode(capture())' in slots and 'SLOTS=12' in slots
           assert "applicationId 'com.overmind.zero.ota'" in gradle
