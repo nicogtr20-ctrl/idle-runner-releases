@@ -1,11 +1,8 @@
 name: ZERO 2.1 unified cognition full physics + Android integration QA
+# ZERO21: PRIVATE-REPO MINUTES SAVING — manual launch only.
+# Main validation is now performed in an installed Android APK on user device.
+# Execute manually only for signed release gate or when a regression requires CI.
 on:
-  push:
-    branches: [feature/zero21-unified-cognition]
-    paths-ignore:
-      - 'docs/**'
-      - '**/*.md'
-      - 'scripts/**'
   workflow_dispatch:
 permissions:
   contents: read
