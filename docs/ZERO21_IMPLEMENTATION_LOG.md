@@ -72,3 +72,9 @@ Do NOT confuse added shared ledger with finished unified cognitive architecture.
 
 ## Handoff / next concrete development
 First finish all new-source CI on exact code SHA, including Android compile and legacy tests. Then implement G2–G4 as a coherent shared event/identity/tracing pipeline (not blind new per-module score additions). Produce evaluator-side novel object rotation/occlusion fixtures and proof of identity continuity before enabling world beliefs. Only then build G5–G7 skill archive and uncertainty-gated advisor, paired headless benchmarks and long-life device QA. Document source, runs, failures, and user observation in this file and docs/ZERO21_HANDOFF_NEXT_CHAT.md.
+
+
+## Verified final executable QA / pull request — 13 October 2026
+- CI [38452161103](https://github.com/nicogtr20-ctrl/idle-runner-releases/actions/runs/38452161103) on tested CODE commit `7361e67f3f82c45913f7263b3b9fee1eb8f6dfee`: **SUCCESS**. Verified GitHub job 115485537613: full Java compilation; all legacy physics/learning regressions and new ObjectExperienceV20 + UnifiedCognitionV21 regression; static non-interference against 16-action scoring and physical laws; Gradle Android assembleDebug; all check steps green. All later commits on feature/zero21-unified-cognition before the draft PR were Markdown-only handoff/whitepaper/roadmap updates, not source modifications.
+- Draft research PR [#39](https://github.com/nicogtr20-ctrl/idle-runner-releases/pull/39) opened against `feature/overmind-inapp-updater`. **DO NOT MERGE OR RELEASE.** There is NO new signed APK/OTA/versionCode, no user phone upgrade and no proven cognitive uplift. Signed production remains OTA112.
+- A code or workflow change after this timestamp requires NEW final-head QA; a documentation-only commit does not alter the executable snapshot. A successful Android Debug build is NOT a completed signed APK.
