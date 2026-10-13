@@ -1,3 +1,5 @@
+# Risultati verificati: leggere [ZERO21_VALIDATION_RESULTS.md](ZERO21_VALIDATION_RESULTS.md) prima di definire una capacità riuscita. Il run 38455726406 è verde: 12 coppie CONTROL/SHADOW, 0 differenze, 0 vantaggi, 12 pareggi, previsione e presa v20 ancora inaffidabili. Non rappresenta una nuova intelligenza. Long-survival 170 s: nuovo test dedicato 38456274262.
+
 # ZERO 2.1 — G2–G7 coherent integration: object continuity, mechanical competence, causal hypotheses and decision arbitration
 **13 October 2026 — research branch `feature/zero21-unified-cognition`**. This paper is the authoritative *new-implementation* supplement to `ZERO21_UNIFIED_COGNITION_MASTER.md`; the owner also expects `ZERO21_HANDOFF_NEXT_CHAT.md` and `ZERO21_IMPLEMENTATION_LOG.md` to remain current. Stable user phone APK **remains OTA112**.
 
