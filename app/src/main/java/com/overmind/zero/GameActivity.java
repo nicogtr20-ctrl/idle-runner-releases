@@ -53,6 +53,10 @@ public final class GameActivity extends Activity {
         GripAffordanceV20 gripAffordanceV20=new GripAffordanceV20();
         PerceptualAssociationsV20 perceptualV20=new PerceptualAssociationsV20();
         ObjectExperienceV20 objectExperienceV20=new ObjectExperienceV20();
+        UnifiedCognitionV21 unifiedCognitionV21=new UnifiedCognitionV21();
+        ObjectContinuityV21 objectContinuityV21=new ObjectContinuityV21();
+        CompetenceMemoryV21 competenceMemoryV21=new CompetenceMemoryV21();
+        UnifiedArbiterV21 unifiedArbiterV21=new UnifiedArbiterV21();
         SpatialPerception spatialMap=new SpatialPerception();
         CausalExperiments causalExperiments=new CausalExperiments();
         InstrumentalNavigation navigation=new InstrumentalNavigation();
@@ -131,8 +135,8 @@ public final class GameActivity extends Activity {
         float testMaxSimSeconds=0f,testMaxActualRate=0f;
         int testMaxThermalStatus=0;
         static final float TEST_MAX_FIXED_DT=1f/60f;
-        static final int TEST_MAX_MAX_STEPS=1024;
-        static final long TEST_MAX_BUDGET_NS=38000000L;
+        static final int TEST_MAX_MAX_STEPS=4096;
+        static final long TEST_MAX_BUDGET_NS=165000000L;
         // Rendering-only light adaptation. Never persisted or fed to physics.
         final float[] cyanLeds=new float[Morphology.POINTS];
         final float[] redLeds=new float[Morphology.POINTS];
@@ -265,6 +269,18 @@ public final class GameActivity extends Activity {
             objectExperienceV20=new ObjectExperienceV20();
             objectExperienceV20.restore(prefs.getString(ObjectExperienceV20.KEY,""));
             sensorMind.attachObjectExperienceV20(objectExperienceV20);
+            // Independent optional working-profile state; never reuses old ZERO slots.
+            unifiedCognitionV21=new UnifiedCognitionV21();
+            unifiedCognitionV21.restore(prefs.getString(UnifiedCognitionV21.KEY,""));
+            sensorMind.attachUnifiedCognitionV21(unifiedCognitionV21);
+            objectContinuityV21=new ObjectContinuityV21();
+            objectContinuityV21.restore(prefs.getString(ObjectContinuityV21.KEY,""));
+            sensorMind.attachObjectContinuityV21(objectContinuityV21);
+            competenceMemoryV21=new CompetenceMemoryV21();
+            competenceMemoryV21.restore(prefs.getString(CompetenceMemoryV21.KEY,""));
+            unifiedArbiterV21=new UnifiedArbiterV21();
+            unifiedArbiterV21.restore(prefs.getString(UnifiedArbiterV21.KEY,""));
+            sensorMind.attachUnifiedArbiterV21(unifiedArbiterV21);
             // Hard device boundary: ZERO 2.0 can LEARN and REPORT but may not
             // bias any live motor decision. Advisory A/B is laboratory-only.
             sensorMind.enableZero20ExperimentalAdvice(false);
@@ -560,6 +576,10 @@ public final class GameActivity extends Activity {
               .putString(GripAffordanceV20.KEY,gripAffordanceV20.encode())
               .putString(PerceptualAssociationsV20.KEY,perceptualV20.encode())
               .putString(ObjectExperienceV20.KEY,objectExperienceV20.encode())
+              .putString(UnifiedCognitionV21.KEY,unifiedCognitionV21.encode())
+              .putString(ObjectContinuityV21.KEY,objectContinuityV21.encode())
+              .putString(CompetenceMemoryV21.KEY,competenceMemoryV21.encode())
+              .putString(UnifiedArbiterV21.KEY,unifiedArbiterV21.encode())
               .putString(SpatialPerception.KEY,spatialMap.encode())
               .putString(CausalExperiments.KEY,causalExperiments.encode())
               .putString(InstrumentalNavigation.KEY,navigation.encode())
@@ -600,7 +620,7 @@ public final class GameActivity extends Activity {
             sensorMind.setLearning(true);
         }
         void suspend(){
-            // Do not persist/resume an unattended high-speed test.
+            // Test speed is deliberately NOT persisted or resumed blindly.
             testMax=false;
             // Pause and FLUSH BOTH cognition and physical state before the
             // named-slot screen is allowed to inspect the working profile.
@@ -875,6 +895,7 @@ public final class GameActivity extends Activity {
                 lifeStats.physical(journey.maxNetLife,journey.lifeCells,
                     chamber==null?0:chamber.maxDoorTravel);
                 lifeStats.death();
+                competenceMemoryV21.newLife();
                 reserve=70;lastEvent="CORPO ESAUSTO • MEMORIA CONSERVATA";eventTime=6;
                 resetEpisode();
                 nextChamber=elapsedLife+12f;
@@ -914,10 +935,10 @@ public final class GameActivity extends Activity {
             // Short bounded burst, always returning control to UI/touch.
             final long burstDeadline=System.nanoTime()+
                 (testMaxThermalStatus>=android.os.PowerManager.THERMAL_STATUS_MODERATE
-                    ?18000000L:TEST_MAX_BUDGET_NS);
+                    ?70000000L:TEST_MAX_BUDGET_NS);
             if(simulationRunning){
                 for(int i=0;i<frameSteps;i++){
-                    if(fullSpeed&&i>0&&System.nanoTime()>=burstDeadline)break;
+                    if(fullSpeed&&i>0&&(i&15)==0&&System.nanoTime()>=burstDeadline)break;
                     float slice=fullSpeed?TEST_MAX_FIXED_DT:Math.min(dt,.035f);
                     if(fullSpeed)testMaxSimSeconds+=slice;
                     float energyBeforeFrame=reserve;
@@ -1049,6 +1070,13 @@ public final class GameActivity extends Activity {
                             if(gripBank.observe(lastAppliedHand,lastAppliedMembrane,
                                true,true,Math.min(2f,actualBoxMotion),
                                sensorMind.stateCopy()))save();
+                            // Research-only archive of physically proven technique:
+                            // self tissue and actual motion; anonymous sighting
+                            // confidence is an uncertainty tag, not object truth.
+                            if(competenceMemoryV21.witnessed(lastAppliedHand,
+                               lastAppliedMembrane,sensorMind.stateCopy(),
+                               grips.opposingGrip,actualBoxMotion,
+                               objectContinuityV21.currentTrackConfidence()))save();
                         }
                         if(grips.opposingGrip)e.peakDisplacement=Math.max(
                             e.peakDisplacement,e.displacementFromSpawn());

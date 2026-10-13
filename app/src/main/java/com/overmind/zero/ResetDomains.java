@@ -17,10 +17,10 @@ public final class ResetDomains {
                                        EXPLORATION,ROOM,EPISODES,TEMPORAL_SKILLS,PROPRIOCEPTION,SPATIAL,CAUSAL,NAVIGATION,INTENTION,GATE_METRICS,ALL};
     public static String[] keys(String domain){
         switch(domain){
-            case WORLD:return new String[]{"sensorimotor_model_v09","sensorimotor_diagnostics_v091",
+            case WORLD:return new String[]{"sensorimotor_model_v09","sensorimotor_diagnostics_v091",UnifiedArbiterV21.KEY,
                 "real_energy_credits_v098","real_damage_credits_v098","real_action_credits_v098",
                 "outcome_credit_v101","learned_planner_stats_v102",
-                "temporal_working_memory_v106",PredictiveWorldV20.KEY,FuturePlannerV20.KEY,MortalityLearning.KEY};
+                "temporal_working_memory_v106",PredictiveWorldV20.KEY,FuturePlannerV20.KEY,MortalityLearning.KEY,UnifiedCognitionV21.KEY};
             case CHOICE:return new String[]{"decision_brain_v05"};
             case MOTOR:return new String[]{"virgin","best","attempts","accepted","original",
                                   "lived_distance_total_v093","lived_distance_record_v093",
@@ -34,7 +34,7 @@ public final class ResetDomains {
             case MEMBRANE:return new String[]{"morph_brain_v07","morph_attempts_v07",
                  "morph_accepted_v07","morph_gate_attempts_v08","morph_gate_success_v08",
                  "online_accepted_membrane_v094","online_rejected_membrane_v094",
-                  "grip_skills_v099"};
+                  "grip_skills_v099",CompetenceMemoryV21.KEY};
             case EXPLORATION:return new String[]{"world_knowledge_v03",
                                                   "visual_guided_v098","visual_avoided_v098"};
             case ROOM:return new String[]{"room_success_v08","finite_energy_eaten_v08",
@@ -43,7 +43,7 @@ public final class ResetDomains {
             case EPISODES:return new String[]{"episodic_memory_v095","physical_replays_v097"};
             case TEMPORAL_SKILLS:return new String[]{"temporal_skills_v107",TransferSkillsV20.KEY};
             case PROPRIOCEPTION:return new String[]{BodyProprioception.KEY,DistributedBodySense.KEY,LocalImpedanceSense.KEY};
-            case SPATIAL:return new String[]{SpatialPerception.KEY,PerceptualAssociationsV20.KEY,ObjectExperienceV20.KEY};
+            case SPATIAL:return new String[]{SpatialPerception.KEY,PerceptualAssociationsV20.KEY,ObjectExperienceV20.KEY,ObjectContinuityV21.KEY};
             case CAUSAL:return new String[]{CausalExperiments.KEY,PhysicalConsequenceV20.KEY};
             case NAVIGATION:return new String[]{InstrumentalNavigation.KEY};
             case INTENTION:return new String[]{GoalContinuity.KEY};
