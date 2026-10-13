@@ -142,6 +142,28 @@ public final class UnifiedCognitionV21 {
     public long contextsObserved(){
         long c=0;for(long n:attempts)if(n>0)c++;return c;
     }
+    /** Read-only, action/context-conditioned empirical statistics. No commands. */
+    public long opportunities(int action,float[] sensory){
+        if(action<0||action>=ACTIONS||!valid(sensory,SENSES))return 0;
+        return attempts[context(sensory)*ACTIONS+action];
+    }
+    public float physicalProbability(int action,float[] sensory){
+        long n=opportunities(action,sensory);
+        if(n==0)return 0f;
+        int c=context(sensory)*ACTIONS+action;
+        return (float)((physical[c]+1d)/(n+2d));
+    }
+    public float netEnergyMean(int action,float[] sensory){
+        long n=opportunities(action,sensory);
+        if(n==0)return 0f;
+        return (float)Math.max(-100d,Math.min(100d,
+            energySum[context(sensory)*ACTIONS+action]/n));
+    }
+    public float harmfulRate(int action,float[] sensory){
+        long n=opportunities(action,sensory);
+        if(n==0)return 0f;
+        return (float)(harmful[context(sensory)*ACTIONS+action]/(double)n);
+    }
     public double heldoutBrier(){
         return heldoutIntervals==0?Double.NaN:heldoutError/heldoutIntervals;
     }
