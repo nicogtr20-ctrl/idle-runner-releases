@@ -1298,11 +1298,35 @@ public final class GameActivity extends Activity {
                 save();saveScene();lastSave=now;
             }
             c.save();float scale=getWidth()/W;c.scale(scale,scale);
-            renderWorld(c);
-            renderBody(c);
-            renderHud(c);
+            // Under TEST MAX, omit the costly world/body/HUD graphics.
+            // The same physical steps and learning still run above.
+            // This is a genuine headless-style collection view with STOP,
+            // not an artificial time multiplier or a physics shortcut.
+            if(testMax&&simulationRunning&&!settingsExpanded&&!showBenchmark){
+                c.drawColor(0xff050d17);
+                renderTestMaxCollection(c);
+            }else{
+                renderWorld(c);
+                renderBody(c);
+                renderHud(c);
+            }
             c.restore();
             postInvalidateOnAnimation();
+        }
+        /** Cheap, non-animated data collection screen in TEST MAX. */
+        void renderTestMaxCollection(Canvas c){
+            text(c,"ZERO 2.1 • TEST MAX",240,105,23,0xff8affdc,true);
+            text(c,"SIMULAZIONE x"+(int)testMaxActualRate,240,150,19,0xffeefcfb,true);
+            text(c,"REALTA: "+(int)testMaxSimSeconds+" s simulati",240,188,13,0xffbed3dd,true);
+            rounded(c,12,212,160,266,0xff4a202e,12);
+            text(c,"STOP TEST",86,244,16,0xffffb0b0,true);
+            text(c,"VITA "+episode+" • ENERGIA "+(int)reserve,35,319,16,0xfff6f9e6,false);
+            text(c,"ESPERIENZE "+sensorMind.experiences,35,353,14,0xffd5f2ee,false);
+            text(c,"DECISIONI "+sensorMind.decisions,35,386,14,0xffd5f2ee,false);
+            text(c,"PRESA + MEMORIA ZERO 2.1",35,424,13,0xff98e8dd,false);
+            text(c,"TEMPERATURA: "+testMaxThermalStatus+" (Android)",35,458,12,0xffa9c2d5,false);
+            text(c,"La fisica e il cervello girano integralmente.",35,510,12,0xff8ba8b9,false);
+            text(c,"STOP per rivedere l'ambiente.",35,531,12,0xff8ba8b9,false);
         }
         void rounded(Canvas c,float l,float t,float r,float b,int color,float rad){
             paint.setShader(null);paint.setColor(color);paint.setStyle(Paint.Style.FILL);
