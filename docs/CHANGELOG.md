@@ -485,3 +485,8 @@ Richiesta utente: APK pronta con centro decisionale rivisto attivo, conservazion
 - Sul telefono ANALISI→LABORATORIO COMPORTAMENTALE (18 prove32s) e CONFRONTO2.2ESTESO/CASSE (24prove fino170s); copie isolate, report distinti inclusi in Condividi dati. TEST MAX rimane separato, conferma/STOP/thermal, substep1/60; sensi completi solo ai confini0.65s, nessun substep fisico saltato. Velocità maggiore di x29 non ancora misurata.
 - Memorie/slot legacy preservati, chiave opzionale `recurrent_core_v22` atomica compressa. Riavvio conserva hidden e cancella solo pending non verificabile. Esperienze heldout e immaginate mai nel replay. Main conserva Idle Runner; soltanto hosting+paper aggiornati.
 
+
+## OTA 0.11.6-ota.122 — 2026-10-13T23:05:17.018875+00:00
+- Pacchetto Android firmato pubblicato su Vercel (codice 1122).
+- SHA-256: `24d7e3357a184e43fedf9cf1516a1007ff1ef520e484bac7e58ad329895bc419`.
+- APK: `/apk/overmind-zero-1122-24d7e3357a18.apk`.
