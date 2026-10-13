@@ -187,7 +187,7 @@ public final class ExperienceCredit {
         if(mechanicFromPast<=0)throw new AssertionError("Missing mechanical evidence");
         if(c.adaptiveValue(starving,10)!=c.energeticValue(starving,10))
             throw new AssertionError("Unrelated old mechanical skill drives starvation behavior");
-        float[] nearby=starving.clone();nearby[6]=.93f;
+        float[] nearby=starving.clone();nearby[6]=.93f;nearby[8]=.7f;nearby[4]=.3f;
         float near=c.adaptiveValue(nearby,10);
         if(near<=c.adaptiveValue(starving,10)||
            near-c.energeticValue(nearby,10)>.20f*1.5f)
