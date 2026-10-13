@@ -38,6 +38,7 @@ public final class GameActivity extends Activity {
         OnlineBodyLearning liveBody=new OnlineBodyLearning();
         MotionExploration journey=new MotionExploration();
         LifeStatistics lifeStats=new LifeStatistics();
+        EnergyLifetimeCounters energyTotals=new EnergyLifetimeCounters();
         EpisodicMemory episodic=new EpisodicMemory();
         TemporalWorkingMemory workingMemory=new TemporalWorkingMemory();
         TemporalSkillBank temporalSkillBank=new TemporalSkillBank();
@@ -118,6 +119,7 @@ public final class GameActivity extends Activity {
         volatile boolean learning=true,enabled=true;
         Thread worker;
         boolean showHelp=true,resetArmed=false,simulationRunning=true,showBenchmark=false;
+        boolean detailsExpanded=false;
         long lastFrame=0,lastSave=0;
         float H=850,clock=0,phase=0,uiTime=0,heading=0,trailClock=0;
         float[] trailX=new float[46],trailY=new float[46];
@@ -178,6 +180,9 @@ public final class GameActivity extends Activity {
             boolean wasReset=consumeResetRequest();
             lifeStats=new LifeStatistics();
             boolean restoredLifeStats=lifeStats.restore(prefs.getString(LifeStatistics.KEY,""));
+            energyTotals=new EnergyLifetimeCounters();
+            if(!energyTotals.restore(prefs.getString(EnergyLifetimeCounters.KEY,"")))
+                energyTotals.migrate(lifeStats);
             String initial=prefs.getString("virgin","");
             virgin=decode(initial);
             if(virgin==null){virgin=MotorBrain.virgin(new Random(System.nanoTime()));}
@@ -555,6 +560,7 @@ public final class GameActivity extends Activity {
               .putString(MortalityLearning.KEY,mortality.encode())
               .putString(GateLifeJournal.CURRENT,gateJournal.encode())
               .putString(LifeStatistics.KEY,lifeStats.encode())
+              .putString(EnergyLifetimeCounters.KEY,energyTotals.encode())
               .putInt("motor_recoveries_v097",motorGuard.recoveryActivations)
               .putInt("motor_free_choices_v097",motorGuard.freeChoices)
               .putInt("physical_replays_v097",recalledManipulationEvents)
@@ -794,6 +800,7 @@ public final class GameActivity extends Activity {
                     float delta=object.touch(dx/Math.max(1,dist),dy/Math.max(1,dist));
                     reserve=Math.max(0,Math.min(100,reserve+delta));
                     lifeStats.contact(reserve-before); // actual clamped contact outcome
+                    energyTotals.record(reserve-before,object.isRare());
                     mortality.energyFlows(0,0,Math.max(0,before-reserve),
                         Math.max(0,reserve-before));
                     // Only actual physical contact, never passive hunger,
@@ -1111,6 +1118,7 @@ public final class GameActivity extends Activity {
                         float prior=reserve;
                         reserve=Math.min(100,reserve+UnknownWorld.RARE_ENERGY);
                         lifeStats.contact(reserve-prior);
+                        energyTotals.record(reserve-prior,true);
                         mortality.energyFlows(0,0,0,Math.max(0,reserve-prior));
                         lifeStats.roomSolved();
                         eventEnergyDeltaSinceAction+=reserve-prior;
@@ -1539,6 +1547,7 @@ public final class GameActivity extends Activity {
             c.restore();
             text(c,"ZERO",onScreenX,onScreenY-104,14,0xffd7fff5,true);
         }
+        /** Dashboard only. ZERO's learned motor policy is never called by the UI. */
         void renderHud(Canvas c){
             rounded(c,12,12,468,145,0xeb0a1420,20);
             rounded(c,27,28,31,55,TEAL,2);
@@ -1552,75 +1561,89 @@ public final class GameActivity extends Activity {
             text(c,"VERSIONE "+installedVersion+"  •  OTA",27,120,10,0xff708d9d,false);
             text(c,"TENTATIVI",377,34,11,MUTED,false);
             text(c,String.valueOf(trainer.attempts),380,71,22,GOLD,false);
-            rounded(c,13,158,467,232,0xca0e1a25,17);
-            text(c,"MOVIMENTO REALE • NETTO / PERCORSO",27,182,11,0xffb5d7d6,false);
-            text(c,"NETTO "+(int)journey.netDistance+" U  •  VIA "+(int)lifeDistance+" U",
-                27,210,19,0xffeffff8,false);
-            text(c,"MAX "+(int)journey.recordNet,363,181,10,GOLD,false);
-            text(c,"VITA "+LifeStatistics.duration(lifeStats.current().seconds),338,225,11,GOLD,false);
+
+            // Three genuine contact-type totals, scoped to the current ZERO
+            // and preserved across every death and named-slot restoration.
+            rounded(c,13,153,467,235,0xf00c1a26,16);
+            text(c,"CONTATTI ENERGETICI CUMULATIVI",26,172,11,MUTED,false);
+            energyCount(c,38,194,"BLU",energyTotals.blue,0xff54cff9);
+            energyCount(c,192,194,"ROSSA",energyTotals.red,0xffff738a);
+            energyCount(c,347,194,"VIOLA",energyTotals.violet,0xffc7a2ff);
+            if(energyTotals.legacyPositive>0){
+                text(c,"PRECEDENTI NON DIVISIBILI: "+
+                    energyTotals.legacyPositive+" POSITIVI",26,228,9,GOLD,false);
+            }else if(!energyTotals.complete){
+                text(c,"STORICO ANTERIORE INCOMPLETO",26,228,9,GOLD,false);
+            }
+
+            rounded(c,13,241,467,296,0xed111e2b,15);
+            text(c,"NETTO "+(int)journey.netDistance+" U • VIA "+(int)lifeDistance+" U",
+                26,262,17,0xffeffff8,false);
+            text(c,"MAX "+(int)journey.recordNet+" U   •   VITA "+
+                LifeStatistics.duration(lifeStats.current().seconds),26,282,11,GOLD,false);
+            rounded(c,402,247,462,283,0xff233944,10);
+            text(c,simulationRunning?"Ⅱ":"▶",432,271,18,0xffe0f7f3,true);
+
+            // Actual reserve and actual storm-damaged tissue integrity. Neither
+            // gauge introduces a second simulated stamina resource.
+            bar(c,25,305,455,319,reserve,TEAL);
+            text(c,"ENERGIA "+(int)reserve+"/100",27,301,12,0xffd8fff3,false);
+            String windText=shelter.storm(worldTime)?
+                "TEMPESTA "+(shelter.wind(worldTime)>0?"→":"←"):
+                shelter.warning(worldTime)?"VENTO VICINO":
+                "VENTO FRA "+(int)shelter.untilStorm(worldTime)+"s";
+            int tissueColor=shelter.integrity>40?0xff9cb9ff:0xffdf829e;
+            text(c,"TESSUTO "+(int)shelter.integrity+"/100",27,337,12,tissueColor,false);
+            text(c,windText,452,337,10,MUTED,true);
+            bar(c,25,341,455,355,shelter.integrity,tissueColor);
+
+            // Only high-value telemetry is always visible.
+            text(c,"ESPERIENZE "+sensorMind.experiences+"   •   DECISIONI "+sensorMind.decisions,
+                26,375,11,0xffc3d8df,false);
+            text(c,"DISCHI "+pushes+"   •   BLOCCHI "+boxesUncovered+
+                "   •   ZONE "+journey.lifeCells+"   •   STANZE "+chambersCleared,
+                26,392,10,GOLD,false);
+            text(c,"ABILITA "+skillBank.count()+"   •   RICORDI "+episodic.stored()+
+                "   •   TECNICHE "+gripBank.count()+"   •   ENERGIE "+energyEaten,
+                26,408,10,TEAL,false);
+
+            rounded(c,13,416,467,450,0xec142938,10);
+            text(c,"DETTAGLI AVANZATI",28,438,12,0xffe0f5f3,false);
+            // Tiny chevron is a clear explicit touch target, unlike the
+            // historical invisible 'touch here to spawn a room' hotspot.
+            paint.setShader(null);paint.setStyle(Paint.Style.STROKE);
+            paint.setColor(TEAL);paint.setStrokeWidth(2.2f);
+            float yc=433f;
+            c.drawLine(429,yc+(detailsExpanded?4:-3),438,yc+(detailsExpanded?-4:4),paint);
+            c.drawLine(438,yc+(detailsExpanded?-4:4),447,yc+(detailsExpanded?4:-3),paint);
+            paint.setStyle(Paint.Style.FILL);
+
+            if(detailsExpanded)renderDetails(c);
+            // Small temporary event toast, not a permanent technical log.
+            if(eventTime>0&&!detailsExpanded&&H>700){
+                float y=H-208;
+                rounded(c,30,y-17,450,y+12,0xe81b343e,9);
+                text(c,lastEvent.length()>51?lastEvent.substring(0,51):lastEvent,
+                     240,y+2,10,0xffdbf9ee,true);
+            }
+
             float y=H-168;
             rounded(c,12,y,468,H-12,0xe00d1923,21);
             text(c,"APPRENDIMENTO DA ZERO",25,y+25,13,TEAL,false);
-            text(c,"MONDO + CORPO + PRESA • APPRENDIMENTO ON",25,y+45,11,0xffacc5ca,false);
+            text(c,"MONDO + CORPO + PRESA • APPRENDIMENTO ON",
+                25,y+45,11,0xffacc5ca,false);
             button(c,18,y+61,100,H-26,"PARTITE",GOLD);
             button(c,106,y+61,188,H-26,"ANALISI",TEAL);
             button(c,194,y+61,276,H-26,"STATISTICHE",TEAL);
             button(c,282,y+61,364,H-26,"TEMPO x"+speed,0xffbfdaec);
             button(c,370,y+61,463,H-26,"PROVE",GOLD);
-            text(c,simulationRunning?"ESPERIENZE SENSORIALI "+sensorMind.experiences+
-               "  •  DECISIONI "+sensorMind.decisions:"SIMULAZIONE IN PAUSA",24,255,11,MUTED,false);
-            rounded(c,25,276,456,287,0xff273746,5);
-            rounded(c,25,276,25+431*reserve/100f,287,reserve>30?TEAL:0xffdf7591,5);
-            text(c,"ENERGIA "+(int)reserve+"/100",25,307,12,0xffe0f7ed,false);
-            text(c,"DISCHI "+pushes+"  •  BLOCCHI "+boxesUncovered,260,307,11,GOLD,false);
-            String windText=shelter.storm(worldTime)?"TEMPESTA "+(shelter.wind(worldTime)>0?"→":"←"):
-                shelter.warning(worldTime)?"VENTO IN ARRIVO":"VENTO FRA "+(int)shelter.untilStorm(worldTime)+"s";
-            text(c,"TESSUTO "+(int)shelter.integrity+"/100  •  "+windText+
-                "  •  MATERIALI POSATI "+shelter.placedCount(),25,544,10,
-                shelter.storm(worldTime)?0xffe2a6bf:TEAL,false);
-            text(c,"URTI "+physicalContacts+"  •  DISTANZA MASSIMA "+(int)biggestDisplacement+" U  •  TENTATIVI MANIP. "+handTrainer.attempts,
-                25,329,10,0xffa6c7c9,false);
-            if(eventTime>0)text(c,lastEvent,25,350,11,0xffc4e5dc,false);
-            text(c,"AZIONE "+(sensorMind.action%8+1)+" / 8  •  PRESA "+
-                (sensorMind.adhesion()>0?"ON":"OFF")+
-                "  •  ERRORE PREVISIONE "+format(sensorMind.averagePredictionError),
-                25,402,10,TEAL,false);
-            // Older stimulus-choice model is historical, not the active policy.
-            if(chosenObject!=null){
-                text(c,"SCELTO DALLA RETE: SEGNALE "+(chosenObject.signature+1)
-                    +"  •  PREVISIONE "+format(decisionBrain.lastPrediction),
-                    25,398,10,0xffaac3cb,false);
-            }
-            text(c,"ZONE "+journey.lifeCells+" • ABILITA "+skillBank.count()+
-                " • RICORDI "+episodic.stored()+
-                " (+"+episodic.positiveCount()+"/-"+episodic.negativeCount()+")"
-                +" • RICHIAMI "+episodic.replayed+
-                (episodic.physicallyReplaying()?" • RICORDO ATTIVO":""),
-                25,377,10,0xffb5d7d6,false);
-            text(c,"MEMBRANA "+Morphology.POINTS+"  •  ESTENSIONE "+
-                  (int)surface.peakExtension+" U  •  PROVE PRESA "+
-                  shapeTrainer.gateAttempts,
-                  25,421,11,GOLD,false);
-            text(c,(scarcity?"SCARSITA' ATTIVA":"SCORTE IN ESAURIMENTO")+
-                "  •  ENERGIE PRESE "+energyEaten+"  •  STANZE RISOLTE "+chambersCleared,
-                25,443,11,scarcity?0xffef9f91:TEAL,false);
-            if(chamber!=null){
-                text(c,"PORTA "+(int)chamber.doorY+" U  •  PRESE "+
-                    (gripsEver+chamber.grasps)+"  •  DUE LATI "+
-                    chamber.opposedContactFrames,25,465,11,GOLD,false);
-                text(c,"TOCCHI "+chamber.tactileFrames+"  •  ADESIONI "+
-                    chamber.adhesiveContactFrames+"  •  SENZA PRESA "+
-                    chamber.dualTouchNoGrip,25,486,10,TEAL,false);
-                text(c,"PRESA SCELTA "+chamber.gateDriveFrames+" • COMANDO "+
-                    chamber.gateCommandFrames+" • TENUTA "+chamber.gateHeldFrames+
-                    " • TECNICHE "+gripBank.count(),25,504,10,GOLD,false);
-            }else text(c,"TOCCA QUI PER ATTIVARE TEST STANZA E FAME",25,465,11,GOLD,false);
+
             if(uiTime<updaterStatusUntil&&updaterStatus.length()>0){
-                rounded(c,13,338,467,387,0xef1f3944,13);
-                text(c,updaterStatus.length()>52?updaterStatus.substring(0,52):updaterStatus,240,368,11,0xffd5fff4,true);
+                float sy=Math.max(457,H-235);
+                rounded(c,13,sy,467,sy+47,0xf01f3944,13);
+                text(c,updaterStatus.length()>52?updaterStatus.substring(0,52):updaterStatus,
+                     240,sy+28,11,0xffd5fff4,true);
             }
-            rounded(c,402,238,464,269,0xff233944,9);
-            text(c,simulationRunning?"Ⅱ":"▶",433,259,18,0xffe0f7f3,true);
             if(showBenchmark){
                 float top=H*.32f;
                 rounded(c,20,top,460,top+294,0xf20e222e,22);
@@ -1638,12 +1661,74 @@ public final class GameActivity extends Activity {
                 text(c,liveBody.lastDomain<0?"NESSUNA PROVA COMPLETATA":
                     liveBody.lastWasAccepted?"VARIANTE CONSERVATA":"VARIANTE SCARTATA",
                     240,top+195,14,liveBody.lastWasAccepted?TEAL:GOLD,true);
-                text(c,"Finestre reali successive, NON A/B identico.",240,top+229,11,MUTED,true);
+                text(c,"Finestre reali successive, NON A/B identico.",
+                    240,top+229,11,MUTED,true);
                 text(c,"TOCCA PER CHIUDERE",240,top+278,11,MUTED,true);
             }
-            if(resetNotice>0)text(c,"TOCCA DI NUOVO IL TITOLO PER AZZERARE LA MEMORIA",240,289,11,GOLD,true);
-            if(showHelp&&mind.total<3)
-                text(c,"Non sa quali oggetti aiutano o danneggiano.",240,355,12,0xffb9cfd2,true);
+            if(resetNotice>0)
+                text(c,"TOCCA DI NUOVO IL TITOLO PER AZZERARE LA MEMORIA",
+                    240,H-196,11,GOLD,true);
+            if(showHelp&&mind.total<3&&!detailsExpanded&&eventTime<=0)
+                text(c,"Non sa ancora quali stimoli lo aiutano o danneggiano.",
+                    240,H-188,11,0xffb9cfd2,true);
+        }
+
+        void energyCount(Canvas c,float x,float cy,String label,long count,int color){
+            paint.setShader(null);paint.setColor(0xff081421);
+            c.drawCircle(x,cy,11f,paint);
+            paint.setColor(color);
+            c.drawCircle(x,cy,7.5f,paint);
+            paint.setColor(0x66ffffff);c.drawCircle(x-2.2f,cy-2.2f,2.1f,paint);
+            text(c,String.valueOf(count),x+17,cy+6,19,0xfff0fafa,false);
+            text(c,label,x+17,cy+18,9,color,false);
+        }
+        void bar(Canvas c,float l,float top,float r,float bottom,
+                 float amount,int color){
+            rounded(c,l,top,r,bottom,0xff263848,7);
+            float fraction=Math.max(0,Math.min(1,amount/100f));
+            if(fraction>.002f)rounded(c,l,top,l+(r-l)*fraction,bottom,color,7);
+        }
+        void renderDetails(Canvas c){
+            float bottom=Math.min(710,Math.max(477,H-180));
+            rounded(c,13,455,467,bottom,0xf30b1a25,15);
+            c.save();
+            c.clipRect(19,459,461,bottom-6);
+            text(c,"MOVIMENTO E MEMORIA",27,479,11,TEAL,false);
+            text(c,"AZIONE "+(sensorMind.action%8+1)+"/8 • PRESA "+
+                (sensorMind.adhesion()>0?"ON":"OFF")+
+                " • ERRORE "+format(sensorMind.averagePredictionError),
+                27,495,10,0xffbfd9d7,false);
+            text(c,"URTI "+physicalContacts+" • DISTANZA MAX "+(int)biggestDisplacement+
+                " U • PROVE MANIP. "+handTrainer.attempts,27,511,10,MUTED,false);
+            text(c,"RICHIAMI "+episodic.replayed+" • ESTENSIONE "+
+                (int)surface.peakExtension+" U • MEMBRANA "+Morphology.POINTS,27,527,10,MUTED,false);
+            text(c,"PRESA E CONTATTO",27,547,11,TEAL,false);
+            text(c,"PROVE PRESA "+shapeTrainer.gateAttempts+
+                " • TECNICHE "+gripBank.count()+
+                " • PRESE "+(gripsEver+(chamber!=null?chamber.grasps:0)),27,563,10,GOLD,false);
+            if(chamber!=null){
+                text(c,"PORTA "+(int)chamber.doorY+" U • DUE LATI "+
+                    chamber.opposedContactFrames+" • TENUTA "+chamber.gateHeldFrames,
+                    27,578,10,MUTED,false);
+                text(c,"TOCCHI "+chamber.tactileFrames+" • ADESIONI "+
+                    chamber.adhesiveContactFrames+" • SENZA PRESA "+
+                    chamber.dualTouchNoGrip,27,594,10,MUTED,false);
+                text(c,"PRESA SCELTA "+chamber.gateDriveFrames+
+                    " • COMANDO "+chamber.gateCommandFrames,27,610,10,MUTED,false);
+            }else{
+                rounded(c,27,580,453,607,0xff26414a,8);
+                text(c,"ATTIVA PROVA STANZA",240,599,11,TEAL,true);
+            }
+            text(c,"AMBIENTE",27,623,11,TEAL,false);
+            text(c,(scarcity?"SCARSITA ATTIVA":"SCORTE NORMALI")+
+                " • MATERIALI "+shelter.placedCount()+
+                " • TEMPESTA "+(shelter.storm(worldTime)?"SI":"NO"),27,639,10,MUTED,false);
+            if(energyTotals.legacyPositive>0||!energyTotals.complete)
+                text(c,"STORICO PRE-111: "+energyTotals.legacyPositive+
+                    " POSITIVI NON SEPARABILI"+(energyTotals.complete?"":" • PARZIALE"),
+                    27,654,9,GOLD,false);
+
+            c.restore();
         }
         String format(float x){return String.format(Locale.US,"%+.1f",x);}
         void button(Canvas c,float l,float t,float r,float b,String caption,int color){
@@ -1662,7 +1747,12 @@ public final class GameActivity extends Activity {
             float scale=getWidth()/W;
             float x=ev.getX()/scale,y=ev.getY()/scale;
             if(showBenchmark){showBenchmark=false;return true;}
-            if(y>442&&y<480&&x<380){
+            if(y>=416&&y<=451){
+                detailsExpanded=!detailsExpanded;
+                invalidate();return true;
+            }
+            if(detailsExpanded&&chamber==null&&
+               y>=580&&y<=608&&x>=20&&x<=460){
                 activateChamber(true);
                 invalidate();return true;
             }
@@ -1700,7 +1790,7 @@ public final class GameActivity extends Activity {
                     GameActivity.this,BrainToolsActivity.class));
                 return true;
             }
-            if(y>234&&y<280&&x>398){
+            if(y>=242&&y<291&&x>398){
                 simulationRunning=!simulationRunning;lastFrame=0;return true;
             }
             showHelp=false;

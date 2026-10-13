@@ -1,3 +1,14 @@
+## 2026-10-13 — ZERO 2.0 / UI compatta e stato vitale reale
+
+- [x] Mostrare i tre contatori energetici blu, rosso, viola in header (solo contatti con conseguenza reale, cumulativi nel profilo).
+- [x] Non inventare una separazione blu/viola per fonti storiche raccolte prima del nuovo contatore: mantenere storico pregresso non classificabile.
+- [x] Mostrare sotto ENERGIA il vero stato del TESSUTO danneggiato/riparato dal vento, nessuna stamina fittizia.
+- [x] Portare i log tecnici in DETTAGLI AVANZATI, espandibile con freccia; mantenere statistiche prioritarie visibili.
+- [x] Mantenere i pulsanti PARTITE/ANALISI/STATISTICHE/TEMPO/PROVE, CERVELLO e AGGIORNA; prova stanza con controllo esplicito in tendina.
+- [ ] Verificare leggibilità sul Galaxy S21 dopo la pubblicazione firmata.
+
+Documentazione: [ZERO_UI_OTA111](ZERO_UI_OTA111.md).
+
 ## ZERO 2.0 — Decisioni energetiche, abilità e memoria contestuale (13 ottobre 2026)
 
 - [x] Distinguere *avere una tecnica fisica riuscita* da *avere un motivo per utilizzarla*: diminuisce il peso dei crediti meccanici quando i sensori non rivelano manipolazioni utili o la riserva è critica.
