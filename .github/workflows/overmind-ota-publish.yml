@@ -833,7 +833,7 @@ jobs:
           'EnergyLifetimeCounters.java':'7c0a9d815937a39c5cfdaddb01896b39536d8afe',
           'ObjectExperienceV20.java':'39ada3745f8b22769e67c00f5def9a5a3ed6ba1a',
           'ObjectExperienceV20Regression.java':'44bccc8ebe5971ed5226e50f62f8e27f7fbc6ddd',
-          'GameActivity.java':'9af6c53c23162ff9f20355d70bd447209d1bc0bc',
+          'GameActivity.java':'edb82b9f106307ca0722aa78570d21e0e1a22ef1',
           'InstrumentalNavigation.java':'fb95ae5b19a8b2602cb4338641d8851bebf8fa26',
           'BehavioralLaboratory.java':'036ff0488cea84813fa73c8a1209d3dece4cc846',
           'BehavioralLabActivity.java':'c1e655a947454e2cb77baad6b282890f00097717',
@@ -913,6 +913,15 @@ jobs:
           assert 'sensorMind.enableZero20ExperimentalAdvice(false);' in game
           assert 'private transient boolean zero20ExperimentalAdvice=false;' in mind
           assert 'MAX_ENTRIES=475, MAX_TEXT=145000;' in blackbox
+          # OTA TEST MAX: research data acceleration, never scripted behavior.
+          assert 'void confirmTestMax(){' in game
+          assert '.setPositiveButton("AVVIA TEST"' in game
+          assert 'TEST_MAX_FIXED_DT=1f/60f' in game
+          assert 'if(fullSpeed&&i>0&&System.nanoTime()>=burstDeadline)break;' in game
+          assert 'if(fullSpeed)testMaxSimSeconds+=slice;' in game
+          assert 'speed=speed==1?5:speed==5?20:1;' in game
+          assert 'testMax=false;' in game and 'THERMAL_STATUS_SEVERE' in game
+          assert '.putString("sensorimotor_model_v09",sensorMind.serialize())' in game
           assert 'WINDOW=300f;' in blackbox
           assert 'if(blackbox!=null)blackbox.finished' in mind
           assert 'blackbox.chosen(senses,chosen,greedyAction,actionExploratory,' in mind
