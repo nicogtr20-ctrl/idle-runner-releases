@@ -446,3 +446,35 @@ Owner requested the same normal in-app updater workflow used for OTA 1–99, not
 - New GitHub main `updater/public/latest.json`: SHA256 `89c30159b3318e3f7cac2050a49103e1b3b327a885ff0a75145ed77c3a323254`, immutable app URL `https://overmind-zero-updates.vercel.app/apk/overmind-zero-1102-89c30159b331.apk`. Vercel authenticated production inspection reports **READY** for main commit `878878ab1af298a492e08aff9d72495b3b320fb7` with production alias `overmind-zero-updates.vercel.app`. Direct external HTTP probe from analysis environment was unavailable; therefore do not assert that exact endpoint returned HTTP 200 here. The device's updater also independently reads the GitHub `main` manifest as fallback and verifies SHA256 before install.
 - **User action required**: open existing Galaxy S21 ZERO app and press **AGGIORNA**, confirm Android install over previous OTA99/preview 1099. Do not uninstall or reset. Save named slot/private report before installing as precaution, verify all saved profiles and behavior still present, continue collecting genuine phone experiences and confirm `extras.zero20Passive` appears in newly uploaded multipart report. Phone runtime migration and uploaded report are **pending user test**, not CI assertions.
 - The experimental RED advice branch remains disabled by `sensorMind.enableZero20ExperimentalAdvice(false)`. This is **an instrumentation/telemetry release, not evidence that ZERO gained intelligence** or that the observer can steer behavior.
+
+
+## 2026-10-13 — 11:46 Europe/Rome real OTA post-fix telemetry audit
+
+Read-only review of the newest explicit Galaxy S21 private multipart report `20261013-094611-80f78afb4123`, timestamp 2026-10-13 09:46:11.850 UTC, 5/5 JSON parts fetched from `zero-telemetry`, all part byte lengths, reported key sets and report identifiers consistent with index, 74 current-profile keys plus `extras.gripContactObserver`, `extras.lastBehaviorLab`, `extras.zero20Passive`. This is the first >10-hour follow-up on OTA 102 report `20261012-230854-5e30b1441b1a` (elapsed 10.622h wall clock), providing strong evidence the multipart digest fix is working. Uploaded SHA256 values are present in the index but no local cryptographic hash verification was done in this pass.
+
+**Current vs prior actual phone observer digest:**
+
+| Field | 01:08 Italy | 11:46 Italy | Interpretation |
+|---|---:|---:|---|
+| World transitions | 14,696 | 44,574 | +29,878 actual observed transitions |
+| Holdout predictions | 2,940 | 8,915 | +5,975; still no trusted world model |
+| World heldout error | 0.13914235 | 0.16143344 | Baseline also changed: 0.13969200 → 0.16384926; gain over no-change ~0.39% → ~1.47%, **well below required 8%** |
+| Grip heldout Brier | 0.000022457358 | 0.00011419298 | Unchanged-action baseline 0.000003587779 → 0.00007363504; learned model **worse than baseline**; no grip confidence |
+| Physical motion events | 16 | 333 | +317 micro-level displacement events, NOT necessarily +317 newly moved boxes |
+| Physical energy contacts | 90 | 379 | +289 observed contacts |
+| Single recent-motion energy associations | 0 | 15 | New temporally associated examples, **not proof of causality** |
+| Ambiguous recent-motion energy | 0 | 2 | Cannot reliably attribute |
+| Energy with no recent motion | 90 | 362 | Still 95.5% of 379 contacts, strongly limiting causal credit |
+| LifeTransfer lives | 19 | 50 | +31 lives; 287 real positive and 92 negative energy events |
+| Stored candidate motifs | 32 | 32 | Capacity cap reached; 4 independently corroborated (previously 0) |
+| Future planner checks / eligible | 1,839 / 0 | 5,578 / 0 | **Motor advice remains blocked**, all 5,578 abstained; world/grip/physical confidence remains 0 |
+
+**Important skill-quality caveat:** decoding the 4 confirmed motifs from `transfer_skills_v20` reveals **three nested repeated-action patterns for the same reduced action group** (length 3, 4 and 5, with stored action examples mostly 11), plus one repeated action-8 length-3 pattern. They are **not four independent, complex, multi-step navigation skills**. Confirmation criteria require at least two training lives and one heldout life, but no causal energy baseline or motor-policy uplift has been demonstrated.
+
+**Original ZERO working-profile continuity** (compared with previous index): attempts 5,290→5,906 (+616), accepted 1,929→2,136 (+207), finite energies collected 1,629→1,830 (+201), old cumulative moved-objects 1,282→1,317 (+35), concealed square uncoverings 176→241 (+65), explored cells 18,356→19,074 (+718), room successes 4→6 (+2), collisions 4,561→4,689 (+128), real damage credits 1,325→1,413 (+88), grip events 608→749 (+141). Gate travel remains 76.00612 (no increment); the running original organism still exhibits measurable exploration and collection but none of this is attributable to v20 advice. No evidence of reset in the live working profile.
+
+**Contact observer diagnostic (session-scoped, NOT lifetime-equivalent):** `gripContactObserver` changed session `life=1` prior to `life=12` now, so don't compare totals as matched durations. New BOX totals: 521,710 touch frames, 333,362 frames with adhesion on, 3,880,932 held patch-points and matching orange points, 64,918 adhesion-on frames with no orange patch. Observer records 147,261 interrupted held-point events, split into 144,068 **geometry/contact-face no longer matching** and 3,193 **same-face** drops. This is a promising diagnosis of why some grabs visibly disengage, but not evidence of erroneous physics by itself: a moving or rotating plate naturally changes faces. Determine spatial conditions and consequent outcome with controlled replays before modifying collision law. Positive motion events and uncovered squares support real activity.
+
+**Internal consistency checks:** 35,659 training + 8,915 heldout = 44,574 world transitions; 15 single-linked + 2 ambiguous + 362 unlinked = 379 actual energy events; 287 positive + 92 negative = 379 energy events; planner 0 eligible + 5,578 abstained = 5,578 checks. Report claims `controlMode=SHADOW_ONLY` and `liveBehaviorChange=false`; source still explicitly disarms v20 motor advice. These are counters and config boundaries, not exhaustive runtime proof of non-interference. Continued shadow-only collection recommended; next priority is auditing geometry drop causes and energy-credit attribution while rejecting unearned confidence/skill claims.
+
+NO user saves, OTA version, actuator policy or GitHub telemetry data were modified during this report analysis.
