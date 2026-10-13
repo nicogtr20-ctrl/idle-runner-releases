@@ -226,3 +226,9 @@
 - Classi `PerceptualAssociationsV20` e `PerceptualAssociationsV20Regression`: raggruppamento incerto di contorni parziali realmente rilevati, esperienze fisiche osservate, persistenza atomica, esclusione holdout, test 440 decisioni immutate.
 - Collegato `SensorimotorMind`/GameActivity, reset SPAZIO, CERVELLO e digest privato `zero20Passive`. Nessun valore/azione motoria imposto; no riconoscimento semantico certo.
 - Non fa parte della OTA103 e non è una release. Le prove di compilazione CI e dispositivo vanno annotate separatamente; non attribuire un miglioramento biologico ai test JVM.
+
+
+### Confirmed QA of first passive prototype — 2026-10-13
+**Actual consolidated GitHub Actions run:** [38391024117](https://github.com/nicogtr20-ctrl/idle-runner-releases/actions/runs/38391024117), executable-source SHA `3621aedc7447d16286c903671593a72aba29288c`, **SUCCESS**. It compiled the full preexisting Java model set plus `PerceptualAssociationsV20` and its dedicated regression; passed the old body, grip, gate, plates, memory, save, privacy/telemetry, reset, physics and decision tests; verified 440 unchanged choice decisions and static absence of any new observer policy score/physics override; built the complete Android Debug APK with `assembleDebug`. Earlier staging run `38390903157` failed only the overly broad source-only assertion that also excluded passive `chosen()` bookkeeping; assertion was narrowed to forbid view/training/scoring within the action-choice policy and the final run passed. No bypass of any real physics test was used.
+
+**What is not verified:** realistic rotation and 3D shape recognition on the Galaxy S21, same-instance tracking, independently proven causal manipulation, long-lived technique retention, battery/thermal overhead, installer signature, unchanged 12 slots after actual upgrade, and real behavioral benefit. **Promotion remains BLOCKED.** Release/OTA103 unchanged.
