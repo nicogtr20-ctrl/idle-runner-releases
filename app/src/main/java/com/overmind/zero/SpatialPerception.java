@@ -31,7 +31,7 @@ public final class SpatialPerception {
     private static final float PRED_LR=.025f,VALUE_LR=.018f;
     private final float[] prediction=new float[ACTIONS*RAYS*HEAD];
     private final float[] values=new float[ACTIONS*VALUES];
-    private final float[] current=new float[RAYS],before=new float[RAYS];
+    private final float[] current=new float[RAYS],before=new float[RAYS],eyeOrigins=new float[RAYS*2];
     private final LinkedHashMap<Long,Byte> memory=new LinkedHashMap<>();
     private int pending=-1;
     private float rememberedAhead=0f;
@@ -166,6 +166,8 @@ public final class SpatialPerception {
         float[] rays=skin==null?sense(x,y,room,objects):
             senseMaterial(body,skin,room,objects,origins);
         feed(rays);
+        if(origins!=null)System.arraycopy(origins,0,eyeOrigins,0,eyeOrigins.length);
+        else Arrays.fill(eyeOrigins,0);
         remember(rays,origins);
         sweeps++;
     }
@@ -173,6 +175,7 @@ public final class SpatialPerception {
         if(valid(rays))System.arraycopy(rays,0,current,0,RAYS);
     }
     public float[] ranges(){return current.clone();}
+    public float[] eyeOrigins(){return eyeOrigins.clone();}
     public float distance(int ray){
         if(ray<0||ray>=RAYS)throw new IllegalArgumentException("ray");
         return current[ray]>=.999f?RANGE:
@@ -220,7 +223,7 @@ public final class SpatialPerception {
         memory.clear();odometryX=odometryY=0;
         lastBodyX=lastBodyY=Float.NaN;
         pending=-1;rememberedAhead=0;
-        Arrays.fill(current,1f);Arrays.fill(before,1f);
+        Arrays.fill(current,1f);Arrays.fill(before,1f);Arrays.fill(eyeOrigins,0);
     }
     public void resumeLife(float x,float y){
         // Only transient action history and exact anchor are refreshed;

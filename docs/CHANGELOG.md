@@ -241,3 +241,7 @@ The initial Galaxy S21 report confirms the original working profile is still pre
 **What is not verified:** realistic rotation and 3D shape recognition on the Galaxy S21, same-instance tracking, independently proven causal manipulation, long-lived technique retention, battery/thermal overhead, installer signature, unchanged 12 slots after actual upgrade, and real behavioral benefit. **Promotion remains BLOCKED.** Release/OTA103 unchanged.
 
 **OTA applicativa:** questo modulo percettivo passivo è stato selezionato per il canale AGGIORNA come candidato successivo alla 103. La build ufficiale resta soggetta a Java/Android QA, stessa firma e pubblicazione SHA/manifest prima di dirla disponibile.
+
+
+## 13 ottobre 2026 — ZERO 2.2 candidato attivo
+Nucleo ricorrente prima della scelta, modello di corpo/energia e rollout a tre decisioni, replay separato dagli holdout, recupero contestuale di tecniche consolidate e protezione delle finestre di adattamento. Nuovo confronto A/B su copie del profilo eseguito dal telefono; TEST MAX evita sensori ridondanti. Nessun vantaggio comportamentale o installazione S21 ancora verificato. Rilascio soggetto a suite finale, build Android, firma storica e manifest/APK verificati. Dettagli completi e limiti: [ZERO22_ACTIVE_CORE_AND_DEVICE_VALIDATION](ZERO22_ACTIVE_CORE_AND_DEVICE_VALIDATION.md).

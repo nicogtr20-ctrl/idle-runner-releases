@@ -81,6 +81,10 @@ public final class BrainToolsActivity extends Activity {
             "privato. Nessuna modifica al cervello e nessun upload automatico.");
         sharePanel.setOnClickListener(v->
             startActivity(new Intent(this,TelemetryActivity.class)));
+        LinearLayout coreLab=panel(body);
+        coreLab.addView(label("CONFRONTO CERVELLO 2.2  ›",17,CYAN,true));
+        paragraph(coreLab,"24 prove fisiche su copie identiche del tuo ZERO: controllo precedente contro nuovo cervello. Energia, danni, sopravvivenza e prese; non modifica il personaggio.");
+        coreLab.setOnClickListener(v->startActivity(new Intent(this,CoreComparisonActivityV22.class)));
         LinearLayout openLab=panel(body);
         openLab.addView(label("LABORATORIO COMPORTAMENTALE  ›",17,CYAN,true));
         paragraph(openLab,"Tre ambienti fisici ripetibili: energia, pericolo, cancello. Confronta lo stesso cervello con e senza influenza della navigazione, senza modificare le partite.");
@@ -394,6 +398,12 @@ public final class BrainToolsActivity extends Activity {
         line(objectPanel,"Fiducia predittiva verificata",String.format(Locale.US,"%.1f%%",objects20.confidence()*100),CYAN);
         paragraph(objectPanel,"Le ipotesi probabilistiche diventano suggerimenti lievi SOLO dopo confronti su episodi non usati per l'apprendimento. Un'energia toccata per caso non annulla una presa riuscita. Le capacità di presa vere rimangono archiviate separatamente.");
         
+        RecurrentCoreV22 active22=new RecurrentCoreV22();
+        boolean loaded22=active22.restore(prefs.getString(RecurrentCoreV22.KEY,""));
+        LinearLayout activePanel=panel(body);
+        activePanel.addView(label("ZERO 2.2 / CONTROLLO ATTIVO",16,CYAN,true));
+        paragraph(activePanel,"Memoria ricorrente, corpo e sensori condivisi. Valuta le azioni prima di eseguirle. Le previsioni contribuiscono solo con evidenza fuori addestramento; il replay usa esperienze realmente vissute. La crescita delle capacita va verificata nelle partite.");
+        paragraph(activePanel,loaded22?active22.summary():"Nucleo nuovo: in attesa del primo salvataggio.");
         // ZERO21 research readout: only genuine saved observer measurements.
         UnifiedCognitionV21 unified21=new UnifiedCognitionV21();
         unified21.restore(prefs.getString(UnifiedCognitionV21.KEY,""));

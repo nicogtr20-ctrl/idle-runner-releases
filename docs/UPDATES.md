@@ -54,3 +54,7 @@ The OTA102 phone reports showed rapid accepted mutations of all hand/membrane we
 `feature/zero20-perceptual-associations` è soltanto ricerca; non pubblicare APK, manifest Vercel o OTA da questo branch. La versione pubblica resta `0.11.6-ota.103` (package `com.overmind.zero.ota`, code 1103). Non installare APK sperimentali su profili esistenti senza verifica firma/code, backup di slot e approvazione esplicita. Sia i prototipi percettivi sia la loro telemetria sono facoltativi per i salvataggi storici.
 
 **OTA applicativa:** questo modulo percettivo passivo è stato selezionato per il canale AGGIORNA come candidato successivo alla 103. La build ufficiale resta soggetta a Java/Android QA, stessa firma e pubblicazione SHA/manifest prima di dirla disponibile.
+
+
+## 13 ottobre 2026 — ZERO 2.2 candidato attivo
+Nucleo ricorrente prima della scelta, modello di corpo/energia e rollout a tre decisioni, replay separato dagli holdout, recupero contestuale di tecniche consolidate e protezione delle finestre di adattamento. Nuovo confronto A/B su copie del profilo eseguito dal telefono; TEST MAX evita sensori ridondanti. Nessun vantaggio comportamentale o installazione S21 ancora verificato. Rilascio soggetto a suite finale, build Android, firma storica e manifest/APK verificati. Dettagli completi e limiti: [ZERO22_ACTIVE_CORE_AND_DEVICE_VALIDATION](ZERO22_ACTIVE_CORE_AND_DEVICE_VALIDATION.md).

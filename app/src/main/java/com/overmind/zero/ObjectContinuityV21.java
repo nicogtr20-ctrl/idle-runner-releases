@@ -9,8 +9,8 @@ import java.util.Locale;
  * ordinary self-touch fraction and chosen action. No Entity, hidden reward,
  * engine legal-grip predicate, world map or ground-truth object ID.
  *
- * Anonymous tracks are HYPOTHESES. Rays have displaced eye origins: world
- * projections are approximate, not verified geometric object centers.
+ * Anonymous tracks are HYPOTHESES. Physical eye offsets are included in every ray projection.
+ * Cluster centers remain partial surface estimates, never ground truth.
  * Ambiguous assignments abstain; tracks expire and reset on real death.
  * Durable statistics are associative, NEVER promoted to causal truth/policy.
  */
@@ -27,7 +27,7 @@ public final class ObjectContinuityV21 {
     private double heldoutError,baselineError;
     private int epoch,nextId=1,focusedId=-1,pendingId=-1,pendingAction=-1;
     private int previousLinkedId=-1,linkedAge=1000,competingMoves=0;
-    private float focusedConfidence,lastTouch,pendingX,pendingY;
+    private float focusedConfidence,lastTouch,pendingX,pendingY,observedX,observedY;
     private boolean pendingTouch,pendingStable;
     private int pendingPositive,pendingNegative;
     private static final class Track {
@@ -52,7 +52,7 @@ public final class ObjectContinuityV21 {
         return (float)Math.hypot(x-a,y-b);
     }
     /** Contiguous first-return clusters, circular wrap; do not segment walls. */
-    private static ArrayList<Hit> clusters(float[] rays,float px,float py){
+    private static ArrayList<Hit> clusters(float[] rays,float px,float py,float[] origins){
         ArrayList<Hit> out=new ArrayList<>();
         boolean[] occupied=new boolean[RAYS];int n=0;
         for(int i=0;i<RAYS;i++){occupied[i]=rays[i]<.999f;if(occupied[i])n++;}
@@ -64,8 +64,8 @@ public final class ObjectContinuityV21 {
                 int j=(i+k)%RAYS;
                 float angle=(float)(j*2*Math.PI/RAYS);
                 float d=Math.max(STEP,Math.round(rays[j]*9f)*STEP);
-                vx+=(float)Math.cos(angle)*d;
-                vy+=(float)Math.sin(angle)*d;
+                vx+=(float)Math.cos(angle)*d+(origins==null?0:origins[j*2]);
+                vy+=(float)Math.sin(angle)*d+(origins==null?0:origins[j*2+1]);
                 depth+=d;
                 length++;
             }
@@ -79,14 +79,22 @@ public final class ObjectContinuityV21 {
     /** New actual sightline. train=false may update ONLY transient tracks. */
     public void view(float[] rays,float odometryX,float odometryY,
                      float touchFraction,boolean train){
+        view(rays,odometryX,odometryY,touchFraction,train,null);
+    }
+    public void view(float[] rays,float odometryX,float odometryY,
+                     float touchFraction,boolean train,float[] origins){
+        if(origins!=null){
+            if(origins.length!=32){invalid++;return;}
+            for(float v:origins)if(!Float.isFinite(v)||Math.abs(v)>1000){invalid++;return;}
+        }
         if(!valid(rays,odometryX,odometryY)||
            !Float.isFinite(touchFraction)||touchFraction<0||touchFraction>1){
             invalid++;focusedId=-1;focusedConfidence=0;return;
         }
         epoch++;views++;
-        lastTouch=touchFraction;
+        lastTouch=touchFraction;observedX=odometryX;observedY=odometryY;
         focusedId=-1;focusedConfidence=0;
-        ArrayList<Hit> hits=clusters(rays,odometryX,odometryY);
+        ArrayList<Hit> hits=clusters(rays,odometryX,odometryY,origins);
         if(hits.isEmpty()){unseen++;expire();return;}
         // Fixed bounded capacity: this sweep can discover NEW tracks while
         // iterating several separate first-return clusters.
@@ -218,6 +226,11 @@ public final class ObjectContinuityV21 {
         if(heldout<80||physicalCandidates<12||!Double.isFinite(base)||
            !Double.isFinite(err)||base<.02||err>=base*.92)return 0f;
         return clamp((float)((base-err)/base),0f,.5f);
+    }
+    public float[] focusFeatures(){
+        Track t=find(focusedId);if(t==null)return new float[4];
+        return new float[]{clamp((t.x-observedX)/200f,-1,1),clamp((t.y-observedY)/200f,-1,1),
+            clamp(t.span/5f,0,1),focusedConfidence};
     }
     public int visibleTracks(){return tracks.size();}
     public int currentAnonymousTrack(){return focusedId;}

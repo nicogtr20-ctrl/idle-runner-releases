@@ -56,6 +56,8 @@ public final class GameActivity extends Activity {
         UnifiedCognitionV21 unifiedCognitionV21=new UnifiedCognitionV21();
         ObjectContinuityV21 objectContinuityV21=new ObjectContinuityV21();
         CompetenceMemoryV21 competenceMemoryV21=new CompetenceMemoryV21();
+        RecurrentCoreV22 recurrentCore=new RecurrentCoreV22();
+        SkillExecutionV22 skillExecution=new SkillExecutionV22();
         UnifiedArbiterV21 unifiedArbiterV21=new UnifiedArbiterV21();
         SpatialPerception spatialMap=new SpatialPerception();
         CausalExperiments causalExperiments=new CausalExperiments();
@@ -80,6 +82,7 @@ public final class GameActivity extends Activity {
         final float[] energySinceAction=new float[UnknownWorld.SIGNATURES];
         int recalledManipulationEvents=0;
         float[] lastAppliedMotor,lastAppliedHand,lastAppliedMembrane;
+        boolean techniqueUsedSinceAction=false;
         float liveStartX,liveStartY,liveStartEnergy;
         float travelSinceAction=0,forwardSinceAction=0;
         // Real box contact/valid opposing hold evidence in the current
@@ -132,11 +135,12 @@ public final class GameActivity extends Activity {
         // Session-only, stopped by explicit STOP, Android pause or overheating.
         boolean testMax=false;
         long testMaxStartedNs=0,testMaxThermalCheckedNs=0;
-        float testMaxSimSeconds=0f,testMaxActualRate=0f;
+        double testMaxSimSeconds=0;
+        float testMaxActualRate=0f;
         int testMaxThermalStatus=0;
         static final float TEST_MAX_FIXED_DT=1f/60f;
         static final int TEST_MAX_MAX_STEPS=4096;
-        static final long TEST_MAX_BUDGET_NS=165000000L;
+        static final long TEST_MAX_BUDGET_NS=80000000L;
         // Rendering-only light adaptation. Never persisted or fed to physics.
         final float[] cyanLeds=new float[Morphology.POINTS];
         final float[] redLeds=new float[Morphology.POINTS];
@@ -281,6 +285,9 @@ public final class GameActivity extends Activity {
             unifiedArbiterV21=new UnifiedArbiterV21();
             unifiedArbiterV21.restore(prefs.getString(UnifiedArbiterV21.KEY,""));
             sensorMind.attachUnifiedArbiterV21(unifiedArbiterV21);
+            recurrentCore=new RecurrentCoreV22();
+            recurrentCore.restore(prefs.getString(RecurrentCoreV22.KEY,""));
+            sensorMind.attachActiveCore(recurrentCore);
             // Hard device boundary: ZERO 2.0 can LEARN and REPORT but may not
             // bias any live motor decision. Advisory A/B is laboratory-only.
             sensorMind.enableZero20ExperimentalAdvice(false);
@@ -579,6 +586,7 @@ public final class GameActivity extends Activity {
               .putString(UnifiedCognitionV21.KEY,unifiedCognitionV21.encode())
               .putString(ObjectContinuityV21.KEY,objectContinuityV21.encode())
               .putString(CompetenceMemoryV21.KEY,competenceMemoryV21.encode())
+              .putString(RecurrentCoreV22.KEY,recurrentCore.encode())
               .putString(UnifiedArbiterV21.KEY,unifiedArbiterV21.encode())
               .putString(SpatialPerception.KEY,spatialMap.encode())
               .putString(CausalExperiments.KEY,causalExperiments.encode())
@@ -630,6 +638,7 @@ public final class GameActivity extends Activity {
             lastFrame=0;
         }
         void resetEpisode(){
+            techniqueUsedSinceAction=false;
             shelter.capture(environment);
             shelter.newLife();
             gripObserver.newLife();
@@ -896,6 +905,7 @@ public final class GameActivity extends Activity {
                     chamber==null?0:chamber.maxDoorTravel);
                 lifeStats.death();
                 competenceMemoryV21.newLife();
+                skillExecution.resetLife();
                 reserve=70;lastEvent="CORPO ESAUSTO • MEMORIA CONSERVATA";eventTime=6;
                 resetEpisode();
                 nextChamber=elapsedLife+12f;
@@ -935,7 +945,7 @@ public final class GameActivity extends Activity {
             // Short bounded burst, always returning control to UI/touch.
             final long burstDeadline=System.nanoTime()+
                 (testMaxThermalStatus>=android.os.PowerManager.THERMAL_STATUS_MODERATE
-                    ?70000000L:TEST_MAX_BUDGET_NS);
+                    ?30000000L:TEST_MAX_BUDGET_NS);
             if(simulationRunning){
                 for(int i=0;i<frameSteps;i++){
                     if(fullSpeed&&i>0&&(i&15)==0&&System.nanoTime()>=burstDeadline)break;
@@ -964,6 +974,19 @@ public final class GameActivity extends Activity {
                     lastAppliedMotor=liveBody.weights(0,trainer.best);
                     lastAppliedHand=liveBody.weights(1,handTrainer.best);
                     lastAppliedMembrane=liveBody.weights(2,shapeTrainer.best);
+                    float[] trialHand=lastAppliedHand,trialMembrane=lastAppliedMembrane;
+                    boolean actualTouch=false;
+                    for(float touch:surface.touchSense)if(touch>.2f){actualTouch=true;break;}
+                    lastAppliedHand=skillExecution.hand(lastAppliedHand,sensorMind.adhesion()>.5f,actualTouch,liveBody.testingCandidate());
+                    lastAppliedMembrane=skillExecution.membrane(lastAppliedMembrane,sensorMind.adhesion()>.5f,actualTouch,liveBody.testingCandidate());
+                    if(lastAppliedHand!=trialHand||lastAppliedMembrane!=trialMembrane){
+                        techniqueUsedSinceAction=true;
+                        // An archived controller is not the incumbent tested
+                        // in this body's comparison window. Discard the window
+                        // rather than crediting another controller's outcome.
+                        liveBody.abortTrial();
+                    }
+                    sensorMind.appliedControls(lastAppliedMotor,lastAppliedHand,lastAppliedMembrane);
                     // Prevent fast material masses from skipping through a
                     // square between consecutive frames. Snapshot before any
                     // physical motion, after routine world streaming.
@@ -1213,13 +1236,16 @@ public final class GameActivity extends Activity {
                     long beforeExperience=sensorMind.experiences;
                     // Snapshot the PREVIOUS decision before the model chooses
                     // the next one. Its sensory state is what ZERO actually saw.
-                    float[] observedBefore=sensorMind.stateCopy();
+                    boolean sensoryBoundary=sensorMind.observationDue(slice);
+                    float[] observedBefore=sensoryBoundary?sensorMind.stateCopy():null;
                     int actionBefore=sensorMind.action;
-                    sensorMind.observe(SensorimotorMind.Senses.read(
-                        creature,surface,chamber,environment,reserve),slice,
+                    sensorMind.observe(sensoryBoundary?SensorimotorMind.Senses.read(
+                        creature,surface,chamber,environment,reserve):null,slice,
                         environmentEffectSinceAction,creature,surface,
                         chamber,environment);
                     if(sensorMind.experiences>beforeExperience){
+                        skillExecution.boundary(competenceMemoryV21,sensorMind.stateCopy(),
+                            sensorMind.action,environmentEffectSinceAction,liveBody.testingCandidate());
                         mortality.observed(reserve/100f);
                         episodic.action(observedBefore,actionBefore);
                         int recallsBefore=episodic.repeatEffects;
@@ -1235,7 +1261,7 @@ public final class GameActivity extends Activity {
                            sensorMind.takeTemporalSkillsDirty())save();
                         // Remembering an action never substitutes an old
                         // physical controller or interrupts body experiments.
-                        OnlineBodyLearning.Result result=liveBody.observe(
+                        OnlineBodyLearning.Result result=techniqueUsedSinceAction?null:liveBody.observe(
                             sensorMind.lastReward,travelSinceAction,forwardSinceAction,
                             Math.max(0,physicalContacts-liveStartContacts),
                             liveStartEnergy,reserve,journey.takeNewCells(),
@@ -1244,6 +1270,7 @@ public final class GameActivity extends Activity {
                             trainer.best,handTrainer.best,shapeTrainer.best,
                             environmentEffectSinceAction,
                             boxTouchFramesSinceAction,boxOpposedFramesSinceAction);
+                        techniqueUsedSinceAction=false;
                         boxTouchFramesSinceAction=boxOpposedFramesSinceAction=0;
                         liveStartX=creature.cx;liveStartY=creature.cy;
                         travelSinceAction=0;forwardSinceAction=0;
@@ -1290,7 +1317,7 @@ public final class GameActivity extends Activity {
             }
             if(fullSpeed&&testMaxStartedNs>0){
                 float realSeconds=(System.nanoTime()-testMaxStartedNs)*1.0e-9f;
-                if(realSeconds>.1f)testMaxActualRate=testMaxSimSeconds/realSeconds;
+                if(realSeconds>.1f)testMaxActualRate=(float)(testMaxSimSeconds/realSeconds);
             }
             // Lightweight periodic checkpoint for app/task interruptions.
             // Normal neural saves remain more frequent than physical writes.
@@ -1885,7 +1912,7 @@ public final class GameActivity extends Activity {
                     testMax=true;simulationRunning=true;
                     testMaxStartedNs=System.nanoTime();
                     testMaxThermalCheckedNs=0;
-                    testMaxSimSeconds=testMaxActualRate=0;
+                    testMaxSimSeconds=0;testMaxActualRate=0;
                     settingsExpanded=false;
                     lastFrame=0;
                     postInvalidateOnAnimation();

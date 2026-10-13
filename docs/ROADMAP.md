@@ -270,3 +270,7 @@ The initial Galaxy S21 report confirms the original working profile is still pre
 - [ ] A/B originale vs percezione+memoria sulle stesse scene, poi 25+ vite e oggetti nuovi; solo dopo valutare un debole suggerimento motore e il pulsante AGGIORNA.
 
 **OTA applicativa:** questo modulo percettivo passivo è stato selezionato per il canale AGGIORNA come candidato successivo alla 103. La build ufficiale resta soggetta a Java/Android QA, stessa firma e pubblicazione SHA/manifest prima di dirla disponibile.
+
+
+## 13 ottobre 2026 — ZERO 2.2 candidato attivo
+Nucleo ricorrente prima della scelta, modello di corpo/energia e rollout a tre decisioni, replay separato dagli holdout, recupero contestuale di tecniche consolidate e protezione delle finestre di adattamento. Nuovo confronto A/B su copie del profilo eseguito dal telefono; TEST MAX evita sensori ridondanti. Nessun vantaggio comportamentale o installazione S21 ancora verificato. Rilascio soggetto a suite finale, build Android, firma storica e manifest/APK verificati. Dettagli completi e limiti: [ZERO22_ACTIVE_CORE_AND_DEVICE_VALIDATION](ZERO22_ACTIVE_CORE_AND_DEVICE_VALIDATION.md).

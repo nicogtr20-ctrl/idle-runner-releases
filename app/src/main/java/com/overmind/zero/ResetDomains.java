@@ -17,7 +17,7 @@ public final class ResetDomains {
                                        EXPLORATION,ROOM,EPISODES,TEMPORAL_SKILLS,PROPRIOCEPTION,SPATIAL,CAUSAL,NAVIGATION,INTENTION,GATE_METRICS,ALL};
     public static String[] keys(String domain){
         switch(domain){
-            case WORLD:return new String[]{"sensorimotor_model_v09","sensorimotor_diagnostics_v091",UnifiedArbiterV21.KEY,
+            case WORLD:return new String[]{RecurrentCoreV22.KEY,"sensorimotor_model_v09","sensorimotor_diagnostics_v091",UnifiedArbiterV21.KEY,
                 "real_energy_credits_v098","real_damage_credits_v098","real_action_credits_v098",
                 "outcome_credit_v101","learned_planner_stats_v102",
                 "temporal_working_memory_v106",PredictiveWorldV20.KEY,FuturePlannerV20.KEY,MortalityLearning.KEY,UnifiedCognitionV21.KEY};
