@@ -10,7 +10,7 @@ permissions:
 jobs:
   observer:
     # Full 59-test experimental-app integration QA supersedes old standalone PR JVM lists.
-    if: ${{ github.event_name != 'pull_request' || github.head_ref != 'feature/zero20-passive-ota100' }}
+    if: ${{ github.event_name != 'pull_request' || github.head_ref != 'feature/zero20-box-grip-ota103' }}
     runs-on: ubuntu-latest
     timeout-minutes: 35
     steps:

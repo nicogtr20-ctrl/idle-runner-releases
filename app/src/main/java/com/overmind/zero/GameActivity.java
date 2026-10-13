@@ -74,6 +74,9 @@ public final class GameActivity extends Activity {
         float[] lastAppliedMotor,lastAppliedHand,lastAppliedMembrane;
         float liveStartX,liveStartY,liveStartEnergy;
         float travelSinceAction=0,forwardSinceAction=0;
+        // Real box contact/valid opposing hold evidence in the current
+        // decision interval, independent of the generic reward controller.
+        int boxTouchFramesSinceAction=0,boxOpposedFramesSinceAction=0;
         float lifeDistance=0,totalTravel=0,bestLifeDistance=0;
         int liveStartContacts;
         int pushes=0,physicalContacts=0;
@@ -584,6 +587,7 @@ public final class GameActivity extends Activity {
             // Only initial boot or actual simulated death restarts the body.
             bestLifeDistance=Math.max(bestLifeDistance,lifeDistance);
             lifeDistance=0;travelSinceAction=0;forwardSinceAction=0;
+            boxTouchFramesSinceAction=boxOpposedFramesSinceAction=0;
             environmentEffectSinceAction=0;eventEnergyDeltaSinceAction=0;
             java.util.Arrays.fill(energySinceAction,0f);
             episodic.resetLife(); // Forget transient attempt, NOT learned motor or memories.
@@ -960,6 +964,7 @@ public final class GameActivity extends Activity {
                     for(UnknownWorld.Entity e:environment)if(e.isBox()){anyBox=true;break;}
                     if(anyBox&&chamber==null)
                         java.util.Arrays.fill(surface.touchSense,0f);
+                    boolean boxTouchedThisFrame=false,boxOpposedThisFrame=false;
                     for(UnknownWorld.Entity e:environment){
                         if(!e.isBilateralBox())continue;
                         gripObserver.beforeBox(surface,e);
@@ -970,6 +975,8 @@ public final class GameActivity extends Activity {
                             oldCoreX,oldCoreY);
                         gripObserver.boxFrame(surface,e,sensorMind.adhesion(),
                             elapsedLife,slice);
+                        if(grips.contacts>0)boxTouchedThisFrame=true;
+                        if(e.bilateralHeldNow)boxOpposedThisFrame=true;
                         if(grips.opposingGrip)e.peakDisplacement=Math.max(
                             e.peakDisplacement,e.displacementFromSpawn());
                         if(SquareGripPuzzle.uncover(e,environment)){
@@ -980,6 +987,8 @@ public final class GameActivity extends Activity {
                             save();
                         }
                     }
+                    if(boxTouchedThisFrame)boxTouchFramesSinceAction++;
+                    if(boxOpposedThisFrame)boxOpposedFramesSinceAction++;
                     // Only INERT construction plates receive the unilateral
                     // physical pressure response. Energy-cover squares and
                     // the existing gate retain their two-sided adhesion.
@@ -1106,7 +1115,9 @@ public final class GameActivity extends Activity {
                             liveStartX,liveStartY,creature.cx,creature.cy,
                             chamber!=null,mx,my,
                             trainer.best,handTrainer.best,shapeTrainer.best,
-                            environmentEffectSinceAction);
+                            environmentEffectSinceAction,
+                            boxTouchFramesSinceAction,boxOpposedFramesSinceAction);
+                        boxTouchFramesSinceAction=boxOpposedFramesSinceAction=0;
                         liveStartX=creature.cx;liveStartY=creature.cy;
                         travelSinceAction=0;forwardSinceAction=0;
                         environmentEffectSinceAction=0;eventEnergyDeltaSinceAction=0;
