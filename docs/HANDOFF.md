@@ -1,3 +1,9 @@
+# Punto di ripresa attuale — ZERO 2.1 (13 ottobre 2026)
+
+**Leggi per prima cosa:** [ZERO21_HANDOFF_NEXT_CHAT.md](ZERO21_HANDOFF_NEXT_CHAT.md). Poi [ZERO21_UNIFIED_COGNITION_MASTER.md](ZERO21_UNIFIED_COGNITION_MASTER.md) e [ZERO21_IMPLEMENTATION_LOG.md](ZERO21_IMPLEMENTATION_LOG.md). **Ramo lavoro**: `feature/zero21-unified-cognition`, base codice OTA112 `feature/overmind-inapp-updater`. Creata prima struttura cognitiva integrata con eventi reali di sensi/scelta/energia/fisica, salvataggio optional, reset WORLD mirato, regressione JVM, QA Android. Workflow [38452161103](https://github.com/nicogtr20-ctrl/idle-runner-releases/actions/runs/38452161103) SUPERATO su ultimo commit di CODICE `7361e67`. **NON** completato cervello generale, non attivato nuovo score nelle scelte, non distribuito APK, non toccati i 12 slot telefono. Il branch ZERO20 più vecchio è divergente: vietato merge indiscriminato. Questo avviso prevale sugli stati storici OTA97/105 riportati sotto senza cancellarli.
+
+---
+
 ## 2026-10-13 — HUD neon minimale OTA112 (implementazione autorizzata)
 
 User screenshot richiesto: energia blu/rossa/viola verticale a sinistra con sfondo trasparente; rimozione header ZERO / LASTRE; stato vitale in pannello alto a destra; freccia trasparente e sola vista avanzata su richiesta; menu inferiore CERVELLO/TEMPO/IMPOSTAZIONI. Impostazioni contiene PARTITE E SALVATAGGI, ANALISI, STATISTICHE, CERVELLO PARAMETRI, PROVE CORPOREE, PROVA STANZA, AGGIORNA, VERSIONE. Il progetto non chiede un'altra immagine ma una **APK** via AGGIORNA. Branch `feature/zero-ui-neon-nav-ota112` basato su `feature/overmind-inapp-updater`. `GameActivity.java` modificato solo lato Canvas e azioni UI, senza toccare fisica, motori, memorie, energyTotals o salvataggi. Documento [ZERO_UI_OTA112_NEON_NAV](ZERO_UI_OTA112_NEON_NAV.md). Non dichiarare rilascio OTA finché verifiche PR e publisher firmato su main/Vercel READY.
@@ -285,3 +291,7 @@ Nuovo ramo dedicato `feature/zero20-perceptual-associations`, base di partenza r
 **What is not verified:** realistic rotation and 3D shape recognition on the Galaxy S21, same-instance tracking, independently proven causal manipulation, long-lived technique retention, battery/thermal overhead, installer signature, unchanged 12 slots after actual upgrade, and real behavioral benefit. **Promotion remains BLOCKED.** Release/OTA103 unchanged.
 
 **OTA applicativa:** questo modulo percettivo passivo è stato selezionato per il canale AGGIORNA come candidato successivo alla 103. La build ufficiale resta soggetta a Java/Android QA, stessa firma e pubblicazione SHA/manifest prima di dirla disponibile.
+
+
+## 13 ottobre 2026 — ZERO21 nuove integrazioni in PR #39
+Il nuovo documento [ZERO21_G2_G7_INTEGRATION.md](ZERO21_G2_G7_INTEGRATION.md) registra il tracciamento multi-vista senza ID privilegiati, l'archivio prove fisiche HAND/MEMBRANA, la memoria di collegamenti energetici solo ipotetici, l'arbitro unico con astensione e la simulazione A/B sulle vere casse bilaterali. In `feature/zero21-unified-cognition`, NON nella OTA sul Galaxy S21. Il primo run completo 38455325053 ha trovato un crash reale in scansioni con più oggetti appena scoperti; poi corretto e fissato in regressione. Controllare il run più recente e la [checklist integrale](ZERO21_HANDOFF_NEXT_CHAT.md) prima di affermare nuove capacità. Nessun nuovo cervello attivo nell'app installata, nessuna firma/manifest sovrascritti.

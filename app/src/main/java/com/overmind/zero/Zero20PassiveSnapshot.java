@@ -162,6 +162,62 @@ public final class Zero20PassiveSnapshot {
             associations.put("motorInterventionAllowed",false);
         }
         result.put("perceptualAssociations",associations);
+
+        // ZERO21 digest: no raw weights, object positions, instance tracks,
+        // private slot names, tokens, or per-35ms frame arrays. User-initiated.
+        Map<String,Object> zero21=new LinkedHashMap<>();
+        String ucRaw=str(values,UnifiedCognitionV21.KEY);
+        UnifiedCognitionV21 uc=new UnifiedCognitionV21();
+        boolean ucValid=uc.restore(ucRaw);
+        Map<String,Object> shared=section(ucRaw,ucValid);
+        if(ucValid){
+            shared.put("realDecisionIntervals",uc.observations());
+            shared.put("realExternalMotionEvents",uc.physicalEvents());
+            shared.put("realContactEnergyEvents",uc.energyContacts());
+            shared.put("heldoutIntervals",uc.holdouts());
+            shared.put("trainingIntervals",uc.training());
+            shared.put("predictionConfidenceInformational",uc.confidence());
+        }
+        zero21.put("sharedEvidence",shared);
+        String ocRaw=str(values,ObjectContinuityV21.KEY);
+        ObjectContinuityV21 oc=new ObjectContinuityV21();
+        boolean ocValid=oc.restore(ocRaw);
+        Map<String,Object> objects=section(ocRaw,ocValid);
+        if(ocValid){
+            objects.put("anonymousRayMatches",oc.trackedViews());
+            objects.put("ambiguousRayViews",oc.ambiguousViews());
+            objects.put("possiblePhysicalEffects",oc.candidateEffects());
+            objects.put("possibleDelayedEnergyLinksNotCausalProof",oc.delayedEnergyAssociations());
+            objects.put("ambiguousEnergyLinks",oc.ambiguousEnergyAssociations());
+            objects.put("unlinkedContactEnergy",oc.unlinkedEnergyContacts());
+            objects.put("heldoutComparisons",oc.holdouts());
+            objects.put("predictionConfidenceInformational",oc.confidence());
+            objects.put("objectIdentityVerified",false);
+        }
+        zero21.put("objectContinuity",objects);
+        String cmRaw=str(values,CompetenceMemoryV21.KEY);
+        CompetenceMemoryV21 cm=new CompetenceMemoryV21();
+        boolean cmValid=cm.restore(cmRaw);
+        Map<String,Object> technique=section(cmRaw,cmValid);
+        if(cmValid){
+            technique.put("provenPhysicalHoldAndMotionFrames",cm.actualWitnesses());
+            technique.put("anonymousIdentityUnresolved",cm.unresolvedIdentityWitnesses());
+            technique.put("recordedPairs",cm.size());
+            technique.put("motorInterventionAllowed",false);
+        }
+        zero21.put("competenceMemory",technique);
+        String uaRaw=str(values,UnifiedArbiterV21.KEY);
+        UnifiedArbiterV21 ua=new UnifiedArbiterV21();
+        boolean uaValid=ua.restore(uaRaw);
+        Map<String,Object> arb=section(uaRaw,uaValid);
+        if(uaValid){
+            arb.put("checked",ua.checks());
+            arb.put("eligibleSuggestionsNeverActuated",ua.eligible());
+            arb.put("abstained",ua.abstentions());
+            arb.put("motorInterventionAllowed",false);
+        }
+        zero21.put("unifiedArbiter",arb);
+        result.put("zero21",zero21);
         return result;
     }
 }

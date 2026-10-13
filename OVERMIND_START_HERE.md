@@ -1,3 +1,11 @@
+# ZERO21: report con prove e fallimenti — [docs/ZERO21_VALIDATION_RESULTS.md](docs/ZERO21_VALIDATION_RESULTS.md). La repository contiene una PR di ricerca, ma il telefono continua a usare OTA112; nessun uplift dimostrato.
+
+# Aggiornamento prioritario — ricerca ZERO 2.1 (13 ottobre 2026)
+
+**Punto di ripresa per ogni nuova chat:** [docs/ZERO21_HANDOFF_NEXT_CHAT.md](docs/ZERO21_HANDOFF_NEXT_CHAT.md) → [docs/ZERO21_UNIFIED_COGNITION_MASTER.md](docs/ZERO21_UNIFIED_COGNITION_MASTER.md) → [docs/ZERO21_IMPLEMENTATION_LOG.md](docs/ZERO21_IMPLEMENTATION_LOG.md). La base codice Android è OTA112, package stabile, firma originale, 12 slot; il nuovo `feature/zero21-unified-cognition` è ricerca separata. Creato `UnifiedCognitionV21` con osservazioni congiunte percezione/scelta/contatto reale/effetti; modalità SHADOW, nessun controllo motorio aggiuntivo. Test integrato JVM+Android [38452161103](https://github.com/nicogtr20-ctrl/idle-runner-releases/actions/runs/38452161103) SUCCESS sul commit `7361e67` (le ulteriori modifiche sono documentazione). **Nessuna nuova APK OTA**. Non usare i vecchi titoli 'ultimo rilascio' nei paragrafi storici di seguito come stato 2026 attuale.
+
+---
+
 # OVERMIND: ZERO — punto di ingresso per tutte le nuove chat
 
 > Ultimo aggiornamento della documentazione: 12 ottobre 2026.
@@ -138,3 +146,7 @@ The initial Galaxy S21 report confirms the original working profile is still pre
 Sviluppo in `feature/zero20-perceptual-associations` (basato sul ramo sperimentale ZERO 2.0, non sullo stabile). Nuovo modello `PerceptualAssociationsV20` capace di ipotesi di somiglianza fra silhouette parziali da 16 raggi realmente percepiti, prototipi anonimi persistenti, associazioni osservazionali fra azioni e spostamento fisico, holdout e diagnosi. Nessuna etichetta preimpostata cassa/lastra/porta, nessun comando motore o modifica a energia/ricompense, nessuna OTA o installazione. Leggi [protocollo e limiti](docs/ZERO20_PERCEPTUAL_ASSOCIATIONS.md) e il registro `docs/ZERO_20_INTELLIGENCE_RESEARCH.md` prima di sviluppare il riconoscimento multivista e la memoria delle tecniche. La OTA103 stabile resta intatta.
 
 **OTA applicativa:** questo modulo percettivo passivo è stato selezionato per il canale AGGIORNA come candidato successivo alla 103. La build ufficiale resta soggetta a Java/Android QA, stessa firma e pubblicazione SHA/manifest prima di dirla disponibile.
+
+
+## Nuovo riferimento ZERO21 — G2–G7 (13 ottobre 2026)
+La PR di ricerca [#39](https://github.com/nicogtr20-ctrl/idle-runner-releases/pull/39) include adesso un'integrazione sensoriale/causale/motoria più ampia rispetto al primo G1. Leggere **[docs/ZERO21_G2_G7_INTEGRATION.md](docs/ZERO21_G2_G7_INTEGRATION.md)** e **[docs/ZERO21_HANDOFF_NEXT_CHAT.md](docs/ZERO21_HANDOFF_NEXT_CHAT.md)** prima di modificare. La nuova libreria di competenze e il pianificatore unificato sono SHADOW, la firma e l'OTA112 non sono state cambiate. Verificare il run Java+Android sui commit finali: vecchie esecuzioni con fallimento fisico non dimostrano che il codice nuovo è funzionante.

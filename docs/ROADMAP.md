@@ -1,3 +1,21 @@
+# Milestone attuali ZERO 2.1 — ricerca cervello unificato (13 ottobre 2026)
+
+Vedere [MASTER](ZERO21_UNIFIED_COGNITION_MASTER.md), [LOG](ZERO21_IMPLEMENTATION_LOG.md) e [HANDOFF](ZERO21_HANDOFF_NEXT_CHAT.md).
+
+- [x] Branch isolato dall'Android stabile OTA112 senza cambiare il telefono.
+- [x] Registro cognitivo condiviso `UnifiedCognitionV21`, sole osservazioni reali, distinte energia/movimento e holdout, salvataggio e reset mirati.
+- [x] Integrazione nello stesso ciclo SensorimotorMind/GameActivity senza nuova policy o reward.
+- [x] Suite CI complete Java, fisica, regressioni e build Android Debug [38452161103](https://github.com/nicogtr20-ctrl/idle-runner-releases/actions/runs/38452161103) SUCCESS sul codice `7361e67`.
+- [ ] G2 identità fisica osservata multivista e ipotesi del mondo con incertezza calibrata.
+- [ ] G3 tracce tattili e tecnica di presa coppia HAND+MEMBRANA associata a effetto sullo stesso oggetto senza privilegi di simulatore.
+- [ ] G4 inferenza prudente sugli effetti energetici ritardati con gruppi di controllo e cambi delle regole.
+- [ ] G5 memoria gerarchica persistente con skills sicure, protezione anti-forgetting e rollback sperimentale.
+- [ ] G6 arbitro unico energia/rischio/incertezza/curiosità e pianificatore bounded con astensione.
+- [ ] G7 simulazione A/B identica cervello/seed e mondi non visti, evidenza ripetuta positiva oltre regressioni.
+- [ ] QA prestazioni su Galaxy S21, salvataggi 12 slot, firma originale e solo allora OTA tramite AGGIORNA. **Nessuna nuova release in questa fase.**
+
+---
+
 ## OTA112 — Riduzione HUD alla navigazione da gioco (13 ottobre 2026)
 
 - [x] Tre indicatori energetici verticali trasparenti, senza toolbar di fondo.
@@ -270,3 +288,14 @@ The initial Galaxy S21 report confirms the original working profile is still pre
 - [ ] A/B originale vs percezione+memoria sulle stesse scene, poi 25+ vite e oggetti nuovi; solo dopo valutare un debole suggerimento motore e il pulsante AGGIORNA.
 
 **OTA applicativa:** questo modulo percettivo passivo è stato selezionato per il canale AGGIORNA come candidato successivo alla 103. La build ufficiale resta soggetta a Java/Android QA, stessa firma e pubblicazione SHA/manifest prima di dirla disponibile.
+
+
+## Research progress ZERO 2.1 / G2–G7 (13 ottobre 2026)
+Documentazione: [ZERO21_G2_G7_INTEGRATION.md](ZERO21_G2_G7_INTEGRATION.md). La seguente realizzazione è *sperimentale*, non un aggiornamento mobile.
+- [x] G2 primo tracciamento multivista anonimo su raggi sensoriali+odometria con astensione, stima d'incertezza e regressioni; [ ] validare origini reali della membrana, occlusione e identità persistente su geometrie nuove.
+- [x] G3 archivio passivo coppie HAND+MEMBRANA dopo reali prese opposte e reale spostamento, doppia vita per candidati; [ ] riproduzione autonoma provata in contesto e benchmark vs dimenticanza.
+- [x] G4 distinzione probabile relazione movimento/contatto futuro, energia non attribuita e casi ambigui; [ ] prova di causalità con baseline indipendenti, intervalli lunghi e manipolazioni miste.
+- [x] G5 inizio archivio abilità separate dal beneficio energetico, persiste tra vite e profili; [ ] protezione generale anti-catastrophic-forgetting e test rollback.
+- [x] G6 proposta unica energia/rischio/incertezza con astensione, esplicitamente passiva; [ ] validazione e diritto di guidare azioni solo dopo misurabile vantaggio.
+- [x] G7 suite regressioni 440 decisioni + arena fisica bilateral-cover per 12 A/B, codice e workflow GitHub; [ ] confermare CI completa e misurare miglioramento rispetto al controllo su mondi nuovi, reale morte e Galaxy S21.
+- [ ] Staging empirico prima di qualsiasi merge, certificato originale, pubblicazione OTA tramite AGGIORNA e conservazione di tutti i salvataggi.

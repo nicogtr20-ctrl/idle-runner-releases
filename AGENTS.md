@@ -1,3 +1,11 @@
+# ZERO21 validazione (13 ottobre 2026): leggere anche [docs/ZERO21_VALIDATION_RESULTS.md](docs/ZERO21_VALIDATION_RESULTS.md) per risultati REALI GitHub, limiti e gate prima di ogni eventuale pubblicazione. Modulo nuovo ancora SHADOW; non autorizzare merged/release per compilazione soltanto.
+
+# Priorità nuova chat — ZERO 2.1 (13 ottobre 2026)
+
+Se il task riguarda il cervello integrato leggere PRIMA e integralmente: [HANDOFF ZERO21](docs/ZERO21_HANDOFF_NEXT_CHAT.md), [ARCHITETTURA ZERO21](docs/ZERO21_UNIFIED_COGNITION_MASTER.md), [LOG E TEST ZERO21](docs/ZERO21_IMPLEMENTATION_LOG.md). Branch ricerca `feature/zero21-unified-cognition`; baseline stabile OTA112 (`feature/overmind-inapp-updater`). NON confondere il ramo di ricerca con l'APK installabile, NON unire in blocco il vecchio ZERO20 divergente e non presumere una prova di intelligenza solo perché CI è verde. QA iniziale [38452161103](https://github.com/nicogtr20-ctrl/idle-runner-releases/actions/runs/38452161103) SUCCESS su codice testato `7361e67`. Tutti i restanti paper e vincoli di sicurezza restano in vigore.
+
+---
+
 # Istruzioni permanenti agli assistenti che lavorano su questo repository
 
 **PRIMA DI QUALSIASI MODIFICA** apri `OVERMIND_START_HERE.md`, `docs/WHITEPAPER.md`, `docs/ARCHITECTURE.md`, `docs/CHANGELOG.md`, `docs/ROADMAP.md`, `docs/HANDOFF.md`, `docs/UPDATES.md`.
