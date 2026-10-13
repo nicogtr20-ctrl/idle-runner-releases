@@ -41,6 +41,36 @@ public final class ExperienceCredit {
             energy+=energetic[base+i]*senses[i];
         return clip(energy,-1.5f,1.5f);
     }
+    /** A learned manipulation skill is a CAPABILITY, not a metabolic goal.
+     * Actual tactile/obstacle sensors gate its contribution to the action
+     * selector. Bare motion and historical moved objects cannot compete as a
+     * permanent reward when ZERO needs energy. No hue/target/box labels. */
+    public float mechanicalValue(float[] senses,int action){
+        if(senses==null||senses.length!=SensorimotorMind.S||
+           action<0||action>=SensorimotorMind.ACTIONS)return 0;
+        int base=action*SensorimotorMind.P;
+        float value=0;
+        for(int i=3;i<14;i++)value+=mechanical[base+i]*senses[i];
+        return clip(value,0f,1.5f);
+    }
+    public static float affordance(float[] senses){
+        if(senses==null||senses.length!=SensorimotorMind.S)return 0;
+        float obstacle=0f;
+        for(int i=6;i<14;i++)obstacle=Math.max(obstacle,Math.max(0,senses[i]));
+        float tactile=Math.max(Math.max(0,senses[4]),Math.max(0,senses[5]));
+        float fromProximity=clip((obstacle-.22f)/.44f,0,1);
+        return Math.max(fromProximity,clip(tactile*8f,0,1));
+    }
+    /** Contextual utility used by decisions AND hypothetical rollouts;
+     * legacy value() remains read-only compatible for older observations.
+     * The energy outcome estimate stays independent of physical competence. */
+    public float adaptiveValue(float[] senses,int action){
+        float energetic=energeticValue(senses,action);
+        float physical=mechanicalValue(senses,action);
+        float reserve=senses==null||senses.length==0?0f:clip(senses[0],0f,1f);
+        float weight=(.12f+.48f*reserve)*affordance(senses);
+        return energetic+physical*weight;
+    }
     public float value(float[] senses,int action){
         if(senses==null||senses.length!=SensorimotorMind.S||
             action<0||action>=SensorimotorMind.ACTIONS)return 0;
@@ -151,6 +181,20 @@ public final class ExperienceCredit {
         c.consequence(22,0);
         if(old!=c.value(invisible,7)||c.ambiguousContacts!=1)
             throw new AssertionError("Invented credit for unobserved signature");
+        float[] starving=new float[SensorimotorMind.S];
+        starving[0]=.002f;starving[14]=.60f;starving[18]=.51f;
+        float mechanicFromPast=c.mechanicalValue(atGate,10);
+        if(mechanicFromPast<=0)throw new AssertionError("Missing mechanical evidence");
+        if(c.adaptiveValue(starving,10)!=c.energeticValue(starving,10))
+            throw new AssertionError("Unrelated old mechanical skill drives starvation behavior");
+        float[] nearby=starving.clone();nearby[6]=.93f;
+        float near=c.adaptiveValue(nearby,10);
+        if(near<=c.adaptiveValue(starving,10)||
+           near-c.energeticValue(nearby,10)>.20f*1.5f)
+            throw new AssertionError("Nearby mechanical affordance not gated by metabolic need");
+        float[] fed=nearby.clone();fed[0]=.9f;
+        if(c.adaptiveValue(fed,10)<=near)
+            throw new AssertionError("Physical exploration remained equally urgent at low energy");
         String saved=c.encode();
         ExperienceCredit recovered=new ExperienceCredit();
         if(!recovered.restore(saved)||recovered.value(nearRed,7)!=c.value(nearRed,7)||
