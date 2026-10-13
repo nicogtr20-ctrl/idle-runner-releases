@@ -43,6 +43,7 @@ public final class SensorimotorMind {
     // Shared sensory/action/effect ledger; strictly observer-only in ZERO21.
     private transient UnifiedCognitionV21 unifiedCognition;
     private transient ObjectContinuityV21 objectContinuity;
+    private transient UnifiedArbiterV21 unifiedArbiter;
     private transient Morphology.Surface lastActualGripSurface;
     /** Never set by GameActivity. Sandbox arena may test bounded advice. */
     private transient boolean zero20ExperimentalAdvice=false;
@@ -138,6 +139,7 @@ public final class SensorimotorMind {
     public synchronized void attachObjectExperienceV20(ObjectExperienceV20 model){objectExperience=model;}
     public synchronized void attachUnifiedCognitionV21(UnifiedCognitionV21 model){unifiedCognition=model;}
     public synchronized void attachObjectContinuityV21(ObjectContinuityV21 model){objectContinuity=model;}
+    public synchronized void attachUnifiedArbiterV21(UnifiedArbiterV21 model){unifiedArbiter=model;}
     /** Experimental research only; OFF by default in every actual app profile. */
     public synchronized void enableZero20ExperimentalAdvice(boolean enabled){
         zero20ExperimentalAdvice=enabled;
@@ -225,6 +227,7 @@ public final class SensorimotorMind {
         if(objectExperience!=null)objectExperience.resetLife();
         if(unifiedCognition!=null)unifiedCognition.resetLife();
         if(objectContinuity!=null)objectContinuity.resetLife();
+        if(unifiedArbiter!=null)unifiedArbiter.resetLife();
         if(gripAffordanceV20!=null)gripAffordanceV20.resetLife();
         if(perceptualV20!=null)perceptualV20.resetLife();
         lastActualGripSurface=null;
@@ -252,6 +255,7 @@ public final class SensorimotorMind {
         if(objectExperience!=null)objectExperience.resetLife();
         if(unifiedCognition!=null)unifiedCognition.resetLife();
         if(objectContinuity!=null)objectContinuity.resetLife();
+        if(unifiedArbiter!=null)unifiedArbiter.resetLife();
         if(gripAffordanceV20!=null)gripAffordanceV20.resetLife();
         if(perceptualV20!=null)perceptualV20.resetLife();
         lastActualGripSurface=null;
@@ -286,6 +290,7 @@ public final class SensorimotorMind {
         if(objectExperience!=null)objectExperience.resetLife();
         if(unifiedCognition!=null)unifiedCognition.resumeLife();
         if(objectContinuity!=null)objectContinuity.resumeLife();
+        if(unifiedArbiter!=null)unifiedArbiter.resetLife();
         if(gripAffordanceV20!=null)gripAffordanceV20.resumeLife();
         if(perceptualV20!=null)perceptualV20.resumeLife();
         lastActualGripSurface=null;
@@ -558,6 +563,11 @@ public final class SensorimotorMind {
                 }
             },transferV20);
         }
+        // Shadow ranking consumes only validation-gated lived evidence and
+        // an already evaluated, NON-actuating future-model suggestion.
+        if(unifiedArbiter!=null&&decisions%8==0)
+            unifiedArbiter.evaluate(senses,unifiedCognition,worldV20,
+                                     futureV20,objectContinuity);
         estimatedValue=estimate(senses,chosen);
         System.arraycopy(senses,0,trialState,0,S);
         trialAction=chosen;
