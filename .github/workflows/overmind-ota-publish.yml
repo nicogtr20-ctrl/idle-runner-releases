@@ -868,11 +868,11 @@ jobs:
           from hashlib import sha1
           root=Path('app/src/main/java/com/overmind/zero')
           pins={
-          'SensorimotorMind.java':'7fd5267f478c26ed7470979dda3b3733f767f5ab',
+          'SensorimotorMind.java':'13e61c6220ad24d834d38afb65693e6435bcee5d',
           'EnergyLifetimeCounters.java':'7c0a9d815937a39c5cfdaddb01896b39536d8afe',
           'ObjectExperienceV20.java':'39ada3745f8b22769e67c00f5def9a5a3ed6ba1a',
           'ObjectExperienceV20Regression.java':'44bccc8ebe5971ed5226e50f62f8e27f7fbc6ddd',
-          'GameActivity.java':'066247a9eff508f86fe125c9f9a0d5c1f37fe88d',
+          'GameActivity.java':'b37c8d82a6b0327a3455ede3a1fe298493310232',
           'InstrumentalNavigation.java':'fb95ae5b19a8b2602cb4338641d8851bebf8fa26',
           'BehavioralLaboratory.java':'8a35099ddb4b4d7ef9a9a334cb2e50b9477285d8',
           'BehavioralLabActivity.java':'007fc2986932cbe0a3956d8d2c36e94e7dd2a47a',
@@ -880,7 +880,7 @@ jobs:
           'ScarcityLab.java':'51d04604c79c728c53dd819971116bd7d710dc60',
           'UnknownWorld.java':'4443b7e2e44a8229fae19c3e8237db9f23b822f2',
           'GameSceneSnapshot.java':'e38c0b8def6c363af74dfabdd4eac96bf95ac2d8',
-          'SquareGripPuzzle.java':'9ef6547bc4348bac03d02b64815ab45b404667a5',
+          'SquareGripPuzzle.java':'781d250161f5c4fa8b4a7dfd57eae932682e0f19',
           'SquareCollisionSolver.java':'88db7fb60d0172ac39c47fcf312ff016b4734465',
           'WorldPlacement.java':'83a79b677d5699841747839bc0969f7b32821914',
           'GateBehaviorMetrics.java':'9afcdc3889943e76a80ca58f728401bc88eb5502',
@@ -918,6 +918,11 @@ jobs:
           'BodyIntegrity.java':'e551493723d13006d5e6905690c0ab0ee9e13d17',
           'BodyIntegrityRecoveredSnapshotsRegression.java':'d536451adb05cb742176ec559460066bd637c453',
           'BodyIntegrityObstacleRegression.java':'d9b4b6d1847ea78787dacc531188d2b61318487f'}
+          # The corrected active core is permitted to bias ONLY actions with
+          # heldout-validated world confidence; contact is not an auto-grip.
+          assert 'Math.min(.85f,maturity*trust)' in (root/'RecurrentCoreV22.java').read_text()
+          assert 'stabilizeExistingGrip' in (root/'SquareGripPuzzle.java').read_text()
+          assert 'environmentEffectSinceAction+=Math.min(2f,actualBoxMotion);' in game
           for name,pin in pins.items():
             data=(root/name).read_bytes()
             assert sha1(b'blob '+str(len(data)).encode()+b'\0'+data).hexdigest()==pin,name
