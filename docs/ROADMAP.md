@@ -288,3 +288,14 @@ The initial Galaxy S21 report confirms the original working profile is still pre
 - [ ] A/B originale vs percezione+memoria sulle stesse scene, poi 25+ vite e oggetti nuovi; solo dopo valutare un debole suggerimento motore e il pulsante AGGIORNA.
 
 **OTA applicativa:** questo modulo percettivo passivo è stato selezionato per il canale AGGIORNA come candidato successivo alla 103. La build ufficiale resta soggetta a Java/Android QA, stessa firma e pubblicazione SHA/manifest prima di dirla disponibile.
+
+
+## Research progress ZERO 2.1 / G2–G7 (13 ottobre 2026)
+Documentazione: [ZERO21_G2_G7_INTEGRATION.md](ZERO21_G2_G7_INTEGRATION.md). La seguente realizzazione è *sperimentale*, non un aggiornamento mobile.
+- [x] G2 primo tracciamento multivista anonimo su raggi sensoriali+odometria con astensione, stima d'incertezza e regressioni; [ ] validare origini reali della membrana, occlusione e identità persistente su geometrie nuove.
+- [x] G3 archivio passivo coppie HAND+MEMBRANA dopo reali prese opposte e reale spostamento, doppia vita per candidati; [ ] riproduzione autonoma provata in contesto e benchmark vs dimenticanza.
+- [x] G4 distinzione probabile relazione movimento/contatto futuro, energia non attribuita e casi ambigui; [ ] prova di causalità con baseline indipendenti, intervalli lunghi e manipolazioni miste.
+- [x] G5 inizio archivio abilità separate dal beneficio energetico, persiste tra vite e profili; [ ] protezione generale anti-catastrophic-forgetting e test rollback.
+- [x] G6 proposta unica energia/rischio/incertezza con astensione, esplicitamente passiva; [ ] validazione e diritto di guidare azioni solo dopo misurabile vantaggio.
+- [x] G7 suite regressioni 440 decisioni + arena fisica bilateral-cover per 12 A/B, codice e workflow GitHub; [ ] confermare CI completa e misurare miglioramento rispetto al controllo su mondi nuovi, reale morte e Galaxy S21.
+- [ ] Staging empirico prima di qualsiasi merge, certificato originale, pubblicazione OTA tramite AGGIORNA e conservazione di tutti i salvataggi.
