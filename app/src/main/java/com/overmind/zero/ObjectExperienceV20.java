@@ -1,8 +1,5 @@
 package com.overmind.zero;
 
-import java.util.Arrays;
-import java.util.Locale;
-
 /**
  * Object-conditioned learning from the organism's OWN sixteen spatial rays,
  * twelve visible wavelength sectors, performed actions and lived outcomes.
@@ -234,7 +231,7 @@ public final class ObjectExperienceV20 {
         try{
             String[] p=raw.split("\\|",-1);
             int n=Integer.parseInt(p[1]);
-            if(n<0||n>N||p.length!=9+2*A+n)return false;
+            if(n<0||n>N||p.length!=10+2*A+n)return false;
             long v=Long.parseLong(p[2]),u=Long.parseLong(p[3]),amb=Long.parseLong(p[4]),
                  phys=Long.parseLong(p[5]),links=Long.parseLong(p[6]),ho=Long.parseLong(p[7]);
             double err=Double.parseDouble(p[8]),base=Double.parseDouble(p[9]);
