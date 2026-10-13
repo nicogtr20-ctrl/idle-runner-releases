@@ -685,7 +685,8 @@ public final class SensorimotorMind {
             spatial.observeEnvironment(body,skin,room,objects);
         float[] before=trialState;
         boolean holdout=diagnostics.shouldHoldout();
-        if(activeCore!=null){feedCore(after);activeCore.consequence(actualEnergySinceChoice,actualContactHarm,learning&&!holdout,holdout,false);}
+        if(activeCore!=null){feedCore(after);activeCore.consequence(actualEnergySinceChoice,actualContactHarm,
+                Math.max(0f,physicalEffect),learning&&!holdout,holdout,false);}
         if(objectContinuity!=null&&spatial!=null)
             objectContinuity.view(spatial.ranges(),spatial.perceivedX(),
                 spatial.perceivedY(),after[4],learning&&!holdout,spatial.eyeOrigins());

@@ -6,6 +6,20 @@ public final class RecurrentCoreV22Regression {
     static void yes(boolean b,String m){if(!b)throw new AssertionError(m);}
     static int max(float[] x){int w=0;for(int i=1;i<x.length;i++)if(x[i]>x[w])w=i;return w;}
     public static void main(String[] args){
+        // Thousands of unvalidated training samples cannot seize control.
+        RecurrentCoreV22 untrusted=new RecurrentCoreV22();
+        float[] noChange=new float[26];noChange[0]=.6f;
+        for(int i=0;i<2000;i++){
+            untrusted.sense(noChange,null,null,null);
+            untrusted.chosen(i%16);
+            untrusted.sense(noChange,null,null,null);
+            untrusted.consequence(0,0,i%5!=0,i%5==0,false);
+        }
+        float[] prior=new float[16];for(int a=0;a<16;a++)prior[a]=(a-8)*.07f;
+        untrusted.sense(noChange,null,null,null);
+        yes(Arrays.equals(prior,untrusted.evaluate(prior)),
+            "Unvalidated recurrent weights overrode a learned legacy policy");
+        yes(untrusted.learningBlend()>=.89f,"Untrusted fixture lacks trained samples");
         RecurrentCoreV22 core=new RecurrentCoreV22();float[] s=new float[26];s[0]=.5f;s[6]=.4f;
         float[] local=new float[DistributedBodySense.FEATURES],origins=new float[32];
         core.sense(s,local,origins,new float[6]);float[] initial=core.state();

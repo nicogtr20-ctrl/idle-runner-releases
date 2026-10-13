@@ -153,14 +153,17 @@ public final class RecurrentCoreV22 {
      */
     public float[] evaluate(float[] oldScores){
         float[] z=state(),scores=new float[A];
-        float blend=learningBlend();
+        float maturity=learningBlend();
         lastConfidence=0;
         for(int a=0;a<A;a++){
             float trust=confidence(a);lastConfidence=Math.max(lastConfidence,trust);
             float prior=oldScores==null?0:oldScores[a];
             float information=.009f*clip(current[0]/.4f,0,1)/(float)Math.sqrt(1+samples[a]);
             float learned=value(z,a)+(trust>0?.35f*trust*(rollout(z,a)-value(z,a)):0)+information;
-            scores[a]=oldScores==null?learned:(1-blend)*prior+blend*learned;
+            // Only heldout-validated action models may override an incumbent.
+            // Untrusted scores remain exactly the previous policy's values.
+            float authority=oldScores==null?1f:Math.min(.85f,maturity*trust);
+            scores[a]=oldScores==null?learned:prior+authority*(learned-prior);
         }
         int best=0;float runner=-Float.MAX_VALUE;
         for(int a=1;a<A;a++)if(scores[a]>scores[best])best=a;
@@ -175,7 +178,9 @@ public final class RecurrentCoreV22 {
     }
     public float exploration(float previous){
         float adaptive=Math.max(.04f,.28f/(1+transitions/300f));
-        float blend=learningBlend();
+        float proven=0f;
+        for(int a=0;a<A;a++)proven=Math.max(proven,confidence(a));
+        float blend=learningBlend()*proven;
         // A newborn replacement must not erase an experienced predecessor
         // by abruptly restoring virgin exploration on already learned skills.
         return previous*(1-blend)+Math.min(previous,adaptive)*blend;
@@ -204,13 +209,21 @@ public final class RecurrentCoreV22 {
      * separately. Never train on imagined reward or a held-out experience.
      */
     public void consequence(float actualContactEnergy,float actualDamage,boolean train,boolean holdout,boolean terminal){
+        consequence(actualContactEnergy,actualDamage,0f,train,holdout,terminal);
+    }
+    /** Verified external displacement has a small separate learning signal:
+     * it is never granted for mere touch, grip command or imaginary motion. */
+    public void consequence(float actualContactEnergy,float actualDamage,
+                            float verifiedExternalMotion,boolean train,boolean holdout,boolean terminal){
         if(pending==null||pendingAction<0)return;
-        if(!Float.isFinite(actualContactEnergy)||!Float.isFinite(actualDamage)||actualDamage<0){
+        if(!Float.isFinite(actualContactEnergy)||!Float.isFinite(actualDamage)||actualDamage<0||
+           !Float.isFinite(verifiedExternalMotion)||verifiedExternalMotion<0){
             invalid++;pending=null;pendingAction=-1;return;
         }
         int a=pendingAction;
         float[] nextHidden=advance(current,hidden,a),after=join(current,nextHidden);
-        float earned=clip(current[0]-pending[0]-(terminal?.20f:0),-1,1);
+        float earned=clip(current[0]-pending[0]-(terminal?.20f:0)
+            +Math.min(.018f,verifiedExternalMotion*.0025f),-1,1);
         float harm=clip(actualDamage/100f,0,1);
         Experience e=new Experience(pending,after,a,earned,harm,terminal);
         if(holdout){

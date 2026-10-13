@@ -31,6 +31,23 @@ public final class BoxGripRetentionRegression {
             "Could not enter hand-candidate testing without touching hidden state");
     }
     public static void main(String[] ignored){
+        MotorBrain.Body physical=new MotorBrain.Body();
+        Morphology.Surface tissue=new Morphology.Surface(physical);
+        UnknownWorld.Entity cover=new UnknownWorld.Entity(100,0,2,5);
+        int point=8;
+        float previousX=cover.x-SquareGripPuzzle.HALF-1.15f;
+        tissue.x[point]=previousX-5f;tissue.y[point]=cover.y;
+        tissue.gripHold[point]=.2f;tissue.gripCommand[point]=1f;
+        require(SquareGripPuzzle.stabilizeExistingGrip(tissue,cover,point,
+                    previousX,cover.y)&&
+                Math.abs(tissue.x[point]-(cover.x-SquareGripPuzzle.HALF))<.001f,
+            "Sustained real adhesion failed to retain its legal face");
+        tissue.x[point]=previousX-5f;tissue.gripCommand[point]=0f;
+        require(!SquareGripPuzzle.stabilizeExistingGrip(tissue,cover,point,
+                    previousX,cover.y),"Tether activated without voluntary grip");
+        tissue.gripCommand[point]=1f;tissue.x[point]=previousX-12f;
+        require(!SquareGripPuzzle.stabilizeExistingGrip(tissue,cover,point,
+                    previousX,cover.y),"Tether exceeded safe detachment distance");
         OnlineBodyLearning x=new OnlineBodyLearning();
         toHand(x);
         require(window(x,false,12,9)==null,"hand base window should spawn candidate");

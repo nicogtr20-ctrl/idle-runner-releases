@@ -1090,6 +1090,8 @@ public final class GameActivity extends Activity {
                         // archives the usable hand/membrane pair, independently
                         // of whether anything valuable is found underneath.
                         if(grips.opposingGrip&&actualBoxMotion>.005f){
+                            // Reward only VERIFIED cover travel, never touch or intent.
+                            environmentEffectSinceAction+=Math.min(2f,actualBoxMotion);
                             if(gripBank.observe(lastAppliedHand,lastAppliedMembrane,
                                true,true,Math.min(2f,actualBoxMotion),
                                sensorMind.stateCopy()))save();

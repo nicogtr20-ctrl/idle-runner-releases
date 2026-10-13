@@ -81,6 +81,39 @@ public final class SquareGripPuzzle {
         int d=Math.abs(i-j);
         return Math.min(d,Morphology.POINTS-d)>=Morphology.POINTS/10;
     }
+    /**
+     * A previously held, voluntary adhesive contact is a short physical
+     * tether. It preserves a legal face hold through small outward wobbles,
+     * never creates a first hold, crosses solid walls or pulls a one-sided box.
+     */
+    static boolean stabilizeExistingGrip(Morphology.Surface skin,
+                                          UnknownWorld.Entity box,int i,
+                                          float oldX,float oldY){
+        if(skin.gripHold[i]<Morphology.GRIP_HOLD||
+           skin.gripCommand[i]<=Morphology.GRIP_THRESHOLD||
+           !Float.isFinite(oldX)||!Float.isFinite(oldY)||
+           Math.hypot(skin.x[i]-oldX,skin.y[i]-oldY)>9f)return false;
+        float ox=oldX-box.x,oy=oldY-box.y;
+        float cx=skin.x[i]-box.x,cy=skin.y[i]-box.y;
+        // Same former face and within a bounded stretch, no edge wrapping.
+        if(Math.abs(oy)<=HALF&&Math.abs(ox+HALF)<=3f&&
+           cx<=-HALF+1f&&cx>=-HALF-8f&&Math.abs(cy)<=HALF){
+            skin.x[i]=box.x-HALF;skin.vx[i]=box.vx;return true;
+        }
+        if(Math.abs(oy)<=HALF&&Math.abs(ox-HALF)<=3f&&
+           cx>=HALF-1f&&cx<=HALF+8f&&Math.abs(cy)<=HALF){
+            skin.x[i]=box.x+HALF;skin.vx[i]=box.vx;return true;
+        }
+        if(Math.abs(ox)<=HALF&&Math.abs(oy+HALF)<=3f&&
+           cy<=-HALF+1f&&cy>=-HALF-8f&&Math.abs(cx)<=HALF){
+            skin.y[i]=box.y-HALF;skin.vy[i]=box.vy;return true;
+        }
+        if(Math.abs(ox)<=HALF&&Math.abs(oy-HALF)<=3f&&
+           cy>=HALF-1f&&cy<=HALF+8f&&Math.abs(cx)<=HALF){
+            skin.y[i]=box.y+HALF;skin.vy[i]=box.vy;return true;
+        }
+        return false;
+    }
     public static Outcome constrain(MotorBrain.Body body,Morphology.Surface skin,
                                     UnknownWorld.Entity box,float dt){
         return constrain(body,skin,box,dt,null,null,null,null,
@@ -101,6 +134,9 @@ public final class SquareGripPuzzle {
             previousSkinY,previousBodyX,previousBodyY,
             previousCoreX,previousCoreY);
         resolveCrossingLinks(skin,box);
+        if(previousSkinX!=null&&previousSkinY!=null)
+            for(int i=0;i<Morphology.POINTS;i++)
+                stabilizeExistingGrip(skin,box,i,previousSkinX[i],previousSkinY[i]);
         int[] sides={-1,-1,-1,-1};
         float sumVx=0,sumVy=0;int held=0,contacts=0;
         for(int i=0;i<Morphology.POINTS;i++){
