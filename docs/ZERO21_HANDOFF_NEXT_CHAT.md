@@ -76,3 +76,9 @@ Al termine di ogni cambiamento tecnico, aggiornare:
 5. Dopo e SOLTANTO dopo OTA firmata: docs/CHANGELOG.md, docs/UPDATES.md, manifest e hash reali. Mai falsificare "versione ultima" semplicemente dal nome del file.
 
 **Sicurezza:** non copiare pesi utente, PAT GitHub, keystore o dump di memoria da zero-telemetry nei paper. Il robot non è cosciente o AGI, è un prototipo di ricerca che deve dimostrare generalizzazione fisica e adattiva.
+
+
+## 9 — Ultimo risultato effettivamente verificato
+- [GitHub Actions ZERO21 run **38452161103**](https://github.com/nicogtr20-ctrl/idle-runner-releases/actions/runs/38452161103): **SUCCESS**. Commit testato `7361e67f3f82c45913f7263b3b9fee1eb8f6dfee`. Tutte le compilazioni e regressioni pure Java, asserzioni anti-influenza sul punteggio e build completa Android Debug riuscite. I commit di paper successivi sono solo Markdown.
+- **PR DRAFT [#39](https://github.com/nicogtr20-ctrl/idle-runner-releases/pull/39)** aperta verso `feature/overmind-inapp-updater`. NON fonderla e NON lanciarne il publisher per adesso: G2–G7 mancanti e nessun uplift provato. Ultima versione ufficiale verificata nella ricerca: OTA112, non una nuova APK ZERO21.
+- Prossimo intervento: tracciamento sensoriale multivista + contatto attribuito allo stesso oggetto, prima di collegare skill e modelli futuri all'azione. Usare i test simmetrici e non cercare scorciatoie per generare punti RED.
