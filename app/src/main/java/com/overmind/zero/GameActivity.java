@@ -1689,7 +1689,7 @@ public final class GameActivity extends Activity {
             if(fraction>.002f)rounded(c,l,top,l+(r-l)*fraction,bottom,color,7);
         }
         void renderDetails(Canvas c){
-            float bottom=Math.max(477,H-180);
+            float bottom=Math.min(710,Math.max(477,H-180));
             rounded(c,13,455,467,bottom,0xf30b1a25,15);
             c.save();
             c.clipRect(19,459,461,bottom-6);
@@ -1716,8 +1716,8 @@ public final class GameActivity extends Activity {
                 text(c,"PRESA SCELTA "+chamber.gateDriveFrames+
                     " • COMANDO "+chamber.gateCommandFrames,27,610,10,MUTED,false);
             }else{
-                text(c,"NESSUNA STANZA ATTIVA • TOCCA 'PROVA STANZA' SOTTO",
-                    27,587,10,MUTED,false);
+                rounded(c,27,580,453,607,0xff26414a,8);
+                text(c,"ATTIVA PROVA STANZA",240,599,11,TEAL,true);
             }
             text(c,"AMBIENTE",27,623,11,TEAL,false);
             text(c,(scarcity?"SCARSITA ATTIVA":"SCORTE NORMALI")+
@@ -1727,10 +1727,7 @@ public final class GameActivity extends Activity {
                 text(c,"STORICO PRE-111: "+energyTotals.legacyPositive+
                     " POSITIVI NON SEPARABILI"+(energyTotals.complete?"":" • PARZIALE"),
                     27,654,9,GOLD,false);
-            if(chamber==null&&bottom>673){
-                rounded(c,27,bottom-30,453,bottom-8,0xff273e45,7);
-                text(c,"PROVA STANZA",240,bottom-15,10,TEAL,true);
-            }
+
             c.restore();
         }
         String format(float x){return String.format(Locale.US,"%+.1f",x);}
@@ -1754,9 +1751,8 @@ public final class GameActivity extends Activity {
                 detailsExpanded=!detailsExpanded;
                 invalidate();return true;
             }
-            float detailsBottom=Math.max(477,H-180);
-            if(detailsExpanded&&chamber==null&&detailsBottom>673&&
-               y>=detailsBottom-34&&y<=detailsBottom&&x>=20&&x<=460){
+            if(detailsExpanded&&chamber==null&&
+               y>=580&&y<=608&&x>=20&&x<=460){
                 activateChamber(true);
                 invalidate();return true;
             }
