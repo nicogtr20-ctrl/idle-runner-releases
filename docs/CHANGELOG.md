@@ -219,3 +219,10 @@
 - Ridotta densità di lastre procedurali presso gli oggetti vitali senza rimuovere le costruzioni persistenti.
 - Bilanciamento sperimentale: opportunità di nutrimento finito in scarsità ogni quattro espansioni; costo metabolico di tempesta da 0.23 a 0.18 e burden injury da 0.11 a 0.09 per secondo.
 - Documentazione [EXPERIMENT_0127](EXPERIMENT_0127.md); test JVM, Android, firma APK, deploy OTA, prova reale S21 **ancora da certificare**. Ultima installazione confermata dall'utente: OTA 97.
+
+
+## 2026-10-13 — ZERO 2.0 experimental shadow perception (NON RELEASE)
+- Ramo indipendente `feature/zero20-perceptual-associations`, derivato da ZERO2 PR #31.
+- Classi `PerceptualAssociationsV20` e `PerceptualAssociationsV20Regression`: raggruppamento incerto di contorni parziali realmente rilevati, esperienze fisiche osservate, persistenza atomica, esclusione holdout, test 440 decisioni immutate.
+- Collegato `SensorimotorMind`/GameActivity, reset SPAZIO, CERVELLO e digest privato `zero20Passive`. Nessun valore/azione motoria imposto; no riconoscimento semantico certo.
+- Non fa parte della OTA103 e non è una release. Le prove di compilazione CI e dispositivo vanno annotate separatamente; non attribuire un miglioramento biologico ai test JVM.
