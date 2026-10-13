@@ -92,6 +92,27 @@ jobs:
           java -cp /tmp/overmind com.overmind.zero.Zero20PassiveSnapshotRegression
           java -cp /tmp/overmind com.overmind.zero.LifeStatistics
           # v0.6 includes v0.5 -> v0.6 weight migration and expansion invariants.
+      - name: ZERO2 protect energy needs, contextual grip and named-slot migration
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          root=Path('app/src/main/java/com/overmind/zero')
+          credit=(root/'ExperienceCredit.java').read_text()
+          mind=(root/'SensorimotorMind.java').read_text()
+          bank=(root/'GripSkillBank.java').read_text()
+          game=(root/'GameActivity.java').read_text()
+          learner=(root/'OnlineBodyLearning.java').read_text()
+          assert 'public float adaptiveValue(float[] senses,int action)' in credit
+          assert 'mechanicalValue(' in credit and 'affordance(' in credit
+          assert mind.count('contactCredit.adaptiveValue(')>=3
+          assert 'contactCredit.value(' not in mind
+          assert 'grip2|' in bank and 'grip1|' in bank
+          assert 'contextDistance(s.sensed,sensory)' in bank
+          assert 'handTrainer.best,shapeTrainer.best,sensorMind.stateCopy()' in game
+          assert 'materialMotionRegression' in learner
+          assert 'working.edit().clear().putBoolean(PENDING_RELOAD,true).commit()' in (root/'SaveSlotStore.java').read_text()
+          print('ZERO2: competence not reward; sensor-context recall, life-protected gait and legacy saves PASS')
+          PY
       - name: Verify perceptual observer is non-actuating
         run: |
           python3 - <<'PY'
@@ -205,7 +226,7 @@ jobs:
           assert 'sensorMind.setLearning(true);' in a and 'learning=!learning' not in a
           assert 'if(reserve<=0)' in a and 'resetEpisode();' in a
           assert 'shapeTrainer.attemptGate(trainer.best,handTrainer.best)' not in a
-          assert 'contactCredit.value(senses,a)' in m and 'contactCredit.displaced(physicalEffect)' in m
+          assert 'contactCredit.adaptiveValue(senses,a)' in m and 'contactCredit.displaced(physicalEffect)' in m
           assert 'model[base+j]' in m and 'value[base+k]' in m
           assert 'worldMind.restore(' in ui
           assert 'morph_brain_v07' in a and 'decision_brain_v05' in a
@@ -408,7 +429,7 @@ jobs:
           assert 'if(!relevant(e,senses))continue;' in ep
           assert 'if(learning&&physicalEffect>.015f)' in mind
           assert 'contactCredit.displaced(physicalEffect)' in mind
-          assert 'contactCredit.value(senses,a)' in mind
+          assert 'contactCredit.adaptiveValue(senses,a)' in mind
           assert 'energetic' in learner and 'mechanical' in learner
           assert 'skin.gripCommand[i]>Morphology.GRIP_THRESHOLD' in Path('app/src/main/java/com/overmind/zero/ScarcityLab.java').read_text()
           assert 'GameSceneSnapshot.capture(creature,surface,environment,chamber)' in game
@@ -756,10 +777,10 @@ jobs:
           from hashlib import sha1
           root=Path('app/src/main/java/com/overmind/zero')
           pins={
-          'SensorimotorMind.java':'76924a1903ad674a131d6367b32d2352c1fafa47',
+          'SensorimotorMind.java':'291fe1507ee03ee663e52bbc9b7e97045612b5ac',
           'ObjectExperienceV20.java':'39ada3745f8b22769e67c00f5def9a5a3ed6ba1a',
           'ObjectExperienceV20Regression.java':'44bccc8ebe5971ed5226e50f62f8e27f7fbc6ddd',
-          'GameActivity.java':'5f7f0712154fd661d78f077c08b215595ba8cc92',
+          'GameActivity.java':'2f9a4682fd55ad2b4d4f2671d307419d1690f469',
           'InstrumentalNavigation.java':'fb95ae5b19a8b2602cb4338641d8851bebf8fa26',
           'BehavioralLaboratory.java':'036ff0488cea84813fa73c8a1209d3dece4cc846',
           'BehavioralLabActivity.java':'c1e655a947454e2cb77baad6b282890f00097717',
@@ -779,7 +800,7 @@ jobs:
           'GripSurfaceComposition.java':'04847c6180ee638961d033e8b4ac01fd574dd312',
           'BrainToolsActivity.java':'8315d5c27e797ee4a2c542a8a102d40c69d0a7a7',
           'MortalityLearning.java':'106683098e58d03a1b901fd7293549ebd5bb6715',
-          'ExperienceCredit.java':'5811cd758423e6fa8b4e27a7279fa56a39fbe661',
+          'ExperienceCredit.java':'fe8e0a1e5ac026596dd0b97c9eca29451796288b',
           'MaterialVisionRegression.java':'0ce4a8420961c27d2959be197f436981790f089e',
           'MaterialMotionRegression.java':'b601122c97de8cd70159ada49b9cbeb2e5cb4358',
           'MaterialSymbioteRegression.java':'a162c986395bcc4784401e72a83458b8b93f33da',
@@ -798,6 +819,8 @@ jobs:
           'TelemetryChunks.java':'9f8af4e550db409098e16f51b948fde699e5e67d',
           'TelemetryChunksRegression.java':'c29156e14934dba37a2c53412e984cbb1eb18696',
           'SpatialPerception.java':'fb58e0990b3837dd6e25ef210afa7a1c9cc20851',
+          'GripSkillBank.java':'715f65333d50ef4acd40ee84e915bad731807589',
+          'OnlineBodyLearning.java':'36caba1ed145ca571d8231152e6052354a71d055',
           'MotorBrain.java':'a3e0681c595bd1a9d17549c25770f6049c83926f',
           'Morphology.java':'4de2bd05eecee576d820e2690b5235dd4dd3aef9',
           'BodyIntegrity.java':'e551493723d13006d5e6905690c0ab0ee9e13d17',
