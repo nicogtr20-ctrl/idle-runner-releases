@@ -40,6 +40,8 @@ public final class SensorimotorMind {
     /** Passive sensory silhouette and physically observed consequence catalogue. */
     private transient PerceptualAssociationsV20 perceptualV20;
     private transient ObjectExperienceV20 objectExperience;
+    // Shared sensory/action/effect ledger; strictly observer-only in ZERO21.
+    private transient UnifiedCognitionV21 unifiedCognition;
     private transient Morphology.Surface lastActualGripSurface;
     /** Never set by GameActivity. Sandbox arena may test bounded advice. */
     private transient boolean zero20ExperimentalAdvice=false;
@@ -91,6 +93,7 @@ public final class SensorimotorMind {
             if(transferV20!=null)transferV20.energyOutcome(actualEnergyDelta);
             if(perceptualV20!=null)perceptualV20.actualEnergy(actualEnergyDelta);
             if(objectExperience!=null)objectExperience.energyContact(actualEnergyDelta,visuallyObservedSignature,visibleAtTouch);
+            if(unifiedCognition!=null)unifiedCognition.energyContact(actualEnergyDelta);
             if(physicalChainV20!=null)physicalChainV20.energyOutcome(actualEnergyDelta);
             if(bodySchema!=null)bodySchema.actualEnergy(actualEnergyDelta);
             if(distributedBody!=null)distributedBody.actualEnergy(actualEnergyDelta);
@@ -131,6 +134,7 @@ public final class SensorimotorMind {
     public synchronized void attachGripAffordanceV20(GripAffordanceV20 model){gripAffordanceV20=model;}
     public synchronized void attachPerceptualAssociationsV20(PerceptualAssociationsV20 model){perceptualV20=model;}
     public synchronized void attachObjectExperienceV20(ObjectExperienceV20 model){objectExperience=model;}
+    public synchronized void attachUnifiedCognitionV21(UnifiedCognitionV21 model){unifiedCognition=model;}
     /** Experimental research only; OFF by default in every actual app profile. */
     public synchronized void enableZero20ExperimentalAdvice(boolean enabled){
         zero20ExperimentalAdvice=enabled;
@@ -216,6 +220,7 @@ public final class SensorimotorMind {
         if(transferV20!=null)transferV20.resetLife();
         if(physicalChainV20!=null)physicalChainV20.resetLife();
         if(objectExperience!=null)objectExperience.resetLife();
+        if(unifiedCognition!=null)unifiedCognition.resetLife();
         if(gripAffordanceV20!=null)gripAffordanceV20.resetLife();
         if(perceptualV20!=null)perceptualV20.resetLife();
         lastActualGripSurface=null;
@@ -241,6 +246,7 @@ public final class SensorimotorMind {
             if(transferV20!=null)transferV20.resetLife();
         if(physicalChainV20!=null)physicalChainV20.resetLife();
         if(objectExperience!=null)objectExperience.resetLife();
+        if(unifiedCognition!=null)unifiedCognition.resetLife();
         if(gripAffordanceV20!=null)gripAffordanceV20.resetLife();
         if(perceptualV20!=null)perceptualV20.resetLife();
         lastActualGripSurface=null;
@@ -273,6 +279,7 @@ public final class SensorimotorMind {
         if(transferV20!=null)transferV20.resumeLife();
         if(physicalChainV20!=null)physicalChainV20.resumeLife();
         if(objectExperience!=null)objectExperience.resetLife();
+        if(unifiedCognition!=null)unifiedCognition.resumeLife();
         if(gripAffordanceV20!=null)gripAffordanceV20.resumeLife();
         if(perceptualV20!=null)perceptualV20.resumeLife();
         lastActualGripSurface=null;
@@ -526,6 +533,13 @@ public final class SensorimotorMind {
         if(gripAffordanceV20!=null)gripAffordanceV20.chosen(chosen,lastActualGripSurface);
         if(perceptualV20!=null)perceptualV20.chosen(chosen);
         if(objectExperience!=null)objectExperience.chosen(chosen,senses);
+        // AFTER final action and epsilon: shares identical experienced frame
+        // with the other learners; never scores candidate actions.
+        if(unifiedCognition!=null)unifiedCognition.chosen(chosen,senses,
+            spatial==null?null:spatial.ranges(),
+            objectExperience==null?-1:objectExperience.matchedCategory(),
+            worldV20==null?0f:worldV20.confidence(),
+            objectExperience==null?0f:objectExperience.confidence());
         // Heavy world-model lookahead is deliberately capped at ONE pass per
         // eight REAL decisions and evaluated only AFTER the old action was
         // chosen. No score or RNG in the original decision is modified.
@@ -691,6 +705,10 @@ public final class SensorimotorMind {
                 spatial.ranges(),learning&&!holdout,holdout);
             objectExperience.view(spatial.ranges(),after,learning&&!holdout);
         }
+        // ONE real decision interval, split using the same heldout gate.
+        // Never infer that a nearby object caused the energy outcome.
+        if(unifiedCognition!=null)unifiedCognition.consequence(
+            after,Math.max(0f,physicalEffect),learning&&!holdout,holdout);
         if(spatial!=null&&body!=null&&objects!=null)
             spatial.consequence(trialAction,lastReward,learning&&!holdout,holdout);
         if(causal!=null&&spatial!=null&&body!=null&&objects!=null)
