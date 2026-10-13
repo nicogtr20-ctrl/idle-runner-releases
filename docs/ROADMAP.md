@@ -1,3 +1,15 @@
+## OTA112 — Riduzione HUD alla navigazione da gioco (13 ottobre 2026)
+
+- [x] Tre indicatori energetici verticali trasparenti, senza toolbar di fondo.
+- [x] Eliminata intestazione grande ZERO / LASTRE, spostata versione in Impostazioni.
+- [x] Pannello vitali compatto in alto a destra, energia/tessuto veri.
+- [x] Freccia piccola per mostrare/nascondere diagnostica avanzata.
+- [x] Bottom navigation Cervello a sinistra, Tempo centrale, Impostazioni a destra.
+- [x] Partite, Analisi, Statistiche, Cervello parametri, Prove, Aggiorna e Versione dentro Impostazioni.
+- [ ] Verificare su Galaxy S21 layout e touch target post installazione; test firmware del bottone AGGIORNA.
+
+Dettagli: [ZERO_UI_OTA112_NEON_NAV](ZERO_UI_OTA112_NEON_NAV.md).
+
 ## 2026-10-13 — ZERO 2.0 / UI compatta e stato vitale reale
 
 - [x] Mostrare i tre contatori energetici blu, rosso, viola in header (solo contatti con conseguenza reale, cumulativi nel profilo).
