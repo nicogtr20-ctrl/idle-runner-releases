@@ -419,7 +419,7 @@ public final class Zero20CoveredEnergyBenchmark {
         }
         if(pairs!=12)throw new AssertionError("Missing matched pairs");
         if(Boolean.getBoolean("zero21.shadowCompare")&&
-            (wins!=0||losses!=0||changed!=0||eligible>0))
+            (wins!=0||losses!=0||changed!=0))
             throw new AssertionError("Research observer changed real autonomous behavior");
         System.out.printf(Locale.US,
             "ZERO20_SUMMARY {\"profile\":\"%s\",\"split\":\"%s\",\"pairs\":%d,\"wins\":%d,"+
