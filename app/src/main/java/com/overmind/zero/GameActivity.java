@@ -55,6 +55,8 @@ public final class GameActivity extends Activity {
         ObjectExperienceV20 objectExperienceV20=new ObjectExperienceV20();
         UnifiedCognitionV21 unifiedCognitionV21=new UnifiedCognitionV21();
         ObjectContinuityV21 objectContinuityV21=new ObjectContinuityV21();
+        CompetenceMemoryV21 competenceMemoryV21=new CompetenceMemoryV21();
+        UnifiedArbiterV21 unifiedArbiterV21=new UnifiedArbiterV21();
         SpatialPerception spatialMap=new SpatialPerception();
         CausalExperiments causalExperiments=new CausalExperiments();
         InstrumentalNavigation navigation=new InstrumentalNavigation();
@@ -265,6 +267,11 @@ public final class GameActivity extends Activity {
             objectContinuityV21=new ObjectContinuityV21();
             objectContinuityV21.restore(prefs.getString(ObjectContinuityV21.KEY,""));
             sensorMind.attachObjectContinuityV21(objectContinuityV21);
+            competenceMemoryV21=new CompetenceMemoryV21();
+            competenceMemoryV21.restore(prefs.getString(CompetenceMemoryV21.KEY,""));
+            unifiedArbiterV21=new UnifiedArbiterV21();
+            unifiedArbiterV21.restore(prefs.getString(UnifiedArbiterV21.KEY,""));
+            sensorMind.attachUnifiedArbiterV21(unifiedArbiterV21);
             // Hard device boundary: ZERO 2.0 can LEARN and REPORT but may not
             // bias any live motor decision. Advisory A/B is laboratory-only.
             sensorMind.enableZero20ExperimentalAdvice(false);
@@ -562,6 +569,8 @@ public final class GameActivity extends Activity {
               .putString(ObjectExperienceV20.KEY,objectExperienceV20.encode())
               .putString(UnifiedCognitionV21.KEY,unifiedCognitionV21.encode())
               .putString(ObjectContinuityV21.KEY,objectContinuityV21.encode())
+              .putString(CompetenceMemoryV21.KEY,competenceMemoryV21.encode())
+              .putString(UnifiedArbiterV21.KEY,unifiedArbiterV21.encode())
               .putString(SpatialPerception.KEY,spatialMap.encode())
               .putString(CausalExperiments.KEY,causalExperiments.encode())
               .putString(InstrumentalNavigation.KEY,navigation.encode())
@@ -875,6 +884,7 @@ public final class GameActivity extends Activity {
                 lifeStats.physical(journey.maxNetLife,journey.lifeCells,
                     chamber==null?0:chamber.maxDoorTravel);
                 lifeStats.death();
+                competenceMemoryV21.newLife();
                 reserve=70;lastEvent="CORPO ESAUSTO • MEMORIA CONSERVATA";eventTime=6;
                 resetEpisode();
                 nextChamber=elapsedLife+12f;
@@ -1025,6 +1035,13 @@ public final class GameActivity extends Activity {
                             if(gripBank.observe(lastAppliedHand,lastAppliedMembrane,
                                true,true,Math.min(2f,actualBoxMotion),
                                sensorMind.stateCopy()))save();
+                            // Research-only archive of physically proven technique:
+                            // self tissue and actual motion; anonymous sighting
+                            // confidence is an uncertainty tag, not object truth.
+                            if(competenceMemoryV21.witnessed(lastAppliedHand,
+                               lastAppliedMembrane,sensorMind.stateCopy(),
+                               grips.opposingGrip,actualBoxMotion,
+                               objectContinuityV21.currentTrackConfidence()))save();
                         }
                         if(grips.opposingGrip)e.peakDisplacement=Math.max(
                             e.peakDisplacement,e.displacementFromSpawn());
