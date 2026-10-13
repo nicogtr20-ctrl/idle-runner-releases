@@ -756,12 +756,14 @@ jobs:
           from hashlib import sha1
           root=Path('app/src/main/java/com/overmind/zero')
           pins={
-          'SensorimotorMind.java':'4dc9d3c60d5a972afbb523a05155f4227aa70d48',
-          'GameActivity.java':'63082a794b264fbca10febd586bc13f5806ee196',
+          'SensorimotorMind.java':'76924a1903ad674a131d6367b32d2352c1fafa47',
+          'ObjectExperienceV20.java':'39ada3745f8b22769e67c00f5def9a5a3ed6ba1a',
+          'ObjectExperienceV20Regression.java':'44bccc8ebe5971ed5226e50f62f8e27f7fbc6ddd',
+          'GameActivity.java':'5f7f0712154fd661d78f077c08b215595ba8cc92',
           'InstrumentalNavigation.java':'fb95ae5b19a8b2602cb4338641d8851bebf8fa26',
           'BehavioralLaboratory.java':'036ff0488cea84813fa73c8a1209d3dece4cc846',
           'BehavioralLabActivity.java':'c1e655a947454e2cb77baad6b282890f00097717',
-          'ResetDomains.java':'52fff791cd6b521ad2dac4f899134bedbe9838b0',
+          'ResetDomains.java':'5b3cdc662617c3beef2df525b9eff6e5d219a6ae',
           'ScarcityLab.java':'51d04604c79c728c53dd819971116bd7d710dc60',
           'UnknownWorld.java':'4443b7e2e44a8229fae19c3e8237db9f23b822f2',
           'GameSceneSnapshot.java':'e38c0b8def6c363af74dfabdd4eac96bf95ac2d8',
@@ -775,7 +777,7 @@ jobs:
           'OpticalCueRegression.java':'78a9df279beb12b450f7792b0a3871762ec1d177',
           'HabitatContinuity.java':'d08aafff5ffa93380384fc427ad1095b93316467',
           'GripSurfaceComposition.java':'04847c6180ee638961d033e8b4ac01fd574dd312',
-          'BrainToolsActivity.java':'42c043c43c545c60933e9e20881bf9e7251b4585',
+          'BrainToolsActivity.java':'8315d5c27e797ee4a2c542a8a102d40c69d0a7a7',
           'MortalityLearning.java':'106683098e58d03a1b901fd7293549ebd5bb6715',
           'ExperienceCredit.java':'5811cd758423e6fa8b4e27a7279fa56a39fbe661',
           'MaterialVisionRegression.java':'0ce4a8420961c27d2959be197f436981790f089e',
