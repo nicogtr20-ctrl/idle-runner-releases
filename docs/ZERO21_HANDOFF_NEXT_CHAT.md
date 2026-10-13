@@ -1,3 +1,5 @@
+# PRIORITÀ SCIENTIFICA ATTUALE: [ZERO21_VALIDATION_RESULTS.md](ZERO21_VALIDATION_RESULTS.md) contiene il run 38455726406 SUCCESS, 440 decisioni identiche e 12 A/B su casse reali con 0 vantaggi, e il run di sopravvivenza 170 s 38456274262 da verificare alla conclusione. NO OTA oltre 112, NO merge della PR #39 senza prove attive di beneficio.
+
 # ZERO 2.1 — HANDOFF OPERATIVO PER NUOVE CHAT (LEGGERE PER PRIMO)
 **Aggiornamento:** 13 ottobre 2026, sera Italia. **Non confondere questa ricerca con un'OTA.** Questo file è il punto di ingresso *attuale* per il ramo feature/zero21-unified-cognition.
 
