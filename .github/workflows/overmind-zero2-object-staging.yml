@@ -1,7 +1,7 @@
 name: ZERO2 Object Cognition Staging QA
 on:
   push:
-    branches: [feature/zero2-object-causal-learning-ota106, feature/zero2-adaptive-priorities-ota110, feature/zero-ui-compact-energy-ota111]
+    branches: [feature/zero2-object-causal-learning-ota106, feature/zero2-adaptive-priorities-ota110, feature/zero-ui-compact-energy-ota111, feature/zero-ui-neon-nav-ota112]
   workflow_dispatch:
 permissions:
   contents: read
@@ -119,9 +119,16 @@ jobs:
           assert 'detailsExpanded=!detailsExpanded;' in hud
           assert 'energyTotals.record(reserve-before,object.isRare());' in hud
           assert 'energyTotals.record(reserve-prior,true);' in hud
-          assert 'bar(c,25,341,455,355,shelter.integrity,tissueColor)' in hud
+          assert 'neonBar(c,173,137,456,149,shelter.integrity,' in hud
           assert 'putString(EnergyLifetimeCounters.KEY,energyTotals.encode())' in hud
-          assert 'CONTATTI ENERGETICI CUMULATIVI' in hud
-          assert 'ATTIVA PROVA STANZA' in hud
+          assert 'hudEnergy(c,37,46,"BLU",energyTotals.blue' in hud
+          assert 'hudEnergy(c,37,95,"ROSSA",energyTotals.red' in hud
+          assert 'hudEnergy(c,37,144,"VIOLA",energyTotals.violet' in hud
+          assert 'case 5:' in hud and 'activateChamber(true)' in hud
+          assert 'renderDock(c);' in hud
+          assert 'settingsExpanded=true;' in hud
+          assert 'settingsChoice(int index)' in hud
+          assert 'updater.checkAndInstall();' in hud
+          assert 'ZERO / LASTRE 0124' not in hud
           print('Object learning, grip archive, reset and save connections PASS')
           PY
