@@ -17,6 +17,10 @@ public final class OnlineBodyLearning {
     private int noveltySum,contactsSum;
     private float firstX,firstY,baseScore,baseNet,baseEnergy,baseDirX,baseDirY;
     private float baseNovelty,baseGain,basePhysicalEffect;
+    // Genuine box encounters, observed from bilateral square physics only.
+    // No synthetic adhesion, goal identity, collision-force or motor advice.
+    private int boxTouchFrames,boxOpposedFrames,baseBoxTouchFrames,baseBoxOpposedFrames;
+    public int protectedBoxTechniqueRejections=0;
     private float externalEffectSum=0;
     private int baseContacts;
     private boolean baseRoom,roomAtStart,roomChanged;
@@ -114,6 +118,20 @@ public final class OnlineBodyLearning {
                           float startX,float startY,float endX,float endY,
                           boolean room,float dirX,float dirY,
                           float[] motor,float[] hand,float[] shape,float physicalEffect){
+        return observe(reward,path,forward,contacts,energyBefore,energyAfter,newCells,
+            startX,startY,endX,endY,room,dirX,dirY,motor,hand,shape,physicalEffect,0,0);
+    }
+    /** Two measured real-square opportunities per completed decision interval:
+     * number of simulated frames with any face contact and number with
+     * physically validated simultaneous opposing patch holds.
+     * This is never a direct training reward nor an invented grasp.
+     */
+    public Result observe(float reward,float path,float forward,int contacts,
+                          float energyBefore,float energyAfter,int newCells,
+                          float startX,float startY,float endX,float endY,
+                          boolean room,float dirX,float dirY,
+                          float[] motor,float[] hand,float[] shape,float physicalEffect,
+                          int realBoxTouchFrames,int realOpposedGripFrames){
         if(!Float.isFinite(reward)||!Float.isFinite(path)||!Float.isFinite(forward)||
            !Float.isFinite(energyBefore)||!Float.isFinite(energyAfter)||
            !Float.isFinite(startX)||!Float.isFinite(startY)||
@@ -136,6 +154,11 @@ public final class OnlineBodyLearning {
         noveltySum+=Math.min(6,Math.max(0,newCells));
         contactsSum+=Math.min(6,Math.max(0,contacts));
         externalEffectSum+=Math.min(50,Math.max(0,physicalEffect));
+        if(realBoxTouchFrames>0)
+            boxTouchFrames+=Math.min(10000,realBoxTouchFrames);
+        if(realOpposedGripFrames>0)
+            boxOpposedFrames+=Math.min(Math.max(0,realBoxTouchFrames),
+                                       realOpposedGripFrames);
         dirXSum+=dirX;dirYSum+=dirY;
         if(++samples<WINDOW)return null;
         float net=(float)Math.hypot(endX-firstX,endY-firstY);
@@ -145,16 +168,21 @@ public final class OnlineBodyLearning {
         float avgX=dirXSum/WINDOW,avgY=dirYSum/WINDOW;
         int novel=noveltySum,cont=contactsSum;
         float gain=gainSum,effect=externalEffectSum;
+        int measuredBoxTouches=boxTouchFrames,measuredBoxHolds=boxOpposedFrames;
         boolean stable=!roomChanged;
         samples=0;
         pathSum=forwardSum=rewardSum=spentSum=gainSum=dirXSum=dirYSum=0;
         externalEffectSum=0;
+        boxTouchFrames=boxOpposedFrames=0;
+        baseBoxTouchFrames=baseBoxOpposedFrames=0;
         noveltySum=contactsSum=0;
         if(net>5||novel>1)mobileWindows++;
         if(phase==0){
             baseScore=score;baseNet=net;
             baseNovelty=novel;baseContacts=cont;baseGain=gain;
             basePhysicalEffect=effect;
+            baseBoxTouchFrames=measuredBoxTouches;
+            baseBoxOpposedFrames=measuredBoxHolds;
             baseEnergy=energyAfterWindow;baseDirX=avgX;baseDirY=avgY;
             baseRoom=room;phase=1;
             candidate=mutate(domain==MOTOR?motor:domain==MANIPULATION?hand:shape,
@@ -175,6 +203,21 @@ public final class OnlineBodyLearning {
         // stationary manipulation; don't accept a motor that slows to zero.
         boolean motorCapable=domain!=MOTOR||net>=Math.max(7f,baseNet*.80f);
         boolean acceptedTrial=comparable&&useful&&motorCapable&&score>baseScore+.30f;
+        // A demonstrably successful previous HAND or MEMBRANE configuration
+        // must not be overwritten by a candidate rewarded only for walking,
+        // finding energy elsewhere or touching unrelated discs. Sequential
+        // windows do NOT have matched worlds: if box opportunities vanish,
+        // evidence is insufficient to replace the proven gripper.
+        // Gate only activates when baseline held a real opposing-face grip.
+        boolean baselineProvedBoxGrip=domain!=MOTOR&&
+            baseBoxTouchFrames>=8&&baseBoxOpposedFrames>=3;
+        boolean candidatePreservedGrip=
+            measuredBoxTouches>=Math.max(8,baseBoxTouchFrames/2)&&
+            measuredBoxHolds>=Math.max(3,(int)Math.ceil(baseBoxOpposedFrames*.60));
+        if(acceptedTrial&&baselineProvedBoxGrip&&!candidatePreservedGrip){
+            acceptedTrial=false;
+            protectedBoxTechniqueRejections++;
+        }
         Result result=new Result(domain,acceptedTrial,
                                  acceptedTrial?candidate:null,baseScore,score);
         lastDomain=domain;lastWasAccepted=acceptedTrial;
