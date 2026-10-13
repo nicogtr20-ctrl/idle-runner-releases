@@ -322,7 +322,7 @@ jobs:
           assert 'skillBank.observe(trainer.best,liveBody.lastBaselineNet' in game
           assert 'skillBank.observe(result.weights,liveBody.lastCandidateNet' in game
           assert 'lastAppliedMotor=liveBody.weights(0,trainer.best);' in game
-          assert 'sensorMind.contactOutcome(reserve-before,object.signature);' in game
+          assert 'sensorMind.contactOutcome(reserve-before,object.signature,sightAtTouch);' in game
           assert 'sensorMind.contactOutcome(reserve-prior,chamber.food.signature);' in game
           assert 'contactCredit.performed(senses,chosen);' in policy
           assert 'contactCredit.consequence(actualEnergyDelta,visuallyObservedSignature)' in policy
@@ -402,7 +402,7 @@ jobs:
           assert 'episodic.consequenceSeparated(' in game
           assert 'energySinceAction[object.signature]+=reserve-before;' in game
           assert 'energySinceAction[chamber.food.signature]+=reserve-prior;' in game
-          assert 'sensorMind.contactOutcome(reserve-before,object.signature);' in game
+          assert 'sensorMind.contactOutcome(reserve-before,object.signature,sightAtTouch);' in game
           assert 'outcome_credit_v101' in game and 'outcome_credit_v101' in Path('app/src/main/java/com/overmind/zero/ResetDomains.java').read_text()
           assert 'em3;' in ep and 'old.kind==kind&&old.source==source' in ep
           assert 'if(!relevant(e,senses))continue;' in ep
@@ -654,7 +654,7 @@ jobs:
           assert '.putString(InstrumentalNavigation.KEY,navigation.encode())' in game
           assert 'sensorMind.attachNavigation(navigation)' in game
           assert 'sensorMind.updateNavigationSense(creature,chamber,environment)' in game
-          assert 'sensorMind.contactOutcome(reserve-before,object.signature)' in game
+          assert 'sensorMind.contactOutcome(reserve-before,object.signature,sightAtTouch)' in game
           assert 'sensorMind.contactOutcome(reserve-prior,chamber.food.signature)' in game
           assert 'float[] sample=SensorimotorMind.Senses.spectral8(' in nav
           assert 'trials[action]<3' in nav and 'holdouts[action]<2' in nav
