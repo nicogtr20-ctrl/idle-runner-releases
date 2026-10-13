@@ -37,3 +37,7 @@ Skill temporali autonome validate su staging **38065646624** e publisher firmato
 - APK: `https://overmind-zero-updates.vercel.app/apk/overmind-zero-1056-a433978f8420.apk`, **149.392 byte**.
 - Manifest e APK verificati HTTP 200.
 È corretto usare **AGGIORNA** nell'app. Installare sopra la versione esistente; non disinstallare.
+
+
+## 2026-10-13 — vincolo distribuzione ZERO2 percezione
+`feature/zero20-perceptual-associations` è soltanto ricerca; non pubblicare APK, manifest Vercel o OTA da questo branch. La versione pubblica resta `0.11.6-ota.103` (package `com.overmind.zero.ota`, code 1103). Non installare APK sperimentali su profili esistenti senza verifica firma/code, backup di slot e approvazione esplicita. Sia i prototipi percettivi sia la loro telemetria sono facoltativi per i salvataggi storici.
