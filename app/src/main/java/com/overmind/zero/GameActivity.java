@@ -1156,8 +1156,11 @@ public final class GameActivity extends Activity {
                             lastAppliedMotor,lastAppliedHand,lastAppliedMembrane,
                             actedFromMemory);
                         if(episodic.repeatEffects>recallsBefore)lifeStats.confirmedRecall();
+                        // Object hypotheses are included in normal periodic checkpoints,
+                        // pauses and physical events. Do not rewrite the entire
+                        // profile on every 0.65-second observational update.
                         if(remembered||episodic.takeDirty()||
-                           sensorMind.takeTemporalSkillsDirty()||objectExperienceV20.takeDirty())save();
+                           sensorMind.takeTemporalSkillsDirty())save();
                         // Remembering an action never substitutes an old
                         // physical controller or interrupts body experiments.
                         OnlineBodyLearning.Result result=liveBody.observe(
