@@ -124,10 +124,17 @@ jobs:
           slots=(root/'SaveSlotStore.java').read_text()
           assert 'void renderDetails(Canvas c)' in game
           assert 'detailsExpanded=!detailsExpanded;' in game
-          assert 'ATTIVA PROVA STANZA' in game
-          assert 'CONTATTI ENERGETICI CUMULATIVI' in game
-          assert 'bar(c,25,305,455,319,reserve,TEAL);' in game
-          assert 'bar(c,25,341,455,355,shelter.integrity,tissueColor);' in game
+          assert 'case 5:' in game and 'activateChamber(true)' in game
+          assert 'renderDock(c);' in game
+          assert 'settingsExpanded=true;' in game
+          assert 'settingsChoice(int index)' in game
+          assert 'updater.checkAndInstall();' in game
+          assert 'ZERO / LASTRE 0124' not in game
+          assert 'hudEnergy(c,37,46,"BLU",energyTotals.blue' in game
+          assert 'hudEnergy(c,37,95,"ROSSA",energyTotals.red' in game
+          assert 'hudEnergy(c,37,144,"VIOLA",energyTotals.violet' in game
+          assert 'neonBar(c,173,96,456,108,reserve,' in game
+          assert 'neonBar(c,173,137,456,149,shelter.integrity,' in game
           assert 'energyTotals.record(reserve-before,object.isRare());' in game
           assert 'energyTotals.record(reserve-prior,true);' in game
           assert 'putString(EnergyLifetimeCounters.KEY,energyTotals.encode())' in game
@@ -805,7 +812,7 @@ jobs:
           'EnergyLifetimeCounters.java':'7c0a9d815937a39c5cfdaddb01896b39536d8afe',
           'ObjectExperienceV20.java':'39ada3745f8b22769e67c00f5def9a5a3ed6ba1a',
           'ObjectExperienceV20Regression.java':'44bccc8ebe5971ed5226e50f62f8e27f7fbc6ddd',
-          'GameActivity.java':'d1c3606d3c0376754f6926df23862d7035bf5041',
+          'GameActivity.java':'9af6c53c23162ff9f20355d70bd447209d1bc0bc',
           'InstrumentalNavigation.java':'fb95ae5b19a8b2602cb4338641d8851bebf8fa26',
           'BehavioralLaboratory.java':'036ff0488cea84813fa73c8a1209d3dece4cc846',
           'BehavioralLabActivity.java':'c1e655a947454e2cb77baad6b282890f00097717',
