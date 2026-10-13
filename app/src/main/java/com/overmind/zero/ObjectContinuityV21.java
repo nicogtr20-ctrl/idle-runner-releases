@@ -29,6 +29,7 @@ public final class ObjectContinuityV21 {
     private int previousLinkedId=-1,linkedAge=1000,competingMoves=0;
     private float focusedConfidence,lastTouch,pendingX,pendingY;
     private boolean pendingTouch,pendingStable;
+    private int pendingPositive,pendingNegative;
     private static final class Track {
         int id,seen,updated;
         float x,y,depth,span;
@@ -145,6 +146,7 @@ public final class ObjectContinuityV21 {
     /** Only the final REAL action; never a proposed or imagined action. */
     public void chosen(int action){
         pendingId=-1;pendingAction=-1;pendingTouch=false;pendingStable=false;
+        pendingPositive=pendingNegative=0;
         if(action<0||action>=ACTIONS){invalid++;return;}
         pendingAction=action;
         Track t=find(focusedId);
@@ -162,8 +164,10 @@ public final class ObjectContinuityV21 {
         }else if(competingMoves>0)ambiguousEnergy++;
         else unlinkedEnergy++;
         if(pendingAction>=0&&pendingTouch){
-            if(delta>0)contactPositive[pendingAction]++;
-            else contactNegative[pendingAction]++;
+            // Holdout status is known only at consequence(), so defer ALL
+            // trained contact counts until that exact existing split.
+            if(delta>0)pendingPositive++;
+            else pendingNegative++;
         }
     }
     /**
@@ -195,7 +199,10 @@ public final class ObjectContinuityV21 {
         }else if(train&&comparable){
             attempts[action]++;
             if(candidate){moves[action]++;physicalCandidates++;}
+            contactPositive[action]+=pendingPositive;
+            contactNegative[action]+=pendingNegative;
         }
+        pendingPositive=pendingNegative=0;
         linkedAge++;
         if(candidate){
             if(linkedAge<=8&&previousLinkedId!=id)competingMoves++;
@@ -262,7 +269,9 @@ public final class ObjectContinuityV21 {
                 values[j][a]=nonneg(p[i++]);
             for(int a=0;a<ACTIONS;a++)
                 if(values[1][a]>values[0][a])return false;
-            if(h[1]>h[0]||h[8]>h[0]||h[4]>h[0]||e>h[8]||b>h[8])return false;
+            // Multiple independent ray clusters can match on ONE sweep.
+            if(h[1]>h[0]*MAX_TRACKS||h[8]>h[0]||h[4]>h[0]||
+               e>h[8]||b>h[8])return false;
             views=h[0];matches=h[1];ambiguous=h[2];unseen=h[3];
             physicalCandidates=h[4];delayedLinks=h[5];unlinkedEnergy=h[6];
             ambiguousEnergy=h[7];heldout=h[8];invalid=h[9];
@@ -277,7 +286,8 @@ public final class ObjectContinuityV21 {
     public void resetLife(){
         tracks.clear();focusedId=pendingId=pendingAction=previousLinkedId=-1;
         nextId=1;epoch=0;focusedConfidence=0;lastTouch=0;
-        pendingTouch=pendingStable=false;linkedAge=1000;competingMoves=0;
+        pendingTouch=pendingStable=false;pendingPositive=pendingNegative=0;
+        linkedAge=1000;competingMoves=0;
     }
     public void resumeLife(){resetLife();}
 }
