@@ -208,3 +208,14 @@ Official OTA path is `feature/overmind-inapp-updater` → `.github/workflows/ove
 The candidate includes exactly the already tested v20 passive observers, existing base motor policy, and `TelemetryGitHub.partition()` fix preserving `extras.zero20Passive` after multipart upload. No model advice biases the motor controller; no change to energy rules or sensor physics. Source-pinned stable checks are UPDATED to the SHA of the actually reviewed source files, never disabled; five new JVM regressions are added before official release signing.
 
 The initial Galaxy S21 report confirms the original working profile is still present and v20 models have collected real observations. No independent skill or survival improvement is established. Release acceptance: independent staging JVM/Android QA GREEN, official stable publisher GREEN, signed APK certificate/package/version and SHA verified, downloadable manifest/APK responsive, user-controlled install and slot continuity confirmed on phone. If any gate fails, **do not claim availability through Aggiorna**.
+
+## ZERO 2.0 — roadmap associazioni percettive, 13 ottobre 2026
+- [x] Implementazione **sperimentale, non rilasciata** di un catalogo di silhouette parziali percepite (nessun accesso all'identità interna del gioco), memoria persistente e statistiche azione→effetto esclusivamente osservazionali.
+- [x] Isolamento dalla scelta motoria, salvataggi opzionali e debug/telemetria; protezione da campioni holdout usati per il training.
+- [ ] Ottenere run QA verde sul commit finale: simulazioni percettive e fisiche preesistenti, test di memoria/anticorruzione, 440 decisioni invariate, build Android.
+- [ ] Registrare **più viste reali dello stesso ostacolo** con odometria e incertezza; testare forma, dimensione e rotazione senza etichette per ZERO. Le etichette del simulatore possono servire SOLO al valutatore offline per misurare errori e false fusioni.
+- [ ] Associare il contatto tattile al **medesimo ostacolo visto**, invece di confondere la movimentazione di altri oggetti della scena.
+- [ ] Archivio durevole di configurazioni HAND+MEMBRANA realmente riuscite, con controlli di sostituzione/rollback e riuso non forzato. OTA103 protegge solo due finestre contigue.
+- [ ] A/B originale vs percezione+memoria sulle stesse scene, poi 25+ vite e oggetti nuovi; solo dopo valutare un debole suggerimento motore e il pulsante AGGIORNA.
+
+**OTA applicativa:** questo modulo percettivo passivo è stato selezionato per il canale AGGIORNA come candidato successivo alla 103. La build ufficiale resta soggetta a Java/Android QA, stessa firma e pubblicazione SHA/manifest prima di dirla disponibile.

@@ -50,6 +50,7 @@ public final class GameActivity extends Activity {
         FuturePlannerV20 futureV20=new FuturePlannerV20();
         PhysicalConsequenceV20 physicalConsequenceV20=new PhysicalConsequenceV20();
         GripAffordanceV20 gripAffordanceV20=new GripAffordanceV20();
+        PerceptualAssociationsV20 perceptualV20=new PerceptualAssociationsV20();
         SpatialPerception spatialMap=new SpatialPerception();
         CausalExperiments causalExperiments=new CausalExperiments();
         InstrumentalNavigation navigation=new InstrumentalNavigation();
@@ -241,6 +242,9 @@ public final class GameActivity extends Activity {
             gripAffordanceV20=new GripAffordanceV20();
             gripAffordanceV20.restore(prefs.getString(GripAffordanceV20.KEY,""));
             sensorMind.attachGripAffordanceV20(gripAffordanceV20);
+            perceptualV20=new PerceptualAssociationsV20();
+            perceptualV20.restore(prefs.getString(PerceptualAssociationsV20.KEY,""));
+            sensorMind.attachPerceptualAssociationsV20(perceptualV20);
             // Hard device boundary: ZERO 2.0 can LEARN and REPORT but may not
             // bias any live motor decision. Advisory A/B is laboratory-only.
             sensorMind.enableZero20ExperimentalAdvice(false);
@@ -534,6 +538,7 @@ public final class GameActivity extends Activity {
               .putString(FuturePlannerV20.KEY,futureV20.encode())
               .putString(PhysicalConsequenceV20.KEY,physicalConsequenceV20.encode())
               .putString(GripAffordanceV20.KEY,gripAffordanceV20.encode())
+              .putString(PerceptualAssociationsV20.KEY,perceptualV20.encode())
               .putString(SpatialPerception.KEY,spatialMap.encode())
               .putString(CausalExperiments.KEY,causalExperiments.encode())
               .putString(InstrumentalNavigation.KEY,navigation.encode())

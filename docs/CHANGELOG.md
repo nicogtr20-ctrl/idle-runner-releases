@@ -227,3 +227,17 @@ Official OTA path is `feature/overmind-inapp-updater` → `.github/workflows/ove
 The candidate includes exactly the already tested v20 passive observers, existing base motor policy, and `TelemetryGitHub.partition()` fix preserving `extras.zero20Passive` after multipart upload. No model advice biases the motor controller; no change to energy rules or sensor physics. Source-pinned stable checks are UPDATED to the SHA of the actually reviewed source files, never disabled; five new JVM regressions are added before official release signing.
 
 The initial Galaxy S21 report confirms the original working profile is still present and v20 models have collected real observations. No independent skill or survival improvement is established. Release acceptance: independent staging JVM/Android QA GREEN, official stable publisher GREEN, signed APK certificate/package/version and SHA verified, downloadable manifest/APK responsive, user-controlled install and slot continuity confirmed on phone. If any gate fails, **do not claim availability through Aggiorna**.
+
+## 2026-10-13 — ZERO 2.0 experimental shadow perception (NON RELEASE)
+- Ramo indipendente `feature/zero20-perceptual-associations`, derivato da ZERO2 PR #31.
+- Classi `PerceptualAssociationsV20` e `PerceptualAssociationsV20Regression`: raggruppamento incerto di contorni parziali realmente rilevati, esperienze fisiche osservate, persistenza atomica, esclusione holdout, test 440 decisioni immutate.
+- Collegato `SensorimotorMind`/GameActivity, reset SPAZIO, CERVELLO e digest privato `zero20Passive`. Nessun valore/azione motoria imposto; no riconoscimento semantico certo.
+- Non fa parte della OTA103 e non è una release. Le prove di compilazione CI e dispositivo vanno annotate separatamente; non attribuire un miglioramento biologico ai test JVM.
+
+
+### Confirmed QA of first passive prototype — 2026-10-13
+**Actual consolidated GitHub Actions run:** [38391024117](https://github.com/nicogtr20-ctrl/idle-runner-releases/actions/runs/38391024117), executable-source SHA `3621aedc7447d16286c903671593a72aba29288c`, **SUCCESS**. It compiled the full preexisting Java model set plus `PerceptualAssociationsV20` and its dedicated regression; passed the old body, grip, gate, plates, memory, save, privacy/telemetry, reset, physics and decision tests; verified 440 unchanged choice decisions and static absence of any new observer policy score/physics override; built the complete Android Debug APK with `assembleDebug`. Earlier staging run `38390903157` failed only the overly broad source-only assertion that also excluded passive `chosen()` bookkeeping; assertion was narrowed to forbid view/training/scoring within the action-choice policy and the final run passed. No bypass of any real physics test was used.
+
+**What is not verified:** realistic rotation and 3D shape recognition on the Galaxy S21, same-instance tracking, independently proven causal manipulation, long-lived technique retention, battery/thermal overhead, installer signature, unchanged 12 slots after actual upgrade, and real behavioral benefit. **Promotion remains BLOCKED.** Release/OTA103 unchanged.
+
+**OTA applicativa:** questo modulo percettivo passivo è stato selezionato per il canale AGGIORNA come candidato successivo alla 103. La build ufficiale resta soggetta a Java/Android QA, stessa firma e pubblicazione SHA/manifest prima di dirla disponibile.
