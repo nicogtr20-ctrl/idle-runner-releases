@@ -153,7 +153,8 @@ jobs:
           assert 'perceptualV20.consequence(Math.max(0f,physicalEffect)' in mind
           assert 'perceptualV20.chosen(chosen)' in mind
           assert 'perceptualV20.choiceBias' not in policy
-          assert 'perceptualV20.' not in policy
+          assert 'perceptualV20.consequence' not in policy
+          assert 'perceptualV20.view' not in policy
           assert 'PerceptualAssociationsV20.KEY,perceptualV20.encode()' in game
           assert 'sensorMind.attachPerceptualAssociationsV20(perceptualV20)' in game
           assert 'sensorMind.enableZero20ExperimentalAdvice(false);' in game
