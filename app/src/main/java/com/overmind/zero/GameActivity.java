@@ -784,6 +784,10 @@ public final class GameActivity extends Activity {
                 if(MaterialGeometry.touches(creature,surface,object.x,object.y,
                         object.radius+2f)||nearest<18+object.radius){
                     float before=reserve;
+                    // Snapshot photons BEFORE a source is consumed. This is
+                    // exactly what ZERO could sense at contact, not object law.
+                    float[] sightAtTouch=SensorimotorMind.Senses.read(
+                        creature,surface,chamber,environment,reserve);
                     float delta=object.touch(dx/Math.max(1,dist),dy/Math.max(1,dist));
                     reserve=Math.max(0,Math.min(100,reserve+delta));
                     lifeStats.contact(reserve-before); // actual clamped contact outcome
@@ -794,7 +798,7 @@ public final class GameActivity extends Activity {
                     eventEnergyDeltaSinceAction+=reserve-before;
                     // Actual feedback trains the self-selected motor-action
                     // history; no color, target angle or food flag passed.
-                    sensorMind.contactOutcome(reserve-before,object.signature);
+                    sensorMind.contactOutcome(reserve-before,object.signature,sightAtTouch);
                     energySinceAction[object.signature]+=reserve-before;
                     mind.observe(object.signature,delta,0);
                     decisionBrain.learn(object,before,reserve,0);
@@ -987,6 +991,13 @@ public final class GameActivity extends Activity {
                             elapsedLife,slice);
                         if(grips.contacts>0)boxTouchedThisFrame=true;
                         if(e.bilateralHeldNow)boxOpposedThisFrame=true;
+                        // A proven two-sided hold on an actual moving box
+                        // archives the usable hand/membrane pair, independently
+                        // of whether anything valuable is found underneath.
+                        if(grips.opposingGrip&&e.displacementFromSpawn()>1f){
+                            if(gripBank.observe(lastAppliedHand,lastAppliedMembrane,
+                               true,true,Math.min(2f,e.displacementFromSpawn())))save();
+                        }
                         if(grips.opposingGrip)e.peakDisplacement=Math.max(
                             e.peakDisplacement,e.displacementFromSpawn());
                         if(SquareGripPuzzle.uncover(e,environment)){
