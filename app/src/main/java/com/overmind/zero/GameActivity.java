@@ -124,6 +124,15 @@ public final class GameActivity extends Activity {
         float H=850,clock=0,phase=0,uiTime=0,heading=0,trailClock=0;
         float[] trailX=new float[46],trailY=new float[46];
         int trailCount=0,speed=1,episode=0;
+        // Separate TEST MAX mode: never part of x1/x5/x20 cycling.
+        // Session-only, stopped by explicit STOP, Android pause or overheating.
+        boolean testMax=false;
+        long testMaxStartedNs=0,testMaxThermalCheckedNs=0;
+        float testMaxSimSeconds=0f,testMaxActualRate=0f;
+        int testMaxThermalStatus=0;
+        static final float TEST_MAX_FIXED_DT=1f/60f;
+        static final int TEST_MAX_MAX_STEPS=1024;
+        static final long TEST_MAX_BUDGET_NS=38000000L;
         // Rendering-only light adaptation. Never persisted or fed to physics.
         final float[] cyanLeds=new float[Morphology.POINTS];
         final float[] redLeds=new float[Morphology.POINTS];
@@ -591,6 +600,8 @@ public final class GameActivity extends Activity {
             sensorMind.setLearning(true);
         }
         void suspend(){
+            // Do not persist/resume an unattended high-speed test.
+            testMax=false;
             // Pause and FLUSH BOTH cognition and physical state before the
             // named-slot screen is allowed to inspect the working profile.
             enabled=false;
@@ -882,9 +893,33 @@ public final class GameActivity extends Activity {
             lastFrame=now;
             uiTime+=dt;
             if(resetNotice>0)resetNotice-=dt;
+            // Fixed-step headless-style burst: preserve ALL original physics,
+            // senses, hunger, actions, learning and real event timestamps.
+            // Wall clock controls CPU budget only, never simulated outcomes.
+            boolean fullSpeed=testMax&&!settingsExpanded&&!showBenchmark;
+            if(fullSpeed&&android.os.Build.VERSION.SDK_INT>=29&&
+                now-testMaxThermalCheckedNs>2000000000L){
+                testMaxThermalCheckedNs=now;
+                android.os.PowerManager thermal=(android.os.PowerManager)
+                    GameActivity.this.getSystemService(Context.POWER_SERVICE);
+                if(thermal!=null){
+                    testMaxThermalStatus=thermal.getCurrentThermalStatus();
+                    if(testMaxThermalStatus>=android.os.PowerManager.THERMAL_STATUS_SEVERE){
+                        stopTestMax("TEST MAX fermato: temperatura alta");
+                        fullSpeed=false;
+                    }
+                }
+            }
+            final int frameSteps=fullSpeed?TEST_MAX_MAX_STEPS:speed;
+            // Short bounded burst, always returning control to UI/touch.
+            final long burstDeadline=System.nanoTime()+
+                (testMaxThermalStatus>=android.os.PowerManager.THERMAL_STATUS_MODERATE
+                    ?18000000L:TEST_MAX_BUDGET_NS);
             if(simulationRunning){
-                for(int i=0;i<speed;i++){
-                    float slice=Math.min(dt,.035f);
+                for(int i=0;i<frameSteps;i++){
+                    if(fullSpeed&&i>0&&System.nanoTime()>=burstDeadline)break;
+                    float slice=fullSpeed?TEST_MAX_FIXED_DT:Math.min(dt,.035f);
+                    if(fullSpeed)testMaxSimSeconds+=slice;
                     float energyBeforeFrame=reserve;
                     int lifeStamp=episode;
                     updateHabitat(slice);
@@ -1224,6 +1259,10 @@ public final class GameActivity extends Activity {
                         trailX[0]=creature.cx;trailY[0]=creature.cy;
                     }
                 }
+            }
+            if(fullSpeed&&testMaxStartedNs>0){
+                float realSeconds=(System.nanoTime()-testMaxStartedNs)*1.0e-9f;
+                if(realSeconds>.1f)testMaxActualRate=testMaxSimSeconds/realSeconds;
             }
             // Lightweight periodic checkpoint for app/task interruptions.
             // Normal neural saves remain more frequent than physical writes.
@@ -1588,6 +1627,12 @@ public final class GameActivity extends Activity {
             text(c,"ABILITA "+skillBank.count()+" • RICORDI "+episodic.stored()+
                 " • TECNICHE "+gripBank.count(),173,210,9,TEAL,false);
 
+            // TEST MAX stop is its own small hit target, away from TEMPO.
+            if(testMax&&!settingsExpanded){
+                rounded(c,13,217,153,260,0xe6172534,9);
+                text(c,"TEST MAX  x"+(int)testMaxActualRate,83,234,11,GOLD,true);
+                text(c,"STOP TEST",83,249,11,0xffffa8a0,true);
+            }
             // Only a small floating chevron, with no surrounding toolbar.
             smallChevron(c,447,250,detailsExpanded);
             if(detailsExpanded)renderDetails(c);
@@ -1784,6 +1829,40 @@ public final class GameActivity extends Activity {
         float settingsTop(){
             return Math.max(75,Math.min(150,H*.13f));
         }
+        float testButtonY(){
+            float bottom=Math.min(H-155,settingsTop()+488);
+            return Math.min(H-208,bottom+24);
+        }
+        void stopTestMax(String notice){
+            testMax=false;
+            testMaxStartedNs=0;
+            testMaxThermalStatus=0;
+            lastFrame=0;
+            if(notice!=null){
+                updaterStatus=notice;
+                updaterStatusUntil=uiTime+5f;
+            }
+            invalidate();
+        }
+        void confirmTestMax(){
+            if(testMax){stopTestMax("TEST MAX arrestato");return;}
+            new android.app.AlertDialog.Builder(GameActivity.this)
+                .setTitle("Avvia TEST MAX?")
+                .setMessage("La simulazione avanzera alla massima velocita sostenibile. " +
+                    "Le leggi fisiche, l'apprendimento e il tempo simulato restano " +
+                    "invariati. Il telefono potrebbe scaldarsi. " +
+                    "Premi STOP TEST per fermarti; uscendo dall'app il test si interrompe.")
+                .setNegativeButton("ANNULLA",null)
+                .setPositiveButton("AVVIA TEST", (dialog,which)->{
+                    testMax=true;simulationRunning=true;
+                    testMaxStartedNs=System.nanoTime();
+                    testMaxThermalCheckedNs=0;
+                    testMaxSimSeconds=testMaxActualRate=0;
+                    settingsExpanded=false;
+                    lastFrame=0;
+                    postInvalidateOnAnimation();
+                }).show();
+        }
         void renderSettings(Canvas c){
             // In-app navigation. No new Activity; existing screens/OTA stay
             // intact and use their original brain-save transitions.
@@ -1828,6 +1907,18 @@ public final class GameActivity extends Activity {
             c.restore();
             dividerHud(c,48,bottom-49,433);
             text(c,"VERSIONE "+installedVersion+" • OTA",55,bottom-23,11,GOLD,false);
+            // This is NOT next to the TEMPO cycle. Its own deliberate,
+            // settings-only control is followed by an explicit confirmation.
+            float ty=testButtonY();
+            rounded(c,105,ty,375,ty+47,
+                testMax?0xc33b2930:0xc21d3944,13);
+            paint.setColor(testMax?0xffffa094:0xff79ebd4);
+            paint.setStyle(Paint.Style.STROKE);paint.setStrokeWidth(1.6f);
+            c.drawRoundRect(105,ty,375,ty+47,13,13,paint);
+            paint.setStyle(Paint.Style.FILL);
+            text(c,testMax?"ARRESTA TEST MAX":"AVVIA TEST MAX",240,ty+20,14,
+                 testMax?0xffffa094:0xffa6fff0,true);
+            text(c,"Solo esperimenti • velocita adattiva",240,ty+37,9,MUTED,true);
             // Footer navigation remains visible; only its right side is active.
             paint.setColor(0xeb061320);
             rounded(c,12,H-143,468,H-16,0xeb071621,35);
@@ -1878,6 +1969,10 @@ public final class GameActivity extends Activity {
             if(showBenchmark){
                 showBenchmark=false;invalidate();return true;
             }
+            // One-tap emergency stop, deliberately separated from x1/x5/x20.
+            if(testMax&&!settingsExpanded&&x>=12&&x<=160&&y>=208&&y<=268){
+                stopTestMax("TEST MAX arrestato");return true;
+            }
             // Modal settings intercepts all taps outside explicit menu items.
             if(settingsExpanded){
                 float top=settingsTop(),first=top+78f;
@@ -1895,6 +1990,10 @@ public final class GameActivity extends Activity {
                         settingsExpanded=false;
                     }else settingsExpanded=false;
                     invalidate();return true;
+                }
+                float ty=testButtonY();
+                if(x>=96&&x<=384&&y>=ty&&y<=ty+54){
+                    confirmTestMax();invalidate();return true;
                 }
                 if(x>=44&&x<=436&&y>=first&&y<first+7*52f){
                     int index=(int)((y-first)/52f);
