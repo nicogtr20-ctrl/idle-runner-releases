@@ -101,3 +101,7 @@ ZERO21 branch is research only. NEVER merge the complete old experimental branch
 
 ## 10. Research discipline
 In every commit/paper append the exact source SHA, CI run IDs, model parameters modified, metrics and regression failures, whether an action policy can be affected, on-device validation status and a concrete falsifying observation. Distinguish [implemented], [compiled], [tested in matched lab], [tested on S21], [released]. Do not confuse journal logs with scientific proof, or historical 'DONE' statements with current reality. Mark UNKNOWN clearly.
+
+
+## 2026-10-13 — Integrated research implementation G2–G7 (read before assumptions)
+The new working source and complete scientific limitations are documented in **[ZERO21_G2_G7_INTEGRATION.md](ZERO21_G2_G7_INTEGRATION.md)**. Implemented in a single research branch: `ObjectContinuityV21` anonymous sightline tracking and delayed energy hypothesis, `CompetenceMemoryV21` real physical HAND/MEMBRANE archive distinct from metabolic utility, `UnifiedArbiterV21` single cautious energy/risk/uncertainty arbiter in SHADOW, and genuine bilateral-cover paired physics arena with new-only vs original unchanged action policy. `SensorimotorMind`, `GameActivity`, `ResetDomains`, `BrainToolsActivity` and manual GitHub telemetry are wired with additive optional schema keys. A full causal world-model, reliable multi-view identity through extreme deformity, and validated performance-raising actuating integration are NOT yet complete. **No signed OTA or on-device experiment.**
