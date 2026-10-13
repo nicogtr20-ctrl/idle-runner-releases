@@ -15,9 +15,9 @@ public final class RecurrentCoreV22Regression {
             untrusted.sense(noChange,null,null,null);
             untrusted.consequence(0,0,i%5!=0,i%5==0,false);
         }
-        float[] prior=new float[16];for(int a=0;a<16;a++)prior[a]=(a-8)*.07f;
+        float[] priorScores=new float[16];for(int a=0;a<16;a++)priorScores[a]=(a-8)*.07f;
         untrusted.sense(noChange,null,null,null);
-        yes(Arrays.equals(prior,untrusted.evaluate(prior)),
+        yes(Arrays.equals(priorScores,untrusted.evaluate(priorScores)),
             "Unvalidated recurrent weights overrode a learned legacy policy");
         yes(untrusted.learningBlend()>=.89f,"Untrusted fixture lacks trained samples");
         RecurrentCoreV22 core=new RecurrentCoreV22();float[] s=new float[26];s[0]=.5f;s[6]=.4f;
