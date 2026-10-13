@@ -464,3 +464,8 @@ Verifiche: **70 test JVM locali PASS**, controlli del publisher PASS, [Android s
 Installare sopra l'app attuale tramite AGGIORNA o APK; non disinstallare e non azzerare le memorie. Nuovo tasto **CONFRONTO CERVELLO 2.2** in CERVELLO/ANALISI: 24 prove fisiche isolate (12 coppie) sul profilo salvato; stesso seed/scena, controllo precedente contro core attivo+recupero. Non modifica il personaggio; report separato `zero_core_lab_v22`, upload solo esplicito tramite CONDIVIDI DATI, conservato nei multipart. L'arena ha controllori fissi, senza tempeste/streaming: screening, non equivalenza integrale al mondo.
 
 **Ancora da verificare sul Galaxy S21:** installazione in-place e continuità dei 12 slot, FPS/termica e nuovo moltiplicatore TEST MAX rispetto al x29 riportato, risultati A/B, retention e adattamento a scene nuove. Nessun uplift comportamentale è già dimostrato. [Paper completo e checklist](ZERO22_ACTIVE_CORE_AND_DEVICE_VALIDATION.md). Il publisher 117 sul diverso branch `feature/zero22-active-recurrent-ota117` non è questa release: ultimo rilascio verificato qui è OTA118.
+
+## OTA 0.11.6-ota.119 — 2026-10-13T21:18:16.833904+00:00
+- Pacchetto Android firmato pubblicato su Vercel (codice 1119).
+- SHA-256: `6593561d5593d1b047b73022506be0203c9fe603b46f1f7de9cd7ba52b215b68`.
+- APK: `/apk/overmind-zero-1119-6593561d5593.apk`.
