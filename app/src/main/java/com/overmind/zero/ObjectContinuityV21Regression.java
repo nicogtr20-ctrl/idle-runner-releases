@@ -27,9 +27,11 @@ public final class ObjectContinuityV21Regression {
             "visible repeated obstacle not tracked across translation");
         yes(t.visibleTracks()==1,"egomotion created phantom duplicate objects");
         t.chosen(8);
+        // Modest 44U observed shift within conservative correspondence gate;
+        // larger 66U leaps must ABSTAIN rather than guess identity.
         // Visible same-ray obstacle displacement, with external-physics
         // evidence. Still only a POTENTIAL action/object association.
-        t.view(east(6f/9),22,0,.20f,true);
+        t.view(east(5f/9),22,0,.20f,true);
         t.consequence(1.6f,true,false);
         yes(t.candidateEffects()>0,"physically witnessed candidate lost");
         t.energyContact(30f);
