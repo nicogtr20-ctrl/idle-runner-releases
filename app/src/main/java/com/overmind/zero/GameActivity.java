@@ -54,6 +54,7 @@ public final class GameActivity extends Activity {
         PerceptualAssociationsV20 perceptualV20=new PerceptualAssociationsV20();
         ObjectExperienceV20 objectExperienceV20=new ObjectExperienceV20();
         UnifiedCognitionV21 unifiedCognitionV21=new UnifiedCognitionV21();
+        ObjectContinuityV21 objectContinuityV21=new ObjectContinuityV21();
         SpatialPerception spatialMap=new SpatialPerception();
         CausalExperiments causalExperiments=new CausalExperiments();
         InstrumentalNavigation navigation=new InstrumentalNavigation();
@@ -261,6 +262,9 @@ public final class GameActivity extends Activity {
             unifiedCognitionV21=new UnifiedCognitionV21();
             unifiedCognitionV21.restore(prefs.getString(UnifiedCognitionV21.KEY,""));
             sensorMind.attachUnifiedCognitionV21(unifiedCognitionV21);
+            objectContinuityV21=new ObjectContinuityV21();
+            objectContinuityV21.restore(prefs.getString(ObjectContinuityV21.KEY,""));
+            sensorMind.attachObjectContinuityV21(objectContinuityV21);
             // Hard device boundary: ZERO 2.0 can LEARN and REPORT but may not
             // bias any live motor decision. Advisory A/B is laboratory-only.
             sensorMind.enableZero20ExperimentalAdvice(false);
@@ -557,6 +561,7 @@ public final class GameActivity extends Activity {
               .putString(PerceptualAssociationsV20.KEY,perceptualV20.encode())
               .putString(ObjectExperienceV20.KEY,objectExperienceV20.encode())
               .putString(UnifiedCognitionV21.KEY,unifiedCognitionV21.encode())
+              .putString(ObjectContinuityV21.KEY,objectContinuityV21.encode())
               .putString(SpatialPerception.KEY,spatialMap.encode())
               .putString(CausalExperiments.KEY,causalExperiments.encode())
               .putString(InstrumentalNavigation.KEY,navigation.encode())
