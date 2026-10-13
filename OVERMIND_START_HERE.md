@@ -125,3 +125,7 @@ La v0.9.5 crea ricordi di sequenze **effettivamente vissute** (fino a 9 sensazio
 - STATISTICHE 25-vs-25 e memoria temporale 0.10.6 restano inalterate.
 - Staging run **38065646624** verde; publisher firmato **38066032322** verde.
 - **OTA pubblico verificato HTTP 200**: versionCode **1056**, versionName **0.10.7-ota.56**, SHA-256 `a433978f842054c71c2744075f3c5a0105a4bad2f825b7ba7d6a7d1629e2030e`, APK **149.392 byte**. Aggiornare in-place; non disinstallare.
+
+
+## ZERO 2.0 — associazioni percettive sperimentali (13 ottobre 2026)
+Sviluppo in `feature/zero20-perceptual-associations` (basato sul ramo sperimentale ZERO 2.0, non sullo stabile). Nuovo modello `PerceptualAssociationsV20` capace di ipotesi di somiglianza fra silhouette parziali da 16 raggi realmente percepiti, prototipi anonimi persistenti, associazioni osservazionali fra azioni e spostamento fisico, holdout e diagnosi. Nessuna etichetta preimpostata cassa/lastra/porta, nessun comando motore o modifica a energia/ricompense, nessuna OTA o installazione. Leggi [protocollo e limiti](docs/ZERO20_PERCEPTUAL_ASSOCIATIONS.md) e il registro `docs/ZERO_20_INTELLIGENCE_RESEARCH.md` prima di sviluppare il riconoscimento multivista e la memoria delle tecniche. La OTA103 stabile resta intatta.
