@@ -22,6 +22,7 @@ public final class ObjectExperienceV20 {
     private float[] pendingSpectra=new float[3];
     private float pendingReserve=0,contactDelta=0;
     private int touchedSignature=-1,energyContacts=0;
+    private float contactCue=0;
     private long views=0,unknown=0,ambiguities=0,physics=0,possibleLinks=0,heldout=0;
     private double error=0,baseline=0;
     private boolean dirty=false;
@@ -116,16 +117,22 @@ public final class ObjectExperienceV20 {
         pending=current;pendingBearing=bearing;pendingAction=action;
         pendingReserve=valid(senses,SensorimotorMind.S)?senses[0]*100f:0;
         for(int i=0;i<3;i++)pendingSpectra[i]=pending>=0?prototype[pending][10+i]:0;
-        contactDelta=0;touchedSignature=-1;energyContacts=0;
+        contactDelta=0;touchedSignature=-1;energyContacts=0;contactCue=0;
     }
     /** An energy event is real, but its cause is not inferred from timing. */
-    public void energyContact(float delta,int signature){
+    public void energyContact(float delta,int signature,float[] visibleAtTouch){
         if(!Float.isFinite(delta)||Math.abs(delta)<.01f)return;
         if(pendingAction<0)return;
         energyContacts++;
         contactDelta+=delta;
-        if(energyContacts==1&&signature>=0&&signature<3)touchedSignature=signature;
-        else touchedSignature=-1; // more than one source = confounded
+        if(energyContacts==1&&signature>=0&&signature<3){
+            touchedSignature=signature;
+            // Only the visually sensed energy at physical contact can
+            // support a tentative association; not hidden Entity properties.
+            int q=quadrant(Math.max(0,pendingBearing));
+            if(valid(visibleAtTouch,SensorimotorMind.S))
+                contactCue=clamp(visibleAtTouch[14+signature*4+q],0,1);
+        }else touchedSignature=-1; // more than one source = confounded
     }
     /** Measured external motion is independent of energetic valence. */
     public void consequence(float displacement,float[] after,float[] afterRays,
@@ -155,17 +162,13 @@ public final class ObjectExperienceV20 {
         // Cross-event object-source attribution is *uncertain* by default.
         // A plausible reveal requires motion, a single source, a localized
         // spectral transition near the same previously perceived bearing.
-        boolean plausible=false;
-        if(moved&&energyContacts==1&&touchedSignature>=0&&
-           valid(afterRays,16)&&oldBearing>=0){
-            int currentRay=nearestRay(afterRays);
-            int gap=Math.abs(currentRay-oldBearing);gap=Math.min(gap,16-gap);
-            int q=quadrant(oldBearing),s=touchedSignature;
-            float later=clamp(after[14+s*4+q],0,1);
-            // Physical source may have been consumed before 'after' was read;
-            // low/vanished signal is NOT evidence of the source's location.
-            plausible=gap<=2 && later>pendingSpectra[s]+.20f;
-        }
+        boolean plausible=moved&&energyContacts==1&&touchedSignature>=0&&
+            oldBearing>=0&&contactCue>pendingSpectra[touchedSignature]+.16f;
+        // A source became optically accessible in the same coarse angular
+        // sector AFTER real movement; still a hypothesis, never proof.
+        // A resource consumed before the end-frame is not misclassified.
+        // Repeated matched observations, controls and heldout validation are
+        // necessary before it may affect any decision.
         if(plausible){
             possibleLinks++;
             if(contactDelta>0){positive[c]++;benefit[c]+=(contactDelta-benefit[c])/
@@ -193,9 +196,11 @@ public final class ObjectExperienceV20 {
         // repeated plausible links before permitting a very small influence.
         float energetic=0;
         int associated=positive[current]+negative[current];
-        if(associated>=20&&encounters[current]>=80){
-            float pp=(positive[current]+.5f)/(encounters[current]+2f);
-            float pn=(negative[current]+.5f)/(encounters[current]+2f);
+        int attempts=0;
+        for(int i=0;i<A;i++)attempts+=tried[current][i];
+        if(associated>=20&&attempts>=80){
+            float pp=(positive[current]+.5f)/(attempts+2f);
+            float pn=(negative[current]+.5f)/(attempts+2f);
             float risk=reserveFraction<.25f?1.8f:1f;
             energetic=clamp((pp*benefit[current]-pn*harm[current]*risk-
                               cost[current])/40f,-.4f,.4f);
@@ -205,7 +210,7 @@ public final class ObjectExperienceV20 {
     }
     public void resetLife(){
         pending=-1;pendingAction=-1;current=-1;bearing=-1;
-        contactDelta=0;energyContacts=0;touchedSignature=-1;
+        contactDelta=0;energyContacts=0;touchedSignature=-1;contactCue=0;
     }
     public String encode(){
         StringBuilder b=new StringBuilder("oe2|").append(size).append('|').append(views)
