@@ -1,7 +1,7 @@
 name: ZERO2 Object Cognition Staging QA
 on:
   push:
-    branches: [feature/zero2-object-causal-learning-ota106]
+    branches: [feature/zero2-object-causal-learning-ota106, feature/zero2-adaptive-priorities-ota110]
   workflow_dispatch:
 permissions:
   contents: read
@@ -104,5 +104,14 @@ jobs:
           assert 'objectExperience.choiceBias(' in b
           assert 'if(grips.opposingGrip&&actualBoxMotion>.005f)' in g
           assert 'if(grips.held>0)boxAnyHeldThisFrame=true;' in g
+          assert 'gripBank.retrieve(' in g
+          assert 'handTrainer.best,shapeTrainer.best,sensorMind.stateCopy()' in g
+          policy=(root/'SensorimotorMind.java').read_text()
+          credit=(root/'ExperienceCredit.java').read_text()
+          assert 'contactCredit.value(' not in policy
+          assert policy.count('contactCredit.adaptiveValue(')>=3
+          assert 'mechanicalValue(' in credit
+          assert 'materialMotionRegression' in (root/'OnlineBodyLearning.java').read_text()
+          assert 'grip2|' in (root/'GripSkillBank.java').read_text()
           print('Object learning, grip archive, reset and save connections PASS')
           PY

@@ -932,7 +932,7 @@ public final class GameActivity extends Activity {
                         if(physicalHold){
                             if(gripBank.observe(lastAppliedHand,lastAppliedMembrane,
                                 true,opposedNow,
-                                Math.max(0,actuallyMoved)))save();
+                                Math.max(0,actuallyMoved),sensorMind.stateCopy()))save();
                         }
                         previousGripHeld=chamber.gateHeldFrames;
                         previousOpposedFrames=chamber.opposedContactFrames;
@@ -952,7 +952,7 @@ public final class GameActivity extends Activity {
                            gripRecoveryCooldown==0 &&
                            !liveBody.testingCandidate()){
                             GripSkillBank.Pair historical=gripBank.retrieve(
-                                handTrainer.best,shapeTrainer.best);
+                                handTrainer.best,shapeTrainer.best,sensorMind.stateCopy());
                             if(historical!=null){
                                 handTrainer.best=historical.hand;
                                 shapeTrainer.best=historical.membrane;
@@ -1005,7 +1005,8 @@ public final class GameActivity extends Activity {
                         // of whether anything valuable is found underneath.
                         if(grips.opposingGrip&&actualBoxMotion>.005f){
                             if(gripBank.observe(lastAppliedHand,lastAppliedMembrane,
-                               true,true,Math.min(2f,actualBoxMotion)))save();
+                               true,true,Math.min(2f,actualBoxMotion),
+                               sensorMind.stateCopy()))save();
                         }
                         if(grips.opposingGrip)e.peakDisplacement=Math.max(
                             e.peakDisplacement,e.displacementFromSpawn());
@@ -1030,7 +1031,7 @@ public final class GameActivity extends Activity {
                     if(boxFailedGripFrames>=120&&gripRecoveryCooldown==0&&
                        !liveBody.testingCandidate()){
                         GripSkillBank.Pair oldGrip=gripBank.retrieve(
-                            handTrainer.best,shapeTrainer.best);
+                            handTrainer.best,shapeTrainer.best,sensorMind.stateCopy());
                         boxFailedGripFrames=0;
                         gripRecoveryCooldown=oldGrip==null?240:900;
                         if(oldGrip!=null){
