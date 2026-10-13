@@ -136,13 +136,12 @@ jobs:
           assert 'if(e.bilateralHeldNow)boxOpposedThisFrame=true;' in game
           assert 'boxTouchFramesSinceAction,boxOpposedFramesSinceAction' in game
           assert 'zero20ExperimentalAdvice=false' in mind
-          lab=Path("app/src/main/java/com/overmind/zero/Zero20CoveredEnergyBenchmark.java").read_text()
           selfgrip=Path("app/src/main/java/com/overmind/zero/GripAffordanceV20.java").read_text()
           assert "sampleGripPhysicsFrame(surface)" in game
-          assert "rig.mind.sampleGripPhysicsFrame(skin)" in lab
+          # The research-only headless arena is not shipped in official Android source;
+          # production checks retain the actual GameActivity physical-frame hook.
           assert "gripAffordanceV20.physicsFrame(skin)" in mind
           assert "GripSurfaceComposition.compose(surface,chamber,environment);" in game
-          assert "GripSurfaceComposition.compose(skin,null,objects);" in lab
           assert 'new StringBuilder("ga21|")' in selfgrip
           assert 'raw.startsWith("ga20|")' in selfgrip
           assert "gripAffordanceV20.physicsFrame(skin)" not in policy
