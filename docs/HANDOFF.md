@@ -1,3 +1,9 @@
+# Punto di ripresa attuale — ZERO 2.1 (13 ottobre 2026)
+
+**Leggi per prima cosa:** [ZERO21_HANDOFF_NEXT_CHAT.md](ZERO21_HANDOFF_NEXT_CHAT.md). Poi [ZERO21_UNIFIED_COGNITION_MASTER.md](ZERO21_UNIFIED_COGNITION_MASTER.md) e [ZERO21_IMPLEMENTATION_LOG.md](ZERO21_IMPLEMENTATION_LOG.md). **Ramo lavoro**: `feature/zero21-unified-cognition`, base codice OTA112 `feature/overmind-inapp-updater`. Creata prima struttura cognitiva integrata con eventi reali di sensi/scelta/energia/fisica, salvataggio optional, reset WORLD mirato, regressione JVM, QA Android. Workflow [38452161103](https://github.com/nicogtr20-ctrl/idle-runner-releases/actions/runs/38452161103) SUPERATO su ultimo commit di CODICE `7361e67`. **NON** completato cervello generale, non attivato nuovo score nelle scelte, non distribuito APK, non toccati i 12 slot telefono. Il branch ZERO20 più vecchio è divergente: vietato merge indiscriminato. Questo avviso prevale sugli stati storici OTA97/105 riportati sotto senza cancellarli.
+
+---
+
 ## 2026-10-13 — HUD neon minimale OTA112 (implementazione autorizzata)
 
 User screenshot richiesto: energia blu/rossa/viola verticale a sinistra con sfondo trasparente; rimozione header ZERO / LASTRE; stato vitale in pannello alto a destra; freccia trasparente e sola vista avanzata su richiesta; menu inferiore CERVELLO/TEMPO/IMPOSTAZIONI. Impostazioni contiene PARTITE E SALVATAGGI, ANALISI, STATISTICHE, CERVELLO PARAMETRI, PROVE CORPOREE, PROVA STANZA, AGGIORNA, VERSIONE. Il progetto non chiede un'altra immagine ma una **APK** via AGGIORNA. Branch `feature/zero-ui-neon-nav-ota112` basato su `feature/overmind-inapp-updater`. `GameActivity.java` modificato solo lato Canvas e azioni UI, senza toccare fisica, motori, memorie, energyTotals o salvataggi. Documento [ZERO_UI_OTA112_NEON_NAV](ZERO_UI_OTA112_NEON_NAV.md). Non dichiarare rilascio OTA finché verifiche PR e publisher firmato su main/Vercel READY.
