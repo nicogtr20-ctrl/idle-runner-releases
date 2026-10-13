@@ -349,7 +349,7 @@ public final class SensorimotorMind {
                 return SensorimotorMind.this.prediction(state,a);
             }
             @Override public float value(float[] state,int a){
-                return SensorimotorMind.this.estimate(state,a)+contactCredit.value(state,a);
+                return SensorimotorMind.this.estimate(state,a)+contactCredit.adaptiveValue(state,a);
             }
         },diagnostics);
         // Policy A/B TEST ONLY: query a learned, uncertainty-gated future
@@ -362,7 +362,7 @@ public final class SensorimotorMind {
             futureV20.evaluate(senses,worldV20,new FuturePlannerV20.Value(){
                 @Override public float value(float[] observed,int candidate){
                     return SensorimotorMind.this.estimate(observed,candidate)+
-                           contactCredit.value(observed,candidate);
+                           contactCredit.adaptiveValue(observed,candidate);
                 }
             },transferV20);
             if(futureV20.latestMargin()>.02f&&
@@ -398,9 +398,11 @@ public final class SensorimotorMind {
             // and generic curiosity/memory/anti-stall terms influence choice.
             float diversity=motorGuard==null?0:motorGuard.stagnationBias(a);
             // Physically observed outcomes maintain INDEPENDENT energetic
-            // and external-displacement values, combined only at choice time.
+            // and external-displacement values. A learned gripper is a
+            // capability, not a source of intrinsic survival reward: only
+            // perceptible physical affordance + reserve allow it into utility.
             // No hidden object identity, hardcoded heading or navigation.
-            float earnedValue=contactCredit.value(senses,a);
+            float earnedValue=contactCredit.adaptiveValue(senses,a);
             // Only a validated lived-death predictor can modulate energy-
             // SOURCE evidence. Never assign death to action, grip or geometry.
             if(mortality!=null)
@@ -531,7 +533,7 @@ public final class SensorimotorMind {
             futureV20.evaluate(senses,worldV20,new FuturePlannerV20.Value(){
                 @Override public float value(float[] observed,int candidate){
                     return SensorimotorMind.this.estimate(observed,candidate)+
-                           contactCredit.value(observed,candidate);
+                           contactCredit.adaptiveValue(observed,candidate);
                 }
             },transferV20);
         }
