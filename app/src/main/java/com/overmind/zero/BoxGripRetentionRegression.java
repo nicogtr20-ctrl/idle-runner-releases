@@ -19,7 +19,7 @@ public final class BoxGripRetentionRegression {
         OnlineBodyLearning.Result r=null;
         for(int i=0;i<OnlineBodyLearning.WINDOW;i++){
             r=x.observe(0f,2f,1f,0,70f,70f,gainedNovelty?2:0,
-                 0f,0f,5f,0f,false,1f,0f,MOTOR,HAND,MEMBRANE,
+                 0f,0f,6f,0f,false,1f,0f,MOTOR,HAND,MEMBRANE,
                  0f,actualContacts,actualOpposed);
         }
         return r;
