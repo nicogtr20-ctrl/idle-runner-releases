@@ -1,0 +1,1030 @@
+name: ZERO22 active recurrent Android QA
+# 0.9.9 retry after parallel paper commits changed main during first publish attempt.
+on:
+  push:
+    branches: [feature/zero22-active-recurrent]
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: zero22-active-qa
+  cancel-in-progress: false
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    env:
+      OVERMIND_BUILD_NUMBER: ${{ github.run_number }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+      - uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: '8.11.1'
+      - name: Unit tests
+        run: |
+          mkdir -p /tmp/overmind
+          javac -d /tmp/overmind app/src/main/java/com/overmind/zero/Base64CodecV22.java app/src/main/java/com/overmind/zero/RecurrentCoreV22.java app/src/main/java/com/overmind/zero/RecurrentCoreV22Regression.java app/src/main/java/com/overmind/zero/SkillExecutionV22.java app/src/main/java/com/overmind/zero/SkillExecutionIndependentRegression.java app/src/main/java/com/overmind/zero/Zero20CoveredEnergyBenchmark.java app/src/main/java/com/overmind/zero/CoreComparisonV22.java app/src/main/java/com/overmind/zero/MotorBrain.java app/src/main/java/com/overmind/zero/OpticalCues.java app/src/main/java/com/overmind/zero/OpticalCueRegression.java app/src/main/java/com/overmind/zero/HabitatContinuity.java app/src/main/java/com/overmind/zero/DecisionBlackbox.java app/src/main/java/com/overmind/zero/GateLifeJournal.java app/src/main/java/com/overmind/zero/ContextualMotionProbe.java app/src/main/java/com/overmind/zero/ShadowNonInterferenceRegression.java app/src/main/java/com/overmind/zero/UnknownWorld.java app/src/main/java/com/overmind/zero/PanelPhysics.java app/src/main/java/com/overmind/zero/PanelPhysicsRegression.java app/src/main/java/com/overmind/zero/SquareGripPuzzle.java app/src/main/java/com/overmind/zero/SquareCollisionSolver.java app/src/main/java/com/overmind/zero/GripParityRegression.java app/src/main/java/com/overmind/zero/GateBoxGripIsolationRegression.java app/src/main/java/com/overmind/zero/MultiObjectGripRegression.java app/src/main/java/com/overmind/zero/GripSurfaceComposition.java app/src/main/java/com/overmind/zero/WorldPlacement.java app/src/main/java/com/overmind/zero/ContactLearning.java app/src/main/java/com/overmind/zero/DecisionBrain.java app/src/main/java/com/overmind/zero/Morphology.java app/src/main/java/com/overmind/zero/ScarcityLab.java app/src/main/java/com/overmind/zero/SensorimotorMind.java app/src/main/java/com/overmind/zero/GoalContinuity.java app/src/main/java/com/overmind/zero/GateBehaviorMetrics.java app/src/main/java/com/overmind/zero/BehavioralLaboratory.java app/src/main/java/com/overmind/zero/InstrumentalNavigation.java app/src/main/java/com/overmind/zero/SpatialPerception.java app/src/main/java/com/overmind/zero/CausalExperiments.java app/src/main/java/com/overmind/zero/BodyProprioception.java app/src/main/java/com/overmind/zero/DistributedBodySense.java app/src/main/java/com/overmind/zero/DistributedBodyRegression.java app/src/main/java/com/overmind/zero/LocalImpedanceSense.java app/src/main/java/com/overmind/zero/LocalImpedanceRegression.java app/src/main/java/com/overmind/zero/ShelterEcology.java app/src/main/java/com/overmind/zero/ShelterEcologyRegression.java app/src/main/java/com/overmind/zero/TemporalWorkingMemory.java app/src/main/java/com/overmind/zero/TemporalSkillBank.java app/src/main/java/com/overmind/zero/TemporalPersistenceRegression.java app/src/main/java/com/overmind/zero/LearnedSequencePlanner.java app/src/main/java/com/overmind/zero/LearningDiagnostics.java app/src/main/java/com/overmind/zero/ResetDomains.java app/src/main/java/com/overmind/zero/OnlineBodyLearning.java app/src/main/java/com/overmind/zero/MotionExploration.java app/src/main/java/com/overmind/zero/EpisodicMemory.java app/src/main/java/com/overmind/zero/MotorAutonomyGuard.java app/src/main/java/com/overmind/zero/MotorSkillBank.java app/src/main/java/com/overmind/zero/ExperienceCredit.java app/src/main/java/com/overmind/zero/GripSkillBank.java app/src/main/java/com/overmind/zero/SaveProfileCodec.java app/src/main/java/com/overmind/zero/LifeStatistics.java app/src/main/java/com/overmind/zero/GripContactObserver.java app/src/main/java/com/overmind/zero/GripContactObserverRegression.java app/src/main/java/com/overmind/zero/MortalityLearning.java app/src/main/java/com/overmind/zero/BodyIntegrity.java app/src/main/java/com/overmind/zero/BodyIntegrityRecoveredSnapshotsRegression.java app/src/main/java/com/overmind/zero/BodyIntegrityObstacleRegression.java app/src/main/java/com/overmind/zero/MaterialGeometry.java app/src/main/java/com/overmind/zero/MaterialSymbioteRegression.java app/src/main/java/com/overmind/zero/MaterialMotionRegression.java app/src/main/java/com/overmind/zero/MaterialVisionRegression.java app/src/main/java/com/overmind/zero/TelemetryChunks.java app/src/main/java/com/overmind/zero/TelemetryChunksRegression.java app/src/main/java/com/overmind/zero/PredictiveWorldV20.java app/src/main/java/com/overmind/zero/PredictiveWorldV20Regression.java app/src/main/java/com/overmind/zero/TransferSkillsV20.java app/src/main/java/com/overmind/zero/FuturePlannerV20.java app/src/main/java/com/overmind/zero/Zero20HierarchicalRegression.java app/src/main/java/com/overmind/zero/PhysicalConsequenceV20.java app/src/main/java/com/overmind/zero/PhysicalConsequenceV20Regression.java app/src/main/java/com/overmind/zero/GripAffordanceV20.java app/src/main/java/com/overmind/zero/GripAffordanceV20Regression.java app/src/main/java/com/overmind/zero/Zero20PassiveSnapshot.java app/src/main/java/com/overmind/zero/Zero20PassiveSnapshotRegression.java app/src/main/java/com/overmind/zero/BoxGripRetentionRegression.java app/src/main/java/com/overmind/zero/PerceptualAssociationsV20.java app/src/main/java/com/overmind/zero/PerceptualAssociationsV20Regression.java app/src/main/java/com/overmind/zero/ObjectExperienceV20.java app/src/main/java/com/overmind/zero/ObjectExperienceV20Regression.java app/src/main/java/com/overmind/zero/EnergyLifetimeCounters.java app/src/main/java/com/overmind/zero/UnifiedCognitionV21.java app/src/main/java/com/overmind/zero/UnifiedCognitionV21Regression.java app/src/main/java/com/overmind/zero/ObjectContinuityV21.java app/src/main/java/com/overmind/zero/ObjectContinuityV21Regression.java app/src/main/java/com/overmind/zero/CompetenceMemoryV21.java app/src/main/java/com/overmind/zero/CompetenceMemoryV21Regression.java app/src/main/java/com/overmind/zero/UnifiedArbiterV21.java app/src/main/java/com/overmind/zero/UnifiedArbiterV21Regression.java app/src/main/java/com/overmind/zero/UnifiedPolicyParityV21Regression.java
+          java -cp /tmp/overmind com.overmind.zero.GripContactObserverRegression
+          java -cp /tmp/overmind com.overmind.zero.MotorBrain
+          java -cp /tmp/overmind com.overmind.zero.UnknownWorld
+          java -cp /tmp/overmind com.overmind.zero.SquareGripPuzzle
+          java -cp /tmp/overmind com.overmind.zero.SquareCollisionSolver
+          java -cp /tmp/overmind com.overmind.zero.GripParityRegression
+          java -cp /tmp/overmind com.overmind.zero.GateBoxGripIsolationRegression
+          java -cp /tmp/overmind com.overmind.zero.MultiObjectGripRegression
+          java -cp /tmp/overmind com.overmind.zero.OpticalCues
+          java -cp /tmp/overmind com.overmind.zero.OpticalCueRegression
+          java -cp /tmp/overmind com.overmind.zero.HabitatContinuity
+          java -cp /tmp/overmind com.overmind.zero.WorldPlacement
+          java -cp /tmp/overmind com.overmind.zero.ContactLearning
+          java -cp /tmp/overmind com.overmind.zero.DecisionBrain
+          java -cp /tmp/overmind com.overmind.zero.Morphology
+          java -cp /tmp/overmind com.overmind.zero.ScarcityLab
+          java -cp /tmp/overmind com.overmind.zero.SensorimotorMind
+          java -cp /tmp/overmind com.overmind.zero.DecisionBlackbox
+          java -cp /tmp/overmind com.overmind.zero.GoalContinuity
+          java -cp /tmp/overmind com.overmind.zero.GateBehaviorMetrics
+          java -cp /tmp/overmind com.overmind.zero.GateLifeJournal
+          java -cp /tmp/overmind com.overmind.zero.ContextualMotionProbe
+          java -cp /tmp/overmind com.overmind.zero.ShadowNonInterferenceRegression
+          java -cp /tmp/overmind com.overmind.zero.BehavioralLaboratory
+          java -cp /tmp/overmind com.overmind.zero.InstrumentalNavigation
+          java -cp /tmp/overmind com.overmind.zero.CausalExperiments
+          java -cp /tmp/overmind com.overmind.zero.SpatialPerception
+          java -cp /tmp/overmind com.overmind.zero.BodyProprioception
+          java -cp /tmp/overmind com.overmind.zero.DistributedBodyRegression
+          java -cp /tmp/overmind com.overmind.zero.LocalImpedanceRegression
+          java -cp /tmp/overmind com.overmind.zero.ShelterEcologyRegression
+          java -cp /tmp/overmind com.overmind.zero.PanelPhysicsRegression
+          java -cp /tmp/overmind com.overmind.zero.TemporalWorkingMemory
+          java -cp /tmp/overmind com.overmind.zero.TemporalSkillBank
+          java -cp /tmp/overmind com.overmind.zero.TemporalPersistenceRegression
+          java -cp /tmp/overmind com.overmind.zero.LearnedSequencePlanner
+          java -cp /tmp/overmind com.overmind.zero.LearningDiagnostics
+          java -cp /tmp/overmind com.overmind.zero.ResetDomains
+          java -cp /tmp/overmind com.overmind.zero.OnlineBodyLearning
+          java -cp /tmp/overmind com.overmind.zero.BoxGripRetentionRegression
+          java -cp /tmp/overmind com.overmind.zero.MotionExploration
+          java -cp /tmp/overmind com.overmind.zero.EpisodicMemory
+          java -cp /tmp/overmind com.overmind.zero.MotorAutonomyGuard
+          java -cp /tmp/overmind com.overmind.zero.MotorSkillBank
+          java -cp /tmp/overmind com.overmind.zero.GripSkillBank
+          java -cp /tmp/overmind com.overmind.zero.ExperienceCredit
+          java -cp /tmp/overmind com.overmind.zero.MortalityLearning
+          # The old nuclear containment fixtures intentionally do not apply
+          # to an organism with no inertial nucleus or central collider.
+          java -cp /tmp/overmind com.overmind.zero.MaterialGeometry
+          java -cp /tmp/overmind com.overmind.zero.MaterialSymbioteRegression
+          java -cp /tmp/overmind com.overmind.zero.MaterialMotionRegression
+          java -cp /tmp/overmind com.overmind.zero.MaterialVisionRegression
+          java -cp /tmp/overmind com.overmind.zero.SaveProfileCodec
+          java -cp /tmp/overmind com.overmind.zero.TelemetryChunksRegression
+          java -cp /tmp/overmind com.overmind.zero.PredictiveWorldV20Regression
+          java -cp /tmp/overmind com.overmind.zero.Zero20HierarchicalRegression
+          java -cp /tmp/overmind com.overmind.zero.PhysicalConsequenceV20Regression
+          java -cp /tmp/overmind com.overmind.zero.GripAffordanceV20Regression
+          java -cp /tmp/overmind com.overmind.zero.PerceptualAssociationsV20Regression
+          java -cp /tmp/overmind com.overmind.zero.ObjectExperienceV20Regression
+          java -cp /tmp/overmind com.overmind.zero.EnergyLifetimeCounters
+          java -cp /tmp/overmind com.overmind.zero.Zero20PassiveSnapshotRegression
+          java -cp /tmp/overmind com.overmind.zero.UnifiedCognitionV21Regression
+          java -cp /tmp/overmind com.overmind.zero.ObjectContinuityV21Regression
+          java -cp /tmp/overmind com.overmind.zero.CompetenceMemoryV21Regression
+          java -cp /tmp/overmind com.overmind.zero.UnifiedArbiterV21Regression
+          java -cp /tmp/overmind com.overmind.zero.UnifiedPolicyParityV21Regression
+          java -cp /tmp/overmind com.overmind.zero.RecurrentCoreV22Regression
+          java -cp /tmp/overmind com.overmind.zero.SkillExecutionIndependentRegression
+          java -cp /tmp/overmind com.overmind.zero.CoreComparisonV22
+          java -cp /tmp/overmind com.overmind.zero.LifeStatistics
+          # v0.6 includes v0.5 -> v0.6 weight migration and expansion invariants.
+      - name: ZERO2 protect energy needs, contextual grip and named-slot migration
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          root=Path('app/src/main/java/com/overmind/zero')
+          credit=(root/'ExperienceCredit.java').read_text()
+          mind=(root/'SensorimotorMind.java').read_text()
+          bank=(root/'GripSkillBank.java').read_text()
+          game=(root/'GameActivity.java').read_text()
+          learner=(root/'OnlineBodyLearning.java').read_text()
+          assert 'public float adaptiveValue(float[] senses,int action)' in credit
+          assert 'mechanicalValue(' in credit and 'affordance(' in credit
+          assert mind.count('contactCredit.adaptiveValue(')>=3
+          assert 'contactCredit.value(' not in mind
+          assert 'grip2|' in bank and 'grip1|' in bank
+          assert 'contextDistance(s.sensed,sensory)' in bank
+          assert 'handTrainer.best,shapeTrainer.best,sensorMind.stateCopy()' in game
+          assert 'materialMotionRegression' in learner
+          assert 'working.edit().clear().putBoolean(PENDING_RELOAD,true).commit()' in (root/'SaveSlotStore.java').read_text()
+          print('ZERO2: competence not reward; sensor-context recall, life-protected gait and legacy saves PASS')
+          PY
+      - name: Verify ZERO HUD energy, tissue and expandable diagnostics
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          root=Path('app/src/main/java/com/overmind/zero')
+          game=(root/'GameActivity.java').read_text()
+          totals=(root/'EnergyLifetimeCounters.java').read_text()
+          slots=(root/'SaveSlotStore.java').read_text()
+          assert 'void renderDetails(Canvas c)' in game
+          assert 'detailsExpanded=!detailsExpanded;' in game
+          assert 'case 5:' in game and 'activateChamber(true)' in game
+          assert 'renderDock(c);' in game
+          assert 'settingsExpanded=true;' in game
+          assert 'settingsChoice(int index)' in game
+          assert 'updater.checkAndInstall();' in game
+          assert 'ZERO / LASTRE 0124' not in game
+          assert 'hudEnergy(c,37,46,"BLU",energyTotals.blue' in game
+          assert 'hudEnergy(c,37,95,"ROSSA",energyTotals.red' in game
+          assert 'hudEnergy(c,37,144,"VIOLA",energyTotals.violet' in game
+          assert 'neonBar(c,173,96,456,108,reserve,' in game
+          assert 'neonBar(c,173,137,456,149,shelter.integrity,' in game
+          assert 'energyTotals.record(reserve-before,object.isRare());' in game
+          assert 'energyTotals.record(reserve-prior,true);' in game
+          assert 'putString(EnergyLifetimeCounters.KEY,energyTotals.encode())' in game
+          assert 'energyTotals.restore(prefs.getString(EnergyLifetimeCounters.KEY,""))' in game
+          assert 'legacyPositive' in totals and 'lifeTotal(stats,LifeStatistics.GOOD)' in totals
+          assert 'working.edit().clear().putBoolean(PENDING_RELOAD,true).commit()' in slots
+          assert 'updater.checkAndInstall();' in game
+          print('HUD: correct physical resource/tissue sources, cumulative slots, safe migration, in-app OTA PASS')
+          PY
+      - name: Verify perceptual observer is non-actuating
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          root=Path('app/src/main/java/com/overmind/zero')
+          model=(root/'PerceptualAssociationsV20.java').read_text()
+          mind=(root/'SensorimotorMind.java').read_text()
+          game=(root/'GameActivity.java').read_text()
+          reset=(root/'ResetDomains.java').read_text()
+          policy=mind[mind.index('public synchronized int choose('):mind.index('return chosen;',mind.index('public synchronized int choose('))]
+          assert 'PerceptualAssociationsV20.KEY,perceptualV20.encode()' in game
+          assert 'attachPerceptualAssociationsV20(perceptualV20)' in game
+          assert 'PerceptualAssociationsV20.KEY' in reset
+          assert 'perceptualV20.choiceBias' not in policy
+          assert 'perceptualV20.view' not in policy
+          assert 'perceptualV20.consequence' not in policy
+          assert 'sensorMind.enableZero20ExperimentalAdvice(false);' in game
+          assert not any(token in model for token in ['isBilateralBox(', 'isConstruction(', '.signature', '.concealed', 'SquareGripPuzzle.constrain('])
+          print('ZERO2 associations remain sensor-only, passive and save-compatible')
+          PY
+      - name: Confirm trained selection replaced scripted selector
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          s=Path("app/src/main/java/com/overmind/zero/GameActivity.java").read_text()
+          assert "decisionBrain.choose(environment" not in s
+          assert "sensorMind.observe(sensoryBoundary?SensorimotorMind.Senses.read(" in s
+          assert "sensorMind.observationDue(slice)" in s
+          assert "float mx=sensorMind.motorX(),my=sensorMind.motorY();" in s
+          assert "mind.choose(environment" not in s
+          assert 'putString("decision_brain_v05"' in s
+          assert 'decisionBrain.learn(object,before,reserve,0)' in s
+          print("ZERO self-selects movement using actual online sensorimotor feedback")
+          PY
+      - name: Verify evolving brain and in-app skill sheet
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          game=Path('app/src/main/java/com/overmind/zero/GameActivity.java').read_text()
+          ui=Path('app/src/main/java/com/overmind/zero/BrainStatsActivity.java').read_text()
+          manifest=Path('app/src/main/AndroidManifest.xml').read_text()
+          brain=Path('app/src/main/java/com/overmind/zero/DecisionBrain.java').read_text()
+          assert 'BrainStatsActivity.class' in game
+          assert 'android:name="com.overmind.zero.BrainStatsActivity"' in manifest
+          assert 'initialSnapshot()' in ui and 'snapshot()' in ui
+          assert 'PARAMETRI' in ui and 'EVOLUZIONE' in ui and 'ABILITA' in ui
+          assert 'decision_brain_v05' in game and 'hand_brain_v04' in game
+          assert 'growthAttempts' in brain and 'growthAccepted' in brain
+          assert 'if(parts.length>0&&"v1".equals(parts[0]))' in brain
+          print('ZERO-006 signed release gate passed: migration, real weight sheet, growth')
+          PY
+      - name: Verify 96-point physical grip and finite supplies in signed APK
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          app=Path('app/src/main/java/com/overmind/zero/GameActivity.java').read_text()
+          brain=Path('app/src/main/java/com/overmind/zero/Morphology.java').read_text()
+          page=Path('app/src/main/java/com/overmind/zero/BrainStatsActivity.java').read_text()
+          assert 'public static final int POINTS=96;' in brain
+          assert 'lastAppliedMotor=liveBody.weights(0,trainer.best);' in app
+          assert 'lastAppliedMembrane=liveBody.weights(2,shapeTrainer.best);' in app
+          assert 'lastAppliedHand=liveBody.weights(1,handTrainer.best);' in app
+          assert 'episodic.weights(' not in app
+          assert 'recalledManipulationInAction' not in app
+          assert 'motorGuard.observe(slice,creature.cx,creature.cy,newlyMeasuredEffect);' in app
+          assert 'surface.step(creature,lastAppliedMembrane,px,py,slice,' in app
+          assert 'Morphology.collide(surface,object,dt)' in app
+          assert 'float[] xx=surface.x, yy=surface.y;' in app
+          assert 'morph_brain_v07' in app and 'decision_brain_v05' in app
+          assert 'hand_brain_v04' in app and 'putString("best"' in app
+          assert '"MEMBRANA"' in page
+          world=Path('app/src/main/java/com/overmind/zero/UnknownWorld.java').read_text()
+          chamber=Path('app/src/main/java/com/overmind/zero/ScarcityLab.java').read_text()
+          assert 'chamber.constrain(creature,surface,slice,sensorMind.adhesion());' in app
+          assert 'foodTouchedByBody(creature,surface)' in app
+          assert 'consumed=true;cooldown=Float.POSITIVE_INFINITY' in world
+          assert 'leftGrip>0&&rightGrip>0' in chamber
+          assert 'dualTouchNoGrip' in chamber and 'Morphology.GRIP_HOLD' in chamber
+          assert 'out[2]+gripDrive*touchSense[i]' in brain
+          assert 'public static float[] migrate' in brain
+          assert 'shapeTrainer.attemptGate(trainer.best,handTrainer.best)' not in app
+          assert 'sensorimotor_model_v09' in app
+          assert 'room_success_v08' in app and 'grip_events_v08' in app
+          print('ZERO-008: physical 96-point membrane, finite energy, bilateral grip, room tests and old brain persistence passed')
+          PY
+      - name: Verify active grip, backward compatible brain and life continuity
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          m=Path('app/src/main/java/com/overmind/zero/Morphology.java').read_text()
+          s=Path('app/src/main/java/com/overmind/zero/ScarcityLab.java').read_text()
+          a=Path('app/src/main/java/com/overmind/zero/GameActivity.java').read_text()
+          assert 'GRIP_HEAD=HIDDEN+2' in m
+          assert 'out[2]+gripDrive*touchSense[i]' in m
+          assert 'grab+=touch*w[LEGACY_PARAMS+HIDDEN+1]' in m
+          assert 'if(surface.gripHold[i]>=Morphology.GRIP_HOLD&&' in a
+          assert 'dualTouchNoGrip' in s and 'leftGrip>0&&rightGrip>0' in s
+          assert 'decision_brain_v05' in a and 'morph_brain_v07' in a
+          assert 'if(reserve<=0)' in a and 'resetEpisode();' in a
+          print('Only actively commanding adhesive patches can drag gate; 74 learned weights preserved.')
+          PY
+      - name: Verify forward-model driven autonomy and unchanged death
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          a=Path('app/src/main/java/com/overmind/zero/GameActivity.java').read_text()
+          m=Path('app/src/main/java/com/overmind/zero/SensorimotorMind.java').read_text()
+          ui=Path('app/src/main/java/com/overmind/zero/BrainStatsActivity.java').read_text()
+          assert 'sensorimotor_model_v09' in a and 'sensorMind.observe(' in a
+          assert 'Math.atan2(chosenObject.y' not in a and 'decisionBrain.choose(environment' not in a
+          assert 'sensorMind.adhesion()' in a
+          assert 'sensorMind.setLearning(true);' in a and 'learning=!learning' not in a
+          assert 'if(reserve<=0)' in a and 'resetEpisode();' in a
+          assert 'shapeTrainer.attemptGate(trainer.best,handTrainer.best)' not in a
+          assert 'contactCredit.adaptiveValue(senses,a)' in m and 'contactCredit.displaced(physicalEffect)' in m
+          assert 'model[base+j]' in m and 'value[base+k]' in m
+          assert 'worldMind.restore(' in ui
+          assert 'morph_brain_v07' in a and 'decision_brain_v05' in a
+          print('ZERO-009 gates: no goal oracle, online sensory learning, old memory and mortal life preserved.')
+          PY
+      - name: Verify net exploration, persistent per-skill trial tracking and real comparison UI
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          a=Path('app/src/main/java/com/overmind/zero/GameActivity.java').read_text()
+          b=Path('app/src/main/java/com/overmind/zero/OnlineBodyLearning.java').read_text()
+          j=Path('app/src/main/java/com/overmind/zero/MotionExploration.java').read_text()
+          t=Path('app/src/main/java/com/overmind/zero/BrainToolsActivity.java').read_text()
+          r=Path('app/src/main/java/com/overmind/zero/ResetDomains.java').read_text()
+          assert 'journey.observe(creature.cx,creature.cy,energyBeforeFrame,reserve)' in a
+          assert 'NETTO ' in a and 'ZONE ' in a and 'showBenchmark=true' in a
+          assert 'lastBaselineScore' in a and 'lastCandidateScore' in a
+          assert 'useful=net>baseNet+1.5f' in b and 'energySpent' in b
+          assert 'MAX_CELLS_PER_LIFE' in j and 'lifeCells' in j
+          for domain in ('motor','hand','membrane'):
+            assert 'online_accepted_'+domain+'_v094' in a
+            assert 'online_rejected_'+domain+'_v094' in r
+          assert 'ADATTAMENTO CORPOREO REALE' in t
+          print('ZERO-009.4: real net exploration, efficiency, safe domain resets and truthful test overlay passed')
+          PY
+      - name: Compile OTA client
+        run: gradle --no-daemon assembleDebug
+      - name: Ensure positive/negative memory and v0.9.5 migration in signed APK
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          e=Path('app/src/main/java/com/overmind/zero/EpisodicMemory.java').read_text()
+          g=Path('app/src/main/java/com/overmind/zero/GameActivity.java').read_text()
+          p=Path('app/src/main/java/com/overmind/zero/SensorimotorMind.java').read_text()
+          t=Path('app/src/main/java/com/overmind/zero/BrainToolsActivity.java').read_text()
+          assert 'DEPTH=36,MAX_EPISODES=24' in e
+          assert 'raw.startsWith("em1;")' in e and 'raw.startsWith("em2;")' in e and 'raw.startsWith("em3;")' in e
+          assert 'e.confirmed' in e and 'if(e.harmful())' in e
+          assert 'eventEnergyDeltaSinceAction+=reserve-before' in g
+          assert 'eventEnergyDeltaSinceAction<0' in g
+          assert 'episodic.consequenceSeparated(' in g and 'energySinceAction' in g
+          assert 'episodic_memory_v095' in g
+          assert 'episodic.bias(a,proposed)' in p
+          assert 'Esperienze dannose' in t
+          assert 'trainer.attempt()' not in g
+          print('Signed ZERO 0.9.6: memory valence, storage migration and autonomy verified')
+          PY
+      - name: Prevent learned-motor regression and recalled-action training starvation
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          g=Path('app/src/main/java/com/overmind/zero/GameActivity.java').read_text()
+          e=Path('app/src/main/java/com/overmind/zero/EpisodicMemory.java').read_text()
+          s=Path('app/src/main/java/com/overmind/zero/SensorimotorMind.java').read_text()
+          t=Path('app/src/main/java/com/overmind/zero/BrainToolsActivity.java').read_text()
+          assert 'lastAppliedMotor=liveBody.weights(0,trainer.best);' in g
+          assert 'episodic.weights(0' not in g
+          assert 'lastAppliedHand=liveBody.weights(1,handTrainer.best);' in g
+          assert 'lastAppliedMembrane=liveBody.weights(2,shapeTrainer.best);' in g
+          assert 'episodic.weights(' not in g
+          assert 'OnlineBodyLearning.Result result=techniqueUsedSinceAction?null:liveBody.observe(' in g
+          assert 'techniqueUsedSinceAction=true;' in g and 'liveBody.abortTrial();' in g
+          assert 'realTactileContact||type==0' in e
+          assert 'episodic.suggested(senses,!protectMotor)' in s
+          assert 'Recuperi da immobilità (0.9.7)' in t
+          assert 'putString("best",encode(trainer.best))' in g
+          assert 'putString("morph_brain_v07",encode(shapeTrainer.best))' in g
+          print('Signed 0.9.7 motor stability, tactile-only recall, and preserved historic brains verified')
+          PY
+      - name: Verify physical experience-based choices without programmed sphere direction
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          game=Path('app/src/main/java/com/overmind/zero/GameActivity.java').read_text()
+          policy=Path('app/src/main/java/com/overmind/zero/SensorimotorMind.java').read_text()
+          trial=Path('app/src/main/java/com/overmind/zero/OnlineBodyLearning.java').read_text()
+          credit=Path('app/src/main/java/com/overmind/zero/ExperienceCredit.java').read_text()
+          assert 'skillBank.retrieve(trainer.best)' in game
+          assert 'trainer.best=alternate;' in game
+          assert 'skillBank.observe(trainer.best,liveBody.lastBaselineNet' in game
+          assert 'skillBank.observe(result.weights,liveBody.lastCandidateNet' in game
+          assert 'lastAppliedMotor=liveBody.weights(0,trainer.best);' in game
+          assert 'sensorMind.contactOutcome(reserve-before,object.signature,sightAtTouch);' in game
+          assert 'sensorMind.contactOutcome(reserve-prior,chamber.food.signature);' in game
+          assert 'contactCredit.performed(senses,chosen);' in policy
+          assert 'contactCredit.consequence(actualEnergyDelta,visuallyObservedSignature)' in policy
+          assert 'sensoryBias' not in policy and 'sensoryGuide' not in policy
+          assert 'history.descendingIterator()' in credit and 'energetic' in credit and 'mechanical' in credit
+          assert 'motorCapable=domain!=MOTOR' in trial
+          assert 'motor_skills_v098' in game and 'episodic_memory_v095' in game
+          assert 'Math.atan2(chosenObject.y' not in game
+          assert 'mind.choose(environment' not in game
+          assert not Path('app/src/main/java/com/overmind/zero/SensoryValenceGuide.java').exists()
+          print('ZERO 0.9.8 patch preserves autonomous chosen actions, rewards only real contacts, retains motors')
+          PY
+      - name: Gate 0.9.9 signed release on demonstrated tactile grip and valid rollback
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          game=Path('app/src/main/java/com/overmind/zero/GameActivity.java').read_text()
+          gate=Path('app/src/main/java/com/overmind/zero/ScarcityLab.java').read_text()
+          grip=Path('app/src/main/java/com/overmind/zero/GripSkillBank.java').read_text()
+          reset=Path('app/src/main/java/com/overmind/zero/ResetDomains.java').read_text()
+          assert 'gripBank.observe(lastAppliedHand,lastAppliedMembrane' in game
+          assert 'gripBank.retrieve(' in game
+          assert 'if(voluntaryGripAtGate&&!physicalHold)' in game
+          assert 'chamber.constrain(creature,surface,slice,sensorMind.adhesion())' in game
+          assert 'gateDriveFrames' in gate and 'gateCommandFrames' in gate and 'gateHeldFrames' in gate
+          assert 'skin.gripHold[i]>=Morphology.GRIP_HOLD' in gate
+          assert 'grip_skills_v099' in game and 'grip_skills_v099' in reset
+          assert 'episodic.weights(' not in game
+          assert 'lastAppliedMotor=liveBody.weights(0,trainer.best);' in game
+          assert 'lastAppliedHand=liveBody.weights(1,handTrainer.best);' in game
+          assert 'lastAppliedMembrane=liveBody.weights(2,shapeTrainer.best);' in game
+          assert 'actualDoorMotion' in grip
+          print('ZERO-009.9: restored physical motor+hand+membrane independence, confirmed grip retention, no scripted adhesion')
+          PY
+      - name: Gate signed named saves, full physical scene and future safe reset
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          g=Path('app/src/main/java/com/overmind/zero/GameActivity.java').read_text()
+          ui=Path('app/src/main/java/com/overmind/zero/SaveSlotsActivity.java').read_text()
+          slot=Path('app/src/main/java/com/overmind/zero/SaveSlotStore.java').read_text()
+          scene=Path('app/src/main/java/com/overmind/zero/GameSceneSnapshot.java').read_text()
+          code=Path('app/src/main/java/com/overmind/zero/SaveProfileCodec.java').read_text()
+          journal=Path('app/src/main/java/com/overmind/zero/MotionExploration.java').read_text()
+          manifest=Path('app/src/main/AndroidManifest.xml').read_text()
+          reset=Path('app/src/main/java/com/overmind/zero/ResetDomains.java').read_text()
+          assert 'PARTITE' in g and 'SaveSlotsActivity.class' in g
+          assert 'SaveSlotsActivity' in manifest and 'android:exported="false"' in manifest
+          assert 'public static final int SLOTS=12' in slot
+          assert 'zero_motorbrain_001' in slot and 'zero_save_slots_v100' in slot
+          assert 'zero_save_slots_v100' not in reset
+          assert 'protectCurrent();' in slot and 'PENDING_RELOAD' in slot
+          assert 'working.edit().clear().putBoolean(PENDING_RELOAD,true).commit()' in slot
+          assert 'SaveProfileCodec.encode(capture())' in slot
+          assert 'MessageDigest.getInstance("SHA-256")' in code
+          assert 'GameSceneSnapshot.capture(creature,surface,environment,chamber)' in g
+          assert 'GameSceneSnapshot.restore(' in g
+          assert 'saveScene();' in g and 'void suspend()' in g
+          assert 'physical_scene_v100' in g and 'physical_scene_v100' in slot
+          assert 'skin.gripCommand,skin.touchSense,skin.gripHold' in scene
+          assert 'out.room.doorY=' in scene and 'out.objects.add(loadEntity(' in scene
+          assert 'journey.saveLife()' in g and 'journey.loadLife(' in g
+          assert 'RECUPERA ZERO PRECEDENTE' in ui
+          assert 'NUOVA PARTITA' in ui and 'SOVRASCRIVI' in ui
+          assert 'grip_skills_v099' in g and 'episodic_memory_v095' in g
+          assert 'lastAppliedMotor=liveBody.weights(0,trainer.best);' in g
+          print('Signed ZERO 0.10.0: twelve named slots, original app identity, true physical checkpoint, SHA256, undo, no erased brains')
+          PY
+      - name: Gate 0.10.1 genuine source-separated outcome memory before signing
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          game=Path('app/src/main/java/com/overmind/zero/GameActivity.java').read_text()
+          ep=Path('app/src/main/java/com/overmind/zero/EpisodicMemory.java').read_text()
+          learner=Path('app/src/main/java/com/overmind/zero/ExperienceCredit.java').read_text()
+          mind=Path('app/src/main/java/com/overmind/zero/SensorimotorMind.java').read_text()
+          assert 'episodic.consequenceSeparated(' in game
+          assert 'energySinceAction[object.signature]+=reserve-before;' in game
+          assert 'energySinceAction[chamber.food.signature]+=reserve-prior;' in game
+          assert 'sensorMind.contactOutcome(reserve-before,object.signature,sightAtTouch);' in game
+          assert 'outcome_credit_v101' in game and 'outcome_credit_v101' in Path('app/src/main/java/com/overmind/zero/ResetDomains.java').read_text()
+          assert 'em3;' in ep and 'old.kind==kind&&old.source==source' in ep
+          assert 'if(!relevant(e,senses))continue;' in ep
+          assert 'if(learning&&physicalEffect>.015f)' in mind
+          assert 'contactCredit.displaced(physicalEffect)' in mind
+          assert 'contactCredit.adaptiveValue(senses,a)' in mind
+          assert 'energetic' in learner and 'mechanical' in learner
+          assert 'skin.gripCommand[i]>Morphology.GRIP_THRESHOLD' in Path('app/src/main/java/com/overmind/zero/ScarcityLab.java').read_text()
+          assert 'GameSceneSnapshot.capture(creature,surface,environment,chamber)' in game
+          print('Source-conditioned real energy, external displacement, old em1/em2 migration, and 12 named slots remain independent')
+          PY
+      - name: Verify 0.10.2 planner confidence gate and GitHub-backed OTA on stable signing
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          p=Path('app/src/main/java/com/overmind/zero/LearnedSequencePlanner.java').read_text()
+          b=Path('app/src/main/java/com/overmind/zero/SensorimotorMind.java').read_text()
+          g=Path('app/src/main/java/com/overmind/zero/GameActivity.java').read_text()
+          u=Path('app/src/main/java/com/overmind/zero/UpdateClient.java').read_text()
+          r=Path('app/src/main/java/com/overmind/zero/ResetDomains.java').read_text()
+          s=Path('app/src/main/java/com/overmind/zero/SaveSlotStore.java').read_text()
+          assert 'd.heldoutTransitions<30' in p and 'd.errorAt(i)' in p
+          assert 'float[] two=safePredict(model,next,action)' in p
+          assert 'new LearnedSequencePlanner.Model()' in b and 'planned[a]' in b
+          assert 'learned_planner_stats_v102' in g and 'learned_planner_stats_v102' in r
+          assert 'MANIFEST_URL=' in u and 'BACKUP_MANIFEST_URL=' in u
+          assert 'newestManifest()' in u and 'REDIRECT_LIMIT=6' in u
+          assert 'MessageDigest.getInstance("SHA-256")' in u
+          assert 'release-assets.githubusercontent.com' in u
+          assert 'FLAG_GRANT_READ_URI_PERMISSION' in u
+          assert 'canRequestPackageInstalls()' in u
+          assert 'zero_save_slots_v100' in s and 'public static final int SLOTS=12' in s
+          assert 'GameSceneSnapshot.capture(creature,surface,environment,chamber)' in g
+          print('ZERO 0.10.2 signed gate: earned short horizon forecasts, source verified Vercel/GitHub update, unchanged installed identity')
+          PY
+      - name: Gate 0.10.7 autonomous temporal skills and prior cognition
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          g=Path('app/src/main/java/com/overmind/zero/GameActivity.java').read_text()
+          stats=Path('app/src/main/java/com/overmind/zero/LifeStatistics.java').read_text()
+          a=Path('app/src/main/java/com/overmind/zero/StatisticsActivity.java').read_text()
+          t=Path('app/src/main/java/com/overmind/zero/TemporalWorkingMemory.java').read_text()
+          k=Path('app/src/main/java/com/overmind/zero/TemporalSkillBank.java').read_text()
+          sm=Path('app/src/main/java/com/overmind/zero/SensorimotorMind.java').read_text()
+          reset=Path('app/src/main/java/com/overmind/zero/ResetDomains.java').read_text()
+          manifest=Path('app/src/main/AndroidManifest.xml').read_text()
+          gradle=Path('app/build.gradle').read_text()
+          assert 'HISTORY=50, WINDOW=25' in stats
+          assert '25 VS 25 PRECEDENTI' in a and 'lifetimeAverage' in a
+          assert 'HIDDEN=16' in t and 'validationTransitions<25' in t
+          assert 'temporalError>=baselineError*.96f' in t
+          assert 'ScarcityLab' not in t and 'UnknownWorld.Entity' not in t
+          assert 'MAX_SKILLS=24,MIN_LEN=2,MAX_LEN=8' in k
+          assert 'if(confirmations<2)return 0' in k
+          assert 'discoverFromRecent' in k and 'findMatch' in k
+          assert 'd>CONTINUE_MATCH' in k
+          assert 'ScarcityLab' not in k and 'UnknownWorld.Entity' not in k
+          assert 'door' not in k.lower() and 'gate' not in k.lower()
+          assert 'temporalSkills.advice(temporalContext,temporal.confidence())' in sm
+          assert 'temporalSkills.chosen(temporalContext,chosen)' in sm
+          assert 'temporalSkills.transition(temporal.contextCopy())' in sm
+          assert 'temporalSkills.physicalOutcome(physicalEffect)' in sm
+          assert 'temporal_skills_v107' in g and 'TEMPORAL_SKILLS="temporal_skills"' in reset
+          assert 'temporal_working_memory_v106' in g
+          assert '0.11.6-ota' in gradle
+          assert 'com.overmind.zero.StatisticsActivity' in manifest
+          assert 'episodic.consequenceSeparated(' in g and 'episodic.weights(' not in g
+          print('0.10.7 verified: repeated lived sequences become bounded context-sensitive skills; prior cognition/statistics preserved.')
+          PY
+      - name: Gate 0.10.8 temporal working memory and skills lifecycle persistence
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          g=Path('app/src/main/java/com/overmind/zero/GameActivity.java').read_text()
+          mind=Path('app/src/main/java/com/overmind/zero/SensorimotorMind.java').read_text()
+          slots=Path('app/src/main/java/com/overmind/zero/SaveSlotStore.java').read_text()
+          p=Path('app/build.gradle').read_text()
+          load=g[g.index('void load(){'):g.index('float[] decode(')]
+          save=g[g.index('void save(){'):g.index('void resume(){')]
+          assert 'workingMemory.restore(prefs.getString("temporal_working_memory_v106",""))' in load
+          assert 'temporalSkillBank.restore(prefs.getString("temporal_skills_v107",""))' in load
+          assert 'sensorMind.attachWorkingMemory(workingMemory);' in load
+          assert 'sensorMind.attachTemporalSkills(temporalSkillBank);' in load
+          assert save.count('.putString("temporal_working_memory_v106",workingMemory.encode())')==1
+          assert save.count('.putString("temporal_skills_v107",temporalSkillBank.encode())')==1
+          assert '.putString("sensorimotor_model_v09",sensorMind.serialize())' in save
+          assert '.putString("episodic_memory_v095",episodic.encode())' in save
+          assert '.putString(LifeStatistics.KEY,lifeStats.encode())' in save
+          assert 'temporal.resumeAction(currentAction)' in mind
+          assert 'temporalSkills.resumeLife()' in mind
+          assert 'physical_scene_v100' in g and 'SaveProfileCodec.encode(capture())' in slots
+          assert 'new HashMap<>(working.getAll())' in slots
+          assert 'applicationId \'com.overmind.zero.ota\'' in p and '0.11.6-ota' in p
+          print('ZERO 0.10.8 signed gate: real learned hidden state/weights and sequential skills survive stop/reopen/named save; earlier brain untouched.')
+          PY
+      - name: Gate 0.10.9 spatial proprioception and continued independent learning
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          p=Path('app/src/main/java/com/overmind/zero/BodyProprioception.java').read_text()
+          g=Path('app/src/main/java/com/overmind/zero/GameActivity.java').read_text()
+          m=Path('app/src/main/java/com/overmind/zero/Morphology.java').read_text()
+          brain=Path('app/src/main/java/com/overmind/zero/SensorimotorMind.java').read_text()
+          reset=Path('app/src/main/java/com/overmind/zero/ResetDomains.java').read_text()
+          a=Path('app/src/main/java/com/overmind/zero/BrainToolsActivity.java').read_text()
+          stats=Path('app/src/main/java/com/overmind/zero/BrainStatsActivity.java').read_text()
+          code=Path('app/build.gradle').read_text()
+          assert 'SECTORS=8,CHANNELS=6,FEATURES=SECTORS*CHANNELS' in p
+          assert 'body_proprioception_v120' in p
+          assert 'v[4*SECTORS+k]' in p and 'v[5*SECTORS+k]' in p
+          assert 'for(int i=0;i<Morphology.POINTS;i++)' in p
+          assert 'skin.touchSense[i]' in p and 'skin.touchPulse[i]' in p
+          assert 'skin.gripHold[i]' in p and 'skin.extension[i]' in p
+          assert 'Math.atan2(y,x)' in p
+          assert 'if(validations<30' in p and 'predictionError>=unchangedError*.96f' in p
+          assert 'clamp(value(current,action)*c*.32f,-.23f,.23f)' in p
+          assert 'ScarcityLab' not in p and 'UnknownWorld.Entity' not in p
+          assert 's.touchPulse[i]=Math.max(' in m and 's.touchPulse[j]=Math.max(' in m
+          assert 'public static final int S=26;' in brain
+          assert 'bodySchema.choiceBias(a)' in brain
+          assert 'bodySchema.consequence(bodyAfter,trialAction,lastReward,physicalEffect,' in brain
+          assert 'bodySchema.restore(prefs.getString(BodyProprioception.KEY,""))' in g
+          assert '.putString(BodyProprioception.KEY,bodySchema.encode())' in g
+          assert 'environmentEffectSinceAction,creature,surface,' in g
+          assert 'chamber,environment);' in g
+          assert '.putString("temporal_working_memory_v106",workingMemory.encode())' in g
+          assert '.putString("temporal_skills_v107",temporalSkillBank.encode())' in g
+          assert '.putString("episodic_memory_v095",episodic.encode())' in g
+          assert '.putString(LifeStatistics.KEY,lifeStats.encode())' in g
+          assert 'ResetDomains.PROPRIOCEPTION' in a
+          assert 'case PROPRIOCEPTION:return new String[]{BodyProprioception.KEY,DistributedBodySense.KEY,LocalImpedanceSense.KEY};' in reset
+          assert 'bodyMap.parameterCount()' in stats
+          assert 'lifeStats.tick(dt);' in g and (
+            'for(int i=0;i<speed;i++)' in g or all(x in g for x in (
+             'for(int i=0;i<frameSteps;i++)',
+             'frameSteps=fullSpeed?TEST_MAX_MAX_STEPS:speed',
+             'float slice=fullSpeed?TEST_MAX_FIXED_DT:Math.min(dt,.035f);',
+             'if(fullSpeed&&i>0&&(i&15)==0&&System.nanoTime()>=burstDeadline)break;',
+             'if(fullSpeed)testMaxSimSeconds+=slice;'
+            )))
+          assert '0.11.6-ota' in code and "applicationId 'com.overmind.zero.ota'" in code
+          print('ZERO 0.10.9 SIGNED GATE: honest tactile world, 96 contacts, eight directions, no embedded goals, old motor and all save slots compatible.')
+          PY
+      - name: Gate 0.11.0 actual spatial perception, occlusion, map, permanent cognition and saves
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          p=Path('app/src/main/java/com/overmind/zero/SpatialPerception.java').read_text()
+          m=Path('app/src/main/java/com/overmind/zero/SensorimotorMind.java').read_text()
+          g=Path('app/src/main/java/com/overmind/zero/GameActivity.java').read_text()
+          ui=Path('app/src/main/java/com/overmind/zero/BrainToolsActivity.java').read_text()
+          brain=Path('app/src/main/java/com/overmind/zero/BrainStatsActivity.java').read_text()
+          reset=Path('app/src/main/java/com/overmind/zero/ResetDomains.java').read_text()
+          slots=Path('app/src/main/java/com/overmind/zero/SaveSlotStore.java').read_text()
+          gradle=Path('app/build.gradle').read_text()
+          assert 'RAYS=16, STEPS=8, CELL=36, MAX_CELLS=1024' in p
+          assert 'SensorimotorMind.Senses.solid(room,x,y,objects)' in p
+          assert 'if(blocked&&step>hit)break;' in p
+          assert 'blockedThisScan.add(' in p
+          assert 'odometryX+=dx;odometryY+=dy;' in p and 'memory.size()>MAX_CELLS' in p
+          assert 'public byte[] localMap(int radius)' in p
+          assert 'if(validations<30' in p and 'error>=baseline*.96f' in p
+          assert 'return bound(value(current,action,mapAhead(action))*trust*.25f,-.19f,.19f);' in p
+          assert 'ScarcityLab.DOOR' not in p and 'UnknownWorld.RARE_ENERGY' not in p
+          assert 'public static final int S=26;' in m
+          assert 'spatial.choiceBias(a)' in m
+          assert 'spatial.consequence(trialAction,lastReward,learning&&!holdout,holdout)' in m
+          assert 'spatial.observeEnvironment(body,skin,room,objects)' in m
+          assert 'spatialMap.restore(prefs.getString(SpatialPerception.KEY,""))' in g
+          assert '.putString(SpatialPerception.KEY,spatialMap.encode())' in g
+          assert 'sensorMind.resumeSpatialSense(creature,surface,chamber,environment)' in g
+          assert 'sensorMind.updateSpatialSense(creature,surface,chamber,environment)' in g
+          assert '.putString(BodyProprioception.KEY,bodySchema.encode())' in g
+          assert '.putString("temporal_working_memory_v106",workingMemory.encode())' in g
+          assert '.putString("temporal_skills_v107",temporalSkillBank.encode())' in g
+          assert '.putString("episodic_memory_v095",episodic.encode())' in g
+          assert '.putString(LifeStatistics.KEY,lifeStats.encode())' in g
+          assert 'ResetDomains.SPATIAL' in ui and 'SpatialMapView extends View' in ui
+          assert 'case SPATIAL:return new String[]{SpatialPerception.KEY,PerceptualAssociationsV20.KEY,ObjectExperienceV20.KEY,ObjectContinuityV21.KEY};' in reset
+          assert 'spatial.parameterCount()' in brain
+          assert 'SaveProfileCodec.encode(capture())' in slots and 'SLOTS=12' in slots
+          assert "applicationId 'com.overmind.zero.ota'" in gradle
+          assert '0.11.6-ota' in gradle
+          assert 'lifeStats.tick(dt);' in g and (
+            'for(int i=0;i<speed;i++)' in g or all(x in g for x in (
+             'for(int i=0;i<frameSteps;i++)',
+             'frameSteps=fullSpeed?TEST_MAX_MAX_STEPS:speed',
+             'float slice=fullSpeed?TEST_MAX_FIXED_DT:Math.min(dt,.035f);',
+             'if(fullSpeed&&i>0&&(i&15)==0&&System.nanoTime()>=burstDeadline)break;',
+             'if(fullSpeed)testMaxSimSeconds+=slice;'
+            )))
+          assert 'episodic.consequenceSeparated(' in g and 'episodic.weights(' not in g
+          print('ZERO 0.11.0 signed: honest occluded rays and bounded map, heldout learning, independent original brain, twelve character slots, and real time simulation')
+          PY
+      - name: Gate 0.11.1 experimental world model and saved intervention evidence
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          p=Path('app/src/main/java/com/overmind/zero/CausalExperiments.java').read_text()
+          spatial=Path('app/src/main/java/com/overmind/zero/SpatialPerception.java').read_text()
+          mind=Path('app/src/main/java/com/overmind/zero/SensorimotorMind.java').read_text()
+          g=Path('app/src/main/java/com/overmind/zero/GameActivity.java').read_text()
+          reset=Path('app/src/main/java/com/overmind/zero/ResetDomains.java').read_text()
+          analyze=Path('app/src/main/java/com/overmind/zero/BrainToolsActivity.java').read_text()
+          stats=Path('app/src/main/java/com/overmind/zero/BrainStatsActivity.java').read_text()
+          slots=Path('app/src/main/java/com/overmind/zero/SaveSlotStore.java').read_text()
+          gradle=Path('app/build.gradle').read_text()
+          runtime=p.split('public static void main(')[0]
+          assert 'CONTEXTS=3, ACTIONS=SensorimotorMind.ACTIONS' in runtime
+          assert 'scene.perceivedX()-anchorX' in runtime
+          assert 'scene.observedCell(originX+dx,originY+dy)' in runtime
+          assert 'old>=2&&now<0' in runtime and 'old<=-2&&now>=2' in runtime
+          assert 'candidateKeys' in runtime and 'confirmedPassages++' in runtime
+          assert 'randomTried[slot]<3' in runtime
+          assert 'contextRandom[ctx]-randomTried[slot]<5' in runtime
+          assert 'if(validations<30' in runtime
+          assert 'modelError>=referenceError*.95f' in runtime
+          assert 'body.cx' not in runtime and 'room.gate' not in runtime
+          assert 'public byte observedCell(int cx,int cy)' in spatial
+          assert 'public static final int S=26;' in mind
+          assert 'causal.choiceBias(spatial,a)' in mind
+          assert 'causal.chosen(spatial,chosen,actionExploratory)' in mind
+          assert 'causal.consequence(spatial,trialAction,lastReward,learning&&!holdout,holdout)' in mind
+          assert 'causal.energyOutcome(actualEnergyDelta)' in mind
+          assert 'causalExperiments.restore(prefs.getString(CausalExperiments.KEY,""))' in g
+          assert '.putString(CausalExperiments.KEY,causalExperiments.encode())' in g
+          assert '.putString(SpatialPerception.KEY,spatialMap.encode())' in g
+          assert '.putString(BodyProprioception.KEY,bodySchema.encode())' in g
+          assert '.putString("temporal_working_memory_v106",workingMemory.encode())' in g
+          assert '.putString("temporal_skills_v107",temporalSkillBank.encode())' in g
+          assert '.putString("episodic_memory_v095",episodic.encode())' in g
+          assert '.putString(LifeStatistics.KEY,lifeStats.encode())' in g
+          assert 'case CAUSAL:return new String[]{CausalExperiments.KEY,PhysicalConsequenceV20.KEY};' in reset
+          assert 'ResetDomains.CAUSAL' in analyze
+          assert 'causal.learnedParameters()' in stats
+          assert 'SaveProfileCodec.encode(capture())' in slots and 'SLOTS=12' in slots
+          assert '0.11.6-ota' in gradle and "applicationId 'com.overmind.zero.ota'" in gradle
+          assert 'lifeStats.tick(dt)' in g and (
+            'for(int i=0;i<speed;i++)' in g or all(x in g for x in (
+             'for(int i=0;i<frameSteps;i++)',
+             'frameSteps=fullSpeed?TEST_MAX_MAX_STEPS:speed',
+             'float slice=fullSpeed?TEST_MAX_FIXED_DT:Math.min(dt,.035f);',
+             'if(fullSpeed&&i>0&&(i&15)==0&&System.nanoTime()>=burstDeadline)break;',
+             'if(fullSpeed)testMaxSimSeconds+=slice;'
+            )))
+          print('ZERO 0.11.1 signed gate: genuinely lived cause/effect experiments, heldout and randomized alternative comparisons, no scripted gate, legacy learning persisted')
+          PY
+      - name: 0.11.2 signed gate - no walking prize, coupled learned instrumental policy
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          root=Path('app/src/main/java/com/overmind/zero')
+          nav=(root/'InstrumentalNavigation.java').read_text()
+          mind=(root/'SensorimotorMind.java').read_text()
+          game=(root/'GameActivity.java').read_text()
+          ui=(root/'BrainToolsActivity.java').read_text()
+          brain=(root/'BrainStatsActivity.java').read_text()
+          reset=(root/'ResetDomains.java').read_text()
+          slots=(root/'SaveSlotStore.java').read_text()
+          gradle=Path('app/build.gradle').read_text()
+          assert 'public static float[] spectral8(' in mind
+          assert 'navigation.energyOutcome(actualEnergyDelta,' in mind
+          assert 'navigation.bias(a,senses[0])' in mind
+          assert 'navigation.chosen(chosen,observedBody)' in mind
+          assert 'navigation.consequence(trialAction,body,learning&&!holdout,holdout)' in mind
+          assert 'actualEnergySinceChoice+=actualEnergyDelta;' in mind
+          assert 'lastReward=energyOutcome-Math.min(.16f,actualAmbientLossSinceChoice*.45f)' in mind and '.24f*realForward' not in mind
+          assert 'navigation.restore(prefs.getString(InstrumentalNavigation.KEY,""))' in game
+          assert '.putString(InstrumentalNavigation.KEY,navigation.encode())' in game
+          assert 'sensorMind.attachNavigation(navigation)' in game
+          assert 'sensorMind.updateNavigationSense(creature,chamber,environment)' in game
+          assert 'sensorMind.contactOutcome(reserve-before,object.signature,sightAtTouch)' in game
+          assert 'sensorMind.contactOutcome(reserve-prior,chamber.food.signature)' in game
+          assert 'float[] sample=SensorimotorMind.Senses.spectral8(' in nav
+          assert 'trials[action]<3' in nav and 'holdouts[action]<2' in nav
+          assert 'float projection=(float)(dx*Math.cos(angle)+dy*Math.sin(angle))' in nav
+          assert 'case NAVIGATION:return new String[]{InstrumentalNavigation.KEY};' in reset
+          assert 'ResetDomains.NAVIGATION' in ui
+          assert 'navigation.parameterCount()' in brain
+          assert 'SaveProfileCodec.encode(capture())' in slots and 'SLOTS=12' in slots
+          assert 'public static final int S=26;' in mind
+          for key in ['CausalExperiments.KEY','SpatialPerception.KEY','BodyProprioception.KEY']:
+            assert '.putString('+key+',' in game
+          for key in ['"episodic_memory_v095"','"temporal_working_memory_v106"','"temporal_skills_v107"','LifeStatistics.KEY']:
+            assert '.putString('+key+',' in game
+          assert "applicationId 'com.overmind.zero.ota'" in gradle and '0.11.6-ota' in gradle
+          print('ZERO 0.11.2: in-world sensor->energy->learned valence->measured action displacement->instrumental choice and full legacy save path verified')
+          PY
+      - name: 0.11.3 honest behavioral laboratory signed release gate
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          root=Path('app/src/main/java/com/overmind/zero')
+          lab=(root/'BehavioralLaboratory.java').read_text()
+          ui=(root/'BehavioralLabActivity.java').read_text()
+          brain=(root/'SensorimotorMind.java').read_text()
+          analysis=(root/'BrainToolsActivity.java').read_text()
+          manifest=Path('app/src/main/AndroidManifest.xml').read_text()
+          game=(root/'GameActivity.java').read_text()
+          slots=(root/'SaveSlotStore.java').read_text()
+          gradle=Path('app/build.gradle').read_text()
+          assert 'public static final int ENERGY=0,HARM=1,GATE=2,CASES=3,SEEDS=3;' in lab
+          assert 'public static final int[] VARIANTS={7,19,31};' in lab
+          assert 'setNavigationAdviceEnabled(instrument)' in lab
+          assert 'room.constrain(body,surface,DT,brain.adhesion())' in lab
+          assert 'surface.step(body,input.membrane,px,py,DT,brain.adhesion())' in lab
+          assert 'body.step(input.motor,mx,my,DT,input.hands,px,py)' in lab
+          assert 'brain.contactOutcome(delta,object.signature)' in lab
+          assert 'room.foodTouchedByBody(body,surface)' in lab
+          assert 'brain.observe(SensorimotorMind.Senses.read(' in lab
+          assert 'rig.episodes.consequenceSeparated(' in lab
+          assert 'public synchronized void setNavigationAdviceEnabled(boolean enabled)' in brain
+          assert 'navigationAdviceEnabled=true' in brain
+          assert 'RESULTS="zero_behavior_lab_v113"' in ui
+          assert 'getSharedPreferences("zero_motorbrain_001",MODE_PRIVATE).edit()' not in ui
+          assert 'new Intent(this,BehavioralLabActivity.class)' in analysis
+          assert 'android:name="com.overmind.zero.BehavioralLabActivity"' in manifest
+          assert 'SaveProfileCodec.encode(capture())' in slots and 'SLOTS=12' in slots
+          assert 'public static final int S=26;' in brain
+          for key in ['InstrumentalNavigation.KEY','CausalExperiments.KEY','SpatialPerception.KEY','BodyProprioception.KEY','LifeStatistics.KEY']:
+            assert '.putString('+key+',' in game
+          for key in ['"episodic_memory_v095"','"temporal_working_memory_v106"','"temporal_skills_v107"']:
+            assert '.putString('+key+',' in game
+          assert '0.11.6-ota' in gradle and "applicationId 'com.overmind.zero.ota'" in gradle
+          print('0.11.3 signed: 18 real physics A/B tests, zero live-profile writes, default policy unchanged, 12 saves unchanged')
+          PY
+      - name: 0.11.4 gate learned intention continuity and physical door diagnostics
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          d=Path('app/src/main/java/com/overmind/zero')
+          intent=(d/'GoalContinuity.java').read_text()
+          gates=(d/'GateBehaviorMetrics.java').read_text()
+          mind=(d/'SensorimotorMind.java').read_text()
+          game=(d/'GameActivity.java').read_text()
+          lab=(d/'BehavioralLaboratory.java').read_text()
+          panel=(d/'BrainToolsActivity.java').read_text()
+          reset=(d/'ResetDomains.java').read_text()
+          slots=(d/'SaveSlotStore.java').read_text()
+          gradle=Path('app/build.gradle').read_text()
+          assert 'delta>.009f' in intent and 'actualTravel<3f' in intent
+          assert 'return clamp(learned*persistence,0,.48f)' in intent
+          assert 'candidate(InstrumentalNavigation n)' in intent
+          assert 'r.gateContactFrames-prevContact' in gates
+          assert 'r.opposedContactFrames-prevOpposed' in gates
+          assert 'distanceToGate(body,r)' in gates
+          assert 'intention.bias(navigation,a,senses[0])' in mind
+          assert 'intention.consequence(navigation,trialAction,navigation.latestMovement)' in mind
+          assert 'navigationAdviceEnabled=true' in mind
+          assert 'lastReward=energyOutcome-Math.min(.16f,actualAmbientLossSinceChoice*.45f)' in mind
+          assert '.putString(GoalContinuity.KEY,intentions.encode())' in game
+          assert '.putString(GateBehaviorMetrics.KEY,gateMetrics.encode())' in game
+          assert 'gateMetrics.observe(creature,chamber)' in game
+          assert 'r.gateDiagnostics.observe(body,room)' in lab
+          assert 'setNavigationAdviceEnabled(instrument)' in lab
+          assert 'GoalContinuity.KEY' in panel and 'GateBehaviorMetrics.KEY' in panel
+          assert 'case INTENTION:return new String[]{GoalContinuity.KEY};' in reset
+          assert 'case GATE_METRICS:return new String[]{GateBehaviorMetrics.KEY};' in reset
+          assert 'case PROPRIOCEPTION:return new String[]{BodyProprioception.KEY,DistributedBodySense.KEY,LocalImpedanceSense.KEY};' in reset
+          assert 'SaveProfileCodec.encode(capture())' in slots and 'SLOTS=12' in slots
+          assert 'public static final int S=26;' in mind
+          for name in ['InstrumentalNavigation.KEY','CausalExperiments.KEY','SpatialPerception.KEY','BodyProprioception.KEY','DistributedBodySense.KEY','LifeStatistics.KEY']:
+            assert '.putString('+name+',' in game
+          assert '0.11.6-ota' in gradle and "applicationId 'com.overmind.zero.ota'" in gradle
+          print('0.11.4 approved: actual physical gate-stage diagnostics, observed progress-gated intentions, existing zero user profiles intact')
+          PY
+      - name: 0.11.6 critical gate - pinned observer-only decision recorder and private telemetry
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          from hashlib import sha1
+          root=Path('app/src/main/java/com/overmind/zero')
+          pins={
+          'SensorimotorMind.java':'44b5b847b801ffb438bc9e5bd2e6296e05884fa8',
+          'EnergyLifetimeCounters.java':'7c0a9d815937a39c5cfdaddb01896b39536d8afe',
+          'ObjectExperienceV20.java':'39ada3745f8b22769e67c00f5def9a5a3ed6ba1a',
+          'ObjectExperienceV20Regression.java':'44bccc8ebe5971ed5226e50f62f8e27f7fbc6ddd',
+          'GameActivity.java':'066247a9eff508f86fe125c9f9a0d5c1f37fe88d',
+          'InstrumentalNavigation.java':'fb95ae5b19a8b2602cb4338641d8851bebf8fa26',
+          'BehavioralLaboratory.java':'036ff0488cea84813fa73c8a1209d3dece4cc846',
+          'BehavioralLabActivity.java':'c1e655a947454e2cb77baad6b282890f00097717',
+          'ResetDomains.java':'2b7ada23448aa4d7228f16ed2570b3db118912c0',
+          'ScarcityLab.java':'51d04604c79c728c53dd819971116bd7d710dc60',
+          'UnknownWorld.java':'4443b7e2e44a8229fae19c3e8237db9f23b822f2',
+          'GameSceneSnapshot.java':'e38c0b8def6c363af74dfabdd4eac96bf95ac2d8',
+          'SquareGripPuzzle.java':'9ef6547bc4348bac03d02b64815ab45b404667a5',
+          'SquareCollisionSolver.java':'88db7fb60d0172ac39c47fcf312ff016b4734465',
+          'WorldPlacement.java':'83a79b677d5699841747839bc0969f7b32821914',
+          'GateBehaviorMetrics.java':'9afcdc3889943e76a80ca58f728401bc88eb5502',
+          'GateLifeJournal.java':'351b1107f90d1dffd91377d1709459324211ef62',
+          'ContextualMotionProbe.java':'064988e420645b7d1c1be3235cb83ca3884e01f8',
+          'OpticalCues.java':'c41adea2d29deca1dc0580b44fabb15363fae865',
+          'OpticalCueRegression.java':'78a9df279beb12b450f7792b0a3871762ec1d177',
+          'HabitatContinuity.java':'d08aafff5ffa93380384fc427ad1095b93316467',
+          'GripSurfaceComposition.java':'04847c6180ee638961d033e8b4ac01fd574dd312',
+          'BrainToolsActivity.java':'da250d2cc32cb23bd7216140a4bc1ee1b7cc895f',
+          'MortalityLearning.java':'106683098e58d03a1b901fd7293549ebd5bb6715',
+          'ExperienceCredit.java':'fe8e0a1e5ac026596dd0b97c9eca29451796288b',
+          'MaterialVisionRegression.java':'0ce4a8420961c27d2959be197f436981790f089e',
+          'MaterialMotionRegression.java':'b601122c97de8cd70159ada49b9cbeb2e5cb4358',
+          'MaterialSymbioteRegression.java':'a162c986395bcc4784401e72a83458b8b93f33da',
+          'MaterialGeometry.java':'46acc9dbd9e75dba803502487ba17dfac7f338f6',
+          'BodyProprioception.java':'2b83452af357a7a3b8c02cee0ba9792ce0b81ada',
+          'DistributedBodySense.java':'75c1561436fef92f07b7fcb339f1a36eb87e7c62',
+          'DistributedBodyRegression.java':'e575ec3f4a0a05ce3c32001f6b7026bbbcd0f2f2',
+          'LocalImpedanceSense.java':'acbcff6d0f39128cca507a96c6594d742e68c2cb',
+          'LocalImpedanceRegression.java':'210835bd51e8319725a85d5435f74bb0dcd84100',
+          'ShelterEcology.java':'bae82eb8f935cd498a24d314c1e60910c77ca21b',
+          'ShelterEcologyRegression.java':'4bbfcec1f83bec96efed24ee28985408a41e0127',
+          'PanelPhysics.java':'caf2f8da6bb8e97c73449c12a4bbac7cc119bb17',
+          'PanelPhysicsRegression.java':'438d489b54d82fc4596721e6ad8564a88b9c9fb3',
+          'WindArt.java':'1fba6d3437c42f6f5c9068f0d22a1111c14ce7b4',
+          'TelemetryGitHub.java':'12519dd4caffac49e448dd6c2adfd20b787f4e51',
+          'TelemetryChunks.java':'9f8af4e550db409098e16f51b948fde699e5e67d',
+          'TelemetryChunksRegression.java':'c29156e14934dba37a2c53412e984cbb1eb18696',
+          'SpatialPerception.java':'06f7339b565e2b7ae8b3a8ce10b72f60866569ca',
+          'GripSkillBank.java':'715f65333d50ef4acd40ee84e915bad731807589',
+          'OnlineBodyLearning.java':'36caba1ed145ca571d8231152e6052354a71d055',
+          'MotorBrain.java':'a3e0681c595bd1a9d17549c25770f6049c83926f',
+          'Morphology.java':'4de2bd05eecee576d820e2690b5235dd4dd3aef9',
+          'BodyIntegrity.java':'e551493723d13006d5e6905690c0ab0ee9e13d17',
+          'BodyIntegrityRecoveredSnapshotsRegression.java':'d536451adb05cb742176ec559460066bd637c453',
+          'BodyIntegrityObstacleRegression.java':'d9b4b6d1847ea78787dacc531188d2b61318487f'}
+          for name,pin in pins.items():
+            data=(root/name).read_bytes()
+            assert sha1(b'blob '+str(len(data)).encode()+b'\0'+data).hexdigest()==pin,name
+          ui=(root/'TelemetryActivity.java').read_text()
+          upload=(root/'TelemetryGitHub.java').read_text()
+          analysis=(root/'BrainToolsActivity.java').read_text()
+          manifest=Path('app/src/main/AndroidManifest.xml').read_text()
+          gradle=Path('app/build.gradle').read_text()
+          assert 'new Intent(this,TelemetryActivity.class)' in analysis
+          assert 'android:name="com.overmind.zero.TelemetryActivity"' in manifest
+          assert 'TelemetryGitHub.upload(' in ui
+          assert 'AndroidKeyStore' in upload and 'AES/GCM/NoPadding' in upload
+          assert 'zero-telemetry/current.json' in upload
+          assert 'zero-telemetry/history/' in upload
+          assert 'zero-telemetry/reports/' in upload
+          assert 'Archive archive=prepare(data);' in upload
+          assert 'MAX_EXPORT_BYTES=32*1024*1024' in upload
+          assert 'TelemetryChunks.PART_BYTES' in upload
+          assert 'MessageDigest.getInstance("SHA-256")' in upload
+          assert upload.index('call("PUT",archive.history') < upload.index('call("PUT",LATEST')
+          assert 'if(size>LIMIT)' not in upload
+          assert 'SaveSlotStore.WORKING' in upload
+          # ZERO 2.0 must remain passive on device, and multipart export MUST retain the digest.
+          assert 'result.put("zero20Passive",new JSONObject(Zero20PassiveSnapshot.fromSaved(all)))' in upload
+          assert 'source.put("zero20Passive",data.get("zero20Passive"))' in upload
+          assert 'getSharedPreferences(SaveSlotStore.WORKING,Context.MODE_PRIVATE).edit()' not in upload
+          assert '0.11.6-ota' in gradle and "applicationId 'com.overmind.zero.ota'" in gradle
+          assert 'SLOTS=12' in (root/'SaveSlotStore.java').read_text()
+          blackbox=(root/'DecisionBlackbox.java').read_text()
+          mind=(root/'SensorimotorMind.java').read_text()
+          game=(root/'GameActivity.java').read_text()
+          assert 'sensorMind.enableZero20ExperimentalAdvice(false);' in game
+          assert 'private transient boolean zero20ExperimentalAdvice=false;' in mind
+          # ZERO 2.1 release gate: new brain is truly included in the
+          # installed Android app and remains observational until independently
+          # validated. No undocumented action-score or reward override.
+          assert 'sensorMind.attachUnifiedCognitionV21(unifiedCognitionV21)' in game
+          assert 'sensorMind.attachObjectContinuityV21(objectContinuityV21)' in game
+          assert 'sensorMind.attachUnifiedArbiterV21(unifiedArbiterV21)' in game
+          for k in ['UnifiedCognitionV21.KEY','ObjectContinuityV21.KEY',
+                    'CompetenceMemoryV21.KEY','UnifiedArbiterV21.KEY']:
+            assert k in game
+          assert 'competenceMemoryV21.witnessed(lastAppliedHand' in game
+          assert 'UnifiedCognitionV21.KEY' in (root/'ResetDomains.java').read_text()
+          assert 'ObjectContinuityV21.KEY' in (root/'ResetDomains.java').read_text()
+          assert 'CompetenceMemoryV21.KEY' in (root/'ResetDomains.java').read_text()
+          assert 'UnifiedArbiterV21.KEY' in (root/'ResetDomains.java').read_text()
+          assert 'private transient UnifiedCognitionV21 unifiedCognition;' in mind
+          assert 'private transient ObjectContinuityV21 objectContinuity;' in mind
+          assert 'private transient UnifiedArbiterV21 unifiedArbiter;' in mind
+          assert 'unifiedArbiter.evaluate(' in mind
+          assert 'UnifiedCognitionV21' in (root/'BrainToolsActivity.java').read_text()
+          assert 'result.put("zero21",zero21);' in (root/'Zero20PassiveSnapshot.java').read_text()
+          assert 'static final long TEST_MAX_BUDGET_NS=80000000L;' in game
+          assert 'static final int TEST_MAX_MAX_STEPS=4096;' in game
+          # All research policies are observer-only: chosen action is recorded
+          # after old scoring, confidence is not itself a scored reward.
+          oldpolicy=mind[mind.index('for(int a=0;a<ACTIONS;a++){'):
+                         mind.index('int greedyAction=chosen;')]
+          assert 'unifiedArbiter' not in oldpolicy
+          assert 'unifiedCognition' not in oldpolicy
+          assert 'MAX_ENTRIES=475, MAX_TEXT=145000;' in blackbox
+          # OTA TEST MAX: research data acceleration, never scripted behavior.
+          assert 'void confirmTestMax(){' in game
+          assert '.setPositiveButton("AVVIA TEST"' in game
+          assert 'TEST_MAX_FIXED_DT=1f/60f' in game
+          assert 'if(fullSpeed&&i>0&&(i&15)==0&&System.nanoTime()>=burstDeadline)break;' in game
+          assert 'if(fullSpeed)testMaxSimSeconds+=slice;' in game
+          assert 'speed=speed==1?5:speed==5?20:1;' in game
+          assert 'testMax=false;' in game and 'THERMAL_STATUS_SEVERE' in game
+          assert '.putString("sensorimotor_model_v09",sensorMind.serialize())' in game
+          assert 'WINDOW=300f;' in blackbox
+          assert 'if(blackbox!=null)blackbox.finished' in mind
+          assert 'blackbox.chosen(senses,chosen,greedyAction,actionExploratory,' in mind
+          assert 'float epsilon=Math.max(.09f,.52f/(1+experiences/120f));' in mind
+          assert 'if(score>best){best=score;chosen=a;}' in mind
+          assert 'DecisionBlackbox.CURRENT,decisionBlackbox.encodeCurrent()' in game
+          assert 'decisionBlackbox.lastLife())' in game
+          assert 'GateLifeJournal.LAST,gateJournal.lastLife()' in game
+          assert 'GateLifeJournal.CURRENT,gateJournal.encode()' in game
+          assert 'ContextualMotionProbe.KEY,motionShadow.encode()' in game
+          assert 'motionShadow.chosen(senses,chosen,observedBody)' in mind
+          assert 'motionShadow.finished(' in mind
+          assert 'SCATOLA NERA' in ui
+          assert 'SquareGripPuzzle.uncover(e,environment)' in game
+          assert 'squarePrevSkinX' in game
+          assert 'squarePrevBodyX' in game
+          assert 'SquareCollisionSolver.constrain' in (root/'SquareGripPuzzle.java').read_text()
+          assert 'if(!modest||!sameFace)skin.gripHold[i]=0f;' in (root/'SquareCollisionSolver.java').read_text()
+          assert 'SquareCollisionSolver.finish' in (root/'SquareGripPuzzle.java').read_text()
+          assert 'box.bilateralHeldNow=opposing&&held>=2;' in (root/'SquareGripPuzzle.java').read_text()
+          assert 'if(box.bilateralHeldNow)' in (root/'SquareGripPuzzle.java').read_text()
+          assert 'nearSolidSquare' in game
+          assert 'OpticalCues.GLASS_TOP' in game
+          assert 'concealedLight' in game
+          assert 'HabitatContinuity.pruneDistant(' in game
+          assert 'HabitatContinuity.enforceLimit(' in game
+          assert 'HabitatContinuity.clearChamber(' in game
+          assert 'HabitatContinuity.excludeRoomOverlap(' in game
+          assert 'if(surface.gripHold[i]>=Morphology.GRIP_HOLD&&' in game
+          assert 'distributedSense.node(i,DistributedBodySense.OPTIC)' in game
+          assert 'shelter.step(' in game and 'shelter.capture(environment);' in game
+          assert 'snapshot.put(ShelterEcology.SNAPSHOT,shelter.encode());' in game
+          assert 'law<0||law>6' in (root/'GameSceneSnapshot.java').read_text()
+          assert 'boolean isConstruction(){return law==6;}' in (root/'UnknownWorld.java').read_text()
+          assert 'PanelPhysics.constrain(' in game
+          panel=(root/'PanelPhysics.java').read_text()
+          composition=(root/'GripSurfaceComposition.java').read_text()
+          assert 'panel.boxGripHold[i]>=Morphology.GRIP_HOLD' in panel
+          assert 'if(red&&s.hasValidMotorTargets()&&impulse>.055f)' in panel
+          assert 'if(confirmed==0)' in panel
+          assert 'panel.vx=panel.vy=panel.angularVelocity=0f;' in panel
+          assert 'PanelPhysics.held(box,i,skin)' in composition
+          assert 'if(law==6&&!PanelPhysics.anyHeld(this))' in (root/'UnknownWorld.java').read_text()
+          assert 'WindArt.draw(c,paint,minX,maxX,minY,maxY,worldTime,uiTime,' in game
+          assert 'panel.angularVelocity=clip(' in (root/'PanelPhysics.java').read_text()
+          assert 'return PanelPhysics.shadow(x,y,wind,box,SHADOW_RANGE)' in (root/'ShelterEcology.java').read_text()
+          assert 'panelAngle' in (root/'GameSceneSnapshot.java').read_text()
+          assert 'se2|' in (root/'ShelterEcology.java').read_text()
+          assert 'if(redLeds[i]>.015f)' in game
+          assert 'sensorMind.updateDistributedSense(creature,surface,chamber,environment);' in game
+          assert 'sensorMind.updateImpedanceSense(creature,surface);' in game
+          assert 'sensorMind.attachImpedance(localImpedance);' in game
+          assert '.putString(LocalImpedanceSense.KEY,localImpedance.encode())' in game
+          assert 'float impedanceBias=impedance==null?0:impedance.choiceBias(a);' in mind
+          assert 'float fullBodyBias=Math.max(-.35f' in mind
+          assert 'surface.touchSense[i]>.5f' in game
+          assert 'OpticalCues.coverOf(e,objects)' in mind
+          assert 'OpticalCues.frontWindow(lab,x,y)' in mind
+          assert 'public static final int S=26;' in mind
+          assert 'if(score>best){best=score;chosen=a;}' in mind
+          assert 'SquareGripPuzzle.constrain(' in game
+          online=(root/'OnlineBodyLearning.java').read_text()
+          assert 'baselineProvedBoxGrip=domain!=MOTOR&&' in online
+          assert 'candidatePreservedGrip=' in online
+          assert 'protectedBoxTechniqueRejections++' in online
+          assert 'if(grips.contacts>0)boxTouchedThisFrame=true;' in game
+          assert 'if(e.bilateralHeldNow)boxOpposedThisFrame=true;' in game
+          assert 'boxTouchFramesSinceAction,boxOpposedFramesSinceAction' in game
+          assert 'gripObserver.beforeBox(surface,e);' in game
+          assert 'gripObserver.boxFrame(surface,e,sensorMind.adhesion(),' in game
+          assert 'gripObserver.gateFrame(surface,chamber,sensorMind.adhesion(),' in game
+          assert 'gripObserver.terminal();' in game
+          assert 'GripContactObserver.PREFS' in upload
+          assert 'result.put("gripContactObserver",grip)' in upload
+          assert 'Condividi dati' in (root/'GripContactObserver.java').read_text() or 'go1|session-counters|' in (root/'GripContactObserver.java').read_text()
+          assert 'WorldPlacement.spawn(' in game
+          assert 'if(object.isBox()||object.concealed)continue;' in game
+          assert 'x.optBoolean("concealed",false)' in (root/'GameSceneSnapshot.java').read_text()
+          assert 'law==4?40f:RARE_ENERGY' in (root/'UnknownWorld.java').read_text()
+          assert 'box.displacementFromSpawn()>=UNCOVER_DISTANCE' in (root/'SquareGripPuzzle.java').read_text()
+          assert 'gateX()-DOOR_HALF_W' in (root/'ScarcityLab.java').read_text()
+          print('ZERO 0.11.6 signed: original cognition and observer, physically bilateral small squares, spawn clearance, hidden finite energy and named saves')
+          PY
+      - name: Verify active ZERO 2.2 and independent phone comparison
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          root=Path('app/src/main/java/com/overmind/zero')
+          game=(root/'GameActivity.java').read_text()
+          mind=(root/'SensorimotorMind.java').read_text()
+          core=(root/'RecurrentCoreV22.java').read_text()
+          ui=(root/'CoreComparisonActivityV22.java').read_text()
+          assert mind.index('activeCore.evaluate(traceScores)') < mind.index('int greedyAction=chosen;')
+          assert 'sensorMind.attachActiveCore(recurrentCore);' in game
+          assert '.putString(RecurrentCoreV22.KEY,recurrentCore.encode())' in game
+          assert 'activeCore.resumeLife();' in mind
+          assert 'techniqueUsedSinceAction?null:liveBody.observe(' in game
+          assert 'train(e,true)' in core and 'if(holdout)' in core
+          assert 'CoreComparisonV22.capture(' in ui and 'CoreComparisonV22.run(' in ui
+          assert 'CoreComparisonActivityV22' in Path('app/src/main/AndroidManifest.xml').read_text()
+          assert 'lastCoreLabV22' in (root/'TelemetryGitHub.java').read_text()
+          print('ZERO 2.2: active authority, durable state, isolated skill windows and explicit-share paired phone report')
+          PY

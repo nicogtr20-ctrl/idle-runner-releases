@@ -1,3 +1,6 @@
+## Candidato più recente: ZERO 2.2, 13 ottobre 2026
+Leggere [nucleo attivo e test telefono](docs/ZERO22_ACTIVE_CORE_AND_DEVICE_VALIDATION.md). Build/firma/OTA ancora da verificare; non confondere il candidato con una release conclusa.
+
 # OVERMIND: ZERO — punto di ingresso per tutte le nuove chat
 
 > Ultimo aggiornamento della documentazione: 12 ottobre 2026.

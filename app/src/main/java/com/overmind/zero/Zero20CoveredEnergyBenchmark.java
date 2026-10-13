@@ -125,6 +125,9 @@ public final class Zero20CoveredEnergyBenchmark {
         final InstrumentalNavigation nav=new InstrumentalNavigation();
         final GoalContinuity intention=new GoalContinuity();
         final MotorAutonomyGuard guard=new MotorAutonomyGuard();
+        final CompetenceMemoryV21 competence=new CompetenceMemoryV21();
+        final SkillExecutionV22 executor=new SkillExecutionV22();
+        boolean activeCore=false;
         Rig(Profile p,boolean experiment){
             if(!p.world.isEmpty()&&!mind.restore(p.world))
                 throw new IllegalArgumentException("Original saved ZERO brain failed validation");
@@ -208,6 +211,9 @@ public final class Zero20CoveredEnergyBenchmark {
         objects.add(cover);objects.add(hidden);
     }
     static Outcome episode(Rig rig,Profile p,int seed,int layout)throws Exception{
+        return episode(rig,p,seed,layout,episodeFrames(),null);
+    }
+    static Outcome episode(Rig rig,Profile p,int seed,int layout,int frames,BehavioralLaboratory.Cancel cancel)throws Exception{
         MotorBrain.Body body=new MotorBrain.Body();
         Morphology.Surface skin=new Morphology.Surface(body);
         ArrayList<UnknownWorld.Entity> objects=new ArrayList<>();
@@ -241,7 +247,8 @@ public final class Zero20CoveredEnergyBenchmark {
         rig.mind.updateNavigationSense(body,null,objects);
         long before=rig.mind.decisions,beforeValid=rig.future.eligible();
         float[] effects=new float[UnknownWorld.SIGNATURES];
-        for(int frame=0;frame<episodeFrames();frame++){
+        for(int frame=0;frame<frames;frame++){
+            if(cancel!=null&&(frame&31)==0&&cancel.stopped())return null;
             float t=frame*DT;
             if(reserve<=0){out.died=true;break;}
             reserve=Math.max(0,reserve-DRAIN*DT);
@@ -271,8 +278,12 @@ public final class Zero20CoveredEnergyBenchmark {
             float oldX=body.cx,oldY=body.cy;
             float mx=rig.mind.motorX(),my=rig.mind.motorY();
             float targetX=body.cx+mx*145f,targetY=body.cy+my*145f;
-            body.step(p.motor,mx,my,DT,p.hand,targetX,targetY);
-            skin.step(body,p.membrane,targetX,targetY,DT,rig.mind.adhesion());
+            boolean touch=false;for(float v:skin.touchSense)if(v>.2f){touch=true;break;}
+            float[] appliedHand=rig.activeCore?rig.executor.hand(p.hand,rig.mind.adhesion()>.5f,touch,false):p.hand;
+            float[] appliedMembrane=rig.activeCore?rig.executor.membrane(p.membrane,rig.mind.adhesion()>.5f,touch,false):p.membrane;
+            rig.mind.appliedControls(p.motor,appliedHand,appliedMembrane);
+            body.step(p.motor,mx,my,DT,appliedHand,targetX,targetY);
+            skin.step(body,appliedMembrane,targetX,targetY,DT,rig.mind.adhesion());
             java.util.Arrays.fill(skin.touchSense,0);
             int heldThis=0,opposedThis=0,contactThis=0;
             for(UnknownWorld.Entity e:objects){
@@ -343,10 +354,12 @@ public final class Zero20CoveredEnergyBenchmark {
             rig.guard.observe(DT,body.cx,body.cy,effect);
             long oldExperience=rig.mind.experiences;
             int lastAction=rig.mind.action;
-            float[] lastSense=rig.mind.stateCopy();
-            float[] next=SensorimotorMind.Senses.read(body,skin,null,objects,reserve);
+            boolean due=rig.mind.observationDue(DT);
+            float[] lastSense=due?rig.mind.stateCopy():null;
+            float[] next=due?SensorimotorMind.Senses.read(body,skin,null,objects,reserve):null;
             rig.mind.observe(next,DT,effect,body,skin,null,objects);
             if(rig.mind.experiences>oldExperience){
+                if(rig.activeCore)rig.executor.boundary(rig.competence,rig.mind.stateCopy(),rig.mind.action,effect,false);
                 rig.episodes.action(lastSense,lastAction);
                 rig.episodes.consequenceSeparated(effect,effects,
                     p.motor,p.hand,p.membrane,false);
@@ -355,6 +368,7 @@ public final class Zero20CoveredEnergyBenchmark {
             }
             out.duration=t+DT;
         }
+        if(reserve<=0)rig.mind.recordTerminal(SensorimotorMind.Senses.read(body,skin,null,objects,0),effect,body);
         out.died=out.died||reserve<=0;
         out.remaining=reserve;out.net=out.positiveEnergy-out.damage;
         out.decisions=rig.mind.decisions-before;
