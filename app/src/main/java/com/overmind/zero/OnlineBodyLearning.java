@@ -54,6 +54,8 @@ public final class OnlineBodyLearning {
         phase=0;samples=0;candidate=null;
         pathSum=forwardSum=rewardSum=spentSum=gainSum=dirXSum=dirYSum=0;
         externalEffectSum=0;
+        boxTouchFrames=boxOpposedFrames=0;
+        baseBoxTouchFrames=baseBoxOpposedFrames=0;
         noveltySum=contactsSum=0;roomChanged=false;
     }
     public int activeDomain(){return domain;}
@@ -174,7 +176,6 @@ public final class OnlineBodyLearning {
         pathSum=forwardSum=rewardSum=spentSum=gainSum=dirXSum=dirYSum=0;
         externalEffectSum=0;
         boxTouchFrames=boxOpposedFrames=0;
-        baseBoxTouchFrames=baseBoxOpposedFrames=0;
         noveltySum=contactsSum=0;
         if(net>5||novel>1)mobileWindows++;
         if(phase==0){
