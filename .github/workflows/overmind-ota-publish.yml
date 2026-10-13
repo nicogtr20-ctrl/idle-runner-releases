@@ -14,7 +14,7 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 30
     env:
-      OVERMIND_BUILD_NUMBER: 117
+      OVERMIND_BUILD_NUMBER: ${{ github.run_number }}
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-java@v4
@@ -388,7 +388,9 @@ jobs:
           assert 'lastAppliedHand=liveBody.weights(1,handTrainer.best);' in g
           assert 'lastAppliedMembrane=liveBody.weights(2,shapeTrainer.best);' in g
           assert 'episodic.weights(' not in g
-          assert 'OnlineBodyLearning.Result result=liveBody.observe(' in g
+          assert 'OnlineBodyLearning.Result result=techniqueUsedSinceAction?null:liveBody.observe(' in g
+          assert 'techniqueUsedSinceAction=true;' in g
+          assert 'liveBody.abortTrial();' in g
           assert 'realTactileContact||type==0' in e
           assert 'episodic.suggested(senses,!protectMotor)' in s
           assert 'Recuperi da immobilità (0.9.7)' in t
@@ -794,7 +796,7 @@ jobs:
           gradle=Path('app/build.gradle').read_text()
           assert 'public static final int ENERGY=0,HARM=1,GATE=2,CASES=3,SEEDS=3;' in lab
           assert 'public static final int[] VARIANTS={7,19,31};' in lab
-          assert 'setNavigationAdviceEnabled(instrument)' in lab
+          assert 'setNavigationAdviceEnabled(p.activeCoreComparison||instrument)' in lab
           assert 'room.constrain(body,surface,DT,brain.adhesion())' in lab
           assert 'surface.step(body,input.membrane,px,py,DT,brain.adhesion())' in lab
           assert 'body.step(input.motor,mx,my,DT,input.hands,px,py)' in lab
@@ -804,7 +806,9 @@ jobs:
           assert 'rig.episodes.consequenceSeparated(' in lab
           assert 'public synchronized void setNavigationAdviceEnabled(boolean enabled)' in brain
           assert 'navigationAdviceEnabled=true' in brain
-          assert 'RESULTS="zero_behavior_lab_v113"' in ui
+          assert 'RESULTS="zero_behavior_lab_v22"' in ui
+          assert 'p.activeCoreComparison=true;' in ui
+          assert 'brain.attachActiveCore(core)' in lab
           assert 'getSharedPreferences("zero_motorbrain_001",MODE_PRIVATE).edit()' not in ui
           assert 'new Intent(this,BehavioralLabActivity.class)' in analysis
           assert 'android:name="com.overmind.zero.BehavioralLabActivity"' in manifest
@@ -845,7 +849,7 @@ jobs:
           assert '.putString(GateBehaviorMetrics.KEY,gateMetrics.encode())' in game
           assert 'gateMetrics.observe(creature,chamber)' in game
           assert 'r.gateDiagnostics.observe(body,room)' in lab
-          assert 'setNavigationAdviceEnabled(instrument)' in lab
+          assert 'setNavigationAdviceEnabled(p.activeCoreComparison||instrument)' in lab
           assert 'GoalContinuity.KEY' in panel and 'GateBehaviorMetrics.KEY' in panel
           assert 'case INTENTION:return new String[]{GoalContinuity.KEY};' in reset
           assert 'case GATE_METRICS:return new String[]{GateBehaviorMetrics.KEY};' in reset
@@ -864,11 +868,11 @@ jobs:
           from hashlib import sha1
           root=Path('app/src/main/java/com/overmind/zero')
           pins={
-          'SensorimotorMind.java':'44b5b847b801ffb438bc9e5bd2e6296e05884fa8',
+          'SensorimotorMind.java':'7fd5267f478c26ed7470979dda3b3733f767f5ab',
           'EnergyLifetimeCounters.java':'7c0a9d815937a39c5cfdaddb01896b39536d8afe',
           'ObjectExperienceV20.java':'39ada3745f8b22769e67c00f5def9a5a3ed6ba1a',
           'ObjectExperienceV20Regression.java':'44bccc8ebe5971ed5226e50f62f8e27f7fbc6ddd',
-          'GameActivity.java':'d12475bdf35a209b91ed9d44c89a42a582a23c9e',
+          'GameActivity.java':'066247a9eff508f86fe125c9f9a0d5c1f37fe88d',
           'InstrumentalNavigation.java':'fb95ae5b19a8b2602cb4338641d8851bebf8fa26',
           'BehavioralLaboratory.java':'8a35099ddb4b4d7ef9a9a334cb2e50b9477285d8',
           'BehavioralLabActivity.java':'007fc2986932cbe0a3956d8d2c36e94e7dd2a47a',

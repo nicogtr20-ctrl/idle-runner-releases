@@ -514,7 +514,7 @@ public final class SensorimotorMind {
         if(zero20ExperimentalAdvice&&v20Recommended>=0&&
            chosen==v20Recommended&&v20Bias>0)zero20DecisionsInfluenced++;
         float epsilon=Math.max(.09f,.52f/(1+experiences/120f));
-        if(activeCore!=null)epsilon=activeCore.exploration();
+        if(activeCore!=null)epsilon=activeCore.exploration(epsilon);
         if(protectMotor)epsilon=Math.max(epsilon,.28f);
         actionExploratory=false;
         if(random.nextFloat()<epsilon){

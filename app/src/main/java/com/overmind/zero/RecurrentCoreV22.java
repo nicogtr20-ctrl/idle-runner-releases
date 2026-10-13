@@ -46,7 +46,7 @@ public final class RecurrentCoreV22 {
         sense(s,local,origins,controls,null,null);
     }
     public void sense(float[] s,float[] local,float[] origins,float[] controls,float[] rays,float[] belief){
-        if(!valid(s,26)){invalid++;return;}
+        if(!valid(s,26)){invalid++;pending=null;pendingAction=-1;return;}
         Arrays.fill(current,0);System.arraycopy(s,0,current,0,26);
         int[] channels={DistributedBodySense.TOUCH,DistributedBodySense.GRIP_HELD,
             DistributedBodySense.SHAPE,DistributedBodySense.STRAIN,DistributedBodySense.OPTIC};
@@ -153,13 +153,14 @@ public final class RecurrentCoreV22 {
      */
     public float[] evaluate(float[] oldScores){
         float[] z=state(),scores=new float[A];
-        float oldTrust=Math.max(.12f,1f/(1+transitions/240f));
+        float blend=learningBlend();
         lastConfidence=0;
         for(int a=0;a<A;a++){
             float trust=confidence(a);lastConfidence=Math.max(lastConfidence,trust);
-            float prior=oldScores==null?0:clip(oldScores[a],-2,2)*.15f*oldTrust;
+            float prior=oldScores==null?0:oldScores[a];
             float information=.009f*clip(current[0]/.4f,0,1)/(float)Math.sqrt(1+samples[a]);
-            scores[a]=value(z,a)+(trust>0?.35f*trust*(rollout(z,a)-value(z,a)):0)+prior+information;
+            float learned=value(z,a)+(trust>0?.35f*trust*(rollout(z,a)-value(z,a)):0)+information;
+            scores[a]=oldScores==null?learned:(1-blend)*prior+blend*learned;
         }
         int best=0;float runner=-Float.MAX_VALUE;
         for(int a=1;a<A;a++)if(scores[a]>scores[best])best=a;
@@ -168,7 +169,17 @@ public final class RecurrentCoreV22 {
         if(confidence(best)>0)modelChoices++;
         return scores;
     }
-    public float exploration(){return Math.max(.04f,.28f/(1+transitions/300f));}
+    public float learningBlend(){
+        long actualTrain=0;for(int n:samples)actualTrain+=n;
+        return Math.min(.9f,actualTrain/1600f);
+    }
+    public float exploration(float previous){
+        float adaptive=Math.max(.04f,.28f/(1+transitions/300f));
+        float blend=learningBlend();
+        // A newborn replacement must not erase an experienced predecessor
+        // by abruptly restoring virgin exploration on already learned skills.
+        return previous*(1-blend)+Math.min(previous,adaptive)*blend;
+    }
     public void chosen(int a){
         if(a<0||a>=A){invalid++;pending=null;pendingAction=-1;return;}
         pending=state();pendingAction=a;lastAction=a;
@@ -194,6 +205,9 @@ public final class RecurrentCoreV22 {
      */
     public void consequence(float actualContactEnergy,float actualDamage,boolean train,boolean holdout,boolean terminal){
         if(pending==null||pendingAction<0)return;
+        if(!Float.isFinite(actualContactEnergy)||!Float.isFinite(actualDamage)||actualDamage<0){
+            invalid++;pending=null;pendingAction=-1;return;
+        }
         int a=pendingAction;
         float[] nextHidden=advance(current,hidden,a),after=join(current,nextHidden);
         float earned=clip(current[0]-pending[0]-(terminal?.20f:0),-1,1);

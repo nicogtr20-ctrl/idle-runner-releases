@@ -22,6 +22,8 @@ public final class RecurrentCoreV22Regression {
         yes(core.replaySize()==96,"bounded replay including rare events");
         core.sense(s,local,origins,new float[6]);
         float[] scores=core.evaluate(null);
+        yes(core.confidence(3)>0,"heldout world evidence never became usable");
+        yes(core.plannedChoices()>0,"future model still observer-only");
         yes(max(scores)==3,"learned beneficial action must outrank harm and idle: "+Arrays.toString(scores));
         yes(scores[5]<scores[3],"harm value lost");
         String encoded=core.encode();RecurrentCoreV22 restored=new RecurrentCoreV22();
@@ -52,6 +54,12 @@ public final class RecurrentCoreV22Regression {
             yes(eager.action==lazy.action,"boundary sensor optimization altered actions");
         }
         yes(eager.serialize().equals(lazy.serialize()),"boundary sensor optimization changed legacy learning");
+        // A virgin replacement preserves an already experienced policy
+        // while it collects its own observations; it must not restart epsilon.
+        SensorimotorMind prior=new SensorimotorMind(),migration=new SensorimotorMind();
+        prior.restore(eager.serialize());migration.restore(eager.serialize());
+        migration.attachActiveCore(new RecurrentCoreV22());
+        for(int i=0;i<100;i++)yes(prior.choose(s)==migration.choose(s),"cold replacement changed experienced policy before any evidence");
         // Active hook alters actual decisions; observers still remain passive.
         SensorimotorMind active=new SensorimotorMind();active.attachActiveCore(restored);
         int wins=0;for(int i=0;i<40;i++)if(active.choose(s)==3)wins++;

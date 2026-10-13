@@ -638,6 +638,7 @@ public final class GameActivity extends Activity {
             lastFrame=0;
         }
         void resetEpisode(){
+            techniqueUsedSinceAction=false;
             shelter.capture(environment);
             shelter.newLife();
             gripObserver.newLife();

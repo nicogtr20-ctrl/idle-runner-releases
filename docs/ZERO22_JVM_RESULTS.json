@@ -405,7 +405,7 @@
     "test": "RecurrentCoreV22Regression",
     "passed": true,
     "seconds": 1.186,
-    "output": "PASS ZERO22: body+origins, recurrent future+energy, active choice, separate harm, replay exclusion, terminal, corruption, slot codec, resume and exact sensor-boundary parity; active learned choices=38/40\n"
+    "output": "PASS ZERO22: body+origins, recurrent future+energy, active choice, separate harm, replay exclusion, terminal, corruption, slot codec, resume and exact sensor-boundary parity; active learned choices=37/40\n"
   },
   {
     "test": "SkillExecutionIndependentRegression",
