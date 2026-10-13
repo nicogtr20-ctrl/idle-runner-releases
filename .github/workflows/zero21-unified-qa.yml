@@ -47,6 +47,11 @@ jobs:
           # Identical brain/seed and genuine two-sided cover physics, no
           # privileged hidden-resource target in policy (12 paired scenes).
           java -Dzero21.shadowCompare=true -cp /tmp/overmind com.overmind.zero.Zero20CoveredEnergyBenchmark
+          # Natural no-contact hunger death occurs after ~129 simulated sec.
+          # The original 128-sec arena censors that endpoint. Keep a second
+          # diagnostic-only 170-sec paired check, again with ZERO21 SHADOW
+          # on ONE side and absolutely NO new actuator policy on either.
+          java -Dzero21.shadowCompare=true -Dzero20.longSurvivalDiagnostic=true -cp /tmp/overmind com.overmind.zero.Zero20CoveredEnergyBenchmark
           java -cp /tmp/overmind com.overmind.zero.Zero20PassiveSnapshotRegression
           java -cp /tmp/overmind com.overmind.zero.ResetDomains
           java -cp /tmp/overmind com.overmind.zero.SensorimotorMind
