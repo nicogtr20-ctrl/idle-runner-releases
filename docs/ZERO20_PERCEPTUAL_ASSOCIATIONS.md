@@ -41,3 +41,9 @@ An organism that can gradually invent its own categories from what it sees and f
 ## Acceptance status
 
 **Code created and connected; CI is authoritative and must be checked on the exact final head.** Until completed green Java + Android and independent device A/B evidence, the model is experimental shadow instrumentation, not a demonstrated learned recognition of boxes or improved intelligence. Do not change OTA103 or the 12 existing user slots.
+
+
+### Confirmed QA of first passive prototype — 2026-10-13
+**Actual consolidated GitHub Actions run:** [38391024117](https://github.com/nicogtr20-ctrl/idle-runner-releases/actions/runs/38391024117), executable-source SHA `3621aedc7447d16286c903671593a72aba29288c`, **SUCCESS**. It compiled the full preexisting Java model set plus `PerceptualAssociationsV20` and its dedicated regression; passed the old body, grip, gate, plates, memory, save, privacy/telemetry, reset, physics and decision tests; verified 440 unchanged choice decisions and static absence of any new observer policy score/physics override; built the complete Android Debug APK with `assembleDebug`. Earlier staging run `38390903157` failed only the overly broad source-only assertion that also excluded passive `chosen()` bookkeeping; assertion was narrowed to forbid view/training/scoring within the action-choice policy and the final run passed. No bypass of any real physics test was used.
+
+**What is not verified:** realistic rotation and 3D shape recognition on the Galaxy S21, same-instance tracking, independently proven causal manipulation, long-lived technique retention, battery/thermal overhead, installer signature, unchanged 12 slots after actual upgrade, and real behavioral benefit. **Promotion remains BLOCKED.** Release/OTA103 unchanged.
