@@ -141,6 +141,27 @@ public final class Zero20PassiveSnapshot {
             else planner.put("readiness","WORLD_GATE_PASS_ONLY_NOT_MOTOR_PERMISSION");
         }
         result.put("futurePlanner",planner);
+
+        String perRaw=str(values,PerceptualAssociationsV20.KEY);
+        PerceptualAssociationsV20 per=new PerceptualAssociationsV20();
+        boolean perValid=per.restore(perRaw);
+        Map<String,Object> associations=section(perRaw,perValid);
+        if(perValid){
+            associations.put("hypotheticalCategories",per.categories());
+            associations.put("partialSilhouetteViews",per.observations());
+            associations.put("unknownOrOccludedViews",per.unknown());
+            associations.put("ambiguousMultiSurfaceViews",per.ambiguous());
+            associations.put("heldoutActionOutcomes",per.validations());
+            associations.put("realExternalMotionCorrelations",per.realExternalEvents());
+            associations.put("realEnergyContactsNotAttributedToObject",per.realEnergyEvents());
+            finite(associations,"heldoutBrierError",per.heldoutError());
+            finite(associations,"actionOnlyReferenceBrier",per.referenceError());
+            finite(associations,"predictiveOnlyConfidence",per.predictiveConfidence());
+            associations.put("objectIdentityVerified",false);
+            associations.put("causalTechniqueVerified",false);
+            associations.put("motorInterventionAllowed",false);
+        }
+        result.put("perceptualAssociations",associations);
         return result;
     }
 }

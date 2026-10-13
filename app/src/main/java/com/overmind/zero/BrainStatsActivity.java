@@ -44,6 +44,7 @@ public final class BrainStatsActivity extends Activity {
         final FuturePlannerV20 futureV20;
         final PhysicalConsequenceV20 physicalConsequenceV20;
         final GripAffordanceV20 gripAffordanceV20;
+        final PerceptualAssociationsV20 perceptualV20;
         final SpatialPerception spatial;
         final CausalExperiments causal;
         final InstrumentalNavigation navigation;
@@ -97,6 +98,8 @@ public final class BrainStatsActivity extends Activity {
                 pref.getString(PhysicalConsequenceV20.KEY,""));
             gripAffordanceV20=new GripAffordanceV20();
             gripAffordanceV20.restore(pref.getString(GripAffordanceV20.KEY,""));
+            perceptualV20=new PerceptualAssociationsV20();
+            perceptualV20.restore(pref.getString(PerceptualAssociationsV20.KEY,""));
             spatial=new SpatialPerception();
             spatial.restore(pref.getString(SpatialPerception.KEY,""));
             causal=new CausalExperiments();
@@ -296,6 +299,13 @@ public final class BrainStatsActivity extends Activity {
                 "  •  fiducia "+String.format(Locale.US,"%.0f%%",
                     gripAffordanceV20.confidence()*100f)+"  •  nessuna guida motoria",
                 Math.min(1f,gripAffordanceV20.validations()/150f),purple);
+            y=skill(c,y,"ZERO 2.0 / ASSOCIAZIONI PERCETTIVE",
+                perceptualV20.categories()+" categorie ipotetiche",
+                perceptualV20.observations()+" sagome parziali osservate  •  "+
+                perceptualV20.ambiguous()+" casi ambigui  •  "+
+                perceptualV20.realExternalEvents()+" movimenti correlati  •  "+
+                "identita oggetti non verificata  •  solo osservazione",
+                Math.min(1f,perceptualV20.validations()/120f),cyan);
             y=skill(c,y,"PERCEZIONE DELLO SPAZIO",
                 spatial.parameterCount()+" pesi",
                 spatial.transitions+" azioni osservate  •  "+SpatialPerception.RAYS+

@@ -29,10 +29,11 @@ public final class Zero20PassiveSnapshotRegression {
         saved.put(PhysicalConsequenceV20.KEY,new PhysicalConsequenceV20().encode());
         saved.put(TransferSkillsV20.KEY,new TransferSkillsV20().encode());
         saved.put(FuturePlannerV20.KEY,new FuturePlannerV20().encode());
+        saved.put(PerceptualAssociationsV20.KEY,new PerceptualAssociationsV20().encode());
         saved.put("best","DO_NOT_TOUCH_MOTOR_WEIGHTS");
         Map<String,Object> valid=Zero20PassiveSnapshot.fromSaved(saved);
         for(String key:new String[]{"predictiveWorld","physicalGrip","physicalConsequences",
-                "lifeTransfer","futurePlanner"})
+                "lifeTransfer","futurePlanner","perceptualAssociations"})
             check(Boolean.TRUE.equals(section(valid,key).get("valid")),
                 "missing valid model in section "+key);
         check("UNDER_40_HELDOUT".equals(section(valid,"predictiveWorld").get("confidenceBlocker")),
@@ -41,10 +42,13 @@ public final class Zero20PassiveSnapshotRegression {
             "untrained physical grip cannot be called confident");
         check("UNDER_60_WORLD_HELDOUT".equals(section(valid,"futurePlanner").get("readiness")),
             "untrained planner cannot be called ready");
-        check(saved.size()==6&&"DO_NOT_TOUCH_MOTOR_WEIGHTS".equals(saved.get("best")),
+        check(saved.size()==7&&"DO_NOT_TOUCH_MOTOR_WEIGHTS".equals(saved.get("best")),
             "must not change existing memory or base motor weights");
         check(!valid.toString().contains("DO_NOT_TOUCH_MOTOR_WEIGHTS"),
             "digest must not copy raw motor weights");
+        check(Boolean.FALSE.equals(section(valid,"perceptualAssociations").get("motorInterventionAllowed")),
+            "a recognized ray cluster must never unlock live motor steering");
+        check(!valid.toString().contains("pa20|"),"digest must not leak prototype payload");
         check(!valid.toString().contains("ga21|")&&!valid.toString().contains("pw21|"),
             "digest must not copy raw learning weights");
 
