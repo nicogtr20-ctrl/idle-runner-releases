@@ -80,13 +80,17 @@ public final class SensorimotorMind {
     public synchronized boolean restorePlanningStats(String saved){return planner.restore(saved);}
     public synchronized LearnedSequencePlanner planner(){return planner;}
     public synchronized void contactOutcome(float actualEnergyDelta,int visuallyObservedSignature){
+        contactOutcome(actualEnergyDelta,visuallyObservedSignature,null);
+    }
+    public synchronized void contactOutcome(float actualEnergyDelta,int visuallyObservedSignature,
+                                           float[] visibleAtTouch){
         if(learning){
             contactCredit.consequence(actualEnergyDelta,visuallyObservedSignature);
             if(temporal!=null)temporal.energyOutcome(actualEnergyDelta);
             if(temporalSkills!=null)temporalSkills.energyOutcome(actualEnergyDelta);
             if(transferV20!=null)transferV20.energyOutcome(actualEnergyDelta);
             if(perceptualV20!=null)perceptualV20.actualEnergy(actualEnergyDelta);
-            if(objectExperience!=null)objectExperience.energyContact(actualEnergyDelta,visuallyObservedSignature);
+            if(objectExperience!=null)objectExperience.energyContact(actualEnergyDelta,visuallyObservedSignature,visibleAtTouch);
             if(physicalChainV20!=null)physicalChainV20.energyOutcome(actualEnergyDelta);
             if(bodySchema!=null)bodySchema.actualEnergy(actualEnergyDelta);
             if(distributedBody!=null)distributedBody.actualEnergy(actualEnergyDelta);
@@ -236,6 +240,7 @@ public final class SensorimotorMind {
             if(worldV20!=null)worldV20.resetLife();
             if(transferV20!=null)transferV20.resetLife();
         if(physicalChainV20!=null)physicalChainV20.resetLife();
+        if(objectExperience!=null)objectExperience.resetLife();
         if(gripAffordanceV20!=null)gripAffordanceV20.resetLife();
         if(perceptualV20!=null)perceptualV20.resetLife();
         lastActualGripSurface=null;
