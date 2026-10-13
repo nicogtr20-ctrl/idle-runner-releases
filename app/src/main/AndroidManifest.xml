@@ -13,6 +13,8 @@
 
     <activity android:name="com.overmind.zero.TelemetryActivity"
       android:exported="false" android:screenOrientation="portrait"/>
+    <activity android:name="com.overmind.zero.CoreLabActivityV22"
+      android:exported="false" android:screenOrientation="portrait"/>
     <activity android:name="com.overmind.zero.BehavioralLabActivity"
       android:exported="false" android:screenOrientation="portrait"/>
     <activity android:name="com.overmind.zero.SaveSlotsActivity"

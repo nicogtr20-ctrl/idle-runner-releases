@@ -38,6 +38,8 @@ public final class BehavioralLaboratory {
         public float[] membrane=Morphology.virgin(new Random(14790));
         /** Bench-only switch: attach passive ZERO 2.0 world to cloned controller. */
         public boolean shadowWorldV20=false;
+        public boolean activeCoreComparison=false;
+        public String recurrent="",distributed="",impedance="";
         public String world="",navigation="",outcome="",diagnostics="",planning="",
             memory="",temporal="",skills="",body="",spatial="",causal="",intent="";
         public Profile copy(){
@@ -47,6 +49,8 @@ public final class BehavioralLaboratory {
             r.diagnostics=diagnostics;r.memory=memory;r.temporal=temporal;
             r.skills=skills;r.body=body;r.spatial=spatial;r.causal=causal;
             r.intent=intent;r.shadowWorldV20=shadowWorldV20;
+            r.activeCoreComparison=activeCoreComparison;r.recurrent=recurrent;
+            r.distributed=distributed;r.impedance=impedance;
             return r;
         }
     }
@@ -86,13 +90,15 @@ public final class BehavioralLaboratory {
     public static final class Result {
         public final Trial[][][] trials=new Trial[CASES][SEEDS][2];
         public int finished=0;
+        public boolean activeCoreComparison=false;
         public int total(){return CASES*SEEDS*2;}
         public String report(){
             StringBuilder b=new StringBuilder(
                 "LABORATORIO ZERO — A/B FISICO, SENZA SCRIPT\n"+
                 "Tre scenari, tre varianti ciascuno, 32 secondi SIMULATI per prova.\n"+
                 "Stesso cervello iniziale e stessa scena per ogni coppia; "+
-                "variano solo i consigli della navigazione e la continuita' delle intenzioni.\n"+
+                (activeCoreComparison?"A: controllo precedente; B: cervello ricorrente 2.2 attivo.\n":
+                "variano solo i consigli della navigazione e la continuita' delle intenzioni.\n")+
                 "Le coordinate degli oggetti sono usate SOLO per misurare i risultati.\n\n");
             for(int s=0;s<CASES;s++){
                 b.append(NAMES[s]).append("\n");
@@ -138,7 +144,7 @@ public final class BehavioralLaboratory {
                     "Scelte navigazione influenzate (ATTIVA / CONTROLLO): %.1f / %.1f; "+
                     "decisioni attive %.1f per prova.\n",
                     sums[8]/valid,sums[9]/valid,sums[7]/valid));
-                if(sums[8]<1)b.append(
+                if(!activeCoreComparison&&sums[8]<1)b.append(
                     "NOTA: modello strumentale probabilmente non ancora pronto "+
                     "o stimoli non rilevanti. Parità non dimostra inefficacia.\n");
                 for(int j=0;j<SEEDS;j++){
@@ -181,7 +187,17 @@ public final class BehavioralLaboratory {
         brain.restoreOutcomeModel(p.outcome);
         brain.diagnostics.restore(p.diagnostics);
         brain.restorePlanningStats(p.planning);
-        brain.setNavigationAdviceEnabled(instrument);
+        brain.setNavigationAdviceEnabled(p.activeCoreComparison||instrument);
+        if(p.activeCoreComparison){
+            DistributedBodySense tissue=new DistributedBodySense();
+            tissue.restore(p.distributed);brain.attachDistributedBody(tissue);
+            LocalImpedanceSense resistance=new LocalImpedanceSense();
+            resistance.restore(p.impedance);brain.attachImpedance(resistance);
+            if(instrument){
+                RecurrentCoreV22 core=new RecurrentCoreV22();
+                core.restore(p.recurrent);brain.attachActiveCore(core);
+            }
+        }
         if(p.shadowWorldV20){
             // Reproduce EXACTLY the new optional hierarchy on a cloned
             // embodied agent, without touching the live named ZERO slot.
@@ -262,6 +278,7 @@ public final class BehavioralLaboratory {
             float mx=brain.motorX(),my=brain.motorY();
             float px=body.cx+mx*145f,py=body.cy+my*145f;
             float effectAtFrameStart=effect;
+            brain.appliedControls(input.motor,input.hands,input.membrane);
             body.step(input.motor,mx,my,DT,input.hands,px,py);
             surface.step(body,input.membrane,px,py,DT,brain.adhesion());
             if(room!=null){
@@ -350,7 +367,7 @@ public final class BehavioralLaboratory {
     }
     public static Result run(Profile p,Progress progress,Cancel stop){
         if(p==null)throw new IllegalArgumentException("profile");
-        Result result=new Result();
+        Result result=new Result();result.activeCoreComparison=p.activeCoreComparison;
         for(int s=0;s<CASES;s++)for(int trial=0;trial<SEEDS;trial++){
             for(int mode=0;mode<2;mode++){
                 if(stop!=null&&stop.stopped())return result;

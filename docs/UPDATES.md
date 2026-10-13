@@ -54,3 +54,7 @@ The OTA102 phone reports showed rapid accepted mutations of all hand/membrane we
 `feature/zero20-perceptual-associations` è soltanto ricerca; non pubblicare APK, manifest Vercel o OTA da questo branch. La versione pubblica resta `0.11.6-ota.103` (package `com.overmind.zero.ota`, code 1103). Non installare APK sperimentali su profili esistenti senza verifica firma/code, backup di slot e approvazione esplicita. Sia i prototipi percettivi sia la loro telemetria sono facoltativi per i salvataggi storici.
 
 **OTA applicativa:** questo modulo percettivo passivo è stato selezionato per il canale AGGIORNA come candidato successivo alla 103. La build ufficiale resta soggetta a Java/Android QA, stessa firma e pubblicazione SHA/manifest prima di dirla disponibile.
+
+
+## 13 ottobre 2026 — ZERO 2.2 attivo (candidato OTA117)
+Richiesta utente: cervello rivisto funzionante e APK, x5/x20 fluidi, TEST MAX circa x29. Nuovo ramo `feature/zero22-active-recurrent-ota117` da `fe6d7497eb5b53055b46c474dd5470028bc97f88`. Leggere **[ZERO22_ACTIVE_CORE](ZERO22_ACTIVE_CORE.md)** per architettura, contratto sensoriale, replay, competenze, ottimizzazione TEST MAX e limitazioni. `RecurrentCoreV22` guida realmente la scelta prima dell'azione; i moduli 2.1 restano osservatori compatibili. Nessun reset del profilo o slot. 71 test JVM locali PASS; release, Android build e prova S21 da verificare separatamente. Non chiamare questo sistema Dreamer completo o intelligenza generale.

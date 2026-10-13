@@ -20,14 +20,14 @@ import java.util.Random;
  * Read-only comparison of a SNAPSHOT of one ZERO against an ablation of its
  * learned instrumental navigation. ALL runs live in private heap clones.
  *
- * Writes only to separate zero_behavior_lab_v113 preferences, NEVER into
+ * Writes only to separate zero_behavior_lab_v22 preferences, NEVER into
  * zero_motorbrain_001 or named save slots. No "training" button and no
  * interventions affecting the real organism.
  */
 public final class BehavioralLabActivity extends Activity {
     private static final int BG=0xff07121d,PANEL=0xff132832,TEAL=0xff85edda,
         MUTED=0xffa1bdc5,WHITE=0xffe8fff8,GOLD=0xfff1c586;
-    private static final String RESULTS="zero_behavior_lab_v113";
+    private static final String RESULTS="zero_behavior_lab_v22";
     private volatile boolean canceled=false,running=false;
     private Thread worker;
     private TextView status,report;
@@ -73,17 +73,14 @@ public final class BehavioralLabActivity extends Activity {
         paragraph(description,"Tre prove: raggiungere energia, evitare danno e "+
             "interagire con una stanza dotata di cancello. Tre varianti di "+
             "posizione/velocita' iniziale per ciascuna.");
-        paragraph(description,"Ogni prova viene ripetuta con lo STESSO cervello "+
-            "iniziale: (A) navigazione disattivata solo nella scelta delle "+
-            "azioni (incluse intenzioni) e (B) navigazione piu' intenzioni attive. Percezioni, fisica, memorie "+
-            "e apprendimento restano in entrambe.");
+        paragraph(description,"Confronto cervello 2.2: A usa il controllo precedente, B usa il nuovo controllore ricorrente. Ogni coppia parte dalla stessa copia dello ZERO e dalle stesse condizioni fisiche. L'apprendimento delle due copie resta isolato dal personaggio reale.");
         paragraph(description,"Ogni prova usa il motore fisico reale del gioco "+
             "per 32 secondi simulati. I risultati riportano veri contatti, "+
             "energia guadagnata/persa, vicinanza, spostamento del cancello "+
             "e attraversamento. Non forniamo bersagli o traiettorie al cervello.");
         paragraph(description,"La prova usa una COPIA dello ZERO attualmente "+
             "salvato, non cancella né allena il personaggio reale. "+
-            "Se la navigazione e le intenzioni non hanno ancora imparato, "+
+            "Se il cervello ricorrente non ha ancora imparato, "+
             "un pareggio e' normale e non e' una dimostrazione di successo.");
         LinearLayout controls=card(root);
         run=new Button(this);run.setText("AVVIA CONFRONTO A/B");
@@ -148,6 +145,10 @@ public final class BehavioralLabActivity extends Activity {
         p.spatial=prefs.getString(SpatialPerception.KEY,"");
         p.causal=prefs.getString(CausalExperiments.KEY,"");
         p.intent=prefs.getString(GoalContinuity.KEY,"");
+        p.activeCoreComparison=true;
+        p.recurrent=prefs.getString(RecurrentCoreV22.KEY,"");
+        p.distributed=prefs.getString(DistributedBodySense.KEY,"");
+        p.impedance=prefs.getString(LocalImpedanceSense.KEY,"");
         return p;
     }
     private void runLab(){

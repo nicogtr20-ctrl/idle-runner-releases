@@ -25,6 +25,23 @@ public final class SensorimotorMind {
     private static final float MODEL_LR=.018f,VALUE_LR=.04f,GAMMA=.78f;
     private final Random random=new Random(60909);
     private transient EpisodicMemory episodic;
+    private transient RecurrentCoreV22 activeCore;
+    private transient float[] executedControls=new float[6];
+    private transient float[] executedMotor,executedHand,executedMembrane;
+    public synchronized void attachActiveCore(RecurrentCoreV22 core){activeCore=core;}
+    public synchronized void appliedControls(float[] motor,float[] hand,float[] membrane){
+        if(motor!=executedMotor||hand!=executedHand||membrane!=executedMembrane){
+            executedControls=RecurrentCoreV22.controlState(motor,hand,membrane);
+            executedMotor=motor;executedHand=hand;executedMembrane=membrane;
+        }
+    }
+    private void feedCore(float[] senses){
+        if(activeCore!=null)activeCore.sense(senses,distributedBody==null?null:distributedBody.localMap(),
+            spatial==null?null:spatial.eyeOrigins(),executedControls,spatial==null?null:spatial.ranges(),
+            objectContinuity==null?null:objectContinuity.focusFeatures());
+    }
+    public synchronized String activeCoreSummary(){return activeCore==null?"Legacy control":activeCore.summary();}
+    public synchronized boolean observationDue(float dt){return trialAction<0||elapsed+Math.max(0,dt)>=.65f;}
     private transient MotorAutonomyGuard motorGuard;
     private transient TemporalWorkingMemory temporal;
     private transient TemporalSkillBank temporalSkills;
@@ -68,7 +85,7 @@ public final class SensorimotorMind {
     public synchronized void setNavigationAdviceEnabled(boolean enabled){
         navigationAdviceEnabled=enabled;
     }
-    private float actualEnergySinceChoice=0f;
+    private float actualEnergySinceChoice=0f,actualContactHarm=0f;
     private float actualAmbientLossSinceChoice=0f;
     /** Physically measured wind exposure, not a red resource or a build bonus. */
     public synchronized void ambientDamage(float actualEnergyLoss){
@@ -105,6 +122,7 @@ public final class SensorimotorMind {
             if(navigation!=null)navigation.energyOutcome(actualEnergyDelta,
                 visuallyObservedSignature,true);
             actualEnergySinceChoice+=actualEnergyDelta;
+            actualContactHarm+=Math.max(0,-actualEnergyDelta);
         }
     }
     public synchronized String outcomeModel(){return contactCredit.encode();}
@@ -228,6 +246,7 @@ public final class SensorimotorMind {
         if(unifiedCognition!=null)unifiedCognition.resetLife();
         if(objectContinuity!=null)objectContinuity.resetLife();
         if(unifiedArbiter!=null)unifiedArbiter.resetLife();
+        if(activeCore!=null)activeCore.resetLife();
         if(gripAffordanceV20!=null)gripAffordanceV20.resetLife();
         if(perceptualV20!=null)perceptualV20.resetLife();
         lastActualGripSurface=null;
@@ -237,7 +256,7 @@ public final class SensorimotorMind {
         if(intention!=null)intention.resetLife();
         if(blackbox!=null)blackbox.newLife();
         if(motionShadow!=null)motionShadow.resetLife();
-        actualEnergySinceChoice=0;
+        actualEnergySinceChoice=0;actualContactHarm=0;
     }
     public synchronized void resetEpisode(float[] first){
         // Mortality resets bodily position and short-term context, never
@@ -256,6 +275,7 @@ public final class SensorimotorMind {
         if(unifiedCognition!=null)unifiedCognition.resetLife();
         if(objectContinuity!=null)objectContinuity.resetLife();
         if(unifiedArbiter!=null)unifiedArbiter.resetLife();
+        if(activeCore!=null)activeCore.resetLife();
         if(gripAffordanceV20!=null)gripAffordanceV20.resetLife();
         if(perceptualV20!=null)perceptualV20.resetLife();
         lastActualGripSurface=null;
@@ -265,7 +285,7 @@ public final class SensorimotorMind {
             if(intention!=null)intention.resetLife();
             if(blackbox!=null)blackbox.newLife();
             if(motionShadow!=null)motionShadow.resetLife();
-            actualEnergySinceChoice=0;
+            actualEnergySinceChoice=0;actualContactHarm=0;
             return;
         }
         begin(first);
@@ -291,6 +311,7 @@ public final class SensorimotorMind {
         if(unifiedCognition!=null)unifiedCognition.resumeLife();
         if(objectContinuity!=null)objectContinuity.resumeLife();
         if(unifiedArbiter!=null)unifiedArbiter.resetLife();
+        if(activeCore!=null)activeCore.resumeLife();
         if(gripAffordanceV20!=null)gripAffordanceV20.resumeLife();
         if(perceptualV20!=null)perceptualV20.resumeLife();
         lastActualGripSurface=null;
@@ -300,7 +321,7 @@ public final class SensorimotorMind {
         if(intention!=null)intention.resumeLife();
         if(blackbox!=null)blackbox.resumeLife();
         if(motionShadow!=null)motionShadow.resetLife();
-        actualEnergySinceChoice=0;
+        actualEnergySinceChoice=0;actualContactHarm=0;
     }
     public synchronized float motorX(){return (float)Math.cos((action%8)*Math.PI/4);}
     public synchronized float motorY(){return (float)Math.sin((action%8)*Math.PI/4);}
@@ -308,6 +329,8 @@ public final class SensorimotorMind {
     /** End-of-life logger path, BEFORE the existing transient brain reset. */
     public synchronized void recordTerminal(float[] observed,float physicalEffect,
                                             MotorBrain.Body body){
+        if(activeCore!=null){feedCore(observed);boolean held=diagnostics.shouldHoldout();
+            activeCore.consequence(actualEnergySinceChoice,actualContactHarm,learning&&!held,held,true);}
         if(blackbox!=null)blackbox.terminal(observed,actualEnergySinceChoice,
                                            physicalEffect,body);
     }
@@ -354,7 +377,7 @@ public final class SensorimotorMind {
         // They are not involved in the policy's comparison or randomness.
         float[][] traceTerms=blackbox==null?null:
             new float[ACTIONS][DecisionBlackbox.TERMS];
-        float[] traceScores=blackbox==null?null:new float[ACTIONS];
+        float[] traceScores=blackbox==null&&activeCore==null?null:new float[ACTIONS];
         float[] temporalContext=temporal==null?null:temporal.contextCopy();
         TemporalSkillBank.Advice skillAdvice=
             temporalSkills==null||temporal==null?null:
@@ -466,8 +489,8 @@ public final class SensorimotorMind {
                         diversity+temporalBias+skillBias+fullBodyBias+spatialBias+causalBias+
                         instrumental+intentBias+objectBias+
                         (zero20ExperimentalAdvice&&a==v20Recommended?v20Bias:0f);
+            if(traceScores!=null)traceScores[a]=score;
             if(traceTerms!=null){
-                traceScores[a]=score;
                 float[] t=traceTerms[a];
                 t[0]=legacyQ;t[1]=earnedValue;t[2]=planned[a]*.50f;
                 t[3]=curiosity;t[4]=jitter;t[5]=memoryBias;t[6]=diversity;
@@ -477,10 +500,21 @@ public final class SensorimotorMind {
             }
             if(score>best){best=score;chosen=a;}
         }
+        if(activeCore!=null){
+            feedCore(senses);
+            float[] unifiedScores=activeCore.evaluate(traceScores);
+            best=-Float.MAX_VALUE;
+            for(int a=0;a<ACTIONS;a++){
+                if(traceScores!=null)traceScores[a]=unifiedScores[a];
+                if(traceTerms!=null){Arrays.fill(traceTerms[a],0);traceTerms[a][0]=unifiedScores[a];}
+                if(unifiedScores[a]>best){best=unifiedScores[a];chosen=a;}
+            }
+        }
         int greedyAction=chosen;
         if(zero20ExperimentalAdvice&&v20Recommended>=0&&
            chosen==v20Recommended&&v20Bias>0)zero20DecisionsInfluenced++;
         float epsilon=Math.max(.09f,.52f/(1+experiences/120f));
+        if(activeCore!=null)epsilon=activeCore.exploration();
         if(protectMotor)epsilon=Math.max(epsilon,.28f);
         actionExploratory=false;
         if(random.nextFloat()<epsilon){
@@ -534,10 +568,11 @@ public final class SensorimotorMind {
             if(navigationAdviceEnabled)intention.chosen(navigation,chosen,senses[0]);
             intention.noteDecision(largestIntentionBias);
         }
-        actualEnergySinceChoice=0f;
+        actualEnergySinceChoice=0f;actualContactHarm=0;
         actualAmbientLossSinceChoice=0f;
         action=chosen;decisions++;
         // Observe only the chosen REAL action; forecasts are never executions.
+        if(activeCore!=null)activeCore.chosen(chosen);
         if(worldV20!=null)worldV20.chosen(chosen,senses);
         if(transferV20!=null)transferV20.chosen(chosen,senses);
         if(physicalChainV20!=null)physicalChainV20.chosen(chosen,senses);
@@ -605,7 +640,9 @@ public final class SensorimotorMind {
     public synchronized void observe(float[] after,float dt,float physicalEffect,
                                      MotorBrain.Body body,Morphology.Surface skin,
                                      ScarcityLab room,ArrayList<UnknownWorld.Entity> objects){
-        if(after.length!=S)throw new IllegalArgumentException("sensory width");
+        if(after!=null&&after.length!=S)throw new IllegalArgumentException("sensory width");
+        if(after==null){elapsed+=Math.max(0,dt);
+            if(blackbox!=null)blackbox.tick(Math.max(0,dt));return;}
         // Sensor-only view of the REAL 96-point membrane at the decision
         // boundary. Previous-lifetime tissue is never reused after reset.
         if(skin!=null)lastActualGripSurface=skin;
@@ -624,7 +661,7 @@ public final class SensorimotorMind {
                 objectExperience.view(spatial.ranges(),after,learning);
             if(objectContinuity!=null&&spatial!=null)
                 objectContinuity.view(spatial.ranges(),spatial.perceivedX(),
-                    spatial.perceivedY(),after[4],learning);
+                    spatial.perceivedY(),after[4],learning,spatial.eyeOrigins());
             updateNavigationSense(body,room,objects);
             choose(after);return;
         }
@@ -648,9 +685,10 @@ public final class SensorimotorMind {
             spatial.observeEnvironment(body,skin,room,objects);
         float[] before=trialState;
         boolean holdout=diagnostics.shouldHoldout();
+        if(activeCore!=null){feedCore(after);activeCore.consequence(actualEnergySinceChoice,actualContactHarm,learning&&!holdout,holdout,false);}
         if(objectContinuity!=null&&spatial!=null)
             objectContinuity.view(spatial.ranges(),spatial.perceivedX(),
-                spatial.perceivedY(),after[4],learning&&!holdout);
+                spatial.perceivedY(),after[4],learning&&!holdout,spatial.eyeOrigins());
         float err=0,naiveErr=0,sensoryChange=0;
         for(int k=0;k<S;k++){
             float pred=predictFeature(before,trialAction,k);

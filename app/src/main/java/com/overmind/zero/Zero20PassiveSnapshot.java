@@ -163,6 +163,14 @@ public final class Zero20PassiveSnapshot {
         }
         result.put("perceptualAssociations",associations);
 
+        RecurrentCoreV22 active22=new RecurrentCoreV22();
+        Map<String,Object> digest22=new LinkedHashMap<>();
+        boolean present22=active22.restore(str(values,RecurrentCoreV22.KEY));
+        digest22.put("present",present22);digest22.put("mode","ACTIVE");
+        if(present22){digest22.put("summary",active22.summary());digest22.put("transitions",active22.transitions());
+            digest22.put("replaySize",active22.replaySize());digest22.put("replayUpdates",active22.replayUpdates());
+            digest22.put("plannedChoices",active22.plannedChoices());}
+        result.put("zero22",digest22);
         // ZERO21 digest: no raw weights, object positions, instance tracks,
         // private slot names, tokens, or per-35ms frame arrays. User-initiated.
         Map<String,Object> zero21=new LinkedHashMap<>();

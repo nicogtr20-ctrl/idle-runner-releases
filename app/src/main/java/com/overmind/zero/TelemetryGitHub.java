@@ -150,6 +150,12 @@ final class TelemetryGitHub {
         String lab=c.getSharedPreferences("zero_behavior_lab_v113",
             Context.MODE_PRIVATE).getString("last","");
         if(!lab.isEmpty())result.put("lastBehaviorLab",lab);
+        String coreLab=c.getSharedPreferences("zero_behavior_lab_v22",
+            Context.MODE_PRIVATE).getString("last","");
+        if(!coreLab.isEmpty())result.put("lastCoreLabV22",coreLab);
+        String extended=c.getSharedPreferences(CoreComparisonV22.RESULTS,
+            Context.MODE_PRIVATE).getString("last","");
+        if(!extended.isEmpty())result.put("lastCoreExtendedV22",extended);
         return result;
     }
     // Each independent upload is <=256 KiB; metadata for a previous legacy
@@ -278,6 +284,10 @@ final class TelemetryGitHub {
                     source.put("gripContactObserver",data.get("gripContactObserver"));
                 if(data.has("lastBehaviorLab"))
                     source.put("lastBehaviorLab",data.get("lastBehaviorLab"));
+                if(data.has("lastCoreExtendedV22"))
+                    source.put("lastCoreExtendedV22",data.get("lastCoreExtendedV22"));
+                if(data.has("lastCoreLabV22"))
+                    source.put("lastCoreLabV22",data.get("lastCoreLabV22"));
             }
             ArrayList<String> names=new ArrayList<>();
             java.util.Iterator<String> iterator=source.keys();
