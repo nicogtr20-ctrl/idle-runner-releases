@@ -588,7 +588,14 @@ jobs:
           assert 'ResetDomains.PROPRIOCEPTION' in a
           assert 'case PROPRIOCEPTION:return new String[]{BodyProprioception.KEY,DistributedBodySense.KEY,LocalImpedanceSense.KEY};' in reset
           assert 'bodyMap.parameterCount()' in stats
-          assert 'lifeStats.tick(dt);' in g and 'for(int i=0;i<speed;i++)' in g
+          assert 'lifeStats.tick(dt);' in g and (
+            'for(int i=0;i<speed;i++)' in g or all(x in g for x in (
+             'for(int i=0;i<frameSteps;i++)',
+             'frameSteps=fullSpeed?TEST_MAX_MAX_STEPS:speed',
+             'float slice=fullSpeed?TEST_MAX_FIXED_DT:Math.min(dt,.035f);',
+             'if(fullSpeed&&i>0&&System.nanoTime()>=burstDeadline)break;',
+             'if(fullSpeed)testMaxSimSeconds+=slice;'
+            )))
           assert '0.11.6-ota' in code and "applicationId 'com.overmind.zero.ota'" in code
           print('ZERO 0.10.9 SIGNED GATE: honest tactile world, 96 contacts, eight directions, no embedded goals, old motor and all save slots compatible.')
           PY
@@ -632,7 +639,14 @@ jobs:
           assert 'SaveProfileCodec.encode(capture())' in slots and 'SLOTS=12' in slots
           assert "applicationId 'com.overmind.zero.ota'" in gradle
           assert '0.11.6-ota' in gradle
-          assert 'lifeStats.tick(dt);' in g and 'for(int i=0;i<speed;i++)' in g
+          assert 'lifeStats.tick(dt);' in g and (
+            'for(int i=0;i<speed;i++)' in g or all(x in g for x in (
+             'for(int i=0;i<frameSteps;i++)',
+             'frameSteps=fullSpeed?TEST_MAX_MAX_STEPS:speed',
+             'float slice=fullSpeed?TEST_MAX_FIXED_DT:Math.min(dt,.035f);',
+             'if(fullSpeed&&i>0&&System.nanoTime()>=burstDeadline)break;',
+             'if(fullSpeed)testMaxSimSeconds+=slice;'
+            )))
           assert 'episodic.consequenceSeparated(' in g and 'episodic.weights(' not in g
           print('ZERO 0.11.0 signed: honest occluded rays and bounded map, heldout learning, independent original brain, twelve character slots, and real time simulation')
           PY
@@ -679,7 +693,14 @@ jobs:
           assert 'causal.learnedParameters()' in stats
           assert 'SaveProfileCodec.encode(capture())' in slots and 'SLOTS=12' in slots
           assert '0.11.6-ota' in gradle and "applicationId 'com.overmind.zero.ota'" in gradle
-          assert 'lifeStats.tick(dt)' in g and 'for(int i=0;i<speed;i++)' in g
+          assert 'lifeStats.tick(dt)' in g and (
+            'for(int i=0;i<speed;i++)' in g or all(x in g for x in (
+             'for(int i=0;i<frameSteps;i++)',
+             'frameSteps=fullSpeed?TEST_MAX_MAX_STEPS:speed',
+             'float slice=fullSpeed?TEST_MAX_FIXED_DT:Math.min(dt,.035f);',
+             'if(fullSpeed&&i>0&&System.nanoTime()>=burstDeadline)break;',
+             'if(fullSpeed)testMaxSimSeconds+=slice;'
+            )))
           print('ZERO 0.11.1 signed gate: genuinely lived cause/effect experiments, heldout and randomized alternative comparisons, no scripted gate, legacy learning persisted')
           PY
       - name: 0.11.2 signed gate - no walking prize, coupled learned instrumental policy
