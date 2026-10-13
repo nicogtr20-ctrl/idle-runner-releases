@@ -1,3 +1,21 @@
+# Milestone attuali ZERO 2.1 — ricerca cervello unificato (13 ottobre 2026)
+
+Vedere [MASTER](ZERO21_UNIFIED_COGNITION_MASTER.md), [LOG](ZERO21_IMPLEMENTATION_LOG.md) e [HANDOFF](ZERO21_HANDOFF_NEXT_CHAT.md).
+
+- [x] Branch isolato dall'Android stabile OTA112 senza cambiare il telefono.
+- [x] Registro cognitivo condiviso `UnifiedCognitionV21`, sole osservazioni reali, distinte energia/movimento e holdout, salvataggio e reset mirati.
+- [x] Integrazione nello stesso ciclo SensorimotorMind/GameActivity senza nuova policy o reward.
+- [x] Suite CI complete Java, fisica, regressioni e build Android Debug [38452161103](https://github.com/nicogtr20-ctrl/idle-runner-releases/actions/runs/38452161103) SUCCESS sul codice `7361e67`.
+- [ ] G2 identità fisica osservata multivista e ipotesi del mondo con incertezza calibrata.
+- [ ] G3 tracce tattili e tecnica di presa coppia HAND+MEMBRANA associata a effetto sullo stesso oggetto senza privilegi di simulatore.
+- [ ] G4 inferenza prudente sugli effetti energetici ritardati con gruppi di controllo e cambi delle regole.
+- [ ] G5 memoria gerarchica persistente con skills sicure, protezione anti-forgetting e rollback sperimentale.
+- [ ] G6 arbitro unico energia/rischio/incertezza/curiosità e pianificatore bounded con astensione.
+- [ ] G7 simulazione A/B identica cervello/seed e mondi non visti, evidenza ripetuta positiva oltre regressioni.
+- [ ] QA prestazioni su Galaxy S21, salvataggi 12 slot, firma originale e solo allora OTA tramite AGGIORNA. **Nessuna nuova release in questa fase.**
+
+---
+
 ## OTA112 — Riduzione HUD alla navigazione da gioco (13 ottobre 2026)
 
 - [x] Tre indicatori energetici verticali trasparenti, senza toolbar di fondo.
