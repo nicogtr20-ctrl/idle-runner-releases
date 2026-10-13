@@ -40,6 +40,12 @@ public final class ObjectContinuityV21Regression {
         // Opposite scene is not automatically the previously seen east track.
         t.view(west(4f/9),22,0,.4f,true);
         yes(t.visibleTracks()>=2,"distinct visible obstacle fused with eastern hit");
+        // Regression from real-cover arena: multiple fresh clusters discovered
+        // in the SAME ray sweep must never index the prior track count.
+        ObjectContinuityV21 crowded=new ObjectContinuityV21();
+        float[] both=east(4f/9);both[8]=4f/9;
+        crowded.view(both,0,0,.3f,true);
+        yes(crowded.visibleTracks()==2,"two new first-return clusters lost or crashed");
         String preserved=t.encode();
         ObjectContinuityV21 copy=new ObjectContinuityV21();
         yes(copy.restore(preserved)&&preserved.equals(copy.encode()),"snapshot mismatch");
