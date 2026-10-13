@@ -12,7 +12,7 @@ import java.util.ArrayList;
  * This cannot recover skills already overwritten before 0.9.9.
  */
 public final class GripSkillBank {
-    public static final int MAX=7;
+    public static final int MAX=9;
     private static final float SAME=.018f;
     static final class Skill {
         final float[] hand,membrane;
@@ -235,6 +235,15 @@ public final class GripSkillBank {
            contextual.retrieve(hand,alternative,west)!=null)
             throw new AssertionError("Contextual grip migration/persistence failed");
         // Load genuine legacy named-slot entries without deleting them.
+        // Migration from the exact grip1 profile layout shipped in OTA109:
+        // held,opposed,motion,hand weights,membrane weights, no sensory tail.
+        StringBuilder legacy=new StringBuilder("grip1|0|1|1|4,2,5");
+        for(float v:hand)legacy.append(',').append(v);
+        for(float v:skin)legacy.append(',').append(v);
+        GripSkillBank migrated=new GripSkillBank();
+        if(!migrated.restore(legacy.toString())||migrated.count()!=1||
+           !migrated.encode().startsWith("grip2|"))
+            throw new AssertionError("Existing named ZERO grip1 data must migrate without reset");
         GripSkillBank reloaded=new GripSkillBank();
         if(!reloaded.restore(bank.encode())||reloaded.count()!=2||reloaded.restored!=2)
             throw new AssertionError("Skill storage did not roundtrip");
