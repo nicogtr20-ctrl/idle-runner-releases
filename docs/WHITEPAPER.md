@@ -1,3 +1,9 @@
+## Nota scientifica ZERO 2.1 (13 ottobre 2026)
+
+[Paper architettura integrata](ZERO21_UNIFIED_COGNITION_MASTER.md), [registro realizzazione](ZERO21_IMPLEMENTATION_LOG.md) e [handoff per nuove chat](ZERO21_HANDOFF_NEXT_CHAT.md). `UnifiedCognitionV21` è una struttura epistemica unica che riceve percezione corporea e ambientale, azione realmente scelta, movimento esterno e contatto energetico realmente osservato nello stesso intervallo temporale. I falsi collegamenti causa-effetto non vengono dichiarati conoscenza: gli oggetti sono ancora ipotesi, non identità dimostrate. Le esperienze sono condivise, ma l'attore esistente rimane sovrano per evitare regressioni; nessuna prova di comprensione generale, AGI o migliore sopravvivenza. JVM/Android integrato [38452161103](https://github.com/nicogtr20-ctrl/idle-runner-releases/actions/runs/38452161103) SUCCESS su codice `7361e67`; il lavoro G2–G7 resta aperto e non pubblicato come OTA.
+
+---
+
 ## Evoluzione ZERO 2.0 — memoria degli oggetti e incertezza (13 ottobre 2026)
 
 Il nuovo livello `ObjectExperienceV20` unisce **i 16 raggi realmente percepiti e le firme energetiche visibili** in ipotesi percettive non etichettate. Memorizza separatamente spostamenti meccanici, fonti energetiche effettivamente toccate e possibili legami; un danno casuale non elimina automaticamente la competenza nello spostare un ostacolo. La confidenza predittiva è verificata su intervalli esclusi dall'apprendimento prima che un consiglio possa influenzare debolmente la decisione.
