@@ -981,7 +981,7 @@ public final class GameActivity extends Activity {
                     for(UnknownWorld.Entity e:environment)if(e.isBox()){anyBox=true;break;}
                     if(anyBox&&chamber==null)
                         java.util.Arrays.fill(surface.touchSense,0f);
-                    boolean boxTouchedThisFrame=false,boxOpposedThisFrame=false;
+                    boolean boxTouchedThisFrame=false,boxOpposedThisFrame=false,boxAnyHeldThisFrame=false;
                     for(UnknownWorld.Entity e:environment){
                         if(!e.isBilateralBox())continue;
                         // Track real world displacement between physics frames;
@@ -998,6 +998,7 @@ public final class GameActivity extends Activity {
                         gripObserver.boxFrame(surface,e,sensorMind.adhesion(),
                             elapsedLife,slice);
                         if(grips.contacts>0)boxTouchedThisFrame=true;
+                        if(grips.held>0)boxAnyHeldThisFrame=true;
                         if(e.bilateralHeldNow)boxOpposedThisFrame=true;
                         // A proven two-sided hold on an actual moving box
                         // archives the usable hand/membrane pair, independently
@@ -1024,7 +1025,7 @@ public final class GameActivity extends Activity {
                     // turn on grips by script and never count bare collision.
                     if(chamber==null&&gripRecoveryCooldown>0)gripRecoveryCooldown--;
                     boolean voluntaryBoxGrip=boxTouchedThisFrame&&sensorMind.adhesion()>.5f;
-                    if(voluntaryBoxGrip&&!boxOpposedThisFrame)boxFailedGripFrames++;
+                    if(voluntaryBoxGrip&&!boxAnyHeldThisFrame)boxFailedGripFrames++;
                     else boxFailedGripFrames=0;
                     if(boxFailedGripFrames>=120&&gripRecoveryCooldown==0&&
                        !liveBody.testingCandidate()){
