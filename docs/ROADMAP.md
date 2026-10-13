@@ -1,3 +1,15 @@
+## ZERO 2.0 — Decisioni energetiche, abilità e memoria contestuale (13 ottobre 2026)
+
+- [x] Distinguere *avere una tecnica fisica riuscita* da *avere un motivo per utilizzarla*: diminuisce il peso dei crediti meccanici quando i sensori non rivelano manipolazioni utili o la riserva è critica.
+- [x] Applicare la distinzione allo stesso modo nelle scelte immediate e negli stimatori del futuro.
+- [x] Archiviare impronta sensoriale delle prese reali e recuperarla solo con situazione sufficientemente simile e fallimento reale di prese scelte volontariamente.
+- [x] Migrare il vecchio `grip1` a `grip2` conservando tecniche/slot.
+- [x] Proteggere locomozione appresa durante evoluzione HAND e MEMBRANA, mantenendo possibili veri progressi di manipolazione.
+- [ ] Confronto esperienziale post-OTA su più vite in condizioni confrontabili, soprattutto energia vicina alla morte, azioni 8/4 e punti RED/GRIP.
+- [ ] Tracciamento multivista di oggetti, procedure condizionali con prove incrociate e differenziazione maggiore delle condizioni corporee.
+
+Approfondimento: [ZERO20_ACTION_PRIORITY_AND_CONTEXT_GRIP](ZERO20_ACTION_PRIORITY_AND_CONTEXT_GRIP.md).
+
 # Roadmap e criteri di accettazione
 
 ## ZERO 2.0 — Oggetti, cause incerte, scelte probabilistiche (13 ottobre 2026)
