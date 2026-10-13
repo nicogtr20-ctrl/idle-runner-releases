@@ -587,6 +587,7 @@ public final class GameActivity extends Activity {
             // Only initial boot or actual simulated death restarts the body.
             bestLifeDistance=Math.max(bestLifeDistance,lifeDistance);
             lifeDistance=0;travelSinceAction=0;forwardSinceAction=0;
+            boxTouchFramesSinceAction=boxOpposedFramesSinceAction=0;
             environmentEffectSinceAction=0;eventEnergyDeltaSinceAction=0;
             java.util.Arrays.fill(energySinceAction,0f);
             episodic.resetLife(); // Forget transient attempt, NOT learned motor or memories.
