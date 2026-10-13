@@ -291,3 +291,7 @@ Nuovo ramo dedicato `feature/zero20-perceptual-associations`, base di partenza r
 **What is not verified:** realistic rotation and 3D shape recognition on the Galaxy S21, same-instance tracking, independently proven causal manipulation, long-lived technique retention, battery/thermal overhead, installer signature, unchanged 12 slots after actual upgrade, and real behavioral benefit. **Promotion remains BLOCKED.** Release/OTA103 unchanged.
 
 **OTA applicativa:** questo modulo percettivo passivo è stato selezionato per il canale AGGIORNA come candidato successivo alla 103. La build ufficiale resta soggetta a Java/Android QA, stessa firma e pubblicazione SHA/manifest prima di dirla disponibile.
+
+
+## 13 ottobre 2026 — ZERO21 nuove integrazioni in PR #39
+Il nuovo documento [ZERO21_G2_G7_INTEGRATION.md](ZERO21_G2_G7_INTEGRATION.md) registra il tracciamento multi-vista senza ID privilegiati, l'archivio prove fisiche HAND/MEMBRANA, la memoria di collegamenti energetici solo ipotetici, l'arbitro unico con astensione e la simulazione A/B sulle vere casse bilaterali. In `feature/zero21-unified-cognition`, NON nella OTA sul Galaxy S21. Il primo run completo 38455325053 ha trovato un crash reale in scansioni con più oggetti appena scoperti; poi corretto e fissato in regressione. Controllare il run più recente e la [checklist integrale](ZERO21_HANDOFF_NEXT_CHAT.md) prima di affermare nuove capacità. Nessun nuovo cervello attivo nell'app installata, nessuna firma/manifest sovrascritti.
