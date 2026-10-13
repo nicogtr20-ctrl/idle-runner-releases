@@ -82,3 +82,15 @@ Al termine di ogni cambiamento tecnico, aggiornare:
 - [GitHub Actions ZERO21 run **38452161103**](https://github.com/nicogtr20-ctrl/idle-runner-releases/actions/runs/38452161103): **SUCCESS**. Commit testato `7361e67f3f82c45913f7263b3b9fee1eb8f6dfee`. Tutte le compilazioni e regressioni pure Java, asserzioni anti-influenza sul punteggio e build completa Android Debug riuscite. I commit di paper successivi sono solo Markdown.
 - **PR DRAFT [#39](https://github.com/nicogtr20-ctrl/idle-runner-releases/pull/39)** aperta verso `feature/overmind-inapp-updater`. NON fonderla e NON lanciarne il publisher per adesso: G2–G7 mancanti e nessun uplift provato. Ultima versione ufficiale verificata nella ricerca: OTA112, non una nuova APK ZERO21.
 - Prossimo intervento: tracciamento sensoriale multivista + contatto attribuito allo stesso oggetto, prima di collegare skill e modelli futuri all'azione. Usare i test simmetrici e non cercare scorciatoie per generare punti RED.
+
+
+## 10 — Ultimo grande intervento dopo PR #39 (13 ottobre 2026)
+Nuovo paper fondamentale: **[ZERO21_G2_G7_INTEGRATION.md](ZERO21_G2_G7_INTEGRATION.md)**. Sono stati sviluppati assieme:
+- `ObjectContinuityV21`: ipotesi anonime sui medesimi ostacoli tra viste a 16 raggi con odometria, astensione per ambiguità; nessuna prova di identità vera, corpo di forma mutevole introduce errore nei raggi.
+- `CompetenceMemoryV21`: conserva coppie di pesi HAND+MEMBRANA osservate dopo REALI prese bilaterali e spostamento, con conteggi su vite differenti, non comanda nulla. Il vecchio `GripSkillBank` continua a decidere eventuali ripristini.
+- `UnifiedArbiterV21`: unica valutazione energetica/rischio/costo/meccanica, richiede predizioni fuori addestramento e pianificazione valide, può ASTENERSI, non altera ancora alcuna scelta fisica.
+- Test di 440 decisioni identiche al controllo e porting selettivo dell'arena con casse con vera presa bilaterale, 12 coppie stesso cervello/seed, ZERO21 in sola osservazione; vietata promozione per un pareggio.
+- `Zero20PassiveSnapshot` e pagina CERVELLO/ANALISI ora includono nuovi contatori aggregati, solo con esplicita condivisione e senza rivelare tracce/spostamenti raw nel digest.
+- Salvataggi nuovi `unified_cognition_v21`, `object_continuity_v21`, `competence_memory_v21`, `unified_arbiter_v21`. Compatibilità opzionale con tutti i dodici slot e reset separati WORLD, SPATIAL, MEMBRANE.
+
+ATTENZIONE VERIFICHE: il primo run di arena `38455325053` ha scoperto crash quando due oggetti appaiono per la prima volta nel medesimo sweep. Non dichiarare mai la build verde citando quel test: fix commit `50d032951b548f8e50fec09c3f1e019c7ec07104`, regressione commit `d80bcac1258c2addd0583f482560380de724154a`. Controlla il run nuovo **dopo** quei commit, leggi log finali, conferma il build Android e tutti i 12 scenari. Se un gate fallisce correggi e riesegui. Non firmare, mergiare o pubblicare questa PR senza test su mondi mai visti, prestazioni e vantaggio reale. Ultima OTA sul telefono rimane 112, e il sistema resta SHADOW.
