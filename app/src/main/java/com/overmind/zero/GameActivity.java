@@ -53,6 +53,7 @@ public final class GameActivity extends Activity {
         GripAffordanceV20 gripAffordanceV20=new GripAffordanceV20();
         PerceptualAssociationsV20 perceptualV20=new PerceptualAssociationsV20();
         ObjectExperienceV20 objectExperienceV20=new ObjectExperienceV20();
+        UnifiedCognitionV21 unifiedCognitionV21=new UnifiedCognitionV21();
         SpatialPerception spatialMap=new SpatialPerception();
         CausalExperiments causalExperiments=new CausalExperiments();
         InstrumentalNavigation navigation=new InstrumentalNavigation();
@@ -256,6 +257,10 @@ public final class GameActivity extends Activity {
             objectExperienceV20=new ObjectExperienceV20();
             objectExperienceV20.restore(prefs.getString(ObjectExperienceV20.KEY,""));
             sensorMind.attachObjectExperienceV20(objectExperienceV20);
+            // Independent optional working-profile state; never reuses old ZERO slots.
+            unifiedCognitionV21=new UnifiedCognitionV21();
+            unifiedCognitionV21.restore(prefs.getString(UnifiedCognitionV21.KEY,""));
+            sensorMind.attachUnifiedCognitionV21(unifiedCognitionV21);
             // Hard device boundary: ZERO 2.0 can LEARN and REPORT but may not
             // bias any live motor decision. Advisory A/B is laboratory-only.
             sensorMind.enableZero20ExperimentalAdvice(false);
@@ -551,6 +556,7 @@ public final class GameActivity extends Activity {
               .putString(GripAffordanceV20.KEY,gripAffordanceV20.encode())
               .putString(PerceptualAssociationsV20.KEY,perceptualV20.encode())
               .putString(ObjectExperienceV20.KEY,objectExperienceV20.encode())
+              .putString(UnifiedCognitionV21.KEY,unifiedCognitionV21.encode())
               .putString(SpatialPerception.KEY,spatialMap.encode())
               .putString(CausalExperiments.KEY,causalExperiments.encode())
               .putString(InstrumentalNavigation.KEY,navigation.encode())
