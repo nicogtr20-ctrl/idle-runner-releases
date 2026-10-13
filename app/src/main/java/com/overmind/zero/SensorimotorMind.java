@@ -37,6 +37,8 @@ public final class SensorimotorMind {
     private transient FuturePlannerV20 futureV20;
     private transient PhysicalConsequenceV20 physicalChainV20;
     private transient GripAffordanceV20 gripAffordanceV20;
+    /** Passive sensory silhouette and physically observed consequence catalogue. */
+    private transient PerceptualAssociationsV20 perceptualV20;
     private transient Morphology.Surface lastActualGripSurface;
     /** Never set by GameActivity. Sandbox arena may test bounded advice. */
     private transient boolean zero20ExperimentalAdvice=false;
@@ -82,6 +84,7 @@ public final class SensorimotorMind {
             if(temporal!=null)temporal.energyOutcome(actualEnergyDelta);
             if(temporalSkills!=null)temporalSkills.energyOutcome(actualEnergyDelta);
             if(transferV20!=null)transferV20.energyOutcome(actualEnergyDelta);
+            if(perceptualV20!=null)perceptualV20.actualEnergy(actualEnergyDelta);
             if(physicalChainV20!=null)physicalChainV20.energyOutcome(actualEnergyDelta);
             if(bodySchema!=null)bodySchema.actualEnergy(actualEnergyDelta);
             if(distributedBody!=null)distributedBody.actualEnergy(actualEnergyDelta);
@@ -120,6 +123,7 @@ public final class SensorimotorMind {
     public synchronized void attachFuturePlannerV20(FuturePlannerV20 model){futureV20=model;}
     public synchronized void attachPhysicalConsequenceV20(PhysicalConsequenceV20 model){physicalChainV20=model;}
     public synchronized void attachGripAffordanceV20(GripAffordanceV20 model){gripAffordanceV20=model;}
+    public synchronized void attachPerceptualAssociationsV20(PerceptualAssociationsV20 model){perceptualV20=model;}
     /** Experimental research only; OFF by default in every actual app profile. */
     public synchronized void enableZero20ExperimentalAdvice(boolean enabled){
         zero20ExperimentalAdvice=enabled;
@@ -149,6 +153,7 @@ public final class SensorimotorMind {
     public synchronized void updateSpatialSense(MotorBrain.Body b,Morphology.Surface skin,
         ScarcityLab room,ArrayList<UnknownWorld.Entity> objects){
         if(spatial!=null)spatial.observeEnvironment(b,skin,room,objects);
+        if(perceptualV20!=null&&spatial!=null)perceptualV20.view(spatial.ranges(),false);
     }
     public synchronized void resumeSpatialSense(MotorBrain.Body b,ScarcityLab room,
         ArrayList<UnknownWorld.Entity> objects){
@@ -204,6 +209,7 @@ public final class SensorimotorMind {
         if(transferV20!=null)transferV20.resetLife();
         if(physicalChainV20!=null)physicalChainV20.resetLife();
         if(gripAffordanceV20!=null)gripAffordanceV20.resetLife();
+        if(perceptualV20!=null)perceptualV20.resetLife();
         lastActualGripSurface=null;
         if(spatial!=null)spatial.resetLife();
         if(causal!=null)causal.resetLife();
@@ -227,6 +233,7 @@ public final class SensorimotorMind {
             if(transferV20!=null)transferV20.resetLife();
         if(physicalChainV20!=null)physicalChainV20.resetLife();
         if(gripAffordanceV20!=null)gripAffordanceV20.resetLife();
+        if(perceptualV20!=null)perceptualV20.resetLife();
         lastActualGripSurface=null;
             if(spatial!=null)spatial.resetLife();
             if(causal!=null)causal.resetLife();
@@ -257,6 +264,7 @@ public final class SensorimotorMind {
         if(transferV20!=null)transferV20.resumeLife();
         if(physicalChainV20!=null)physicalChainV20.resumeLife();
         if(gripAffordanceV20!=null)gripAffordanceV20.resumeLife();
+        if(perceptualV20!=null)perceptualV20.resumeLife();
         lastActualGripSurface=null;
         // Spatial map is reinstated with the saved physical body separately.
         if(causal!=null)causal.resumeLife();
@@ -501,6 +509,7 @@ public final class SensorimotorMind {
         if(transferV20!=null)transferV20.chosen(chosen,senses);
         if(physicalChainV20!=null)physicalChainV20.chosen(chosen,senses);
         if(gripAffordanceV20!=null)gripAffordanceV20.chosen(chosen,lastActualGripSurface);
+        if(perceptualV20!=null)perceptualV20.chosen(chosen);
         // Heavy world-model lookahead is deliberately capped at ONE pass per
         // eight REAL decisions and evaluated only AFTER the old action was
         // chosen. No score or RNG in the original decision is modified.
@@ -562,6 +571,8 @@ public final class SensorimotorMind {
                 impedance.feed(LocalImpedanceSense.sense(body,skin));
             if(spatial!=null&&body!=null&&objects!=null)
                 spatial.observeEnvironment(body,skin,room,objects);
+            if(perceptualV20!=null&&spatial!=null&&body!=null&&objects!=null)
+                perceptualV20.view(spatial.ranges(),learning);
             updateNavigationSense(body,room,objects);
             choose(after);return;
         }
@@ -649,6 +660,14 @@ public final class SensorimotorMind {
         if(gripAffordanceV20!=null)
             gripAffordanceV20.consequence(trialAction,Math.max(0f,physicalEffect),
                 learning&&!holdout,holdout);
+        // Scene-level observational association only. Attribute the RESULT
+        // to the preceding actual self-chosen action and partial silhouette,
+        // never to a game object's identity or to a privileged physics rule.
+        if(perceptualV20!=null&&spatial!=null&&body!=null&&objects!=null){
+            perceptualV20.consequence(Math.max(0f,physicalEffect),
+                learning&&!holdout,holdout);
+            perceptualV20.view(spatial.ranges(),learning&&!holdout);
+        }
         if(spatial!=null&&body!=null&&objects!=null)
             spatial.consequence(trialAction,lastReward,learning&&!holdout,holdout);
         if(causal!=null&&spatial!=null&&body!=null&&objects!=null)
