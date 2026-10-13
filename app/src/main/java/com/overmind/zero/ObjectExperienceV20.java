@@ -125,13 +125,20 @@ public final class ObjectExperienceV20 {
         if(pendingAction<0)return;
         energyContacts++;
         contactDelta+=delta;
-        if(energyContacts==1&&signature>=0&&signature<3){
-            touchedSignature=signature;
-            // Only the visually sensed energy at physical contact can
-            // support a tentative association; not hidden Entity properties.
-            int q=quadrant(Math.max(0,pendingBearing));
-            if(valid(visibleAtTouch,SensorimotorMind.S))
-                contactCue=clamp(visibleAtTouch[14+signature*4+q],0,1);
+        if(energyContacts==1&&valid(visibleAtTouch,SensorimotorMind.S)&&pendingBearing>=0){
+            // Infer a frequency from the photons ZERO sees at the time of
+            // physical touch. The simulator source ID passed to the OTHER
+            // legacy learners is intentionally ignored by this model.
+            int q=quadrant(pendingBearing),best=-1;
+            float first=0,second=0;
+            for(int freq=0;freq<3;freq++){
+                float observed=clamp(visibleAtTouch[14+freq*4+q],0,1);
+                if(observed>first){second=first;first=observed;best=freq;}
+                else if(observed>second)second=observed;
+            }
+            if(first>.16f&&first-second>.06f){
+                touchedSignature=best;contactCue=first;
+            }else touchedSignature=-1; // no unique perceptible cue
         }else touchedSignature=-1; // more than one source = confounded
     }
     /** Measured external motion is independent of energetic valence. */
