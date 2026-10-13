@@ -1,0 +1,428 @@
+[
+  {
+    "test": "GripContactObserverRegression",
+    "passed": true,
+    "seconds": 0.142,
+    "output": "GripContactObserver PASS: global/local split, face hold, drop, no interference\n"
+  },
+  {
+    "test": "MotorBrain",
+    "passed": true,
+    "seconds": 1.775,
+    "output": "ZERO-001 selftest: parameters=62 attempts=180 accepted=11 train_before=-16.937 train_after=238.283 heldout_before=-16.980 heldout_after=239.479\n"
+  },
+  {
+    "test": "UnknownWorld",
+    "passed": true,
+    "seconds": 0.124,
+    "output": "ZERO-002 selftest: known_types=3 contacts=45 learned_values=[22.00, -18.00, 4.41] preferred_signature=0\n"
+  },
+  {
+    "test": "SquareGripPuzzle",
+    "passed": true,
+    "seconds": 0.171,
+    "output": "SquareGripPuzzle PASS: static collision, bilateral grip, multi-axis motion, one-time 40-energy reveal\n"
+  },
+  {
+    "test": "SquareCollisionSolver",
+    "passed": true,
+    "seconds": 0.094,
+    "output": "SquareCollisionSolver PASS: swept through-box CCD, segments, distributed physical masses, no phantom core\n"
+  },
+  {
+    "test": "GripParityRegression",
+    "passed": true,
+    "seconds": 0.182,
+    "output": "Gate virgin action .82: heldFrames=6 latch=0.28,0.28\nBox virgin action .82: contactsFrames=8 heldFrames=6 bilateralFrames=6 gripLeft=0.28 gripRight=0.28 crossedLinks=0\nGripParityRegression PASS: both surfaces can hold .82 action, orange at box, crossing cancels illegal hold\n"
+  },
+  {
+    "test": "GateBoxGripIsolationRegression",
+    "passed": true,
+    "seconds": 0.222,
+    "output": "Simultaneous gate+square held=7 bilateral=7 orange=7\nPASS gate and box independent without neural changes\n"
+  },
+  {
+    "test": "MultiObjectGripRegression",
+    "passed": true,
+    "seconds": 0.299,
+    "output": "PASS: 3 boxes, all 7 selection combinations, order invariance, selective release, gate isolation\n"
+  },
+  {
+    "test": "OpticalCues",
+    "passed": true,
+    "seconds": 0.111,
+    "output": "OpticalCues PASS: real occluded box rim, inert glass, weak spectral photons, unchanged 40 energy\n"
+  },
+  {
+    "test": "OpticalCueRegression",
+    "passed": true,
+    "seconds": 0.127,
+    "output": "OpticalCueRegression PASS: glass transmits light not body, square leaks faint real energy while covered, gate occludes, opaque obstacle occludes, no unlock, no new sensor channels\n"
+  },
+  {
+    "test": "HabitatContinuity",
+    "passed": true,
+    "seconds": 0.185,
+    "output": "HabitatContinuity PASS: active boxes persist, covered rewards remain paired, chambers spawn clear, remote recycle\n"
+  },
+  {
+    "test": "WorldPlacement",
+    "passed": true,
+    "seconds": 0.184,
+    "output": "WorldPlacement PASS: no overlapping resources, boxes, gate or hidden-source orphan\n"
+  },
+  {
+    "test": "ContactLearning",
+    "passed": true,
+    "seconds": 2.869,
+    "output": "ZERO-003 tests passed: physicalCollision=6.500 attempts=70 accepted=4 baseline=162.066 trained=184.449 heldout=148.939\n"
+  },
+  {
+    "test": "DecisionBrain",
+    "passed": true,
+    "seconds": 0.252,
+    "output": "ZERO-006 tests passed: base=91 actual=100 neurons=11 learned utility positive=1.008 neutral=0.244 negative=-0.811 migration=v1->v2 preserved=true\n"
+  },
+  {
+    "test": "Morphology",
+    "passed": true,
+    "seconds": 2.191,
+    "output": "ZERO-007 passed: motorPoints=10 shellPoints=96 morphWeights=82 extendedRadius=38.94 contacts=16.30 fitness=25.663 -> 51.165 accepted=5\n"
+  },
+  {
+    "test": "ScarcityLab",
+    "passed": true,
+    "seconds": 0.422,
+    "output": "ZERO-008.2 physics passed: frontDoorGap=10.0 doorHeight=138 openingHeight=86 unilateral=0 bilateralTravel=124.65 wallEdgesSolid=true coreSweep=true\n"
+  },
+  {
+    "test": "SensorimotorMind",
+    "passed": true,
+    "seconds": 0.566,
+    "output": "ZERO-009 predictive learning: initial error=10.9840 learned error=3.2052\nZERO-009 passed: senses=26 actions=16 learned_weights=11664 online_exp=230 prediction_error=0.0153 persistent=true occlusion=true\n"
+  },
+  {
+    "test": "DecisionBlackbox",
+    "passed": true,
+    "seconds": 0.428,
+    "output": "ZERO decision blackbox 0116.2 PASS: bounded five minutes, sensed advisors, real movement, death snapshot, save migration, no actuation\n"
+  },
+  {
+    "test": "GoalContinuity",
+    "passed": true,
+    "seconds": 0.111,
+    "output": "ZERO-0114 PASS: no synthetic goal, progress-gated persistence, disappointment, autonomous abandonment and safe recall\n"
+  },
+  {
+    "test": "GateBehaviorMetrics",
+    "passed": true,
+    "seconds": 0.106,
+    "output": "ZERO-0114 PASS: independent observed gate proximity, contact, adhesion, bilateral grip and genuine movement\n"
+  },
+  {
+    "test": "GateLifeJournal",
+    "passed": true,
+    "seconds": 0.44,
+    "output": "GateLifeJournal PASS: real grip phases, movement, long life, death, reload\n"
+  },
+  {
+    "test": "ContextualMotionProbe",
+    "passed": true,
+    "seconds": 0.204,
+    "output": "ContextualMotionProbe PASS: real state dependence, 20% holdout, old-motion comparable errors, save/restore, no steering\n"
+  },
+  {
+    "test": "ShadowNonInterferenceRegression",
+    "passed": true,
+    "seconds": 0.254,
+    "output": "ZERO 0116.4 PASS: 320 real learned transitions, choices, random exploration and all old brain weights unchanged\n"
+  },
+  {
+    "test": "BehavioralLaboratory",
+    "passed": true,
+    "seconds": 4.993,
+    "output": "ZERO 0.11.3 behavioral lab PASS: 18 paired genuine physical trials, 3 scenarios, virgin-control neutrality, no forced goal, real gate and sampled consequences\n"
+  },
+  {
+    "test": "InstrumentalNavigation",
+    "passed": true,
+    "seconds": 0.544,
+    "output": "ZERO-0112 PASS: physical 8-sector wavelengths, lived positive/negative energy, learned action motion, heldout validity, approach/avoid and saved independent brains; verified actions=8\n"
+  },
+  {
+    "test": "CausalExperiments",
+    "passed": true,
+    "seconds": 0.362,
+    "output": "ZERO-0111 pass: ego/environment separation, cold-start neutrality, actual randomized alternatives gate, life-limited hypotheses, persistence 892 bytes\n"
+  },
+  {
+    "test": "SpatialPerception",
+    "passed": true,
+    "seconds": 0.491,
+    "output": "ZERO-0110 pass: 16 occluding rays, bounded learned occupancy, 62 memories, 150 held-out, earned confidence 0.500, persistent weights and life reset\n"
+  },
+  {
+    "test": "BodyProprioception",
+    "passed": true,
+    "seconds": 0.514,
+    "output": "ZERO-0109 PASS: 96-node tactile map, distinct 8 physical sectors, grip/extension/slip, heldout confidence 0.500, persisted learned readouts\n"
+  },
+  {
+    "test": "DistributedBodyRegression",
+    "passed": true,
+    "seconds": 0.315,
+    "output": "ZERO-0121 PASS: all 96 patches: nine local signals, near-field visual rays, touch/grip separation, genuine protrusion, holdout-gated learning, additive save, death continuity\n"
+  },
+  {
+    "test": "LocalImpedanceRegression",
+    "passed": true,
+    "seconds": 0.194,
+    "output": "ZERO-0123 PASS: exact per-node intended/achieved discrepancy, neighbor tension, independent free-vs-held movement, no weather phantom collisions, delayed resistance, action-specific holdout learning and lossless additive persistence\n"
+  },
+  {
+    "test": "ShelterEcologyRegression",
+    "passed": true,
+    "seconds": 0.18,
+    "output": "ZERO-0122 SHELTER PASS: real atmosphere-linked action loss, no synthetic source credit\nZERO-0122 SHELTER PASS: active weather, correct opaque direction, real tissue pressure, lower damage behind moved solids, no free energy, material streaming, save/death persistence, one-time SAT solid material collisions and blank procedural supplies\n"
+  },
+  {
+    "test": "PanelPhysicsRegression",
+    "passed": true,
+    "seconds": 0.169,
+    "output": "ZERO 0126 PASS: only one RED adhesive hold moves plates, off-center spin, no free drift, bilateral-cover isolation, orientation-correct shadows, rotated SAT solids, angle/velocity persistence and OTA93 migration\n"
+  },
+  {
+    "test": "TemporalWorkingMemory",
+    "passed": true,
+    "seconds": 0.288,
+    "output": "ZERO 0.10.6 temporal working memory: recurrent context, heldout gating, delayed consequence, persistence passed\n"
+  },
+  {
+    "test": "TemporalSkillBank",
+    "passed": true,
+    "seconds": 0.247,
+    "output": "ZERO 0.10.7 temporal skills: autonomous discovery, repeated consolidation, context-validated replay, divergence abort, persistence passed\n"
+  },
+  {
+    "test": "TemporalPersistenceRegression",
+    "passed": true,
+    "seconds": 0.31,
+    "output": "ZERO-0108 PASS: learned temporal weights + hidden state + skill chunks survive app-style persistence, death and 12-slot-compatible profile switching\n"
+  },
+  {
+    "test": "LearnedSequencePlanner",
+    "passed": true,
+    "seconds": 0.161,
+    "output": "ZERO 0.10.2 three-step learned lookahead, empirical holdout gating, bounds and legacy-safe persistence passed\n"
+  },
+  {
+    "test": "LearningDiagnostics",
+    "passed": true,
+    "seconds": 0.1,
+    "output": "ZERO-009.1 diagnostics pass: holdouts=52 curvePoints=10 learned=0.0821 naive=0.3500 persistent=true\n"
+  },
+  {
+    "test": "ResetDomains",
+    "passed": true,
+    "seconds": 0.099,
+    "output": "ZERO-009.1 reset domains verified: 16 actions, 73 independent keys, no overlaps\n"
+  },
+  {
+    "test": "OnlineBodyLearning",
+    "passed": true,
+    "seconds": 0.084,
+    "output": "ZERO-009.4: reject circling, reward novel net movement or real interaction; independent stats pass\n"
+  },
+  {
+    "test": "BoxGripRetentionRegression",
+    "passed": true,
+    "seconds": 0.33,
+    "output": "PASS: genuine two-sided square-grip memory retained on hand/membrane updates; new physical discoveries remain possible\n"
+  },
+  {
+    "test": "MotionExploration",
+    "passed": true,
+    "seconds": 0.127,
+    "output": "ZERO-009.4 telemetry and ZERO-0100 physical-life checkpoint pass\n"
+  },
+  {
+    "test": "EpisodicMemory",
+    "passed": true,
+    "seconds": 0.411,
+    "output": "ZERO-009.6 passed: varied episodes, beneficial/dangerous recall, consolidation and em1 migration\n"
+  },
+  {
+    "test": "MotorAutonomyGuard",
+    "passed": true,
+    "seconds": 0.099,
+    "output": "ZERO-009.7 mobility watchdog: no scripted direction, real exploration recovers, useful stationary contact protected\n"
+  },
+  {
+    "test": "MotorSkillBank",
+    "passed": true,
+    "seconds": 0.096,
+    "output": "ZERO-009.8 motor skill archive, alternate rollback, stable serialization verified\n"
+  },
+  {
+    "test": "GripSkillBank",
+    "passed": true,
+    "seconds": 0.292,
+    "output": "ZERO-009.9 actual sustained grip archive and no automatic grip command verified\n"
+  },
+  {
+    "test": "ExperienceCredit",
+    "passed": true,
+    "seconds": 0.244,
+    "output": "ZERO 0.10.1 real energy-source credit and independent physical outcome tests pass\n"
+  },
+  {
+    "test": "MortalityLearning",
+    "passed": true,
+    "seconds": 0.776,
+    "output": "Terminal experience pass: deaths=35 holdoutLives=7 risk low 0.705 high 0.067 confidence 0.444\n"
+  },
+  {
+    "test": "MaterialGeometry",
+    "passed": true,
+    "seconds": 0.104,
+    "output": "ZERO 0120: center is derived, surface contact geometry physical\n"
+  },
+  {
+    "test": "MaterialSymbioteRegression",
+    "passed": true,
+    "seconds": 2.072,
+    "output": "ZERO 0120: center is derived, surface contact geometry physical\nSymbiote: 4800 material-only real actuator steps, fixed 26/16 policy, 48 physical proprioception, no logical collider; self-cross frames 0/88 max=0\nRigid obstacle case 0: max real silhouette intersections 0 among 27 observed outlines\nRigid obstacle case 1: max real silhouette intersections 0 among 27 observed outlines\nRigid obstacle case 2: max real silhouette intersections 0 among 27 observed outlines\nSymbiote: 5400 real rigid-solid physical solver steps no core impulse and no uncommanded square motion\nZERO 0120: distributed energetic-material organism PASS\n"
+  },
+  {
+    "test": "MaterialMotionRegression",
+    "passed": true,
+    "seconds": 2.748,
+    "output": "EXISTING learned ZERO (copied) scenario 0: path 1437.97, net 440.96, active 99.9%\nEXISTING learned ZERO (copied) scenario 1: path 1405.96, net 426.44, active 99.9%\nEXISTING learned ZERO (copied) scenario 2: path 1366.56, net 324.15, active 99.9%\nVIRGIN neural controllers scenario 0: path 105.05, net 62.48, active 94.6%\nVIRGIN neural controllers scenario 1: path 106.88, net 61.24, active 94.6%\nVIRGIN neural controllers scenario 2: path 105.11, net 47.85, active 94.4%\n"
+  },
+  {
+    "test": "MaterialVisionRegression",
+    "passed": true,
+    "seconds": 0.196,
+    "output": "ZERO 0120 optical: actual membrane photoreceptors, opaque box occlusion, physical eye motion, 16-ray mapping and body-aware morphology PERCEPTION PASS\n"
+  },
+  {
+    "test": "SaveProfileCodec",
+    "passed": true,
+    "seconds": 0.341,
+    "output": "ZERO-0100: typed full brain profile, long model, checksum, corrupt-snapshot rollback pass\n"
+  },
+  {
+    "test": "TelemetryChunksRegression",
+    "passed": true,
+    "seconds": 0.226,
+    "output": "ZERO TELEMETRY PASS: lossless UTF-8 shard round-trip\n"
+  },
+  {
+    "test": "PredictiveWorldV20Regression",
+    "passed": true,
+    "seconds": 5.642,
+    "output": "ZERO 2.0 GATE A PASS: action-specific forecasts, validated holdout, no motor outputs, death/resume, corrupt/old save isolation; ZERO 2.0 selective change: lived=12501 train=10416 heldout=2085 e=0.00362 baseline=0.10997 confidence=0.600 (SHADOW ONLY)\n"
+  },
+  {
+    "test": "Zero20HierarchicalRegression",
+    "passed": true,
+    "seconds": 1.787,
+    "output": "ZERO20 B: 12-action crosslife holdout corroboration, negative outcome devaluation, context generalization guard, schema rollback PASS\nZERO20 C: 5-decision pessimistic model rollouts, abstention, read-only imagination, atomic stats PASS\nZERO20 B/C: 440 identical baseline vs hierarchy policy choices and original brain hashes PASS\nZERO20 B/C HIERARCHICAL RESEARCH REGRESSIONS PASS\n"
+  },
+  {
+    "test": "PhysicalConsequenceV20Regression",
+    "passed": true,
+    "seconds": 1.187,
+    "output": "ZERO20 Gate E PASS: true movement vs no-op, energy ambiguity, heldout integrity, death/save, 440 old brain parity; ZERO20 physical attribution: 0 observed moves, 8 energy contacts, 0 temporal associations (0 ambiguous), heldout 0.00018 vs 0.00005, confidence 0.000; SHADOW ONLY\n"
+  },
+  {
+    "test": "GripAffordanceV20Regression",
+    "passed": true,
+    "seconds": 2.197,
+    "output": "ZERO20 F PASS: 96 self sites, dispersed-vs-clustered grips, rotation, heldout, safe resumes, corrupt profiles and 440 old motor choices; ZERO2 grasp self-model: 439 observed, 0 real environmental moves, 294 held snapshots (147 distributed), subframes 0 held 0 spread 0, heldout 0.00026 vs 0.00003 confidence 0.000 (SHADOW, NO ACTUATION)\n"
+  },
+  {
+    "test": "PerceptualAssociationsV20Regression",
+    "passed": true,
+    "seconds": 0.237,
+    "output": "PASS ZERO2 perceptual prototypes, view rotation, uncertainty, real effect association, holdout, persistence and 440 unchanged decisions\n"
+  },
+  {
+    "test": "ObjectExperienceV20Regression",
+    "passed": true,
+    "seconds": 0.221,
+    "output": "ZERO2 object memory: independent movement, uncertain hazard, rarity, sensory wavelengths, persistence PASS\n"
+  },
+  {
+    "test": "EnergyLifetimeCounters",
+    "passed": true,
+    "seconds": 0.223,
+    "output": "ZERO HUD energy counters PASS\n"
+  },
+  {
+    "test": "Zero20PassiveSnapshotRegression",
+    "passed": true,
+    "seconds": 0.269,
+    "output": "PASS zero20 passive metrics snapshot, virgin/corrupt saves, no raw weights, no mutations\n"
+  },
+  {
+    "test": "UnifiedCognitionV21Regression",
+    "passed": true,
+    "seconds": 0.182,
+    "output": "ZERO21 unified evidence: sensor context, independent real outcomes, heldout isolation, atomic save, death and bad-input fail-closed PASS\n"
+  },
+  {
+    "test": "ObjectContinuityV21Regression",
+    "passed": true,
+    "seconds": 0.13,
+    "output": "ZERO21 multi-view: egomotion, distinct observed objects, actual effect, delayed energy hypothesis, holdout, corrupt save, death PASS\n"
+  },
+  {
+    "test": "CompetenceMemoryV21Regression",
+    "passed": true,
+    "seconds": 0.141,
+    "output": "ZERO21 durable competence: real opposed grip and motion only, independent lives, context, defensive copies, migration safety PASS\n"
+  },
+  {
+    "test": "UnifiedArbiterV21Regression",
+    "passed": true,
+    "seconds": 0.419,
+    "output": "ZERO21 arbiter: energy urgency, prediction abstention, no steering and atomic saves PASS\n"
+  },
+  {
+    "test": "UnifiedPolicyParityV21Regression",
+    "passed": true,
+    "seconds": 0.28,
+    "output": "ZERO21 parity 440 real sensorimotor decisions unchanged, old brain byte-identical PASS\n"
+  },
+  {
+    "test": "LifeStatistics",
+    "passed": true,
+    "seconds": 0.343,
+    "output": "ZERO life statistics: simulated clock, permanent lifetime aggregates, 25-vs-25 windows, records, legacy migration and save passed\n"
+  },
+  {
+    "test": "RecurrentCoreV22Regression",
+    "passed": true,
+    "seconds": 1.186,
+    "output": "PASS ZERO22: body+origins, recurrent future+energy, active choice, separate harm, replay exclusion, terminal, corruption, slot codec, resume and exact sensor-boundary parity; active learned choices=37/40\n"
+  },
+  {
+    "test": "SkillExecutionIndependentRegression",
+    "passed": true,
+    "seconds": 0.109,
+    "output": "PASS independent closed-loop skill: contact/adhesion/trial gates, three misses abort, immutable incumbent/archive\n"
+  },
+  {
+    "test": "Zero22LabCheck",
+    "passed": true,
+    "seconds": 0.661,
+    "output": "PASS independent Android-lab backend: identical control replay, active real physics, source checkpoint immutable\n"
+  },
+  {
+    "test": "CoreComparisonV22",
+    "passed": true,
+    "seconds": 0.54,
+    "output": "PASS ZERO22 physical arena: same-source clones, repeatability, cancellation, real tissue/cover physics; no claim of uplift\n"
+  }
+]
