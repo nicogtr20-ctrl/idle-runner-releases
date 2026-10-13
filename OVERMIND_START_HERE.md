@@ -1,3 +1,5 @@
+# ZERO21: report con prove e fallimenti — [docs/ZERO21_VALIDATION_RESULTS.md](docs/ZERO21_VALIDATION_RESULTS.md). La repository contiene una PR di ricerca, ma il telefono continua a usare OTA112; nessun uplift dimostrato.
+
 # Aggiornamento prioritario — ricerca ZERO 2.1 (13 ottobre 2026)
 
 **Punto di ripresa per ogni nuova chat:** [docs/ZERO21_HANDOFF_NEXT_CHAT.md](docs/ZERO21_HANDOFF_NEXT_CHAT.md) → [docs/ZERO21_UNIFIED_COGNITION_MASTER.md](docs/ZERO21_UNIFIED_COGNITION_MASTER.md) → [docs/ZERO21_IMPLEMENTATION_LOG.md](docs/ZERO21_IMPLEMENTATION_LOG.md). La base codice Android è OTA112, package stabile, firma originale, 12 slot; il nuovo `feature/zero21-unified-cognition` è ricerca separata. Creato `UnifiedCognitionV21` con osservazioni congiunte percezione/scelta/contatto reale/effetti; modalità SHADOW, nessun controllo motorio aggiuntivo. Test integrato JVM+Android [38452161103](https://github.com/nicogtr20-ctrl/idle-runner-releases/actions/runs/38452161103) SUCCESS sul commit `7361e67` (le ulteriori modifiche sono documentazione). **Nessuna nuova APK OTA**. Non usare i vecchi titoli 'ultimo rilascio' nei paragrafi storici di seguito come stato 2026 attuale.
