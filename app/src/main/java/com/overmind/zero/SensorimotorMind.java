@@ -636,11 +636,11 @@ public final class SensorimotorMind {
         // fabricate a sustained local blockage within one decision interval.
         if(spatial!=null&&body!=null&&objects!=null)
             spatial.observeEnvironment(body,skin,room,objects);
-        if(objectContinuity!=null&&spatial!=null)
-            objectContinuity.view(spatial.ranges(),spatial.perceivedX(),
-                spatial.perceivedY(),after[4],learning&&!diagnostics.shouldHoldout());
         float[] before=trialState;
         boolean holdout=diagnostics.shouldHoldout();
+        if(objectContinuity!=null&&spatial!=null)
+            objectContinuity.view(spatial.ranges(),spatial.perceivedX(),
+                spatial.perceivedY(),after[4],learning&&!holdout);
         float err=0,naiveErr=0,sensoryChange=0;
         for(int k=0;k<S;k++){
             float pred=predictFeature(before,trialAction,k);
