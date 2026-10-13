@@ -382,6 +382,18 @@ public final class BrainToolsActivity extends Activity {
             String.format(Locale.US,"%.0f celle",causes.lastEnvironmentalChange),WHITE);
         paragraph(experiment,"Un ostacolo che sembra scomparso e' soltanto un'ipotesi di apertura. Si conta un passaggio solo quando il corpo attraversa effettivamente quella cella in seguito. Prima di cambiare le proprie decisioni ZERO deve superare almeno 30 prove non usate per apprendere, prevedere meglio del riferimento e aver provato diverse azioni in situazioni simili. Associazioni e verifiche non costituiscono una prova di causalita' certa.");
 
+        ObjectExperienceV20 objects20=new ObjectExperienceV20();
+        objects20.restore(prefs.getString(ObjectExperienceV20.KEY,""));
+        LinearLayout objectPanel=panel(body);
+        objectPanel.addView(label("ZERO 2.0 / OGGETTI ED ESPERIENZE",16,CYAN,true));
+        paragraph(objectPanel,"Categorie sensoriali ipotetiche costruite da raggi e firme energetiche: nessun ID di cassa, contenuto nascosto o regola speciale nel cervello. Gli eventi energetici casuali non vengono automaticamente attribuiti all'oggetto.");
+        line(objectPanel,"Categorie sensoriali apprese",String.valueOf(objects20.categories()),WHITE);
+        line(objectPanel,"Osservazioni reali",String.valueOf(objects20.observations()),WHITE);
+        line(objectPanel,"Spostamenti esterni registrati",String.valueOf(objects20.physicalSuccesses()),CYAN);
+        line(objectPanel,"Possibili collegamenti con energia (non prove)",String.valueOf(objects20.possibleCausalLinks()),AMBER);
+        line(objectPanel,"Fiducia predittiva verificata",String.format(Locale.US,"%.1f%%",objects20.confidence()*100),CYAN);
+        paragraph(objectPanel,"Le ipotesi probabilistiche diventano suggerimenti lievi SOLO dopo confronti su episodi non usati per l'apprendimento. Un'energia toccata per caso non annulla una presa riuscita. Le capacità di presa vere rimangono archiviate separatamente.");
+        
         InstrumentalNavigation navigation=new InstrumentalNavigation();
         navigation.restore(prefs.getString(InstrumentalNavigation.KEY,""));
         LinearLayout instrument=panel(body);
