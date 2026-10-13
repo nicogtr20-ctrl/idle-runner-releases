@@ -2,11 +2,11 @@
   "schemaVersion": 1,
   "available": true,
   "applicationId": "com.overmind.zero.ota",
-  "versionCode": 1109,
-  "versionName": "0.11.6-ota.109",
-  "apkUrl": "https://overmind-zero-updates.vercel.app/apk/overmind-zero-1109-8804da1489eb.apk",
-  "sha256": "8804da1489eba04c6d53a5f4b91a92e365e52c02e14ce705f4ab9df0cdbaecad",
-  "sizeBytes": 335104,
+  "versionCode": 1110,
+  "versionName": "0.11.6-ota.110",
+  "apkUrl": "https://overmind-zero-updates.vercel.app/apk/overmind-zero-1110-5e2ec3b0133a.apk",
+  "sha256": "5e2ec3b0133a7a0bc1e753ac4d1ed207ec28bcb1614d593c24d6d06eeb8a0c4f",
+  "sizeBytes": 336784,
   "notes": "Aggiornamento OVERMIND ZERO verificato e firmato",
-  "publishedAt": "2026-10-13T15:26:23.628307+00:00"
+  "publishedAt": "2026-10-13T16:24:34.005941+00:00"
 }
