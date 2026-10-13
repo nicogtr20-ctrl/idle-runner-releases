@@ -200,3 +200,13 @@ Documentazione dettagliata e limiti scientifici: `docs/EXPERIMENT_0095.md`.
 - [ ] Test Galaxy S21: lasciare vivere ZERO abbastanza da ottenere confidenza temporale >0 e osservare se compaiono skill consolidate.
 - [ ] Verificare se una skill viene richiamata in un contesto simile e mantiene un effetto fisico progressivo senza essere stata programmata per quell'oggetto.
 - [ ] Passo successivo solo dopo verifica: permettere al planner di valutare skill consolidate come macro-azioni.
+
+
+## ZERO 2.0 — roadmap associazioni percettive, 13 ottobre 2026
+- [x] Implementazione **sperimentale, non rilasciata** di un catalogo di silhouette parziali percepite (nessun accesso all'identità interna del gioco), memoria persistente e statistiche azione→effetto esclusivamente osservazionali.
+- [x] Isolamento dalla scelta motoria, salvataggi opzionali e debug/telemetria; protezione da campioni holdout usati per il training.
+- [ ] Ottenere run QA verde sul commit finale: simulazioni percettive e fisiche preesistenti, test di memoria/anticorruzione, 440 decisioni invariate, build Android.
+- [ ] Registrare **più viste reali dello stesso ostacolo** con odometria e incertezza; testare forma, dimensione e rotazione senza etichette per ZERO. Le etichette del simulatore possono servire SOLO al valutatore offline per misurare errori e false fusioni.
+- [ ] Associare il contatto tattile al **medesimo ostacolo visto**, invece di confondere la movimentazione di altri oggetti della scena.
+- [ ] Archivio durevole di configurazioni HAND+MEMBRANA realmente riuscite, con controlli di sostituzione/rollback e riuso non forzato. OTA103 protegge solo due finestre contigue.
+- [ ] A/B originale vs percezione+memoria sulle stesse scene, poi 25+ vite e oggetti nuovi; solo dopo valutare un debole suggerimento motore e il pulsante AGGIORNA.
