@@ -394,6 +394,33 @@ public final class BrainToolsActivity extends Activity {
         line(objectPanel,"Fiducia predittiva verificata",String.format(Locale.US,"%.1f%%",objects20.confidence()*100),CYAN);
         paragraph(objectPanel,"Le ipotesi probabilistiche diventano suggerimenti lievi SOLO dopo confronti su episodi non usati per l'apprendimento. Un'energia toccata per caso non annulla una presa riuscita. Le capacità di presa vere rimangono archiviate separatamente.");
         
+        // ZERO21 research readout: only genuine saved observer measurements.
+        UnifiedCognitionV21 unified21=new UnifiedCognitionV21();
+        unified21.restore(prefs.getString(UnifiedCognitionV21.KEY,""));
+        ObjectContinuityV21 continuity21=new ObjectContinuityV21();
+        continuity21.restore(prefs.getString(ObjectContinuityV21.KEY,""));
+        CompetenceMemoryV21 competence21=new CompetenceMemoryV21();
+        competence21.restore(prefs.getString(CompetenceMemoryV21.KEY,""));
+        UnifiedArbiterV21 arbiter21=new UnifiedArbiterV21();
+        arbiter21.restore(prefs.getString(UnifiedArbiterV21.KEY,""));
+        LinearLayout unifiedPanel=panel(body);
+        unifiedPanel.addView(label("ZERO 2.1 / CERVELLO CONDIVISO",16,CYAN,true));
+        paragraph(unifiedPanel,"Sperimentale in sola osservazione. Collega 26 sensi, azioni autonome, vere conseguenze e ipotesi di continuità degli ostacoli. Le associazioni NON sono cause dimostrate e le proposte del pianificatore non comandano il corpo.");
+        line(unifiedPanel,"Intervalli di esperienza reali",String.valueOf(unified21.observations()),WHITE);
+        line(unifiedPanel,"Previsioni fuori addestramento",String.valueOf(unified21.holdouts()),WHITE);
+        line(unifiedPanel,"Effetti esterni osservati",String.valueOf(unified21.physicalEvents()),WHITE);
+        line(unifiedPanel,"Contatti energetici vissuti",String.valueOf(unified21.energyContacts()),CYAN);
+        line(unifiedPanel,"Fiducia del modello condiviso",String.format(Locale.US,"%.1f%%",unified21.confidence()*100f),CYAN);
+        line(unifiedPanel,"Confronti multivista degli ostacoli",String.valueOf(continuity21.trackedViews()),WHITE);
+        line(unifiedPanel,"Vista ambigua / non attribuibile",String.valueOf(continuity21.ambiguousViews()),AMBER);
+        line(unifiedPanel,"Possibili effetti su ostacoli",String.valueOf(continuity21.candidateEffects()),WHITE);
+        line(unifiedPanel,"Energia dopo uno spostamento (solo ipotesi)",String.valueOf(continuity21.delayedEnergyAssociations()),AMBER);
+        line(unifiedPanel,"Presa fisica confermata / campioni",String.valueOf(competence21.actualWitnesses()),CYAN);
+        line(unifiedPanel,"Tecniche HAND + MEMBRANA archiviate",String.valueOf(competence21.size()),WHITE);
+        line(unifiedPanel,"Proposte future ammesse (non usate)",String.valueOf(arbiter21.eligible()),WHITE);
+        line(unifiedPanel,"Pianificazioni rifiutate per incertezza",String.valueOf(arbiter21.abstentions()),AMBER);
+        paragraph(unifiedPanel,"Le identità dei singoli ostacoli non vengono salvate come verità. Una tecnica di presa richiede una vera presa opposta e spostamento fisico; archiviarla non significa eseguirla. Zero 2.1 non ha ancora prova di maggior sopravvivenza e non deve ricevere potere motorio senza test A/B.");
+
         InstrumentalNavigation navigation=new InstrumentalNavigation();
         navigation.restore(prefs.getString(InstrumentalNavigation.KEY,""));
         LinearLayout instrument=panel(body);
