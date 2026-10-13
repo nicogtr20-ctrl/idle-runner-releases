@@ -67,7 +67,8 @@ public final class GameActivity extends Activity {
         GripSkillBank gripBank=new GripSkillBank();
         // Read-only physical test instrumentation, scoped to the current room.
         int previousGripDrive=0,previousGripHeld=0,previousOpposedFrames=0;
-        int ongoingUnsuccessfulGrip=0;
+        int ongoingUnsuccessfulGrip=0,boxFailedGripFrames=0;
+        final java.util.WeakHashMap<UnknownWorld.Entity,float[]> boxLastPositions=new java.util.WeakHashMap<>();
         int gripRecoveryCooldown=0;
         int lastSkillStall=0;
         float environmentEffectSinceAction=0,eventEnergyDeltaSinceAction=0;
@@ -161,6 +162,7 @@ public final class GameActivity extends Activity {
             return true;
         }
         void load(){
+            boxLastPositions.clear();boxFailedGripFrames=0;
             shelter=new ShelterEcology();
             java.util.Arrays.fill(cyanLeds,0f);
             java.util.Arrays.fill(redLeds,0f);
@@ -605,7 +607,8 @@ public final class GameActivity extends Activity {
             previousGripDrive=previousGripHeld=previousOpposedFrames=0;
             gateMetrics.resetLife();
             gateJournal.newLife(); // Retain previous life snapshot, start clean.
-            ongoingUnsuccessfulGrip=0;gripRecoveryCooldown=0;
+            ongoingUnsuccessfulGrip=0;boxFailedGripFrames=0;gripRecoveryCooldown=0;
+            boxLastPositions.clear();
             liveBody.abortTrial();
             creature.reset();surface.reset(creature);
             java.util.Arrays.fill(cyanLeds,0f);
@@ -981,6 +984,11 @@ public final class GameActivity extends Activity {
                     boolean boxTouchedThisFrame=false,boxOpposedThisFrame=false;
                     for(UnknownWorld.Entity e:environment){
                         if(!e.isBilateralBox())continue;
+                        // Track real world displacement between physics frames;
+                        // historical offset alone does not count as fresh motion.
+                        float[] prior=boxLastPositions.put(e,new float[]{e.x,e.y});
+                        float actualBoxMotion=prior==null?0f:
+                            (float)Math.hypot(e.x-prior[0],e.y-prior[1]);
                         gripObserver.beforeBox(surface,e);
                         SquareGripPuzzle.Outcome grips=SquareGripPuzzle.constrain(
                             creature,surface,e,slice,
@@ -994,9 +1002,9 @@ public final class GameActivity extends Activity {
                         // A proven two-sided hold on an actual moving box
                         // archives the usable hand/membrane pair, independently
                         // of whether anything valuable is found underneath.
-                        if(grips.opposingGrip&&e.displacementFromSpawn()>1f){
+                        if(grips.opposingGrip&&actualBoxMotion>.005f){
                             if(gripBank.observe(lastAppliedHand,lastAppliedMembrane,
-                               true,true,Math.min(2f,e.displacementFromSpawn())))save();
+                               true,true,Math.min(2f,actualBoxMotion)))save();
                         }
                         if(grips.opposingGrip)e.peakDisplacement=Math.max(
                             e.peakDisplacement,e.displacementFromSpawn());
@@ -1010,6 +1018,28 @@ public final class GameActivity extends Activity {
                     }
                     if(boxTouchedThisFrame)boxTouchFramesSinceAction++;
                     if(boxOpposedThisFrame)boxOpposedFramesSinceAction++;
+                    // Recovery of a PROVEN physical grip is allowed only
+                    // after ZERO himself selected adhesion, maintained real
+                    // box contact and repeatedly failed to hold it. Never
+                    // turn on grips by script and never count bare collision.
+                    if(chamber==null&&gripRecoveryCooldown>0)gripRecoveryCooldown--;
+                    boolean voluntaryBoxGrip=boxTouchedThisFrame&&sensorMind.adhesion()>.5f;
+                    if(voluntaryBoxGrip&&!boxOpposedThisFrame)boxFailedGripFrames++;
+                    else boxFailedGripFrames=0;
+                    if(boxFailedGripFrames>=120&&gripRecoveryCooldown==0&&
+                       !liveBody.testingCandidate()){
+                        GripSkillBank.Pair oldGrip=gripBank.retrieve(
+                            handTrainer.best,shapeTrainer.best);
+                        boxFailedGripFrames=0;
+                        gripRecoveryCooldown=oldGrip==null?240:900;
+                        if(oldGrip!=null){
+                            handTrainer.best=oldGrip.hand;
+                            shapeTrainer.best=oldGrip.membrane;
+                            liveBody.abortTrial();
+                            lastEvent="PRESA APPRESA RECUPERATA";
+                            eventTime=3;save();
+                        }
+                    }
                     // Only INERT construction plates receive the unilateral
                     // physical pressure response. Energy-cover squares and
                     // the existing gate retain their two-sided adhesion.
