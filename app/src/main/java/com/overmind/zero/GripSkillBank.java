@@ -193,8 +193,8 @@ public final class GripSkillBank {
                         return false;
                     if(hasContext==1){
                         item.sensed=new float[SensorimotorMind.S];
-                        for(int j=0;j<item.sensed.length;j++)
-                            item.sensed[j]=Float.parseFloat(nums[base+1+j]);
+                        for(int k=0;k<item.sensed.length;k++)
+                            item.sensed[k]=Float.parseFloat(nums[base+1+k]);
                         if(!validContext(item.sensed))return false;
                         item.verifiedContextFrames=1;
                     }
