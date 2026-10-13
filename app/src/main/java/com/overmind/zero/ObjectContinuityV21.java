@@ -88,7 +88,9 @@ public final class ObjectContinuityV21 {
         focusedId=-1;focusedConfidence=0;
         ArrayList<Hit> hits=clusters(rays,odometryX,odometryY);
         if(hits.isEmpty()){unseen++;expire();return;}
-        boolean[] taken=new boolean[tracks.size()];
+        // Fixed bounded capacity: this sweep can discover NEW tracks while
+        // iterating several separate first-return clusters.
+        boolean[] taken=new boolean[MAX_TRACKS];
         Track nearest=null;
         float nearestRange=Float.POSITIVE_INFINITY,nearestConf=0f;
         int candidates=0;
