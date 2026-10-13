@@ -1,5 +1,21 @@
 # Roadmap e criteri di accettazione
 
+## ZERO 2.0 — Oggetti, cause incerte, scelte probabilistiche (13 ottobre 2026)
+
+- [x] Integrare firma energetica osservata e contorno spaziale in categorie ipotetiche senza introdurre tipi/laws nascosti.
+- [x] Registrare movimento fisico indipendentemente da energia/danno e richiedere evidenza ripetuta per legami energetici ipotetici.
+- [x] Conservare modelli fra vite/slot e ripartire vergine con CREA NUOVO ZERO.
+- [x] Aggiungere proposta di decisione attenuata dietro validazione fuori addestramento; zero influenza senza prove.
+- [x] Archivio di prese bilaterali realmente riuscite sulle casse, con recupero condizionato a fallimenti volontari verificati.
+- [ ] Seguire individualmente uno stesso oggetto fra più viste e attribuirgli soltanto conseguenze fisicamente connesse.
+- [ ] Legare in modo diretto l'identità probabilistica dell'oggetto alla tecnica motoria provata, con controllo contro regressione dei pesi.
+- [ ] Apprendere eventi ritardati lungo una catena causale senza premiare coincidenze.
+- [ ] Misurare stabilità del cervello sulle nuove vite, confronto normalizzato di RED/GRIP e miglioramento in scenari non preparati.
+- [ ] Approvare il test fisico sul Galaxy S21 dopo APK firmata e OTA pubblica verificata.
+
+Documento: [ZERO20_OBJECT_CAUSAL_MEMORY](ZERO20_OBJECT_CAUSAL_MEMORY.md).
+
+
 ## Priorità immediata ZERO 0127 — recupero prima di altre capacità
 
 - [x] Riparare la compatibilità con celle neutre 0 nella memoria spaziale senza perdere pesi appresi (codice su branch 0127).

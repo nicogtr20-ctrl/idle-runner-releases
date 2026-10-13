@@ -1,3 +1,9 @@
+## Evoluzione ZERO 2.0 — memoria degli oggetti e incertezza (13 ottobre 2026)
+
+Il nuovo livello `ObjectExperienceV20` unisce **i 16 raggi realmente percepiti e le firme energetiche visibili** in ipotesi percettive non etichettate. Memorizza separatamente spostamenti meccanici, fonti energetiche effettivamente toccate e possibili legami; un danno casuale non elimina automaticamente la competenza nello spostare un ostacolo. La confidenza predittiva è verificata su intervalli esclusi dall'apprendimento prima che un consiglio possa influenzare debolmente la decisione.
+
+Il sistema riutilizza il deposito fisico HAND/MEMBRANA per archiviare prese bilaterali effettivamente riuscite su casse e cancello; eventuale recupero richiede azioni di adesione volontarie e fallimenti ripetuti. Le memorie sono salvate con il personaggio, e non passano da un profilo all'altro. **Limitazione:** categorie di scena non sono identità individuali persistenti, correlazione non è causazione, e non si dichiara ancora raggiunto un ragionamento probabilistico o causale generale. Scopo e limiti: [ZERO20_OBJECT_CAUSAL_MEMORY](ZERO20_OBJECT_CAUSAL_MEMORY.md).
+
 # OVERMIND: ZERO — Whitepaper di progetto
 
 **Versione:** 0.2 (documento vivo) · **Data:** 9 ottobre 2026 · **Stato:** prototipo di ricerca Android

@@ -51,6 +51,7 @@ public final class GameActivity extends Activity {
         PhysicalConsequenceV20 physicalConsequenceV20=new PhysicalConsequenceV20();
         GripAffordanceV20 gripAffordanceV20=new GripAffordanceV20();
         PerceptualAssociationsV20 perceptualV20=new PerceptualAssociationsV20();
+        ObjectExperienceV20 objectExperienceV20=new ObjectExperienceV20();
         SpatialPerception spatialMap=new SpatialPerception();
         CausalExperiments causalExperiments=new CausalExperiments();
         InstrumentalNavigation navigation=new InstrumentalNavigation();
@@ -66,7 +67,8 @@ public final class GameActivity extends Activity {
         GripSkillBank gripBank=new GripSkillBank();
         // Read-only physical test instrumentation, scoped to the current room.
         int previousGripDrive=0,previousGripHeld=0,previousOpposedFrames=0;
-        int ongoingUnsuccessfulGrip=0;
+        int ongoingUnsuccessfulGrip=0,boxFailedGripFrames=0;
+        final java.util.WeakHashMap<UnknownWorld.Entity,float[]> boxLastPositions=new java.util.WeakHashMap<>();
         int gripRecoveryCooldown=0;
         int lastSkillStall=0;
         float environmentEffectSinceAction=0,eventEnergyDeltaSinceAction=0;
@@ -160,6 +162,7 @@ public final class GameActivity extends Activity {
             return true;
         }
         void load(){
+            boxLastPositions.clear();boxFailedGripFrames=0;
             shelter=new ShelterEcology();
             java.util.Arrays.fill(cyanLeds,0f);
             java.util.Arrays.fill(redLeds,0f);
@@ -245,6 +248,9 @@ public final class GameActivity extends Activity {
             perceptualV20=new PerceptualAssociationsV20();
             perceptualV20.restore(prefs.getString(PerceptualAssociationsV20.KEY,""));
             sensorMind.attachPerceptualAssociationsV20(perceptualV20);
+            objectExperienceV20=new ObjectExperienceV20();
+            objectExperienceV20.restore(prefs.getString(ObjectExperienceV20.KEY,""));
+            sensorMind.attachObjectExperienceV20(objectExperienceV20);
             // Hard device boundary: ZERO 2.0 can LEARN and REPORT but may not
             // bias any live motor decision. Advisory A/B is laboratory-only.
             sensorMind.enableZero20ExperimentalAdvice(false);
@@ -539,6 +545,7 @@ public final class GameActivity extends Activity {
               .putString(PhysicalConsequenceV20.KEY,physicalConsequenceV20.encode())
               .putString(GripAffordanceV20.KEY,gripAffordanceV20.encode())
               .putString(PerceptualAssociationsV20.KEY,perceptualV20.encode())
+              .putString(ObjectExperienceV20.KEY,objectExperienceV20.encode())
               .putString(SpatialPerception.KEY,spatialMap.encode())
               .putString(CausalExperiments.KEY,causalExperiments.encode())
               .putString(InstrumentalNavigation.KEY,navigation.encode())
@@ -600,7 +607,8 @@ public final class GameActivity extends Activity {
             previousGripDrive=previousGripHeld=previousOpposedFrames=0;
             gateMetrics.resetLife();
             gateJournal.newLife(); // Retain previous life snapshot, start clean.
-            ongoingUnsuccessfulGrip=0;gripRecoveryCooldown=0;
+            ongoingUnsuccessfulGrip=0;boxFailedGripFrames=0;gripRecoveryCooldown=0;
+            boxLastPositions.clear();
             liveBody.abortTrial();
             creature.reset();surface.reset(creature);
             java.util.Arrays.fill(cyanLeds,0f);
@@ -779,6 +787,10 @@ public final class GameActivity extends Activity {
                 if(MaterialGeometry.touches(creature,surface,object.x,object.y,
                         object.radius+2f)||nearest<18+object.radius){
                     float before=reserve;
+                    // Snapshot photons BEFORE a source is consumed. This is
+                    // exactly what ZERO could sense at contact, not object law.
+                    float[] sightAtTouch=SensorimotorMind.Senses.read(
+                        creature,surface,chamber,environment,reserve);
                     float delta=object.touch(dx/Math.max(1,dist),dy/Math.max(1,dist));
                     reserve=Math.max(0,Math.min(100,reserve+delta));
                     lifeStats.contact(reserve-before); // actual clamped contact outcome
@@ -789,7 +801,7 @@ public final class GameActivity extends Activity {
                     eventEnergyDeltaSinceAction+=reserve-before;
                     // Actual feedback trains the self-selected motor-action
                     // history; no color, target angle or food flag passed.
-                    sensorMind.contactOutcome(reserve-before,object.signature);
+                    sensorMind.contactOutcome(reserve-before,object.signature,sightAtTouch);
                     energySinceAction[object.signature]+=reserve-before;
                     mind.observe(object.signature,delta,0);
                     decisionBrain.learn(object,before,reserve,0);
@@ -969,9 +981,14 @@ public final class GameActivity extends Activity {
                     for(UnknownWorld.Entity e:environment)if(e.isBox()){anyBox=true;break;}
                     if(anyBox&&chamber==null)
                         java.util.Arrays.fill(surface.touchSense,0f);
-                    boolean boxTouchedThisFrame=false,boxOpposedThisFrame=false;
+                    boolean boxTouchedThisFrame=false,boxOpposedThisFrame=false,boxAnyHeldThisFrame=false;
                     for(UnknownWorld.Entity e:environment){
                         if(!e.isBilateralBox())continue;
+                        // Track real world displacement between physics frames;
+                        // historical offset alone does not count as fresh motion.
+                        float[] prior=boxLastPositions.put(e,new float[]{e.x,e.y});
+                        float actualBoxMotion=prior==null?0f:
+                            (float)Math.hypot(e.x-prior[0],e.y-prior[1]);
                         gripObserver.beforeBox(surface,e);
                         SquareGripPuzzle.Outcome grips=SquareGripPuzzle.constrain(
                             creature,surface,e,slice,
@@ -981,7 +998,15 @@ public final class GameActivity extends Activity {
                         gripObserver.boxFrame(surface,e,sensorMind.adhesion(),
                             elapsedLife,slice);
                         if(grips.contacts>0)boxTouchedThisFrame=true;
+                        if(grips.held>0)boxAnyHeldThisFrame=true;
                         if(e.bilateralHeldNow)boxOpposedThisFrame=true;
+                        // A proven two-sided hold on an actual moving box
+                        // archives the usable hand/membrane pair, independently
+                        // of whether anything valuable is found underneath.
+                        if(grips.opposingGrip&&actualBoxMotion>.005f){
+                            if(gripBank.observe(lastAppliedHand,lastAppliedMembrane,
+                               true,true,Math.min(2f,actualBoxMotion)))save();
+                        }
                         if(grips.opposingGrip)e.peakDisplacement=Math.max(
                             e.peakDisplacement,e.displacementFromSpawn());
                         if(SquareGripPuzzle.uncover(e,environment)){
@@ -994,6 +1019,28 @@ public final class GameActivity extends Activity {
                     }
                     if(boxTouchedThisFrame)boxTouchFramesSinceAction++;
                     if(boxOpposedThisFrame)boxOpposedFramesSinceAction++;
+                    // Recovery of a PROVEN physical grip is allowed only
+                    // after ZERO himself selected adhesion, maintained real
+                    // box contact and repeatedly failed to hold it. Never
+                    // turn on grips by script and never count bare collision.
+                    if(chamber==null&&gripRecoveryCooldown>0)gripRecoveryCooldown--;
+                    boolean voluntaryBoxGrip=boxTouchedThisFrame&&sensorMind.adhesion()>.5f;
+                    if(voluntaryBoxGrip&&!boxAnyHeldThisFrame)boxFailedGripFrames++;
+                    else boxFailedGripFrames=0;
+                    if(boxFailedGripFrames>=120&&gripRecoveryCooldown==0&&
+                       !liveBody.testingCandidate()){
+                        GripSkillBank.Pair oldGrip=gripBank.retrieve(
+                            handTrainer.best,shapeTrainer.best);
+                        boxFailedGripFrames=0;
+                        gripRecoveryCooldown=oldGrip==null?240:900;
+                        if(oldGrip!=null){
+                            handTrainer.best=oldGrip.hand;
+                            shapeTrainer.best=oldGrip.membrane;
+                            liveBody.abortTrial();
+                            lastEvent="PRESA APPRESA RECUPERATA";
+                            eventTime=3;save();
+                        }
+                    }
                     // Only INERT construction plates receive the unilateral
                     // physical pressure response. Energy-cover squares and
                     // the existing gate retain their two-sided adhesion.
@@ -1109,6 +1156,9 @@ public final class GameActivity extends Activity {
                             lastAppliedMotor,lastAppliedHand,lastAppliedMembrane,
                             actedFromMemory);
                         if(episodic.repeatEffects>recallsBefore)lifeStats.confirmedRecall();
+                        // Object hypotheses are included in normal periodic checkpoints,
+                        // pauses and physical events. Do not rewrite the entire
+                        // profile on every 0.65-second observational update.
                         if(remembered||episodic.takeDirty()||
                            sensorMind.takeTemporalSkillsDirty())save();
                         // Remembering an action never substitutes an old

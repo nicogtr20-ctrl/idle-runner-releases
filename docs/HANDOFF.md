@@ -1,3 +1,9 @@
+## 2026-10-13 — ZERO2 memoria sensoriale oggetti/energia, ipotesi causali, recupero delle prese
+
+Autorizzazione utente: integrare in **prossima APK** una memoria coerente di forme/frequenze/episodi/rischio/abilità, senza inserire ricette per quattro mondi di casse. Branch `feature/zero2-object-causal-learning-ota106` da `feature/overmind-inapp-updater`. Nuovi `ObjectExperienceV20.java`, `ObjectExperienceV20Regression.java`, persist `object_experience_v20` in SaveSlotStore autosave/slot, reset spaziale e pannello ANALISI. Valenza meccanica non cancellata da danni energetici casuali; possibili nessi richiedono evidenza sensoriale e validazione; scelta massima ±0,18 solo con gating. Archivio di prese bilaterali reali esteso alle casse; ripristino vecchia tecnica solo con adesione volontaria e molti frame a contatto senza alcuna presa. Sensori/forze e generazione casse fisiche restano invariati.
+
+Leggere **[ZERO20_OBJECT_CAUSAL_MEMORY](ZERO20_OBJECT_CAUSAL_MEMORY.md)** per contratto scientifico e limitazioni: riconoscimento di categorie ≠ tracciamento dell'identità del singolo oggetto, nesso temporale ≠ prova causale, archivio skill fisiche generale ≠ tecnica legata esclusivamente a una categoria. Staging QA `38418060491` (prima passata JVM+Android Debug verde), da rieseguire dopo gli ultimi fix della presa. Verificare publisher firmato, Vercel e Samsung S21 prima di dire conclusa l'OTA. NON cancellare vecchi slot o sovrascrivere i cervelli appresi.
+
 # HANDOFF — punto di ripresa per un'altra chat o agente
 
 **Ultimo aggiornamento:** 2026-10-12
