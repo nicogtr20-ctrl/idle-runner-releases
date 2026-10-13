@@ -51,6 +51,7 @@ public final class GameActivity extends Activity {
         PhysicalConsequenceV20 physicalConsequenceV20=new PhysicalConsequenceV20();
         GripAffordanceV20 gripAffordanceV20=new GripAffordanceV20();
         PerceptualAssociationsV20 perceptualV20=new PerceptualAssociationsV20();
+        ObjectExperienceV20 objectExperienceV20=new ObjectExperienceV20();
         SpatialPerception spatialMap=new SpatialPerception();
         CausalExperiments causalExperiments=new CausalExperiments();
         InstrumentalNavigation navigation=new InstrumentalNavigation();
@@ -245,6 +246,9 @@ public final class GameActivity extends Activity {
             perceptualV20=new PerceptualAssociationsV20();
             perceptualV20.restore(prefs.getString(PerceptualAssociationsV20.KEY,""));
             sensorMind.attachPerceptualAssociationsV20(perceptualV20);
+            objectExperienceV20=new ObjectExperienceV20();
+            objectExperienceV20.restore(prefs.getString(ObjectExperienceV20.KEY,""));
+            sensorMind.attachObjectExperienceV20(objectExperienceV20);
             // Hard device boundary: ZERO 2.0 can LEARN and REPORT but may not
             // bias any live motor decision. Advisory A/B is laboratory-only.
             sensorMind.enableZero20ExperimentalAdvice(false);
@@ -539,6 +543,7 @@ public final class GameActivity extends Activity {
               .putString(PhysicalConsequenceV20.KEY,physicalConsequenceV20.encode())
               .putString(GripAffordanceV20.KEY,gripAffordanceV20.encode())
               .putString(PerceptualAssociationsV20.KEY,perceptualV20.encode())
+              .putString(ObjectExperienceV20.KEY,objectExperienceV20.encode())
               .putString(SpatialPerception.KEY,spatialMap.encode())
               .putString(CausalExperiments.KEY,causalExperiments.encode())
               .putString(InstrumentalNavigation.KEY,navigation.encode())
@@ -1110,7 +1115,7 @@ public final class GameActivity extends Activity {
                             actedFromMemory);
                         if(episodic.repeatEffects>recallsBefore)lifeStats.confirmedRecall();
                         if(remembered||episodic.takeDirty()||
-                           sensorMind.takeTemporalSkillsDirty())save();
+                           sensorMind.takeTemporalSkillsDirty()||objectExperienceV20.takeDirty())save();
                         // Remembering an action never substitutes an old
                         // physical controller or interrupts body experiments.
                         OnlineBodyLearning.Result result=liveBody.observe(
