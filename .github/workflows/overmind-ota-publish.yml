@@ -922,7 +922,7 @@ jobs:
           # heldout-validated world confidence; contact is not an auto-grip.
           assert 'Math.min(.85f,maturity*trust)' in (root/'RecurrentCoreV22.java').read_text()
           assert 'stabilizeExistingGrip' in (root/'SquareGripPuzzle.java').read_text()
-          assert 'environmentEffectSinceAction+=Math.min(2f,actualBoxMotion);' in game
+          assert 'environmentEffectSinceAction+=Math.min(2f,actualBoxMotion);' in (root/'GameActivity.java').read_text()
           for name,pin in pins.items():
             data=(root/name).read_bytes()
             assert sha1(b'blob '+str(len(data)).encode()+b'\0'+data).hexdigest()==pin,name
