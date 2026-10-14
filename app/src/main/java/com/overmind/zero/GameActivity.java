@@ -1041,7 +1041,7 @@ public final class GameActivity extends Activity {
                         if(ongoingUnsuccessfulGrip>=120 &&
                            gripRecoveryCooldown==0 &&
                            !liveBody.testingCandidate()){
-                            GripSkillBank.Pair historical=gripBank.retrieve(
+                            GripSkillBank.Pair historical=gripBank.retrieveAfterRepeatedFailure(
                                 handTrainer.best,shapeTrainer.best,sensorMind.stateCopy());
                             if(historical!=null){
                                 handTrainer.best=historical.hand;
@@ -1129,7 +1129,7 @@ public final class GameActivity extends Activity {
                     else boxFailedGripFrames=0;
                     if(boxFailedGripFrames>=120&&gripRecoveryCooldown==0&&
                        !liveBody.testingCandidate()){
-                        GripSkillBank.Pair oldGrip=gripBank.retrieve(
+                        GripSkillBank.Pair oldGrip=gripBank.retrieveAfterRepeatedFailure(
                             handTrainer.best,shapeTrainer.best,sensorMind.stateCopy());
                         boxFailedGripFrames=0;
                         gripRecoveryCooldown=oldGrip==null?240:900;
