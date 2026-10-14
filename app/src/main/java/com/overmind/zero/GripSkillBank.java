@@ -327,12 +327,12 @@ public final class GripSkillBank {
         float[] mem=Morphology.virgin(new java.util.Random(4));
         for(int i=0;i<MAX;i++){
             float[] unique=mem.clone();
-            unique[0]+=(i+1)*.6f;
+            unique[0]+=(i+1)*.4f;
             if(!full.observe(hand,unique,true,true,.1f))
                 throw new AssertionError("Historical verified skill missing");
         }
         if(full.count()!=MAX)throw new AssertionError("Full archive setup");
-        float[] newcomer=mem.clone();newcomer[0]+=8f;
+        float[] newcomer=mem.clone();newcomer[0]=-3.8f;
         if(full.observe(hand,newcomer,true,true,.1f))
             throw new AssertionError("Unproven first grip evicted history");
         boolean promoted=false;
