@@ -26,6 +26,9 @@ public final class RecurrentCoreV22 {
     private long transitions,trainSteps,replays,choices,modelChoices,invalid,terminals;
     private int lastAction=-1;
     private float lastMargin,lastConfidence;
+    // Runtime-only diagnostics: no persistence schema change or memory reset.
+    private long primaryDecisionsSession;
+    private int intervalsWithoutEnergy;
     private static final class Experience {
         float[] before,after;int action;float earned,harm;boolean terminal;
         Experience(float[] b,float[] n,int a,float r,float d,boolean t){
@@ -196,6 +199,43 @@ public final class RecurrentCoreV22 {
         // blocks transient false-positive energyConfidence spikes.
         return oldScores==null?scores:oldScores.clone();
     }
+    /** SINGLE LIVE ARBITER (OTA132). The legacy TD policy is never queried.
+     * The external array contains only empirically learned, bounded
+     * affordance evidence from navigation/causal/object subsystems; it is
+     * NOT a second policy or a privileged resource heading.
+     * Q/reward/risk and recurrence remain the actual primary brain.
+     */
+    public float[] primaryScores(float[] learnedAffordance){
+        float[] scores=evaluate(null);
+        for(int a=0;a<A;a++){
+            float evidence=learnedAffordance!=null&&learnedAffordance.length==A
+                &&Float.isFinite(learnedAffordance[a])
+                ?clip(learnedAffordance[a],-1.2f,1.2f):0;
+            // The reward learner owns the main score. Empirical motor/energy
+            // affordance is a subordinate, evidence-backed feature.
+            scores[a]+= .40f*evidence;
+            // Experiences per action are real, not imagined. Mild intrinsic
+            // action uncertainty preserves discovery while reusing skills.
+            scores[a]+=.075f/(float)Math.sqrt(1+samples[a]/16f);
+            if(a==lastAction&&intervalsWithoutEnergy>=10)
+                scores[a]-=.14f*clip((intervalsWithoutEnergy-10)/20f,0,1);
+        }
+        lastMargin=0;
+        int best=0;for(int a=1;a<A;a++)if(scores[a]>scores[best])best=a;
+        float second=-Float.MAX_VALUE;
+        for(int a=0;a<A;a++)if(a!=best)second=Math.max(second,scores[a]);
+        lastMargin=scores[best]-second;
+        primaryDecisionsSession++;
+        return scores;
+    }
+    /** Exploration belongs to the primary learner. Sparse energy makes
+     * experimentation MORE likely, not less. No target, colour or script. */
+    public float primaryExploration(float reserve){
+        return clip(.12f+.10f*(1f-clip(reserve,0,1))
+            +.09f*clip(intervalsWithoutEnergy/70f,0,1),.12f,.31f);
+    }
+    public long primaryDecisionsSession(){return primaryDecisionsSession;}
+    public int intervalsWithoutEnergy(){return intervalsWithoutEnergy;}
     public float learningBlend(){
         long actualTrain=0;for(int n:samples)actualTrain+=n;
         return Math.min(.9f,actualTrain/1600f);
@@ -278,11 +318,15 @@ public final class RecurrentCoreV22 {
                 }
             }
         }
+        // Count ACTUAL positive energy events, including heldout transitions;
+        // this is a runtime-only discovery/stagnation measure, not a reward.
+        if(actualContactEnergy>.01f)intervalsWithoutEnergy=0;
+        else intervalsWithoutEnergy=Math.min(1000000,intervalsWithoutEnergy+1);
         System.arraycopy(nextHidden,0,hidden,0,H);
         transitions++;if(terminal)terminals++;
         pending=null;pendingAction=-1;
     }
-    public void resetLife(){Arrays.fill(hidden,0);Arrays.fill(current,0);pending=null;pendingAction=-1;lastAction=-1;}
+    public void resetLife(){Arrays.fill(hidden,0);Arrays.fill(current,0);pending=null;pendingAction=-1;lastAction=-1;intervalsWithoutEnergy=0;}
     public void resumeLife(){pending=null;pendingAction=-1;}
     public long transitions(){return transitions;}
     public long replayUpdates(){return replays;}
@@ -294,8 +338,9 @@ public final class RecurrentCoreV22 {
         float livePhysicalTrust=0;
         for(int a=0;a<A;a++)livePhysicalTrust=Math.max(livePhysicalTrust,confidence(a));
         return String.format(Locale.US,
-            "ZERO 2.2 SHADOW POLICY: lived=%d replay=%d/%d plannedShadow=%d physicalReady=%d/%d confidence=%.3f energyReady=%d/%d lastShadowMargin=%.4f terminal=%d invalid=%d",
-            transitions,replaySize(),replays,modelChoices,physicalReady(),A,livePhysicalTrust,energyReady(),A,lastMargin,terminals,invalid);
+            "ZERO 2.2 PRIMARY: lived=%d replay=%d/%d modelProbes=%d primaryDecisionsSession=%d intervalsNoEnergy=%d physicalReady=%d/%d physicalConfidence=%.3f energyReady=%d/%d margin=%.4f terminal=%d invalid=%d",
+            transitions,replaySize(),replays,modelChoices,primaryDecisionsSession,intervalsWithoutEnergy,
+            physicalReady(),A,livePhysicalTrust,energyReady(),A,lastMargin,terminals,invalid);
     }
     private static void array(DataOutputStream out,float[] a)throws IOException{for(float v:a)out.writeFloat(v);}
     private static void readArray(DataInputStream in,float[] a,float bound)throws IOException{
