@@ -114,6 +114,9 @@ public final class GameActivity extends Activity {
         float eventTime=7;
         MotorBrain.Body creature=new MotorBrain.Body();
         Morphology.Surface surface=new Morphology.Surface(creature);
+        boolean useSymbiote=false;
+        SymbioteMatterV1 symMatter=null;
+        SymbioteMotorHeadV1 symMotor=null;
         // Frame-start physical positions for continuous collision detection.
         // These scratch arrays are NEVER part of ZERO's neural state/save.
         final float[] squarePrevSkinX=new float[Morphology.POINTS];
@@ -200,6 +203,12 @@ public final class GameActivity extends Activity {
                !prefs.edit().remove(SaveSlotStore.PENDING_RELOAD).commit())
                 throw new IllegalStateException("Unable to apply save-slot switch");
             boolean wasReset=consumeResetRequest();
+            // Old named profiles stay physically unchanged. Only the
+            // explicitly created newborn profile gets fluid-body version 1.
+            useSymbiote=prefs.getBoolean(SymbioteMatterV1.ENABLED,false);
+            symMotor=useSymbiote?new SymbioteMotorHeadV1():null;
+            if(symMotor!=null)
+                symMotor.restore(prefs.getString(SymbioteMotorHeadV1.KEY,""));
             contactGeometry=new ContactGeometryForensics();
             if(!wasReset)
                 contactGeometry.restore(prefs.getString(ContactGeometryForensics.KEY,""));
@@ -299,6 +308,7 @@ public final class GameActivity extends Activity {
             recurrentCore=new RecurrentCoreV22();
             recurrentCore.restore(prefs.getString(RecurrentCoreV22.KEY,""));
             sensorMind.attachActiveCore(recurrentCore);
+            sensorMind.attachSymbioteMotorHead(symMotor);
             // Hard device boundary: ZERO 2.0 can LEARN and REPORT but may not
             // bias any live motor decision. Advisory A/B is laboratory-only.
             sensorMind.enableZero20ExperimentalAdvice(false);
@@ -432,7 +442,8 @@ public final class GameActivity extends Activity {
                 JSONObject snapshot=new JSONObject();
                 snapshot.put("v",1);
                 snapshot.put("physical",new JSONObject(
-                    GameSceneSnapshot.capture(creature,surface,environment,chamber)));
+                    GameSceneSnapshot.capture(creature,surface,environment,chamber,
+                        useSymbiote?symMatter:null)));
                 snapshot.put("episode",episode);
                 snapshot.put("speed",speed);
                 snapshot.put("running",simulationRunning);
@@ -481,7 +492,7 @@ public final class GameActivity extends Activity {
                 if(o.getInt("v")!=1)return false;
                 GameSceneSnapshot.Scene scene=GameSceneSnapshot.restore(
                     o.getJSONObject("physical").toString());
-                if(scene==null)return false;
+                if(scene==null||(useSymbiote!=(scene.matter!=null)))return false;
                 ShelterEcology decodedShelter=new ShelterEcology();
                 if(o.has(ShelterEcology.SNAPSHOT)&&
                    !decodedShelter.restore(o.getString(ShelterEcology.SNAPSHOT)))return false;
@@ -495,6 +506,7 @@ public final class GameActivity extends Activity {
                    !Float.isFinite(savedNext)||savedPhase<0||savedPhase>14)return false;
                 // Only after the complete physical structure was verified.
                 creature=scene.body;surface=scene.skin;
+                symMatter=scene.matter;
                 chamber=scene.room;environment=scene.objects;
                 shelter=decodedShelter;
                 episode=savedEpisode;phase=savedPhase;
@@ -600,6 +612,8 @@ public final class GameActivity extends Activity {
               .putString(CausalSequenceV23.KEY,causalSequenceV23.encode())
               .putString(CompetenceMemoryV21.KEY,competenceMemoryV21.encode())
               .putString(RecurrentCoreV22.KEY,recurrentCore.encode())
+              .putString(SymbioteMotorHeadV1.KEY,
+                  symMotor==null?"":symMotor.encode())
               .putString(UnifiedArbiterV21.KEY,unifiedArbiterV21.encode())
               .putString(SpatialPerception.KEY,spatialMap.encode())
               .putString(CausalExperiments.KEY,causalExperiments.encode())
@@ -672,6 +686,10 @@ public final class GameActivity extends Activity {
             boxLastPositions.clear();
             liveBody.abortTrial();
             creature.reset();surface.reset(creature);
+            if(useSymbiote){
+                symMatter=new SymbioteMatterV1();
+                symMatter.reset(creature,surface);
+            }else symMatter=null;
             java.util.Arrays.fill(cyanLeds,0f);
             java.util.Arrays.fill(redLeds,0f);
             motorGuard.resetLife(creature.cx,creature.cy);
@@ -1017,9 +1035,15 @@ public final class GameActivity extends Activity {
                     System.arraycopy(creature.x,0,squarePrevBodyX,0,MotorBrain.N);
                     System.arraycopy(creature.y,0,squarePrevBodyY,0,MotorBrain.N);
                     float oldCoreX=creature.cx,oldCoreY=creature.cy;
-                    creature.step(lastAppliedMotor,mx,my,slice,lastAppliedHand,px,py);
-                    surface.step(creature,lastAppliedMembrane,px,py,slice,
-                        sensorMind.adhesion());
+                    if(useSymbiote&&symMatter!=null&&symMotor!=null){
+                        // Real viscous matter. No legacy radial springs or
+                        // old membrane actuator runs in this physical mode.
+                        symMatter.step(creature,surface,symMotor.commands(),slice);
+                    }else{
+                        creature.step(lastAppliedMotor,mx,my,slice,lastAppliedHand,px,py);
+                        surface.step(creature,lastAppliedMembrane,px,py,slice,
+                            sensorMind.adhesion());
+                    }
                     if(chamber!=null){
                         float doorBefore=chamber.doorY;
                         chamber.constrain(creature,surface,slice,sensorMind.adhesion());
