@@ -98,6 +98,36 @@ public final class CausalSequenceV23Regression {
         restored.consequence(noLight,-1,0,true,false,brain);
         ok(restored.missed()>=2,"uninformative light attributed causal energy");
 
+        // 40 real intervening motor decisions: long-term causal credit
+        // must survive well beyond the immediate physical-change frame.
+        long oldLinks=restored.delayedLinks();
+        restored.resetLife();
+        act(restored,brain,3,BASE,7,.9f,BASE,7,12,false);
+        act(restored,brain,4,BASE,-1,0,SEEN,-1,0,false);
+        for(int k=0;k<40;k++)
+            act(restored,brain,4,SEEN,-1,0,SEEN,-1,0,false);
+        restored.chosen(4,SEEN,-1,0f,brain.state());
+        restored.contactEnergy(22,0);
+        restored.consequence(SEEN,-1,0,true,false,brain);
+        ok(restored.delayedLinks()==oldLinks+1,
+            "41-step visual->contact delay was lost by premature expiry");
+
+        // Two equally eligible object moves are NOT automatically awarded
+        // the same energy effect. An ambiguous chain is censored, not a
+        // fabricated positive/negative sample for either object.
+        long trainedBeforeAmbiguity=restored.trained();
+        long ambiguousBefore=restored.ambiguous();
+        restored.resetLife();
+        act(restored,brain,3,BASE,7,.9f,BASE,7,12,false);
+        act(restored,brain,6,BASE,8,.9f,BASE,8,12,false);
+        act(restored,brain,4,BASE,-1,0,SEEN,-1,0,false);
+        restored.chosen(4,SEEN,-1,0f,brain.state());
+        restored.contactEnergy(22,0);
+        restored.consequence(SEEN,-1,0,true,false,brain);
+        ok(restored.ambiguous()==ambiguousBefore+1&&
+           restored.trained()==trainedBeforeAmbiguity,
+           "ambiguous competing object moves created false training evidence");
+
         // Existing experienced 2.2 must remain the sole chooser.
         SensorimotorMind a=new SensorimotorMind(),c=new SensorimotorMind();
         RecurrentCoreV22 coreA=new RecurrentCoreV22(),coreB=new RecurrentCoreV22();
