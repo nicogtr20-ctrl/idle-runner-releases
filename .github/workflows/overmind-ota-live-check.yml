@@ -1,0 +1,56 @@
+name: Verify LIVE OVERMIND OTA delivery
+on:
+  push:
+    branches: [main]
+    paths:
+      - updater/public/latest.json
+      - .github/workflows/overmind-ota-live-check.yml
+permissions:
+  contents: read
+jobs:
+  verify-live:
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v4
+      - name: Compare public HTTP 200 manifest and signed APK bytes to committed manifest
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          import json,hashlib,time,urllib.request,urllib.error
+          from pathlib import Path
+          wanted=json.loads(Path("updater/public/latest.json").read_text())
+          assert wanted["applicationId"]=="com.overmind.zero.ota"
+          assert wanted["sizeBytes"]>0 and wanted["sizeBytes"]<20000000
+          assert len(wanted["sha256"])==64
+          public="https://overmind-zero-updates.vercel.app/latest.json"
+          link=wanted["apkUrl"]
+          assert link.startswith("https://overmind-zero-updates.vercel.app/apk/") and link.endswith(".apk")
+          last=None
+          for attempt in range(24):
+              try:
+                  with urllib.request.urlopen(urllib.request.Request(public,headers={"Cache-Control":"no-cache"}),timeout=20) as reply:
+                      code=reply.status
+                      live=json.loads(reply.read())
+                  assert code==200,("manifest response",code)
+                  assert all(live.get(k)==wanted[k] for k in ("versionCode","versionName","applicationId","apkUrl","sha256","sizeBytes")),("stale manifest",live.get("versionCode"),wanted["versionCode"])
+                  with urllib.request.urlopen(urllib.request.Request(link,headers={"Cache-Control":"no-cache"}),timeout=30) as reply:
+                      apkstatus=reply.status
+                      resolved=reply.geturl()
+                      ctype=reply.headers.get("Content-Type","")
+                      data=reply.read(wanted["sizeBytes"]+1)
+                  assert apkstatus==200,("apk response",apkstatus)
+                  assert resolved.startswith("https://overmind-zero-updates.vercel.app/apk/"),("unexpected redirect",resolved)
+                  assert len(data)==wanted["sizeBytes"],("apk size",len(data),wanted["sizeBytes"])
+                  sha=hashlib.sha256(data).hexdigest()
+                  assert sha==wanted["sha256"],("apk sha256 mismatch",sha)
+                  assert "android" in ctype or "octet-stream" in ctype,("unexpected APK mime type",ctype)
+                  print("LIVE VERIFIED manifest HTTP200, APK HTTP200, correct version, size, SHA256, applicationId, MIME")
+                  print("version",wanted["versionName"],"code",wanted["versionCode"],"size",len(data),"sha256",sha,"mime",ctype)
+                  break
+              except Exception as exc:
+                  last=str(exc)
+                  print(f"Attempt {attempt+1}/24 not ready: {last}",flush=True)
+                  if attempt==23:raise
+                  time.sleep(15)
+          PY
