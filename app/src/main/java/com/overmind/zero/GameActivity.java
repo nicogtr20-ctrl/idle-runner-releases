@@ -835,17 +835,12 @@ public final class GameActivity extends Activity {
                 if(!object.ready())continue;
                 float dx=object.x-creature.cx,dy=object.y-creature.cy;
                 float dist=(float)Math.hypot(dx,dy);
-                float nearest=Float.POSITIVE_INFINITY;
-                for(int k=0;k<MotorBrain.N;k++){
-                    float d=(float)Math.hypot(object.x-creature.x[k],object.y-creature.y[k]);
-                    if(d<nearest)nearest=d;
-                }
-                for(int k=0;k<Morphology.POINTS;k++){
-                    float d=(float)Math.hypot(object.x-surface.x[k],object.y-surface.y[k]);
-                    if(d<nearest)nearest=d;
-                }
+                // The original +18-unit fallback made ZERO collect a gem
+                // while NONE of his material was touching it (OTA127 proved
+                // material=0, source=extra18). Use actual material only;
+                // no phantom centroid or decorative trail collider.
                 if(MaterialGeometry.touches(creature,surface,object.x,object.y,
-                        object.radius+2f)||nearest<18+object.radius){
+                        object.radius+2f)){
                     float before=reserve;
                     // Snapshot photons BEFORE a source is consumed. This is
                     // exactly what ZERO could sense at contact, not object law.
@@ -1175,6 +1170,12 @@ public final class GameActivity extends Activity {
                             panel.peakDisplacement=Math.max(panel.peakDisplacement,
                                 panel.displacementFromSpawn());
                     }
+                    // Different covers cannot own the SAME material patch.
+                    // The local finite-area contact solver also relaxes
+                    // coincident tissue; it neither chooses an action nor
+                    // artificially releases a valid separate-patch grip.
+                    MaterialContactConstraints.reconcile(creature,surface,
+                        environment,slice);
                     // Read centroid from ACTUAL muscle material, not a
                     // simulated nucleus. Collision projection may move it.
                     MaterialGeometry.observe(creature);
