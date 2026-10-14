@@ -1,11 +1,12 @@
 package com.overmind.zero;
 
 import java.util.*;
+import java.lang.reflect.*;
 
 public final class RecurrentCoreV22Regression {
     static void yes(boolean b,String m){if(!b)throw new AssertionError(m);}
     static int max(float[] x){int w=0;for(int i=1;i<x.length;i++)if(x[i]>x[w])w=i;return w;}
-    public static void main(String[] args){
+    public static void main(String[] args)throws Exception{
         // Thousands of unvalidated training samples cannot seize control.
         RecurrentCoreV22 untrusted=new RecurrentCoreV22();
         float[] noChange=new float[26];noChange[0]=.6f;
@@ -20,6 +21,43 @@ public final class RecurrentCoreV22Regression {
         yes(Arrays.equals(priorScores,untrusted.evaluate(priorScores)),
             "Unvalidated recurrent weights overrode a learned legacy policy");
         yes(untrusted.learningBlend()>=.89f,"Untrusted fixture lacks trained samples");
+        // OTA130: reproduce REAL checkpoint failure: 16/16 physical heldout
+        // models accurate, but energy prediction worse than no-change.
+        RecurrentCoreV22 split=new RecurrentCoreV22();
+        Field sf=RecurrentCoreV22.class.getDeclaredField("samples");
+        Field vf=RecurrentCoreV22.class.getDeclaredField("validation");
+        Field mf=RecurrentCoreV22.class.getDeclaredField("modelError");
+        Field bf=RecurrentCoreV22.class.getDeclaredField("baselineError");
+        Field ef=RecurrentCoreV22.class.getDeclaredField("energyError");
+        Field ebf=RecurrentCoreV22.class.getDeclaredField("energyBase");
+        Field qf=RecurrentCoreV22.class.getDeclaredField("q");
+        for(Field field:new Field[]{sf,vf,mf,bf,ef,ebf,qf})field.setAccessible(true);
+        ((int[])sf.get(split))[3]=240;
+        ((int[])vf.get(split))[3]=60;
+        ((float[])mf.get(split))[3]=.060f;
+        ((float[])bf.get(split))[3]=.080f;
+        ((float[])ef.get(split))[3]=.012f;
+        ((float[])ebf.get(split))[3]=.0002f;
+        ((float[])qf.get(split))[3*(RecurrentCoreV22.Z+1)+RecurrentCoreV22.Z]=2f;
+        yes(split.confidence(3)>.15f,"Physical heldout confidence was wrongly disabled by energy error");
+        yes(split.energyConfidence(3)==0&&split.energyReady()==0,
+            "Unproven energy forecasting was allowed into imagination");
+        float[] physicalSense=new float[26];physicalSense[0]=.7f;
+        split.sense(physicalSense,null,null,null);
+        float[] safePrior=new float[16];safePrior[3]=-.01f;
+        float[] physicallyGuided=split.evaluate(safePrior);
+        yes(physicallyGuided[3]>safePrior[3]&&physicallyGuided[3]-safePrior[3]<=.12001f,
+            "Physical-only confidence had no bounded policy influence");
+        for(int a=0;a<16;a++)if(a!=3)yes(physicallyGuided[a]==safePrior[a],
+            "Unvalidated action displaced expert policy");
+        yes(Math.abs(split.exploration(.19f)-.19f)<.000001f,
+            "Untrusted energy planning altered expert exploration");
+        yes(split.plannedChoices()==0,"Legacy planned counter mixed physical-only choices");
+        String physicalSave=split.encode();
+        RecurrentCoreV22 loadedSplit=new RecurrentCoreV22();
+        yes(loadedSplit.restore(physicalSave)&&loadedSplit.energyConfidence(3)==0
+            &&Math.abs(loadedSplit.confidence(3)-split.confidence(3))<.0001f,
+            "Split confidence lost continuity across save/restore");
         RecurrentCoreV22 core=new RecurrentCoreV22();float[] s=new float[26];s[0]=.5f;s[6]=.4f;
         float[] local=new float[DistributedBodySense.FEATURES],origins=new float[32];
         core.sense(s,local,origins,new float[6]);float[] initial=core.state();
