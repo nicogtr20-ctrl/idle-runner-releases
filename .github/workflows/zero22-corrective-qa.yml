@@ -1,7 +1,7 @@
 name: ZERO22 corrective pre-release QA
 on:
   push:
-    branches: [feature/zero22-confidence-grip-fix, feature/zero22-split-confidence-ota130]
+    branches: [feature/zero22-confidence-grip-fix, feature/zero22-split-confidence-ota130, feature/zero22-legacy-guard-ota131]
 permissions:
   contents: read
 jobs:
@@ -104,9 +104,9 @@ jobs:
           grip=(p/'SquareGripPuzzle.java').read_text()
           game=(p/'GameActivity.java').read_text()
           mind=(p/'SensorimotorMind.java').read_text()
-          assert 'Math.min(.85f,maturity*energyTrust)' in core
-          assert 'Math.min(.16f,.35f*maturity*physicalTrust)' in core
-          assert 'if(energyTrust<=0)delta=clip(delta,-.12f,.12f);' in core
+          assert 'return oldScores==null?scores:oldScores.clone();' in core
+          assert 'return previous;' in core
+          assert 'SHADOW POLICY' in core
           assert 'energyConfidence(a)' in core
           assert 'stabilizeExistingGrip' in grip
           assert 'environmentEffectSinceAction+=Math.min(2f,actualBoxMotion);' in game
