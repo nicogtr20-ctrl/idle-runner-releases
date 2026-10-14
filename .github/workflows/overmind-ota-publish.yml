@@ -901,7 +901,7 @@ jobs:
           'MaterialSymbioteRegression.java':'a162c986395bcc4784401e72a83458b8b93f33da',
           'MaterialGeometry.java':'05d80792976d0d1eb7774319c4bb957404fe645b',
           'MaterialContactConstraints.java':'c42de2af48daa446e288f224b392b5f2243505e9',
-          'MaterialContactRegression.java':'aaa4b93d600a33e1abb2159d9f489bdd6b3d4059',
+          'MaterialContactRegression.java':'f71b1550cb6dad10c8298cb9997e745c1ad94487',
           'BodyProprioception.java':'2b83452af357a7a3b8c02cee0ba9792ce0b81ada',
           'DistributedBodySense.java':'75c1561436fef92f07b7fcb339f1a36eb87e7c62',
           'DistributedBodyRegression.java':'e575ec3f4a0a05ce3c32001f6b7026bbbcd0f2f2',
