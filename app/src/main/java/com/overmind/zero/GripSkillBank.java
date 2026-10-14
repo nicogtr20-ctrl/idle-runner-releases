@@ -30,6 +30,12 @@ public final class GripSkillBank {
         Pair(Skill skill){hand=skill.hand.clone();membrane=skill.membrane.clone();}
     }
     private final ArrayList<Skill> entries=new ArrayList<>();
+    // A full nine-slot archive previously rejected every one-frame newcomer:
+    // it never had a chance to accumulate proof, even after hundreds of
+    // genuinely successful holds. These temporary prospects accumulate ONLY
+    // witnessed physics; they are not controllers and never select actions.
+    private static final int MAX_PROSPECTS=5;
+    private final ArrayList<Skill> prospects=new ArrayList<>();
     public int restored=0,archived=0;
     public int count(){return entries.size();}
     private static boolean valid(float[] w,int required){
@@ -93,20 +99,63 @@ public final class GripSkillBank {
                 return false;
             }
         }
-        Skill candidate=new Skill(hand,membrane);
-        candidate.heldFrames=1;
-        if(validContext(sensory)){
-            candidate.sensed=sensory.clone();
-            candidate.verifiedContextFrames=1;
+        // For a full archive, keep gathering REAL evidence about newly
+        // evolved techniques until they can legitimately replace a weaker
+        // skill. Previously every trial was evaluated at heldFrames=1 and
+        // thrown away, even if it succeeded for minutes afterwards.
+        Skill candidate=null;
+        if(entries.size()==MAX)for(Skill p:prospects){
+            if(same(p,hand,membrane)&&
+               (p.sensed==null||!validContext(sensory)||
+                contextDistance(p.sensed,sensory)<.21f)){
+                candidate=p;break;
+            }
         }
-        if(opposed)candidate.opposedFrames=1;
-        candidate.doorMotion=actualDoorMotion;
+        boolean newProspect=candidate==null;
+        if(newProspect){
+            candidate=new Skill(hand,membrane);
+            candidate.heldFrames=1;
+            candidate.opposedFrames=opposed?1:0;
+            candidate.doorMotion=actualDoorMotion;
+            if(validContext(sensory)){
+                candidate.sensed=sensory.clone();
+                candidate.verifiedContextFrames=1;
+            }
+        }else{
+            candidate.heldFrames=Math.min(100000,candidate.heldFrames+1);
+            if(opposed)
+                candidate.opposedFrames=Math.min(100000,candidate.opposedFrames+1);
+            candidate.doorMotion=Math.min(100000,candidate.doorMotion+
+                Math.min(10,actualDoorMotion));
+            if(validContext(sensory)){
+                if(candidate.sensed==null)candidate.sensed=sensory.clone();
+                else{
+                    float rate=1f/Math.min(20,++candidate.verifiedContextFrames);
+                    for(int i=4;i<SensorimotorMind.S;i++)
+                        candidate.sensed[i]+=rate*(sensory[i]-candidate.sensed[i]);
+                }
+            }
+        }
         if(entries.size()==MAX){
+            // At least five real successful adhesion frames, not a look-up
+            // based on mere touching, are needed to challenge the archive.
+            if(newProspect){
+                if(prospects.size()>=MAX_PROSPECTS){
+                    int weakest=0;
+                    for(int i=1;i<prospects.size();i++)
+                        if(prospects.get(i).rank()<prospects.get(weakest).rank())
+                            weakest=i;
+                    prospects.remove(weakest);
+                }
+                prospects.add(candidate);
+            }
+            if(candidate.heldFrames<5||candidate.opposedFrames<3)return false;
             int worst=0;
             for(int i=1;i<entries.size();i++)
                 if(entries.get(i).rank()<entries.get(worst).rank())worst=i;
             if(candidate.rank()<=entries.get(worst).rank())return false;
             entries.remove(worst);
+            prospects.remove(candidate);
         }
         entries.add(candidate);archived++;
         return true;
@@ -137,6 +186,27 @@ public final class GripSkillBank {
                 score=1f-distance/.28f + .07f*Math.min(1f,s.rank()/160f);
             }else score=s.rank();
             if(best==null||score>bestScore){best=s;bestScore=score;}
+        }
+        if(best==null)return null;
+        restored++;
+        return new Pair(best);
+    }
+    /** Invoked ONLY after many actual failed holds while ZERO independently
+     * kept requesting adhesion against a real solid. If no contextual match
+     * exists, allow a physically tested historical controller as last resort.
+     * Returning weights never turns adhesion ON or chooses movement. */
+    public Pair retrieveAfterRepeatedFailure(float[] hand,float[] membrane,
+                                            float[] sensory){
+        Pair match=retrieve(hand,membrane,sensory);
+        if(match!=null)return match;
+        if(!valid(hand,ContactLearning.PARAMS)||
+           !valid(membrane,Morphology.PARAMS))return null;
+        Skill best=null;
+        for(Skill s:entries){
+            if(same(s,hand,membrane))continue;
+            // Do not recover unproven contact or a merely simulated grip.
+            if(s.opposedFrames<8||s.doorMotion<2f)continue;
+            if(best==null||s.rank()>best.rank())best=s;
         }
         if(best==null)return null;
         restored++;
@@ -202,6 +272,7 @@ public final class GripSkillBank {
                 parsed.add(item);
             }
             entries.clear();entries.addAll(parsed);
+            prospects.clear();
             restored=former;archived=saved;return true;
         }catch(RuntimeException ignored){return false;}
     }
@@ -249,6 +320,46 @@ public final class GripSkillBank {
             throw new AssertionError("Skill storage did not roundtrip");
         if(reloaded.restore("grip1|0|1|1|NaN,1,3")||reloaded.count()!=2)
             throw new AssertionError("Broken storage overwrote valid skills");
+        // Reproduction of the real defect: nine successful historical
+        // skills filled the archive; a better new technique was rejected
+        // frame after frame because its first frame could not outrank them.
+        GripSkillBank full=new GripSkillBank();
+        float[] mem=Morphology.virgin(new java.util.Random(4));
+        for(int i=0;i<MAX;i++){
+            float[] unique=mem.clone();
+            unique[0]+=(i+1)*.4f;
+            if(!full.observe(hand,unique,true,true,.1f))
+                throw new AssertionError("Historical verified skill missing");
+        }
+        if(full.count()!=MAX)throw new AssertionError("Full archive setup");
+        float[] newcomer=mem.clone();newcomer[0]=-3.8f;
+        if(full.observe(hand,newcomer,true,true,.1f))
+            throw new AssertionError("Unproven first grip evicted history");
+        boolean promoted=false;
+        for(int i=0;i<25;i++)
+            promoted|=full.observe(hand,newcomer,true,true,1f);
+        if(!promoted||full.count()!=MAX||
+           full.retrieve(hand,mem)==null)
+            throw new AssertionError("Real repeated new grip cannot enter full archive");
+        // In ordinary contexts, do not recover an unrelated technique.
+        // After independently selected adhesion fails repeatedly, allow a
+        // historically proven physical controller without issuing a command.
+        GripSkillBank recovery=new GripSkillBank();
+        float[] oldMem=mem.clone();oldMem[0]+=.5f;
+        for(int i=0;i<12;i++)
+            recovery.observe(hand,oldMem,true,true,3f,east);
+        float[] currentMem=mem.clone();currentMem[0]+=.9f;
+        if(recovery.retrieve(hand,currentMem,west)!=null)
+            throw new AssertionError("Ordinary retrieval ignored context gate");
+        Pair rescued=recovery.retrieveAfterRepeatedFailure(hand,currentMem,west);
+        if(rescued==null||rescued.membrane[0]!=oldMem[0]||
+           recovery.retrieveAfterRepeatedFailure(hand,oldMem,west)!=null)
+            throw new AssertionError("Verified fallback missing or invented");
+        // Encode remains grip2; existing saved profiles must round-trip
+        // without embedding transient or unsupervised skill prospects.
+        GripSkillBank savedFull=new GripSkillBank();
+        if(!savedFull.restore(full.encode())||savedFull.count()!=MAX)
+            throw new AssertionError("Full archive persistence broken");
         System.out.println("ZERO-009.9 actual sustained grip archive and no automatic grip command verified");
     }
 }
