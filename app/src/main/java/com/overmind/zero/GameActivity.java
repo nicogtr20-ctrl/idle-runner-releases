@@ -990,6 +990,14 @@ public final class GameActivity extends Activity {
                 for(int i=0;i<frameSteps;i++){
                     if(fullSpeed&&i>0&&(i&15)==0&&System.nanoTime()>=burstDeadline)break;
                     float slice=fullSpeed?TEST_MAX_FIXED_DT:Math.min(dt,.035f);
+                    // OTA144 CRITICAL: Android's first onDraw after launch,
+                    // save-slot switch or Activity resume has lastFrame==0,
+                    // so dt==0. The new physical fluid solver correctly
+                    // rejects zero-duration integration. Do not execute ANY
+                    // physics, sensor or life events until dt>0. In OTA143
+                    // this unguarded first frame crashed every new Symbiote
+                    // immediately and again on every app relaunch.
+                    if(!Float.isFinite(slice)||slice<=0f)continue;
                     if(fullSpeed)testMaxSimSeconds+=slice;
                     float energyBeforeFrame=reserve;
                     int lifeStamp=episode;
