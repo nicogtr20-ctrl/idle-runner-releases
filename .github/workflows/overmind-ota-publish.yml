@@ -872,7 +872,7 @@ jobs:
           'EnergyLifetimeCounters.java':'7c0a9d815937a39c5cfdaddb01896b39536d8afe',
           'ObjectExperienceV20.java':'39ada3745f8b22769e67c00f5def9a5a3ed6ba1a',
           'ObjectExperienceV20Regression.java':'44bccc8ebe5971ed5226e50f62f8e27f7fbc6ddd',
-          'GameActivity.java':'b37c8d82a6b0327a3455ede3a1fe298493310232',
+          'GameActivity.java':'294fb3346a78e615b493c249922fe8208aeb0f4b',
           'InstrumentalNavigation.java':'fb95ae5b19a8b2602cb4338641d8851bebf8fa26',
           'BehavioralLaboratory.java':'8a35099ddb4b4d7ef9a9a334cb2e50b9477285d8',
           'BehavioralLabActivity.java':'007fc2986932cbe0a3956d8d2c36e94e7dd2a47a',
@@ -882,13 +882,13 @@ jobs:
           'GameSceneSnapshot.java':'e38c0b8def6c363af74dfabdd4eac96bf95ac2d8',
           'SquareGripPuzzle.java':'781d250161f5c4fa8b4a7dfd57eae932682e0f19',
           'SquareCollisionSolver.java':'88db7fb60d0172ac39c47fcf312ff016b4734465',
-          'WorldPlacement.java':'83a79b677d5699841747839bc0969f7b32821914',
+          'WorldPlacement.java':'c0c1b7d52645cf1d4211a0821edfdd10b7be41c3',
           'GateBehaviorMetrics.java':'9afcdc3889943e76a80ca58f728401bc88eb5502',
           'GateLifeJournal.java':'351b1107f90d1dffd91377d1709459324211ef62',
           'ContextualMotionProbe.java':'064988e420645b7d1c1be3235cb83ca3884e01f8',
           'OpticalCues.java':'c41adea2d29deca1dc0580b44fabb15363fae865',
           'OpticalCueRegression.java':'78a9df279beb12b450f7792b0a3871762ec1d177',
-          'HabitatContinuity.java':'d08aafff5ffa93380384fc427ad1095b93316467',
+          'HabitatContinuity.java':'a8f8c5b51ae66f58b024167daa395c3e757ec9a6',
           'GripSurfaceComposition.java':'04847c6180ee638961d033e8b4ac01fd574dd312',
           'BrainToolsActivity.java':'9acf4242fd5d4df323f6cff49578aed4b544c1da',
           'MortalityLearning.java':'106683098e58d03a1b901fd7293549ebd5bb6715',
@@ -923,6 +923,15 @@ jobs:
           assert 'Math.min(.85f,maturity*trust)' in (root/'RecurrentCoreV22.java').read_text()
           assert 'stabilizeExistingGrip' in (root/'SquareGripPuzzle.java').read_text()
           assert 'environmentEffectSinceAction+=Math.min(2f,actualBoxMotion);' in (root/'GameActivity.java').read_text()
+          # OTA123 world physics only: do not replace an occupied chamber,
+          # don't cull visible unconsumed gem, and render a purple rim glow.
+          game=(root/'GameActivity.java').read_text()
+          habitat=(root/'HabitatContinuity.java').read_text()
+          placement=(root/'WorldPlacement.java').read_text()
+          assert '!HabitatContinuity.roomOccupied(chamber,creature,surface)' in game
+          assert 'new int[]{0x805f32d0,0x505f32d0,0x005f32d0}' in game
+          assert 'e.physicalLaw()==4&&!e.concealed&&!e.consumed' in habitat
+          assert 'every energy box has exactly one purple gem' in placement
           for name,pin in pins.items():
             data=(root/name).read_bytes()
             assert sha1(b'blob '+str(len(data)).encode()+b'\0'+data).hexdigest()==pin,name

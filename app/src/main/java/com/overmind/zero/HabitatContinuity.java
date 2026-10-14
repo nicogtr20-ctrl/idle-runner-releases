@@ -41,6 +41,10 @@ public final class HabitatContinuity {
     }
     private static boolean protectedByInteraction(ArrayList<UnknownWorld.Entity> world,
                           UnknownWorld.Entity e,MotorBrain.Body body,Morphology.Surface skin){
+        // An uncovered, uncollected rare gem is a real persistent world
+        // resource. Distance and the 24-object procedural soft cap must not
+        // delete it. Consumed energy still disappears normally on contact.
+        if(e!=null&&e.physicalLaw()==4&&!e.concealed&&!e.consumed)return true;
         if(engaged(e,body,skin))return true;
         // Real placed building materials remain present for manipulation near
         // ZERO; more distant ones are archived and streamed back on return.
@@ -119,6 +123,23 @@ public final class HabitatContinuity {
         }
     }
 
+    /** The room cannot be replaced while ANY part of ZERO's real material
+     * is inside its walls, gate or close approach. This is world lifecycle
+     * safety, never a movement or decision preference. */
+    public static boolean roomOccupied(ScarcityLab room,MotorBrain.Body body,
+                                       Morphology.Surface skin){
+        if(room==null||body==null)return false;
+        // Small guard band prevents a chamber vanishing as ZERO squeezes
+        // through the gate; the body centroid alone can be outside a wall.
+        final float margin=18f;
+        if(room.overlapsRoom(body.cx,body.cy,margin))return true;
+        for(int i=0;i<MotorBrain.N;i++)
+            if(room.overlapsRoom(body.x[i],body.y[i],5f))return true;
+        if(skin!=null)for(int i=0;i<Morphology.POINTS;i++)
+            if(room.overlapsRoom(skin.x[i],skin.y[i],3f))return true;
+        return false;
+    }
+
     /** Try nearby physically vacant locations instead of manifesting a room
      * OVER an existing solid that ZERO is currently learning to handle. */
     public static ScarcityLab clearChamber(float x,float y,
@@ -165,6 +186,32 @@ public final class HabitatContinuity {
         enforceLimit(world,body,skin,null);
         yes(world.contains(cover)==world.contains(hidden),
             "Covered source and cover were orphaned by recycling");
+        // A successfully revealed gem may NEVER vanish from world streaming
+        // or soft-cap trimming before its one real physical pickup.
+        UnknownWorld.Entity uncovered=new UnknownWorld.Entity(525,280,0,4);
+        world.add(uncovered);
+        pruneDistant(world,body,skin,null,600f);
+        body.cx=3000;body.cy=3000;
+        pruneDistant(world,body,skin,null,600f);
+        enforceLimit(world,body,skin,null);
+        yes(world.contains(uncovered)&&!uncovered.consumed,
+            "Visible uncollected +40 gem lost in distant/cap recycling");
+        uncovered.touch(0,0);
+        pruneDistant(world,body,skin,null,600f);
+        yes(!world.contains(uncovered),
+            "Already collected gem did not disappear");
+        ScarcityLab occupied=new ScarcityLab(0,0);
+        body.cx=occupied.ox+200;body.cy=occupied.oy;
+        yes(roomOccupied(occupied,body,null),
+            "Room vanished even though ZERO was in the chamber");
+        body.cx=-300;body.cy=0;
+        yes(!roomOccupied(occupied,body,null),
+            "Distant ZERO incorrectly pinned the chamber");
+        // Real membrane entering an otherwise remote room also protects it.
+        skin.x[0]=occupied.ox+200;skin.y[0]=occupied.oy;
+        yes(roomOccupied(occupied,body,skin),
+            "Room vanished with ONE physical membrane patch inside");
+        skin.x[0]=-300;skin.y[0]=0;
         // Long limbs still protect the physical contact when the core is far.
         body.cx=-300;body.cy=0;
         skin.x[3]=cover.x-SquareGripPuzzle.HALF;

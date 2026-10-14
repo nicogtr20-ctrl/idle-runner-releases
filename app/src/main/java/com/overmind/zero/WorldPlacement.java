@@ -118,6 +118,44 @@ public final class WorldPlacement {
                     "Expansion spawned over a live older object");
             }
         }
-        System.out.println("WorldPlacement PASS: no overlapping resources, boxes, gate or hidden-source orphan");
+        // Every actual energy cover comes with exactly one existing finite
+        // +40 rare source, both in raw generation and after legal placement.
+        // Blank metal panels are intentionally NOT energy covers.
+        for(int episode=1;episode<=48;episode++){
+            ArrayList<UnknownWorld.Entity> raw=UnknownWorld.newHabitat(
+                episode,episode*800f,0,false);
+            ArrayList<UnknownWorld.Entity> placed=spawn(
+                episode,episode*800f,0,false,null,
+                new ArrayList<UnknownWorld.Entity>());
+            for(ArrayList<UnknownWorld.Entity> sample:
+                java.util.Arrays.asList(raw,placed)){
+                int covers=0,hidden=0;
+                for(UnknownWorld.Entity box:sample){
+                    if(!box.isBilateralBox())continue;
+                    covers++;
+                    int matching=0;
+                    for(UnknownWorld.Entity energy:sample)
+                        if(energy.physicalLaw()==4&&energy.concealed&&
+                           !energy.consumed&&
+                           energy.spawnX==box.spawnX&&
+                           energy.spawnY==box.spawnY)matching++;
+                    require(matching==1,
+                        "Energy box missing unique purple gem at "+episode);
+                }
+                for(UnknownWorld.Entity energy:sample){
+                    if(energy.physicalLaw()!=4)continue;
+                    hidden++;
+                    int matching=0;
+                    for(UnknownWorld.Entity box:sample)
+                        if(box.isBilateralBox()&&
+                           box.spawnX==energy.spawnX&&
+                           box.spawnY==energy.spawnY)matching++;
+                    require(matching==1,
+                        "Orphan purple gem at episode "+episode);
+                }
+                require(covers==hidden,"Mismatch between covers and purple gems");
+            }
+        }
+        System.out.println("WorldPlacement PASS: every energy box has exactly one purple gem; no overlapping resources");
     }
 }

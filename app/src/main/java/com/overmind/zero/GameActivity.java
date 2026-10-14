@@ -756,7 +756,11 @@ public final class GameActivity extends Activity {
             reserve=Math.max(0,reserve-(scarcity?.30f:.09f)*dt);
             mortality.energyFlows(dt,energyBeforeDrain-reserve,0,0);
             if(scarcity&&elapsedLife>=nextChamber&&
-                (chamber==null||chamber.reachedEnergy))
+                (chamber==null||chamber.reachedEnergy)&&
+                // A completed room stays physical while ZERO or even one
+                // piece of its deformable membrane remains inside. It may
+                // be recycled only after real exit, never on timer alone.
+                !HabitatContinuity.roomOccupied(chamber,creature,surface))
                 activateChamber(false);
             for(UnknownWorld.Entity object:environment){
                 float ox=object.x,oy=object.y;
@@ -1492,10 +1496,16 @@ public final class GameActivity extends Activity {
                             concealedLight=true;break;
                         }
                     if(concealedLight){
-                        paint.setShader(new RadialGradient(x,y,34f,
-                            new int[]{0x5530d9ce,0x2530d9ce,0x0030d9ce},
+                        // Purple photon spill is visible outside the
+                        // opaque cover. This changes only rendering; ZERO's
+                        // weak, directional optical signal remains physical.
+                        float pulse=.85f+.15f*(float)Math.sin(uiTime*2.1f);
+                        paint.setShader(new RadialGradient(x,y,38f,
+                            new int[]{0x805f32d0,0x505f32d0,0x005f32d0},
                             null,Shader.TileMode.CLAMP));
-                        c.drawRoundRect(x-34,y-34,x+34,y+34,8,8,paint);
+                        paint.setAlpha((int)(255*pulse));
+                        c.drawRoundRect(x-38,y-38,x+38,y+38,9,9,paint);
+                        paint.setAlpha(255);
                         paint.setShader(null);
                     }
                     paint.setColor(0xff0a131e);
