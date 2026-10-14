@@ -137,6 +137,7 @@ public final class RecurrentCoreV22Regression {
         RecurrentCoreV22 brainA=new RecurrentCoreV22(),brainB=new RecurrentCoreV22();
         yes(brainA.restore(encoded)&&brainB.restore(encoded),
             "Migrated recurrent state not accessible in both profiles");
+        long savedRealTransitions=brainA.transitions();
         virginLegacy.attachActiveCore(brainA);
         experiencedLegacy.attachActiveCore(brainB);
         int same=0;
@@ -155,7 +156,7 @@ public final class RecurrentCoreV22Regression {
         yes(brainA.primaryExploration(.01f)>brainA.primaryExploration(.9f),
             "Low energy must increase the PRIMARY learner's own experimentation");
         yes(core.physicalReady()>0,"Predictive world learning was lost");
-        yes(brainA.transitions()==core.transitions(),
+        yes(brainA.transitions()==savedRealTransitions,
             "Non-executed policy queries fabricated real experience");
         System.out.println("PASS ZERO22 OTA132: recurrent PRIMARY owns 120/120 live choices independent of prior TD, intact saves, sensorimotor evidence, real recurrence, imagination, rare replay, terminal, corruption");
 
