@@ -139,7 +139,7 @@ public final class SaveSlotsActivity extends Activity {
     }
     private void newGame(){
         confirm("CREARE UN NUOVO ZERO?",
-            "Inizierà con un cervello vergine e senza esperienze. "+
+            "Inizierà con un cervello vergine e il NUOVO CORPO SIMBIONTE fluido. "+
             "I salvataggi con nome non verranno cancellati.\n\n"+
             "Il personaggio attuale verrà conservato in «RECUPERA ZERO PRECEDENTE», "+
             "ma quel backup sarà sostituito al prossimo cambio partita.",
@@ -182,8 +182,8 @@ public final class SaveSlotsActivity extends Activity {
         }
         LinearLayout start=card(0xff312c37);
         start.addView(text("NUOVA PARTITA",14,GOLD,true));
-        start.addView(text("Un ZERO vergine, senza cancellare gli slot salvati.",12,MUTED,false));
-        button(actions(start),"＋ CREA NUOVO ZERO",GOLD,this::newGame);
+        start.addView(text("Un ZERO vergine con corpo SYMBIOTE, senza alterare gli ZERO storici salvati.",12,MUTED,false));
+        button(actions(start),"＋ CREA ZERO SIMBIONTE",GOLD,this::newGame);
 
         content.addView(text("I TUOI SLOT",17,WHITE,true));
         for(int i=0;i<SaveSlotStore.SLOTS;i++){
