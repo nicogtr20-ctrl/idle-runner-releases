@@ -168,6 +168,33 @@ public final class SymbioteMatterV1Regression {
                 MaterialGeometry.selfCrossings(olderSkin)==0,
             "late-life commands damaged fluid topology");
 
+        // OTA148 actual-phone topology-lock reproducer. Real exported
+        // working Symbiote had one crossed edge and ALL 96 shell velocities
+        // exactly zero, even while 74 internal parcels kept moving.
+        // Swapping two adjacent membrane points simulates a one-crossing
+        // persisted scene without food, scripted gait or learning reward.
+        MotorBrain.Body tBody=new MotorBrain.Body();
+        Morphology.Surface tSkin=new Morphology.Surface(tBody);
+        SymbioteMatterV1 tMatter=new SymbioteMatterV1();
+        tMatter.reset(tBody,tSkin);
+        int a=17,b=18;
+        float temp=tSkin.x[a];tSkin.x[a]=tSkin.x[b];tSkin.x[b]=temp;
+        temp=tSkin.y[a];tSkin.y[a]=tSkin.y[b];tSkin.y[b]=temp;
+        require(MaterialGeometry.selfCrossings(tSkin)>0,
+            "invalid-scene topology fixture not crossed");
+        for(int k=0;k<90;k++)tMatter.step(tBody,tSkin,calm,.025f);
+        require(MaterialGeometry.selfCrossings(tSkin)==0,
+            "persisted membrane crossing never physically recovers");
+        float[] tMove=new float[calm.length];
+        tMove[0]=.88f;tMove[4]=.64f;tMove[8]=.32f;
+        for(int k=0;k<60;k++)tMatter.step(tBody,tSkin,tMove,.025f);
+        int activeSites=0;
+        for(int i=0;i<Morphology.POINTS;i++)
+            if(Math.hypot(tSkin.vx[i],tSkin.vy[i])>.015f)activeSites++;
+        require(activeSites>=8,
+            "crossed-scene recovery still freezes all 96 membrane velocities");
+        require(tMatter.invalid==0,"recovering crossed scene caused invalid fluid");
+
         motor.consequence(20,0,blob.work,true,false);
         String saved=motor.encode();
         SymbioteMotorHeadV1 copy=new SymbioteMotorHeadV1();
