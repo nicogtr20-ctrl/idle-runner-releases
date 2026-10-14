@@ -185,18 +185,11 @@ public final class Zero20PassiveSnapshot {
             boolean loaded=head.restore(str(values,SymbioteMotorHeadV1.KEY));
             symbio.put("cortexMotorLoaded",loaded);
             if(loaded)symbio.put("cortexSummary",head.summary());
-            // Physics checkpoint contains only real particle positions;
-            // export aggregate diagnostics, not a private body-world scene.
-            try{
-                org.json.JSONObject checkpoint=new org.json.JSONObject(str(values,"physical_scene_v100"));
-                org.json.JSONObject physics=checkpoint.getJSONObject("physical");
-                org.json.JSONObject material=physics.getJSONObject("symbiote");
-                symbio.put("materialParticles",SymbioteMatterV1.INNER+MotorBrain.N);
-                symbio.put("membraneParticles",Morphology.POINTS);
-                symbio.put("fluidSteps",material.getLong("ticks"));
-                symbio.put("nonfiniteErrors",material.getLong("invalid"));
-                symbio.put("areaAtBirth",material.getDouble("area"));
-            }catch(Exception ignored){}
+            // Keep JVM-side telemetry free of Android-only JSON libraries.
+            // Full physical checkpoint remains in the named save; no private
+            // particle positions are exported by this passive digest.
+            symbio.put("materialParticles",SymbioteMatterV1.INNER+MotorBrain.N);
+            symbio.put("membraneParticles",Morphology.POINTS);
         }
         result.put("symbioteBody",symbio);
         String seqRaw=str(values,CausalSequenceV23.KEY);
