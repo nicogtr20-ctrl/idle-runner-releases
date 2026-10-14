@@ -128,26 +128,36 @@ public final class RecurrentCoreV22Regression {
             yes(eager.action==lazy.action,"boundary sensor optimization altered actions");
         }
         yes(eager.serialize().equals(lazy.serialize()),"boundary sensor optimization changed legacy learning");
-        // A virgin replacement preserves an already experienced policy
-        // while it collects its own observations; it must not restart epsilon.
-        SensorimotorMind prior=new SensorimotorMind(),migration=new SensorimotorMind();
-        prior.restore(eager.serialize());migration.restore(eager.serialize());
-        migration.attachActiveCore(new RecurrentCoreV22());
-        for(int i=0;i<100;i++)yes(prior.choose(s)==migration.choose(s),"cold replacement changed experienced policy before any evidence");
-        // OTA131: same learned legacy motor policy MUST choose exactly the
-        // same actions when CORE has large Q readouts but no validated outcome.
-        // Recurrent learning continues internally while policy stays stable.
-        SensorimotorMind baseline=new SensorimotorMind(),guarded=new SensorimotorMind();
-        guarded.attachActiveCore(restored);
-        int matched=0;
+        // OTA132: the recurrent controller owns ALL live action selection.
+        // Even two wildly different old TD policies must yield identical
+        // action sequences when given identical rc22 state and observations.
+        SensorimotorMind virginLegacy=new SensorimotorMind();
+        SensorimotorMind experiencedLegacy=new SensorimotorMind();
+        experiencedLegacy.restore(eager.serialize());
+        RecurrentCoreV22 brainA=new RecurrentCoreV22(),brainB=new RecurrentCoreV22();
+        yes(brainA.restore(encoded)&&brainB.restore(encoded),
+            "Migrated recurrent state not accessible in both profiles");
+        virginLegacy.attachActiveCore(brainA);
+        experiencedLegacy.attachActiveCore(brainB);
+        int same=0;
         for(int i=0;i<120;i++){
-            int oldChoice=baseline.choose(s),newChoice=guarded.choose(s);
-            yes(oldChoice==newChoice,"Recurrent shadow overrode learned action at "+i+": "+oldChoice+"/"+newChoice);
-            matched++;
+            int a=virginLegacy.choose(s),b=experiencedLegacy.choose(s);
+            yes(a==b,"Legacy Q policy influenced PRIMARY action at "+i+": "+a+"/"+b);
+            same++;
         }
-        yes(core.physicalReady()>0,"World model ceased learning after policy protection");
-        yes(!core.summary().contains("ZERO 2.2 ACTIVE:"),
-            "Readout mislabels a deliberately protected core as active actuator");
-        System.out.println("PASS ZERO22 OTA131: body+origins, real recurrence, physical/energy heldouts, SHADOW active-learning, all legacy choices unchanged, rare replay, terminal, corruption, slot codec and zero-reset parity; matched="+matched+"/120");
+        yes(brainA.primaryDecisionsSession()==120&&brainB.primaryDecisionsSession()==120,
+            "Primary does not own every decision");
+        yes(brainA.summary().contains("ZERO 2.2 PRIMARY:"),
+            "Brain incorrectly described as passive shadow");
+        float[] primaryScores=brainA.primaryScores(null);
+        yes(max(primaryScores)==3,
+            "A genuinely learned positive action is lost by the sole arbiter");
+        yes(brainA.primaryExploration(.01f)>brainA.primaryExploration(.9f),
+            "Low energy must increase the PRIMARY learner's own experimentation");
+        yes(core.physicalReady()>0,"Predictive world learning was lost");
+        yes(brainA.transitions()==core.transitions(),
+            "Non-executed policy queries fabricated real experience");
+        System.out.println("PASS ZERO22 OTA132: recurrent PRIMARY owns 120/120 live choices independent of prior TD, intact saves, sensorimotor evidence, real recurrence, imagination, rare replay, terminal, corruption");
+
     }
 }
