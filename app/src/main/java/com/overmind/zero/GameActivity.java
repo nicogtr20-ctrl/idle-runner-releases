@@ -69,6 +69,10 @@ public final class GameActivity extends Activity {
         ContextualMotionProbe motionShadow=new ContextualMotionProbe();
         MortalityLearning mortality=new MortalityLearning();
         DecisionBlackbox decisionBlackbox=new DecisionBlackbox();
+        // Passive, never read by the brain/actuators. Exact evidence about
+        // blue gems, material pickup geometry, decorative trail and two-box
+        // entrapment is saved independently of the learning weights.
+        ContactGeometryForensics contactGeometry=new ContactGeometryForensics();
         MotorAutonomyGuard motorGuard=new MotorAutonomyGuard();
         MotorSkillBank skillBank=new MotorSkillBank();
         GripSkillBank gripBank=new GripSkillBank();
@@ -195,6 +199,9 @@ public final class GameActivity extends Activity {
                !prefs.edit().remove(SaveSlotStore.PENDING_RELOAD).commit())
                 throw new IllegalStateException("Unable to apply save-slot switch");
             boolean wasReset=consumeResetRequest();
+            contactGeometry=new ContactGeometryForensics();
+            if(!wasReset)
+                contactGeometry.restore(prefs.getString(ContactGeometryForensics.KEY,""));
             lifeStats=new LifeStatistics();
             boolean restoredLifeStats=lifeStats.restore(prefs.getString(LifeStatistics.KEY,""));
             energyTotals=new EnergyLifetimeCounters();
@@ -453,6 +460,7 @@ public final class GameActivity extends Activity {
                 if(!prefs.edit().putString("physical_scene_v100",snapshot.toString())
                     .putString(DecisionBlackbox.CURRENT,decisionBlackbox.encodeCurrent())
                     .putString(GateLifeJournal.CURRENT,gateJournal.encode())
+                    .putString(ContactGeometryForensics.KEY,contactGeometry.encode())
                     .commit())
                     throw new IllegalStateException("Impossibile salvare la scena fisica");
                 saveGripObserver();
@@ -592,6 +600,7 @@ public final class GameActivity extends Activity {
               .putString(CausalExperiments.KEY,causalExperiments.encode())
               .putString(InstrumentalNavigation.KEY,navigation.encode())
               .putString(GoalContinuity.KEY,intentions.encode())
+              .putString(ContactGeometryForensics.KEY,contactGeometry.encode())
               .putString(GateBehaviorMetrics.KEY,gateMetrics.encode())
               .putString(ContextualMotionProbe.KEY,motionShadow.encode())
               .putString(MortalityLearning.KEY,mortality.encode())
@@ -642,6 +651,7 @@ public final class GameActivity extends Activity {
             shelter.capture(environment);
             shelter.newLife();
             gripObserver.newLife();
+            contactGeometry.newLife();
             // Only initial boot or actual simulated death restarts the body.
             bestLifeDistance=Math.max(bestLifeDistance,lifeDistance);
             lifeDistance=0;travelSinceAction=0;forwardSinceAction=0;
@@ -856,7 +866,15 @@ public final class GameActivity extends Activity {
                     energySinceAction[object.signature]+=reserve-before;
                     mind.observe(object.signature,delta,0);
                     decisionBrain.learn(object,before,reserve,0);
-                    if(delta>0)energyEaten++;
+                    if(delta>0){
+                        // Record the EXACT accepted pickup, including whether
+                        // it was physical material OR the legacy extra-18
+                        // distance. The centroid trail is never a collider.
+                        contactGeometry.pickup(episode,elapsedLife,sensorMind.action,
+                            creature,surface,object,reserve-before,trailX,trailY,
+                            trailCount,"habitat");
+                        energyEaten++;
+                    }
                     contactsThisLife++;chosenObject=null;goalTimer=0;
                     lastEvent="STIMOLO "+(object.signature+1)+"  ENERGIA "+(delta>=0?"+":"")+(int)delta;
                     eventTime=4;
@@ -1163,6 +1181,11 @@ public final class GameActivity extends Activity {
                     // Restore the union of physically valid object-owned holds
                     // for vision and next-frame tactile input only.
                     GripSurfaceComposition.compose(surface,chamber,environment);
+                    // Sample only if two separately held energy covers
+                    // physically constrain the SAME body; passive at most
+                    // every 8 simulated seconds, including at TEST MAX.
+                    contactGeometry.trap(episode,elapsedLife,sensorMind.action,
+                        creature,surface,environment,trailX,trailY,trailCount);
                     // ZERO2 shadow: actual 96-site, simultaneously composed
                     // physics-owned holds sampled at every 35ms substep,
                     // including grips shorter than the ~650ms decision tick.
@@ -1213,6 +1236,10 @@ public final class GameActivity extends Activity {
                         energyTotals.record(reserve-prior,true);
                         mortality.energyFlows(0,0,0,Math.max(0,reserve-prior));
                         lifeStats.roomSolved();
+                        if(reserve>prior)
+                            contactGeometry.pickup(episode,elapsedLife,sensorMind.action,
+                                creature,surface,chamber.food,reserve-prior,
+                                trailX,trailY,trailCount,"room");
                         eventEnergyDeltaSinceAction+=reserve-prior;
                         sensorMind.contactOutcome(reserve-prior,chamber.food.signature);
                         energySinceAction[chamber.food.signature]+=reserve-prior;
