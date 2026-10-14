@@ -525,3 +525,8 @@ Richiesta utente: APK pronta con centro decisionale rivisto attivo, conservazion
 - Pacchetto Android firmato pubblicato su Vercel (codice 1131).
 - SHA-256: `8984cbe90c5af831b440346eb37933aa982556b5bdc9b9dcddc98e374a752bfd`.
 - APK: `/apk/overmind-zero-1131-8984cbe90c5a.apk`.
+
+## OTA 0.11.6-ota.135 — 2026-10-14T19:05:25.694598+00:00
+- Pacchetto Android firmato pubblicato su Vercel (codice 1135).
+- SHA-256: `f306246fbac259cb518277a1fca253372a09b5c9ccefb89855c1c838cceae109`.
+- APK: `/apk/overmind-zero-1135-f306246fbac2.apk`.
