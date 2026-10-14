@@ -891,7 +891,7 @@ jobs:
           'EnergyLifetimeCounters.java':'7c0a9d815937a39c5cfdaddb01896b39536d8afe',
           'ObjectExperienceV20.java':'39ada3745f8b22769e67c00f5def9a5a3ed6ba1a',
           'ObjectExperienceV20Regression.java':'44bccc8ebe5971ed5226e50f62f8e27f7fbc6ddd',
-          'GameActivity.java':'e3b4f1536d1cb8b43130ff9d542a784aced09c5d',
+          'GameActivity.java':'2fff4344052bc5d70bab8be728e5f81eabe80e04',
           'ContactGeometryForensics.java':'661401bf03e4e586e5fe69d819db7af05a1a319d',
           'InstrumentalNavigation.java':'fb95ae5b19a8b2602cb4338641d8851bebf8fa26',
           'BehavioralLaboratory.java':'8a35099ddb4b4d7ef9a9a334cb2e50b9477285d8',
@@ -952,6 +952,10 @@ jobs:
           assert 'CausalSequenceV23.KEY,causalSequenceV23.encode()' in (root/'GameActivity.java').read_text()
           assert 'useSymbiote=prefs.getBoolean(SymbioteMatterV1.ENABLED,false)' in (root/'GameActivity.java').read_text()
           assert 'symMatter.step(creature,surface,symMotor.commands(),slice)' in (root/'GameActivity.java').read_text()
+          # Stable Android screen initialization: frame delta is 0 on first
+          # draw after cold start/slot switch. Never integrate fluid dt=0.
+          assert 'if(!Float.isFinite(slice)||slice<=0f)continue;' in (root/'GameActivity.java').read_text()
+
           assert 'symMatter=new SymbioteMatterV1();' in (root/'GameActivity.java').read_text()
           assert 'SymbioteMatterV1.ENABLED,true' in (root/'SaveSlotStore.java').read_text()
           assert 'out.matter=m;' in (root/'GameSceneSnapshot.java').read_text()
