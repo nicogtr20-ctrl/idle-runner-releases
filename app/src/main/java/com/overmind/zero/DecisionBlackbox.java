@@ -276,7 +276,7 @@ public final class DecisionBlackbox {
         // their historic evidence, even though new exports use db2.
         String example=active.split("\\n")[1];
         String[] fields=example.split(",",-1);
-        StringBuilder legacy=new StringBuilder("db1|65|1\\n");
+        StringBuilder legacy=new StringBuilder("db1|").append(fields[0]).append("|1\\n");
         for(int k=0;k<17+SENSES+LEGACY_TERMS;k++){
             if(k>0)legacy.append(',');
             legacy.append(fields[k]);
