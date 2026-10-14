@@ -10,6 +10,7 @@ import android.os.Bundle;
 import android.view.*;
 import android.widget.*;
 import java.util.Locale;
+import org.json.JSONObject;
 
 /** Read-only quantitative learning evaluation + explicitly confirmed resets.
  * Never edits trained weights itself: GameActivity consumes the request upon
