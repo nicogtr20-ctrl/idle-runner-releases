@@ -17,6 +17,7 @@ public final class GameSceneSnapshot {
     public static final class Scene {
         public MotorBrain.Body body;
         public Morphology.Surface skin;
+        public SymbioteMatterV1 matter;
         public ScarcityLab room;
         public ArrayList<UnknownWorld.Entity> objects;
     }
@@ -105,6 +106,11 @@ public final class GameSceneSnapshot {
     public static String capture(MotorBrain.Body body,Morphology.Surface skin,
                                  List<UnknownWorld.Entity> environment,
                                  ScarcityLab room){
+        return capture(body,skin,environment,room,null);
+    }
+    public static String capture(MotorBrain.Body body,Morphology.Surface skin,
+                                 List<UnknownWorld.Entity> environment,
+                                 ScarcityLab room,SymbioteMatterV1 matter){
         try{
             JSONObject root=new JSONObject();root.put("version",VERSION);
             JSONObject b=new JSONObject();
@@ -121,6 +127,17 @@ public final class GameSceneSnapshot {
                 new float[][]{skin.x,skin.y,skin.vx,skin.vy,skin.extension,
                     skin.gripCommand,skin.touchSense,skin.gripHold});
             root.put("surface",s);
+            if(matter!=null){
+                JSONObject fluid=new JSONObject();
+                fluid.put("version",1);
+                fluid.put("area",matter.restArea);
+                fluid.put("work",matter.work);
+                fluid.put("ticks",matter.ticks);
+                fluid.put("invalid",matter.invalid);
+                putArrays(fluid,new String[]{"x","y","vx","vy"},
+                    new float[][]{matter.x,matter.y,matter.vx,matter.vy});
+                root.put("symbiote",fluid);
+            }
             if(room!=null){
                 JSONObject r=new JSONObject();r.put("ox",room.ox);r.put("oy",room.oy);
                 r.put("doorY",room.doorY);r.put("doorVelocity",room.doorVelocity);
@@ -175,6 +192,23 @@ public final class GameSceneSnapshot {
             readArrays(s,new String[]{"x","y","vx","vy","extension","command","sense","hold"},
                 new float[][]{out.skin.x,out.skin.y,out.skin.vx,out.skin.vy,
                     out.skin.extension,out.skin.gripCommand,out.skin.touchSense,out.skin.gripHold});
+            if(root.has("symbiote")){
+                JSONObject fluid=root.getJSONObject("symbiote");
+                if(fluid.getInt("version")!=1)return null;
+                SymbioteMatterV1 m=new SymbioteMatterV1();
+                m.restArea=(float)fluid.getDouble("area");
+                m.work=(float)fluid.getDouble("work");
+                m.ticks=fluid.getLong("ticks");
+                m.invalid=fluid.getLong("invalid");
+                if(!Float.isFinite(m.restArea)||m.restArea<100||
+                   m.restArea>20000||!Float.isFinite(m.work)||m.work<0||
+                   m.ticks<0||m.invalid<0)return null;
+                readArrays(fluid,new String[]{"x","y","vx","vy"},
+                    new float[][]{m.x,m.y,m.vx,m.vy});
+                // Distinct body schemas cannot be silently mixed.
+                if(m.areaRelativeError(out.skin)>.18f)return null;
+                out.matter=m;
+            }
             if(root.has("room")){
                 JSONObject r=root.getJSONObject("room");
                 out.room=new ScarcityLab((float)r.getDouble("ox"),(float)r.getDouble("oy"));
