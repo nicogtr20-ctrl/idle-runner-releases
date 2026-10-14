@@ -1,7 +1,7 @@
 name: ZERO22 corrective pre-release QA
 on:
   push:
-    branches: [feature/zero22-confidence-grip-fix]
+    branches: [feature/zero22-confidence-grip-fix, feature/zero22-decision-provenance-ota124]
 permissions:
   contents: read
 jobs:
