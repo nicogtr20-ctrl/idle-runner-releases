@@ -419,6 +419,31 @@ public final class BrainToolsActivity extends Activity {
             String.format(Locale.US,"%.1f%%",100f*causalSequence.confidence()),CYAN);
         paragraph(chainPanel,"Un collegamento possibile non prova di per se' la causa: prima di ricevere influenza sulla decisione deve superare verifiche indipendenti.");
 
+        if(prefs.getBoolean(SymbioteMatterV1.ENABLED,false)){
+            SymbioteMotorHeadV1 muscle=new SymbioteMotorHeadV1();
+            boolean loadedMuscle=muscle.restore(
+                prefs.getString(SymbioteMotorHeadV1.KEY,""));
+            LinearLayout symPanel=panel(body);
+            symPanel.addView(label("ZERO / CORPO SIMBIONTE FLUIDO",16,CYAN,true));
+            paragraph(symPanel,"Nuova fisica viscofluida: 96 patch materiali sulla membrana, " +
+                "74 particelle interne mobili, conservazione dell'area, tensione corticale, " +
+                "viscosita' e attuazione locale in 16 settori. Nessun corpo a molle radiali.");
+            paragraph(symPanel,loadedMuscle?muscle.summary():
+                "Testa motoria locale vergine: esperienze ancora da raccogliere.");
+            try{
+                JSONObject checkpoint=new JSONObject(
+                    prefs.getString("physical_scene_v100","{}"));
+                JSONObject physical=checkpoint.optJSONObject("physical");
+                JSONObject fluid=physical==null?null:physical.optJSONObject("symbiote");
+                if(fluid!=null){
+                    line(symPanel,"Area iniziale",String.format(Locale.US,"%.1f",fluid.optDouble("area")),WHITE);
+                    line(symPanel,"Passi di simulazione",(String.valueOf(fluid.optLong("ticks"))),WHITE);
+                    line(symPanel,"Instabilita' rilevate",(String.valueOf(fluid.optLong("invalid"))),AMBER);
+                }
+            }catch(Exception ignored){}
+            paragraph(symPanel,"Il cervello principale rimane ZERO 2.2. " +
+                "I comandi locali sono un readout motorio apprendibile dalle conseguenze reali.");
+        }
         // ZERO21 research readout: only genuine saved observer measurements.
         UnifiedCognitionV21 unified21=new UnifiedCognitionV21();
         unified21.restore(prefs.getString(UnifiedCognitionV21.KEY,""));
