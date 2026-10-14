@@ -29,9 +29,9 @@ public final class Zero20PassiveSnapshot {
     public static Map<String,Object> fromSaved(Map<String,?> values){
         Map<String,Object> result=new LinkedHashMap<>();
         result.put("schema","zero20-passive-observer-digest-v1");
-        result.put("controlMode","SHADOW_ONLY");
+        result.put("controlMode","ZERO22_PRIMARY_WITH_V20_V21_PASSIVE_EVIDENCE");
         result.put("dataOrigin","SAVED_WORKING_PROFILE_AT_EXPLICIT_SHARE");
-        result.put("liveBehaviorChange",false);
+        result.put("liveBehaviorChange",true);
         result.put("note","These fields summarize stored observers, not proof of higher intelligence; no raw 35ms frames.");
 
         String pwRaw=str(values,PredictiveWorldV20.KEY);
@@ -166,10 +166,10 @@ public final class Zero20PassiveSnapshot {
         RecurrentCoreV22 active22=new RecurrentCoreV22();
         Map<String,Object> digest22=new LinkedHashMap<>();
         boolean present22=active22.restore(str(values,RecurrentCoreV22.KEY));
-        digest22.put("present",present22);digest22.put("mode","SHADOW_LEARNING");
-        digest22.put("livePolicyOverrideAllowed",false);
+        digest22.put("present",present22);digest22.put("mode","PRIMARY_ACTIVE_LEARNING");
+        digest22.put("livePolicyOverrideAllowed",true);
         digest22.put("continuousRealExperienceLearning",true);
-        digest22.put("reason","OTA131 protects existing choices while independent action-outcome calibration is missing");
+        digest22.put("reason","OTA132 recurrent core selects all 16 live actions; physical and causal evidence submodels are learned skills, not an old policy");
         if(present22){digest22.put("summary",active22.summary());digest22.put("transitions",active22.transitions());
             digest22.put("replaySize",active22.replaySize());digest22.put("replayUpdates",active22.replayUpdates());
             digest22.put("plannedChoices",active22.plannedChoices());
