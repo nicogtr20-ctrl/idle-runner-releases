@@ -295,8 +295,12 @@ public final class SymbioteMatterV1 {
             // Viscous drag remains nonzero, but the substrate can support
             // reaction only where living material physically presses into it.
             // No food vector, desired travel, oscillator or reward is added.
-            float normalLoad=Math.max(0f,extend);
-            float traction=clip(normalLoad*1.60f,0f,.95f);
+            // Passive material still touches the substrate and needs a
+            // modest frictional reference for independent pseudopods.
+            // Local compression increases anchoring; extending cortex can
+            // slide past it. Object-grip intention NEVER anchors open floor.
+            float compression=Math.max(0f,-extend);
+            float traction=clip(.12f+1.45f*compression,0f,.95f);
             float drag=(float)Math.exp(-(1.8f+66f*traction)*dt);
             skin.vx[i]=clip((skin.vx[i]+fx[i]*dt)*drag,-140f,140f);
             skin.vy[i]=clip((skin.vy[i]+fy[i]*dt)*drag,-140f,140f);
