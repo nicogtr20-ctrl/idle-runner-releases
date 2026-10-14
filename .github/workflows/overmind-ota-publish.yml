@@ -873,7 +873,7 @@ jobs:
           'EnergyLifetimeCounters.java':'7c0a9d815937a39c5cfdaddb01896b39536d8afe',
           'ObjectExperienceV20.java':'39ada3745f8b22769e67c00f5def9a5a3ed6ba1a',
           'ObjectExperienceV20Regression.java':'44bccc8ebe5971ed5226e50f62f8e27f7fbc6ddd',
-          'GameActivity.java':'294fb3346a78e615b493c249922fe8208aeb0f4b',
+          'GameActivity.java':'f9808261907e42eb143b0855b8aa3b613377126e',
           'InstrumentalNavigation.java':'fb95ae5b19a8b2602cb4338641d8851bebf8fa26',
           'BehavioralLaboratory.java':'8a35099ddb4b4d7ef9a9a334cb2e50b9477285d8',
           'BehavioralLabActivity.java':'007fc2986932cbe0a3956d8d2c36e94e7dd2a47a',
@@ -912,7 +912,7 @@ jobs:
           'TelemetryChunks.java':'9f8af4e550db409098e16f51b948fde699e5e67d',
           'TelemetryChunksRegression.java':'c29156e14934dba37a2c53412e984cbb1eb18696',
           'SpatialPerception.java':'06f7339b565e2b7ae8b3a8ce10b72f60866569ca',
-          'GripSkillBank.java':'715f65333d50ef4acd40ee84e915bad731807589',
+          'GripSkillBank.java':'3eb89f644b70896644a8204e7a4044a2de03a2c7',
           'OnlineBodyLearning.java':'36caba1ed145ca571d8231152e6052354a71d055',
           'MotorBrain.java':'a3e0681c595bd1a9d17549c25770f6049c83926f',
           'Morphology.java':'4de2bd05eecee576d820e2690b5235dd4dd3aef9',
@@ -924,6 +924,18 @@ jobs:
           assert 'Math.min(.85f,maturity*trust)' in (root/'RecurrentCoreV22.java').read_text()
           assert 'stabilizeExistingGrip' in (root/'SquareGripPuzzle.java').read_text()
           assert 'environmentEffectSinceAction+=Math.min(2f,actualBoxMotion);' in (root/'GameActivity.java').read_text()
+          # OTA125: retain genuinely verified new skills even when full,
+          # allow fallback only after already existing volunteered failures.
+          archive=(root/'GripSkillBank.java').read_text()
+          game=(root/'GameActivity.java').read_text()
+          assert 'candidate.heldFrames<5||candidate.opposedFrames<3' in archive
+          assert 'private static final int MAX_PROSPECTS=5;' in archive
+          assert 'if(s.opposedFrames<8||s.doorMotion<2f)continue;' in archive
+          assert game.count('gripBank.retrieveAfterRepeatedFailure(')==2
+          assert 'voluntaryBoxGrip=boxTouchedThisFrame&&sensorMind.adhesion()>.5f;' in game
+          assert 'boxFailedGripFrames>=120' in game
+          assert 'gripCommand[i]=Math.max(0,Math.min(1.4f,' in (root/'Morphology.java').read_text()
+
           # Passive ZERO2.2 decision-provenance ONLY, no new survival goal
           # or veto over self-selected exploration and active core output.
           logger=(root/'DecisionBlackbox.java').read_text()
