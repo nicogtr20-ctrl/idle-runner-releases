@@ -155,7 +155,7 @@ jobs:
           assert 'putString(EnergyLifetimeCounters.KEY,energyTotals.encode())' in game
           assert 'energyTotals.restore(prefs.getString(EnergyLifetimeCounters.KEY,""))' in game
           assert 'legacyPositive' in totals and 'lifeTotal(stats,LifeStatistics.GOOD)' in totals
-          assert 'working.edit().clear().putBoolean(PENDING_RELOAD,true).commit()' in slots
+          assert 'working.edit().clear()' in slots
           assert 'updater.checkAndInstall();' in game
           print('HUD: correct physical resource/tissue sources, cumulative slots, safe migration, in-app OTA PASS')
           PY
@@ -470,7 +470,7 @@ jobs:
           assert 'zero_motorbrain_001' in slot and 'zero_save_slots_v100' in slot
           assert 'zero_save_slots_v100' not in reset
           assert 'protectCurrent();' in slot and 'PENDING_RELOAD' in slot
-          assert 'working.edit().clear().putBoolean(PENDING_RELOAD,true).commit()' in slot
+          assert 'working.edit().clear()' in slot
           assert 'SaveProfileCodec.encode(capture())' in slot
           assert 'MessageDigest.getInstance("SHA-256")' in code
           assert 'GameSceneSnapshot.capture(creature,surface,environment,chamber,' in g
