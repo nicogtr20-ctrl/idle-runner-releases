@@ -193,7 +193,7 @@ public final class SymbioteMatterV1 {
             int sector=i*SECTORS/SURFACE;
             float extend=clip(cortex[sector*OUTPUTS],-1,1);
             float lateral=clip(cortex[sector*OUTPUTS+1],-1,1);
-            float adhesive=clip(cortex[sector*OUTPUTS+2],-1,1)*.5f+.5f;
+            float adhesive=Math.max(0,clip(cortex[sector*OUTPUTS+2],-1,1));
             float stiffness=clip(cortex[sector*OUTPUTS+3],-1,1)*.5f+.5f;
             // Local active cortico-muscular force. Equal reaction is applied
             // to real liquid particles below, not to the centroid.
