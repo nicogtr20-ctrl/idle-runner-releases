@@ -281,7 +281,7 @@ public final class DecisionBlackbox {
             if(k>0)legacy.append(',');
             legacy.append(fields[k]);
         }
-        legacy.append('\\n');
+        legacy.append('\n');
         DecisionBlackbox migrated=new DecisionBlackbox();
         require(migrated.restoreCurrent(legacy.toString()),
             "An OTA122 db1 trace could not be loaded without reset");
