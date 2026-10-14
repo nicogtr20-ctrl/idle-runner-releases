@@ -176,6 +176,29 @@ public final class Zero20PassiveSnapshot {
             digest22.put("physicalReady",active22.physicalReady());
             digest22.put("energyReady",active22.energyReady());}
         result.put("zero22",digest22);
+        Map<String,Object> symbio=new LinkedHashMap<>();
+        boolean fluidMode=Boolean.TRUE.equals(values.get(SymbioteMatterV1.ENABLED));
+        symbio.put("enabled",fluidMode);
+        symbio.put("model",fluidMode?"SymbioteMatterV1":"OriginalElasticBody");
+        if(fluidMode){
+            SymbioteMotorHeadV1 head=new SymbioteMotorHeadV1();
+            boolean loaded=head.restore(str(values,SymbioteMotorHeadV1.KEY));
+            symbio.put("cortexMotorLoaded",loaded);
+            if(loaded)symbio.put("cortexSummary",head.summary());
+            // Physics checkpoint contains only real particle positions;
+            // export aggregate diagnostics, not a private body-world scene.
+            try{
+                org.json.JSONObject checkpoint=new org.json.JSONObject(str(values,"physical_scene_v100"));
+                org.json.JSONObject physics=checkpoint.getJSONObject("physical");
+                org.json.JSONObject material=physics.getJSONObject("symbiote");
+                symbio.put("materialParticles",SymbioteMatterV1.INNER+MotorBrain.N);
+                symbio.put("membraneParticles",Morphology.POINTS);
+                symbio.put("fluidSteps",material.getLong("ticks"));
+                symbio.put("nonfiniteErrors",material.getLong("invalid"));
+                symbio.put("areaAtBirth",material.getDouble("area"));
+            }catch(Exception ignored){}
+        }
+        result.put("symbioteBody",symbio);
         String seqRaw=str(values,CausalSequenceV23.KEY);
         CausalSequenceV23 seq=new CausalSequenceV23();
         boolean seqValid=seq.restore(seqRaw);
