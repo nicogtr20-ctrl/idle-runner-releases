@@ -1051,10 +1051,12 @@ jobs:
           assert 'result.put("zero21",zero21);' in (root/'Zero20PassiveSnapshot.java').read_text()
           assert 'static final long TEST_MAX_BUDGET_NS=80000000L;' in game
           assert 'static final int TEST_MAX_MAX_STEPS=4096;' in game
-          # All research policies are observer-only: chosen action is recorded
-          # after old scoring, confidence is not itself a scored reward.
-          oldpolicy=mind[mind.index('for(int a=0;a<ACTIONS;a++){'):
-                         mind.index('int greedyAction=chosen;')]
+          # ZERO 2.2 is PRIMARY, while 2.0/2.1 observers remain non-actuating.
+          # Inspect ONLY the legacy chooser's dormant path, not the new
+          # primary chooser earlier in this source file.
+          legacyStart=mind.index('boolean protectMotor=motorGuard!=null')
+          oldpolicy=mind[mind.index('for(int a=0;a<ACTIONS;a++){',legacyStart):
+                         mind.index('int greedyAction=chosen;',legacyStart)]
           assert 'unifiedArbiter' not in oldpolicy
           assert 'unifiedCognition' not in oldpolicy
           assert 'MAX_ENTRIES=475, MAX_TEXT=145000;' in blackbox
