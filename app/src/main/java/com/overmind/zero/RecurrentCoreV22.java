@@ -234,6 +234,23 @@ public final class RecurrentCoreV22 {
         return clip(.12f+.10f*(1f-clip(reserve,0,1))
             +.09f*clip(intervalsWithoutEnergy/70f,0,1),.12f,.31f);
     }
+    /** N-step credit for a lived, uniquely traced earlier intervention.
+     * External evidence must already have passed a held-out predictive gate.
+     * The user never gives a resource coordinate or a scripted action.
+     * Existing rc22 save schema, recurrence and replay are unchanged.
+     * This does NOT create a synthetic physical transition or a fake reward:
+     * it modifies only the value of an actually performed earlier action.
+     */
+    public void learnVerifiedDelayedCredit(float[] observedPrior,int action,
+                                          float realPositiveContact,float trust){
+        if(action<0||action>=A||!valid(observedPrior,Z)||
+           !Float.isFinite(realPositiveContact)||realPositiveContact<=0||
+           !Float.isFinite(trust)||trust<=0||trust>.35f)return;
+        float delta=clip(realPositiveContact/22f,0,1.8f);
+        float target=clip(read(q,observedPrior,action)+
+            .32f*trust*delta,-2f,2f);
+        fit(q,observedPrior,action,target,.12f);
+    }
     public long primaryDecisionsSession(){return primaryDecisionsSession;}
     public int intervalsWithoutEnergy(){return intervalsWithoutEnergy;}
     public float learningBlend(){

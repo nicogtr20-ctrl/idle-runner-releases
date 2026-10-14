@@ -176,6 +176,22 @@ public final class Zero20PassiveSnapshot {
             digest22.put("physicalReady",active22.physicalReady());
             digest22.put("energyReady",active22.energyReady());}
         result.put("zero22",digest22);
+        String seqRaw=str(values,CausalSequenceV23.KEY);
+        CausalSequenceV23 seq=new CausalSequenceV23();
+        boolean seqValid=seq.restore(seqRaw);
+        Map<String,Object> evidence23=section(seqRaw,seqValid);
+        if(seqValid){
+            evidence23.put("independentPhysicalObjectInterventions",seq.interventions());
+            evidence23.put("uniqueDelayedEnergyLinksHypothetical",seq.delayedLinks());
+            evidence23.put("ambiguousEnergyLinksRejected",seq.ambiguous());
+            evidence23.put("unattributedEnergyContacts",seq.missed());
+            evidence23.put("trainedSequenceOutcomes",seq.trained());
+            evidence23.put("heldoutOutcomes",seq.validations());
+            finite(evidence23,"heldoutPolicyConfidence",seq.confidence());
+            evidence23.put("verifiedCausation",false);
+            evidence23.put("primaryPolicyIsRecurrent22",true);
+        }
+        result.put("causalSequences23",evidence23);
         // ZERO21 digest: no raw weights, object positions, instance tracks,
         // private slot names, tokens, or per-35ms frame arrays. User-initiated.
         Map<String,Object> zero21=new LinkedHashMap<>();
