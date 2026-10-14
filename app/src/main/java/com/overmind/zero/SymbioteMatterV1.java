@@ -78,6 +78,64 @@ public final class SymbioteMatterV1 {
         return .5f*a;
     }
     public static float absArea(Morphology.Surface skin){return Math.abs(signedArea(skin));}
+    private static float cross(float ax,float ay,float bx,float by,float cx,float cy){
+        return (bx-ax)*(cy-ay)-(by-ay)*(cx-ax);
+    }
+    private static boolean intersects(float ax,float ay,float bx,float by,
+                                      float cx,float cy,float dx,float dy){
+        float a=cross(ax,ay,bx,by,cx,cy),b=cross(ax,ay,bx,by,dx,dy);
+        float c=cross(cx,cy,dx,dy,ax,ay),d=cross(cx,cy,dx,dy,bx,by);
+        return ((a>1e-4f&&b<-1e-4f)||(a< -1e-4f&&b>1e-4f))&&
+               ((c>1e-4f&&d<-1e-4f)||(c< -1e-4f&&d>1e-4f));
+    }
+    /** Continuous material self-collision guard. The previous contour is a
+     * real known non-intersecting configuration. A proposed pair of crossed
+     * segments yields, with the more displaced material patch returning to
+     * last physical position; no snap to centroid or to a resource. */
+    private void repairTopology(Morphology.Surface skin){
+        for(int pass=0;pass<7;pass++){
+            boolean changed=false;
+            for(int i=0;i<SURFACE;i++){
+                int ii=(i+1)%SURFACE;
+                for(int j=i+2;j<SURFACE;j++){
+                    int jj=(j+1)%SURFACE;
+                    if(jj==i)continue;
+                    if(!intersects(skin.x[i],skin.y[i],skin.x[ii],skin.y[ii],
+                        skin.x[j],skin.y[j],skin.x[jj],skin.y[jj]))continue;
+                    float first=len(skin.x[i]-lastSkinX[i],skin.y[i]-lastSkinY[i])+
+                        len(skin.x[ii]-lastSkinX[ii],skin.y[ii]-lastSkinY[ii]);
+                    float second=len(skin.x[j]-lastSkinX[j],skin.y[j]-lastSkinY[j])+
+                        len(skin.x[jj]-lastSkinX[jj],skin.y[jj]-lastSkinY[jj]);
+                    int start=first>=second?i:j,other=(start+1)%SURFACE;
+                    // An actually attached point cannot be unhooked by a
+                    // numerical self-contact repair. Favor the free edge.
+                    if(skin.gripHold[start]>=Morphology.GRIP_HOLD||
+                       skin.gripHold[other]>=Morphology.GRIP_HOLD){
+                        start=first>=second?j:i;other=(start+1)%SURFACE;
+                    }
+                    for(int k:new int[]{start,other}){
+                        if(skin.gripHold[k]>=Morphology.GRIP_HOLD)continue;
+                        skin.x[k]=lastSkinX[k];skin.y[k]=lastSkinY[k];
+                        skin.vx[k]=skin.vy[k]=0;
+                    }
+                    topologyRepairs++;changed=true;
+                    break;
+                }
+                if(changed)break;
+            }
+            if(!changed)return;
+        }
+        // Last resort only if both edges repeatedly conflict: rollback
+        // this rejected physical step, NOT the body or the learned brain.
+        if(MaterialGeometry.selfCrossings(skin)>0){
+            for(int i=0;i<SURFACE;i++){
+                if(skin.gripHold[i]>=Morphology.GRIP_HOLD)continue;
+                skin.x[i]=lastSkinX[i];skin.y[i]=lastSkinY[i];
+                skin.vx[i]=skin.vy[i]=0;
+            }
+            topologyRepairs++;
+        }
+    }
     /** A material parcel is never created, destroyed or snapped to a goal. */
     public float areaRelativeError(Morphology.Surface skin){
         return Math.abs(absArea(skin)-restArea)/Math.max(1f,restArea);
@@ -281,6 +339,7 @@ public final class SymbioteMatterV1 {
             projectArea(skin,dt);
             projectInterior(body,skin);
         }
+        repairTopology(skin);
         // Finite-difference post-constraint velocities include real reaction.
         for(int i=0;i<SURFACE;i++){
             skin.vx[i]=clip((skin.x[i]-lastSkinX[i])/dt,-180f,180f);
