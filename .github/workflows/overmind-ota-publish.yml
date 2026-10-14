@@ -929,9 +929,9 @@ jobs:
           assert 'public float[] primaryScores(float[] learnedAffordance)' in core
           assert 'public float primaryExploration(float reserve)' in core
           assert 'ZERO 2.2 PRIMARY:' in core
-          assert 'if(activeCore!=null)return choosePrimaryV22(senses);' in mind
-          assert 'if(learning&&!holdout&&activeCore==null)' in mind
-          assert 'activeCore.chosen(chosen)' in mind
+          assert 'if(activeCore!=null)return choosePrimaryV22(senses);' in (root/'SensorimotorMind.java').read_text()
+          assert 'if(learning&&!holdout&&activeCore==null)' in (root/'SensorimotorMind.java').read_text()
+          assert 'activeCore.chosen(chosen)' in (root/'SensorimotorMind.java').read_text()
           assert 'energyConfidence(a)' in core
           assert 'train(pool.get(replayRandom.nextInt(pool.size())),k==0)' in core
           assert 'stabilizeExistingGrip' in (root/'SquareGripPuzzle.java').read_text()
