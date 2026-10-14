@@ -62,6 +62,60 @@ public final class SymbioteMatterV1Regression {
         for(float command:motor.commands())
             require(Float.isFinite(command)&&Math.abs(command)<=1f,
                 "neural motor command out of physical bounds");
+        // Same direction, same sensed body: high action bank must actually
+        // express voluntary adhesion, not silently map to action % 8.
+        motor.chosen(4,readings,primary.state(),0f);
+        float normalGrip=0f;
+        for(int i=2;i<motor.commands().length;i+=4)
+            normalGrip+=Math.max(0,motor.commands()[i]);
+        motor.chosen(12,readings,primary.state(),0f);
+        float intentionalGrip=0f;
+        int usableGrip=0;
+        for(int i=2;i<motor.commands().length;i+=4){
+            intentionalGrip+=Math.max(0,motor.commands()[i]);
+            if(motor.commands()[i]>Morphology.GRIP_THRESHOLD)usableGrip++;
+        }
+        require(intentionalGrip>normalGrip+2.5f&&usableGrip>=8,
+            "2.2 action bank grip intent never reaches physical grip solver");
+
+        // An organism's apparent position is the mass-weighted full body,
+        // not the legacy ten convenient parcels. No special target/food.
+        MotorBrain.Body probeBody=new MotorBrain.Body();
+        Morphology.Surface probeSkin=new Morphology.Surface(probeBody);
+        SymbioteMatterV1 probeMatter=new SymbioteMatterV1();
+        probeMatter.reset(probeBody,probeSkin);
+        for(int i=0;i<SymbioteMatterV1.INNER;i++)
+            probeMatter.x[i]+=10f;
+        probeMatter.observeBody(probeBody,probeSkin);
+        require(probeBody.cx>3.0f&&probeBody.cx<5.0f,
+            "whole-mass position ignored the 64 fluid particles");
+
+        // Verify there is an actual physics-grounded substrate reaction.
+        // Unlike extension-only tests, real asymmetric material commands
+        // must be able to change organism position without a food reward.
+        MotorBrain.Body crawler=new MotorBrain.Body();
+        Morphology.Surface crawlSkin=new Morphology.Surface(crawler);
+        SymbioteMatterV1 crawlMatter=new SymbioteMatterV1();
+        crawlMatter.reset(crawler,crawlSkin);
+        float[] crawl=new float[SymbioteMatterV1.SECTORS*SymbioteMatterV1.OUTPUTS];
+        for(int tick=0;tick<320;tick++){
+            boolean phase=(tick/20)%2==0;
+            for(int sector=0;sector<SymbioteMatterV1.SECTORS;sector++){
+                boolean forward=Math.cos((sector+.5)*Math.PI/8)>0;
+                crawl[4*sector]=forward?(phase?.78f:-.78f)
+                                      :(phase?-.43f:.43f);
+                // Opposed substrate contact makes contraction produce
+                // external friction instead of free-floating internal shear.
+                crawl[4*sector+2]=forward?(phase?-.95f:.95f)
+                                        :(phase?.95f:-.95f);
+            }
+            crawlMatter.step(crawler,crawlSkin,crawl,.025f);
+            require(crawlMatter.invalid==0&&
+                    MaterialGeometry.selfCrossings(crawlSkin)==0,
+                "substrate-actuated gel lost physical integrity");
+        }
+        require(Math.abs(crawler.cx)>.8f,
+            "symbiote still cannot locomote despite substrate traction");
         motor.consequence(20,0,blob.work,true,false);
         String saved=motor.encode();
         SymbioteMotorHeadV1 copy=new SymbioteMotorHeadV1();
