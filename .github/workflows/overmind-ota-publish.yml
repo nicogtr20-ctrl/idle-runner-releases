@@ -433,7 +433,7 @@ jobs:
           grip=Path('app/src/main/java/com/overmind/zero/GripSkillBank.java').read_text()
           reset=Path('app/src/main/java/com/overmind/zero/ResetDomains.java').read_text()
           assert 'gripBank.observe(lastAppliedHand,lastAppliedMembrane' in game
-          assert 'gripBank.retrieve(' in game
+          assert 'gripBank.retrieveAfterRepeatedFailure(' in game
           assert 'if(voluntaryGripAtGate&&!physicalHold)' in game
           assert 'chamber.constrain(creature,surface,slice,sensorMind.adhesion())' in game
           assert 'gateDriveFrames' in gate and 'gateCommandFrames' in gate and 'gateHeldFrames' in gate
