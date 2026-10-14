@@ -80,6 +80,14 @@ public final class MaterialGeometry {
         }
         return best;
     }
+    private static boolean hasArea(Morphology.Surface s){
+        double area=0;
+        for(int i=0;i<Morphology.POINTS;i++){
+            int j=(i+1)%Morphology.POINTS;
+            area+=(double)s.x[i]*s.y[j]-(double)s.x[j]*s.y[i];
+        }
+        return Math.abs(area)>2.0;
+    }
     /** Food is absorbed ONLY where living material touches it, not where a
      * calculated centroid happens to be. The polygon interior also counts
      * as distributed material, independent of shape concavity.
@@ -88,7 +96,15 @@ public final class MaterialGeometry {
                                   float x,float y,float radius){
         if(!Float.isFinite(x)||!Float.isFinite(y)||radius<0)return false;
         if(s!=null){
-            if(BodyIntegrity.encloses(s.x,s.y,x,y))return true;
+            // A self-crossed or area-less membrane is NOT a filled body.
+            // OTA127 recorded 40 edge intersections while ZERO unfolded:
+            // odd/even fill of that broken polygon can create phantom food
+            // contacts even after removing the old +18-unit proximity rule.
+            // Only a genuinely simple, non-zero-area contour has interior.
+            // Real membrane edges and individual muscle masses below remain
+            // fully eligible regardless of shape complexity.
+            if(BodyIntegrity.encloses(s.x,s.y,x,y)&&
+               selfCrossings(s)==0&&hasArea(s))return true;
             if(surfaceDistanceSquared(s,x,y)<radius*radius)return true;
         }
         if(b!=null){
