@@ -404,6 +404,21 @@ public final class BrainToolsActivity extends Activity {
         activePanel.addView(label("ZERO 2.2 / CONTROLLO ATTIVO",16,CYAN,true));
         paragraph(activePanel,"Memoria ricorrente, corpo e sensori condivisi. Valuta le azioni prima di eseguirle. Le previsioni contribuiscono solo con evidenza fuori addestramento; il replay usa esperienze realmente vissute. La crescita delle capacita va verificata nelle partite.");
         paragraph(activePanel,loaded22?active22.summary():"Nucleo nuovo: in attesa del primo salvataggio.");
+        CausalSequenceV23 causalSequence=new CausalSequenceV23();
+        boolean loadedCausal=causalSequence.restore(prefs.getString(CausalSequenceV23.KEY,""));
+        LinearLayout chainPanel=panel(body);
+        chainPanel.addView(label("ZERO 2.2 / MEMORIA CAUSALE DI SEQUENZA",16,CYAN,true));
+        paragraph(chainPanel,"Oggetti tracciati con raggi anonimi, effetti fisici misurati, cambiamenti visivi e risorse realmente toccate: ZERO conserva gli esiti fino a 64 decisioni. Associazioni ambigue escluse. Solo un miglioramento verificato fuori addestramento puo' guidare il cervello primario.");
+        paragraph(chainPanel,loadedCausal?causalSequence.summary():"Prima raccolta di esperienze: nessuna associazione convalidata.");
+        line(chainPanel,"Movimenti riconosciuti",String.valueOf(causalSequence.qualifiedMoves()),WHITE);
+        line(chainPanel,"Possibili sequenze con energia",String.valueOf(causalSequence.delayedLinks()),CYAN);
+        line(chainPanel,"Sequenze ambigue respinte",String.valueOf(causalSequence.ambiguous()),AMBER);
+        line(chainPanel,"Contatti senza causa attribuita",String.valueOf(causalSequence.missed()),WHITE);
+        line(chainPanel,"Episodi fuori addestramento",String.valueOf(causalSequence.validations()),WHITE);
+        line(chainPanel,"Fiducia per la scelta delle azioni",
+            String.format(Locale.US,"%.1f%%",100f*causalSequence.confidence()),CYAN);
+        paragraph(chainPanel,"Un collegamento possibile non prova di per se' la causa: prima di ricevere influenza sulla decisione deve superare verifiche indipendenti.");
+
         // ZERO21 research readout: only genuine saved observer measurements.
         UnifiedCognitionV21 unified21=new UnifiedCognitionV21();
         unified21.restore(prefs.getString(UnifiedCognitionV21.KEY,""));
