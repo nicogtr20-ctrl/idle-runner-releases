@@ -1,7 +1,7 @@
 name: ZERO22 corrective pre-release QA
 on:
   push:
-    branches: [feature/zero22-confidence-grip-fix]
+    branches: [feature/zero22-confidence-grip-fix, feature/zero22-grip-archive-retention-ota125]
 permissions:
   contents: read
 jobs:
@@ -111,6 +111,24 @@ jobs:
           assert 'box.bilateralHeldNow=opposing&&held>=2' in grip
           assert 'SquareCollisionSolver.finish(body,skin,box)' in grip
           print('Corrective authority, legal physical grip and real effect learning OK')
+          PY
+      - name: Verify no scripted grips or locomotion reward
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          root=Path('app/src/main/java/com/overmind/zero')
+          g=(root/'GripSkillBank.java').read_text()
+          game=(root/'GameActivity.java').read_text()
+          m=(root/'Morphology.java').read_text()
+          assert 'candidate.heldFrames<5||candidate.opposedFrames<3' in g
+          assert 'retrieveAfterRepeatedFailure' in g
+          assert 'if(s.opposedFrames<8||s.doorMotion<2f)continue;' in g
+          assert game.count('gripBank.retrieveAfterRepeatedFailure(')==2
+          assert 'voluntaryBoxGrip=boxTouchedThisFrame&&sensorMind.adhesion()>.5f;' in game
+          assert 'boxFailedGripFrames>=120' in game
+          assert 'gripCommand[i]=Math.max(0,Math.min(1.4f,' in m
+          assert 'if(gripCommand[i]>GRIP_THRESHOLD)' in m
+          print('Self-selected grip commands unchanged; only verified skill memory is safer')
           PY
       - name: Compile Android debug APK (pre-release only)
         run: gradle --no-daemon assembleDebug
