@@ -274,9 +274,9 @@ public final class DecisionBlackbox {
         require(loaded.currentCount()>0,"resume erased five-minute ring");
         // Old 14-advisor traces from OTA122 must remain readable and keep
         // their historic evidence, even though new exports use db2.
-        String example=active.split("\\n")[1];
+        String example=active.split("\n")[1];
         String[] fields=example.split(",",-1);
-        StringBuilder legacy=new StringBuilder("db1|").append(fields[0]).append("|1\\n");
+        StringBuilder legacy=new StringBuilder("db1|").append(fields[0]).append("|1\n");
         for(int k=0;k<17+SENSES+LEGACY_TERMS;k++){
             if(k>0)legacy.append(',');
             legacy.append(fields[k]);
@@ -287,7 +287,7 @@ public final class DecisionBlackbox {
             "An OTA122 db1 trace could not be loaded without reset");
         require(migrated.encodeCurrent().startsWith("db2|"),
             "Old trace was not upgraded only in export format");
-        String[] migratedFields=migrated.encodeCurrent().split("\\n")[1].split(",");
+        String[] migratedFields=migrated.encodeCurrent().split("\n")[1].split(",");
         require(migratedFields.length==17+SENSES+TERMS&&
                 Integer.parseInt(migratedFields[17+SENSES])==300,
             "Old advisor values disappeared during in-place upgrade");
@@ -317,7 +317,7 @@ public final class DecisionBlackbox {
         }
         String encodedTrace=activeTrace.encodeCurrent();
         require(encodedTrace.startsWith("db2|"),"New trace schema not saved");
-        String[] records=encodedTrace.split("\\n");
+        String[] records=encodedTrace.split("\n");
         boolean preservedJitter=false;
         for(int row=1;row<records.length;row++){
             String[] v=records[row].split(",");
