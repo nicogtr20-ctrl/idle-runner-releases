@@ -55,6 +55,7 @@ public final class GameActivity extends Activity {
         ObjectExperienceV20 objectExperienceV20=new ObjectExperienceV20();
         UnifiedCognitionV21 unifiedCognitionV21=new UnifiedCognitionV21();
         ObjectContinuityV21 objectContinuityV21=new ObjectContinuityV21();
+        CausalSequenceV23 causalSequenceV23=new CausalSequenceV23();
         CompetenceMemoryV21 competenceMemoryV21=new CompetenceMemoryV21();
         RecurrentCoreV22 recurrentCore=new RecurrentCoreV22();
         SkillExecutionV22 skillExecution=new SkillExecutionV22();
@@ -287,6 +288,9 @@ public final class GameActivity extends Activity {
             objectContinuityV21=new ObjectContinuityV21();
             objectContinuityV21.restore(prefs.getString(ObjectContinuityV21.KEY,""));
             sensorMind.attachObjectContinuityV21(objectContinuityV21);
+            causalSequenceV23=new CausalSequenceV23();
+            causalSequenceV23.restore(prefs.getString(CausalSequenceV23.KEY,""));
+            sensorMind.attachCausalSequenceV23(causalSequenceV23);
             competenceMemoryV21=new CompetenceMemoryV21();
             competenceMemoryV21.restore(prefs.getString(CompetenceMemoryV21.KEY,""));
             unifiedArbiterV21=new UnifiedArbiterV21();
@@ -593,6 +597,7 @@ public final class GameActivity extends Activity {
               .putString(ObjectExperienceV20.KEY,objectExperienceV20.encode())
               .putString(UnifiedCognitionV21.KEY,unifiedCognitionV21.encode())
               .putString(ObjectContinuityV21.KEY,objectContinuityV21.encode())
+              .putString(CausalSequenceV23.KEY,causalSequenceV23.encode())
               .putString(CompetenceMemoryV21.KEY,competenceMemoryV21.encode())
               .putString(RecurrentCoreV22.KEY,recurrentCore.encode())
               .putString(UnifiedArbiterV21.KEY,unifiedArbiterV21.encode())
