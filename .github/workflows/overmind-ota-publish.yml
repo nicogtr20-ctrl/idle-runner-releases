@@ -868,7 +868,8 @@ jobs:
           from hashlib import sha1
           root=Path('app/src/main/java/com/overmind/zero')
           pins={
-          'SensorimotorMind.java':'13e61c6220ad24d834d38afb65693e6435bcee5d',
+          'SensorimotorMind.java':'8b6e56f992ba7783850bc86c7e2ba306d4c2fb66',
+          'DecisionBlackbox.java':'b35d2fa0d9212e6c95f3190e707f5a9f6ddf8fdb',
           'EnergyLifetimeCounters.java':'7c0a9d815937a39c5cfdaddb01896b39536d8afe',
           'ObjectExperienceV20.java':'39ada3745f8b22769e67c00f5def9a5a3ed6ba1a',
           'ObjectExperienceV20Regression.java':'44bccc8ebe5971ed5226e50f62f8e27f7fbc6ddd',
@@ -923,6 +924,17 @@ jobs:
           assert 'Math.min(.85f,maturity*trust)' in (root/'RecurrentCoreV22.java').read_text()
           assert 'stabilizeExistingGrip' in (root/'SquareGripPuzzle.java').read_text()
           assert 'environmentEffectSinceAction+=Math.min(2f,actualBoxMotion);' in (root/'GameActivity.java').read_text()
+          # Passive ZERO2.2 decision-provenance ONLY, no new survival goal
+          # or veto over self-selected exploration and active core output.
+          logger=(root/'DecisionBlackbox.java').read_text()
+          mind=(root/'SensorimotorMind.java').read_text()
+          assert 'public static final int LEGACY_TERMS=14, TERMS=19;' in logger
+          assert 'encoded.startsWith("db1|")||encoded.startsWith("db2|")' in logger
+          assert '"recurrentDelta"' in logger and '"mechanicalPartOfEarnedValue"' in logger
+          assert 'unifiedScores[a]-traceScores[a]' in mind
+          assert 'Arrays.fill(traceTerms[a],0)' not in mind
+          assert 't[18]=earnedValue-t[17]' in mind
+          assert 'mortalityBoost=mortality.energyAdvice' in mind
           # OTA123 world physics only: do not replace an occupied chamber,
           # don't cull visible unconsumed gem, and render a purple rim glow.
           game=(root/'GameActivity.java').read_text()
