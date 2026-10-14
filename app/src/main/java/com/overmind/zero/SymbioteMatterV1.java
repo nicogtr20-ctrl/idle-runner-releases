@@ -67,7 +67,27 @@ public final class SymbioteMatterV1 {
         restArea=absArea(skin);
         areaError=work=maxReach=time=0;
         ticks=invalid=topologyRepairs=0;
-        MaterialGeometry.observe(body);
+        observeBody(body,skin);
+    }
+    /** Mass-weighted center of all 170 material nodes, never an accelerated core. */
+    public void observeBody(MotorBrain.Body body,Morphology.Surface skin){
+        float mx=0f,my=0f,mvx=0f,mvy=0f;
+        for(int i=0;i<SURFACE;i++){
+            mx+=skin.x[i];my+=skin.y[i];mvx+=skin.vx[i];mvy+=skin.vy[i];
+        }
+        float shellWeight=.5f/SURFACE;
+        float centerX=mx*shellWeight,centerY=my*shellWeight;
+        float centerVx=mvx*shellWeight,centerVy=mvy*shellWeight;
+        mx=my=mvx=mvy=0f;
+        for(int i=0;i<MotorBrain.N;i++){
+            mx+=body.x[i];my+=body.y[i];mvx+=body.vx[i];mvy+=body.vy[i];
+        }
+        for(int i=0;i<INNER;i++){
+            mx+=x[i];my+=y[i];mvx+=vx[i];mvy+=vy[i];
+        }
+        float fluidWeight=.5f/(MotorBrain.N+INNER);
+        body.cx=centerX+mx*fluidWeight;body.cy=centerY+my*fluidWeight;
+        body.cvx=centerVx+mvx*fluidWeight;body.cvy=centerVy+mvy*fluidWeight;
     }
     public static float signedArea(Morphology.Surface skin){
         float a=0;
@@ -238,7 +258,7 @@ public final class SymbioteMatterV1 {
         for(float v:cortex)if(!Float.isFinite(v)||v<-1.01f||v>1.01f)
             throw new IllegalArgumentException("Non-finite muscle command");
         time+=dt;body.time+=dt;ticks++;
-        MaterialGeometry.observe(body);
+        observeBody(body,skin);
         float cx=body.cx,cy=body.cy;
         for(int i=0;i<SURFACE;i++){
             lastSkinX[i]=skin.x[i];lastSkinY[i]=skin.y[i];
@@ -266,7 +286,15 @@ public final class SymbioteMatterV1 {
             // the hold timer. No compulsory automatic adhesion.
             skin.gripCommand[i]=adhesive;
             skin.extension[i]=Math.max(0,extend)*Morphology.MAX_REACH;
-            float drag=(float)Math.exp(-(2.4f+adhesive*7.5f)*dt);
+            // Physical substrate traction, independently of object contact.
+            // In OTA143 every patch had almost identical weak damping, so
+            // cortex/internal impulses cancelled without a usable foothold.
+            // The same learned local adhesion channel controls stick/slip on
+            // the world substrate; only an actual object touch can form a hold.
+            // No reward or prescribed gait: forces remain equal/opposite in
+            // living matter; the substrate absorbs velocity through friction.
+            float traction=clip(.50f+2.75f*cortex[sector*OUTPUTS+2],0f,1f);
+            float drag=(float)Math.exp(-(1.8f+66f*traction)*dt);
             skin.vx[i]=clip((skin.vx[i]+fx[i]*dt)*drag,-140f,140f);
             skin.vy[i]=clip((skin.vy[i]+fy[i]*dt)*drag,-140f,140f);
             skin.x[i]+=skin.vx[i]*dt;skin.y[i]+=skin.vy[i]*dt;
@@ -374,7 +402,7 @@ public final class SymbioteMatterV1 {
             vx[i]=clip((x[i]-lastX[i])/dt,-180f,180f);
             vy[i]=clip((y[i]-lastY[i])/dt,-180f,180f);
         }
-        MaterialGeometry.observe(body);
+        observeBody(body,skin);
         areaError=areaRelativeError(skin);
         float reach=0;
         for(int i=0;i<SURFACE;i++){
