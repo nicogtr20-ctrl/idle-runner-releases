@@ -46,12 +46,30 @@ public final class RecurrentCoreV22Regression {
         split.sense(physicalSense,null,null,null);
         float[] safePrior=new float[16];safePrior[3]=-.01f;
         float[] physicallyGuided=split.evaluate(safePrior);
-        yes(physicallyGuided[3]>safePrior[3]&&physicallyGuided[3]-safePrior[3]<=.12001f,
-            "Physical-only confidence had no bounded policy influence");
+        yes(Arrays.equals(physicallyGuided,safePrior),
+            "Physical confidence without independently validated action OUTCOMES changed expert policy");
         for(int a=0;a<16;a++)if(a!=3)yes(physicallyGuided[a]==safePrior[a],
             "Unvalidated action displaced expert policy");
         yes(Math.abs(split.exploration(.19f)-.19f)<.000001f,
             "Untrusted energy planning altered expert exploration");
+        // Reproduce the OTA130 observed transient gate with enormous Q bias:
+        // even when holdout energy briefly meets the old MSE threshold,
+        // the Q and long horizon must remain SHADOW for live decisions.
+        ((float[])ef.get(split))[3]=.0001f;
+        ((float[])ebf.get(split))[3]=.001f;
+        yes(split.energyConfidence(3)>0,
+            "Test fixture did not reproduce transient energy-confidence spike");
+        float[] spikeInput=safePrior.clone();spikeInput[3]=-3f;
+        float[] spikeOutput=split.evaluate(spikeInput);
+        yes(Arrays.equals(spikeInput,spikeOutput),
+            "Transient energy confidence overwrote existing effective action preferences");
+        yes(Math.abs(split.exploration(.09f)-.09f)<.000001f,
+            "Transient energy confidence reduced exploration below experienced policy floor");
+        yes(split.confidence(3)>0&&split.energyReady()==1&&split.physicalReady()==1,
+            "Core lost independent evidence during protected live decisions");
+        // Restore energy-regression fixture before persistence checks.
+        ((float[])ef.get(split))[3]=.012f;
+        ((float[])ebf.get(split))[3]=.0002f;
         yes(split.plannedChoices()==0,"Legacy planned counter mixed physical-only choices");
         // Synthetic aggregate fixtures must obey checkpoint invariants:
         // per-action sample counts cannot exceed total lived transitions.
@@ -116,10 +134,20 @@ public final class RecurrentCoreV22Regression {
         prior.restore(eager.serialize());migration.restore(eager.serialize());
         migration.attachActiveCore(new RecurrentCoreV22());
         for(int i=0;i<100;i++)yes(prior.choose(s)==migration.choose(s),"cold replacement changed experienced policy before any evidence");
-        // Active hook alters actual decisions; observers still remain passive.
-        SensorimotorMind active=new SensorimotorMind();active.attachActiveCore(restored);
-        int wins=0;for(int i=0;i<40;i++)if(active.choose(s)==3)wins++;
-        yes(wins>25,"active core has no actual authority: "+wins);
-        System.out.println("PASS ZERO22: body+origins, recurrent future+energy, active choice, separate harm, replay exclusion, terminal, corruption, slot codec, resume and exact sensor-boundary parity; active learned choices="+wins+"/40");
+        // OTA131: same learned legacy motor policy MUST choose exactly the
+        // same actions when CORE has large Q readouts but no validated outcome.
+        // Recurrent learning continues internally while policy stays stable.
+        SensorimotorMind baseline=new SensorimotorMind(),guarded=new SensorimotorMind();
+        guarded.attachActiveCore(restored);
+        int matched=0;
+        for(int i=0;i<120;i++){
+            int oldChoice=baseline.choose(s),newChoice=guarded.choose(s);
+            yes(oldChoice==newChoice,"Recurrent shadow overrode learned action at "+i+": "+oldChoice+"/"+newChoice);
+            matched++;
+        }
+        yes(core.physicalReady()>0,"World model ceased learning after policy protection");
+        yes(!core.summary().contains("ZERO 2.2 ACTIVE:"),
+            "Readout mislabels a deliberately protected core as active actuator");
+        System.out.println("PASS ZERO22 OTA131: body+origins, real recurrence, physical/energy heldouts, SHADOW active-learning, all legacy choices unchanged, rare replay, terminal, corruption, slot codec and zero-reset parity; matched="+matched+"/120");
     }
 }
