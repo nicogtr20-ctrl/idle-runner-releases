@@ -132,20 +132,29 @@ public final class RecurrentCoreV22 {
     private float value(float[] z,int a){return read(q,z,a)-.30f*Math.max(0,read(risk,z,a));}
     private int greedy(float[] z){int win=0;float best=-Float.MAX_VALUE;
         for(int a=0;a<A;a++){float v=value(z,a);if(v>best){win=a;best=v;}}return win;}
+    /** Split existing holdout MSE into energy and other 157 sensory channels.
+     * All EMA components came from the same held-out experiences; no save migration. */
     public float confidence(int a){
-        if(a<0||a>=A||samples[a]<24||validation[a]<8||baselineError[a]<.00001f||
-            modelError[a]>=baselineError[a]*.96f||energyError[a]>energyBase[a]+.00002f)return 0;
-        return clip(1-modelError[a]/baselineError[a],0,.8f);
+        if(a<0||a>=A||samples[a]<24||validation[a]<8)return 0;
+        float physicalModel=Math.max(0,modelError[a]*(F-6)-energyError[a])/(F-7);
+        float physicalBase=Math.max(0,baselineError[a]*(F-6)-energyBase[a])/(F-7);
+        if(physicalBase<.00001f||physicalModel>=physicalBase*.96f)return 0;
+        return clip(1-physicalModel/physicalBase,0,.8f);
+    }
+    /** Only trusted energy forecasts may authorize an imagined energy future. */
+    public float energyConfidence(int a){
+        float physical=confidence(a);
+        return physical>0&&energyError[a]<=energyBase[a]+.00002f?physical:0;
     }
     private float rollout(float[] start,int first){
         float[] z=start;float total=0,discount=1;int a=first;
         for(int depth=0;depth<3;depth++){
-            float trust=confidence(a);
+            float trust=energyConfidence(a);
             if(trust<=0)break;
             total+=discount*(read(reward,z,a)-.30f*Math.max(0,read(risk,z,a)));
             z=imagine(z,a);discount*=.90f;a=greedy(z);
         }
-        return total+discount*value(z,greedy(z));
+        return total+(energyConfidence(a)>0?discount*value(z,a):0);
     }
     /** Returns a score for EVERY action BEFORE the real choice. Old scores
      * are a bounded migration prior which decays with actual new evidence.
@@ -156,20 +165,28 @@ public final class RecurrentCoreV22 {
         float maturity=learningBlend();
         lastConfidence=0;
         for(int a=0;a<A;a++){
-            float trust=confidence(a);lastConfidence=Math.max(lastConfidence,trust);
+            float physicalTrust=confidence(a),energyTrust=energyConfidence(a);
+            lastConfidence=Math.max(lastConfidence,physicalTrust);
             float prior=oldScores==null?0:oldScores[a];
             float information=.009f*clip(current[0]/.4f,0,1)/(float)Math.sqrt(1+samples[a]);
-            float learned=value(z,a)+(trust>0?.35f*trust*(rollout(z,a)-value(z,a)):0)+information;
-            // Only heldout-validated action models may override an incumbent.
-            // Untrusted scores remain exactly the previous policy's values.
-            float authority=oldScores==null?1f:Math.min(.85f,maturity*trust);
-            scores[a]=oldScores==null?learned:prior+authority*(learned-prior);
+            // Value and risk heads learn from real outcomes. Never use
+            // multi-step energy imagination without independent energy validity.
+            float learned=value(z,a)+(energyTrust>0?.35f*energyTrust*(rollout(z,a)-value(z,a)):0)+information;
+            // Preserve old decisions with no validated physical evidence.
+            // Physical-only evidence can cautiously use observed-outcome value.
+            float authority=oldScores==null?1f:energyTrust>0?
+                Math.min(.85f,maturity*energyTrust):
+                Math.min(.16f,.35f*maturity*physicalTrust);
+            float delta=authority*(learned-prior);
+            if(energyTrust<=0)delta=clip(delta,-.12f,.12f);
+            scores[a]=oldScores==null?learned:prior+delta;
         }
         int best=0;float runner=-Float.MAX_VALUE;
         for(int a=1;a<A;a++)if(scores[a]>scores[best])best=a;
         for(int a=0;a<A;a++)if(a!=best)runner=Math.max(runner,scores[a]);
         lastMargin=scores[best]-runner;choices++;
-        if(confidence(best)>0)modelChoices++;
+        // Historical planned counter remains energy-validated, not physical-only.
+        if(energyConfidence(best)>0)modelChoices++;
         return scores;
     }
     public float learningBlend(){
@@ -179,7 +196,7 @@ public final class RecurrentCoreV22 {
     public float exploration(float previous){
         float adaptive=Math.max(.04f,.28f/(1+transitions/300f));
         float proven=0f;
-        for(int a=0;a<A;a++)proven=Math.max(proven,confidence(a));
+        for(int a=0;a<A;a++)proven=Math.max(proven,energyConfidence(a));
         float blend=learningBlend()*proven;
         // A newborn replacement must not erase an experienced predecessor
         // by abruptly restoring virgin exploration on already learned skills.
@@ -249,7 +266,11 @@ public final class RecurrentCoreV22 {
             }
             for(int k=0;k<2;k++){
                 ArrayList<Experience> pool=k==1&&!rare.isEmpty()?rare:recent;
-                if(!pool.isEmpty()){train(pool.get(replayRandom.nextInt(pool.size())),true);replays++;}
+                if(!pool.isEmpty()){
+                    // Replay of rare energy events teaches value/risk, not the
+                    // typical frequency of physical world-state transitions.
+                    train(pool.get(replayRandom.nextInt(pool.size())),k==0);replays++;
+                }
             }
         }
         System.arraycopy(nextHidden,0,hidden,0,H);
@@ -262,9 +283,10 @@ public final class RecurrentCoreV22 {
     public long replayUpdates(){return replays;}
     public int replaySize(){return recent.size()+rare.size();}
     public long plannedChoices(){return modelChoices;}
+    public int energyReady(){int n=0;for(int a=0;a<A;a++)if(energyConfidence(a)>0)n++;return n;}
     public String summary(){return String.format(Locale.US,
-        "ZERO 2.2 ACTIVE: lived=%d replay=%d/%d planned=%d confidence=%.3f margin=%.4f terminal=%d invalid=%d",
-        transitions,replaySize(),replays,modelChoices,lastConfidence,lastMargin,terminals,invalid);}
+        "ZERO 2.2 ACTIVE: lived=%d replay=%d/%d planned=%d confidence=%.3f energyReady=%d/%d margin=%.4f terminal=%d invalid=%d",
+        transitions,replaySize(),replays,modelChoices,lastConfidence,energyReady(),A,lastMargin,terminals,invalid);}
     private static void array(DataOutputStream out,float[] a)throws IOException{for(float v:a)out.writeFloat(v);}
     private static void readArray(DataInputStream in,float[] a,float bound)throws IOException{
         for(int i=0;i<a.length;i++){float v=in.readFloat();if(!Float.isFinite(v)||Math.abs(v)>bound)throw new IOException("weight");a[i]=v;}
