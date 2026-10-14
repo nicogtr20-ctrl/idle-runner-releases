@@ -187,20 +187,25 @@ public final class RecurrentCoreV22 {
         lastMargin=scores[best]-runner;choices++;
         // Historical planned counter remains energy-validated, not physical-only.
         if(energyConfidence(best)>0)modelChoices++;
-        return scores;
+        // OTA131 safety boundary: The 2.2 readout is still trained, evaluated
+        // and checkpointed, but NO 2.2 value/risk prediction may control the
+        // organism before independent held-out OUTCOME validation exists.
+        // A good world-state forecast is not proof of a good action.
+        // Existing expert/skill signals win unchanged, including low-energy
+        // survival and opposing-face box manipulation. This boundary also
+        // blocks transient false-positive energyConfidence spikes.
+        return oldScores==null?scores:oldScores.clone();
     }
     public float learningBlend(){
         long actualTrain=0;for(int n:samples)actualTrain+=n;
         return Math.min(.9f,actualTrain/1600f);
     }
+    /** OTA131: preserve incumbent exploration EXACTLY.
+     * A transient heldout energy MSE advantage must never suppress exploration
+     * or lock a starving ZERO into one repeated action.
+     */
     public float exploration(float previous){
-        float adaptive=Math.max(.04f,.28f/(1+transitions/300f));
-        float proven=0f;
-        for(int a=0;a<A;a++)proven=Math.max(proven,energyConfidence(a));
-        float blend=learningBlend()*proven;
-        // A newborn replacement must not erase an experienced predecessor
-        // by abruptly restoring virgin exploration on already learned skills.
-        return previous*(1-blend)+Math.min(previous,adaptive)*blend;
+        return previous;
     }
     public void chosen(int a){
         if(a<0||a>=A){invalid++;pending=null;pendingAction=-1;return;}
@@ -283,10 +288,15 @@ public final class RecurrentCoreV22 {
     public long replayUpdates(){return replays;}
     public int replaySize(){return recent.size()+rare.size();}
     public long plannedChoices(){return modelChoices;}
+    public int physicalReady(){int n=0;for(int a=0;a<A;a++)if(confidence(a)>0)n++;return n;}
     public int energyReady(){int n=0;for(int a=0;a<A;a++)if(energyConfidence(a)>0)n++;return n;}
-    public String summary(){return String.format(Locale.US,
-        "ZERO 2.2 ACTIVE: lived=%d replay=%d/%d planned=%d confidence=%.3f energyReady=%d/%d margin=%.4f terminal=%d invalid=%d",
-        transitions,replaySize(),replays,modelChoices,lastConfidence,energyReady(),A,lastMargin,terminals,invalid);}
+    public String summary(){
+        float livePhysicalTrust=0;
+        for(int a=0;a<A;a++)livePhysicalTrust=Math.max(livePhysicalTrust,confidence(a));
+        return String.format(Locale.US,
+            "ZERO 2.2 SHADOW POLICY: lived=%d replay=%d/%d plannedShadow=%d physicalReady=%d/%d confidence=%.3f energyReady=%d/%d lastShadowMargin=%.4f terminal=%d invalid=%d",
+            transitions,replaySize(),replays,modelChoices,physicalReady(),A,livePhysicalTrust,energyReady(),A,lastMargin,terminals,invalid);
+    }
     private static void array(DataOutputStream out,float[] a)throws IOException{for(float v:a)out.writeFloat(v);}
     private static void readArray(DataInputStream in,float[] a,float bound)throws IOException{
         for(int i=0;i<a.length;i++){float v=in.readFloat();if(!Float.isFinite(v)||Math.abs(v)>bound)throw new IOException("weight");a[i]=v;}
