@@ -1194,7 +1194,15 @@ jobs:
           grep -F "com.overmind.zero.UpdateFileProvider" "$RUNNER_TEMP/manifest.txt"
           grep -F "com.overmind.zero.ota.updates" "$RUNNER_TEMP/manifest.txt"
           echo "Validated final signed APK: network, installer permission and update provider."
-      - name: Create verified GitHub Release BEFORE updating public OTA manifest
+      - name: Preserve signed APK build artifact for recovery and manual QA
+        if: env.signing_ready == 'true'
+        uses: actions/upload-artifact@v4
+        with:
+          name: OVERMIND-ZERO-signed-${{ github.run_number }}
+          path: app/build/outputs/apk/release/app-release.apk
+          if-no-files-found: error
+          retention-days: 14
+      - name: Attempt immutable GitHub Release fallback
         if: env.signing_ready == 'true'
         env:
           GH_TOKEN: ${{ github.token }}
@@ -1220,12 +1228,16 @@ jobs:
           Puoi installare sopra la versione attuale senza disinstallare. I salvataggi con nome restano intatti.
           La release GitHub offre il percorso di riserva quando Vercel è obsoleto o non raggiungibile.
           NOTES
-            gh release create "$TAG" OVERMIND-ZERO.apk --repo "${{ github.repository }}" \
+            if gh release create "$TAG" OVERMIND-ZERO.apk --repo "${{ github.repository }}" \
               --title "OVERMIND ZERO $VERSION_NAME" \
               --notes-file "$RUNNER_TEMP/overmind-release-notes.md" \
-              --target "${{ github.sha }}"
+              --target "${{ github.sha }}"; then
+              echo "Immutable GitHub Release $TAG created."
+            else
+              echo "::warning::GitHub Releases creation not authorized: signed APK kept as Actions artifact. Primary OTA must still pass SHA/HTTP verification."
+            fi
           fi
-          echo "Verified immutable fallback release ready BEFORE raw GitHub manifest changes."
+          echo "Signed APK kept independently; proceed only with publisher's normal manifest/host checks."
       - name: Publish signed APK to updater in main
         if: env.signing_ready == 'true'
         env:
