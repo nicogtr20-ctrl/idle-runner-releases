@@ -74,7 +74,11 @@ public final class SymbioteMotorHeadV1 {
                 noise[at]=random()*explore;
                 // Exploration is localized and smooth enough not to make a
                 // single 96-node patch teleport relative to its neighbours.
-                commands[at]=(float)Math.tanh(z+noise[at]);
+                // Actuator gain makes newborn cortex commands physically usable.
+                // The active 2.2 action bank 8..15 explicitly requests grip;
+                // action%8 alone in OTA143 had discarded this motor intention.
+                float gripIntent=channel==2&&action>=8?.55f:0f;
+                commands[at]=(float)Math.tanh(2.8f*z+1.4f*noise[at]+gripIntent);
                 pending[at]=commands[at];
             }
         }
