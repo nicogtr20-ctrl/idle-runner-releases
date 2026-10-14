@@ -26,9 +26,12 @@ public final class SensorimotorMind {
     private final Random random=new Random(60909);
     private transient EpisodicMemory episodic;
     private transient RecurrentCoreV22 activeCore;
+    // Continuous active-fluid muscle readout, CONDITIONAL on the same core action.
+    private transient SymbioteMotorHeadV1 symbioteHead;
     private transient float[] executedControls=new float[6];
     private transient float[] executedMotor,executedHand,executedMembrane;
     public synchronized void attachActiveCore(RecurrentCoreV22 core){activeCore=core;}
+    public synchronized void attachSymbioteMotorHead(SymbioteMotorHeadV1 head){symbioteHead=head;}
     public synchronized void appliedControls(float[] motor,float[] hand,float[] membrane){
         if(motor!=executedMotor||hand!=executedHand||membrane!=executedMembrane){
             executedControls=RecurrentCoreV22.controlState(motor,hand,membrane);
@@ -252,6 +255,7 @@ public final class SensorimotorMind {
         if(causalSequence!=null)causalSequence.resetLife();
         if(unifiedArbiter!=null)unifiedArbiter.resetLife();
         if(activeCore!=null)activeCore.resetLife();
+        if(symbioteHead!=null)symbioteHead.resetLife();
         if(gripAffordanceV20!=null)gripAffordanceV20.resetLife();
         if(perceptualV20!=null)perceptualV20.resetLife();
         lastActualGripSurface=null;
@@ -282,6 +286,7 @@ public final class SensorimotorMind {
         if(causalSequence!=null)causalSequence.resetLife();
         if(unifiedArbiter!=null)unifiedArbiter.resetLife();
         if(activeCore!=null)activeCore.resetLife();
+        if(symbioteHead!=null)symbioteHead.resetLife();
         if(gripAffordanceV20!=null)gripAffordanceV20.resetLife();
         if(perceptualV20!=null)perceptualV20.resetLife();
         lastActualGripSurface=null;
@@ -318,6 +323,7 @@ public final class SensorimotorMind {
         if(objectContinuity!=null)objectContinuity.resumeLife();
         if(unifiedArbiter!=null)unifiedArbiter.resetLife();
         if(activeCore!=null)activeCore.resumeLife();
+        if(symbioteHead!=null)symbioteHead.resumeLife();
         if(gripAffordanceV20!=null)gripAffordanceV20.resumeLife();
         if(perceptualV20!=null)perceptualV20.resumeLife();
         lastActualGripSurface=null;
@@ -449,6 +455,11 @@ public final class SensorimotorMind {
                 objectContinuity==null?-1:objectContinuity.currentAnonymousTrack(),
                 objectContinuity==null?0f:objectContinuity.currentTrackConfidence(),
                 activeCore.state());
+        // The motor head observes the ACTUAL 2.2 selection. It never picks a
+        // competing discrete action or writes any world/goal information.
+        if(symbioteHead!=null)symbioteHead.chosen(chosen,
+            distributedBody==null?null:distributedBody.localMap(),
+            activeCore.state(),epsilon);
         activeCore.chosen(chosen);
         if(worldV20!=null)worldV20.chosen(chosen,senses);
         if(transferV20!=null)transferV20.chosen(chosen,senses);
@@ -806,6 +817,8 @@ public final class SensorimotorMind {
         boolean holdout=diagnostics.shouldHoldout();
         if(activeCore!=null){feedCore(after);activeCore.consequence(actualEnergySinceChoice,actualContactHarm,
                 Math.max(0f,physicalEffect),learning&&!holdout,holdout,false);}
+        if(symbioteHead!=null)symbioteHead.consequence(actualEnergySinceChoice,
+                actualContactHarm,0f,learning&&!holdout,holdout);
         if(objectContinuity!=null&&spatial!=null)
             objectContinuity.view(spatial.ranges(),spatial.perceivedX(),
                 spatial.perceivedY(),after[4],learning&&!holdout,spatial.eyeOrigins());
