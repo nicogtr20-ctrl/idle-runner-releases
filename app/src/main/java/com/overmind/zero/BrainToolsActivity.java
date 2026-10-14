@@ -434,8 +434,8 @@ public final class BrainToolsActivity extends Activity {
             try{
                 JSONObject checkpoint=new JSONObject(
                     prefs.getString("physical_scene_v100","{}"));
-                JSONObject physical=checkpoint.optJSONObject("physical");
-                JSONObject fluid=physical==null?null:physical.optJSONObject("symbiote");
+                JSONObject scenePhysical=checkpoint.optJSONObject("physical");
+                JSONObject fluid=scenePhysical==null?null:scenePhysical.optJSONObject("symbiote");
                 if(fluid!=null){
                     line(symPanel,"Area iniziale",String.format(Locale.US,"%.1f",fluid.optDouble("area")),WHITE);
                     line(symPanel,"Passi di simulazione",(String.valueOf(fluid.optLong("ticks"))),WHITE);
