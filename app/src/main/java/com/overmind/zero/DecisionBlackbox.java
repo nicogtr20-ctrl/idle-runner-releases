@@ -26,6 +26,9 @@ public final class DecisionBlackbox {
         "objectEvidence","zero20Experimental","recurrentDelta",
         "energeticPartOfEarnedValue","mechanicalPartOfEarnedValue"
     };
+    // OTA132: index 16 is the sole primary recurrent value (legacy OTA<=131
+    // encoded an incremental recurrent delta). Historic db2 rows retain their
+    // version-dependent meaning; never reinterpret old reports silently.
     // Only indices 0..16 are ADDITIVE score contributions; the last
     // two are a DECOMPOSITION of existing term 1 (not extra rewards).
     private final ArrayDeque<Record> events=new ArrayDeque<>();
@@ -318,7 +321,7 @@ public final class DecisionBlackbox {
         String encodedTrace=activeTrace.encodeCurrent();
         require(encodedTrace.startsWith("db2|"),"New trace schema not saved");
         String[] records=encodedTrace.split("\n");
-        boolean preservedJitter=false;
+        boolean witnessedPrimaryContribution=false;
         for(int row=1;row<records.length;row++){
             String[] v=records[row].split(",");
             require(v.length==17+SENSES+TERMS,
@@ -334,11 +337,11 @@ public final class DecisionBlackbox {
             int mechanics=Integer.parseInt(v[17+SENSES+18]);
             require(Math.abs((energy+mechanics)-earned)<=2,
                 "Energy/mechanics breakdown invented or lost value");
-            if(Integer.parseInt(v[17+SENSES+4])!=0)
-                preservedJitter=true;
+            if(Integer.parseInt(v[17+SENSES+16])!=0)
+                witnessedPrimaryContribution=true;
         }
-        require(preservedJitter,
-            "ACTIVE 2.2 still overwrote each advisor with the final score");
-        System.out.println("ZERO decision blackbox OTA124 PASS: db1 migration, 19 fields, active-core additive provenance and zero policy divergence");
+        require(witnessedPrimaryContribution,
+            "PRIMARY 2.2 did not appear in action-decision provenance");
+        System.out.println("ZERO decision blackbox OTA132 PASS: db1 migration, 19 fields, recurrent PRIMARY score, exact recorder noninterference");
     }
 }

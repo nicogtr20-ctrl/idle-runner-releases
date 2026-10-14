@@ -366,8 +366,97 @@ public final class SensorimotorMind {
         return best;
     }
 
+    /** OTA132: One real decision brain. Legacy Q/planner/episodic arbitration
+     * are not executed at all. Prior modules provide learned sensorimotor
+     * affordance EVIDENCE and receive the executed outcome, but the recurrent
+     * core exclusively ranks and selects the sixteen real motor actions.
+     */
+    private int choosePrimaryV22(float[] senses){
+        feedCore(senses);
+        float[] observedMeans=new float[ACTIONS],navTerms=new float[ACTIONS],
+            causalTerms=new float[ACTIONS],objectTerms=new float[ACTIONS];
+        for(int a=0;a<ACTIONS;a++){
+            float nav=navigation!=null&&navigationAdviceEnabled
+                ?navigation.bias(a,senses[0]):0f;
+            float effect=causal!=null&&spatial!=null
+                ?causal.choiceBias(spatial,a):0f;
+            float object=objectExperience!=null
+                ?objectExperience.choiceBias(a,senses[0]):0f;
+            navTerms[a]=nav;causalTerms[a]=effect;objectTerms[a]=object;
+            observedMeans[a]=nav+effect+object;
+        }
+        float[] scores=activeCore.primaryScores(observedMeans);
+        int greedyAction=0;
+        for(int a=1;a<ACTIONS;a++)
+            if(scores[a]>scores[greedyAction])greedyAction=a;
+        float epsilon=activeCore.primaryExploration(senses[0]);
+        int chosen=greedyAction;
+        actionExploratory=false;
+        if(random.nextFloat()<epsilon){
+            chosen=random.nextInt(ACTIONS);
+            actionExploratory=true;explorations++;
+        }
+        if(motionShadow!=null)motionShadow.chosen(senses,chosen,observedBody);
+        if(blackbox!=null){
+            float[] breakdown=new float[DecisionBlackbox.TERMS];
+            breakdown[12]=.40f*navTerms[chosen];
+            breakdown[11]=.40f*causalTerms[chosen];
+            breakdown[14]=.40f*objectTerms[chosen];
+            // On OTA132 the historically named 'recurrentDelta' field is
+            // the absolute PRIMARY recurrent contribution (not a delta to
+            // the previous brain). Source version and report mode disambiguate.
+            breakdown[16]=scores[chosen]-breakdown[12]-breakdown[11]
+                              -breakdown[14];
+            blackbox.chosen(senses,chosen,greedyAction,actionExploratory,
+                false,epsilon,scores[chosen],scores[greedyAction],
+                breakdown,observedBody);
+        }
+        if(action!=chosen)actionsReconsidered++;
+        // Learning/physical modules observe this SAME real action; none can
+        // override the core's choice. In particular, do not request an
+        // independently proposed old-brain action.
+        if(episodic!=null)episodic.chosen(chosen,-1);
+        if(motorGuard!=null)motorGuard.action(chosen);
+        contactCredit.performed(senses,chosen);
+        if(temporalSkills!=null&&temporal!=null)
+            temporalSkills.chosen(temporal.contextCopy(),chosen);
+        if(temporal!=null)temporal.chosen(chosen);
+        if(bodySchema!=null)bodySchema.chosen(chosen);
+        if(distributedBody!=null)distributedBody.chosen(chosen);
+        if(impedance!=null)impedance.chosen(chosen);
+        if(spatial!=null)spatial.chosen(chosen);
+        if(causal!=null&&spatial!=null)
+            causal.chosen(spatial,chosen,actionExploratory);
+        if(navigation!=null)navigation.chosen(chosen,observedBody);
+        if(intention!=null&&navigation!=null&&navigationAdviceEnabled)
+            intention.chosen(navigation,chosen,senses[0]);
+        actualEnergySinceChoice=actualContactHarm=actualAmbientLossSinceChoice=0f;
+        action=chosen;decisions++;
+        activeCore.chosen(chosen);
+        if(worldV20!=null)worldV20.chosen(chosen,senses);
+        if(transferV20!=null)transferV20.chosen(chosen,senses);
+        if(physicalChainV20!=null)physicalChainV20.chosen(chosen,senses);
+        if(gripAffordanceV20!=null)
+            gripAffordanceV20.chosen(chosen,lastActualGripSurface);
+        if(perceptualV20!=null)perceptualV20.chosen(chosen);
+        if(objectExperience!=null)objectExperience.chosen(chosen,senses);
+        if(unifiedCognition!=null)unifiedCognition.chosen(chosen,senses,
+            spatial==null?null:spatial.ranges(),
+            objectContinuity==null?-1:objectContinuity.currentAnonymousTrack(),
+            worldV20==null?0f:worldV20.confidence(),
+            objectContinuity==null?0f:objectContinuity.currentTrackConfidence());
+        if(objectContinuity!=null)objectContinuity.chosen(chosen);
+        // Do not evaluate the legacy learned planner after deciding.
+        // The 2.0/2.1 observational evidence continues collecting actuals.
+        estimatedValue=scores[chosen];
+        System.arraycopy(senses,0,trialState,0,S);
+        trialAction=chosen;elapsed=0;
+        return chosen;
+    }
+
     public synchronized int choose(float[] senses){
         if(senses.length!=S)throw new IllegalArgumentException("sensor width");
+        if(activeCore!=null)return choosePrimaryV22(senses);
         boolean protectMotor=motorGuard!=null&&motorGuard.suppressPositiveRecall();
         if(protectMotor)motorGuard.decisionWhenSuppressed();
         int proposed=episodic==null?-1:episodic.suggested(senses,!protectMotor);
@@ -710,7 +799,7 @@ public final class SensorimotorMind {
             err+=delta*delta;
             float unchanged=after[k]-before[k];naiveErr+=unchanged*unchanged;
             if(k>=6)sensoryChange+=Math.abs(after[k]-before[k]);
-            if(learning&&!holdout){
+            if(learning&&!holdout&&activeCore==null){
                 float g=MODEL_LR*bounded(delta);
                 int base=(trialAction*S+k)*P;
                 for(int j=0;j<S;j++)
@@ -799,7 +888,9 @@ public final class SensorimotorMind {
             navigation.consequence(trialAction,body,learning&&!holdout,holdout);
         if(intention!=null&&navigation!=null&&body!=null&&navigationAdviceEnabled)
             intention.consequence(navigation,trialAction,navigation.latestMovement);
-        if(learning&&!holdout){
+        // The obsolete 26D TD brain freezes when recurrent 2.2 is primary.
+        // It never silently relearns a competing action policy.
+        if(learning&&!holdout&&activeCore==null){
             float td=bounded(lastReward+GAMMA*bestFuture(after)-estimate(before,trialAction));
             int base=trialAction*P;
             for(int k=0;k<S;k++)

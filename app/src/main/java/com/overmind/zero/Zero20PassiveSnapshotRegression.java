@@ -16,7 +16,10 @@ public final class Zero20PassiveSnapshotRegression {
     public static void main(String[] ignored){
         Map<String,Object> saved=new HashMap<>();
         Map<String,Object> empty=Zero20PassiveSnapshot.fromSaved(saved);
-        check("SHADOW_ONLY".equals(empty.get("controlMode")),"must never advertise motor access");
+        check("ZERO22_PRIMARY_WITH_V20_V21_PASSIVE_EVIDENCE".equals(empty.get("controlMode")),
+            "OTA132 must name recurrent primary, not shadow-only");
+        check(Boolean.TRUE.equals(empty.get("liveBehaviorChange")),
+            "readout must not hide OTA132 behavioral transition");
         check(!section(empty,"predictiveWorld").get("valid").equals(Boolean.TRUE),
             "legacy profile must not pretend trained");
         check("NOT_YET_OBSERVED".equals(section(empty,"physicalGrip").get("status")),

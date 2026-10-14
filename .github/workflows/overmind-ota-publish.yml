@@ -923,13 +923,15 @@ jobs:
           'BodyIntegrity.java':'e551493723d13006d5e6905690c0ab0ee9e13d17',
           'BodyIntegrityRecoveredSnapshotsRegression.java':'d536451adb05cb742176ec559460066bd637c453',
           'BodyIntegrityObstacleRegression.java':'d9b4b6d1847ea78787dacc531188d2b61318487f'}
-          # OTA131 regression containment: recurrent value/risk heads are
-          # trained and monitored, but no unchecked outcome prediction may
-          # change incumbent scored actions or suppress exploration.
+          # OTA132: all game actions originate in recurrent primary Q/forward model;
+          # old TD learner remains frozen, historical game files unchanged.
           core=(root/'RecurrentCoreV22.java').read_text()
-          assert 'return oldScores==null?scores:oldScores.clone();' in core
-          assert 'return previous;' in core
-          assert 'SHADOW POLICY' in core
+          assert 'public float[] primaryScores(float[] learnedAffordance)' in core
+          assert 'public float primaryExploration(float reserve)' in core
+          assert 'ZERO 2.2 PRIMARY:' in core
+          assert 'if(activeCore!=null)return choosePrimaryV22(senses);' in mind
+          assert 'if(learning&&!holdout&&activeCore==null)' in mind
+          assert 'activeCore.chosen(chosen)' in mind
           assert 'energyConfidence(a)' in core
           assert 'train(pool.get(replayRandom.nextInt(pool.size())),k==0)' in core
           assert 'stabilizeExistingGrip' in (root/'SquareGripPuzzle.java').read_text()
