@@ -28,7 +28,7 @@ public final class SymbioteMotorHeadV1 {
     private static float clip(float x,float a,float b){return Math.max(a,Math.min(b,x));}
     private float random(){
         seed^=seed<<13;seed^=seed>>>7;seed^=seed<<17;
-        return ((seed>>>40)/8388608f-.5f)*2;
+        return ((seed>>>40)/16777216f-.5f)*2;
     }
     private static boolean valid(float[] a,int n){
         if(a==null||a.length!=n)return false;
