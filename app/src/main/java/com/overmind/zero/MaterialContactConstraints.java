@@ -83,6 +83,85 @@ public final class MaterialContactConstraints {
         }
         return false;
     }
+    private static boolean legalStep(float ox,float oy,float x,float y,
+                                     List<UnknownWorld.Entity> objects){
+        if(insideCover(x,y,objects))return false;
+        for(UnknownWorld.Entity box:objects){
+            if(!box.isBilateralBox()||box.consumed)continue;
+            // Reject a candidate that ends outside but crosses the solid
+            // on the way there. This is positional contact projection,
+            // not an instantaneous escape through a wall.
+            if(ScarcityLab.crossesInterior(ox,oy,x,y,
+                box.x-HALF+.05f,box.y-HALF+.05f,
+                box.x+HALF-.05f,box.y+HALF-.05f))return false;
+        }
+        return true;
+    }
+    private static float pressure(Morphology.Surface s,int i,float x,float y){
+        float density=0f;
+        for(int j=0;j<Morphology.POINTS;j++){
+            if(i==j)continue;
+            float dx=x-s.x[j],dy=y-s.y[j];
+            float d=(float)Math.hypot(dx,dy);
+            if(d<5f){
+                float overlap=5f-d;
+                density+=overlap*overlap;
+            }
+        }
+        return density;
+    }
+    /** A packed ball of 96 coincident masses cannot make room unless the
+     * first separated particles move outward: duplications would otherwise
+     * persist forever after the nearest slots became occupied. Material
+     * crowd-pressure gradually expands a packed local group into free space.
+     * Every tiny step remains collision-safe and never uses a goal position.
+     */
+    private static int relievePressure(Morphology.Surface s,
+                                      List<UnknownWorld.Entity> boxes,float dt){
+        int moved=0;
+        for(int i=0;i<Morphology.POINTS&&moved<MAX_REPAIRS;i++){
+            float existing=pressure(s,i,s.x[i],s.y[i]);
+            // Legal adjacent membrane pieces can be close. Only respond
+            // to gross over-packing, not normal dense grasp geometry.
+            if(existing<125f)continue;
+            float dx=0,dy=0;
+            for(int j=0;j<Morphology.POINTS;j++){
+                if(i==j)continue;
+                float ex=s.x[i]-s.x[j],ey=s.y[i]-s.y[j];
+                float d=(float)Math.hypot(ex,ey);
+                if(d>.03f&&d<6f){
+                    dx+=ex/d*(6f-d);
+                    dy+=ey/d*(6f-d);
+                }
+            }
+            if(dx*dx+dy*dy<.0025f){
+                dx=s.anchorX(i)-s.x[i];
+                dy=s.anchorY(i)-s.y[i];
+            }
+            float phase=(float)Math.atan2(dy,dx);
+            if(dx*dx+dy*dy<.0025f)
+                phase=(float)(2*Math.PI*i/Morphology.POINTS);
+            float bx=s.x[i],by=s.y[i],best=existing;
+            for(int a=0;a<16;a++){
+                float theta=phase+a*(float)(Math.PI/8);
+                float nx=s.x[i]+3.2f*(float)Math.cos(theta);
+                float ny=s.y[i]+3.2f*(float)Math.sin(theta);
+                if(!legalStep(s.x[i],s.y[i],nx,ny,boxes))continue;
+                float candidate=pressure(s,i,nx,ny);
+                if(candidate<best-1f){best=candidate;bx=nx;by=ny;}
+            }
+            if(bx==s.x[i]&&by==s.y[i])continue;
+            float vx=bx-s.x[i],vy=by-s.y[i];
+            releaseDuplicateAt(i,s,boxes);
+            s.x[i]=bx;s.y[i]=by;
+            s.vx[i]=Math.max(-230,Math.min(230,
+                s.vx[i]+vx/Math.max(dt,.016f)*.35f));
+            s.vy[i]=Math.max(-230,Math.min(230,
+                s.vy[i]+vy/Math.max(dt,.016f)*.35f));
+            moved++;
+        }
+        return moved;
+    }
     /** Called AFTER all box solvers and BEFORE visual/tactile composition.
      * Only impossible co-location receives local repulsion. A legal sustained
      * single-cover grip is untouched; there is no objective or heading.
@@ -98,7 +177,7 @@ public final class MaterialContactConstraints {
             float dx=skin.x[i]-skin.x[j],dy=skin.y[i]-skin.y[j];
             if(dx*dx+dy*dy<MIN_DIST2){degenerate=true;break;}
         }
-        if(!degenerate)return changed;
+        if(!degenerate&&changed==0)return 0;
         int fixed=0;
         for(int i=1;i<Morphology.POINTS&&fixed<MAX_REPAIRS;i++){
             if(!overlapsEarlier(skin,i,skin.x[i],skin.y[i],MIN_DIST2))
@@ -121,7 +200,7 @@ public final class MaterialContactConstraints {
                     float angle=phase+n*(float)(Math.PI/8);
                     float nx=skin.x[i]+radius*(float)Math.cos(angle);
                     float ny=skin.y[i]+radius*(float)Math.sin(angle);
-                    if(insideCover(nx,ny,boxes)||
+                    if(!legalStep(skin.x[i],skin.y[i],nx,ny,boxes)||
                        overlapsEarlier(skin,i,nx,ny,MIN_DIST2))continue;
                     float ddx=nx-skin.x[i],ddy=ny-skin.y[i];
                     releaseDuplicateAt(i,skin,boxes);
@@ -139,6 +218,9 @@ public final class MaterialContactConstraints {
                 releaseDuplicateAt(i,skin,boxes);
             }
         }
+        // Re-open crowded groups from the outside as well, or the first
+        // 20 free patches obstruct the 76 still-collapsed ones indefinitely.
+        if(degenerate)fixed+=relievePressure(skin,boxes,dt);
         historicalRepairs+=fixed;
         // A moved particle no longer supplies a phantom bilateral hold:
         // calculate this-frame box eligibility from surviving real holds.
