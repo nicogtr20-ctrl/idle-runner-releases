@@ -194,11 +194,24 @@ public final class Morphology {
                 int j=(i+1)%POINTS;
                 float edx=x[j]-x[i],edy=y[j]-y[i];
                 float d=(float)Math.hypot(edx,edy);
-                if(d<.0001f)continue;
                 float rest=(float)Math.hypot(ax[j]-ax[i],ay[j]-ay[i]);
-                float rel=((vx[j]-vx[i])*edx+(vy[j]-vy[i])*edy)/d;
+                float nx,ny;
+                if(d<.0001f){
+                    // Exact coincidences were a zero-force blind spot:
+                    // every collapsed neighboring pair skipped its ONLY
+                    // connective spring, trapping 96 points as one red dot.
+                    // Use their OWN interpolated physical anchors to recover
+                    // a spring direction, not a target/gem/fixed escape path.
+                    nx=ax[j]-ax[i];ny=ay[j]-ay[i];
+                    float len=(float)Math.hypot(nx,ny);
+                    if(len<.0001f){
+                        float a=(float)(2*Math.PI*i/POINTS);
+                        nx=-(float)Math.sin(a);ny=(float)Math.cos(a);
+                    }else{nx/=len;ny/=len;}
+                }else{nx=edx/d;ny=edy/d;}
+                float rel=(vx[j]-vx[i])*nx+(vy[j]-vy[i])*ny;
                 float force=clamp((d-rest)*18f+rel*1.2f,-2400,2400);
-                float px=force*edx/d,py=force*edy/d;
+                float px=force*nx,py=force*ny;
                 fx[i]+=px;fy[i]+=py;fx[j]-=px;fy[j]-=py;
             }
             float damping=(float)Math.exp(-3f*dt);
