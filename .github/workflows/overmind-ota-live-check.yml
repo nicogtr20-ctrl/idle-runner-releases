@@ -1,4 +1,5 @@
 name: Verify LIVE OVERMIND OTA delivery
+# OTA144 CRITICAL app-start crash recovery, verify exact APK + public manifest.
 # OTA143 Symbiote 1.0 production proof: signed manifest, APK bytes, SHA-256.
 # OTA137 four-part causal sequence production proof: manifest, APK length and SHA-256.
 # OTA135 recurrent primary: verify complete signed manifest and exact APK bytes.
