@@ -19,6 +19,10 @@ public final class ObjectContinuityV21 {
     private static final String FORMAT="oc21";
     public static final int RAYS=16, ACTIONS=16, MAX_TRACKS=12;
     private static final float STEP=22f, MAX_RAY=1f;
+    // Partial surfaces may disappear behind the creature or another solid for
+    // a few observations. Remember them longer, but NEVER match an ambiguous
+    // near-tie or resurrect a real game object by ID.
+    private static final int MAX_UNSEEN=14;
     private final ArrayList<Track> tracks=new ArrayList<>();
     private final long[] attempts=new long[ACTIONS],moves=new long[ACTIONS];
     private final long[] contactPositive=new long[ACTIONS],contactNegative=new long[ACTIONS];
@@ -27,6 +31,8 @@ public final class ObjectContinuityV21 {
     private double heldoutError,baselineError;
     private int epoch,nextId=1,focusedId=-1,pendingId=-1,pendingAction=-1;
     private int previousLinkedId=-1,linkedAge=1000,competingMoves=0;
+    private int lastCorroboratedMoveId=-1;
+    private float lastCorroboratedConfidence;
     private float focusedConfidence,lastTouch,pendingX,pendingY,observedX,observedY;
     private boolean pendingTouch,pendingStable;
     private int pendingPositive,pendingNegative;
@@ -106,7 +112,7 @@ public final class ObjectContinuityV21 {
             int bestIndex=-1;float best=Float.POSITIVE_INFINITY,second=Float.POSITIVE_INFINITY;
             for(int i=0;i<tracks.size();i++){
                 Track t=tracks.get(i);
-                if(taken[i]||epoch-t.updated>7)continue;
+                if(taken[i]||epoch-t.updated>MAX_UNSEEN)continue;
                 float d=dist(t.x,t.y,hit.x,hit.y);
                 float deltaSpan=Math.abs(t.span-hit.span)*8f;
                 float score=d+deltaSpan+Math.abs(t.depth-hit.depth)*.12f;
@@ -132,6 +138,9 @@ public final class ObjectContinuityV21 {
             // Stable means independently observed across multiple sweeps.
             float confidence=assigned.seen<3?0:
                 clamp((assigned.seen-2)/5f,0,1)*clamp(1f-best/105f,.2f,1f);
+            // A reappearing surface is a hypothesis, with freshness reducing
+            // confidence rather than creating a guaranteed identity.
+            confidence*=clamp(1f-(epoch-assigned.updated)/18f,.25f,1f);
             if(distance<140f&&confidence>.20f){
                 candidates++;
                 if(distance<nearestRange){
@@ -146,7 +155,7 @@ public final class ObjectContinuityV21 {
     }
     private void expire(){
         for(int i=tracks.size()-1;i>=0;i--){
-            if(epoch-tracks.get(i).updated>8)tracks.remove(i);
+            if(epoch-tracks.get(i).updated>MAX_UNSEEN)tracks.remove(i);
         }
     }
     private Track find(int id){
@@ -155,6 +164,7 @@ public final class ObjectContinuityV21 {
     }
     /** Only the final REAL action; never a proposed or imagined action. */
     public void chosen(int action){
+        lastCorroboratedMoveId=-1;lastCorroboratedConfidence=0;
         pendingId=-1;pendingAction=-1;pendingTouch=false;pendingStable=false;
         pendingPositive=pendingNegative=0;
         if(action<0||action>=ACTIONS){invalid++;return;}
@@ -198,6 +208,10 @@ public final class ObjectContinuityV21 {
         float visibleMotion=comparable?dist(pendingX,pendingY,t.x,t.y):0f;
         // Noise due to off-centre membrane-mounted rays can exceed a cell.
         boolean candidate=comparable&&externalMotion>.015f&&visibleMotion>8f;
+        // Only real independent displacement of an anonymously matched ray
+        // surface can introduce a causal intervention hypothesis. No engine ID.
+        lastCorroboratedMoveId=candidate?id:-1;
+        lastCorroboratedConfidence=candidate?focusedConfidence:0f;
         if(holdout){
             if(comparable){
                 heldout++;
@@ -220,6 +234,8 @@ public final class ObjectContinuityV21 {
             previousLinkedId=id;linkedAge=0;
         }else if(linkedAge>8){previousLinkedId=-1;competingMoves=0;}
     }
+    public int corroboratedMovementTrack(){return lastCorroboratedMoveId;}
+    public float corroboratedMovementConfidence(){return lastCorroboratedConfidence;}
     public float confidence(){
         double base=heldout==0?Double.NaN:baselineError/heldout;
         double err=heldout==0?Double.NaN:heldoutError/heldout;
@@ -303,6 +319,7 @@ public final class ObjectContinuityV21 {
         nextId=1;epoch=0;focusedConfidence=0;lastTouch=0;
         pendingTouch=pendingStable=false;pendingPositive=pendingNegative=0;
         linkedAge=1000;competingMoves=0;
+        lastCorroboratedMoveId=-1;lastCorroboratedConfidence=0;
     }
     public void resumeLife(){resetLife();}
 }
