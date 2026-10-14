@@ -136,6 +136,44 @@ public final class MaterialContactRegression {
             separated+", corrections="+total);
         yes(total>0,"No physical repair after impossible collapsed material");
     }
+    private static void repeatedlySolveTwoCovers(){
+        MotorBrain.Body b=new MotorBrain.Body();
+        for(int i=0;i<MotorBrain.N;i++){
+            b.x[i]+=65;b.y[i]+=35;
+        }
+        MaterialGeometry.observe(b);
+        Morphology.Surface s=new Morphology.Surface(b);
+        UnknownWorld.Entity a=new UnknownWorld.Entity(0,0,2,5);
+        UnknownWorld.Entity c=new UnknownWorld.Entity(-38.2f,-36.5f,2,5);
+        ArrayList<UnknownWorld.Entity> world=new ArrayList<>();
+        world.add(a);world.add(c);
+        for(int i=0;i<Morphology.POINTS;i++){
+            s.x[i]=-17f;s.y[i]=-21f;
+            s.gripCommand[i]=1f;s.gripHold[i]=.25f;
+            a.boxGripHold[i]=c.boxGripHold[i]=.25f;
+        }
+        int best=1;
+        for(int frame=0;frame<50;frame++){
+            float[] oldX=s.x.clone(),oldY=s.y.clone();
+            float[] oldBX=b.x.clone(),oldBY=b.y.clone();
+            float oldCX=b.cx,oldCY=b.cy;
+            SquareGripPuzzle.constrain(b,s,a,.035f,
+                oldX,oldY,oldBX,oldBY,oldCX,oldCY);
+            SquareGripPuzzle.constrain(b,s,c,.035f,
+                oldX,oldY,oldBX,oldBY,oldCX,oldCY);
+            MaterialContactConstraints.reconcile(b,s,world,.035f);
+            GripSurfaceComposition.compose(s,null,world);
+            yes(shared(a,c)==0,
+                "Real consecutive cover solvers re-created two box owners");
+            best=Math.max(best,unique(s,.65f));
+            for(int i=0;i<Morphology.POINTS;i++)
+                yes(s.gripCommand[i]==1f,
+                    "Physics imposed grip release on ZERO's action command");
+        }
+        yes(best>=20,
+            "Actual two-box collision pipeline keeps membrane as one red pixel: "+
+            best);
+    }
     private static void separateLegitimateGrips(){
         MotorBrain.Body b=new MotorBrain.Body();
         Morphology.Surface s=new Morphology.Surface(b);
@@ -165,6 +203,7 @@ public final class MaterialContactRegression {
         phantomEnergy();
         invalidPolygonHasNoPhantomFilledArea();
         twoBoxes();
+        repeatedlySolveTwoCovers();
         separateLegitimateGrips();
         System.out.println("PASS: OTA127 double 96-patch collapsed trap disperses by physical finite-area exclusion, no shared owners, real energy contact only and legal independent grips retained");
     }
