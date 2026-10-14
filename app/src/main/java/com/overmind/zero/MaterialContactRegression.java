@@ -67,11 +67,19 @@ public final class MaterialContactRegression {
         // inner mass is within 17 units.
         float[] px={-80f,80f,-80f,80f};
         float[] py={-80f,80f,80f,-80f};
-        for(int i=0;i<Morphology.POINTS;i++){
-            int side=i/24,j=(side+1)%4;
-            float t=(i%24)/24f;
-            skin.x[i]=px[side]*(1-t)+px[j]*t;
-            skin.y[i]=py[side]*(1-t)+py[j]*t;
+        // Odd subdivisions on BOTH diagonals keep their intersection
+        // strictly inside the two links, not exactly at a sampled vertex.
+        int[] parts={23,25,23,25};
+        int start=0;
+        for(int side=0;side<4;side++){
+            int j=(side+1)%4;
+            for(int p=0;p<parts[side];p++){
+                int i=start+p;
+                float t=p/(float)parts[side];
+                skin.x[i]=px[side]*(1-t)+px[j]*t;
+                skin.y[i]=py[side]*(1-t)+py[j]*t;
+            }
+            start+=parts[side];
         }
         yes(MaterialGeometry.selfCrossings(skin)>0,
             "Crossed membrane fixture not detected");
