@@ -60,6 +60,8 @@ public final class SensorimotorMind {
     // Shared sensory/action/effect ledger; strictly observer-only in ZERO21.
     private transient UnifiedCognitionV21 unifiedCognition;
     private transient ObjectContinuityV21 objectContinuity;
+    // Long-delayed evidence belongs to the ONE 2.2 policy.
+    private transient CausalSequenceV23 causalSequence;
     private transient UnifiedArbiterV21 unifiedArbiter;
     private transient Morphology.Surface lastActualGripSurface;
     /** Never set by GameActivity. Sandbox arena may test bounded advice. */
@@ -114,6 +116,7 @@ public final class SensorimotorMind {
             if(objectExperience!=null)objectExperience.energyContact(actualEnergyDelta,visuallyObservedSignature,visibleAtTouch);
             if(unifiedCognition!=null)unifiedCognition.energyContact(actualEnergyDelta);
             if(objectContinuity!=null)objectContinuity.energyContact(actualEnergyDelta);
+            if(causalSequence!=null)causalSequence.contactEnergy(actualEnergyDelta,visuallyObservedSignature);
             if(physicalChainV20!=null)physicalChainV20.energyOutcome(actualEnergyDelta);
             if(bodySchema!=null)bodySchema.actualEnergy(actualEnergyDelta);
             if(distributedBody!=null)distributedBody.actualEnergy(actualEnergyDelta);
@@ -157,6 +160,7 @@ public final class SensorimotorMind {
     public synchronized void attachObjectExperienceV20(ObjectExperienceV20 model){objectExperience=model;}
     public synchronized void attachUnifiedCognitionV21(UnifiedCognitionV21 model){unifiedCognition=model;}
     public synchronized void attachObjectContinuityV21(ObjectContinuityV21 model){objectContinuity=model;}
+    public synchronized void attachCausalSequenceV23(CausalSequenceV23 model){causalSequence=model;}
     public synchronized void attachUnifiedArbiterV21(UnifiedArbiterV21 model){unifiedArbiter=model;}
     /** Experimental research only; OFF by default in every actual app profile. */
     public synchronized void enableZero20ExperimentalAdvice(boolean enabled){
@@ -245,6 +249,7 @@ public final class SensorimotorMind {
         if(objectExperience!=null)objectExperience.resetLife();
         if(unifiedCognition!=null)unifiedCognition.resetLife();
         if(objectContinuity!=null)objectContinuity.resetLife();
+        if(causalSequence!=null)causalSequence.resetLife();
         if(unifiedArbiter!=null)unifiedArbiter.resetLife();
         if(activeCore!=null)activeCore.resetLife();
         if(gripAffordanceV20!=null)gripAffordanceV20.resetLife();
@@ -274,6 +279,7 @@ public final class SensorimotorMind {
         if(objectExperience!=null)objectExperience.resetLife();
         if(unifiedCognition!=null)unifiedCognition.resetLife();
         if(objectContinuity!=null)objectContinuity.resetLife();
+        if(causalSequence!=null)causalSequence.resetLife();
         if(unifiedArbiter!=null)unifiedArbiter.resetLife();
         if(activeCore!=null)activeCore.resetLife();
         if(gripAffordanceV20!=null)gripAffordanceV20.resetLife();
@@ -329,6 +335,8 @@ public final class SensorimotorMind {
     /** End-of-life logger path, BEFORE the existing transient brain reset. */
     public synchronized void recordTerminal(float[] observed,float physicalEffect,
                                             MotorBrain.Body body){
+        // An interrupted trace at death is censored, not a fake failure.
+        if(causalSequence!=null)causalSequence.resetLife();
         if(activeCore!=null){feedCore(observed);boolean held=diagnostics.shouldHoldout();
             activeCore.consequence(actualEnergySinceChoice,actualContactHarm,learning&&!held,held,true);}
         if(blackbox!=null)blackbox.terminal(observed,actualEnergySinceChoice,
@@ -374,7 +382,8 @@ public final class SensorimotorMind {
     private int choosePrimaryV22(float[] senses){
         feedCore(senses);
         float[] observedMeans=new float[ACTIONS],navTerms=new float[ACTIONS],
-            causalTerms=new float[ACTIONS],objectTerms=new float[ACTIONS];
+            causalTerms=new float[ACTIONS],objectTerms=new float[ACTIONS],
+            sequenceTerms=new float[ACTIONS];
         for(int a=0;a<ACTIONS;a++){
             float nav=navigation!=null&&navigationAdviceEnabled
                 ?navigation.bias(a,senses[0]):0f;
@@ -382,8 +391,11 @@ public final class SensorimotorMind {
                 ?causal.choiceBias(spatial,a):0f;
             float object=objectExperience!=null
                 ?objectExperience.choiceBias(a,senses[0]):0f;
+            float seq=causalSequence==null||objectContinuity==null?0f:
+                causalSequence.choiceBias(a,senses,objectContinuity.currentTrackConfidence());
             navTerms[a]=nav;causalTerms[a]=effect;objectTerms[a]=object;
-            observedMeans[a]=nav+effect+object;
+            sequenceTerms[a]=seq;
+            observedMeans[a]=nav+effect+object+seq;
         }
         float[] scores=activeCore.primaryScores(observedMeans);
         int greedyAction=0;
@@ -401,7 +413,7 @@ public final class SensorimotorMind {
             float[] breakdown=new float[DecisionBlackbox.TERMS];
             breakdown[12]=.40f*navTerms[chosen];
             breakdown[11]=.40f*causalTerms[chosen];
-            breakdown[14]=.40f*objectTerms[chosen];
+            breakdown[14]=.40f*(objectTerms[chosen]+sequenceTerms[chosen]);
             // On OTA132 the historically named 'recurrentDelta' field is
             // the absolute PRIMARY recurrent contribution (not a delta to
             // the previous brain). Source version and report mode disambiguate.
@@ -432,6 +444,11 @@ public final class SensorimotorMind {
             intention.chosen(navigation,chosen,senses[0]);
         actualEnergySinceChoice=actualContactHarm=actualAmbientLossSinceChoice=0f;
         action=chosen;decisions++;
+        if(causalSequence!=null)
+            causalSequence.chosen(chosen,senses,
+                objectContinuity==null?-1:objectContinuity.currentAnonymousTrack(),
+                objectContinuity==null?0f:objectContinuity.currentTrackConfidence(),
+                activeCore.state());
         activeCore.chosen(chosen);
         if(worldV20!=null)worldV20.chosen(chosen,senses);
         if(transferV20!=null)transferV20.chosen(chosen,senses);
@@ -875,6 +892,10 @@ public final class SensorimotorMind {
             after,Math.max(0f,physicalEffect),learning&&!holdout,holdout);
         if(objectContinuity!=null)objectContinuity.consequence(
             Math.max(0f,physicalEffect),learning&&!holdout,holdout);
+        if(causalSequence!=null&&activeCore!=null)
+            causalSequence.consequence(after,
+                objectContinuity==null?-1:objectContinuity.corroboratedMovementTrack(),
+                Math.max(0f,physicalEffect),learning&&!holdout,holdout,activeCore);
         if(spatial!=null&&body!=null&&objects!=null)
             spatial.consequence(trialAction,lastReward,learning&&!holdout,holdout);
         if(causal!=null&&spatial!=null&&body!=null&&objects!=null)
