@@ -444,11 +444,15 @@ public final class SensorimotorMind {
             // perceptible physical affordance + reserve allow it into utility.
             // No hidden object identity, hardcoded heading or navigation.
             float earnedValue=contactCredit.adaptiveValue(senses,a);
-            // Only a validated lived-death predictor can modulate energy-
-            // SOURCE evidence. Never assign death to action, grip or geometry.
-            if(mortality!=null)
-                earnedValue+=mortality.energyAdvice(senses[0],
+            // Preserve the EXACT pre-existing single mortality-advice call.
+            // The logger merely stores its return value, never evaluates it
+            // twice (energyAdvice also increments a diagnostic counter).
+            float mortalityBoost=0f;
+            if(mortality!=null){
+                mortalityBoost=mortality.energyAdvice(senses[0],
                     contactCredit.energeticValue(senses,a));
+                earnedValue+=mortalityBoost;
+            }
             // Recurrent recent-history advice is exactly zero until its
             // temporal prediction wins on held-out real transitions.
             float temporalBias=temporal==null?0:temporal.choiceBias(a);
@@ -497,6 +501,11 @@ public final class SensorimotorMind {
                 t[7]=temporalBias;t[8]=skillBias;t[9]=fullBodyBias;
                 t[10]=spatialBias;t[11]=causalBias;t[12]=instrumental;
                 t[13]=intentBias;
+                t[14]=objectBias;
+                t[15]=zero20ExperimentalAdvice&&a==v20Recommended?v20Bias:0f;
+                // Read-only breakdown: not additional policy terms.
+                t[17]=contactCredit.energeticValue(senses,a)+mortalityBoost;
+                t[18]=earnedValue-t[17];
             }
             if(score>best){best=score;chosen=a;}
         }
@@ -505,8 +514,12 @@ public final class SensorimotorMind {
             float[] unifiedScores=activeCore.evaluate(traceScores);
             best=-Float.MAX_VALUE;
             for(int a=0;a<ACTIONS;a++){
+                // Preserve the raw legacy/additive reasons. Record exactly
+                // how much the validated recurrent core changed this action's
+                // FINAL score. Never change policy scores or argmax.
+                if(traceTerms!=null)traceTerms[a][16]=
+                    unifiedScores[a]-traceScores[a];
                 if(traceScores!=null)traceScores[a]=unifiedScores[a];
-                if(traceTerms!=null){Arrays.fill(traceTerms[a],0);traceTerms[a][0]=unifiedScores[a];}
                 if(unifiedScores[a]>best){best=unifiedScores[a];chosen=a;}
             }
         }
