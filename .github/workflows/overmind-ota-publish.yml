@@ -925,7 +925,12 @@ jobs:
           'BodyIntegrityObstacleRegression.java':'d9b4b6d1847ea78787dacc531188d2b61318487f'}
           # The corrected active core is permitted to bias ONLY actions with
           # heldout-validated world confidence; contact is not an auto-grip.
-          assert 'Math.min(.85f,maturity*trust)' in (root/'RecurrentCoreV22.java').read_text()
+          core=(root/'RecurrentCoreV22.java').read_text()
+          assert 'Math.min(.85f,maturity*energyTrust)' in core
+          assert 'Math.min(.16f,.35f*maturity*physicalTrust)' in core
+          assert 'if(energyTrust<=0)delta=clip(delta,-.12f,.12f);' in core
+          assert 'energyConfidence(a)' in core
+          assert 'train(pool.get(replayRandom.nextInt(pool.size())),k==0)' in core
           assert 'stabilizeExistingGrip' in (root/'SquareGripPuzzle.java').read_text()
           assert 'environmentEffectSinceAction+=Math.min(2f,actualBoxMotion);' in (root/'GameActivity.java').read_text()
           # OTA128: ONLY validated material world corrections, not a new
