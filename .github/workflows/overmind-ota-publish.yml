@@ -923,12 +923,13 @@ jobs:
           'BodyIntegrity.java':'e551493723d13006d5e6905690c0ab0ee9e13d17',
           'BodyIntegrityRecoveredSnapshotsRegression.java':'d536451adb05cb742176ec559460066bd637c453',
           'BodyIntegrityObstacleRegression.java':'d9b4b6d1847ea78787dacc531188d2b61318487f'}
-          # The corrected active core is permitted to bias ONLY actions with
-          # heldout-validated world confidence; contact is not an auto-grip.
+          # OTA131 regression containment: recurrent value/risk heads are
+          # trained and monitored, but no unchecked outcome prediction may
+          # change incumbent scored actions or suppress exploration.
           core=(root/'RecurrentCoreV22.java').read_text()
-          assert 'Math.min(.85f,maturity*energyTrust)' in core
-          assert 'Math.min(.16f,.35f*maturity*physicalTrust)' in core
-          assert 'if(energyTrust<=0)delta=clip(delta,-.12f,.12f);' in core
+          assert 'return oldScores==null?scores:oldScores.clone();' in core
+          assert 'return previous;' in core
+          assert 'SHADOW POLICY' in core
           assert 'energyConfidence(a)' in core
           assert 'train(pool.get(replayRandom.nextInt(pool.size())),k==0)' in core
           assert 'stabilizeExistingGrip' in (root/'SquareGripPuzzle.java').read_text()
