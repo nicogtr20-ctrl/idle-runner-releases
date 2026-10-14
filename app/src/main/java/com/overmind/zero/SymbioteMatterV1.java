@@ -1,0 +1,313 @@
+package com.overmind.zero;
+
+import java.util.Arrays;
+import java.util.Locale;
+
+/**
+ * SYMBIOTE 1.0 — 2D active cortex + materially conserved viscous interior.
+ * The existing 10 MotorBrain nodes are genuine particles in the liquid,
+ * NOT spokes/anchors, and 64 further mobile parcels carry volume inside.
+ * All 96 Morphology.Surface points remain true collidable membrane material.
+ * There is no artificial central mass, target, entity identity or food rule.
+ *
+ * One fixed-duration physics step regardless of UI x1/x5/x20/TEST MAX.
+ * The chosen neural motor head provides a continuous sector field of
+ * extension/tangential actuation/substrate friction/cortex stiffness.
+ */
+public final class SymbioteMatterV1 {
+    public static final String KEY="symbiote_body_v1";
+    public static final String ENABLED="symbiote_body_v1_enabled";
+    public static final int INNER=64, SECTORS=16, OUTPUTS=4;
+    private static final int SURFACE=Morphology.POINTS;
+    public final float[] x=new float[INNER],y=new float[INNER],vx=new float[INNER],vy=new float[INNER];
+    private final float[] lastX=new float[INNER],lastY=new float[INNER];
+    private final float[] lastSkinX=new float[SURFACE],lastSkinY=new float[SURFACE];
+    private final float[] lastBodyX=new float[MotorBrain.N],lastBodyY=new float[MotorBrain.N];
+    private final float[] fx=new float[SURFACE],fy=new float[SURFACE];
+    private final float[] nx=new float[SURFACE],ny=new float[SURFACE];
+    private final float[] impulsesX=new float[MotorBrain.N+INNER],impulsesY=new float[MotorBrain.N+INNER];
+    private final float[] fluidX=new float[MotorBrain.N+INNER],fluidY=new float[MotorBrain.N+INNER];
+    private final float[] fluidVx=new float[MotorBrain.N+INNER],fluidVy=new float[MotorBrain.N+INNER];
+    private static final float TWO_PI=(float)(2*Math.PI), R=28f;
+    public float restArea=(float)Math.PI*R*R,areaError=0f,work=0f,maxReach=0f;
+    public long ticks=0,invalid=0,topologyRepairs=0;
+    private float time=0f;
+    public SymbioteMatterV1(){}
+    private static float clip(float a,float lo,float hi){return Math.max(lo,Math.min(hi,a));}
+    private static float len(float a,float b){return (float)Math.sqrt(a*a+b*b);}
+    /** Allocate distributed matter in deterministic concentric sample rings.
+     * Initial matter coordinates are not permanent: no spoke constraints. */
+    public void reset(MotorBrain.Body body,Morphology.Surface skin){
+        if(body==null||skin==null)throw new IllegalArgumentException("Missing actual organism");
+        float ox=body.cx,oy=body.cy;
+        for(int i=0;i<MotorBrain.N;i++){
+            float a=i*TWO_PI/MotorBrain.N;
+            body.x[i]=ox+17f*(float)Math.cos(a);
+            body.y[i]=oy+17f*(float)Math.sin(a);
+            body.vx[i]=body.vy[i]=0;
+        }
+        int[] counts={8,12,20,24};
+        float[] radii={5,10,15,21};
+        int k=0;
+        for(int ring=0;ring<counts.length;ring++)
+            for(int j=0;j<counts[ring];j++){
+                float a=TWO_PI*(j+.29f*(ring&1))/counts[ring];
+                x[k]=ox+radii[ring]*(float)Math.cos(a);
+                y[k]=oy+radii[ring]*(float)Math.sin(a);
+                vx[k]=vy[k]=0;
+                k++;
+            }
+        for(int i=0;i<SURFACE;i++){
+            float a=i*TWO_PI/SURFACE;
+            skin.x[i]=ox+R*(float)Math.cos(a);
+            skin.y[i]=oy+R*(float)Math.sin(a);
+            skin.vx[i]=skin.vy[i]=skin.extension[i]=0;
+            skin.gripCommand[i]=skin.touchSense[i]=skin.gripHold[i]=0;
+        }
+        restArea=absArea(skin);
+        areaError=work=maxReach=time=0;
+        ticks=invalid=topologyRepairs=0;
+        MaterialGeometry.observe(body);
+    }
+    public static float signedArea(Morphology.Surface skin){
+        float a=0;
+        for(int i=0;i<SURFACE;i++){
+            int j=(i+1)%SURFACE;
+            a+=skin.x[i]*skin.y[j]-skin.x[j]*skin.y[i];
+        }
+        return .5f*a;
+    }
+    public static float absArea(Morphology.Surface skin){return Math.abs(signedArea(skin));}
+    /** A material parcel is never created, destroyed or snapped to a goal. */
+    public float areaRelativeError(Morphology.Surface skin){
+        return Math.abs(absArea(skin)-restArea)/Math.max(1f,restArea);
+    }
+    private static boolean inside(Morphology.Surface skin,float px,float py){
+        boolean state=false;
+        for(int i=0,j=SURFACE-1;i<SURFACE;j=i++){
+            float ax=skin.x[i],ay=skin.y[i],bx=skin.x[j],by=skin.y[j];
+            if((ay>py)!=(by>py)&&px<(bx-ax)*(py-ay)/(by-ay)+ax)state=!state;
+        }
+        return state;
+    }
+    /** XPBD membrane area constraint; 2D mass conservation without a
+     * centroid force or radial length target. */
+    private void projectArea(Morphology.Surface skin,float dt){
+        float signed=signedArea(skin);
+        float diff=signed-restArea;
+        float sum=0;
+        for(int i=0;i<SURFACE;i++){
+            int a=(i+SURFACE-1)%SURFACE,b=(i+1)%SURFACE;
+            nx[i]=.5f*(skin.y[b]-skin.y[a]);
+            ny[i]=.5f*(skin.x[a]-skin.x[b]);
+            // Real adhesive contact is not teleported to fix shape.
+            if(skin.gripHold[i]>=Morphology.GRIP_HOLD)continue;
+            sum+=nx[i]*nx[i]+ny[i]*ny[i];
+        }
+        if(sum<.0001f)return;
+        float alpha=.001f/(dt*dt);
+        float change=-diff/(sum+alpha);
+        for(int i=0;i<SURFACE;i++){
+            if(skin.gripHold[i]>=Morphology.GRIP_HOLD)continue;
+            float dx=clip(change*nx[i],-1.8f,1.8f);
+            float dy=clip(change*ny[i],-1.8f,1.8f);
+            skin.x[i]+=dx;skin.y[i]+=dy;
+        }
+    }
+    /** Conservative interior density/viscosity: all core and liquid parcels
+     * are exchangeable material; no central anchor is privileged. */
+    private void projectInterior(MotorBrain.Body body,Morphology.Surface skin){
+        final int n=MotorBrain.N+INNER;
+        for(int k=0;k<MotorBrain.N;k++){fluidX[k]=body.x[k];fluidY[k]=body.y[k];}
+        for(int k=0;k<INNER;k++){fluidX[k+MotorBrain.N]=x[k];fluidY[k+MotorBrain.N]=y[k];}
+        Arrays.fill(impulsesX,0f);Arrays.fill(impulsesY,0f);
+        final float min=4.15f;
+        for(int i=0;i<n;i++)for(int j=i+1;j<n;j++){
+            float dx=fluidX[j]-fluidX[i],dy=fluidY[j]-fluidY[i];
+            float d2=dx*dx+dy*dy;
+            if(d2>=min*min)continue;
+            if(d2<.00001f){ // deterministic alternate directions, NOT a goal
+                float a=(i*0.311f+j*.79f);
+                dx=(float)Math.cos(a)*.004f;dy=(float)Math.sin(a)*.004f;
+                d2=dx*dx+dy*dy;
+            }
+            float d=(float)Math.sqrt(d2), force=.35f*(min-d)/d;
+            impulsesX[i]-=dx*force;impulsesY[i]-=dy*force;
+            impulsesX[j]+=dx*force;impulsesY[j]+=dy*force;
+        }
+        // Unenclosed fluid cannot escape from the actual membrane: correct
+        // to nearest physical segment inward, never to an imaginary nucleus.
+        for(int i=0;i<n;i++){
+            float px=fluidX[i]+clip(impulsesX[i],-1.8f,1.8f);
+            float py=fluidY[i]+clip(impulsesY[i],-1.8f,1.8f);
+            if(!inside(skin,px,py)){
+                float best=Float.MAX_VALUE,cx=px,cy=py;
+                for(int j=0;j<SURFACE;j++){
+                    int next=(j+1)%SURFACE;
+                    float ax=skin.x[j],ay=skin.y[j],bx=skin.x[next],by=skin.y[next];
+                    float dx=bx-ax,dy=by-ay,div=dx*dx+dy*dy;
+                    float t=div<.00001f?0:clip(((px-ax)*dx+(py-ay)*dy)/div,0,1);
+                    float nearX=ax+t*dx,nearY=ay+t*dy;
+                    float dist=(px-nearX)*(px-nearX)+(py-nearY)*(py-nearY);
+                    if(dist<best){best=dist;cx=nearX;cy=nearY;}
+                }
+                // Retreat only a tiny epsilon into the oriented perimeter,
+                // regardless of what the organism might be reaching toward.
+                float signed=signedArea(skin);
+                float towardX=0,towardY=0;
+                // In a degenerate/disconnected contour skip the correction.
+                // This will be reported as topology loss by validation.
+                if(Math.abs(signed)>.01f){
+                    float insideX=0,insideY=0;
+                    for(int j=0;j<SURFACE;j++){insideX+=skin.x[j];insideY+=skin.y[j];}
+                    insideX/=SURFACE;insideY/=SURFACE;
+                    towardX=insideX-cx;towardY=insideY-cy;
+                    float norm=len(towardX,towardY);
+                    if(norm>.001f){towardX/=norm;towardY/=norm;}
+                }
+                px=cx+towardX*.8f;py=cy+towardY*.8f;
+            }
+            fluidX[i]=px;fluidY[i]=py;
+        }
+        for(int i=0;i<MotorBrain.N;i++){body.x[i]=fluidX[i];body.y[i]=fluidY[i];}
+        for(int i=0;i<INNER;i++){x[i]=fluidX[i+MotorBrain.N];y[i]=fluidY[i+MotorBrain.N];}
+    }
+    public void step(MotorBrain.Body body,Morphology.Surface skin,float[] cortex,
+                     float dt){
+        if(body==null||skin==null||cortex==null||
+           cortex.length!=SECTORS*OUTPUTS||!Float.isFinite(dt)||dt<=0||dt>.04f)
+            throw new IllegalArgumentException("Invalid symbiote physical input");
+        for(float v:cortex)if(!Float.isFinite(v)||v<-1.01f||v>1.01f)
+            throw new IllegalArgumentException("Non-finite muscle command");
+        time+=dt;body.time+=dt;ticks++;
+        MaterialGeometry.observe(body);
+        float cx=body.cx,cy=body.cy;
+        for(int i=0;i<SURFACE;i++){
+            lastSkinX[i]=skin.x[i];lastSkinY[i]=skin.y[i];
+            float dx=skin.x[i]-cx,dy=skin.y[i]-cy;
+            float rr=len(dx,dy);
+            if(rr<.00001f){dx=(float)Math.cos(i*TWO_PI/SURFACE);dy=(float)Math.sin(i*TWO_PI/SURFACE);rr=1;}
+            // The physical outward gradient is a boundary-normal estimate,
+            // not the direction to a resource or a global target.
+            float ux=dx/rr,uy=dy/rr;
+            int sector=i*SECTORS/SURFACE;
+            float extend=clip(cortex[sector*OUTPUTS],-1,1);
+            float lateral=clip(cortex[sector*OUTPUTS+1],-1,1);
+            float adhesive=clip(cortex[sector*OUTPUTS+2],-1,1)*.5f+.5f;
+            float stiffness=clip(cortex[sector*OUTPUTS+3],-1,1)*.5f+.5f;
+            // Local active cortico-muscular force. Equal reaction is applied
+            // to real liquid particles below, not to the centroid.
+            fx[i]=ux*extend*680f-uy*lateral*210f;
+            fy[i]=uy*extend*680f+ux*lateral*210f;
+            // Neighbour smoothing = surface tension; stiffness modulates
+            // corticoelastic relaxation without a fixed radial spring.
+            int p=(i+SURFACE-1)%SURFACE,n=(i+1)%SURFACE;
+            fx[i]+=(skin.x[p]+skin.x[n]-2*skin.x[i])*(85f+stiffness*190f);
+            fy[i]+=(skin.y[p]+skin.y[n]-2*skin.y[i])*(85f+stiffness*190f);
+            // Grip command is an INTENTION. Real box/door contact solver owns
+            // the hold timer. No compulsory automatic adhesion.
+            skin.gripCommand[i]=adhesive;
+            skin.extension[i]=Math.max(0,extend)*Morphology.MAX_REACH;
+            float drag=(float)Math.exp(-(2.4f+adhesive*7.5f)*dt);
+            skin.vx[i]=clip((skin.vx[i]+fx[i]*dt)*drag,-140f,140f);
+            skin.vy[i]=clip((skin.vy[i]+fy[i]*dt)*drag,-140f,140f);
+            skin.x[i]+=skin.vx[i]*dt;skin.y[i]+=skin.vy[i]*dt;
+            work+=(Math.abs(extend)+.25f*Math.abs(lateral)+adhesive*.1f)*dt*.0002f;
+        }
+        // Real opposite impulse distributed by proximity of membrane patches
+        // to actual fluid material, respecting momentum (before substrate
+        // damping), rather than pulling against an infinite-mass ghost core.
+        final int n=INNER+MotorBrain.N;
+        for(int i=0;i<MotorBrain.N;i++){
+            lastBodyX[i]=body.x[i];lastBodyY[i]=body.y[i];
+            fluidX[i]=body.x[i];fluidY[i]=body.y[i];
+            fluidVx[i]=body.vx[i];fluidVy[i]=body.vy[i];
+        }
+        for(int i=0;i<INNER;i++){
+            lastX[i]=x[i];lastY[i]=y[i];
+            fluidX[i+MotorBrain.N]=x[i];fluidY[i+MotorBrain.N]=y[i];
+            fluidVx[i+MotorBrain.N]=vx[i];fluidVy[i+MotorBrain.N]=vy[i];
+        }
+        Arrays.fill(impulsesX,0f);Arrays.fill(impulsesY,0f);
+        for(int i=0;i<SURFACE;i++){
+            float normalizer=0;
+            for(int j=0;j<n;j++){
+                float d=len(fluidX[j]-lastSkinX[i],fluidY[j]-lastSkinY[i]);
+                if(d<24f)normalizer+=1f/(3f+d);
+            }
+            if(normalizer<.0001f)continue;
+            for(int j=0;j<n;j++){
+                float d=len(fluidX[j]-lastSkinX[i],fluidY[j]-lastSkinY[i]);
+                if(d>=24f)continue;
+                float share=(1f/(3f+d))/normalizer;
+                impulsesX[j]-=fx[i]*dt*share/SURFACE;
+                impulsesY[j]-=fy[i]*dt*share/SURFACE;
+            }
+        }
+        for(int j=0;j<n;j++){
+            // Damping through real material rather than position teleport.
+            float drag=(float)Math.exp(-2.3f*dt);
+            fluidVx[j]=clip((fluidVx[j]+impulsesX[j])*drag,-140f,140f);
+            fluidVy[j]=clip((fluidVy[j]+impulsesY[j])*drag,-140f,140f);
+            fluidX[j]+=fluidVx[j]*dt;
+            fluidY[j]+=fluidVy[j]*dt;
+        }
+        for(int i=0;i<MotorBrain.N;i++){
+            body.x[i]=fluidX[i];body.y[i]=fluidY[i];
+        }
+        for(int i=0;i<INNER;i++){x[i]=fluidX[i+MotorBrain.N];y[i]=fluidY[i+MotorBrain.N];}
+        // Bounded XPBD-like projections: cortex arc-length/tension,
+        // quasi-incompressible area, and local density in the same iteration.
+        for(int iter=0;iter<3;iter++){
+            // A soft cortex can stretch locally; it cannot tear unboundedly.
+            for(int i=0;i<SURFACE;i++){
+                int j=(i+1)%SURFACE;
+                float dx=skin.x[j]-skin.x[i],dy=skin.y[j]-skin.y[i];
+                float d=len(dx,dy);
+                if(d<.00001f)continue;
+                float span=2f*(float)Math.PI*R/SURFACE;
+                float limit=span*2.8f;
+                float over=d-limit;
+                if(over>0){
+                    float correction=clip(over*.24f,0,1.2f)/d;
+                    if(skin.gripHold[i]<Morphology.GRIP_HOLD){
+                        skin.x[i]+=dx*correction;skin.y[i]+=dy*correction;
+                    }
+                    if(skin.gripHold[j]<Morphology.GRIP_HOLD){
+                        skin.x[j]-=dx*correction;skin.y[j]-=dy*correction;
+                    }
+                }
+            }
+            projectArea(skin,dt);
+            projectInterior(body,skin);
+        }
+        // Finite-difference post-constraint velocities include real reaction.
+        for(int i=0;i<SURFACE;i++){
+            skin.vx[i]=clip((skin.x[i]-lastSkinX[i])/dt,-180f,180f);
+            skin.vy[i]=clip((skin.y[i]-lastSkinY[i])/dt,-180f,180f);
+        }
+        for(int i=0;i<MotorBrain.N;i++){
+            body.vx[i]=clip((body.x[i]-lastBodyX[i])/dt,-180f,180f);
+            body.vy[i]=clip((body.y[i]-lastBodyY[i])/dt,-180f,180f);
+        }
+        for(int i=0;i<INNER;i++){
+            vx[i]=clip((x[i]-lastX[i])/dt,-180f,180f);
+            vy[i]=clip((y[i]-lastY[i])/dt,-180f,180f);
+        }
+        MaterialGeometry.observe(body);
+        areaError=areaRelativeError(skin);
+        float reach=0;
+        for(int i=0;i<SURFACE;i++){
+            float d=len(skin.x[i]-body.cx,skin.y[i]-body.cy);
+            reach=Math.max(reach,d);
+            if(!Float.isFinite(d)||d>400f){invalid++;break;}
+        }
+        for(int i=0;i<INNER;i++)
+            if(!Float.isFinite(x[i])||!Float.isFinite(y[i])){invalid++;break;}
+        maxReach=Math.max(maxReach,reach);
+        body.totalWork+=work*dt;
+    }
+    public String summary(){
+        return String.format(Locale.US,"SYMBIOTE V1 matter64 cortex96 areaError=%.3f maxReach=%.1f ticks=%d invalid=%d",areaError,maxReach,ticks,invalid);
+    }
+}
