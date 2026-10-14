@@ -175,7 +175,9 @@ public final class SaveSlotStore {
         protectCurrent();
         // The OTHER preferences file contains saved named characters and
         // survives. Start with absolutely no inherited weights/stats.
-        if(!working.edit().clear().putBoolean(PENDING_RELOAD,true).commit())
+        if(!working.edit().clear()
+            .putBoolean(SymbioteMatterV1.ENABLED,true)
+            .putBoolean(PENDING_RELOAD,true).commit())
             throw new IllegalStateException("Nuova partita non avviata");
     }
 }
