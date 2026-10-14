@@ -1,7 +1,7 @@
 name: ZERO22 corrective pre-release QA
 on:
   push:
-    branches: [feature/zero22-confidence-grip-fix, feature/zero22-split-confidence-ota130, feature/zero22-legacy-guard-ota131, feature/zero22-primary-ota132, feature/zero22-causal-memory-ota136, feature/symbiote-body-v1]
+    branches: [feature/zero22-confidence-grip-fix, feature/zero22-split-confidence-ota130, feature/zero22-legacy-guard-ota131, feature/zero22-primary-ota132, feature/zero22-causal-memory-ota136, feature/symbiote-body-v1, hotfix/symbiote-first-frame-crash-ota144]
 permissions:
   contents: read
 jobs:
@@ -115,6 +115,12 @@ jobs:
           assert 'new CausalSequenceV23()' in game
           assert 'new SymbioteMatterV1()' in game
           assert 'symMatter.step(creature,surface,symMotor.commands(),slice)' in game
+          # Android first draw and Activity resume intentionally provide dt=0.
+          # Fluid integration must not observe that zero-duration frame.
+          assert 'float dt=lastFrame==0?0:' in game
+          assert 'if(!Float.isFinite(slice)||slice<=0f)continue;' in game
+          assert game.index('if(!Float.isFinite(slice)||slice<=0f)continue;') < game.index('symMatter.step(creature,surface,symMotor.commands(),slice)')
+
           assert 'attachSymbioteMotorHead(symMotor)' in game
           assert 'SymbioteMatterV1.ENABLED,true' in (p/'SaveSlotStore.java').read_text()
           assert 'CausalSequenceV23.KEY,causalSequenceV23.encode()' in game
