@@ -123,7 +123,10 @@ jobs:
           assert 'contextDistance(s.sensed,sensory)' in bank
           assert 'handTrainer.best,shapeTrainer.best,sensorMind.stateCopy()' in game
           assert 'materialMotionRegression' in learner
-          assert 'working.edit().clear().putBoolean(PENDING_RELOAD,true).commit()' in (root/'SaveSlotStore.java').read_text()
+          slots=(root/'SaveSlotStore.java').read_text()
+          assert 'working.edit().clear()' in slots
+          assert '.putBoolean(SymbioteMatterV1.ENABLED,true)' in slots
+          assert '.putBoolean(PENDING_RELOAD,true).commit()' in slots
           print('ZERO2: competence not reward; sensor-context recall, life-protected gait and legacy saves PASS')
           PY
       - name: Verify ZERO HUD energy, tissue and expandable diagnostics
