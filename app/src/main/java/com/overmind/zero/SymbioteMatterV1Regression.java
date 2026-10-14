@@ -116,6 +116,58 @@ public final class SymbioteMatterV1Regression {
         }
         require(Math.abs(crawler.cx)>.8f,
             "symbiote still cannot locomote despite substrate traction");
+        // OTA146 real-phone regression: global object-grip intention
+        // inadvertently pinned ALL floor contacts even without an object.
+        // A voluntary grip is for a REAL contacted obstacle; it must not
+        // change free-space floor friction when the active shape commands
+        // are otherwise identical. The two organic bodies get exactly
+        // the same muscle commands, except voluntary obstacle grip.
+        MotorBrain.Body freeBody=new MotorBrain.Body();
+        Morphology.Surface freeSkin=new Morphology.Surface(freeBody);
+        SymbioteMatterV1 freeMatter=new SymbioteMatterV1();
+        freeMatter.reset(freeBody,freeSkin);
+        MotorBrain.Body gripBody=new MotorBrain.Body();
+        Morphology.Surface gripSkin=new Morphology.Surface(gripBody);
+        SymbioteMatterV1 gripMatter=new SymbioteMatterV1();
+        gripMatter.reset(gripBody,gripSkin);
+        float[] freeCmd=new float[crawl.length],gripCmd=new float[crawl.length];
+        for(int sector=0;sector<SymbioteMatterV1.SECTORS;sector++){
+            float angle=(float)((sector+.5f)*Math.PI/8f);
+            freeCmd[4*sector]=.65f*(float)Math.cos(angle);
+            freeCmd[4*sector+1]=.20f*(float)Math.sin(angle);
+            freeCmd[4*sector+3]=.40f;
+        }
+        System.arraycopy(freeCmd,0,gripCmd,0,freeCmd.length);
+        for(int sector=0;sector<SymbioteMatterV1.SECTORS;sector++)
+            gripCmd[4*sector+2]=.90f;
+        for(int tick=0;tick<120;tick++){
+            freeMatter.step(freeBody,freeSkin,freeCmd,.025f);
+            gripMatter.step(gripBody,gripSkin,gripCmd,.025f);
+        }
+        for(int i=0;i<Morphology.POINTS;i++)
+            require(Math.abs(freeSkin.x[i]-gripSkin.x[i])<1e-4f&&
+                    Math.abs(freeSkin.y[i]-gripSkin.y[i])<1e-4f,
+                "uncontacted object-grip intention froze membrane on the floor");
+        require(Math.abs(freeBody.cx-gripBody.cx)<1e-4f&&
+                Math.abs(freeBody.cy-gripBody.cy)<1e-4f,
+            "gripping empty space changed locomotion physics");
+
+        // A long-lived organism must still respond to NEW local muscular
+        // commands after 40s of simulated time. Extending a pseudopod is
+        // an external laboratory motor input, not an in-game gait/reward.
+        MotorBrain.Body olderBody=new MotorBrain.Body();
+        Morphology.Surface olderSkin=new Morphology.Surface(olderBody);
+        SymbioteMatterV1 olderMatter=new SymbioteMatterV1();
+        olderMatter.reset(olderBody,olderSkin);
+        for(int t=0;t<1640;t++)olderMatter.step(olderBody,olderSkin,calm,.025f);
+        float oldTip=radius(olderSkin,olderBody.cx,olderBody.cy,0,12);
+        for(int t=0;t<75;t++)olderMatter.step(olderBody,olderSkin,directed,.025f);
+        require(radius(olderSkin,olderBody.cx,olderBody.cy,0,12)>oldTip+4f,
+            "symbiote did not respond to muscles after 41 seconds");
+        require(olderMatter.invalid==0&&
+                MaterialGeometry.selfCrossings(olderSkin)==0,
+            "late-life commands damaged fluid topology");
+
         motor.consequence(20,0,blob.work,true,false);
         String saved=motor.encode();
         SymbioteMotorHeadV1 copy=new SymbioteMotorHeadV1();

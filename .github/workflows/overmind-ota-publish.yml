@@ -873,6 +873,9 @@ jobs:
           from pathlib import Path
           from hashlib import sha1
           root=Path('app/src/main/java/com/overmind/zero')
+          # OTA147: physical grip-floor isolation, late-life response, and
+          # stable pseudopod regression reviewed in PR #51 with QA 38654485667.
+          # Keep all other pinned sources and protection checks unchanged.
           # OTA146 reviewed physical fix: only these four pinned source files
           # changed under PR #49, with passing full JVM/Android QA 38652561483.
           # Freeze every other pin; do not waive the verifier.
@@ -882,9 +885,9 @@ jobs:
           'Zero20PassiveSnapshot.java':'aad03161b82ef96f768927dec8193c9c43008923',
           'SaveSlotsActivity.java':'c85c98e5fb415c2c70e7441b4ccae21c43147931',
           'SaveSlotStore.java':'4d232fed8599f7f3eb42a080f3806b5a537f01fa',
-          'SymbioteMatterV1Regression.java':'89f4349b07e79061042a0a89ebba3c71e338e188',
+          'SymbioteMatterV1Regression.java':'2555b513bb6220614185cd370b69b867e131d414',
           'SymbioteMotorHeadV1.java':'e0a4b557b5e3f5a89e51db28ab6b1d3e7d640f01',
-          'SymbioteMatterV1.java':'5d81e1f9d57d1e6fa3aff3d82fd38c8b28cc4dad',
+          'SymbioteMatterV1.java':'b7bb68c614aceaf7e64f6ebbf830c34448ce3659',
           'RecurrentCoreV22.java':'665ab6138fb2d754e94de0e41d6b394a29e392f5',
           'ObjectContinuityV21.java':'73835ed4c3b15eefcfa3d1c615d7769b6fa1fa46',
           'CausalSequenceV23.java':'329344e296ec342e0b85b965babbae15a3eb6f83',
