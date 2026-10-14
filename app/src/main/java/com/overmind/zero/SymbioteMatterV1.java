@@ -286,14 +286,17 @@ public final class SymbioteMatterV1 {
             // the hold timer. No compulsory automatic adhesion.
             skin.gripCommand[i]=adhesive;
             skin.extension[i]=Math.max(0,extend)*Morphology.MAX_REACH;
-            // Physical substrate traction, independently of object contact.
-            // In OTA143 every patch had almost identical weak damping, so
-            // cortex/internal impulses cancelled without a usable foothold.
-            // The same learned local adhesion channel controls stick/slip on
-            // the world substrate; only an actual object touch can form a hold.
-            // No reward or prescribed gait: forces remain equal/opposite in
-            // living matter; the substrate absorbs velocity through friction.
-            float traction=clip(.50f+2.75f*cortex[sector*OUTPUTS+2],0f,1f);
+            // Independent contact with the floor: body-side normal loading
+            // comes from the cortex's voluntary outward pressure, not from
+            // object-grip intention. OTA146 incorrectly assigned EVERY patch
+            // 50% floor anchoring even at rest and also mapped the global
+            // high-bank object grip onto ground friction. This could lock all
+            // 96 sites while the newborn was trying to deform its body.
+            // Viscous drag remains nonzero, but the substrate can support
+            // reaction only where living material physically presses into it.
+            // No food vector, desired travel, oscillator or reward is added.
+            float normalLoad=Math.max(0f,extend);
+            float traction=clip(normalLoad*1.60f,0f,.95f);
             float drag=(float)Math.exp(-(1.8f+66f*traction)*dt);
             skin.vx[i]=clip((skin.vx[i]+fx[i]*dt)*drag,-140f,140f);
             skin.vy[i]=clip((skin.vy[i]+fy[i]*dt)*drag,-140f,140f);
