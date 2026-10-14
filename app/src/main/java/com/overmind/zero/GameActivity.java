@@ -533,7 +533,9 @@ public final class GameActivity extends Activity {
                 previousGripHeld=o.getInt("previousGripHeld");
                 previousOpposedFrames=o.getInt("previousOpposedFrames");
                 journey.loadLife(o.getString("journey"));
-                MaterialGeometry.observe(creature);
+                if(useSymbiote&&symMatter!=null)
+                            symMatter.observeBody(creature,surface);
+                        else MaterialGeometry.observe(creature);
                 sensorMind.resumeEpisode(SensorimotorMind.Senses.read(
                     creature,surface,chamber,environment,reserve),action);
                 sensorMind.updateBodySense(creature,surface);
@@ -902,7 +904,9 @@ public final class GameActivity extends Activity {
                         for(int i=0;i<MotorBrain.N;i++){
                             creature.vx[i]*=.6f;creature.vy[i]*=.6f;
                         }
-                        MaterialGeometry.observe(creature);
+                        if(useSymbiote&&symMatter!=null)
+                            symMatter.observeBody(creature,surface);
+                        else MaterialGeometry.observe(creature);
                     }
                     save();
                 }
@@ -1215,7 +1219,9 @@ public final class GameActivity extends Activity {
                         environment,slice);
                     // Read centroid from ACTUAL muscle material, not a
                     // simulated nucleus. Collision projection may move it.
-                    MaterialGeometry.observe(creature);
+                    if(useSymbiote&&symMatter!=null)
+                            symMatter.observeBody(creature,surface);
+                        else MaterialGeometry.observe(creature);
                     // Restore the union of physically valid object-owned holds
                     // for vision and next-frame tactile input only.
                     GripSurfaceComposition.compose(surface,chamber,environment);
