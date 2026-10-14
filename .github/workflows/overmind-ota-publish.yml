@@ -868,9 +868,11 @@ jobs:
           from pathlib import Path
           from hashlib import sha1
           root=Path('app/src/main/java/com/overmind/zero')
+          # OTA132 reviewed changes: sole recurrent action selection and updated flight provenance.
+          # All other physical and historical file hashes remain pinned unchanged.
           pins={
-          'SensorimotorMind.java':'8b6e56f992ba7783850bc86c7e2ba306d4c2fb66',
-          'DecisionBlackbox.java':'b35d2fa0d9212e6c95f3190e707f5a9f6ddf8fdb',
+          'SensorimotorMind.java':'2dd186e8fa689fd4860500ac3826f079c799d9b6',
+          'DecisionBlackbox.java':'7fbac5e10cdf101bef3fd5ae050ae5db6074bc6c',
           'EnergyLifetimeCounters.java':'7c0a9d815937a39c5cfdaddb01896b39536d8afe',
           'ObjectExperienceV20.java':'39ada3745f8b22769e67c00f5def9a5a3ed6ba1a',
           'ObjectExperienceV20Regression.java':'44bccc8ebe5971ed5226e50f62f8e27f7fbc6ddd',
