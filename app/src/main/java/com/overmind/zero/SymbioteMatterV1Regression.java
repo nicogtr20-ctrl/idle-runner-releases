@@ -168,6 +168,60 @@ public final class SymbioteMatterV1Regression {
                 MaterialGeometry.selfCrossings(olderSkin)==0,
             "late-life commands damaged fluid topology");
 
+        // OTA148 actual-phone topology-lock reproducer. Real exported
+        // working Symbiote had one crossed edge and ALL 96 shell velocities
+        // exactly zero, even while 74 internal parcels kept moving.
+        // Swapping two adjacent membrane points simulates a one-crossing
+        // persisted scene without food, scripted gait or learning reward.
+        MotorBrain.Body tBody=new MotorBrain.Body();
+        Morphology.Surface tSkin=new Morphology.Surface(tBody);
+        SymbioteMatterV1 tMatter=new SymbioteMatterV1();
+        tMatter.reset(tBody,tSkin);
+        int a=17,b=18;
+        float temp=tSkin.x[a];tSkin.x[a]=tSkin.x[b];tSkin.x[b]=temp;
+        temp=tSkin.y[a];tSkin.y[a]=tSkin.y[b];tSkin.y[b]=temp;
+        require(MaterialGeometry.selfCrossings(tSkin)>0,
+            "invalid-scene topology fixture not crossed");
+        for(int k=0;k<90;k++)tMatter.step(tBody,tSkin,calm,.025f);
+        require(MaterialGeometry.selfCrossings(tSkin)==0,
+            "persisted membrane crossing never physically recovers");
+        float[] tMove=new float[calm.length];
+        tMove[0]=.88f;tMove[4]=.64f;tMove[8]=.32f;
+        for(int k=0;k<60;k++)tMatter.step(tBody,tSkin,tMove,.025f);
+        int activeSites=0;
+        for(int i=0;i<Morphology.POINTS;i++)
+            if(Math.hypot(tSkin.vx[i],tSkin.vy[i])>.015f)activeSites++;
+        require(activeSites>=8,
+            "crossed-scene recovery still freezes all 96 membrane velocities");
+        require(tMatter.invalid==0,"recovering crossed scene caused invalid fluid");
+
+        // Exact 96-point contour geometry from the user's explicitly
+        // exported recent ZERO scene, centered to (0,0); no player or phone
+        // identifiers, neuron weights, location, or private contents.
+        // The real saved membrane had 1 intersecting edge pair and 0/96
+        // nonzero x/y velocities while the internal matter was still active.
+        float[] badX={44.0776f,44.9218f,44.977f,43.6195f,44.4972f,44.1282f,43.322f,42.3637f,41.2841f,40.0532f,38.6121f,36.8994f,34.8531f,32.5914f,30.1151f,27.4597f,24.6596f,21.7295f,18.6289f,15.4716f,12.2532f,8.9998f,5.7319f,2.4686f,-0.8094f,-4.1054f,-7.4485f,-10.8347f,-14.2535f,-17.7065f,-21.1044f,-24.1141f,-26.6909f,-28.8556f,-30.6366f,-32.0717f,-33.1793f,-34.3158f,-35.4768f,-36.6691f,-37.9093f,-39.1617f,-39.9738f,-39.2934f,-37.9125f,-36.3213f,-34.6682f,-33.0747f,-31.6941f,-30.1056f,-28.3877f,-26.5733f,-24.6689f,-22.6942f,-20.7062f,-18.7373f,-16.8315f,-15.0186f,-13.3235f,-11.758f,-10.328f,-9.2149f,-8.4134f,-7.8927f,-7.6168f,-7.5397f,-7.6266f,-7.7661f,-8.1376f,-8.8976f,-9.8527f,-11.8138f,-12.7523f,-10.9192f,-7.7022f,-5.849f,-4.1065f,-2.27f,-0.174f,1.9474f,4.0948f,6.2653f,8.4528f,10.6534f,12.9227f,15.4576f,18.2669f,21.2906f,24.435f,27.5853f,30.6093f,33.5105f,36.1974f,38.6156f,40.7314f,42.5444f};
+        float[] badY={21.1888f,22.2734f,22.9768f,23.0265f,24.2859f,24.8999f,25.3643f,25.7244f,26.009f,26.2244f,26.377f,26.4851f,26.5064f,26.5059f,26.4671f,26.4066f,26.3095f,26.1156f,25.7433f,25.2651f,24.6731f,23.9645f,23.1325f,22.184f,21.0803f,19.8641f,18.5345f,17.1301f,15.6858f,14.2465f,12.8609f,11.4244f,9.9772f,8.5615f,7.2094f,5.9535f,4.7859f,3.7817f,2.936f,2.2576f,1.7638f,1.4635f,1.2188f,0.7163f,-0.0138f,-0.8989f,-1.9256f,-3.0816f,-4.352f,-5.6966f,-7.1375f,-8.6904f,-10.3745f,-12.1987f,-14.1635f,-16.2533f,-18.3873f,-20.4564f,-22.3747f,-24.0616f,-25.5398f,-27.1446f,-28.8975f,-30.77f,-32.7236f,-34.7019f,-36.5617f,-38.2199f,-39.4802f,-40.143f,-40.3683f,-39.7529f,-39.3778f,-39.549f,-41.0545f,-40.5023f,-39.0745f,-36.8639f,-33.9806f,-31.0009f,-27.9341f,-24.7285f,-21.3537f,-17.7834f,-14.0544f,-10.338f,-6.6644f,-3.023f,0.5784f,4.1175f,7.5116f,10.6426f,13.4438f,15.8999f,18.0029f,19.7554f};
+        MotorBrain.Body realBody=new MotorBrain.Body();
+        Morphology.Surface realSkin=new Morphology.Surface(realBody);
+        SymbioteMatterV1 realMatter=new SymbioteMatterV1();
+        realMatter.reset(realBody,realSkin);
+        System.arraycopy(badX,0,realSkin.x,0,Morphology.POINTS);
+        System.arraycopy(badY,0,realSkin.y,0,Morphology.POINTS);
+        require(MaterialGeometry.selfCrossings(realSkin)==1,
+            "live-scene witness must have exactly one crossed edge pair");
+        for(int k=0;k<130;k++)realMatter.step(realBody,realSkin,calm,.025f);
+        require(MaterialGeometry.selfCrossings(realSkin)==0,
+            "actual user-exported scene cannot untangle under real matter");
+        for(int k=0;k<50;k++)realMatter.step(realBody,realSkin,tMove,.025f);
+        int activeReal=0;
+        for(int i=0;i<Morphology.POINTS;i++)
+            if(Math.hypot(realSkin.vx[i],realSkin.vy[i])>.015f)activeReal++;
+        require(activeReal>=8,
+            "actual formerly locked 96-site contour stayed immobilized");
+        require(realMatter.invalid==0,
+            "live-scene topology recovery produced invalid matter");
+
         motor.consequence(20,0,blob.work,true,false);
         String saved=motor.encode();
         SymbioteMotorHeadV1 copy=new SymbioteMotorHeadV1();

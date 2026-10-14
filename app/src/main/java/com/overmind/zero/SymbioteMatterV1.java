@@ -108,6 +108,43 @@ public final class SymbioteMatterV1 {
         return ((a>1e-4f&&b<-1e-4f)||(a< -1e-4f&&b>1e-4f))&&
                ((c>1e-4f&&d<-1e-4f)||(c< -1e-4f&&d>1e-4f));
     }
+    /**
+     * A saved scene may already contain an edge crossing. OTA143-147 only
+     * rolled a crossed step back to the immediately previous contour; when
+     * THAT contour was crossed as well it zeroed the velocity of every free
+     * membrane node forever. Recover pre-existing crossings locally using
+     * short real-neighbour surface-tension projections, never an impulse to
+     * the centroid, resource, or a target. Fully free sites only; held sites
+     * remain owned by their real contacted obstacle.
+     */
+    private void recoverPersistedCrossings(Morphology.Surface skin){
+        if(MaterialGeometry.selfCrossings(skin)==0)return;
+        for(int pass=0;pass<24;pass++){
+            boolean touched=false;
+            for(int i=0;i<SURFACE&&!touched;i++){
+                int ii=(i+1)%SURFACE;
+                for(int j=i+2;j<SURFACE;j++){
+                    int jj=(j+1)%SURFACE;
+                    if(jj==i)continue;
+                    if(!intersects(skin.x[i],skin.y[i],skin.x[ii],skin.y[ii],
+                                   skin.x[j],skin.y[j],skin.x[jj],skin.y[jj]))continue;
+                    // At most four adjoining cortex particles per repair.
+                    // Midpoint attraction is the existing local membrane
+                    // tension, applied with a per-pass displacement limit.
+                    for(int k:new int[]{i,ii,j,jj}){
+                        if(skin.gripHold[k]>=Morphology.GRIP_HOLD)continue;
+                        int prev=(k+SURFACE-1)%SURFACE,next=(k+1)%SURFACE;
+                        float tx=(skin.x[prev]+skin.x[next])*.5f;
+                        float ty=(skin.y[prev]+skin.y[next])*.5f;
+                        skin.x[k]+=clip((tx-skin.x[k])*.58f,-.65f,.65f);
+                        skin.y[k]+=clip((ty-skin.y[k])*.58f,-.65f,.65f);
+                    }
+                    topologyRepairs++;touched=true;break;
+                }
+            }
+            if(!touched||MaterialGeometry.selfCrossings(skin)==0)return;
+        }
+    }
     /** Continuous material self-collision guard. The previous contour is a
      * real known non-intersecting configuration. A proposed pair of crossed
      * segments yields, with the more displaced material patch returning to
@@ -148,13 +185,37 @@ public final class SymbioteMatterV1 {
         // Last resort only if both edges repeatedly conflict: rollback
         // this rejected physical step, NOT the body or the learned brain.
         if(MaterialGeometry.selfCrossings(skin)>0){
-            for(int i=0;i<SURFACE;i++){
-                if(skin.gripHold[i]>=Morphology.GRIP_HOLD)continue;
-                skin.x[i]=lastSkinX[i];skin.y[i]=lastSkinY[i];
-                skin.vx[i]=skin.vy[i]=0;
+            // A rollback is valid ONLY if the previous contour was simple.
+            // Rolling back to a previously self-crossed contour zeroes all
+            // velocities permanently despite ongoing neural muscle commands.
+            // In that case relax the obstructing real membrane pieces rather
+            // than reverting every living patch to the same broken geometry.
+            if(previousContourCrossed()){
+                recoverPersistedCrossings(skin);
+            }else{
+                for(int i=0;i<SURFACE;i++){
+                    if(skin.gripHold[i]>=Morphology.GRIP_HOLD)continue;
+                    skin.x[i]=lastSkinX[i];skin.y[i]=lastSkinY[i];
+                    skin.vx[i]=skin.vy[i]=0;
+                }
+                topologyRepairs++;
             }
-            topologyRepairs++;
         }
+    }
+    /** True if the solver's actual pre-integration perimeter was invalid. */
+    private boolean previousContourCrossed(){
+        for(int i=0;i<SURFACE;i++){
+            int ii=(i+1)%SURFACE;
+            for(int j=i+2;j<SURFACE;j++){
+                int jj=(j+1)%SURFACE;
+                if(jj==i)continue;
+                if(intersects(lastSkinX[i],lastSkinY[i],
+                              lastSkinX[ii],lastSkinY[ii],
+                              lastSkinX[j],lastSkinY[j],
+                              lastSkinX[jj],lastSkinY[jj]))return true;
+            }
+        }
+        return false;
     }
     /** A material parcel is never created, destroyed or snapped to a goal. */
     public float areaRelativeError(Morphology.Surface skin){
@@ -258,6 +319,9 @@ public final class SymbioteMatterV1 {
         for(float v:cortex)if(!Float.isFinite(v)||v<-1.01f||v>1.01f)
             throw new IllegalArgumentException("Non-finite muscle command");
         time+=dt;body.time+=dt;ticks++;
+        // Valid snapshots keep their exact material positions. Only a
+        // physically crossed saved contour needs localized rehabilitation.
+        recoverPersistedCrossings(skin);
         observeBody(body,skin);
         float cx=body.cx,cy=body.cy;
         for(int i=0;i<SURFACE;i++){

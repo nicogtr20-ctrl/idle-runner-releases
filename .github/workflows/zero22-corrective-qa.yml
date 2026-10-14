@@ -1,7 +1,7 @@
 name: ZERO22 corrective pre-release QA
 on:
   push:
-    branches: [feature/zero22-confidence-grip-fix, feature/zero22-split-confidence-ota130, feature/zero22-legacy-guard-ota131, feature/zero22-primary-ota132, feature/zero22-causal-memory-ota136, feature/symbiote-body-v1, hotfix/symbiote-first-frame-crash-ota144, fix/zero-symbiote-ground-traction-ota145, fix/zero-symbiote-traction-release-ota147]
+    branches: [feature/zero22-confidence-grip-fix, feature/zero22-split-confidence-ota130, feature/zero22-legacy-guard-ota131, feature/zero22-primary-ota132, feature/zero22-causal-memory-ota136, feature/symbiote-body-v1, hotfix/symbiote-first-frame-crash-ota144, fix/zero-symbiote-ground-traction-ota145, fix/zero-symbiote-traction-release-ota147, fix/zero-symbiote-self-cross-lock-ota148]
 permissions:
   contents: read
 jobs:
