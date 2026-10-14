@@ -39,6 +39,7 @@ public final class CausalSequenceV23 {
         final boolean[] follows=new boolean[A];
         int riseSignal=-1;
         boolean censored;
+        int riseTick=-1;
         Anchor(int t,int a,int id,float[] z,float[] before,boolean held){
             tick=t;action=a;track=id;state=z.clone();
             lightBefore=before.clone();lightPeak=before.clone();holdout=held;
@@ -71,9 +72,11 @@ public final class CausalSequenceV23 {
         pendingLight=light(senses);pendingState=recurrentState.clone();
         pendingSeen=track>=0&&confidence>=.44f&&senses[4]>.015f;
         // Remember only choices following a currently *observed* change.
-        if(pendingSeen&&active.size()==1){
+        if(active.size()==1){
             Anchor a=active.get(0);
-            if(tick-a.tick>0&&tick-a.tick<=HORIZON&&a.riseSignal>=0)
+            int k=a.riseSignal;
+            if(a.riseTick>=0&&tick-a.riseTick<=12&&tick>a.tick&&
+               k>=0&&light(senses)[k]>.12f)
                 a.follows[action]=true;
         }
     }
@@ -147,7 +150,10 @@ public final class CausalSequenceV23 {
         for(Anchor a:active){
             for(int k=0;k<SIGNALS;k++)
                 a.lightPeak[k]=Math.max(a.lightPeak[k],seen[k]);
-            for(int k=0;k<SIGNALS;k++)if(a.saw(k))a.riseSignal=k;
+            for(int k=0;k<SIGNALS;k++)if(a.saw(k)){
+                if(a.riseTick<0)a.riseTick=tick;
+                if(a.riseSignal<0)a.riseSignal=k;
+            }
         }
         // An object cannot be called moved just because its optical image
         // changed when ZERO changed viewpoint. A same-ID before/after
@@ -204,7 +210,8 @@ public final class CausalSequenceV23 {
         }
         // After a measured object intervention, remember which next action
         // was actually followed by a delayed positive energy outcome.
-        if(active.size()==1&&active.get(0).riseSignal>=0){
+        if(active.size()==1&&active.get(0).riseSignal>=0&&
+           light(senses)[active.get(0).riseSignal]>.12f){
             Anchor a=active.get(0);
             int ix=a.action*A+action;
             if(pairAttempts[ix]>=12&&pairSuccess[ix]>=3){
