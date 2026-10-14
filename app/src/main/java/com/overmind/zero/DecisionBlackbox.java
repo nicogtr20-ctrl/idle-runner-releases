@@ -4,22 +4,30 @@ import java.util.ArrayDeque;
 import java.util.ArrayList;
 
 /**
- * 0116.2: passive, bounded last-five-minutes decision flight recorder.
+ * 0124: passive, bounded five-minute decision provenance recorder.
  * No randomness, learning, action selection, or world/reward modifications.
  * Samples only already computed decision terms and REAL finished movements.
  */
 public final class DecisionBlackbox {
     public static final String CURRENT="decision_flight_current_v1162";
     public static final String LAST="decision_flight_last_v1162";
-    public static final int TERMS=14, SENSES=SensorimotorMind.S;
+    // Original db1 stored 14 advisor fields. db2 appends unlogged evidence,
+    // recurrent influence, and a read-only energy/mechanics subdivision.
+    // Restore both without clearing an experienced ZERO's existing trace.
+    public static final int LEGACY_TERMS=14, TERMS=19;
+    public static final int SENSES=SensorimotorMind.S;
     public static final int MAX_ENTRIES=475, MAX_TEXT=145000;
     private static final float WINDOW=300f;
     // Score terms in order, identical to SensorimotorMind.choose() summands.
     public static final String[] TERM_NAMES={
         "legacyQ","energeticCredit","threeStepLookahead","curiosity","jitter",
         "episodic","antiStall","temporal","temporalSkill","proprioception",
-        "spatial","causal","instrumental","goalContinuity"
+        "spatial","causal","instrumental","goalContinuity",
+        "objectEvidence","zero20Experimental","recurrentDelta",
+        "energeticPartOfEarnedValue","mechanicalPartOfEarnedValue"
     };
+    // Only indices 0..16 are ADDITIVE score contributions; the last
+    // two are a DECOMPOSITION of existing term 1 (not extra rewards).
     private final ArrayDeque<Record> events=new ArrayDeque<>();
     private Pending pending;
     private float time=0f;
@@ -47,7 +55,9 @@ public final class DecisionBlackbox {
         }
         static Record parse(String s){
             String[] f=s.split(",",-1);
-            if(f.length!=17+SENSES+TERMS)throw new IllegalArgumentException("trace fields");
+            int storedTerms=f.length-17-SENSES;
+            if(storedTerms!=LEGACY_TERMS&&storedTerms!=TERMS)
+                throw new IllegalArgumentException("trace fields");
             int[] nums=new int[f.length];
             for(int i=0;i<f.length;i++)nums[i]=Integer.parseInt(f[i]);
             if(nums[0]<0||nums[1]<0||nums[1]>=16||nums[2]<0||nums[2]>=16||
@@ -65,7 +75,7 @@ public final class DecisionBlackbox {
                 if(nums[17+i]<-1600||nums[17+i]>1600)throw new IllegalArgumentException("sensor");
                 r.senses[i]=(short)nums[17+i];
             }
-            for(int i=0;i<TERMS;i++){
+            for(int i=0;i<storedTerms;i++){
                 int k=nums[17+SENSES+i];
                 if(k<-30000||k>30000)throw new IllegalArgumentException("advisor");
                 r.terms[i]=(short)k;
@@ -159,7 +169,7 @@ public final class DecisionBlackbox {
         while(bytes>MAX_TEXT-1000&&start<lines.size())
             bytes-=lines.get(start++).length()+1;
         StringBuilder b=new StringBuilder(bytes+90);
-        b.append("db1|").append(Math.max(0,Math.round(time*100))).append('|')
+        b.append("db2|").append(Math.max(0,Math.round(time*100))).append('|')
          .append(lines.size()-start).append('\n');
         for(int i=start;i<lines.size();i++)b.append(lines.get(i)).append('\n');
         return b.toString();
@@ -167,11 +177,13 @@ public final class DecisionBlackbox {
     public boolean restoreCurrent(String encoded){
         if(encoded==null||encoded.isEmpty())return false;
         try{
-            if(encoded.length()>MAX_TEXT||!encoded.startsWith("db1|"))
+            if(encoded.length()>MAX_TEXT||
+               !(encoded.startsWith("db1|")||encoded.startsWith("db2|")))
                 return false;
             String[] lines=encoded.split("\n",-1);
             String[] head=lines[0].split("\\|",-1);
-            if(head.length!=3||!head[0].equals("db1"))return false;
+            if(head.length!=3||
+               !(head[0].equals("db1")||head[0].equals("db2")))return false;
             int hundredths=Integer.parseInt(head[1]),count=Integer.parseInt(head[2]);
             if(hundredths<0||count<0||count>MAX_ENTRIES||lines.length!=count+2||
                !lines[lines.length-1].isEmpty())return false;
@@ -247,7 +259,7 @@ public final class DecisionBlackbox {
         rec.tick(.1f);
         senses[0]=0;
         rec.terminal(senses,-7,0,body);
-        require(rec.lastLife().contains("db1|"),"last-life freeze");
+        require(rec.lastLife().contains("db2|"),"last-life freeze");
         String last=rec.lastLife();
         rec.newLife();
         require(rec.currentCount()==0&&rec.lastLife().equals(last),
@@ -260,6 +272,73 @@ public final class DecisionBlackbox {
             "bad trace damaged previous valid snapshots");
         loaded.resumeLife();
         require(loaded.currentCount()>0,"resume erased five-minute ring");
-        System.out.println("ZERO decision blackbox 0116.2 PASS: bounded five minutes, sensed advisors, real movement, death snapshot, save migration, no actuation");
+        // Old 14-advisor traces from OTA122 must remain readable and keep
+        // their historic evidence, even though new exports use db2.
+        String example=active.split("\n")[1];
+        String[] fields=example.split(",",-1);
+        StringBuilder legacy=new StringBuilder("db1|").append(fields[0]).append("|1\n");
+        for(int k=0;k<17+SENSES+LEGACY_TERMS;k++){
+            if(k>0)legacy.append(',');
+            legacy.append(fields[k]);
+        }
+        legacy.append('\n');
+        DecisionBlackbox migrated=new DecisionBlackbox();
+        require(migrated.restoreCurrent(legacy.toString()),
+            "An OTA122 db1 trace could not be loaded without reset");
+        require(migrated.encodeCurrent().startsWith("db2|"),
+            "Old trace was not upgraded only in export format");
+        String[] migratedFields=migrated.encodeCurrent().split("\n")[1].split(",");
+        require(migratedFields.length==17+SENSES+TERMS&&
+                Integer.parseInt(migratedFields[17+SENSES])==300,
+            "Old advisor values disappeared during in-place upgrade");
+        for(int k=LEGACY_TERMS;k<TERMS;k++)
+            require(Integer.parseInt(migratedFields[17+SENSES+k])==0,
+                "Invented recurrent or energetic provenance for old trace");
+        // The observer must not steer ZERO even with an ACTIVE 2.2 core.
+        SensorimotorMind monitored=new SensorimotorMind();
+        SensorimotorMind unmonitored=new SensorimotorMind();
+        RecurrentCoreV22 mCore=new RecurrentCoreV22();
+        RecurrentCoreV22 uCore=new RecurrentCoreV22();
+        monitored.attachActiveCore(mCore);
+        unmonitored.attachActiveCore(uCore);
+        DecisionBlackbox activeTrace=new DecisionBlackbox();
+        monitored.attachDecisionBlackbox(activeTrace);
+        float[] sensed=new float[SENSES];sensed[0]=.04f;
+        sensed[14]=.62f;sensed[15]=.18f;sensed[22]=.35f;
+        for(int j=0;j<160;j++){
+            int a=monitored.choose(sensed),b=unmonitored.choose(sensed);
+            require(a==b,"Recorder modified active recurrent decision "+j);
+            require(monitored.serialize().equals(unmonitored.serialize()),
+                "Recorder modified legacy policy state "+j);
+            require(mCore.encode().equals(uCore.encode()),
+                "Recorder modified active recurrent state "+j);
+            activeTrace.tick(.65f);
+            activeTrace.finished(sensed,0,0,0,null);
+        }
+        String encodedTrace=activeTrace.encodeCurrent();
+        require(encodedTrace.startsWith("db2|"),"New trace schema not saved");
+        String[] records=encodedTrace.split("\n");
+        boolean preservedJitter=false;
+        for(int row=1;row<records.length;row++){
+            String[] v=records[row].split(",");
+            require(v.length==17+SENSES+TERMS,
+                "Missing old advisors, independent evidence or core delta");
+            int sum=0;
+            for(int k=0;k<=16;k++)
+                sum+=Integer.parseInt(v[17+SENSES+k]);
+            int actual=Integer.parseInt(v[8]);
+            require(Math.abs(sum-actual)<=14,
+                "Original advisors and recurrent delta do not explain final score");
+            int earned=Integer.parseInt(v[17+SENSES+1]);
+            int energy=Integer.parseInt(v[17+SENSES+17]);
+            int mechanics=Integer.parseInt(v[17+SENSES+18]);
+            require(Math.abs((energy+mechanics)-earned)<=2,
+                "Energy/mechanics breakdown invented or lost value");
+            if(Integer.parseInt(v[17+SENSES+4])!=0)
+                preservedJitter=true;
+        }
+        require(preservedJitter,
+            "ACTIVE 2.2 still overwrote each advisor with the final score");
+        System.out.println("ZERO decision blackbox OTA124 PASS: db1 migration, 19 fields, active-core additive provenance and zero policy divergence");
     }
 }
