@@ -298,8 +298,12 @@ public final class SymbioteMatterV1 {
                 float d=len(fluidX[j]-lastSkinX[i],fluidY[j]-lastSkinY[i]);
                 if(d>=24f)continue;
                 float share=(1f/(3f+d))/normalizer;
-                impulsesX[j]-=fx[i]*dt*share/SURFACE;
-                impulsesY[j]-=fy[i]*dt*share/SURFACE;
+                // Weighted parcel masses: the thin cortex has total mass 1,
+                // and the interior parcels also sum to mass 1. Convert a
+                // patch's force into equal/opposite parcel acceleration.
+                // This is not an impulse absorbed by a fictional centroid.
+                impulsesX[j]-=fx[i]*dt*share*n/SURFACE;
+                impulsesY[j]-=fy[i]*dt*share*n/SURFACE;
             }
         }
         for(int j=0;j<n;j++){
