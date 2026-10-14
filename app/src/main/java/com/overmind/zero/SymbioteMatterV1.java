@@ -307,8 +307,25 @@ public final class SymbioteMatterV1 {
             float drag=(float)Math.exp(-2.3f*dt);
             fluidVx[j]=clip((fluidVx[j]+impulsesX[j])*drag,-140f,140f);
             fluidVy[j]=clip((fluidVy[j]+impulsesY[j])*drag,-140f,140f);
-            fluidX[j]+=fluidVx[j]*dt;
-            fluidY[j]+=fluidVy[j]*dt;
+        }
+        // XSPH viscosity exchanges velocity between neighbouring *real*
+        // parcels. Pairwise impulses sum to zero: fluid shear diffuses,
+        // rather than each particle behaving like an independent rubber ball.
+        Arrays.fill(impulsesX,0);Arrays.fill(impulsesY,0);
+        for(int i=0;i<n;i++)for(int j=i+1;j<n;j++){
+            float dx=fluidX[j]-fluidX[i],dy=fluidY[j]-fluidY[i];
+            float dd=dx*dx+dy*dy;
+            if(dd>=196f)continue; // 14-unit material neighborhood
+            float viscosity=.22f*dt*(1f-dd/196f);
+            float ux=(fluidVx[j]-fluidVx[i])*viscosity;
+            float uy=(fluidVy[j]-fluidVy[i])*viscosity;
+            impulsesX[i]+=ux;impulsesY[i]+=uy;
+            impulsesX[j]-=ux;impulsesY[j]-=uy;
+        }
+        for(int j=0;j<n;j++){
+            fluidVx[j]=clip(fluidVx[j]+impulsesX[j],-140f,140f);
+            fluidVy[j]=clip(fluidVy[j]+impulsesY[j],-140f,140f);
+            fluidX[j]+=fluidVx[j]*dt;fluidY[j]+=fluidVy[j]*dt;
         }
         for(int i=0;i<MotorBrain.N;i++){
             body.x[i]=fluidX[i];body.y[i]=fluidY[i];
