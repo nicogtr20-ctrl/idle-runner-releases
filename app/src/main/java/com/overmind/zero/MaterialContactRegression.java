@@ -55,6 +55,39 @@ public final class MaterialContactRegression {
         yes(blue.touch(0,0)==22&&!blue.ready()&&blue.touch(0,0)==0,
             "Finite blue gem duplicate payout");
     }
+    private static void invalidPolygonHasNoPhantomFilledArea(){
+        MotorBrain.Body body=new MotorBrain.Body();
+        Morphology.Surface skin=new Morphology.Surface(body);
+        for(int i=0;i<MotorBrain.N;i++){
+            body.x[i]=body.y[i]=400f+i;
+        }
+        // Four long edges, crossing in the middle. The odd/even test
+        // ALONE says that (0,50) lies in the filled top lobe, although
+        // this contour is not a valid membrane and no actual strand or
+        // inner mass is within 17 units.
+        float[] px={-80f,80f,-80f,80f};
+        float[] py={-80f,80f,80f,-80f};
+        for(int i=0;i<Morphology.POINTS;i++){
+            int side=i/24,j=(side+1)%4;
+            float t=(i%24)/24f;
+            skin.x[i]=px[side]*(1-t)+px[j]*t;
+            skin.y[i]=py[side]*(1-t)+py[j]*t;
+        }
+        yes(MaterialGeometry.selfCrossings(skin)>0,
+            "Crossed membrane fixture not detected");
+        yes(BodyIntegrity.encloses(skin.x,skin.y,0f,50f),
+            "Invalid odd/even interior fixture does not reproduce");
+        yes(!MaterialGeometry.touches(body,skin,0f,50f,17f),
+            "A self-crossing outline granted energy without real material");
+        for(int i=0;i<Morphology.POINTS;i++){
+            float theta=(float)(2*Math.PI*i/Morphology.POINTS);
+            skin.x[i]=48f*(float)Math.cos(theta);
+            skin.y[i]=48f*(float)Math.sin(theta);
+        }
+        yes(MaterialGeometry.selfCrossings(skin)==0&&
+            MaterialGeometry.touches(body,skin,0f,0f,17f),
+            "A genuinely connected, filled valid blob lost real absorption");
+    }
     private static void twoBoxes(){
         MotorBrain.Body b=new MotorBrain.Body();
         Morphology.Surface s=new Morphology.Surface(b);
@@ -122,6 +155,7 @@ public final class MaterialContactRegression {
     }
     public static void main(String[] args){
         phantomEnergy();
+        invalidPolygonHasNoPhantomFilledArea();
         twoBoxes();
         separateLegitimateGrips();
         System.out.println("PASS: OTA127 double 96-patch collapsed trap disperses by physical finite-area exclusion, no shared owners, real energy contact only and legal independent grips retained");
