@@ -53,6 +53,10 @@ public final class RecurrentCoreV22Regression {
         yes(Math.abs(split.exploration(.19f)-.19f)<.000001f,
             "Untrusted energy planning altered expert exploration");
         yes(split.plannedChoices()==0,"Legacy planned counter mixed physical-only choices");
+        // Synthetic aggregate fixtures must obey checkpoint invariants:
+        // per-action sample counts cannot exceed total lived transitions.
+        Field livedField=RecurrentCoreV22.class.getDeclaredField("transitions");
+        livedField.setAccessible(true);livedField.setLong(split,500L);
         String physicalSave=split.encode();
         RecurrentCoreV22 loadedSplit=new RecurrentCoreV22();
         yes(loadedSplit.restore(physicalSave)&&loadedSplit.energyConfidence(3)==0
