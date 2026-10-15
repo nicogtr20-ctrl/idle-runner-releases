@@ -83,6 +83,8 @@ public final class SensorimotorMind {
     private transient BodyProprioception bodySchema;
     private transient DistributedBodySense distributedBody;
     private transient LocalImpedanceSense impedance;
+    private transient FluidInteroceptionV1 innerSense;
+    private transient SymbioteMatterV1 actualLiquid;
     /** ZERO 2.0: shadow-only learned world; NEVER actuates or scores actions. */
     private transient PredictiveWorldV20 worldV20;
     private transient TransferSkillsV20 transferV20;
@@ -156,6 +158,7 @@ public final class SensorimotorMind {
             if(bodySchema!=null)bodySchema.actualEnergy(actualEnergyDelta);
             if(distributedBody!=null)distributedBody.actualEnergy(actualEnergyDelta);
             if(impedance!=null)impedance.actualEnergy(actualEnergyDelta);
+            if(innerSense!=null&&actualLiquid!=null)innerSense.actualEnergy(actualEnergyDelta);
             if(causal!=null)causal.energyOutcome(actualEnergyDelta);
             if(navigation!=null)navigation.energyOutcome(actualEnergyDelta,
                 visuallyObservedSignature,true);
@@ -186,6 +189,17 @@ public final class SensorimotorMind {
     public synchronized void attachDistributedBody(DistributedBodySense map){distributedBody=map;}
     public synchronized DistributedBodySense distributedBody(){return distributedBody;}
     public synchronized void attachImpedance(LocalImpedanceSense model){impedance=model;}
+    /** Real 74-particle interoception, never substituted by a fake body. */
+    public synchronized void attachFluidInteroception(FluidInteroceptionV1 sense,
+                                                       SymbioteMatterV1 matter){
+        innerSense=sense;actualLiquid=matter;
+    }
+    public synchronized void setActualFluid(SymbioteMatterV1 matter){actualLiquid=matter;}
+    public synchronized void updateInnerSense(MotorBrain.Body body,Morphology.Surface skin){
+        if(innerSense!=null&&actualLiquid!=null)
+            innerSense.feed(FluidInteroceptionV1.sense(body,skin,actualLiquid),body,actualLiquid);
+    }
+    public synchronized FluidInteroceptionV1 fluidInteroception(){return innerSense;}
     public synchronized void attachPredictiveWorldV20(PredictiveWorldV20 model){worldV20=model;}
     public synchronized void attachTransferSkillsV20(TransferSkillsV20 model){transferV20=model;}
     public synchronized void attachFuturePlannerV20(FuturePlannerV20 model){futureV20=model;}
@@ -278,6 +292,7 @@ public final class SensorimotorMind {
         if(bodySchema!=null)bodySchema.resetLife();
         if(distributedBody!=null)distributedBody.resetLife();
         if(impedance!=null)impedance.resetLife();
+        if(innerSense!=null)innerSense.resetLife();
         if(worldV20!=null)worldV20.resetLife();
         if(transferV20!=null)transferV20.resetLife();
         if(physicalChainV20!=null)physicalChainV20.resetLife();
@@ -309,6 +324,7 @@ public final class SensorimotorMind {
             if(bodySchema!=null)bodySchema.resetLife();
         if(distributedBody!=null)distributedBody.resetLife();
             if(impedance!=null)impedance.resetLife();
+        if(innerSense!=null)innerSense.resetLife();
             if(worldV20!=null)worldV20.resetLife();
             if(transferV20!=null)transferV20.resetLife();
         if(physicalChainV20!=null)physicalChainV20.resetLife();
@@ -347,6 +363,7 @@ public final class SensorimotorMind {
         if(bodySchema!=null)bodySchema.resumeLife();
         if(distributedBody!=null)distributedBody.resumeLife();
         if(impedance!=null)impedance.resumeLife();
+        if(innerSense!=null)innerSense.resumeLife();
         if(worldV20!=null)worldV20.resumeLife();
         if(transferV20!=null)transferV20.resumeLife();
         if(physicalChainV20!=null)physicalChainV20.resumeLife();
@@ -423,14 +440,16 @@ public final class SensorimotorMind {
         if(action<0||action>=ACTIONS)return 0f;
         return (bodySchema==null?0f:bodySchema.choiceBias(action))+
                (distributedBody==null?0f:distributedBody.choiceBias(action))+
-               (impedance==null?0f:impedance.choiceBias(action));
+               (impedance==null?0f:impedance.choiceBias(action))+
+               (innerSense==null||actualLiquid==null?0f:innerSense.choiceBias(action));
     }
     private int choosePrimaryV22(float[] senses){
         feedCore(senses);
         float[] observedMeans=new float[ACTIONS],navTerms=new float[ACTIONS],
             causalTerms=new float[ACTIONS],objectTerms=new float[ACTIONS],
             sequenceTerms=new float[ACTIONS];
-        float maximumBody=0f,maximumDistributed=0f,maximumImpedance=0f;
+        float maximumBody=0f,maximumDistributed=0f,maximumImpedance=0f,
+            maximumInner=0f;
         for(int a=0;a<ACTIONS;a++){
             float nav=navigation!=null&&navigationAdviceEnabled
                 ?navigation.bias(a,senses[0]):0f;
@@ -450,11 +469,13 @@ public final class SensorimotorMind {
             float proprio=bodySchema==null?0f:bodySchema.choiceBias(a);
             float membrane=distributedBody==null?0f:distributedBody.choiceBias(a);
             float resistance=impedance==null?0f:impedance.choiceBias(a);
+            float inner=innerSense==null||actualLiquid==null?0f:innerSense.choiceBias(a);
             navTerms[a]=nav;causalTerms[a]=effect;objectTerms[a]=object;
             sequenceTerms[a]=seq;
             maximumBody=Math.max(maximumBody,Math.abs(proprio));
             maximumDistributed=Math.max(maximumDistributed,Math.abs(membrane));
             maximumImpedance=Math.max(maximumImpedance,Math.abs(resistance));
+            maximumInner=Math.max(maximumInner,Math.abs(inner));
             observedMeans[a]=nav+effect+object+seq+liveBodyEvidence(a);
         }
         float[] scores=activeCore.primaryScores(observedMeans);
@@ -464,6 +485,7 @@ public final class SensorimotorMind {
         if(bodySchema!=null)bodySchema.noteDecision(maximumBody);
         if(distributedBody!=null)distributedBody.noteDecision(maximumDistributed);
         if(impedance!=null)impedance.noteDecision(maximumImpedance);
+        if(innerSense!=null&&actualLiquid!=null)innerSense.noteDecision(maximumInner);
         int greedyAction=0;
         for(int a=1;a<ACTIONS;a++)
             if(scores[a]>scores[greedyAction])greedyAction=a;
@@ -505,6 +527,7 @@ public final class SensorimotorMind {
         if(bodySchema!=null)bodySchema.chosen(chosen);
         if(distributedBody!=null)distributedBody.chosen(chosen);
         if(impedance!=null)impedance.chosen(chosen);
+        if(innerSense!=null&&actualLiquid!=null)innerSense.chosen(chosen);
         if(spatial!=null)spatial.chosen(chosen);
         if(causal!=null&&spatial!=null)
             causal.chosen(spatial,chosen,actionExploratory);
@@ -522,7 +545,8 @@ public final class SensorimotorMind {
         // competing discrete action or writes any world/goal information.
         if(symbioteHead!=null)symbioteHead.chosen(chosen,
             distributedBody==null?null:distributedBody.localMap(),
-            activeCore.state(),epsilon);
+            activeCore.state(),epsilon,
+            innerSense==null||actualLiquid==null?null:innerSense.summary());
         activeCore.chosen(chosen);
         if(worldV20!=null)worldV20.chosen(chosen,senses);
         if(transferV20!=null)transferV20.chosen(chosen,senses);
@@ -846,6 +870,9 @@ public final class SensorimotorMind {
                 distributedBody.feed(DistributedBodySense.sense(body,skin,room,objects));
             if(impedance!=null&&body!=null&&skin!=null)
                 impedance.feed(LocalImpedanceSense.sense(body,skin));
+            if(innerSense!=null&&actualLiquid!=null&&body!=null&&skin!=null)
+                innerSense.feed(FluidInteroceptionV1.sense(body,skin,actualLiquid),
+                    body,actualLiquid);
             if(spatial!=null&&body!=null&&objects!=null)
                 spatial.observeEnvironment(body,skin,room,objects);
             if(perceptualV20!=null&&spatial!=null&&body!=null&&objects!=null)
@@ -872,6 +899,8 @@ public final class SensorimotorMind {
         if(distributedBody!=null&&distributedAfter!=null)distributedBody.feed(distributedAfter);
         float[] impedanceAfter=impedance!=null&&body!=null&&skin!=null?
             LocalImpedanceSense.sense(body,skin):null;
+        float[] innerAfter=innerSense!=null&&actualLiquid!=null&&body!=null&&skin!=null?
+            FluidInteroceptionV1.sense(body,skin,actualLiquid):null;
         // Feed exactly once in consequence(): a duplicated sample would
         // fabricate a sustained local blockage within one decision interval.
         if(spatial!=null&&body!=null&&objects!=null)
@@ -939,6 +968,10 @@ public final class SensorimotorMind {
         if(impedance!=null&&impedanceAfter!=null)
             impedance.consequence(impedanceAfter,trialAction,lastReward,physicalEffect,
                                   learning&&!holdout,holdout);
+        if(innerSense!=null&&innerAfter!=null)
+            innerSense.consequence(innerAfter,body,actualLiquid,trialAction,
+                actualEnergySinceChoice,actualContactHarm,
+                learning&&!holdout,holdout);
         // Isolated predictive readout. No change to reward, action scoring or
         // any motor learning; sharing ONLY the pre-existing heldout split.
         if(worldV20!=null)
