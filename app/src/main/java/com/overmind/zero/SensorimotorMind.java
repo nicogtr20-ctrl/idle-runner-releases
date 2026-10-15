@@ -799,9 +799,7 @@ public final class SensorimotorMind {
             intention.noteDecision(largestIntentionBias);
         }
         actualEnergySinceChoice=0f;actualContactHarm=0;
-        actualMotorEnergyCostSinceChoice=0f;
-        actualAmbientLossSinceChoice=0f;
-        actualMotorEnergyCostSinceChoice=0f;
+        actualAmbientLossSinceChoice=actualMotorEnergyCostSinceChoice=0f;
         action=chosen;decisions++;
         // Observe only the chosen REAL action; forecasts are never executions.
         if(activeCore!=null)activeCore.chosen(chosen);
