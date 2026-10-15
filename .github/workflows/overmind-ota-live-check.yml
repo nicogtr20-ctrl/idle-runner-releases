@@ -1,4 +1,5 @@
 name: Verify LIVE OVERMIND OTA delivery
+# OTA159: verify true recurrent growth, actual 3D neuron count, signed APK 1159 bytes and SHA256.
 # OTA158: verify LIVE 3D neural atlas + real skills/evolution signed APK HTTP200 and SHA256.
 # OTA157: verify signed 2.2 menu coherence release / exact public APK SHA256, bytes, HTTP200.
 # OTA156: verify production signed 2.2 primary-only APK exact bytes / SHA-256.
