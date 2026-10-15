@@ -561,7 +561,8 @@ public final class GameActivity extends Activity {
                 // No synthetic reward crosses process death; instead choose
                 // a NEW real action on restored physical measurements BEFORE
                 // the first resumed physics substep.
-                if(useSymbiote&&symMotor!=null)sensorMind.rearmAfterResume();
+                if(useSymbiote&&symMotor!=null)
+                    sensorMind.rearmAfterResume(creature,surface);
                 motorGuard.resetLife(creature.cx,creature.cy);
                 lastSkillStall=motorGuard.recoveryActivations;
                 liveBody.abortTrial();
