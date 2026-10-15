@@ -367,8 +367,14 @@ public final class SymbioteMatterV1 {
             // Neighbour smoothing = surface tension; stiffness modulates
             // corticoelastic relaxation without a fixed radial spring.
             int p=(i+SURFACE-1)%SURFACE,n=(i+1)%SURFACE;
-            fx[i]+=(skin.x[p]+skin.x[n]-2*skin.x[i])*(85f+stiffness*190f);
-            fy[i]+=(skin.y[p]+skin.y[n]-2*skin.y[i])*(85f+stiffness*190f);
+            // Strain-hardening surface tension: extreme tips need stronger
+            // LOCAL membrane curvature resistance before adjacent edges
+            // fold across one another. No preferred radius or angle is
+            // projected; the body can still be a blob or several pseudopods.
+            float stretch=clip((rr-R-8f)/(R+8f),0f,1.7f);
+            float tension=(85f+stiffness*190f)*(1f+1.5f*stretch);
+            fx[i]+=(skin.x[p]+skin.x[n]-2*skin.x[i])*tension;
+            fy[i]+=(skin.y[p]+skin.y[n]-2*skin.y[i])*tension;
             // Grip command is an INTENTION. Real box/door contact solver owns
             // the hold timer. No compulsory automatic adhesion.
             skin.gripCommand[i]=adhesive;
