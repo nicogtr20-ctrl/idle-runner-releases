@@ -960,6 +960,10 @@ public final class SensorimotorMind {
         // remains for exploration in the absence of known resources.
         float energyOutcome=clampEnergyReward(actualEnergySinceChoice);
         lastReward=energyOutcome-Math.min(.16f,actualAmbientLossSinceChoice*.45f)
+                    // The main brain and its motor readout must both value
+                    // ACTUAL reserve spent by living muscles. This is a
+                    // physiological survival cost, never a movement score.
+                    -Math.min(.16f,actualMotorEnergyCostSinceChoice*.45f)
                     +.025f*Math.min(2,sensoryChange)
                     +.15f*progress-.018f;
         if(temporal!=null){
