@@ -1035,8 +1035,13 @@ public final class GameActivity extends Activity {
                     float[] trialHand=lastAppliedHand,trialMembrane=lastAppliedMembrane;
                     boolean actualTouch=false;
                     for(float touch:surface.touchSense)if(touch>.2f){actualTouch=true;break;}
-                    lastAppliedHand=skillExecution.hand(lastAppliedHand,sensorMind.adhesion()>.5f,actualTouch,liveBody.testingCandidate());
-                    lastAppliedMembrane=skillExecution.membrane(lastAppliedMembrane,sensorMind.adhesion()>.5f,actualTouch,liveBody.testingCandidate());
+                    // Legacy motor genomes do not operate the living cortex.
+                    if(!useSymbiote){
+                        lastAppliedHand=skillExecution.hand(lastAppliedHand,
+                            sensorMind.adhesion()>.5f,actualTouch,liveBody.testingCandidate());
+                        lastAppliedMembrane=skillExecution.membrane(lastAppliedMembrane,
+                            sensorMind.adhesion()>.5f,actualTouch,liveBody.testingCandidate());
+                    }
                     if(!useSymbiote&&
                        (lastAppliedHand!=trialHand||lastAppliedMembrane!=trialMembrane)){
                         techniqueUsedSinceAction=true;
@@ -1100,7 +1105,7 @@ public final class GameActivity extends Activity {
                         boolean physicalHold=chamber.gateHeldFrames>previousGripHeld;
                         boolean opposedNow=chamber.opposedContactFrames>previousOpposedFrames;
                         if(physicalHold){
-                            if(gripBank.observe(lastAppliedHand,lastAppliedMembrane,
+                            if(!useSymbiote&&gripBank.observe(lastAppliedHand,lastAppliedMembrane,
                                 true,opposedNow,
                                 Math.max(0,actuallyMoved),sensorMind.stateCopy()))save();
                         }
@@ -1118,7 +1123,7 @@ public final class GameActivity extends Activity {
                         }else if(physicalHold||!voluntaryGripAtGate){
                             ongoingUnsuccessfulGrip=0;
                         }
-                        if(ongoingUnsuccessfulGrip>=120 &&
+                        if(!useSymbiote&&ongoingUnsuccessfulGrip>=120 &&
                            gripRecoveryCooldown==0 &&
                            !liveBody.testingCandidate()){
                             GripSkillBank.Pair historical=gripBank.retrieveAfterRepeatedFailure(
@@ -1176,13 +1181,13 @@ public final class GameActivity extends Activity {
                         if(grips.opposingGrip&&actualBoxMotion>.005f){
                             // Reward only VERIFIED cover travel, never touch or intent.
                             environmentEffectSinceAction+=Math.min(2f,actualBoxMotion);
-                            if(gripBank.observe(lastAppliedHand,lastAppliedMembrane,
+                            if(!useSymbiote&&gripBank.observe(lastAppliedHand,lastAppliedMembrane,
                                true,true,Math.min(2f,actualBoxMotion),
                                sensorMind.stateCopy()))save();
                             // Research-only archive of physically proven technique:
                             // self tissue and actual motion; anonymous sighting
                             // confidence is an uncertainty tag, not object truth.
-                            if(competenceMemoryV21.witnessed(lastAppliedHand,
+                            if(!useSymbiote&&competenceMemoryV21.witnessed(lastAppliedHand,
                                lastAppliedMembrane,sensorMind.stateCopy(),
                                grips.opposingGrip,actualBoxMotion,
                                objectContinuityV21.currentTrackConfidence()))save();
@@ -1207,7 +1212,7 @@ public final class GameActivity extends Activity {
                     boolean voluntaryBoxGrip=boxTouchedThisFrame&&sensorMind.adhesion()>.5f;
                     if(voluntaryBoxGrip&&!boxAnyHeldThisFrame)boxFailedGripFrames++;
                     else boxFailedGripFrames=0;
-                    if(boxFailedGripFrames>=120&&gripRecoveryCooldown==0&&
+                    if(!useSymbiote&&boxFailedGripFrames>=120&&gripRecoveryCooldown==0&&
                        !liveBody.testingCandidate()){
                         GripSkillBank.Pair oldGrip=gripBank.retrieveAfterRepeatedFailure(
                             handTrainer.best,shapeTrainer.best,sensorMind.stateCopy());
@@ -1349,7 +1354,7 @@ public final class GameActivity extends Activity {
                         environmentEffectSinceAction,creature,surface,
                         chamber,environment);
                     if(sensorMind.experiences>beforeExperience){
-                        skillExecution.boundary(competenceMemoryV21,sensorMind.stateCopy(),
+                        if(!useSymbiote)skillExecution.boundary(competenceMemoryV21,sensorMind.stateCopy(),
                             sensorMind.action,environmentEffectSinceAction,liveBody.testingCandidate());
                         mortality.observed(reserve/100f);
                         episodic.action(observedBefore,actionBefore);
