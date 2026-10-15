@@ -417,12 +417,20 @@ public final class SensorimotorMind {
      * affordance EVIDENCE and receive the executed outcome, but the recurrent
      * core exclusively ranks and selects the sixteen real motor actions.
      */
+    /** Exact currently earned body evidence; scored only by recurrent 2.2.
+     * Confidence remains zero until independent heldout validation passes. */
+    synchronized float liveBodyEvidence(int action){
+        if(action<0||action>=ACTIONS)return 0f;
+        return (bodySchema==null?0f:bodySchema.choiceBias(action))+
+               (distributedBody==null?0f:distributedBody.choiceBias(action))+
+               (impedance==null?0f:impedance.choiceBias(action));
+    }
     private int choosePrimaryV22(float[] senses){
         feedCore(senses);
         float[] observedMeans=new float[ACTIONS],navTerms=new float[ACTIONS],
             causalTerms=new float[ACTIONS],objectTerms=new float[ACTIONS],
-            sequenceTerms=new float[ACTIONS],physicalTerms=new float[ACTIONS];
-        float maximumPhysical=0f;
+            sequenceTerms=new float[ACTIONS];
+        float maximumBody=0f,maximumDistributed=0f,maximumImpedance=0f;
         for(int a=0;a<ACTIONS;a++){
             float nav=navigation!=null&&navigationAdviceEnabled
                 ?navigation.bias(a,senses[0]):0f;
@@ -442,19 +450,20 @@ public final class SensorimotorMind {
             float proprio=bodySchema==null?0f:bodySchema.choiceBias(a);
             float membrane=distributedBody==null?0f:distributedBody.choiceBias(a);
             float resistance=impedance==null?0f:impedance.choiceBias(a);
-            float physicallyLearned=proprio+membrane+resistance;
             navTerms[a]=nav;causalTerms[a]=effect;objectTerms[a]=object;
-            sequenceTerms[a]=seq;physicalTerms[a]=physicallyLearned;
-            maximumPhysical=Math.max(maximumPhysical,Math.abs(physicallyLearned));
-            observedMeans[a]=nav+effect+object+seq+physicallyLearned;
+            sequenceTerms[a]=seq;
+            maximumBody=Math.max(maximumBody,Math.abs(proprio));
+            maximumDistributed=Math.max(maximumDistributed,Math.abs(membrane));
+            maximumImpedance=Math.max(maximumImpedance,Math.abs(resistance));
+            observedMeans[a]=nav+effect+object+seq+proprio+membrane+resistance;
         }
         float[] scores=activeCore.primaryScores(observedMeans);
         // Observe whether real proprioceptive evidence earned meaningful
         // influence. This is a diagnostic of the same live motor decision,
         // never an independently selected alternative policy.
-        if(bodySchema!=null)bodySchema.noteDecision(maximumPhysical);
-        if(distributedBody!=null)distributedBody.noteDecision(maximumPhysical);
-        if(impedance!=null)impedance.noteDecision(maximumPhysical);
+        if(bodySchema!=null)bodySchema.noteDecision(maximumBody);
+        if(distributedBody!=null)distributedBody.noteDecision(maximumDistributed);
+        if(impedance!=null)impedance.noteDecision(maximumImpedance);
         int greedyAction=0;
         for(int a=1;a<ACTIONS;a++)
             if(scores[a]>scores[greedyAction])greedyAction=a;
