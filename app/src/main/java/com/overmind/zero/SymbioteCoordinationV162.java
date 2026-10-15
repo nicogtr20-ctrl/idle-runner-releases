@@ -21,7 +21,9 @@ public final class SymbioteCoordinationV162 {
     public static final String KEY="symbiote_coordination_v162";
     private static final int ACTIONS=RecurrentCoreV22.A, SECTORS=SymbioteMatterV1.SECTORS;
     private static final int MOTOR=SECTORS*SymbioteMatterV1.OUTPUTS;
-    private static final float LR=.014f;
+    // Conservative local updates: OTA162 phone saves showed rapid regional
+    // weight growth before directional consistency was validated.
+    private static final float LR=.006f;
     private final float[] policyBaseline=new float[ACTIONS];
     private final int[] policySamples=new int[ACTIONS];
     private final float[] ux=new float[SECTORS],uy=new float[SECTORS];
@@ -87,7 +89,7 @@ public final class SymbioteCoordinationV162 {
         float realization=clip(forward/Math.max(4f,gross),-1f,1f);
         realizationTotal+=realization;
         if(isHeldout)heldout++;
-        if(learn&&!isHeldout&&action>=0&&action<ACTIONS&&gross>=.5f&&
+        if(learn&&!isHeldout&&action>=0&&action<ACTIONS&&gross>=.8f&&
             noise!=null&&output!=null&&localFeatures!=null&&regionalWeights!=null&&
             noise.length==MOTOR&&output.length==MOTOR&&
             localFeatures.length==regionalWeights.length&&
@@ -105,7 +107,7 @@ public final class SymbioteCoordinationV162 {
                 float drive=clip(output[i],-1f,1f);
                 float derivative=1f-drive*drive;
                 float change=clip(lr*advantage*clip(noise[i],-.5f,.5f)*
-                    derivative,-.005f,.005f);
+                    derivative,-.0025f,.0025f);
                 int base=i*nFeatures;
                 for(int f=0;f<nFeatures;f++)
                     regionalWeights[base+f]=clip(regionalWeights[base+f]+
