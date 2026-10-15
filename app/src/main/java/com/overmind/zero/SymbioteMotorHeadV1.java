@@ -48,11 +48,56 @@ public final class SymbioteMotorHeadV1 {
      */
     public void chosen(int action,float[] bodySensors,float[] recurrent,
                        float exploration){
-        chosen(action,bodySensors,recurrent,exploration,null);
+        chosen(action,bodySensors,recurrent,exploration,null,null);
     }
     /** The SAME single decision; learned cortex sees actual living inside. */
     public void chosen(int action,float[] bodySensors,float[] recurrent,
                        float exploration,float[] internal){
+        chosen(action,bodySensors,recurrent,exploration,internal,null);
+    }
+
+    /**
+     * Read ACTUAL world azimuths for the 16 material cortex sectors.
+     * Material point #17 is not permanently "north-east": a fluid body
+     * twists and stretches. This is proprioception, NOT a target direction.
+     * No energy/food/object coordinates and no gait are read.
+     */
+    public static float[] measuredSectorAngles(MotorBrain.Body body,
+                                               Morphology.Surface skin){
+        if(body==null||skin==null)return null;
+        float[] angles=new float[N];
+        int width=Morphology.POINTS/N;
+        for(int sector=0;sector<N;sector++){
+            float x=0f,y=0f;
+            for(int k=0;k<width;k++){
+                int i=sector*width+k;
+                float dx=skin.x[i]-body.cx,dy=skin.y[i]-body.cy;
+                float len=(float)Math.hypot(dx,dy);
+                if(Float.isFinite(len)&&len>.001f){
+                    x+=dx/len;y+=dy/len;
+                }
+            }
+            // A perfect local cancellation means no meaningful direction.
+            // Fall back to the most distant actual material patch, never
+            // the historic sector angle or a privileged desired heading.
+            if(Math.hypot(x,y)<.04f){
+                float d2=-1f;float bestX=0,bestY=0;
+                for(int k=0;k<width;k++){
+                    int i=sector*width+k;
+                    float dx=skin.x[i]-body.cx,dy=skin.y[i]-body.cy;
+                    float rr=dx*dx+dy*dy;
+                    if(Float.isFinite(rr)&&rr>d2){d2=rr;bestX=dx;bestY=dy;}
+                }
+                x=bestX;y=bestY;
+            }
+            angles[sector]=(float)Math.atan2(y,x);
+        }
+        return angles;
+    }
+
+    /** The same single recurrent chosen action, now aligned to real tissue. */
+    public void chosen(int action,float[] bodySensors,float[] recurrent,
+                       float exploration,float[] internal,float[] sectorAngles){
         if(action<0||action>=RecurrentCoreV22.A||
            !valid(recurrent,RecurrentCoreV22.Z)||
            bodySensors==null||bodySensors.length!=DistributedBodySense.FEATURES)
@@ -62,7 +107,10 @@ public final class SymbioteMotorHeadV1 {
         previousState=recurrent.clone();
         float goal=action%8*(float)Math.PI/4f;
         for(int sector=0;sector<N;sector++){
-            float a=(sector+.5f)*(float)Math.PI*2/N;
+            float a=sectorAngles!=null&&sectorAngles.length==N&&
+                Float.isFinite(sectorAngles[sector])
+                ?sectorAngles[sector]
+                :(sector+.5f)*(float)Math.PI*2/N;
             int base=sector*FEATURE;
             for(int j=0;j<DistributedBodySense.CHANNELS;j++){
                 float value=0;
