@@ -495,7 +495,10 @@ public final class SensorimotorMind {
             causalTerms=new float[ACTIONS],objectTerms=new float[ACTIONS],
             sequenceTerms=new float[ACTIONS];
         float maximumBody=0f,maximumDistributed=0f,maximumImpedance=0f,
-            maximumInner=0f,maximumSpatial=0f;
+            maximumInner=0f,maximumSpatial=0f,maximumTemporal=0f,maximumGoal=0f;
+        // Learned sequences are suggestions, never a second policy.
+        TemporalSkillBank.Advice recalled=temporalSkills==null||temporal==null
+            ?null:temporalSkills.advice(temporal.contextCopy(),temporal.confidence());
         for(int a=0;a<ACTIONS;a++){
             float nav=navigation!=null&&navigationAdviceEnabled
                 ?navigation.bias(a,senses[0]):0f;
@@ -519,6 +522,10 @@ public final class SensorimotorMind {
             // The spatial model speaks only after its own independent heldout
             // gate approves; the active 2.2 arbiter remains the sole chooser.
             float space=spatial==null?0f:spatial.choiceBias(a);
+            float time=temporal==null?0f:temporal.choiceBias(a);
+            float skill=recalled!=null&&recalled.action==a?recalled.bias:0f;
+            float goal=intention==null||navigation==null||!navigationAdviceEnabled
+                ?0f:intention.bias(navigation,a,senses[0]);
             navTerms[a]=nav;causalTerms[a]=effect;objectTerms[a]=object;
             sequenceTerms[a]=seq;
             maximumBody=Math.max(maximumBody,Math.abs(proprio));
@@ -526,11 +533,15 @@ public final class SensorimotorMind {
             maximumImpedance=Math.max(maximumImpedance,Math.abs(resistance));
             maximumInner=Math.max(maximumInner,Math.abs(inner));
             maximumSpatial=Math.max(maximumSpatial,Math.abs(space));
-            // All four previously computed but omitted body readouts feed
-            // the SOLE 2.2 controller only through independently validated
-            // heldout-confidence gates (zero when untrusted).
-            observedMeans[a]=nav+effect+object+seq+space
-                +proprio+membrane+resistance+inner;
+            maximumTemporal=Math.max(maximumTemporal,Math.abs(time+skill));
+            maximumGoal=Math.max(maximumGoal,Math.abs(goal));
+            // Every verified physical sensor contributes ONCE. Recalled
+            // temporal skills/goal persistence share small bounded budgets,
+            // so neither can impose a preprogrammed or competing action.
+            float memory=Math.max(-.35f,Math.min(.35f,time+skill));
+            float persistence=Math.max(0f,Math.min(.24f,goal));
+            observedMeans[a]=nav+effect+object+seq+space+proprio
+                +membrane+resistance+inner+memory+persistence;
         }
         float[] scores=activeCore.primaryScores(observedMeans);
         // Observe whether real proprioceptive evidence earned meaningful
@@ -541,6 +552,8 @@ public final class SensorimotorMind {
         if(impedance!=null)impedance.noteDecision(maximumImpedance);
         if(innerSense!=null&&actualLiquid!=null)innerSense.noteDecision(maximumInner);
         if(spatial!=null)spatial.noteDecision(maximumSpatial);
+        if(temporal!=null)temporal.noteDecision(maximumTemporal);
+        if(intention!=null)intention.noteDecision(maximumGoal);
         int greedyAction=0;
         for(int a=1;a<ACTIONS;a++)
             if(scores[a]>scores[greedyAction])greedyAction=a;
