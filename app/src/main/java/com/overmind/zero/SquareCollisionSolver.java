@@ -190,6 +190,19 @@ final class SquareCollisionSolver {
         repairLinks(body.x,body.y,body.vx,body.vy,MotorBrain.N,box,
                     BODY_CLEARANCE,null);
     }
+    /** OTA163: a box blocks every living interior fluid parcel as well
+     * as the ten legacy parcels. Pure contact projection, no motor credit.
+     */
+    static void constrainInterior(SymbioteMatterV1 gel,
+                                  UnknownWorld.Entity box,float dt){
+        if(gel==null||box==null||dt<=0)return;
+        float l=box.x-SquareGripPuzzle.HALF,r=box.x+SquareGripPuzzle.HALF;
+        float t=box.y-SquareGripPuzzle.HALF,b=box.y+SquareGripPuzzle.HALF;
+        for(int i=0;i<SymbioteMatterV1.INNER;i++)
+            project(gel.x,gel.y,gel.vx,gel.vy,i,
+                gel.x[i]-gel.vx[i]*dt,gel.y[i]-gel.vy[i]*dt,
+                l,t,r,b,BODY_CLEARANCE);
+    }
     /** Body or membrane adjustments can reintroduce an edge crossing.
      * After the original square-grip solver, require all links outside.
      */

@@ -71,8 +71,19 @@ public final class SymbioteHeadingGeometryRegression {
         // A stretched body no longer has sector angles implied by index.
         for(int i=0;i<6;i++){skin.x[i]+=22f;skin.y[i]+=8f;}
         float[] deformed=SymbioteMotorHeadV1.measuredSectorAngles(body,skin);
-        need(Math.abs(wrap(deformed[0]-rotated[0]))>.04f,
-            "local pseudopod extension ignored by sector orientation");
+        // The membrane force chooses TRUE contour normals for concave
+        // valleys and a stable radial component on convex fronts. Prove
+        // the cortex uses EXACTLY the same direction in BOTH regimes.
+        float faceX=0f,faceY=0f;
+        float handedness=SymbioteMatterV1.signedArea(skin)>=0?1f:-1f;
+        float[] actuator=new float[2];
+        for(int i=0;i<6;i++){
+            SymbioteMatterV1.actuatorDirectionAt(skin,i,body.cx,body.cy,
+                handedness,actuator);
+            faceX+=actuator[0];faceY+=actuator[1];
+        }
+        need(Math.abs(wrap(deformed[0]-(float)Math.atan2(faceY,faceX)))<.035f,
+            "deformed cortex does not track actual physical actuator");
         motor.chosen(6,input,recurrent,0f,null,deformed);
         float[] again=privateFeature(motor);
         need(Math.abs(again[9]-(float)Math.cos(deformed[0]-6*Math.PI/4))<.0001f,

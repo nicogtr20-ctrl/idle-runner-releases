@@ -81,14 +81,20 @@ public final class Zero162CoordinationRegression {
         ok(b.heldoutIntervals()==1,"heldout observation not counted");
         b.begin(8,angles);b.sample(0,0,1.1f,0,output);
         b.consequence(true,false,noise,output,features,local,4,5);
-        ok(difference(local,saved)==0f,
-            "grip action was incorrectly coerced to translate");
+        ok(difference(local,saved)>.00001f&&b.actionSamples(8)==1,
+            "grip+movement action incorrectly excluded from body learning");
+        for(int sector=0;sector<16;sector++)
+            for(int f=0;f<5;f++)
+                ok(local[(sector*4+2)*5+f]==0f,
+                    "locomotion credit changed voluntary adhesive grip weights");
+        float[] afterGrip=local.clone();
         b.begin(1,angles);b.sample(0,0,120f,120f,output);
         b.consequence(true,false,noise,output,features,local,4,5);
-        ok(difference(local,saved)==0f,
+        ok(difference(local,afterGrip)==0f,
             "teleport/collision correction contaminated motor credit");
         b.resetLife();
-        ok(b.trainedIntervals()==1&&b.actionSamples(0)==1,
+        ok(b.trainedIntervals()==2&&b.actionSamples(0)==1&&
+            b.actionSamples(8)==1,
             "new life destroyed the learned inverse motor model");
         System.out.println("ZERO162 COORDINATION PASS: "+b.frames()+
             " living physical steps, net="+net+

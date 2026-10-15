@@ -154,6 +154,21 @@ public final class PanelPhysics {
         float inward=vxs[i]*n[0]+vys[i]*n[1];
         if(inward<0){vxs[i]-=inward*n[0];vys[i]-=inward*n[1];}
     }
+    /** OTA163: real interior liquid cannot tunnel through a rotated
+     * construction plate. Use the SAME CCD/contact-plane geometry as
+     * its outer shell; no new adhesion or force on the plate.
+     */
+    static void constrainInterior(SymbioteMatterV1 gel,
+                                  UnknownWorld.Entity panel,float dt){
+        if(gel==null||panel==null||!panel.isConstruction()||dt<=0)return;
+        float[] collision=new float[4];
+        for(int i=0;i<SymbioteMatterV1.INNER;i++){
+            float xx=gel.x[i],yy=gel.y[i];
+            if(hit(panel,xx-gel.vx[i]*dt,yy-gel.vy[i]*dt,
+                   xx,yy,1.5f,collision))
+                project(gel.x,gel.y,gel.vx,gel.vy,i,collision,panel);
+        }
+    }
     /** Run after existing square physics. Panel is NOT a bilateral box. */
     public static Contact constrain(MotorBrain.Body body,Morphology.Surface s,
                                     UnknownWorld.Entity panel,float dt,

@@ -69,8 +69,10 @@ public final class SymbioteCoordinationV162 {
     }
     /**
      * Separate physical credit, no contamination of primary brain learning.
-     * Only navigation actions 0-7 imply a world-heading movement intent;
-     * 8-15 are grip variants, never trained to travel instead of holding.
+     * The brain's actions 0..7 and 8..15 BOTH contain the same learned
+     * heading (action%8); 8..15 add adhesion. Do not discard physical
+     * steering experience while the animal chooses to grip. Never alter
+     * the grip CHANNEL using directional credit and never reward raw travel.
      * A no-motion interval provides no actuator credit.
      */
     public void consequence(boolean learn,boolean isHeldout,
@@ -85,7 +87,7 @@ public final class SymbioteCoordinationV162 {
         float realization=clip(forward/Math.max(4f,gross),-1f,1f);
         realizationTotal+=realization;
         if(isHeldout)heldout++;
-        if(learn&&!isHeldout&&action<8&&gross>=.5f&&
+        if(learn&&!isHeldout&&action>=0&&action<ACTIONS&&gross>=.5f&&
             noise!=null&&output!=null&&localFeatures!=null&&regionalWeights!=null&&
             noise.length==MOTOR&&output.length==MOTOR&&
             localFeatures.length==regionalWeights.length&&

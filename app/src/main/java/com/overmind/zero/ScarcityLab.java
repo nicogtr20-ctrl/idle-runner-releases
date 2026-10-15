@@ -215,6 +215,24 @@ public final class ScarcityLab {
         resolveSolidLinks(skin);
     }
 
+    /** OTA163: the other 64 REAL interior particles collide with the same
+     * room walls and gate as membrane and ten original material parcels.
+     * A zero-area observed centroid is never made into a collider.
+     */
+    public void constrainInterior(SymbioteMatterV1 gel,float dt){
+        if(gel==null||dt<=0)return;
+        float x=gateX(),yc=gateCenterY();
+        for(int i=0;i<SymbioteMatterV1.INNER;i++){
+            for(int w=0;w<5;w++){
+                boundaries(w,temp);
+                sweptProject(gel.x,gel.y,gel.vx,gel.vy,i,
+                    temp[0],temp[1],temp[2],temp[3],1.5f,dt);
+            }
+            sweptProject(gel.x,gel.y,gel.vx,gel.vy,i,
+                x-DOOR_HALF_W,yc-DOOR_HALF_H,
+                x+DOOR_HALF_W,yc+DOOR_HALF_H,1.5f,dt);
+        }
+    }
     /** Continuous segment/rectangle intersection (strict interior), using
      * slab clipping. Does not mistake a legitimate grazing contact for a
      * membrane passing through a physical obstruction. */

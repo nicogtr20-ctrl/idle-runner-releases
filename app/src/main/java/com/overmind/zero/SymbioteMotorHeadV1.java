@@ -75,15 +75,17 @@ public final class SymbioteMotorHeadV1 {
         if(body==null||skin==null)return null;
         float[] angles=new float[N];
         int width=Morphology.POINTS/N;
+        float handedness=SymbioteMatterV1.signedArea(skin)>=0f?1f:-1f;
+        float[] surfaceNormal=new float[2];
         for(int sector=0;sector<N;sector++){
             float x=0f,y=0f;
             for(int k=0;k<width;k++){
                 int i=sector*width+k;
-                float dx=skin.x[i]-body.cx,dy=skin.y[i]-body.cy;
-                float len=(float)Math.hypot(dx,dy);
-                if(Float.isFinite(len)&&len>.001f){
-                    x+=dx/len;y+=dy/len;
-                }
+                // Same living membrane normal that the physical muscles
+                // actually use; no centroid-ray contradiction in concavity.
+                SymbioteMatterV1.actuatorDirectionAt(skin,i,body.cx,body.cy,
+                    handedness,surfaceNormal);
+                x+=surfaceNormal[0];y+=surfaceNormal[1];
             }
             // A perfect local cancellation means no meaningful direction.
             // Fall back to the most distant actual material patch, never

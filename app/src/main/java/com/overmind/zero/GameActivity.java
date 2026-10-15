@@ -1127,14 +1127,9 @@ public final class GameActivity extends Activity {
                     }
                     // Only measured physical displacement after collisions
                     // and before simulated death can count as motor progress.
-                    float ddx=creature.cx-beforeX,ddy=creature.cy-beforeY;
-                    float physicalTravel=(float)Math.hypot(ddx,ddy);
-                    if(Float.isFinite(physicalTravel)&&physicalTravel<80){
-                        lifeDistance+=physicalTravel;totalTravel+=physicalTravel;
-                        travelSinceAction+=physicalTravel;
-                        forwardSinceAction+=ddx*mx+ddy*my;
-                        bestLifeDistance=Math.max(bestLifeDistance,lifeDistance);
-                    }
+                    // OTA163: real traveled path must be computed after ALL
+                    // physical collisions, from the same material center as
+                    // coordination learning. Measuring here was premature.
                     // The smaller square puzzle has real static collisions
                     // and requires independent opposing adhesive contacts.
                     // Unlike round disks, pressing a box cannot translate it.
@@ -1236,9 +1231,19 @@ public final class GameActivity extends Activity {
                         environment,slice);
                     // Read centroid from ACTUAL muscle material, not a
                     // simulated nucleus. Collision projection may move it.
-                    if(useSymbiote&&symMatter!=null)
-                            symMatter.observeBody(creature,surface);
-                        else MaterialGeometry.observe(creature);
+                    if(useSymbiote&&symMatter!=null){
+                        // EXACTLY HERE: contact correction on 96 membrane,
+                        // 10 old body masses and 64 liquid parcels of same gel.
+                        if(chamber!=null)chamber.constrainInterior(symMatter,slice);
+                        for(UnknownWorld.Entity obstacle:environment){
+                            if(obstacle.consumed)continue;
+                            if(obstacle.isBox())
+                                SquareCollisionSolver.constrainInterior(symMatter,obstacle,slice);
+                            else if(obstacle.isConstruction())
+                                PanelPhysics.constrainInterior(symMatter,obstacle,slice);
+                        }
+                        symMatter.observeBody(creature,surface);
+                    }else MaterialGeometry.observe(creature);
                     // Restore the union of physically valid object-owned holds
                     // for vision and next-frame tactile input only.
                     GripSurfaceComposition.compose(surface,chamber,environment);
@@ -1315,7 +1320,20 @@ public final class GameActivity extends Activity {
                         nextChamber=elapsedLife+40;
                         save();
                     }
-                    // OTA162: one cheap actual motor outcome per completed
+                    // OTA163: final body displacement is shared by the life
+                    // odometer, temporal learners and real cortex credit.
+                    // Same pre-physics material center; never count a respawn.
+                    if(lifeStamp==episode){
+                        float realDx=creature.cx-oldCoreX,realDy=creature.cy-oldCoreY;
+                        float realTravel=(float)Math.hypot(realDx,realDy);
+                        if(Float.isFinite(realTravel)&&realTravel<3f){
+                            lifeDistance+=realTravel;totalTravel+=realTravel;
+                            travelSinceAction+=realTravel;
+                            forwardSinceAction+=realDx*mx+realDy*my;
+                            bestLifeDistance=Math.max(bestLifeDistance,lifeDistance);
+                        }
+                    }
+                    // OTA162: real actuator credit from the same completed
                     // material frame, after box/door collisions and object motion.
                     // No new physical force or action chooser. Exclude respawns.
                     if(lifeStamp==episode&&useSymbiote&&symMotor!=null)

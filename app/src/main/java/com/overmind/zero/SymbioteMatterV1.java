@@ -31,10 +31,47 @@ public final class SymbioteMatterV1 {
     private static final float TWO_PI=(float)(2*Math.PI), R=28f;
     public float restArea=(float)Math.PI*R*R,areaError=0f,work=0f,maxReach=0f;
     public long ticks=0,invalid=0,topologyRepairs=0,selfContactPairs=0;
+    /** Physics QA only: membrane sites formerly missing opposite fluid force. */
+    public long longTipReactionFallbacks=0;
     private float time=0f;
     public SymbioteMatterV1(){}
     private static float clip(float a,float lo,float hi){return Math.max(lo,Math.min(hi,a));}
     private static float len(float a,float b){return (float)Math.sqrt(a*a+b*b);}
+    /** Normal from actual living polygon, NOT radius from the center. */
+    static void normalAt(Morphology.Surface skin,int i,float centerX,float centerY,
+                         float handedness,float[] out){
+        int prev=(i+SURFACE-1)%SURFACE,next=(i+1)%SURFACE;
+        float tx=skin.x[next]-skin.x[prev],ty=skin.y[next]-skin.y[prev];
+        float nx=handedness*ty,ny=-handedness*tx;
+        float ll=len(nx,ny);
+        if(ll<.001f){
+            nx=skin.x[i]-centerX;ny=skin.y[i]-centerY;
+            ll=len(nx,ny);
+        }
+        if(ll<.001f){nx=(float)Math.cos(i*TWO_PI/SURFACE);
+                       ny=(float)Math.sin(i*TWO_PI/SURFACE);ll=1f;}
+        out[0]=nx/ll;out[1]=ny/ll;
+    }
+    /** A concave gel needs true outward normals, while ordinary convex
+     * material must preserve the already validated radial locomotor
+     * reaction. Smooth, local geometry-only adaptation; no heading/goal.
+     * Shared by the cortex proprioception and real physical solver.
+     */
+    static void actuatorDirectionAt(Morphology.Surface skin,int i,
+                                    float cx,float cy,float handedness,
+                                    float[] out){
+        normalAt(skin,i,cx,cy,handedness,out);
+        float dx=skin.x[i]-cx,dy=skin.y[i]-cy;
+        float radius=len(dx,dy);
+        if(radius<.001f)return;
+        float rx=dx/radius,ry=dy/radius;
+        float alignment=out[0]*rx+out[1]*ry;
+        float correction=clip((.55f-alignment)/.8f,0f,1f);
+        float ux=rx*(1f-correction)+out[0]*correction;
+        float uy=ry*(1f-correction)+out[1]*correction;
+        float mag=len(ux,uy);
+        if(mag>.001f){out[0]=ux/mag;out[1]=uy/mag;}
+    }
     /** Allocate distributed matter in deterministic concentric sample rings.
      * Initial matter coordinates are not permanent: no spoke constraints. */
     public void reset(MotorBrain.Body body,Morphology.Surface skin){
@@ -66,7 +103,7 @@ public final class SymbioteMatterV1 {
         }
         restArea=absArea(skin);
         areaError=work=maxReach=time=0;
-        ticks=invalid=topologyRepairs=selfContactPairs=0;
+        ticks=invalid=topologyRepairs=selfContactPairs=longTipReactionFallbacks=0;
         observeBody(body,skin);
     }
     /** Mass-weighted center of all 170 material nodes, never an accelerated core. */
@@ -364,20 +401,26 @@ public final class SymbioteMatterV1 {
         skin.t+=dt;
         float pulseDecay=(float)Math.exp(-2.5f*dt);
         for(int i=0;i<SURFACE;i++)skin.touchPulse[i]*=pulseDecay;
-        skin.maxExtension=0f;skin.stretchedPoints=0;skin.intentionalPoints=0;
+        // A proprioceptive sensor must describe THIS frame, never a stale
+        // maximum recorded across previous extensions in the same life.
+        skin.maxExtension=0f;skin.peakExtension=0f;
+        skin.stretchedPoints=0;skin.intentionalPoints=0;
         // Valid snapshots keep their exact material positions. Only a
         // physically crossed saved contour needs localized rehabilitation.
         recoverPersistedCrossings(skin);
         observeBody(body,skin);
         float cx=body.cx,cy=body.cy;
+        float contourSign=signedArea(skin)>=0f?1f:-1f;
+        float[] physicalNormal=new float[2];
         for(int i=0;i<SURFACE;i++){
             lastSkinX[i]=skin.x[i];lastSkinY[i]=skin.y[i];
             float dx=skin.x[i]-cx,dy=skin.y[i]-cy;
             float rr=len(dx,dy);
             if(rr<.00001f){dx=(float)Math.cos(i*TWO_PI/SURFACE);dy=(float)Math.sin(i*TWO_PI/SURFACE);rr=1;}
-            // The physical outward gradient is a boundary-normal estimate,
-            // not the direction to a resource or a global target.
-            float ux=dx/rr,uy=dy/rr;
+            // A centroid ray can point INWARD on the concave bays of a
+            // live gel. Apply forces in the actual polygon's outward normal.
+            actuatorDirectionAt(skin,i,cx,cy,contourSign,physicalNormal);
+            float ux=physicalNormal[0],uy=physicalNormal[1];
             int sector=i*SECTORS/SURFACE;
             float extend=clip(cortex[sector*OUTPUTS],-1,1);
             float lateral=clip(cortex[sector*OUTPUTS+1],-1,1);
@@ -424,8 +467,24 @@ public final class SymbioteMatterV1 {
             float traction=clip(.12f+1.45f*compression,0f,.95f);
             float drag=(float)Math.exp(-(1.8f+66f*traction)*dt);
             float preX=skin.x[i],preY=skin.y[i];
-            skin.vx[i]=clip((skin.vx[i]+fx[i]*dt)*drag,-140f,140f);
-            skin.vy[i]=clip((skin.vy[i]+fy[i]*dt)*drag,-140f,140f);
+            float appliedVx=skin.vx[i]+fx[i]*dt;
+            float appliedVy=skin.vy[i]+fy[i]*dt;
+            // OTA163: a VERY long appendage pulling inward must be able
+            // to retract without becoming its own immovable floor anchor.
+            // Keep normal crawl traction and TANGENTIAL foothold friction.
+            // Only release radial resistance of the truly overstretched,
+            // voluntarily retracting skin (no desired gait or target).
+            if(rr>R+32f&&extend<-.65f){
+                float radial=appliedVx*ux+appliedVy*uy;
+                float tangent=-appliedVx*uy+appliedVy*ux;
+                float radialDrag=(float)Math.exp(-(1.8f+
+                    28f*clip(.12f+.90f*compression,0f,.78f))*dt);
+                skin.vx[i]=clip(radial*radialDrag*ux-tangent*drag*uy,-140f,140f);
+                skin.vy[i]=clip(radial*radialDrag*uy+tangent*drag*ux,-140f,140f);
+            }else{
+                skin.vx[i]=clip(appliedVx*drag,-140f,140f);
+                skin.vy[i]=clip(appliedVy*drag,-140f,140f);
+            }
             float freeX=preX+skin.vx[i]*dt,freeY=preY+skin.vy[i]*dt;
             // Real pre-constraint cortical target, later compared with
             // achieved geometry AFTER density, shape and world collisions.
@@ -454,7 +513,29 @@ public final class SymbioteMatterV1 {
                 float d=len(fluidX[j]-lastSkinX[i],fluidY[j]-lastSkinY[i]);
                 if(d<24f)normalizer+=1f/(3f+d);
             }
-            if(normalizer<.0001f)continue;
+            if(normalizer<.0001f){
+                longTipReactionFallbacks++;
+                // A stretched tip may be >24 U from EVERY interior parcel.
+                // Skipping reaction makes a ghost muscle. Use the 3 closest
+                // REAL particles for the equal/opposite impulse instead.
+                int a=-1,b=-1,c=-1;
+                float da=Float.MAX_VALUE,db=Float.MAX_VALUE,dc=Float.MAX_VALUE;
+                for(int j=0;j<n;j++){
+                    float d=len(fluidX[j]-lastSkinX[i],fluidY[j]-lastSkinY[i]);
+                    if(d<da){c=b;dc=db;b=a;db=da;a=j;da=d;}
+                    else if(d<db){c=b;dc=db;b=j;db=d;}
+                    else if(d<dc){c=j;dc=d;}
+                }
+                float wa=1f/(3f+da),wb=1f/(3f+db),wc=1f/(3f+dc);
+                float norm=wa+wb+wc;
+                if(a>=0){impulsesX[a]-=fx[i]*dt*(wa/norm)*n/SURFACE;
+                         impulsesY[a]-=fy[i]*dt*(wa/norm)*n/SURFACE;}
+                if(b>=0){impulsesX[b]-=fx[i]*dt*(wb/norm)*n/SURFACE;
+                         impulsesY[b]-=fy[i]*dt*(wb/norm)*n/SURFACE;}
+                if(c>=0){impulsesX[c]-=fx[i]*dt*(wc/norm)*n/SURFACE;
+                         impulsesY[c]-=fy[i]*dt*(wc/norm)*n/SURFACE;}
+                continue;
+            }
             for(int j=0;j<n;j++){
                 float d=len(fluidX[j]-lastSkinX[i],fluidY[j]-lastSkinY[i]);
                 if(d>=24f)continue;
