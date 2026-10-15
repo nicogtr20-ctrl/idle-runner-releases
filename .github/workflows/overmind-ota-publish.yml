@@ -984,7 +984,7 @@ jobs:
           'InstrumentalNavigation.java':'96a147f6f366a650a10be293370a0c16404dc220',
           'BehavioralLaboratory.java':'8a35099ddb4b4d7ef9a9a334cb2e50b9477285d8',
           'BehavioralLabActivity.java':'007fc2986932cbe0a3956d8d2c36e94e7dd2a47a',
-          'ResetDomains.java':'c3dc9ac04ce9ff9e80cc1a7f1838c3a8b68b64f2',
+          'ResetDomains.java':'730cc6f2a7b1ab4c047d6cf968f7f8969c7bacbf',
           'ScarcityLab.java':'51d04604c79c728c53dd819971116bd7d710dc60',
           'UnknownWorld.java':'4443b7e2e44a8229fae19c3e8237db9f23b822f2',
           'GameSceneSnapshot.java':'c3dab75b8f71fbc4e9fefa455831484468acd465',
