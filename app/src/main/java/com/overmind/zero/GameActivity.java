@@ -52,6 +52,7 @@ public final class GameActivity extends Activity {
         CausalSequenceV23 causalSequenceV23=new CausalSequenceV23();
         CompetenceMemoryV21 competenceMemoryV21=new CompetenceMemoryV21();
         RecurrentCoreV22 recurrentCore=new RecurrentCoreV22();
+        MotorDurationV22 motorDuration=new MotorDurationV22();
         SkillExecutionV22 skillExecution=new SkillExecutionV22();
         SpatialPerception spatialMap=new SpatialPerception();
         CausalExperiments causalExperiments=new CausalExperiments();
@@ -285,7 +286,10 @@ public final class GameActivity extends Activity {
             competenceMemoryV21.restore(prefs.getString(CompetenceMemoryV21.KEY,""));
             recurrentCore=new RecurrentCoreV22();
             recurrentCore.restore(prefs.getString(RecurrentCoreV22.KEY,""));
+            motorDuration=new MotorDurationV22();
+            motorDuration.restore(prefs.getString(MotorDurationV22.KEY,""));
             sensorMind.attachActiveCore(recurrentCore);
+            sensorMind.attachMotorDuration(motorDuration);
             sensorMind.attachSymbioteMotorHead(symMotor);
             // Android exclusively uses RecurrentCoreV22; historical 2.0
             // future/transfer and 2.1 shadow arbiters no longer run or persist.
@@ -592,6 +596,7 @@ public final class GameActivity extends Activity {
               .putString(CausalSequenceV23.KEY,causalSequenceV23.encode())
               .putString(CompetenceMemoryV21.KEY,competenceMemoryV21.encode())
               .putString(RecurrentCoreV22.KEY,recurrentCore.encode())
+               .putString(MotorDurationV22.KEY,motorDuration.encode())
               .putString(SymbioteMotorHeadV1.KEY,
                   symMotor==null?"":symMotor.encode())
               .putString(SpatialPerception.KEY,spatialMap.encode())
