@@ -419,7 +419,12 @@ jobs:
           assert 'lastAppliedHand=liveBody.weights(1,handTrainer.best);' in g
           assert 'lastAppliedMembrane=liveBody.weights(2,shapeTrainer.best);' in g
           assert 'episodic.weights(' not in g
-          assert 'OnlineBodyLearning.Result result=techniqueUsedSinceAction?null:liveBody.observe(' in g
+          # OTA155: old learned controller is still trained on physically
+          # executed old-body actions, never on an inactive candidate when
+          # the living Symbiote cortex owns material motion.
+          assert 'OnlineBodyLearning.Result result=' in g
+          assert '(useSymbiote||techniqueUsedSinceAction)?null:liveBody.observe(' in g
+          assert 'symMatter.step(creature,surface,symMotor.commands(),slice)' in g
           assert 'techniqueUsedSinceAction=true;' in g
           assert 'liveBody.abortTrial();' in g
           assert 'realTactileContact||type==0' in e
