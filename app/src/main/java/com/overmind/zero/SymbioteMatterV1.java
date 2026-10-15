@@ -385,8 +385,14 @@ public final class SymbioteMatterV1 {
             float stiffness=clip(cortex[sector*OUTPUTS+3],-1,1)*.5f+.5f;
             // Local active cortico-muscular force. Equal reaction is applied
             // to real liquid particles below, not to the centroid.
-            fx[i]=ux*extend*680f-uy*lateral*210f;
-            fy[i]=uy*extend*680f+ux*lateral*210f;
+            // Finite local strain response: a pressurized membrane can extend
+            // a new pseudopod, but an ALREADY stretched tip cannot keep
+            // accelerating as if its material had infinite spare area.
+            // This modifies no neural command, center target or world goal.
+            float strain=Math.max(0f,rr/R-1f);
+            float extensionCompliance=extend>0f?1f/(1f+4f*strain):1f;
+            fx[i]=ux*extend*680f*extensionCompliance-uy*lateral*210f;
+            fy[i]=uy*extend*680f*extensionCompliance+ux*lateral*210f;
             // Neighbour smoothing = surface tension; stiffness modulates
             // corticoelastic relaxation without a fixed radial spring.
             int p=(i+SURFACE-1)%SURFACE,n=(i+1)%SURFACE;
