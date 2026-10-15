@@ -984,7 +984,7 @@ jobs:
           'HabitatContinuity.java':'a8f8c5b51ae66f58b024167daa395c3e757ec9a6',
           'GripSurfaceComposition.java':'04847c6180ee638961d033e8b4ac01fd574dd312',
           'BrainToolsActivity.java':'4f7835554928c32c469b8c5dbeecaea7c3d3e3af',
-          'BrainStatsActivity.java':'1a10fcf45d02613554f8b07fc295c8473d846c0c',
+          'BrainStatsActivity.java':'fa6c095ec9dd80454b55b607d3c88972e8e464ea',
           'StatisticsActivity.java':'94c65bc27b6bc0ccc1e0d1d9359ae572e85b95e1',
           'TelemetryActivity.java':'1c6d49cf0d78a6cb913be0708aebaaa43ab5aaaf',
           'Zero157DashboardRegression.java':'2ceb93a50bbb1269c872d4bcaa0699af581d9260',
@@ -1358,6 +1358,7 @@ jobs:
           assert 'VISTA DALLA MEMBRANA' in atlas
           assert 'void evolutionPage(' in atlas and 'LifeStatistics.NET' in atlas
           assert 'lives.average(metric,25,25)' in atlas
+          assert 'if(prefs!=null){loadReadOnly();render();}' in atlas
           assert 'core.trainedTransitions()' in atlas
           assert 'muscle.trainedOutcomes()' in atlas
           assert 'core.parameterAt(i)' in atlas and 'muscle.parameterAt(i)' in atlas
