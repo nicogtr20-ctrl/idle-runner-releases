@@ -897,7 +897,7 @@ jobs:
           # All other physical and historical file hashes remain pinned unchanged.
           pins={
           'FluidInteroceptionRegression.java':'5a325eaf23867f00dd03eadc27990fe60537eb40',
-          'FluidInteroceptionV1.java':'8e8143b220e91b135084e3157ab167dbda0cc14a',
+          'FluidInteroceptionV1.java':'2dc52ad05361326ef575daa14a1b36c738e3be53',
           'Zero20PassiveSnapshot.java':'aad03161b82ef96f768927dec8193c9c43008923',
           'SaveSlotsActivity.java':'c85c98e5fb415c2c70e7441b4ccae21c43147931',
           'SaveSlotStore.java':'4d232fed8599f7f3eb42a080f3806b5a537f01fa',
