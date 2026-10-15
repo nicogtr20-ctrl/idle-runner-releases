@@ -1,4 +1,5 @@
 name: Verify LIVE OVERMIND OTA delivery
+# OTA161 signed independent public byte+SHA-256 verification; requires versionCode 1161.
 # OTA160: verify public in-app update 1160 after signed publisher and Vercel production alias READY.
 # OTA159: verify true recurrent growth, actual 3D neuron count, signed APK 1159 bytes and SHA256.
 # OTA158: verify LIVE 3D neural atlas + real skills/evolution signed APK HTTP200 and SHA256.
