@@ -24,6 +24,26 @@ jobs:
       - uses: gradle/actions/setup-gradle@v4
         with:
           gradle-version: '8.11.1'
+      - name: Reserve next sequential OTA from current signed manifest
+        run: |
+          set -euo pipefail
+          # A blocked publisher MUST NOT consume an Android release version.
+          # Keep monotonic OTA codes from the last successfully signed main
+          # manifest rather than the GitHub Actions run counter.
+          git fetch --no-tags --depth=1 origin main
+          python3 - <<'PY'
+          import json,os,subprocess
+          current=json.loads(subprocess.check_output(
+              ['git','show','FETCH_HEAD:updater/public/latest.json'],text=True))
+          assert current['available'] is True
+          assert current['applicationId']=='com.overmind.zero.ota'
+          prior=int(current['versionCode'])
+          assert 1000<=prior<=999999
+          next_build=prior-1000+1
+          with open(os.environ['GITHUB_ENV'],'a',encoding='utf-8') as env:
+              env.write('OVERMIND_BUILD_NUMBER='+str(next_build)+'\\n')
+          print('Sequential OTA build',next_build,'from signed code',prior)
+          PY
       - name: Unit tests
         run: |
           mkdir -p /tmp/overmind
@@ -773,7 +793,8 @@ jobs:
           assert 'navigation.restore(prefs.getString(InstrumentalNavigation.KEY,""))' in game
           assert '.putString(InstrumentalNavigation.KEY,navigation.encode())' in game
           assert 'sensorMind.attachNavigation(navigation)' in game
-          assert 'sensorMind.updateNavigationSense(creature,chamber,environment)' in game
+          assert 'sensorMind.updateNavigationSense(creature,surface,chamber,environment)' in game
+          assert 'SensorimotorMind.Senses.spectral8(b,skin,room,objects)' in nav
           assert 'sensorMind.contactOutcome(reserve-before,object.signature,sightAtTouch)' in game
           assert 'sensorMind.contactOutcome(reserve-prior,chamber.food.signature)' in game
           assert 'float[] sample=SensorimotorMind.Senses.spectral8(' in nav
