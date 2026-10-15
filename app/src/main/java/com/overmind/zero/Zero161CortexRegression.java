@@ -97,6 +97,6 @@ public final class Zero161CortexRegression {
         changed.resetLife();
         ok(changed.localTrainedOutcomes()==1,
             "death erased motor learning");
-        System.out.println("ZERO161 CORTEX PASS: 320 regional neurons, three independent sector drives, smooth motor action, legacy weights, heldout and persistent plasticity");
+        System.out.println("ZERO161 CORTEX PASS: 320 regional trainable weights, three independent sector drives, smooth motor action, legacy weights, heldout and persistent plasticity");
     }
 }
