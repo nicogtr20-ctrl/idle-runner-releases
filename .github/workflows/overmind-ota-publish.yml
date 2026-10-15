@@ -1276,7 +1276,16 @@ jobs:
           assert '(useSymbiote||techniqueUsedSinceAction)?null:liveBody.observe(' in game
           assert 'if(!useSymbiote&&motorGuard.recoveryActivations>lastSkillStall)' in game
           assert 'symMatter.step(creature,surface,symMotor.commands(),slice)' in game
-          assert '+space+proprio+membrane+resistance+inner;' in mind
+          # OTA156: exact once-per-body-channel evidence and bounded,
+          # independently validated temporal/goal advice to the ONE core.
+          assert '+membrane+resistance+inner+memory+persistence;' in mind
+          active=mind[mind.index('private int choosePrimaryV22('):
+                      mind.index('float[] scores=activeCore.primaryScores(')]
+          assert 'liveBodyEvidence(a)' not in active
+          for channel in ('proprio','membrane','resistance','inner'):
+              assert active.count('float '+channel+'=')==1,channel
+          assert 'temporalSkills.advice(' in active
+          assert 'intention.bias(' in active
           assert 'sensorMind.rearmAfterResume(creature,surface)' in game
           assert 'lastActualGripSurface=skin;' in mind
           assert 'body.totalWork+=work-previousCumulativeEffort;' in work
