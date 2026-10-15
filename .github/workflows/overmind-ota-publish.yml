@@ -984,7 +984,7 @@ jobs:
           'GripSurfaceComposition.java':'04847c6180ee638961d033e8b4ac01fd574dd312',
           'BrainToolsActivity.java':'4f7835554928c32c469b8c5dbeecaea7c3d3e3af',
           'BrainStatsActivity.java':'831a85b70d9e17c6b19353ebca2e6dab5ec60f1d',
-          'StatisticsActivity.java':'eb6eb7f9ef88d1c1332f13a2cf2d2374884fc9df',
+          'StatisticsActivity.java':'94c65bc27b6bc0ccc1e0d1d9359ae572e85b95e1',
           'TelemetryActivity.java':'1c6d49cf0d78a6cb913be0708aebaaa43ab5aaaf',
           'Zero157DashboardRegression.java':'2ceb93a50bbb1269c872d4bcaa0699af581d9260',
           'MortalityLearning.java':'106683098e58d03a1b901fd7293549ebd5bb6715',
