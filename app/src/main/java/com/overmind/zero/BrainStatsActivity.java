@@ -29,7 +29,7 @@ public final class BrainStatsActivity extends Activity {
     private static final int PAGE=12;
     private SharedPreferences prefs;
     private String section="HOME", module="";
-    private int coreOffset=0,motorOffset=0,selectedSkill=0;
+    private int coreOffset=0,motorOffset=0,localOffset=0,selectedSkill=0;
     private RecurrentCoreV22 core;
     private SymbioteMotorHeadV1 muscle;
     private MotorDurationV22 motorDuration;
@@ -47,7 +47,7 @@ public final class BrainStatsActivity extends Activity {
     private GoalContinuity goals;
     private GateBehaviorMetrics gates;
     private LifeStatistics lives;
-    private boolean bDuration,bCore,bMuscle,bProprio,bDistributed,bImpedance,bInner,
+    private boolean bLocal,bDuration,bCore,bMuscle,bProprio,bDistributed,bImpedance,bInner,
         bSpatial,bNavigation,bObjects,bCausal,bSequence,bTemporal,bSkills,bGoals,
         bGates,bLives;
     private long shownAt;
@@ -88,6 +88,7 @@ public final class BrainStatsActivity extends Activity {
         lives=new LifeStatistics();
         bCore=core.restore(prefs.getString(RecurrentCoreV22.KEY,""));
         bMuscle=muscle.restore(prefs.getString(SymbioteMotorHeadV1.KEY,""));
+        bLocal=muscle.restoreLocal(prefs.getString(SymbioteMotorHeadV1.LOCAL_KEY,""));
         bDuration=motorDuration.restore(prefs.getString(MotorDurationV22.KEY,""));
         bProprio=proprio.restore(prefs.getString(BodyProprioception.KEY,""));
         bDistributed=distributed.restore(prefs.getString(DistributedBodySense.KEY,""));
@@ -248,6 +249,7 @@ public final class BrainStatsActivity extends Activity {
             case "OBJECTS":return "Memoria degli oggetti";
             case "WEIGHTS_CORE":return "Parametri del nucleo";
             case "WEIGHTS_MOTOR":return "Pesi muscolari";
+            case "WEIGHTS_LOCAL":return "Rete regionale corticale";
             default:return id;
         }
     }
@@ -343,6 +345,8 @@ public final class BrainStatsActivity extends Activity {
                     " particelle interne e "+SymbioteMatterV1.SECTORS+" settori muscolari.");
                 tile(body,"CORTECCIA MUSCOLARE",bMuscle?num(muscle.trainedOutcomes())+
                     " aggiornamenti":"Nessun checkpoint muscolare",VIOLET,"MUSCLE");
+                tile(body,"PLASTICITÀ LOCALE",bLocal?num(muscle.localTrainedOutcomes())+
+                     " aggiornamenti • "+muscle.localParameterCount()+" connessioni":"Nuove connessioni a zero",TEAL,"MUSCLE");
                 tile(body,"DURATA DEL MOVIMENTO",bDuration?num(motorDuration.continuations())+
                      " prosecuzioni • "+num(motorDuration.evaluated())+
                      " sequenze valutate":"Inizia dagli esperimenti reali",GOLD,"DURATION");
@@ -377,7 +381,9 @@ public final class BrainStatsActivity extends Activity {
                 tile(body,"PESI NUCLEO 2.2",num(core.parameterCount())+
                     " valori reali (incluse "+core.addedNeurons()+" nuove unità) • 12 per pagina",TEAL,"WEIGHTS_CORE");
                 tile(body,"PESI MUSCOLARI",muscle.parameterCount()+
-                    " parametri della corteccia reale",VIOLET,"WEIGHTS_MOTOR");
+                    " parametri condivisi della corteccia",VIOLET,"WEIGHTS_MOTOR");
+                tile(body,"CONNESSIONI REGIONALI",muscle.localParameterCount()+
+                    " parametri distinti tra 16 settori",TEAL,"WEIGHTS_LOCAL");
                 LinearLayout links=panel(body,"ALTRI MODELLI APPRESI",BLUE);
                 metric(links,"Propriocezione",num(BodyProprioception.PARAMETERS));
                 metric(links,"Membrana",num(DistributedBodySense.PARAMETERS));
@@ -651,6 +657,8 @@ public final class BrainStatsActivity extends Activity {
                 weightPage(body,true);break;
             case "WEIGHTS_MOTOR":
                 weightPage(body,false);break;
+            case "WEIGHTS_LOCAL":
+                localWeightPage(body);break;
         }
         tap(body,"‹  TORNA A "+sectionTitle(section),null,TEAL,()->{module="";render();});
     }
@@ -711,7 +719,9 @@ public final class BrainStatsActivity extends Activity {
      private void detailMuscle(LinearLayout body){
         LinearLayout c=panel(body,"CONTROLLO MUSCOLARE DEL SIMBIONTE",VIOLET);
         metric(c,"Stato",bMuscle?"Dati salvati":"Non disponibile");
-        metric(c,"Pesi addestrabili",muscle.parameterCount()+"");
+        metric(c,"Pesi originari condivisi",muscle.parameterCount()+"");
+        metric(c,"Connessioni regionali",muscle.localParameterCount()+"");
+        metric(c,"Aggiornamenti regionali",bLocal?num(muscle.localTrainedOutcomes()):"0 • memoria nuova");
         metric(c,"Settori della membrana",SymbioteMatterV1.SECTORS+"");
         metric(c,"Comandi per settore",SymbioteMatterV1.OUTPUTS+"");
         if(bMuscle){
@@ -720,7 +730,8 @@ public final class BrainStatsActivity extends Activity {
             metric(c,"Verifiche indipendenti",num(muscle.heldoutOutcomes()));
         }
         note(c,"Il cervello sceglie l'azione; questa corteccia ne traduce gli effetti in spinte, tensione e adesione sul corpo.");
-        tile(body,"ESPLORA 84 PESI", "Paginazione read-only dei parametri muscolari",TEAL,"WEIGHTS_MOTOR");
+        tile(body,"ESPLORA 84 PESI", "Rete condivisa originale: dati invariati",TEAL,"WEIGHTS_MOTOR");
+        tile(body,"ESPLORA 320 CONNESSIONI LOCALI", "Plasticità separata per settore e comando",VIOLET,"WEIGHTS_LOCAL");
     }
     private void weightPage(LinearLayout body,boolean brain){
         int total=brain?core.parameterCount():muscle.parameterCount();
@@ -751,6 +762,30 @@ public final class BrainStatsActivity extends Activity {
                 render();
             });
         }
+    }
+    private void localWeightPage(LinearLayout body){
+        int total=muscle.localParameterCount();
+        int offset=Math.max(0,Math.min(Math.max(0,total-1),localOffset/PAGE*PAGE));
+        localOffset=offset;
+        LinearLayout c=panel(body,"CONNESSIONI MOTORIE REGIONALI",VIOLET);
+        metric(c,"Pesi fisici",num(total));
+        metric(c,"Salvataggio",bLocal?"Presente":"Ancora assente • valori iniziali zero");
+        metric(c,"Conseguenze allenanti",num(muscle.localTrainedOutcomes()));
+        note(c,"Ogni gruppo di 5 pesi appartiene a uno dei 64 attuatori: quattro comandi per ciascuno dei 16 settori. Non sono arti predefiniti.");
+        if(bLocal){
+            metric(c,"Intervallo",(offset+1)+" – "+Math.min(offset+PAGE,total)+" di "+total);
+            for(int i=offset;i<Math.min(total,offset+PAGE);i++){
+                int site=i/5,sector=site/4,channel=site%4;
+                metric(c,"#"+(i+1)+" • S"+(sector+1)+" C"+(channel+1),
+                    String.format(Locale.ITALY,"%+.5f",muscle.localParameterAt(i)));
+            }
+        }
+        tap(body,"‹  12 PRECEDENTI","Pagina precedente",BLUE,()->{
+            localOffset=Math.max(0,localOffset-PAGE);render();
+        });
+        tap(body,"12 SUCCESSIVI  ›","Pagina successiva",TEAL,()->{
+            localOffset=Math.min(total-1,localOffset+PAGE);render();
+        });
     }
     private String bank(int index){
         int d=RecurrentCoreV22.dynamicsParameters(),h=RecurrentCoreV22.headParameters();
