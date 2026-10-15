@@ -231,7 +231,7 @@ jobs:
           brain=Path('app/src/main/java/com/overmind/zero/DecisionBrain.java').read_text()
           assert 'BrainStatsActivity.class' in game
           assert 'android:name="com.overmind.zero.BrainStatsActivity"' in manifest
-          assert 'initialSnapshot()' in ui and 'snapshot()' in ui
+          assert 'core.parameterAt(i)' in ui and 'cortex.parameterAt(i)' in ui
           assert 'PARAMETRI' in ui and 'EVOLUZIONE' in ui and 'ABILITA' in ui
           assert 'decision_brain_v05' in game and 'hand_brain_v04' in game
           assert 'growthAttempts' in brain and 'growthAccepted' in brain
@@ -257,7 +257,7 @@ jobs:
           assert 'float[] xx=surface.x, yy=surface.y;' in app
           assert 'morph_brain_v07' in app and 'decision_brain_v05' in app
           assert 'hand_brain_v04' in app and 'putString("best"' in app
-          assert '"MEMBRANA"' in page
+          assert 'CORTECCIA MUSCOLARE' in page
           world=Path('app/src/main/java/com/overmind/zero/UnknownWorld.java').read_text()
           chamber=Path('app/src/main/java/com/overmind/zero/ScarcityLab.java').read_text()
           assert 'chamber.constrain(creature,surface,slice,sensorMind.adhesion());' in app
@@ -303,7 +303,7 @@ jobs:
           assert 'shapeTrainer.attemptGate(trainer.best,handTrainer.best)' not in a
           assert 'contactCredit.adaptiveValue(senses,a)' in m and 'contactCredit.displaced(physicalEffect)' in m
           assert 'model[base+j]' in m and 'value[base+k]' in m
-          assert 'worldMind.restore(' in ui
+          assert 'core.restore(' in ui and 'SymbioteMotorHeadV1.KEY' in ui
           assert 'morph_brain_v07' in a and 'decision_brain_v05' in a
           print('ZERO-009 gates: no goal oracle, online sensory learning, old memory and mortal life preserved.')
           PY
@@ -324,7 +324,7 @@ jobs:
           for domain in ('motor','hand','membrane'):
             assert 'online_accepted_'+domain+'_v094' in a
             assert 'online_rejected_'+domain+'_v094' in r
-          assert 'ADATTAMENTO CORPOREO REALE' in t
+          assert '02 / SENSI CORPOREI' in t
           print('ZERO-009.4: real net exploration, efficiency, safe domain resets and truthful test overlay passed')
           PY
       - name: Verify active recurrent loop and isolated phone experiments
@@ -405,7 +405,7 @@ jobs:
           assert 'episodic.consequenceSeparated(' in g and 'energySinceAction' in g
           assert 'episodic_memory_v095' in g
           assert 'episodic.bias(a,proposed)' in p
-          assert 'Esperienze dannose' in t
+          assert 'core.summary()' in t and 'muscle.summary()' in t
           assert 'trainer.attempt()' not in g
           print('Signed ZERO 0.9.6: memory valence, storage migration and autonomy verified')
           PY
@@ -432,7 +432,7 @@ jobs:
           assert 'liveBody.abortTrial();' in g
           assert 'realTactileContact||type==0' in e
           assert 'episodic.suggested(senses,!protectMotor)' in s
-          assert 'Recuperi da immobilità (0.9.7)' in t
+          assert 'ResetDomains.MEMBRANE' in t and 'RecurrentCoreV22.KEY' in t
           assert 'putString("best",encode(trainer.best))' in g
           assert 'putString("morph_brain_v07",encode(shapeTrainer.best))' in g
           print('Signed 0.9.7 motor stability, tactile-only recall, and preserved historic brains verified')
@@ -580,7 +580,7 @@ jobs:
           manifest=Path('app/src/main/AndroidManifest.xml').read_text()
           gradle=Path('app/build.gradle').read_text()
           assert 'HISTORY=50, WINDOW=25' in stats
-          assert '25 VS 25 PRECEDENTI' in a and 'lifetimeAverage' in a
+          assert '25 VITE VS 25 PRECEDENTI' in a and 'lifetimeAverage' in a
           assert 'HIDDEN=16' in t and 'validationTransitions<25' in t
           assert 'temporalError>=baselineError*.96f' in t
           assert 'ScarcityLab' not in t and 'UnknownWorld.Entity' not in t
@@ -663,7 +663,7 @@ jobs:
           assert '.putString(LifeStatistics.KEY,lifeStats.encode())' in g
           assert 'ResetDomains.PROPRIOCEPTION' in a
           assert 'case PROPRIOCEPTION:return new String[]{BodyProprioception.KEY,DistributedBodySense.KEY,LocalImpedanceSense.KEY,FluidInteroceptionV1.KEY};' in reset
-          assert 'bodyMap.parameterCount()' in stats
+          assert 'proprio.parameterCount()' in stats
           assert 'lifeStats.tick(dt);' in g and (
             'for(int i=0;i<speed;i++)' in g or all(x in g for x in (
              'for(int i=0;i<frameSteps;i++)',
@@ -811,7 +811,7 @@ jobs:
           assert 'float projection=(float)(dx*Math.cos(angle)+dy*Math.sin(angle))' in nav
           assert 'case NAVIGATION:return new String[]{InstrumentalNavigation.KEY};' in reset
           assert 'ResetDomains.NAVIGATION' in ui
-          assert 'navigation.parameterCount()' in brain
+          assert 'nav.parameterCount()' in brain
           assert 'SaveProfileCodec.encode(capture())' in slots and 'SLOTS=12' in slots
           assert 'public static final int S=26;' in mind
           for key in ['CausalExperiments.KEY','SpatialPerception.KEY','BodyProprioception.KEY']:
@@ -1157,7 +1157,7 @@ jobs:
           assert 'intention.bias(' in primary
           assert 'if(activeCore!=null)return choosePrimaryV22(senses);' in mind
           assert 'ObjectContinuityV21.KEY' in (root/'ResetDomains.java').read_text()
-          assert 'UnifiedCognitionV21' in (root/'BrainToolsActivity.java').read_text()
+          assert 'UnifiedCognitionV21' not in (root/'BrainToolsActivity.java').read_text()
           assert 'result.put("zero21",zero21);' in (root/'Zero20PassiveSnapshot.java').read_text()
           assert 'static final long TEST_MAX_BUDGET_NS=80000000L;' in game
           assert 'static final int TEST_MAX_MAX_STEPS=4096;' in game
