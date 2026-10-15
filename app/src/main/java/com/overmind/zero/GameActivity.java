@@ -1062,9 +1062,26 @@ public final class GameActivity extends Activity {
                     System.arraycopy(creature.y,0,squarePrevBodyY,0,MotorBrain.N);
                     float oldCoreX=creature.cx,oldCoreY=creature.cy;
                     if(useSymbiote&&symMatter!=null&&symMotor!=null){
-                        // Real viscous matter. No legacy radial springs or
-                        // old membrane actuator runs in this physical mode.
+                        // Keep OTA148/151 physics EXACTLY unchanged. Cortex
+                        // work is an actually measured material quantity;
+                        // debit a small, explicit metabolic energy cost from
+                        // the SAME reserve that determines real survival.
+                        // No positive feedback for distance or deformation.
+                        float workBefore=symMatter.work;
                         symMatter.step(creature,surface,symMotor.commands(),slice);
+                        float freshWork=Math.max(0f,symMatter.work-workBefore);
+                        if(Float.isFinite(freshWork)&&freshWork>0f){
+                            // Physical work -> resource units calibration.
+                            // Small compared to existing basal scarcity;
+                            // only physically executed nonzero contraction
+                            // draws fuel. An idle body pays no motor cost.
+                            float actualFuel=Math.min(reserve,freshWork*8f);
+                            if(actualFuel>0f){
+                                reserve-=actualFuel;
+                                sensorMind.motorMetabolicCost(actualFuel);
+                                mortality.energyFlows(0f,actualFuel,0f,0f);
+                            }
+                        }
                     }else{
                         creature.step(lastAppliedMotor,mx,my,slice,lastAppliedHand,px,py);
                         surface.step(creature,lastAppliedMembrane,px,py,slice,
