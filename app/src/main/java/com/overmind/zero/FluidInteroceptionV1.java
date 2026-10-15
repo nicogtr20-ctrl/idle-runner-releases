@@ -21,6 +21,8 @@ public final class FluidInteroceptionV1 {
         TANGENTIAL_V=4,BOUNDARY_GAP=5,AGITATION=6;
     private static final int A=SensorimotorMind.ACTIONS,HEAD=3,PRED=A*SUMMARY*HEAD,
         VAL=A*(SUMMARY+1);
+    /** Fixed number of learned prediction/value parameters, not growth. */
+    public static final int PARAMETERS=PRED+VAL;
     private final float[] local=new float[FEATURES],pooled=new float[SUMMARY],
         before=new float[SUMMARY],predictor=new float[PRED],values=new float[VAL];
     private int pending=-1;
