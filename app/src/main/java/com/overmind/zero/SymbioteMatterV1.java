@@ -30,7 +30,7 @@ public final class SymbioteMatterV1 {
     private final float[] fluidVx=new float[MotorBrain.N+INNER],fluidVy=new float[MotorBrain.N+INNER];
     private static final float TWO_PI=(float)(2*Math.PI), R=28f;
     public float restArea=(float)Math.PI*R*R,areaError=0f,work=0f,maxReach=0f;
-    public long ticks=0,invalid=0,topologyRepairs=0,radialReflowSteps=0;
+    public long ticks=0,invalid=0,topologyRepairs=0,selfContactPairs=0;
     private float time=0f;
     public SymbioteMatterV1(){}
     private static float clip(float a,float lo,float hi){return Math.max(lo,Math.min(hi,a));}
@@ -66,7 +66,7 @@ public final class SymbioteMatterV1 {
         }
         restArea=absArea(skin);
         areaError=work=maxReach=time=0;
-        ticks=invalid=topologyRepairs=radialReflowSteps=0;
+        ticks=invalid=topologyRepairs=selfContactPairs=0;
         observeBody(body,skin);
     }
     /** Mass-weighted center of all 170 material nodes, never an accelerated core. */
@@ -311,6 +311,44 @@ public final class SymbioteMatterV1 {
         for(int i=0;i<MotorBrain.N;i++){body.x[i]=fluidX[i];body.y[i]=fluidY[i];}
         for(int i=0;i<INNER;i++){x[i]=fluidX[i+MotorBrain.N];y[i]=fluidY[i+MotorBrain.N];}
     }
+    /**
+     * Excluded-volume self-contact between unrelated membrane material
+     * points. Adjacent/next-nearest points already have elastic bonds.
+     * Conservative symmetric projections preserve momentum locally and
+     * never target a centroid, resource, world direction, or gait.
+     */
+    private void projectSelfContact(Morphology.Surface skin){
+        final float min=3.0f, minSq=min*min;
+        for(int i=0;i<SURFACE;i++)for(int j=i+4;j<SURFACE;j++){
+            if(j-i>=SURFACE-3)continue;
+            float dx=skin.x[j]-skin.x[i],dy=skin.y[j]-skin.y[i];
+            float d2=dx*dx+dy*dy;
+            if(!Float.isFinite(d2)||d2>=minSq)continue;
+            float d=(float)Math.sqrt(Math.max(d2,.000001f));
+            if(d2<.000001f){
+                int next=(i+1)%SURFACE,prev=(i+SURFACE-1)%SURFACE;
+                dx=skin.y[next]-skin.y[prev];
+                dy=skin.x[prev]-skin.x[next];
+                float scale=len(dx,dy);
+                if(scale<.0001f){dx=1f;dy=0f;}
+                else{dx/=scale;dy/=scale;}
+                d=1f;
+            }
+            float strength=clip((min-d)*.38f,0f,.65f)/d;
+            float px=dx*strength,py=dy*strength;
+            boolean freeI=skin.gripHold[i]<Morphology.GRIP_HOLD;
+            boolean freeJ=skin.gripHold[j]<Morphology.GRIP_HOLD;
+            if(freeI&&freeJ){
+                skin.x[i]-=px*.5f;skin.y[i]-=py*.5f;
+                skin.x[j]+=px*.5f;skin.y[j]+=py*.5f;
+            }else if(freeI){
+                skin.x[i]-=px;skin.y[i]-=py;
+            }else if(freeJ){
+                skin.x[j]+=px;skin.y[j]+=py;
+            }else continue;
+            selfContactPairs++;
+        }
+    }
     public void step(MotorBrain.Body body,Morphology.Surface skin,float[] cortex,
                      float dt){
         if(body==null||skin==null||cortex==null||
@@ -332,21 +370,6 @@ public final class SymbioteMatterV1 {
         recoverPersistedCrossings(skin);
         observeBody(body,skin);
         float cx=body.cx,cy=body.cy;
-        // A strongly elongated retracting pseudopod cannot reduce length
-        // unless the conserved gel can redistribute its area elsewhere.
-        // Temporarily yield radial substrate resistance across the liquid
-        // when ACTUAL tissue stretch and voluntary contraction coexist.
-        // Ordinary strokes retain the previous measured crawl footing.
-        boolean fluidReflow=false;
-        for(int i=0;i<SURFACE;i++){
-            float dx=skin.x[i]-cx,dy=skin.y[i]-cy;
-            int sector=i*SECTORS/SURFACE;
-            if(dx*dx+dy*dy>(R+32f)*(R+32f)&&
-               cortex[sector*OUTPUTS]<-.65f){
-                fluidReflow=true;break;
-            }
-        }
-        if(fluidReflow)radialReflowSteps++;
         for(int i=0;i<SURFACE;i++){
             lastSkinX[i]=skin.x[i];lastSkinY[i]=skin.y[i];
             float dx=skin.x[i]-cx,dy=skin.y[i]-cy;
@@ -390,16 +413,10 @@ public final class SymbioteMatterV1 {
             // Local compression increases anchoring; extending cortex can
             // slide past it. Object-grip intention NEVER anchors open floor.
             float compression=Math.max(0f,-extend);
-            // Ordinary substrate drag is BYTE-FOR-BYTE the OTA160 law.
-            // Severely extended, voluntarily retracting tissue raises
-            // an area-conserving slip state for the whole connected gel:
-            // both normal and shear components must yield to let liquid
-            // redistribute. No goal, limb count or gait enters this rule.
-            float compressionDrag=clip(.12f+1.45f*compression,0f,.95f);
-            float drag=fluidReflow?
-                (float)Math.exp(-(1.8f+
-                    28f*clip(.12f+.90f*compression,0f,.78f))*dt):
-                (float)Math.exp(-(1.8f+66f*compressionDrag)*dt);
+            // Original OTA160 floor traction is unchanged. The physics
+            // fix is excluded-volume self-contact, not weaker footholds.
+            float traction=clip(.12f+1.45f*compression,0f,.95f);
+            float drag=(float)Math.exp(-(1.8f+66f*traction)*dt);
             float preX=skin.x[i],preY=skin.y[i];
             skin.vx[i]=clip((skin.vx[i]+fx[i]*dt)*drag,-140f,140f);
             skin.vy[i]=clip((skin.vy[i]+fy[i]*dt)*drag,-140f,140f);
@@ -497,6 +514,9 @@ public final class SymbioteMatterV1 {
             }
             projectArea(skin,dt);
             projectInterior(body,skin);
+            // Prevent non-neighbor living cortex sites from interpenetrating
+            // BEFORE expensive emergency edge rollback can lock the tissue.
+            projectSelfContact(skin);
         }
         repairTopology(skin);
         // Finite-difference post-constraint velocities include real reaction.
