@@ -548,7 +548,7 @@ public final class GameActivity extends Activity {
                 sensorMind.updateImpedanceSense(creature,surface);
                 sensorMind.updateInnerSense(creature,surface);
                 sensorMind.resumeSpatialSense(creature,surface,chamber,environment);
-                sensorMind.updateNavigationSense(creature,chamber,environment);
+                sensorMind.updateNavigationSense(creature,surface,chamber,environment);
                 motorGuard.resetLife(creature.cx,creature.cy);
                 lastSkillStall=motorGuard.recoveryActivations;
                 liveBody.abortTrial();
@@ -728,7 +728,7 @@ public final class GameActivity extends Activity {
                 sensorMind.updateInnerSense(creature,surface);
             // The newborn sees from actual membrane sites, never a centroid eye.
             sensorMind.updateSpatialSense(creature,surface,chamber,environment);
-            sensorMind.updateNavigationSense(creature,chamber,environment);
+            sensorMind.updateNavigationSense(creature,surface,chamber,environment);
             heading=(float)Math.atan2(sensorMind.motorY(),sensorMind.motorX());
         }
         void extendHabitat(){
@@ -1051,7 +1051,7 @@ public final class GameActivity extends Activity {
                         liveBody.abortTrial();
                     }
                     if(useSymbiote&&symMatter!=null&&symMotor!=null)
-                        sensorMind.appliedSymbioteControls(symMotor.commands());
+                        sensorMind.appliedSymbioteControls(symMotor.commands(),creature,surface);
                     else sensorMind.appliedControls(lastAppliedMotor,lastAppliedHand,lastAppliedMembrane);
                     // Prevent fast material masses from skipping through a
                     // square between consecutive frames. Snapshot before any

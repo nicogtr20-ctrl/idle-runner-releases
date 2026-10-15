@@ -67,8 +67,13 @@ public final class InstrumentalNavigation {
     }
     public void sense(MotorBrain.Body b,ScarcityLab room,
                       java.util.ArrayList<UnknownWorld.Entity> objects){
+        sense(b,null,room,objects);
+    }
+    /** The navigational retina shares the active 26D physical eye origins. */
+    public void sense(MotorBrain.Body b,Morphology.Surface skin,ScarcityLab room,
+                      java.util.ArrayList<UnknownWorld.Entity> objects){
         if(b==null||objects==null)return;
-        float[] sample=SensorimotorMind.Senses.spectral8(b,room,objects);
+        float[] sample=SensorimotorMind.Senses.spectral8(b,skin,room,objects);
         if(sample.length!=visual.length)return;
         System.arraycopy(sample,0,visual,0,visual.length);
         if(pending<0){startX=b.cx;startY=b.cy;}
