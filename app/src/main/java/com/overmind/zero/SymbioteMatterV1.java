@@ -126,6 +126,21 @@ public final class SymbioteMatterV1 {
         body.cx=centerX+mx*fluidWeight;body.cy=centerY+my*fluidWeight;
         body.cvx=centerVx+mvx*fluidWeight;body.cvy=centerVy+mvy*fluidWeight;
     }
+    /**
+     * A moderately extended patch must be able to pull material back even
+     * before it becomes an extreme filament. Preserve full tangential floor
+     * anchoring and NEVER release an actual obstacle hold. This is a passive
+     * physical constitutive law, not a neural gait or food-directed impulse.
+     */
+    static float radialRetractionRelease(float radius,float extend,boolean obstacleHeld){
+        if(obstacleHeld||!Float.isFinite(radius)||!Float.isFinite(extend))return 0f;
+        return clip((radius-(R+7f))/14f,0f,1f)*
+            clip((-extend-.45f)/.35f,0f,1f);
+    }
+    static float radialRetractionDrag(float traction,float release,float dt){
+        return (float)Math.exp(-(1.8f+
+            66f*clip(traction,0f,.95f)*(1f-.70f*clip(release,0f,1f)))*dt);
+    }
     public static float signedArea(Morphology.Surface skin){
         float a=0;
         for(int i=0;i<SURFACE;i++){
@@ -469,16 +484,17 @@ public final class SymbioteMatterV1 {
             float preX=skin.x[i],preY=skin.y[i];
             float appliedVx=skin.vx[i]+fx[i]*dt;
             float appliedVy=skin.vy[i]+fy[i]*dt;
-            // OTA163: a VERY long appendage pulling inward must be able
-            // to retract without becoming its own immovable floor anchor.
-            // Keep normal crawl traction and TANGENTIAL foothold friction.
-            // Only release radial resistance of the truly overstretched,
-            // voluntarily retracting skin (no desired gait or target).
-            if(rr>R+32f&&extend<-.65f){
+            // OTA164: valid ordinary pseudopod retraction also needs radial
+            // mobility. The original >R+32 gate never engaged on real ~43U
+            // extents. Release radial drag progressively from R+7 to R+21,
+            // ONLY during deliberate contraction of unheld material. Existing
+            // tangential traction is untouched; solid obstacle holds stay fixed.
+            float release=radialRetractionRelease(rr,extend,
+                skin.gripHold[i]>=Morphology.GRIP_HOLD);
+            if(release>0f){
                 float radial=appliedVx*ux+appliedVy*uy;
                 float tangent=-appliedVx*uy+appliedVy*ux;
-                float radialDrag=(float)Math.exp(-(1.8f+
-                    28f*clip(.12f+.90f*compression,0f,.78f))*dt);
+                float radialDrag=radialRetractionDrag(traction,release,dt);
                 skin.vx[i]=clip(radial*radialDrag*ux-tangent*drag*uy,-140f,140f);
                 skin.vy[i]=clip(radial*radialDrag*uy+tangent*drag*ux,-140f,140f);
             }else{
