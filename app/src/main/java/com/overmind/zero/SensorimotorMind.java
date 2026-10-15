@@ -126,6 +126,13 @@ public final class SensorimotorMind {
     }
     private float actualEnergySinceChoice=0f,actualContactHarm=0f;
     private float actualAmbientLossSinceChoice=0f;
+    /** Actual resource units debited from reserve to power living cortex.
+     * Not "effort", desired movement, or synthetic reinforcement. */
+    private float actualMotorEnergyCostSinceChoice=0f;
+    public synchronized void motorMetabolicCost(float actualEnergyDebited){
+        if(learning&&Float.isFinite(actualEnergyDebited)&&actualEnergyDebited>0f)
+            actualMotorEnergyCostSinceChoice+=actualEnergyDebited;
+    }
     /** Physically measured wind exposure, not a red resource or a build bonus. */
     public synchronized void ambientDamage(float actualEnergyLoss){
         if(learning&&Float.isFinite(actualEnergyLoss)&&actualEnergyLoss>0)
@@ -286,6 +293,7 @@ public final class SensorimotorMind {
         System.arraycopy(observation,0,trialState,0,S);
         trialAction=-1;elapsed=0;
         actualAmbientLossSinceChoice=0f;
+        actualMotorEnergyCostSinceChoice=0f;
         contactCredit.newLife();
         if(temporal!=null)temporal.resetLife();
         if(temporalSkills!=null)temporalSkills.resetLife();
@@ -313,6 +321,7 @@ public final class SensorimotorMind {
         if(blackbox!=null)blackbox.newLife();
         if(motionShadow!=null)motionShadow.resetLife();
         actualEnergySinceChoice=0;actualContactHarm=0;
+        actualMotorEnergyCostSinceChoice=0f;
     }
     public synchronized void resetEpisode(float[] first){
         // Mortality resets bodily position and short-term context, never
@@ -345,6 +354,7 @@ public final class SensorimotorMind {
             if(blackbox!=null)blackbox.newLife();
             if(motionShadow!=null)motionShadow.resetLife();
             actualEnergySinceChoice=0;actualContactHarm=0;
+        actualMotorEnergyCostSinceChoice=0f;
             return;
         }
         begin(first);
@@ -358,6 +368,7 @@ public final class SensorimotorMind {
         System.arraycopy(observation,0,trialState,0,S);
         action=currentAction;trialAction=currentAction;elapsed=0;
         actualAmbientLossSinceChoice=0f;
+        actualMotorEnergyCostSinceChoice=0f;
         if(temporal!=null)temporal.resumeAction(currentAction);
         if(temporalSkills!=null)temporalSkills.resumeLife();
         if(bodySchema!=null)bodySchema.resumeLife();
@@ -383,6 +394,7 @@ public final class SensorimotorMind {
         if(blackbox!=null)blackbox.resumeLife();
         if(motionShadow!=null)motionShadow.resetLife();
         actualEnergySinceChoice=0;actualContactHarm=0;
+        actualMotorEnergyCostSinceChoice=0f;
     }
     public synchronized float motorX(){return (float)Math.cos((action%8)*Math.PI/4);}
     public synchronized float motorY(){return (float)Math.sin((action%8)*Math.PI/4);}
@@ -534,7 +546,8 @@ public final class SensorimotorMind {
         if(navigation!=null)navigation.chosen(chosen,observedBody);
         if(intention!=null&&navigation!=null&&navigationAdviceEnabled)
             intention.chosen(navigation,chosen,senses[0]);
-        actualEnergySinceChoice=actualContactHarm=actualAmbientLossSinceChoice=0f;
+        actualEnergySinceChoice=actualContactHarm=actualAmbientLossSinceChoice=
+            actualMotorEnergyCostSinceChoice=0f;
         action=chosen;decisions++;
         if(causalSequence!=null)
             causalSequence.chosen(chosen,senses,
@@ -786,7 +799,9 @@ public final class SensorimotorMind {
             intention.noteDecision(largestIntentionBias);
         }
         actualEnergySinceChoice=0f;actualContactHarm=0;
+        actualMotorEnergyCostSinceChoice=0f;
         actualAmbientLossSinceChoice=0f;
+        actualMotorEnergyCostSinceChoice=0f;
         action=chosen;decisions++;
         // Observe only the chosen REAL action; forecasts are never executions.
         if(activeCore!=null)activeCore.chosen(chosen);
@@ -910,7 +925,8 @@ public final class SensorimotorMind {
         if(activeCore!=null){feedCore(after);activeCore.consequence(actualEnergySinceChoice,actualContactHarm,
                 Math.max(0f,physicalEffect),learning&&!holdout,holdout,false);}
         if(symbioteHead!=null)symbioteHead.consequence(actualEnergySinceChoice,
-                actualContactHarm,0f,learning&&!holdout,holdout);
+                actualContactHarm,actualAmbientLossSinceChoice,
+                actualMotorEnergyCostSinceChoice,learning&&!holdout,holdout);
         if(objectContinuity!=null&&spatial!=null)
             objectContinuity.view(spatial.ranges(),spatial.perceivedX(),
                 spatial.perceivedY(),after[4],learning&&!holdout,spatial.eyeOrigins());
