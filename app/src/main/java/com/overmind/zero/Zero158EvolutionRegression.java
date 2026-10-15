@@ -24,6 +24,15 @@ public final class Zero158EvolutionRegression {
            "Fluid subsystem model parameters inaccurate");
         ok(beforeCore.equals(core.encode())&&beforeMuscle.equals(muscle.encode()),
            "Evolution inspection unexpectedly modified learned brain data");
+        TemporalSkillBank bank=new TemporalSkillBank();
+        String unchangedSkills=bank.encode();
+        boolean bounds=false;
+        try{bank.skillActionsAt(0);}catch(IndexOutOfBoundsException ex){bounds=true;}
+        ok(bounds,"Invalid skill index didn't fail closed");
+        ok(bank.stored()==0&&unchangedSkills.equals(bank.encode()),
+           "Read-only skill inspection fabricated an ability or mutated the learner");
+        ok(bank.consolidated()==0&&bank.bestConfidence()==0,
+           "Virgin ZERO incorrectly reports consolidated skills");
         System.out.println("PASS OTA158: one living 2.2, true motor/holdout counters, fluid parameters, read-only checkpoints");
     }
 }
