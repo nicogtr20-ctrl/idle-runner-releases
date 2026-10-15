@@ -57,6 +57,7 @@ public final class Zero161PhysicalCapabilityRegression {
         float[] triple=drive(0,5,10);
         for(int i=0;i<120;i++){m.step(b,s,triple,dt);}
         stable(m,s);
+        long repairsAtPeak=m.topologyRepairs;
         float[] radii=new float[16];
         for(int j=0;j<16;j++)radii[j]=sectorRadius(b,s,j);
         float[] peaks={radii[0],radii[5],radii[10]};
@@ -97,8 +98,8 @@ public final class Zero161PhysicalCapabilityRegression {
         stable(matter,surface);
         end=norm(crawl.cx,crawl.cy);
         System.out.printf(Locale.US,
-            "ZERO161 BASELINE quietNet=%.3f quietMaxStep=%.3f threePeaks=%d peak=[%.2f %.2f %.2f] gaps=[%.2f %.2f %.2f] independentDelta=[%.2f %.2f %.2f] radialProgress=[%.2f %.2f %.2f %.2f] reflowSteps=%d repairs=%d crawledNet=%.2f gross=%.2f efficiency=%.4f%n",
-            quietNet,maxQuietStep,strong,peaks[0],peaks[1],peaks[2],gaps[0],gaps[1],gaps[2],delta0,delta5,delta10,retractProgress[0],retractProgress[1],retractProgress[2],retractProgress[3],m.radialReflowSteps,m.topologyRepairs,end,path,end/Math.max(1,path));
+            "ZERO161 BASELINE quietNet=%.3f quietMaxStep=%.3f threePeaks=%d peak=[%.2f %.2f %.2f] gaps=[%.2f %.2f %.2f] independentDelta=[%.2f %.2f %.2f] radialProgress=[%.2f %.2f %.2f %.2f] reflowSteps=%d repairs=[%d +%d] crawledNet=%.2f gross=%.2f efficiency=%.4f%n",
+            quietNet,maxQuietStep,strong,peaks[0],peaks[1],peaks[2],gaps[0],gaps[1],gaps[2],delta0,delta5,delta10,retractProgress[0],retractProgress[1],retractProgress[2],retractProgress[3],m.radialReflowSteps,repairsAtPeak,m.topologyRepairs-repairsAtPeak,end,path,end/Math.max(1,path));
         ok(quietNet<2f && maxQuietStep<.35f,"passive gel jitters / translates");
         ok(strong==3,"three independently activated pseudopods cannot coexist");
         ok(Math.abs(delta5)>1.2f,"changing one active appendage has no effect");
