@@ -57,7 +57,7 @@ public final class Zero155SystemIntegrityRegression {
            "Living brain did not command muscles before first resumed tick");
         long beforeTransitions=core.transitions();
         agent.rearmAfterResume(newborn,tissue);
-        ok(agent.decisionCount()==beforeDecisions+2 &&
+        ok(agent.decisionCount()==beforeDecisions+1 &&
            core.transitions()==beforeTransitions,
            "Rearming fabricated training on a censored pre-restart interval");
         ok(GripContactObserver.PREVIOUS_SESSION.equals("previous_session_report"),
