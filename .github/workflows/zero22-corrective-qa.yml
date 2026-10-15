@@ -175,11 +175,18 @@ jobs:
           for old in ('attachTransferSkillsV20(transferV20)',
                       'attachFuturePlannerV20(futureV20)',
                       'attachUnifiedCognitionV21(unifiedCognitionV21)',
-                      'attachUnifiedArbiterV21(unifiedArbiterV21)'):
+                      'attachUnifiedArbiterV21(unifiedArbiterV21)',
+                      'attachPredictiveWorldV20(predictiveWorldV20)',
+                      'attachPhysicalConsequenceV20(physicalConsequenceV20)',
+                      'attachGripAffordanceV20(gripAffordanceV20)',
+                      'attachPerceptualAssociationsV20(perceptualV20)'):
               assert old not in game,old
           assert 'if(activeCore!=null)return choosePrimaryV22(senses);' in mind
           assert 'symMatter.step(creature,surface,symMotor.commands(),slice)' in game
           assert 'if(!useSymbiote)skillExecution.boundary(' in game
+          assert 'if(!useSymbiote)sensorMind.attachMemory(episodic)' in game
+          assert 'if(!useSymbiote&&eventEnergyDeltaSinceAction<0)' in game
+          assert 'lastAppliedMotor=liveBody.weights(0,trainer.best);' in game
           assert 'if(!useSymbiote&&gripBank.observe(' in game
           print('OTA156: sole 2.2 policy, validated memory and no legacy shadow modules')
           PY
