@@ -112,8 +112,10 @@ public final class StatisticsActivity extends Activity {
         scroll.addView(body);
         body.addView(label("ZERO / STATISTICHE",24,TEXT,true));
         gap(body,5);
-        body.addView(label("Misure del mondo reale simulato • osservazione soltanto • non alterano il cervello",12,MUTED,false));
+        body.addView(label("Dati fisici del corpo e dell'ambiente • nessuna influenza sulle decisioni del 2.2",12,MUTED,false));
 
+        boolean activeSymbiote=getSharedPreferences(SaveSlotStore.WORKING,MODE_PRIVATE)
+            .getBoolean(SymbioteMatterV1.ENABLED,true);
         LifeStatistics.Life live=stats.current();
         LinearLayout now=panel(body);
         now.addView(label("VITA IN CORSO",15,CYAN,true));
@@ -128,10 +130,11 @@ public final class StatisticsActivity extends Activity {
         int[] essential={LifeStatistics.GOOD,LifeStatistics.HARM,LifeStatistics.GAIN,
             LifeStatistics.DAMAGE,LifeStatistics.DISKS,LifeStatistics.CELLS,
             LifeStatistics.NET,LifeStatistics.GATE,LifeStatistics.ROOMS,LifeStatistics.RECALL};
-        for(int m:essential)line(now,LifeStatistics.LABELS[m],metric(m,live.value(m)),TEXT);
+        for(int m:essential)if(!activeSymbiote||m!=LifeStatistics.RECALL)
+            line(now,LifeStatistics.LABELS[m],metric(m,live.value(m)),TEXT);
 
         LinearLayout averages=panel(body);
-        averages.addView(label("CAPACITA' ATTUALE • ULTIME 25 VITE",15,CYAN,true));
+        averages.addView(label("MEDIE OSSERVATE • ULTIME 25 VITE",15,CYAN,true));
         int seen=stats.sampleCount(WINDOW);
         averages.addView(label(seen==0?"Nessuna vita completa misurata ancora.":
             "Media mobile su "+seen+(seen==WINDOW?"":" / "+WINDOW)+" vite complete. Riduce il peso della singola partita fortunata o sfortunata.",12,MUTED,false));
@@ -140,25 +143,26 @@ public final class StatisticsActivity extends Activity {
                 LifeStatistics.GAIN,LifeStatistics.DAMAGE,LifeStatistics.DISKS,
                 LifeStatistics.CELLS,LifeStatistics.NET,LifeStatistics.GATE,
                 LifeStatistics.ROOMS,LifeStatistics.RECALL};
-            for(int m:chosen)line(averages,LifeStatistics.LABELS[m],
-                metric(m,stats.average(m,0,WINDOW)),TEXT);
+            for(int m:chosen)if(!activeSymbiote||m!=LifeStatistics.RECALL)
+                line(averages,LifeStatistics.LABELS[m],
+                    metric(m,stats.average(m,0,WINDOW)),TEXT);
         }
 
         LinearLayout trend=panel(body);
-        trend.addView(label("TENDENZA • 25 VS 25 PRECEDENTI",15,CYAN,true));
+        trend.addView(label("CONFRONTO • 25 VITE VS 25 PRECEDENTI",15,CYAN,true));
         trend.addView(label("Confronta due blocchi distinti di 25 vite. Il confronto si attiva soltanto a 50 vite complete per evitare che poche casualità sembrino apprendimento.",12,MUTED,false));
         if(stats.historyCount()<50){
             line(trend,"Raccolta dati",stats.historyCount()+" / 50 vite",GOLD);
         }else{
             double index=evolutionIndex();
             int indexColor=Math.abs(index)<2?MUTED:index>0?GREEN:RED;
-            line(trend,"Tendenza evolutiva",
+            line(trend,"Variazione osservata",
                 (index>0?"+":"")+String.format(Locale.ITALY,"%.0f%%",index),indexColor);
-            trend.addView(label("Indice osservativo sintetico: combina più misure reali con pesi uguali. NON è una ricompensa e ZERO non lo vede.",11,MUTED,false));
+            trend.addView(label("Indice descrittivo: combina le misure fisiche, non è una stima di intelligenza né una ricompensa per ZERO.",11,MUTED,false));
             int[] trendMetrics={LifeStatistics.DURATION,LifeStatistics.GOOD,LifeStatistics.HARM,
                 LifeStatistics.DISKS,LifeStatistics.CELLS,LifeStatistics.NET,
                 LifeStatistics.GATE,LifeStatistics.ROOMS,LifeStatistics.RECALL};
-            for(int m:trendMetrics){
+            for(int m:trendMetrics){if(activeSymbiote&&m==LifeStatistics.RECALL)continue;
                 double recent=stats.average(m,0,WINDOW);
                 double previous=stats.average(m,WINDOW,WINDOW);
                 line(trend,LifeStatistics.LABELS[m],delta(m,recent,previous),
@@ -182,8 +186,9 @@ public final class StatisticsActivity extends Activity {
                 LifeStatistics.GATE,LifeStatistics.ROOMS,LifeStatistics.RECALL};
             gap(lifetime,7);
             lifetime.addView(label("MEDIE STORICHE",12,GOLD,true));
-            for(int m:lifeMetrics)line(lifetime,LifeStatistics.LABELS[m],
-                metric(m,stats.lifetimeAverage(m)),TEXT);
+            for(int m:lifeMetrics)if(!activeSymbiote||m!=LifeStatistics.RECALL)
+                line(lifetime,LifeStatistics.LABELS[m],
+                    metric(m,stats.lifetimeAverage(m)),TEXT);
             gap(lifetime,9);
             lifetime.addView(label("RECORD ASSOLUTI",12,GOLD,true));
             for(int m:new int[]{LifeStatistics.DURATION,LifeStatistics.GOOD,
