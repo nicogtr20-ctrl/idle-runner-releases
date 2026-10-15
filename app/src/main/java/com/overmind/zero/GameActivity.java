@@ -895,6 +895,8 @@ public final class GameActivity extends Activity {
                             creature.vx[i]*=.6f;creature.vy[i]*=.6f;
                         }
                         if(useSymbiote&&symMatter!=null){
+                        // AFTER all membrane + ten-body collisions, impose
+                        // identical solid boundaries on 64 interior parcels.
                         if(chamber!=null)chamber.constrainInterior(symMatter,slice);
                         for(UnknownWorld.Entity obstacle:environment){
                             if(obstacle.consumed)continue;
