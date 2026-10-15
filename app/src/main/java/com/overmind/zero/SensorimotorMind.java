@@ -455,7 +455,7 @@ public final class SensorimotorMind {
             maximumBody=Math.max(maximumBody,Math.abs(proprio));
             maximumDistributed=Math.max(maximumDistributed,Math.abs(membrane));
             maximumImpedance=Math.max(maximumImpedance,Math.abs(resistance));
-            observedMeans[a]=nav+effect+object+seq+proprio+membrane+resistance;
+            observedMeans[a]=nav+effect+object+seq+liveBodyEvidence(a);
         }
         float[] scores=activeCore.primaryScores(observedMeans);
         // Observe whether real proprioceptive evidence earned meaningful
