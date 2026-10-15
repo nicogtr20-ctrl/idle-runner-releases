@@ -81,6 +81,21 @@ public final class TemporalSkillBank {
     public float bestConfidence(){
         float c=0;for(Skill s:skills)c=Math.max(c,s.confidence());return c;
     }
+    /** Read-only inspection. An action number is a learned primitive, NOT a
+     * hand-coded target or tutorial. Copies prevent UI mutation of the learner. */
+    private Skill inspected(int index){
+        if(index<0||index>=skills.size())throw new IndexOutOfBoundsException();
+        return skills.get(index);
+    }
+    public int skillLengthAt(int index){return inspected(index).len;}
+    public int skillConfirmationsAt(int index){return inspected(index).confirmations;}
+    public int skillFailuresAt(int index){return inspected(index).failures;}
+    public int skillCompletionsAt(int index){return inspected(index).completions;}
+    public float skillConfidenceAt(int index){return inspected(index).confidence();}
+    public int[] skillActionsAt(int index){
+        Skill s=inspected(index);
+        return java.util.Arrays.copyOf(s.actions,s.len);
+    }
     public boolean takeDirty(){boolean d=dirty;dirty=false;return d;}
 
     /** New life: discard only unfinished sequence/context. Learned chunks live on. */

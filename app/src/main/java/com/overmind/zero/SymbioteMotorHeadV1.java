@@ -210,6 +210,10 @@ public final class SymbioteMotorHeadV1 {
     }
     public void resetLife(){lastAction=-1;Arrays.fill(commands,0);Arrays.fill(noise,0);}
     public void resumeLife(){resetLife();}
+    /** Safe counters, sourced from the same authenticated saved cortex. */
+    public long decisionCount(){return choices;}
+    public long trainedOutcomes(){return updates;}
+    public long heldoutOutcomes(){return heldout;}
     /** Read-only learned muscle-cortex weights; 84 trainable scalars. */
     public int parameterCount(){return weights.length;}
     public float parameterAt(int index){

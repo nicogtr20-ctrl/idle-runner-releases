@@ -345,6 +345,11 @@ public final class RecurrentCoreV22 {
     }
     public void resetLife(){Arrays.fill(hidden,0);Arrays.fill(current,0);pending=null;pendingAction=-1;lastAction=-1;intervalsWithoutEnergy=0;}
     public void resumeLife(){pending=null;pendingAction=-1;}
+    /** Read-only lifetime learning counters. Never changes the policy. */
+    public long trainedTransitions(){return trainSteps;}
+    public long decisionCount(){return choices;}
+    public long terminalEvents(){return terminals;}
+    public int heldoutTransitions(){int n=0;for(int v:validation)n+=v;return n;}
     public long transitions(){return transitions;}
     public long replayUpdates(){return replays;}
     /** Read-only trainable weights for the local parameter inspector.
