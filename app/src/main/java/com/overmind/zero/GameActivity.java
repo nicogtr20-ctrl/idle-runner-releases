@@ -47,20 +47,12 @@ public final class GameActivity extends Activity {
         DistributedBodySense distributedSense=new DistributedBodySense();
         LocalImpedanceSense localImpedance=new LocalImpedanceSense();
         FluidInteroceptionV1 innerSense=new FluidInteroceptionV1();
-        PredictiveWorldV20 predictiveWorldV20=new PredictiveWorldV20();
-        TransferSkillsV20 transferV20=new TransferSkillsV20();
-        FuturePlannerV20 futureV20=new FuturePlannerV20();
-        PhysicalConsequenceV20 physicalConsequenceV20=new PhysicalConsequenceV20();
-        GripAffordanceV20 gripAffordanceV20=new GripAffordanceV20();
-        PerceptualAssociationsV20 perceptualV20=new PerceptualAssociationsV20();
         ObjectExperienceV20 objectExperienceV20=new ObjectExperienceV20();
-        UnifiedCognitionV21 unifiedCognitionV21=new UnifiedCognitionV21();
         ObjectContinuityV21 objectContinuityV21=new ObjectContinuityV21();
         CausalSequenceV23 causalSequenceV23=new CausalSequenceV23();
         CompetenceMemoryV21 competenceMemoryV21=new CompetenceMemoryV21();
         RecurrentCoreV22 recurrentCore=new RecurrentCoreV22();
         SkillExecutionV22 skillExecution=new SkillExecutionV22();
-        UnifiedArbiterV21 unifiedArbiterV21=new UnifiedArbiterV21();
         SpatialPerception spatialMap=new SpatialPerception();
         CausalExperiments causalExperiments=new CausalExperiments();
         InstrumentalNavigation navigation=new InstrumentalNavigation();
@@ -282,31 +274,10 @@ public final class GameActivity extends Activity {
             innerSense=new FluidInteroceptionV1();
             innerSense.restore(prefs.getString(FluidInteroceptionV1.KEY,""));
             sensorMind.attachFluidInteroception(innerSense,null);
-            predictiveWorldV20=new PredictiveWorldV20();
-            predictiveWorldV20.restore(prefs.getString(PredictiveWorldV20.KEY,""));
-            sensorMind.attachPredictiveWorldV20(predictiveWorldV20);
-            transferV20=new TransferSkillsV20();
-            transferV20.restore(prefs.getString(TransferSkillsV20.KEY,""));
-            sensorMind.attachTransferSkillsV20(transferV20);
-            futureV20=new FuturePlannerV20();
-            futureV20.restore(prefs.getString(FuturePlannerV20.KEY,""));
-            sensorMind.attachFuturePlannerV20(futureV20);
-            physicalConsequenceV20=new PhysicalConsequenceV20();
-            physicalConsequenceV20.restore(prefs.getString(PhysicalConsequenceV20.KEY,""));
-            sensorMind.attachPhysicalConsequenceV20(physicalConsequenceV20);
-            gripAffordanceV20=new GripAffordanceV20();
-            gripAffordanceV20.restore(prefs.getString(GripAffordanceV20.KEY,""));
-            sensorMind.attachGripAffordanceV20(gripAffordanceV20);
-            perceptualV20=new PerceptualAssociationsV20();
-            perceptualV20.restore(prefs.getString(PerceptualAssociationsV20.KEY,""));
-            sensorMind.attachPerceptualAssociationsV20(perceptualV20);
             objectExperienceV20=new ObjectExperienceV20();
             objectExperienceV20.restore(prefs.getString(ObjectExperienceV20.KEY,""));
             sensorMind.attachObjectExperienceV20(objectExperienceV20);
             // Independent optional working-profile state; never reuses old ZERO slots.
-            unifiedCognitionV21=new UnifiedCognitionV21();
-            unifiedCognitionV21.restore(prefs.getString(UnifiedCognitionV21.KEY,""));
-            sensorMind.attachUnifiedCognitionV21(unifiedCognitionV21);
             objectContinuityV21=new ObjectContinuityV21();
             objectContinuityV21.restore(prefs.getString(ObjectContinuityV21.KEY,""));
             sensorMind.attachObjectContinuityV21(objectContinuityV21);
@@ -315,15 +286,12 @@ public final class GameActivity extends Activity {
             sensorMind.attachCausalSequenceV23(causalSequenceV23);
             competenceMemoryV21=new CompetenceMemoryV21();
             competenceMemoryV21.restore(prefs.getString(CompetenceMemoryV21.KEY,""));
-            unifiedArbiterV21=new UnifiedArbiterV21();
-            unifiedArbiterV21.restore(prefs.getString(UnifiedArbiterV21.KEY,""));
-            sensorMind.attachUnifiedArbiterV21(unifiedArbiterV21);
             recurrentCore=new RecurrentCoreV22();
             recurrentCore.restore(prefs.getString(RecurrentCoreV22.KEY,""));
             sensorMind.attachActiveCore(recurrentCore);
             sensorMind.attachSymbioteMotorHead(symMotor);
-            // Hard device boundary: ZERO 2.0 can LEARN and REPORT but may not
-            // bias any live motor decision. Advisory A/B is laboratory-only.
+            // Android exclusively uses RecurrentCoreV22; historical 2.0
+            // future/transfer and 2.1 shadow arbiters no longer run or persist.
             sensorMind.enableZero20ExperimentalAdvice(false);
             spatialMap=new SpatialPerception();
             spatialMap.restore(prefs.getString(SpatialPerception.KEY,""));
@@ -355,7 +323,7 @@ public final class GameActivity extends Activity {
             gateMetrics.restore(prefs.getString(GateBehaviorMetrics.KEY,""));
             episodic=new EpisodicMemory();
             episodic.restore(prefs.getString("episodic_memory_v095",""));
-            sensorMind.attachMemory(episodic);
+            if(!useSymbiote)sensorMind.attachMemory(episodic);
             motorGuard=new MotorAutonomyGuard();
             motorGuard.restoreCounts(prefs.getInt("motor_recoveries_v097",0),
                 prefs.getInt("motor_free_choices_v097",0));
@@ -623,21 +591,13 @@ public final class GameActivity extends Activity {
               .putString(LocalImpedanceSense.KEY,localImpedance.encode())
               .putString(FluidInteroceptionV1.KEY,innerSense.encode())
               // ZERO 2.0 shadow brain: optional independent persistence; no legacy changes.
-              .putString(PredictiveWorldV20.KEY,predictiveWorldV20.encode())
-              .putString(TransferSkillsV20.KEY,transferV20.encode())
-              .putString(FuturePlannerV20.KEY,futureV20.encode())
-              .putString(PhysicalConsequenceV20.KEY,physicalConsequenceV20.encode())
-              .putString(GripAffordanceV20.KEY,gripAffordanceV20.encode())
-              .putString(PerceptualAssociationsV20.KEY,perceptualV20.encode())
               .putString(ObjectExperienceV20.KEY,objectExperienceV20.encode())
-              .putString(UnifiedCognitionV21.KEY,unifiedCognitionV21.encode())
               .putString(ObjectContinuityV21.KEY,objectContinuityV21.encode())
               .putString(CausalSequenceV23.KEY,causalSequenceV23.encode())
               .putString(CompetenceMemoryV21.KEY,competenceMemoryV21.encode())
               .putString(RecurrentCoreV22.KEY,recurrentCore.encode())
               .putString(SymbioteMotorHeadV1.KEY,
                   symMotor==null?"":symMotor.encode())
-              .putString(UnifiedArbiterV21.KEY,unifiedArbiterV21.encode())
               .putString(SpatialPerception.KEY,spatialMap.encode())
               .putString(CausalExperiments.KEY,causalExperiments.encode())
               .putString(InstrumentalNavigation.KEY,navigation.encode())
@@ -948,7 +908,7 @@ public final class GameActivity extends Activity {
                 }
                 // Injury immediately preceding death must be recorded BEFORE
                 // the transient episode buffer is reset.
-                if(eventEnergyDeltaSinceAction<0){
+                if(!useSymbiote&&eventEnergyDeltaSinceAction<0){
                     episodic.action(sensorMind.stateCopy(),sensorMind.action);
                     if(episodic.consequenceSeparated(0,energySinceAction,
                        lastAppliedMotor,lastAppliedHand,lastAppliedMembrane,false))save();
@@ -1049,14 +1009,20 @@ public final class GameActivity extends Activity {
                     // ZERO's independently selected ACTIONS, but procedural
                     // skills come only from today's live trained controllers
                     // or physically tested candidate mutations.
-                    lastAppliedMotor=liveBody.weights(0,trainer.best);
+                    if(!useSymbiote){
+                        lastAppliedMotor=liveBody.weights(0,trainer.best);
                     lastAppliedHand=liveBody.weights(1,handTrainer.best);
                     lastAppliedMembrane=liveBody.weights(2,shapeTrainer.best);
                     float[] trialHand=lastAppliedHand,trialMembrane=lastAppliedMembrane;
                     boolean actualTouch=false;
                     for(float touch:surface.touchSense)if(touch>.2f){actualTouch=true;break;}
-                    lastAppliedHand=skillExecution.hand(lastAppliedHand,sensorMind.adhesion()>.5f,actualTouch,liveBody.testingCandidate());
-                    lastAppliedMembrane=skillExecution.membrane(lastAppliedMembrane,sensorMind.adhesion()>.5f,actualTouch,liveBody.testingCandidate());
+                    // Legacy motor genomes do not operate the living cortex.
+                    if(!useSymbiote){
+                        lastAppliedHand=skillExecution.hand(lastAppliedHand,
+                            sensorMind.adhesion()>.5f,actualTouch,liveBody.testingCandidate());
+                        lastAppliedMembrane=skillExecution.membrane(lastAppliedMembrane,
+                            sensorMind.adhesion()>.5f,actualTouch,liveBody.testingCandidate());
+                    }
                     if(!useSymbiote&&
                        (lastAppliedHand!=trialHand||lastAppliedMembrane!=trialMembrane)){
                         techniqueUsedSinceAction=true;
@@ -1064,6 +1030,7 @@ public final class GameActivity extends Activity {
                         // in this body's comparison window. Discard the window
                         // rather than crediting another controller's outcome.
                         liveBody.abortTrial();
+                    }
                     }
                     if(useSymbiote&&symMatter!=null&&symMotor!=null)
                         sensorMind.appliedSymbioteControls(symMotor.commands(),creature,surface);
@@ -1120,7 +1087,7 @@ public final class GameActivity extends Activity {
                         boolean physicalHold=chamber.gateHeldFrames>previousGripHeld;
                         boolean opposedNow=chamber.opposedContactFrames>previousOpposedFrames;
                         if(physicalHold){
-                            if(gripBank.observe(lastAppliedHand,lastAppliedMembrane,
+                            if(!useSymbiote&&gripBank.observe(lastAppliedHand,lastAppliedMembrane,
                                 true,opposedNow,
                                 Math.max(0,actuallyMoved),sensorMind.stateCopy()))save();
                         }
@@ -1138,7 +1105,7 @@ public final class GameActivity extends Activity {
                         }else if(physicalHold||!voluntaryGripAtGate){
                             ongoingUnsuccessfulGrip=0;
                         }
-                        if(ongoingUnsuccessfulGrip>=120 &&
+                        if(!useSymbiote&&ongoingUnsuccessfulGrip>=120 &&
                            gripRecoveryCooldown==0 &&
                            !liveBody.testingCandidate()){
                             GripSkillBank.Pair historical=gripBank.retrieveAfterRepeatedFailure(
@@ -1196,13 +1163,13 @@ public final class GameActivity extends Activity {
                         if(grips.opposingGrip&&actualBoxMotion>.005f){
                             // Reward only VERIFIED cover travel, never touch or intent.
                             environmentEffectSinceAction+=Math.min(2f,actualBoxMotion);
-                            if(gripBank.observe(lastAppliedHand,lastAppliedMembrane,
+                            if(!useSymbiote&&gripBank.observe(lastAppliedHand,lastAppliedMembrane,
                                true,true,Math.min(2f,actualBoxMotion),
                                sensorMind.stateCopy()))save();
                             // Research-only archive of physically proven technique:
                             // self tissue and actual motion; anonymous sighting
                             // confidence is an uncertainty tag, not object truth.
-                            if(competenceMemoryV21.witnessed(lastAppliedHand,
+                            if(!useSymbiote&&competenceMemoryV21.witnessed(lastAppliedHand,
                                lastAppliedMembrane,sensorMind.stateCopy(),
                                grips.opposingGrip,actualBoxMotion,
                                objectContinuityV21.currentTrackConfidence()))save();
@@ -1227,7 +1194,7 @@ public final class GameActivity extends Activity {
                     boolean voluntaryBoxGrip=boxTouchedThisFrame&&sensorMind.adhesion()>.5f;
                     if(voluntaryBoxGrip&&!boxAnyHeldThisFrame)boxFailedGripFrames++;
                     else boxFailedGripFrames=0;
-                    if(boxFailedGripFrames>=120&&gripRecoveryCooldown==0&&
+                    if(!useSymbiote&&boxFailedGripFrames>=120&&gripRecoveryCooldown==0&&
                        !liveBody.testingCandidate()){
                         GripSkillBank.Pair oldGrip=gripBank.retrieveAfterRepeatedFailure(
                             handTrainer.best,shapeTrainer.best,sensorMind.stateCopy());
@@ -1357,7 +1324,7 @@ public final class GameActivity extends Activity {
                     // Real temporal observation AFTER collisions, hunger
                     // and any energy actually collected.
                     sensorMind.setLearning(true);
-                    boolean actedFromMemory=episodic.physicallyReplaying();
+                    boolean actedFromMemory=!useSymbiote&&episodic.physicallyReplaying();
                     long beforeExperience=sensorMind.experiences;
                     // Snapshot the PREVIOUS decision before the model chooses
                     // the next one. Its sensory state is what ZERO actually saw.
@@ -1369,16 +1336,20 @@ public final class GameActivity extends Activity {
                         environmentEffectSinceAction,creature,surface,
                         chamber,environment);
                     if(sensorMind.experiences>beforeExperience){
-                        skillExecution.boundary(competenceMemoryV21,sensorMind.stateCopy(),
+                        if(!useSymbiote)skillExecution.boundary(competenceMemoryV21,sensorMind.stateCopy(),
                             sensorMind.action,environmentEffectSinceAction,liveBody.testingCandidate());
                         mortality.observed(reserve/100f);
-                        episodic.action(observedBefore,actionBefore);
-                        int recallsBefore=episodic.repeatEffects;
-                        boolean remembered=episodic.consequenceSeparated(
-                            environmentEffectSinceAction,energySinceAction,
-                            lastAppliedMotor,lastAppliedHand,lastAppliedMembrane,
-                            actedFromMemory);
-                        if(episodic.repeatEffects>recallsBefore)lifeStats.confirmedRecall();
+                        boolean remembered=false;
+                        if(!useSymbiote){
+                            episodic.action(observedBefore,actionBefore);
+                            int recallsBefore=episodic.repeatEffects;
+                            remembered=episodic.consequenceSeparated(
+                                environmentEffectSinceAction,energySinceAction,
+                                lastAppliedMotor,lastAppliedHand,lastAppliedMembrane,
+                                actedFromMemory);
+                            if(episodic.repeatEffects>recallsBefore)
+                                lifeStats.confirmedRecall();
+                        }
                         // Object hypotheses are included in normal periodic checkpoints,
                         // pauses and physical events. Do not rewrite the entire
                         // profile on every 0.65-second observational update.
@@ -1814,7 +1785,9 @@ public final class GameActivity extends Activity {
                 173,179,10,0xffb3ced7,false);
             text(c,"DISCHI "+pushes+" • BLOCCHI "+boxesUncovered+" • ZONE "+journey.lifeCells+
                 " • STANZE "+chambersCleared,173,195,9,GOLD,false);
-            text(c,"ABILITA "+skillBank.count()+" • RICORDI "+episodic.stored()+
+            text(c,useSymbiote?
+                "CERVELLO 2.2 • SKILL TEMPORALI "+temporalSkillBank.stored():
+                "ABILITA "+skillBank.count()+" • RICORDI "+episodic.stored()+
                 " • TECNICHE "+gripBank.count(),173,210,9,TEAL,false);
 
             // TEST MAX stop is its own small hit target, away from TEMPO.
