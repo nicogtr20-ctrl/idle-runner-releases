@@ -93,6 +93,12 @@ public final class NeurogenesisV22 {
         return s/ACTIONS;
     }
     public int addedParameters(){return grown.size()*(PARAMETERS+ACTIONS);}
+    public float parameterAt(int index){
+        if(index<0||index>=addedParameters())throw new IndexOutOfBoundsException();
+        Node n=grown.get(index/(PARAMETERS+ACTIONS));
+        int offset=index%(PARAMETERS+ACTIONS);
+        return offset<PARAMETERS?n.in[offset]:n.out[offset-PARAMETERS];
+    }
     private Node propose(){
         Random rnd=new Random(12719L+104729L*attempts);
         Node n=new Node();
