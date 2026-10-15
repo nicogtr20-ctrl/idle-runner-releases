@@ -364,6 +364,9 @@ public final class RecurrentCoreV22 {
     public float neuronConnectionStrength(int newIndex){
         return neuralGrowth.neuronStrength(newIndex);
     }
+    public float grownNeuronRecurrentLink(int grownIndex,int originalIndex){
+        return neuralGrowth.recurrentLink(grownIndex,originalIndex);
+    }
     public long trainedTransitions(){return trainSteps;}
     public long decisionCount(){return choices;}
     public long terminalEvents(){return terminals;}
