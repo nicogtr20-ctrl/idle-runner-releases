@@ -873,6 +873,10 @@ jobs:
           from pathlib import Path
           from hashlib import sha1
           root=Path('app/src/main/java/com/overmind/zero')
+          # OTA149: sensor wiring only, six explicitly reviewed Java source
+          # blobs: true 96-patch motor targets, real executed efference,
+          # achieved material stretch, tactile pulse decay and regression.
+          # All other source hash pins and QA/signing gates remain enforced.
           # OTA148: one-crossing real-profile topology-liveness QA; only the
           # two changed physics/test blobs are re-pinned, all other strict
           # source hashes and signature/telemetry gates remain intact.
@@ -888,19 +892,19 @@ jobs:
           'Zero20PassiveSnapshot.java':'aad03161b82ef96f768927dec8193c9c43008923',
           'SaveSlotsActivity.java':'c85c98e5fb415c2c70e7441b4ccae21c43147931',
           'SaveSlotStore.java':'4d232fed8599f7f3eb42a080f3806b5a537f01fa',
-          'SymbioteMatterV1Regression.java':'6ce2f03b3d408db38d6538b1fe13c558b174930a',
+          'SymbioteMatterV1Regression.java':'83ed37ea1d891d30148b0e9343102f99921948f5',
           'SymbioteMotorHeadV1.java':'e0a4b557b5e3f5a89e51db28ab6b1d3e7d640f01',
-          'SymbioteMatterV1.java':'70c7d8b759987a9548a54b5be41097f957502813',
+          'SymbioteMatterV1.java':'500c4d15fdc26e590a55b4ce970040bfabff7332',
           'RecurrentCoreV22.java':'665ab6138fb2d754e94de0e41d6b394a29e392f5',
           'ObjectContinuityV21.java':'73835ed4c3b15eefcfa3d1c615d7769b6fa1fa46',
           'CausalSequenceV23.java':'329344e296ec342e0b85b965babbae15a3eb6f83',
           'CausalSequenceV23Regression.java':'e8ea1df2ae038dd9f7db44132df3e247e643b6ae',
-          'SensorimotorMind.java':'347a0028fa1d570ffa6368ad70baf2ec1d3a8f62',
+          'SensorimotorMind.java':'fca84526d484039e63a7a12e658946cce2b3b023',
           'DecisionBlackbox.java':'7fbac5e10cdf101bef3fd5ae050ae5db6074bc6c',
           'EnergyLifetimeCounters.java':'7c0a9d815937a39c5cfdaddb01896b39536d8afe',
           'ObjectExperienceV20.java':'39ada3745f8b22769e67c00f5def9a5a3ed6ba1a',
           'ObjectExperienceV20Regression.java':'44bccc8ebe5971ed5226e50f62f8e27f7fbc6ddd',
-          'GameActivity.java':'22a7d518fc5d8a2eba806c2091cd5a10044672de',
+          'GameActivity.java':'ed7286011bc698b8b8ab70596fbfda7f42371709',
           'ContactGeometryForensics.java':'661401bf03e4e586e5fe69d819db7af05a1a319d',
           'InstrumentalNavigation.java':'fb95ae5b19a8b2602cb4338641d8851bebf8fa26',
           'BehavioralLaboratory.java':'8a35099ddb4b4d7ef9a9a334cb2e50b9477285d8',
@@ -931,7 +935,7 @@ jobs:
           'BodyProprioception.java':'2b83452af357a7a3b8c02cee0ba9792ce0b81ada',
           'DistributedBodySense.java':'75c1561436fef92f07b7fcb339f1a36eb87e7c62',
           'DistributedBodyRegression.java':'e575ec3f4a0a05ce3c32001f6b7026bbbcd0f2f2',
-          'LocalImpedanceSense.java':'acbcff6d0f39128cca507a96c6594d742e68c2cb',
+          'LocalImpedanceSense.java':'7fa08ff827694fad00bdc1303eb5c35814188039',
           'LocalImpedanceRegression.java':'210835bd51e8319725a85d5435f74bb0dcd84100',
           'ShelterEcology.java':'bae82eb8f935cd498a24d314c1e60910c77ca21b',
           'ShelterEcologyRegression.java':'4bbfcec1f83bec96efed24ee28985408a41e0127',
@@ -945,7 +949,7 @@ jobs:
           'GripSkillBank.java':'3eb89f644b70896644a8204e7a4044a2de03a2c7',
           'OnlineBodyLearning.java':'36caba1ed145ca571d8231152e6052354a71d055',
           'MotorBrain.java':'a3e0681c595bd1a9d17549c25770f6049c83926f',
-          'Morphology.java':'c56744c08a452681b23ad640515e20d7304c28c0',
+          'Morphology.java':'905be7b131e81b35d95ca2a1d5967c1e2a1c8018',
           'BodyIntegrity.java':'e551493723d13006d5e6905690c0ab0ee9e13d17',
           'BodyIntegrityRecoveredSnapshotsRegression.java':'d536451adb05cb742176ec559460066bd637c453',
           'BodyIntegrityObstacleRegression.java':'d9b4b6d1847ea78787dacc531188d2b61318487f'}
