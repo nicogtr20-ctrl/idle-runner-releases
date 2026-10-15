@@ -143,7 +143,7 @@ public final class BrainToolsActivity extends Activity {
             line(spatialPanel,"Verifiche spaziali",spatial.validations+"",WHITE);
             line(spatialPanel,"Fiducia spaziale",percent(spatial.confidence()),CYAN);
         }else line(spatialPanel,"Mappa fisica","Nessun salvataggio disponibile",AMBER);
-        line(spatialPanel,"Esperimenti causa/effetto",ca?ca.experiments+"":"Non ancora registrati",WHITE);
+        line(spatialPanel,"Esperimenti causa/effetto",ca?causal.experiments+"":"Non ancora registrati",WHITE);
         if(ca)line(spatialPanel,"Fiducia causale",percent(causal.confidence()),CYAN);
         line(spatialPanel,"Movimenti verificati",nav?navigation.verifiedActions()+" / 16":"In attesa di dati",WHITE);
         line(spatialPanel,"Tracce oggetti anonimi",oc?objects.trackedViews()+"":"In attesa di dati",WHITE);
@@ -168,7 +168,7 @@ public final class BrainToolsActivity extends Activity {
             line(memory,"Sequenze consolidate",skills.consolidated()+"",CYAN);
             line(memory,"Esecuzioni riuscite",skills.completions+"",WHITE);
         }
-        line(memory,"Progressi obiettivi",go?go.confirmed+" verificati":"In attesa di dati",WHITE);
+        line(memory,"Progressi obiettivi",go?goals.confirmed+" verificati":"In attesa di dati",WHITE);
         paragraph(memory,"La memoria può suggerire un'azione, ma non imporla. ZERO deve confermare con l'esperienza che una sequenza funziona; non riceve coordinate, regole di soluzione o premi per il semplice movimento.");
 
         LinearLayout stats=panel(body);
@@ -177,7 +177,7 @@ public final class BrainToolsActivity extends Activity {
         stats.setOnClickListener(v->startActivity(new Intent(this,StatisticsActivity.class)));
 
         LinearLayout share=panel(body);
-        share.addView(label("CONDI VIDI DATI CON GPT  ↗".replace("CONDI VIDI","CONDIVIDI"),17,CYAN,true));
+        share.addView(label("CONDIVIDI DATI CON GPT  ↗",17,CYAN,true));
         paragraph(share,"Invio manuale e privato dell'ultimo profilo salvato, inclusi i pesi del 2.2, le memorie, il corpo e le statistiche. I campi legacy eventualmente presenti sono materiale storico, non funzioni attive.");
         share.setOnClickListener(v->startActivity(new Intent(this,TelemetryActivity.class)));
 
@@ -187,7 +187,7 @@ public final class BrainToolsActivity extends Activity {
         TextView basic=label("CONFRONTO COMPORTAMENTALE STORICO  ›",15,WHITE,true);
         basic.setPadding(0,dp(17),0,dp(12));basic.setOnClickListener(v->
             startActivity(new Intent(this,BehavioralLabActivity.class)));lab.addView(basic);
-        TextView extended=label("PROVE ESTese 2.2 / CASSE  ›".replace("ESTese","ESTESE"),15,WHITE,true);
+        TextView extended=label("PROVE ESTESE 2.2 / CASSE  ›",15,WHITE,true);
         extended.setPadding(0,dp(12),0,dp(12));
         extended.setOnClickListener(v->startActivity(new Intent(this,CoreLabActivityV22.class)));
         lab.addView(extended);
