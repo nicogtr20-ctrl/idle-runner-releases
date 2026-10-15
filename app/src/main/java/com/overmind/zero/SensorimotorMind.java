@@ -68,6 +68,8 @@ public final class SensorimotorMind {
         // changes in the actually executed cortex commands.
         executedMotor=executedHand=executedMembrane=null;
     }
+    /** Package-visible immutable test probe; not an actuator or new learner. */
+    synchronized float[] appliedEfferenceForTest(){return executedControls.clone();}
     private void feedCore(float[] senses){
         if(activeCore!=null)activeCore.sense(senses,distributedBody==null?null:distributedBody.localMap(),
             spatial==null?null:spatial.eyeOrigins(),executedControls,spatial==null?null:spatial.ranges(),
