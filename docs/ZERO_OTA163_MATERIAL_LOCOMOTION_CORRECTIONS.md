@@ -1,0 +1,25 @@
+# ZERO OTA163 — Material motion corrective report
+
+Date: 2026-10-15. **FIRMATO E PUBBLICATO.** Publisher run 38813242015 SUCCESS, live HTTPS bytes/SHA-256 run 38813593199 SUCCESS. Active base: `feature/zero22-active-recurrent-ota117`; corrective branch `fix/zero163-complete-material-motion`.
+
+## Why
+Real OTA162 reports show selected motor heading disagrees with actual movement; 41% of 96 measurable navigation decisions in last life moved against own selected heading. Shape often elongated, slow, with visually antagonistic sectors. Independent forensic QA run 38809772921 established additional deterministic faults: in the real concave saved contour 10/96 centroid rays oppose polygon outward normals; long appendage had 23/96 membrane sites outside the previous 24U liquid reaction radius; high contraction friction retains only 19.9% of prior velocity per 25ms; peak proprioception remained a life-high (36.49U versus actual ~4.0U after relaxation). The previous core locomotor map itself is not globally inverted: 16/16 virgin long-held actions move in expected world directions.
+
+## Fixes in OTA163
+1. **Concavity-aware physical normal field** `SymbioteMatterV1.actuatorDirectionAt` derives real boundary tangent normals and blends the learned convex radial propulsion only when local concavity makes the centroid ray incorrect. Reuses the very same field in `SymbioteMotorHeadV1.measuredSectorAngles`, keeping cortex intention consistent with the material solver. Pure physics, no goals or scripted limb count. A fully-normal-only early experiment reduced the 16s crawl to ~1.72U and was **rejected**. Convex-preserving blended version restores >5U in QA, but is not advertised as a demonstrated LIVE improvement.
+2. **Real action-reaction at distal tips**: when there is no fluid parcel within the old radius, distribute opposite reaction among the three nearest actual liquid parcels. No imaginary core/mass. Track `longTipReactionFallbacks` for physics diagnostics only.
+3. **Instantaneous extension**: reset `skin.peakExtension` per physics frame, separately from lifetime `maxReach`; the brain cannot receive a historically stuck shape signal as current proprioception.
+4. **Full obstacle contact for 64 inner liquid parcels**: `ScarcityLab.constrainInterior`, `SquareCollisionSolver.constrainInterior`, `PanelPhysics.constrainInterior` project the same genuine interior material against gates, square blocks, and rotated construction plates, performed in `GameActivity` AFTER external collision resolution and BEFORE final center-of-mass observation. Do not run in `updateHabitat` (a first draft incorrectly inserted it there and the Android compiler rejected an undefined substep variable; corrected).
+5. **Unified physical odometry**: increment `VIA`/life traveled distance and action progress after all collisions using the identical physical center sample consumed by `SymbioteCoordinationV162`, excluding resets and teleport corrections above 3U.
+6. **Grip-action coordination**: retain the direction component of actions 8–15 (same as 0–7) for *local physical actuator accuracy learning*; exclude only the adhesion COMMAND (channel 2), maintaining separate grip learning. Do not add a travel reward to the brain or redirect to food.
+7. **Retracting overstretched tip**: keep original tangential friction and standard short/ordinary crawl grip; for **radius >R+19 and voluntary inward command <-0.65 only**, reduce radial resistance to allow distal tissue to retract. Not a gait, vector to food, or animation trick.
+
+## Safety invariants and tests
+- The sole recurrent brain 2.2, neurogenesis, 84 shared motor weights, 320 regional motor weights, all active 12 save slots, all previous key names and application ID remain unchanged. No forced reset; read/write existing brain saves identical.
+- `Zero163MaterialIntegrationRegression`: real gel extension/retraction, live boundary normal, current rather than stale shape sensing, conservation and non-self-crossing, and all three actual interior solid contacts.
+- `Zero162CoordinationRegression` updated: real physical steering credit for 8–15 without touching adhesive command weights; holdout and bad teleports excluded, no corruption of stored baseline.
+- `SymbioteHeadingGeometryRegression`: observed 16-sector cortical angles match the physical *blended* motor normal on deformed boundaries; no frozen sector angles.
+- Previous `Zero161PhysicalCapabilityRegression`, `Zero161OverstretchRegression` and every earlier zero20–zero22 regression remain publication gates.
+- Final real-world criterion on Galaxy S21: 25+ lives with NETTO/VIA, shape and prolonged direction consistency, actual blue/red pickup, real actuator samples; the JVM acceptance only demonstrates capabilities under laboratory electrodes.
+
+Signed publisher and independent public HTTPS SHA-256 check both passed on 15 October 2026. Do not claim that offline physical lab tests demonstrate successful autonomous movement until lived phone telemetry is analyzed.
