@@ -954,12 +954,12 @@ jobs:
           'ObjectContinuityV21.java':'73835ed4c3b15eefcfa3d1c615d7769b6fa1fa46',
           'CausalSequenceV23.java':'329344e296ec342e0b85b965babbae15a3eb6f83',
           'CausalSequenceV23Regression.java':'e8ea1df2ae038dd9f7db44132df3e247e643b6ae',
-          'SensorimotorMind.java':'835d9504da383e6f1f6eeab6488b90c19e847595',
+          'SensorimotorMind.java':'c1a57e9fcc14ca28a65ecbd7ed7685f3b2a99751',
           'DecisionBlackbox.java':'7fbac5e10cdf101bef3fd5ae050ae5db6074bc6c',
           'EnergyLifetimeCounters.java':'7c0a9d815937a39c5cfdaddb01896b39536d8afe',
           'ObjectExperienceV20.java':'39ada3745f8b22769e67c00f5def9a5a3ed6ba1a',
           'ObjectExperienceV20Regression.java':'44bccc8ebe5971ed5226e50f62f8e27f7fbc6ddd',
-          'GameActivity.java':'4bd438c20cd71cfc862bcdcd2d8411ba97eb6ae6',
+          'GameActivity.java':'a0eb95aac03aee52934afa40ead43f55040b0cdc',
           'ContactGeometryForensics.java':'661401bf03e4e586e5fe69d819db7af05a1a319d',
           'InstrumentalNavigation.java':'96a147f6f366a650a10be293370a0c16404dc220',
           'BehavioralLaboratory.java':'8a35099ddb4b4d7ef9a9a334cb2e50b9477285d8',
@@ -1127,24 +1127,29 @@ jobs:
           game=(root/'GameActivity.java').read_text()
           assert 'sensorMind.enableZero20ExperimentalAdvice(false);' in game
           assert 'private transient boolean zero20ExperimentalAdvice=false;' in mind
-          # ZERO 2.1 release gate: new brain is truly included in the
-          # installed Android app and remains observational until independently
-          # validated. No undocumented action-score or reward override.
-          assert 'sensorMind.attachUnifiedCognitionV21(unifiedCognitionV21)' in game
+          # ZERO156: ONE living recurrent arbiter. 2.1's legacy passive
+          # cognition and arbitration no longer load, execute, or persist.
+          # 2.1 object continuity is retained because the causal sequence
+          # actually supplies it to 2.2 (not an independent chooser).
           assert 'sensorMind.attachObjectContinuityV21(objectContinuityV21)' in game
-          assert 'sensorMind.attachUnifiedArbiterV21(unifiedArbiterV21)' in game
-          for k in ['UnifiedCognitionV21.KEY','ObjectContinuityV21.KEY',
-                    'CompetenceMemoryV21.KEY','UnifiedArbiterV21.KEY']:
-            assert k in game
-          assert 'competenceMemoryV21.witnessed(lastAppliedHand' in game
-          assert 'UnifiedCognitionV21.KEY' in (root/'ResetDomains.java').read_text()
+          assert 'sensorMind.attachCausalSequenceV23(causalSequenceV23)' in game
+          assert 'sensorMind.attachActiveCore(recurrentCore)' in game
+          assert 'sensorMind.attachSymbioteMotorHead(symMotor)' in game
+          for key in ('RecurrentCoreV22.KEY','SymbioteMotorHeadV1.KEY',
+                      'ObjectContinuityV21.KEY','CausalSequenceV23.KEY'):
+              assert key in game,key
+          for old in ('sensorMind.attachUnifiedCognitionV21(unifiedCognitionV21)',
+                      'sensorMind.attachUnifiedArbiterV21(unifiedArbiterV21)',
+                      'sensorMind.attachTransferSkillsV20(transferV20)',
+                      'sensorMind.attachFuturePlannerV20(futureV20)'):
+              assert old not in game,old
+          primary=mind[mind.index('private int choosePrimaryV22('):
+                       mind.index('float[] scores=activeCore.primaryScores(')]
+          assert 'liveBodyEvidence(a)' not in primary
+          assert 'temporalSkills.advice(' in primary
+          assert 'intention.bias(' in primary
+          assert 'if(activeCore!=null)return choosePrimaryV22(senses);' in mind
           assert 'ObjectContinuityV21.KEY' in (root/'ResetDomains.java').read_text()
-          assert 'CompetenceMemoryV21.KEY' in (root/'ResetDomains.java').read_text()
-          assert 'UnifiedArbiterV21.KEY' in (root/'ResetDomains.java').read_text()
-          assert 'private transient UnifiedCognitionV21 unifiedCognition;' in mind
-          assert 'private transient ObjectContinuityV21 objectContinuity;' in mind
-          assert 'private transient UnifiedArbiterV21 unifiedArbiter;' in mind
-          assert 'unifiedArbiter.evaluate(' in mind
           assert 'UnifiedCognitionV21' in (root/'BrainToolsActivity.java').read_text()
           assert 'result.put("zero21",zero21);' in (root/'Zero20PassiveSnapshot.java').read_text()
           assert 'static final long TEST_MAX_BUDGET_NS=80000000L;' in game
