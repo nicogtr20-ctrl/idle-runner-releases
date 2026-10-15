@@ -467,8 +467,24 @@ public final class SymbioteMatterV1 {
             float traction=clip(.12f+1.45f*compression,0f,.95f);
             float drag=(float)Math.exp(-(1.8f+66f*traction)*dt);
             float preX=skin.x[i],preY=skin.y[i];
-            skin.vx[i]=clip((skin.vx[i]+fx[i]*dt)*drag,-140f,140f);
-            skin.vy[i]=clip((skin.vy[i]+fy[i]*dt)*drag,-140f,140f);
+            float appliedVx=skin.vx[i]+fx[i]*dt;
+            float appliedVy=skin.vy[i]+fy[i]*dt;
+            // OTA163: a VERY long appendage pulling inward must be able
+            // to retract without becoming its own immovable floor anchor.
+            // Keep normal crawl traction and TANGENTIAL foothold friction.
+            // Only release radial resistance of the truly overstretched,
+            // voluntarily retracting skin (no desired gait or target).
+            if(rr>R+19f&&extend<-.65f){
+                float radial=appliedVx*ux+appliedVy*uy;
+                float tangent=-appliedVx*uy+appliedVy*ux;
+                float radialDrag=(float)Math.exp(-(1.8f+
+                    28f*clip(.12f+.90f*compression,0f,.78f))*dt);
+                skin.vx[i]=clip(radial*radialDrag*ux-tangent*drag*uy,-140f,140f);
+                skin.vy[i]=clip(radial*radialDrag*uy+tangent*drag*ux,-140f,140f);
+            }else{
+                skin.vx[i]=clip(appliedVx*drag,-140f,140f);
+                skin.vy[i]=clip(appliedVy*drag,-140f,140f);
+            }
             float freeX=preX+skin.vx[i]*dt,freeY=preY+skin.vy[i]*dt;
             // Real pre-constraint cortical target, later compared with
             // achieved geometry AFTER density, shape and world collisions.
