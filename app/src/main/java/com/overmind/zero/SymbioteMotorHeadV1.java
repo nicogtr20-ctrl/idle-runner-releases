@@ -24,7 +24,12 @@ public final class SymbioteMotorHeadV1 {
     private float meanReward=0f;
     public SymbioteMotorHeadV1(){
         // Small unbiased initial pathways. This is not a gait or hand recipe.
-        for(int i=0;i<weights.length;i++)weights[i]=random()*.056f;
+        // Preserve the precise old virgin seed sequence in the original
+        // 14 features of each output; the 7 new internal afferents begin at
+        // ZERO, so OTA151 does not suddenly alter newborn locomotion.
+        for(int channel=0;channel<CHANNELS;channel++)
+            for(int j=0;j<LEGACY_FEATURE;j++)
+                weights[channel*FEATURE+j]=random()*.056f;
     }
     private static float clip(float x,float a,float b){return Math.max(a,Math.min(b,x));}
     private float random(){
