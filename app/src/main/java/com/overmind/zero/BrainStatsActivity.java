@@ -50,6 +50,7 @@ public final class BrainStatsActivity extends Activity {
         bSpatial,bNavigation,bObjects,bCausal,bSequence,bTemporal,bSkills,bGoals,
         bGates,bLives;
     private long shownAt;
+    private boolean firstResume=true;
 
     @Override public void onCreate(Bundle state){
         super.onCreate(state);
@@ -58,6 +59,13 @@ public final class BrainStatsActivity extends Activity {
         prefs=getSharedPreferences(SaveSlotStore.WORKING,MODE_PRIVATE);
         loadReadOnly();
         render();
+    }
+    @Override protected void onResume(){
+        super.onResume();
+        if(firstResume){firstResume=false;return;}
+        // Returning from analysis/reset or stats must never show stale saved
+        // cortex weights or obsolete skill counts.
+        if(prefs!=null){loadReadOnly();render();}
     }
     private void loadReadOnly(){
         core=new RecurrentCoreV22();
@@ -194,7 +202,9 @@ public final class BrainStatsActivity extends Activity {
                           boolean first){
         LinearLayout card=vertical();card.setPadding(dp(12),dp(15),dp(12),dp(15));
         card.setBackground(background(0xff19354b,0xff102235,17,true));
-        LinearLayout.LayoutParams cp=new LinearLayout.LayoutParams(0,-1,1);
+        // Fixed equal-height dashboard cards: wrap-content rows must not
+        // measure MATCH_PARENT children to zero on some Android devices.
+        LinearLayout.LayoutParams cp=new LinearLayout.LayoutParams(0,dp(127),1);
         if(first)cp.rightMargin=dp(5);else cp.leftMargin=dp(5);
         row.addView(card,cp);
         add(card,label(name,15,accent,true),0);
