@@ -367,14 +367,8 @@ public final class SymbioteMatterV1 {
             // Neighbour smoothing = surface tension; stiffness modulates
             // corticoelastic relaxation without a fixed radial spring.
             int p=(i+SURFACE-1)%SURFACE,n=(i+1)%SURFACE;
-            // Strain-hardening surface tension: extreme tips need stronger
-            // LOCAL membrane curvature resistance before adjacent edges
-            // fold across one another. No preferred radius or angle is
-            // projected; the body can still be a blob or several pseudopods.
-            float stretch=clip((rr-R-8f)/(R+8f),0f,1.7f);
-            float tension=(85f+stiffness*190f)*(1f+1.5f*stretch);
-            fx[i]+=(skin.x[p]+skin.x[n]-2*skin.x[i])*tension;
-            fy[i]+=(skin.y[p]+skin.y[n]-2*skin.y[i])*tension;
+            fx[i]+=(skin.x[p]+skin.x[n]-2*skin.x[i])*(85f+stiffness*190f);
+            fy[i]+=(skin.y[p]+skin.y[n]-2*skin.y[i])*(85f+stiffness*190f);
             // Grip command is an INTENTION. Real box/door contact solver owns
             // the hold timer. No compulsory automatic adhesion.
             skin.gripCommand[i]=adhesive;
@@ -396,23 +390,19 @@ public final class SymbioteMatterV1 {
             // Local compression increases anchoring; extending cortex can
             // slide past it. Object-grip intention NEVER anchors open floor.
             float compression=Math.max(0f,-extend);
-            // The original traction makes a stable foothold; when
-            // severely stretched material starts to contract, permit
-            // volume-conserving radial reflow in the WHOLE connected gel.
-            // Without this coupled yield the membrane tip cannot retreat.
-            // No preferred angle, direction, food or timing is consulted.
-            float traction=clip(.12f+1.45f*compression,0f,.95f);
-            float slipDrag=(float)Math.exp(-(1.8f+66f*traction)*dt);
-            float radialDrag=fluidReflow?
+            // Ordinary substrate drag is BYTE-FOR-BYTE the OTA160 law.
+            // Severely extended, voluntarily retracting tissue raises
+            // an area-conserving slip state for the whole connected gel:
+            // both normal and shear components must yield to let liquid
+            // redistribute. No goal, limb count or gait enters this rule.
+            float compressionDrag=clip(.12f+1.45f*compression,0f,.95f);
+            float drag=fluidReflow?
                 (float)Math.exp(-(1.8f+
                     28f*clip(.12f+.90f*compression,0f,.78f))*dt):
-                slipDrag;
+                (float)Math.exp(-(1.8f+66f*compressionDrag)*dt);
             float preX=skin.x[i],preY=skin.y[i];
-            float freeVx=skin.vx[i]+fx[i]*dt,freeVy=skin.vy[i]+fy[i]*dt;
-            float normalSpeed=(freeVx*ux+freeVy*uy)*radialDrag;
-            float tangentSpeed=(-freeVx*uy+freeVy*ux)*slipDrag;
-            skin.vx[i]=clip(normalSpeed*ux-tangentSpeed*uy,-140f,140f);
-            skin.vy[i]=clip(normalSpeed*uy+tangentSpeed*ux,-140f,140f);
+            skin.vx[i]=clip((skin.vx[i]+fx[i]*dt)*drag,-140f,140f);
+            skin.vy[i]=clip((skin.vy[i]+fy[i]*dt)*drag,-140f,140f);
             float freeX=preX+skin.vx[i]*dt,freeY=preY+skin.vy[i]*dt;
             // Real pre-constraint cortical target, later compared with
             // achieved geometry AFTER density, shape and world collisions.
