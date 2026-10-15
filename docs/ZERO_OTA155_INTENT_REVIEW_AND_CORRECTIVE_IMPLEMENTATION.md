@@ -16,3 +16,6 @@ Base: signed OTA154 `fc76715e2b41527260edc9ac694baa6a9b4f623f`. Reviewed `HANDOF
 
 ## Official release delivery
 Signed QA: https://github.com/nicogtr20-ctrl/idle-runner-releases/actions/runs/38733952677 SUCCESS; publisher: https://github.com/nicogtr20-ctrl/idle-runner-releases/actions/runs/38734574557 SUCCESS. Main manifest version 1155 `0.11.6-ota.155`, 432700 bytes, SHA256 `5ab73ca0a4e9a183641868736cef85dc38fd880d83f64488e7d865e829d1ef8d`; Vercel production READY deployment `dpl_5gbQxZmquqmZV1P9j9Smzg3DrVxs`. Independent public HTTP byte verifier is separately triggered; do not infer proof of real learned locomotion from signed build success alone.
+
+
+**Independent OTA155 production HTTP/APK verification completed:** GitHub LIVE verifier [38735102489](https://github.com/nicogtr20-ctrl/idle-runner-releases/actions/runs/38735102489) **SUCCESS**, 15 Oct 2026 12:30:14 UTC. Downloaded current HTTPS public manifest HTTP200 and actual signed APK HTTP200: `0.11.6-ota.155` / `1155`, `432700` bytes, SHA256 `5ab73ca0a4e9a183641868736cef85dc38fd880d83f64488e7d865e829d1ef8d`, MIME `application/vnd.android.package-archive`. Same app ID and stable signature verified by publisher; do not infer the user's on-device behavior from CI success. Use in-app AGGIORNA on existing ZERO, no reset.
