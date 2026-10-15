@@ -339,7 +339,7 @@ public final class GameActivity extends Activity {
             gateMetrics.restore(prefs.getString(GateBehaviorMetrics.KEY,""));
             episodic=new EpisodicMemory();
             episodic.restore(prefs.getString("episodic_memory_v095",""));
-            sensorMind.attachMemory(episodic);
+            if(!useSymbiote)sensorMind.attachMemory(episodic);
             motorGuard=new MotorAutonomyGuard();
             motorGuard.restoreCounts(prefs.getInt("motor_recoveries_v097",0),
                 prefs.getInt("motor_free_choices_v097",0));
@@ -928,7 +928,7 @@ public final class GameActivity extends Activity {
                 }
                 // Injury immediately preceding death must be recorded BEFORE
                 // the transient episode buffer is reset.
-                if(eventEnergyDeltaSinceAction<0){
+                if(!useSymbiote&&eventEnergyDeltaSinceAction<0){
                     episodic.action(sensorMind.stateCopy(),sensorMind.action);
                     if(episodic.consequenceSeparated(0,energySinceAction,
                        lastAppliedMotor,lastAppliedHand,lastAppliedMembrane,false))save();
@@ -1029,7 +1029,8 @@ public final class GameActivity extends Activity {
                     // ZERO's independently selected ACTIONS, but procedural
                     // skills come only from today's live trained controllers
                     // or physically tested candidate mutations.
-                    lastAppliedMotor=liveBody.weights(0,trainer.best);
+                    if(!useSymbiote){
+                        lastAppliedMotor=liveBody.weights(0,trainer.best);
                     lastAppliedHand=liveBody.weights(1,handTrainer.best);
                     lastAppliedMembrane=liveBody.weights(2,shapeTrainer.best);
                     float[] trialHand=lastAppliedHand,trialMembrane=lastAppliedMembrane;
@@ -1049,6 +1050,7 @@ public final class GameActivity extends Activity {
                         // in this body's comparison window. Discard the window
                         // rather than crediting another controller's outcome.
                         liveBody.abortTrial();
+                    }
                     }
                     if(useSymbiote&&symMatter!=null&&symMotor!=null)
                         sensorMind.appliedSymbioteControls(symMotor.commands(),creature,surface);
@@ -1342,7 +1344,7 @@ public final class GameActivity extends Activity {
                     // Real temporal observation AFTER collisions, hunger
                     // and any energy actually collected.
                     sensorMind.setLearning(true);
-                    boolean actedFromMemory=episodic.physicallyReplaying();
+                    boolean actedFromMemory=!useSymbiote&&episodic.physicallyReplaying();
                     long beforeExperience=sensorMind.experiences;
                     // Snapshot the PREVIOUS decision before the model chooses
                     // the next one. Its sensory state is what ZERO actually saw.
@@ -1357,13 +1359,17 @@ public final class GameActivity extends Activity {
                         if(!useSymbiote)skillExecution.boundary(competenceMemoryV21,sensorMind.stateCopy(),
                             sensorMind.action,environmentEffectSinceAction,liveBody.testingCandidate());
                         mortality.observed(reserve/100f);
-                        episodic.action(observedBefore,actionBefore);
-                        int recallsBefore=episodic.repeatEffects;
-                        boolean remembered=episodic.consequenceSeparated(
-                            environmentEffectSinceAction,energySinceAction,
-                            lastAppliedMotor,lastAppliedHand,lastAppliedMembrane,
-                            actedFromMemory);
-                        if(episodic.repeatEffects>recallsBefore)lifeStats.confirmedRecall();
+                        boolean remembered=false;
+                        if(!useSymbiote){
+                            episodic.action(observedBefore,actionBefore);
+                            int recallsBefore=episodic.repeatEffects;
+                            remembered=episodic.consequenceSeparated(
+                                environmentEffectSinceAction,energySinceAction,
+                                lastAppliedMotor,lastAppliedHand,lastAppliedMembrane,
+                                actedFromMemory);
+                            if(episodic.repeatEffects>recallsBefore)
+                                lifeStats.confirmedRecall();
+                        }
                         // Object hypotheses are included in normal periodic checkpoints,
                         // pauses and physical events. Do not rewrite the entire
                         // profile on every 0.65-second observational update.
@@ -1799,7 +1805,9 @@ public final class GameActivity extends Activity {
                 173,179,10,0xffb3ced7,false);
             text(c,"DISCHI "+pushes+" • BLOCCHI "+boxesUncovered+" • ZONE "+journey.lifeCells+
                 " • STANZE "+chambersCleared,173,195,9,GOLD,false);
-            text(c,"ABILITA "+skillBank.count()+" • RICORDI "+episodic.stored()+
+            text(c,useSymbiote?
+                "CERVELLO 2.2 • SKILL TEMPORALI "+temporalSkillBank.stored():
+                "ABILITA "+skillBank.count()+" • RICORDI "+episodic.stored()+
                 " • TECNICHE "+gripBank.count(),173,210,9,TEAL,false);
 
             // TEST MAX stop is its own small hit target, away from TEMPO.
