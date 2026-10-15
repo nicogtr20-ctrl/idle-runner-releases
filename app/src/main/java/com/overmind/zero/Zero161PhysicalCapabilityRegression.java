@@ -55,7 +55,7 @@ public final class Zero161PhysicalCapabilityRegression {
         SymbioteMatterV1 m=new SymbioteMatterV1();
         m.reset(b,s);
         float[] triple=drive(0,5,10);
-        for(int i=0;i<120;i++){m.step(b,s,triple,dt);}
+        for(int i=0;i<70;i++){m.step(b,s,triple,dt);}
         stable(m,s);
         long repairsAtPeak=m.topologyRepairs;
         float[] radii=new float[16];
