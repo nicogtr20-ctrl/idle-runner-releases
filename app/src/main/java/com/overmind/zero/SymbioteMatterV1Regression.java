@@ -14,7 +14,7 @@ public final class SymbioteMatterV1Regression {
         }
         return max;
     }
-    public static void main(String[] args){
+    public static void main(String[] args) throws Exception{
         MotorBrain.Body body=new MotorBrain.Body();
         Morphology.Surface skin=new Morphology.Surface(body);
         SymbioteMatterV1 blob=new SymbioteMatterV1();
@@ -327,6 +327,50 @@ public final class SymbioteMatterV1Regression {
         float[] legacyRead=LocalImpedanceSense.sense(legacyBody,legacySkin);
         require(legacyRead.length==LocalImpedanceSense.FEATURES,
             "legacy impedance schema was modified");
+
+        // OTA150: do the sensors actually INFLUENCE the sole active
+        // recurrent action rank, or are they merely accumulating logs?
+        // Inject a tiny learned heldout-validated choice value directly
+        // into the existing model readout, without moving the game body.
+        SensorimotorMind functional=new SensorimotorMind();
+        BodyProprioception bp=new BodyProprioception();
+        DistributedBodySense db=new DistributedBodySense();
+        LocalImpedanceSense li=new LocalImpedanceSense();
+        functional.attachBodySchema(bp);
+        functional.attachDistributedBody(db);
+        functional.attachImpedance(li);
+        // Unvalidated memories never bias live decisions.
+        java.lang.reflect.Field wb=BodyProprioception.class.getDeclaredField("values");
+        java.lang.reflect.Field wd=DistributedBodySense.class.getDeclaredField("values");
+        java.lang.reflect.Field wi=LocalImpedanceSense.class.getDeclaredField("values");
+        wb.setAccessible(true);wd.setAccessible(true);wi.setAccessible(true);
+        float[] bWeights=(float[])wb.get(bp);
+        float[] dWeights=(float[])wd.get(db);
+        float[] iWeights=(float[])wi.get(li);
+        int desiredAction=7,otherAction=5;
+        bWeights[desiredAction*(BodyProprioception.FEATURES+1)+BodyProprioception.FEATURES]=2.5f;
+        dWeights[desiredAction*(DistributedBodySense.SUMMARY+1)+DistributedBodySense.SUMMARY]=2.5f;
+        iWeights[desiredAction*(LocalImpedanceSense.SUMMARY+1)+LocalImpedanceSense.SUMMARY]=2.5f;
+        require(functional.liveBodyEvidence(desiredAction)==0f,
+            "unvalidated tissue predictions hijacked the 2.2 policy");
+        // Heldout statistics become trustworthy solely from real experience;
+        // the injection here is a test fixture, never enabled in production.
+        bp.validations=db.validations=li.validations=40;
+        bp.predictionError=db.predictionError=li.predictionError=.001f;
+        bp.unchangedError=db.unchangedError=li.unchangedError=.2f;
+        float physicalEvidence=functional.liveBodyEvidence(desiredAction);
+        require(physicalEvidence>.15f&&
+                Math.abs(functional.liveBodyEvidence(otherAction))<.00001f,
+            "trained proprioception and actual impedance still ignored");
+        float[] learned=new float[RecurrentCoreV22.A];
+        learned[desiredAction]=physicalEvidence;
+        float[] noEvidence=new RecurrentCoreV22().primaryScores(new float[RecurrentCoreV22.A]);
+        float[] withEvidence=new RecurrentCoreV22().primaryScores(learned);
+        require(Math.abs(withEvidence[desiredAction]-noEvidence[desiredAction]-
+                         .4f*physicalEvidence)<.0001f,
+            "the sole recurrent action scorer discarded trained body evidence");
+        require(Math.abs(withEvidence[otherAction]-noEvidence[otherAction])<.00001f,
+            "one localized body observation fabricated unrelated action values");
 
         motor.consequence(20,0,blob.work,true,false);
         String saved=motor.encode();

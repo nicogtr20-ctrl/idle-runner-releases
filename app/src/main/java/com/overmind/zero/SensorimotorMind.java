@@ -417,11 +417,20 @@ public final class SensorimotorMind {
      * affordance EVIDENCE and receive the executed outcome, but the recurrent
      * core exclusively ranks and selects the sixteen real motor actions.
      */
+    /** Exact currently earned body evidence; scored only by recurrent 2.2.
+     * Confidence remains zero until independent heldout validation passes. */
+    synchronized float liveBodyEvidence(int action){
+        if(action<0||action>=ACTIONS)return 0f;
+        return (bodySchema==null?0f:bodySchema.choiceBias(action))+
+               (distributedBody==null?0f:distributedBody.choiceBias(action))+
+               (impedance==null?0f:impedance.choiceBias(action));
+    }
     private int choosePrimaryV22(float[] senses){
         feedCore(senses);
         float[] observedMeans=new float[ACTIONS],navTerms=new float[ACTIONS],
             causalTerms=new float[ACTIONS],objectTerms=new float[ACTIONS],
             sequenceTerms=new float[ACTIONS];
+        float maximumBody=0f,maximumDistributed=0f,maximumImpedance=0f;
         for(int a=0;a<ACTIONS;a++){
             float nav=navigation!=null&&navigationAdviceEnabled
                 ?navigation.bias(a,senses[0]):0f;
@@ -431,11 +440,30 @@ public final class SensorimotorMind {
                 ?objectExperience.choiceBias(a,senses[0]):0f;
             float seq=causalSequence==null||objectContinuity==null?0f:
                 causalSequence.choiceBias(a,senses,objectContinuity.currentTrackConfidence());
+            // The 8-sector proprioception, 96-site distributed membrane
+            // and 96-site local impedance predictors must be able to INFORM
+            // the ONE recurrent controller's choices once their own heldout
+            // predictive confidence is established. OTA149 connected their
+            // physics data but they still did not affect primary ranking.
+            // These biases are earned from lived action->sensory outcome,
+            // never handcoded "move", grip, food or obstacle instructions.
+            float proprio=bodySchema==null?0f:bodySchema.choiceBias(a);
+            float membrane=distributedBody==null?0f:distributedBody.choiceBias(a);
+            float resistance=impedance==null?0f:impedance.choiceBias(a);
             navTerms[a]=nav;causalTerms[a]=effect;objectTerms[a]=object;
             sequenceTerms[a]=seq;
-            observedMeans[a]=nav+effect+object+seq;
+            maximumBody=Math.max(maximumBody,Math.abs(proprio));
+            maximumDistributed=Math.max(maximumDistributed,Math.abs(membrane));
+            maximumImpedance=Math.max(maximumImpedance,Math.abs(resistance));
+            observedMeans[a]=nav+effect+object+seq+liveBodyEvidence(a);
         }
         float[] scores=activeCore.primaryScores(observedMeans);
+        // Observe whether real proprioceptive evidence earned meaningful
+        // influence. This is a diagnostic of the same live motor decision,
+        // never an independently selected alternative policy.
+        if(bodySchema!=null)bodySchema.noteDecision(maximumBody);
+        if(distributedBody!=null)distributedBody.noteDecision(maximumDistributed);
+        if(impedance!=null)impedance.noteDecision(maximumImpedance);
         int greedyAction=0;
         for(int a=1;a<ACTIONS;a++)
             if(scores[a]>scores[greedyAction])greedyAction=a;
@@ -452,6 +480,9 @@ public final class SensorimotorMind {
             breakdown[12]=.40f*navTerms[chosen];
             breakdown[11]=.40f*causalTerms[chosen];
             breakdown[14]=.40f*(objectTerms[chosen]+sequenceTerms[chosen]);
+            // Preserve historical flight-recorder term ownership. The
+            // newly LIVE proprioceptive term is included in the measured
+            // primary contribution, not invented as a separate chooser.
             // On OTA132 the historically named 'recurrentDelta' field is
             // the absolute PRIMARY recurrent contribution (not a delta to
             // the previous brain). Source version and report mode disambiguate.
