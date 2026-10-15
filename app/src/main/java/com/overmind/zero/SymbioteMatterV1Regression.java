@@ -222,6 +222,112 @@ public final class SymbioteMatterV1Regression {
         require(realMatter.invalid==0,
             "live-scene topology recovery produced invalid matter");
 
+        // OTA149: physical senses must sample REAL newly actuated gel.
+        // The body runs exactly the same physics as OTA148; sensors only.
+        MotorBrain.Body sensedBody=new MotorBrain.Body();
+        Morphology.Surface sensedSkin=new Morphology.Surface(sensedBody);
+        SymbioteMatterV1 sensedMatter=new SymbioteMatterV1();
+        sensedMatter.reset(sensedBody,sensedSkin);
+        require(!sensedSkin.hasValidMotorTargets(),
+            "newborn invents a pre-action motor target");
+        for(int i=0;i<90;i++)sensedMatter.step(sensedBody,sensedSkin,directed,.025f);
+        require(sensedSkin.hasSymbioteMotorTargets(),
+            "symbiote never registered physical cortex motor target");
+        float[] imp=LocalImpedanceSense.sense(sensedBody,sensedSkin);
+        float demand=0f;
+        for(int i=0;i<Morphology.POINTS;i++)
+            demand+=imp[i*LocalImpedanceSense.CHANNELS+
+                LocalImpedanceSense.MOTOR_DEMAND];
+        require(demand>.01f,
+            "motor demand absent despite executed fluid commands");
+        int disturbed=4,base=disturbed*LocalImpedanceSense.CHANNELS;
+        sensedSkin.x[disturbed]+=6f; // fixture: real collision projection
+        float[] resisted=LocalImpedanceSense.sense(sensedBody,sensedSkin);
+        require(Math.abs(resisted[base+LocalImpedanceSense.RADIAL_ERROR])+
+                Math.abs(resisted[base+LocalImpedanceSense.TANGENT_ERROR])>.08f,
+            "actual local collision strain invisible to impedance receptor");
+        require(sensedSkin.peakExtension>0f,
+            "actual pseudopod extension never reaches primary body channel");
+        float[] primarySenses=SensorimotorMind.Senses.read(
+            sensedBody,sensedSkin,null,new java.util.ArrayList<UnknownWorld.Entity>(),70f);
+        require(primarySenses[3]>0f,
+            "primary 26-channel brain remains blind to achieved body shape");
+        // Both the full 96-particle sensory map and the 8-sector readout
+        // must react to physical membrane shape, not a desired endpoint.
+        float[] distributed=DistributedBodySense.sense(
+            sensedBody,sensedSkin,null,new java.util.ArrayList<UnknownWorld.Entity>());
+        float[] proprio=BodyProprioception.sense(sensedBody,sensedSkin);
+        require(distributed.length==96*9&&proprio.length==8*6,
+            "body sensory width broke old saved cortex state");
+        float shape=0f;
+        for(int i=0;i<Morphology.POINTS;i++)
+            shape+=distributed[i*DistributedBodySense.CHANNELS+
+                DistributedBodySense.SHAPE];
+        require(shape>1f,"distributed membrane shape absent");
+
+        // Tactile transients must carry real temporal meaning. One event,
+        // no new contact: exponentially decay by elapsed simulated time,
+        // not by UI refresh/frame count or the obsolete legacy membrane.
+        MotorBrain.Body pulseBody=new MotorBrain.Body();
+        Morphology.Surface pulseSkin=new Morphology.Surface(pulseBody);
+        SymbioteMatterV1 pulseMatter=new SymbioteMatterV1();
+        pulseMatter.reset(pulseBody,pulseSkin);
+        pulseSkin.touchPulse[27]=1f;
+        for(int i=0;i<80;i++)pulseMatter.step(pulseBody,pulseSkin,calm,.025f);
+        float expected=(float)Math.exp(-2.5f*2f);
+        require(Math.abs(pulseSkin.touchPulse[27]-expected)<.002f,
+            "symbiote retained an ancient wind/collision pulse forever");
+        require(pulseSkin.touchSense[27]==0f&&pulseSkin.gripHold[27]==0f,
+            "tactile decay manufactured an obstacle or a hold");
+        require(Math.abs(pulseSkin.t-2f)<.01f,
+            "new body's material proprioceptive time did not advance");
+
+        // The active primary 2.2 must see the ACTUAL 64 cortex outputs
+        // through unchanged six-dimensional channels, never unused legacy
+        // motor/hand/membrane weights. No brain learning is needed here.
+        SensorimotorMind actionSense=new SensorimotorMind();
+        float[] ctlA=new float[64],ctlB=new float[64];
+        for(int q=0;q<16;q++){
+            ctlB[q*4]=.6f;
+            ctlB[q*4+1]=-.3f;
+            ctlB[q*4+2]=.75f;
+            ctlB[q*4+3]=.45f;
+        }
+        actionSense.appliedSymbioteControls(ctlA);
+        float[] copyA=actionSense.appliedEfferenceForTest();
+        actionSense.appliedSymbioteControls(ctlB);
+        float[] copyB=actionSense.appliedEfferenceForTest();
+        require(copyA.length==6&&copyB.length==6,
+            "core 2.2 readout width changed, breaking existing brain saves");
+        require(Math.abs(copyB[0]-.6f)<.0001f&&
+                Math.abs(copyB[3]+.3f)<.0001f&&
+                Math.abs(copyB[4]-.75f)<.0001f&&
+                Math.abs(copyB[5]-.45f)<.0001f,
+            "primary efference is not genuine cortex pressure/shear/grip/stiffness");
+        require(Math.abs(copyB[0]-copyA[0])>.2f,
+            "different actually executed muscles looked identical to brain");
+        RecurrentCoreV22 recipient=new RecurrentCoreV22();
+        recipient.sense(new float[26],null,null,copyB);
+        float[] realState=recipient.state();
+        for(int q=0;q<6;q++)require(Math.abs(realState[138+q]-copyB[q])<.00001f,
+            "primary core did not receive applied symbiote efference");
+
+        // Legacy body must keep original motor scaling and sensor
+        // timing: the new snapshot format cannot silently upgrade it.
+        MotorBrain.Body legacyBody=new MotorBrain.Body();
+        Morphology.Surface legacySkin=new Morphology.Surface(legacyBody);
+        require(!legacySkin.hasValidMotorTargets()&&
+                !legacySkin.hasSymbioteMotorTargets(),
+            "legacy limb targets enabled before physical actuation");
+        float[] legacyMuscle=Morphology.virgin(new Random(143));
+        legacySkin.step(legacyBody,legacyMuscle,65f,15f,.025f);
+        require(legacySkin.hasValidMotorTargets()&&
+                !legacySkin.hasSymbioteMotorTargets(),
+            "original membrane targets corrupted by Symbiote sensing");
+        float[] legacyRead=LocalImpedanceSense.sense(legacyBody,legacySkin);
+        require(legacyRead.length==LocalImpedanceSense.FEATURES,
+            "legacy impedance schema was modified");
+
         motor.consequence(20,0,blob.work,true,false);
         String saved=motor.encode();
         SymbioteMotorHeadV1 copy=new SymbioteMotorHeadV1();

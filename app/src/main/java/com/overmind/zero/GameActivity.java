@@ -1038,7 +1038,9 @@ public final class GameActivity extends Activity {
                         // rather than crediting another controller's outcome.
                         liveBody.abortTrial();
                     }
-                    sensorMind.appliedControls(lastAppliedMotor,lastAppliedHand,lastAppliedMembrane);
+                    if(useSymbiote&&symMatter!=null&&symMotor!=null)
+                        sensorMind.appliedSymbioteControls(symMotor.commands());
+                    else sensorMind.appliedControls(lastAppliedMotor,lastAppliedHand,lastAppliedMembrane);
                     // Prevent fast material masses from skipping through a
                     // square between consecutive frames. Snapshot before any
                     // physical motion, after routine world streaming.

@@ -319,6 +319,13 @@ public final class SymbioteMatterV1 {
         for(float v:cortex)if(!Float.isFinite(v)||v<-1.01f||v>1.01f)
             throw new IllegalArgumentException("Non-finite muscle command");
         time+=dt;body.time+=dt;ticks++;
+        // This living tissue, not the inactive legacy membrane motor,
+        // owns simulated-time pulse decay in Symbiote mode. New real
+        // contacts and storm impulses are added later in this frame.
+        skin.t+=dt;
+        float pulseDecay=(float)Math.exp(-2.5f*dt);
+        for(int i=0;i<SURFACE;i++)skin.touchPulse[i]*=pulseDecay;
+        skin.maxExtension=0f;skin.stretchedPoints=0;skin.intentionalPoints=0;
         // Valid snapshots keep their exact material positions. Only a
         // physically crossed saved contour needs localized rehabilitation.
         recoverPersistedCrossings(skin);
@@ -350,6 +357,9 @@ public final class SymbioteMatterV1 {
             // the hold timer. No compulsory automatic adhesion.
             skin.gripCommand[i]=adhesive;
             skin.extension[i]=Math.max(0,extend)*Morphology.MAX_REACH;
+            skin.maxExtension=Math.max(skin.maxExtension,skin.extension[i]);
+            if(adhesive>Morphology.GRIP_THRESHOLD)skin.intentionalPoints++;
+            skin.totalEffort+=(Math.abs(extend)+.25f*Math.abs(lateral))*.0002f*dt;
             // Independent contact with the floor: body-side normal loading
             // comes from the cortex's voluntary outward pressure, not from
             // object-grip intention. OTA146 incorrectly assigned EVERY patch
@@ -366,9 +376,14 @@ public final class SymbioteMatterV1 {
             float compression=Math.max(0f,-extend);
             float traction=clip(.12f+1.45f*compression,0f,.95f);
             float drag=(float)Math.exp(-(1.8f+66f*traction)*dt);
+            float preX=skin.x[i],preY=skin.y[i];
             skin.vx[i]=clip((skin.vx[i]+fx[i]*dt)*drag,-140f,140f);
             skin.vy[i]=clip((skin.vy[i]+fy[i]*dt)*drag,-140f,140f);
-            skin.x[i]+=skin.vx[i]*dt;skin.y[i]+=skin.vy[i]*dt;
+            float freeX=preX+skin.vx[i]*dt,freeY=preY+skin.vy[i]*dt;
+            // Real pre-constraint cortical target, later compared with
+            // achieved geometry AFTER density, shape and world collisions.
+            skin.symbioteMotorTarget(i,preX,preY,ux,uy,freeX,freeY);
+            skin.x[i]=freeX;skin.y[i]=freeY;
             work+=(Math.abs(extend)+.25f*Math.abs(lateral)+adhesive*.1f)*dt*.0002f;
         }
         // Real opposite impulse distributed by proximity of membrane patches
@@ -474,6 +489,15 @@ public final class SymbioteMatterV1 {
             vy[i]=clip((y[i]-lastY[i])/dt,-180f,180f);
         }
         observeBody(body,skin);
+        // Achieved shape measurement distinct from requested extension.
+        // The old Surface.step no longer runs in this physics mode; the
+        // primary 26D sense channel 3 and EST HUD need real material data.
+        for(int i=0;i<SURFACE;i++){
+            float achieved=Math.max(0f,len(skin.x[i]-body.cx,
+                skin.y[i]-body.cy)-R);
+            skin.peakExtension=Math.max(skin.peakExtension,achieved);
+            if(achieved>22f)skin.stretchedPoints++;
+        }
         areaError=areaRelativeError(skin);
         float reach=0;
         for(int i=0;i<SURFACE;i++){
