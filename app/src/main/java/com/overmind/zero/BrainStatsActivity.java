@@ -181,6 +181,37 @@ public final class BrainStatsActivity extends Activity {
             render();
         });
     }
+    private void homePair(LinearLayout parent,String left,String leftHint,int leftTint,
+                          String leftId,String right,String rightHint,int rightTint,String rightId){
+        LinearLayout row=new LinearLayout(this);
+        row.setOrientation(LinearLayout.HORIZONTAL);
+        LinearLayout.LayoutParams rp=new LinearLayout.LayoutParams(-1,-2);rp.topMargin=dp(11);
+        parent.addView(row,rp);
+        homeCard(row,left,leftHint,leftTint,leftId,true);
+        homeCard(row,right,rightHint,rightTint,rightId,false);
+    }
+    private void homeCard(LinearLayout row,String name,String subtitle,int accent,String id,
+                          boolean first){
+        LinearLayout card=vertical();card.setPadding(dp(12),dp(15),dp(12),dp(15));
+        card.setBackground(background(0xff19354b,0xff102235,17,true));
+        LinearLayout.LayoutParams cp=new LinearLayout.LayoutParams(0,-1,1);
+        if(first)cp.rightMargin=dp(5);else cp.leftMargin=dp(5);
+        row.addView(card,cp);
+        add(card,label(name,15,accent,true),0);
+        add(card,label(subtitle,11,MUTED,false),6);
+        card.setMinimumHeight(dp(115));
+        card.setContentDescription(name+". "+subtitle);
+        card.setOnClickListener(v->{
+            switch(id){
+                case "section-brain":group("BRAIN");break;
+                case "section-body":group("BODY");break;
+                case "section-perception":group("PERCEPTION");break;
+                case "section-skill":group("SKILL");break;
+                case "section-evolution":group("EVOLUTION");break;
+                case "section-params":group("PARAMS");break;
+            }
+        });
+    }
     private void group(String id){section=id;module="";render();}
     private String title(String id){
         switch(id){
@@ -251,12 +282,12 @@ public final class BrainStatsActivity extends Activity {
             android.view.Gravity.BOTTOM|android.view.Gravity.CENTER_HORIZONTAL);
         cp.bottomMargin=dp(14);hero.addView(caption,cp);
         note(body,"UNA SOLA INTELLIGENZA • 16 AZIONI • CORPO SIMBIONTE");
-        tile(body,"◉  CERVELLO","Nucleo decisionale, memoria, causalità e obiettivi",TEAL,"section-brain");
-        tile(body,"⬡  CORPO","Muscoli, membrana, tatto, propriocezione, fluido",VIOLET,"section-body");
-        tile(body,"◉  PERCEZIONE","Vista, navigazione, mappa e oggetti",BLUE,"section-perception");
-        tile(body,"✦  ABILITÀ","Capacità osservate e sequenze realmente consolidate",GOLD,"section-skill");
-        tile(body,"↗  EVOLUZIONE","Apprendimento, verifiche e confronto tra vite",ORANGE,"section-evolution");
-        tile(body,"⌘  PARAMETRI","Pesi del nucleo e della corteccia, senza falsi livelli",TEAL,"section-params");
+        homePair(body,"◉ CERVELLO","Memorie, nucleo e causalità",TEAL,"section-brain",
+            "⬡ CORPO","Muscoli, tatto e sensori",VIOLET,"section-body");
+        homePair(body,"◉ PERCEZIONE","Vista, mondo e oggetti",BLUE,"section-perception",
+            "✦ ABILITÀ","Sequenze e capacità",GOLD,"section-skill");
+        homePair(body,"↗ EVOLUZIONE","Esperienza e progressi",ORANGE,"section-evolution",
+            "⌘ PARAMETRI","Pesi neurali reali",TEAL,"section-params");
         add(body,label("Tocca una sezione per aprire i suoi sistemi. Tutte le schermate sono di sola lettura.",12,MUTED,false),16);
         tap(body,"ANALISI COMPLETA","Affidabilità di tutti i modelli e ripristini avanzati",BLUE,
             ()->startActivity(new Intent(this,BrainToolsActivity.class)));
