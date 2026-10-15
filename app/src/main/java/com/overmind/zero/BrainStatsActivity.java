@@ -167,6 +167,16 @@ public final class BrainStatsActivity extends Activity {
     }
     private void tile(LinearLayout container,String title,String hint,int tint,String id){
         tap(container,title,hint,tint,()->{
+            if(id.startsWith("section-")){
+                switch(id){
+                    case "section-brain":group("BRAIN");return;
+                    case "section-body":group("BODY");return;
+                    case "section-perception":group("PERCEPTION");return;
+                    case "section-skill":group("SKILL");return;
+                    case "section-evolution":group("EVOLUTION");return;
+                    case "section-params":group("PARAMS");return;
+                }
+            }
             module=id;
             render();
         });
@@ -569,7 +579,7 @@ public final class BrainStatsActivity extends Activity {
         tile(body,"ESPLORA I PESI","I singoli numeri, suddivisi per funzione",VIOLET,"WEIGHTS_CORE");
     }
     private void detailMuscle(LinearLayout body){
-        LinearLayout c=panel(body,"MOTOR CONTROL DEL SIMBIONTE",VIOLET);
+        LinearLayout c=panel(body,"CONTROLLO MUSCOLARE DEL SIMBIONTE",VIOLET);
         metric(c,"Stato",bMuscle?"Dati salvati":"Non disponibile");
         metric(c,"Pesi addestrabili",muscle.parameterCount()+"");
         metric(c,"Settori della membrana",SymbioteMatterV1.SECTORS+"");
