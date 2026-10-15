@@ -52,7 +52,7 @@ public final class LocalImpedanceSense {
         if(!tissue.hasValidMotorTargets())return result;
         for(int i=0;i<POINTS;i++){
             int prev=(i+POINTS-1)%POINTS,next=(i+1)%POINTS;
-            float nx=tissue.normalX(i),ny=tissue.normalY(i);
+            float nx=tissue.sensorNormalX(i),ny=tissue.sensorNormalY(i);
             float targetDx=tissue.targetX(i)-tissue.x[i];
             float targetDy=tissue.targetY(i)-tissue.y[i];
             float radial=targetDx*nx+targetDy*ny;
@@ -61,10 +61,10 @@ public final class LocalImpedanceSense {
                                             tissue.y[i]-tissue.y[prev]);
             float curNext=(float)Math.hypot(tissue.x[i]-tissue.x[next],
                                             tissue.y[i]-tissue.y[next]);
-            float restPrev=(float)Math.hypot(tissue.anchorX(i)-tissue.anchorX(prev),
-                                            tissue.anchorY(i)-tissue.anchorY(prev));
-            float restNext=(float)Math.hypot(tissue.anchorX(i)-tissue.anchorX(next),
-                                            tissue.anchorY(i)-tissue.anchorY(next));
+            float restPrev=(float)Math.hypot(tissue.sensorAnchorX(i)-tissue.sensorAnchorX(prev),
+                                            tissue.sensorAnchorY(i)-tissue.sensorAnchorY(prev));
+            float restNext=(float)Math.hypot(tissue.sensorAnchorX(i)-tissue.sensorAnchorX(next),
+                                            tissue.sensorAnchorY(i)-tissue.sensorAnchorY(next));
             float delta=((curPrev-restPrev)+(curNext-restNext))*.5f;
             float vx=tissue.vx[i]-body.cvx,vy=tissue.vy[i]-body.cvy;
             int p=i*CHANNELS;
@@ -84,8 +84,8 @@ public final class LocalImpedanceSense {
             result[p+HARD_CONTACT]=limit(tissue.touchSense[i],0,1);
             result[p+IMPACT]=limit(tissue.touchPulse[i],0,1);
             result[p+HELD]=limit(tissue.gripHold[i]/.5f,0,1);
-            float demandedX=tissue.targetX(i)-tissue.anchorX(i);
-            float demandedY=tissue.targetY(i)-tissue.anchorY(i);
+            float demandedX=tissue.targetX(i)-tissue.sensorAnchorX(i);
+            float demandedY=tissue.targetY(i)-tissue.sensorAnchorY(i);
             result[p+MOTOR_DEMAND]=limit(
                 (float)Math.hypot(demandedX,demandedY)/
                     (tissue.hasSymbioteMotorTargets()?5f:100f),0,1);
