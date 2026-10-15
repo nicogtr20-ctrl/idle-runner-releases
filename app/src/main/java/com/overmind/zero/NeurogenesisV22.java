@@ -92,6 +92,16 @@ public final class NeurogenesisV22 {
         for(float v:n.out)s+=Math.abs(v);
         return s/ACTIONS;
     }
+    /** Actual trainable recurrent synapse from one original H24 unit into
+     * an accepted new recurrent neuron. Unknown edges have weight zero. */
+    public float recurrentLink(int newIndex,int originalIndex){
+        if(newIndex<0||newIndex>=grown.size())throw new IndexOutOfBoundsException();
+        Node n=grown.get(newIndex);
+        for(int k=0;k<INPUTS;k++)
+            if(INPUT[k]==RecurrentCoreV22.F+originalIndex)
+                return n.in[k];
+        return 0f;
+    }
     public int addedParameters(){return grown.size()*(PARAMETERS+ACTIONS);}
     public float parameterAt(int index){
         if(index<0||index>=addedParameters())throw new IndexOutOfBoundsException();
