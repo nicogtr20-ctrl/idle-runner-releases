@@ -473,6 +473,26 @@ public final class SymbioteMatterV1 {
             }
             projectArea(skin,dt);
             projectInterior(body,skin);
+            // The cortex is now projected by incompressibility and fabric
+            // constraints. Ground reaction MUST be enforced AFTER these
+            // projections too: previously all final position corrections
+            // bypassed the friction applied before XPBD integration, making
+            // the body look like a freely swimming snake despite "traction".
+            //
+            // Physical stick/slip is local and passive: material compressed
+            // into the substrate is frictional, extending parts slide.
+            // This does not encode travel direction, a gait, or any reward.
+            for(int i=0;i<SURFACE;i++){
+                if(skin.gripHold[i]>=Morphology.GRIP_HOLD)continue;
+                int sector=i*SECTORS/SURFACE;
+                float compression=Math.max(0f,-clip(cortex[sector*OUTPUTS],-1f,1f));
+                // A small passive contact plus voluntary load. Three
+                // iterations spread substrate reaction to the whole fluid
+                // through genuine area + density constraints, never COM kick.
+                float stick=clip(.025f+.72f*compression,0f,.80f);
+                skin.x[i]=lastSkinX[i]+(skin.x[i]-lastSkinX[i])*(1f-stick);
+                skin.y[i]=lastSkinY[i]+(skin.y[i]-lastSkinY[i])*(1f-stick);
+            }
         }
         repairTopology(skin);
         // Finite-difference post-constraint velocities include real reaction.
