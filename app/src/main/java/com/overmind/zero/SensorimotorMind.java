@@ -559,7 +559,15 @@ public final class SensorimotorMind {
         if(symbioteHead!=null)symbioteHead.chosen(chosen,
             distributedBody==null?null:distributedBody.localMap(),
             activeCore.state(),epsilon,
-            innerSense==null||actualLiquid==null?null:innerSense.summary());
+            innerSense==null||actualLiquid==null?null:innerSense.summary(),
+            // World directions of ALL 16 live material sectors are sampled
+            // from the actual 96 cortex points after physics+collisions.
+            // Before this fix the head assumed birth-ring angles forever,
+            // while ZERO rotated like a clock hand. This mismatch prevented
+            // stable world-space action/physical-consequence attribution.
+            actualLiquid==null||observedBody==null||lastActualGripSurface==null
+                ?null:SymbioteMotorHeadV1.measuredSectorAngles(
+                    observedBody,lastActualGripSurface));
         activeCore.chosen(chosen);
         if(worldV20!=null)worldV20.chosen(chosen,senses);
         if(transferV20!=null)transferV20.chosen(chosen,senses);
