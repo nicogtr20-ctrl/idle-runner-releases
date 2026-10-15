@@ -318,6 +318,7 @@ public final class SymbioteMatterV1 {
             throw new IllegalArgumentException("Invalid symbiote physical input");
         for(float v:cortex)if(!Float.isFinite(v)||v<-1.01f||v>1.01f)
             throw new IllegalArgumentException("Non-finite muscle command");
+        float previousCumulativeEffort=work;
         time+=dt;body.time+=dt;ticks++;
         // This living tissue, not the inactive legacy membrane motor,
         // owns simulated-time pulse decay in Symbiote mode. New real
@@ -508,7 +509,11 @@ public final class SymbioteMatterV1 {
         for(int i=0;i<INNER;i++)
             if(!Float.isFinite(x[i])||!Float.isFinite(y[i])){invalid++;break;}
         maxReach=Math.max(maxReach,reach);
-        body.totalWork+=work*dt;
+        // 'work' is already a lifetime integral of commands * dt. Never
+        // integrate that cumulative value a second time into body effort.
+        // GameActivity's metabolic fuel debit remains based on the same
+        // per-step delta and is not altered by this correction.
+        body.totalWork+=work-previousCumulativeEffort;
     }
     public String summary(){
         return String.format(Locale.US,"SYMBIOTE V1 matter64 cortex96 areaError=%.3f maxReach=%.1f ticks=%d invalid=%d",areaError,maxReach,ticks,invalid);

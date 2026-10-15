@@ -195,8 +195,17 @@ public final class GameActivity extends Activity {
             java.util.Arrays.fill(cyanLeds,0f);
             java.util.Arrays.fill(redLeds,0f);
             lastLedFrame=0;
+            // A passive report belongs to ONE app session, not a ZERO's
+            // learned state. Preserve the previous session independently for
+            // explicit upload before starting a clean observation stream.
             gripObserver=new GripContactObserver();
-            gripPrefs.edit().remove(GripContactObserver.KEY).apply();
+            String preceding=gripPrefs.getString(GripContactObserver.KEY,"");
+            if(preceding.startsWith("go1|")&&preceding.length()<=60000){
+                if(!gripPrefs.edit().putString(
+                    GripContactObserver.PREVIOUS_SESSION,preceding)
+                    .remove(GripContactObserver.KEY).commit())
+                    throw new IllegalStateException("Cannot archive grip session");
+            }else gripPrefs.edit().remove(GripContactObserver.KEY).apply();
             // Named slot loads/new-game atomically swap the working profile
             // while this Activity is paused. Discard any stale in-memory
             // controllers BEFORE the next frame or save.
@@ -549,6 +558,10 @@ public final class GameActivity extends Activity {
                 sensorMind.updateInnerSense(creature,surface);
                 sensorMind.resumeSpatialSense(creature,surface,chamber,environment);
                 sensorMind.updateNavigationSense(creature,surface,chamber,environment);
+                // No synthetic reward crosses process death; instead choose
+                // a NEW real action on restored physical measurements BEFORE
+                // the first resumed physics substep.
+                if(useSymbiote&&symMotor!=null)sensorMind.rearmAfterResume();
                 motorGuard.resetLife(creature.cx,creature.cy);
                 lastSkillStall=motorGuard.recoveryActivations;
                 liveBody.abortTrial();
@@ -714,7 +727,7 @@ public final class GameActivity extends Activity {
             environment=new ArrayList<UnknownWorld.Entity>();
             shelter.rehydrate(environment,creature.cx,creature.cy,null);
             environment.addAll(WorldPlacement.spawn(episode,creature.cx,creature.cy,
-                scarcity,null,environment));
+                scarcity,null,environment,surface));
             chosenObject=null;decisionBrain.abandon();
             goalTimer=0;contactsThisLife=0;worldTime=0;
             reserve=Math.max(70,Math.min(92,reserve));
@@ -745,7 +758,7 @@ public final class GameActivity extends Activity {
             // procedural spawns, never the other way around.
             shelter.rehydrate(environment,creature.cx,creature.cy,chamber);
             environment.addAll(WorldPlacement.spawn(
-                episode,creature.cx,creature.cy,scarcity,chamber,environment));
+                episode,creature.cx,creature.cy,scarcity,chamber,environment,surface));
             excludeOrdinaryRoomObjects();
             // Oldest unengaged objects are recycled first; a touched or
             // currently gripped square never vanishes merely due to cap 24.
@@ -1043,7 +1056,8 @@ public final class GameActivity extends Activity {
                     for(float touch:surface.touchSense)if(touch>.2f){actualTouch=true;break;}
                     lastAppliedHand=skillExecution.hand(lastAppliedHand,sensorMind.adhesion()>.5f,actualTouch,liveBody.testingCandidate());
                     lastAppliedMembrane=skillExecution.membrane(lastAppliedMembrane,sensorMind.adhesion()>.5f,actualTouch,liveBody.testingCandidate());
-                    if(lastAppliedHand!=trialHand||lastAppliedMembrane!=trialMembrane){
+                    if(!useSymbiote&&
+                       (lastAppliedHand!=trialHand||lastAppliedMembrane!=trialMembrane)){
                         techniqueUsedSinceAction=true;
                         // An archived controller is not the incumbent tested
                         // in this body's comparison window. Discard the window
@@ -1288,7 +1302,9 @@ public final class GameActivity extends Activity {
                         // If the learned policy/curriculum is stuck, an old
                         // physically proven motor can be recovered from the
                         // archive. No destination, force or gait is prescribed.
-                        if(motorGuard.recoveryActivations>lastSkillStall){
+                        // Old MotorBrain candidate weights are dormant when
+                        // physical movement uses the living cortex instead.
+                        if(!useSymbiote&&motorGuard.recoveryActivations>lastSkillStall){
                             skillBank.stallEvent();
                             lastSkillStall=motorGuard.recoveryActivations;
                             if(!liveBody.testingCandidate()){
@@ -1369,7 +1385,11 @@ public final class GameActivity extends Activity {
                            sensorMind.takeTemporalSkillsDirty())save();
                         // Remembering an action never substitutes an old
                         // physical controller or interrupts body experiments.
-                        OnlineBodyLearning.Result result=techniqueUsedSinceAction?null:liveBody.observe(
+                        // The legacy genes do not actuate a Symbiote.
+                        // Never accept their mutation because the separate
+                        // 84-weight living cortex happened to find energy.
+                        OnlineBodyLearning.Result result=
+                            (useSymbiote||techniqueUsedSinceAction)?null:liveBody.observe(
                             sensorMind.lastReward,travelSinceAction,forwardSinceAction,
                             Math.max(0,physicalContacts-liveStartContacts),
                             liveStartEnergy,reserve,journey.takeNewCells(),

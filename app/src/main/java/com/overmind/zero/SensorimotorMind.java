@@ -407,6 +407,15 @@ public final class SensorimotorMind {
         actualEnergySinceChoice=0;actualContactHarm=0;
         actualMotorEnergyCostSinceChoice=0f;
     }
+    /** New real action after process resume. The interrupted pre-shutdown
+     * outcome was censored by resumeLife, and must never be credited as if
+     * this newly selected motor had performed it. Call after restoring the
+     * complete physical body, all skin senses and 2.2 hidden context. */
+    public synchronized void rearmAfterResume(){
+        if(activeCore==null||symbioteHead==null||trialAction<0)return;
+        trialAction=-1;elapsed=0;
+        choose(trialState.clone());
+    }
     public synchronized float motorX(){return (float)Math.cos((action%8)*Math.PI/4);}
     public synchronized float motorY(){return (float)Math.sin((action%8)*Math.PI/4);}
     public synchronized float adhesion(){return action>=8?.82f:0f;}
@@ -509,7 +518,11 @@ public final class SensorimotorMind {
             maximumImpedance=Math.max(maximumImpedance,Math.abs(resistance));
             maximumInner=Math.max(maximumInner,Math.abs(inner));
             maximumSpatial=Math.max(maximumSpatial,Math.abs(space));
-            observedMeans[a]=nav+effect+object+seq+liveBodyEvidence(a)+space;
+            // All four previously computed but omitted body readouts feed
+            // the SOLE 2.2 controller only through independently validated
+            // heldout-confidence gates (zero when untrusted).
+            observedMeans[a]=nav+effect+object+seq+liveBodyEvidence(a)
+                +space+proprio+membrane+resistance+inner;
         }
         float[] scores=activeCore.primaryScores(observedMeans);
         // Observe whether real proprioceptive evidence earned meaningful
