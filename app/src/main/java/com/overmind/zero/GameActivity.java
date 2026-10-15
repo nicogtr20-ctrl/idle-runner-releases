@@ -93,7 +93,6 @@ public final class GameActivity extends Activity {
         float recentDisplacement=0;
         volatile float handInitial=Float.NaN,handTrained=Float.NaN;
         UnknownWorld.Mind mind=new UnknownWorld.Mind();
-        DecisionBrain decisionBrain=new DecisionBrain(90517L);
         SensorimotorMind sensorMind=new SensorimotorMind();
         UpdateClient updater;
         String installedVersion="0.3.7";
@@ -244,8 +243,6 @@ public final class GameActivity extends Activity {
             biggestDisplacement=prefs.getFloat("max_displacement_v041",0);
             mind=new UnknownWorld.Mind();
             mind.deserialize(prefs.getString("world_knowledge_v03",""));
-            decisionBrain=new DecisionBrain(90517L);
-            decisionBrain.restore(prefs.getString("decision_brain_v05",""));
             sensorMind=new SensorimotorMind();
             sensorMind.restore(prefs.getString("sensorimotor_model_v09",""));
             sensorMind.restoreContactCounts(
@@ -577,7 +574,6 @@ public final class GameActivity extends Activity {
               .putInt("objects_displaced_v041",pushes)
               .putInt("collisions_v041",physicalContacts)
               .putFloat("max_displacement_v041",biggestDisplacement)
-              .putString("decision_brain_v05",decisionBrain.serialize())
               .putString("sensorimotor_model_v09",sensorMind.serialize())
               .putString("sensorimotor_diagnostics_v091",sensorMind.diagnostics.encode())
               .putString("episodic_memory_v095",episodic.encode())
@@ -689,7 +685,7 @@ public final class GameActivity extends Activity {
             shelter.rehydrate(environment,creature.cx,creature.cy,null);
             environment.addAll(WorldPlacement.spawn(episode,creature.cx,creature.cy,
                 scarcity,null,environment,surface));
-            chosenObject=null;decisionBrain.abandon();
+            chosenObject=null;
             goalTimer=0;contactsThisLife=0;worldTime=0;
             reserve=Math.max(70,Math.min(92,reserve));
             liveStartX=creature.cx;liveStartY=creature.cy;
@@ -726,7 +722,6 @@ public final class GameActivity extends Activity {
             HabitatContinuity.enforceLimit(environment,creature,surface,
                 chamber==null?null:chamber.food);
             if(chosenObject!=null&&!environment.contains(chosenObject)){
-                decisionBrain.abandon();
                 chosenObject=null;goalTimer=0;
             }
             lastEvent="NUOVA AREA ESPLORATA  •  ZERO NON SI AZZERA";
@@ -831,7 +826,6 @@ public final class GameActivity extends Activity {
                         environmentEffectSinceAction+=Math.min(18,shift);
                         pushes++;
                         lifeStats.diskMoved();
-                        decisionBrain.learn(object,reserve,reserve,shift);
                         if(chosenObject==object){chosenObject=null;goalTimer=0;}
                         biggestDisplacement=Math.max(biggestDisplacement,shift);
                         recentDisplacement=shift;
@@ -871,7 +865,6 @@ public final class GameActivity extends Activity {
                     sensorMind.contactOutcome(reserve-before,object.signature,sightAtTouch);
                     energySinceAction[object.signature]+=reserve-before;
                     mind.observe(object.signature,delta,0);
-                    decisionBrain.learn(object,before,reserve,0);
                     if(delta>0){
                         // Record the EXACT accepted pickup, including whether
                         // it was physical material OR the legacy extra-18
@@ -1305,7 +1298,6 @@ public final class GameActivity extends Activity {
                         int gained=(int)(reserve-prior);
                         energyEaten++;chambersCleared++;
                         gateJournal.reward(creature,chamber,elapsedLife,reserve-prior);
-                        decisionBrain.learn(chamber.food,prior,reserve,0);
                         chamberMessage="SCOPERTA RARA • RISERVA RIPRISTINATA";
                         lastEvent="SCOPERTA RARA • ENERGIA +"+gained;
                         eventTime=7;

@@ -15,6 +15,7 @@ public final class RecurrentCoreV22 {
     private static final int WIDTH=Z+1,RECENT=72,RARE=24;
     private final float[] dynamics=new float[A*F*HEAD],q=new float[A*WIDTH],
         reward=new float[A*WIDTH],risk=new float[A*WIDTH];
+    private final NeurogenesisV22 neuralGrowth=new NeurogenesisV22();
     private final int[] samples=new int[A],validation=new int[A];
     private final float[] modelError=new float[A],baselineError=new float[A],
         energyError=new float[A],energyBase=new float[A];
@@ -216,6 +217,8 @@ public final class RecurrentCoreV22 {
             scores[a]+= .40f*evidence;
             // Experiences per action are real, not imagined. Mild intrinsic
             // action uncertainty preserves discovery while reusing skills.
+            // New neurons join the SAME 2.2 arbiter after independent proof.
+            scores[a]+=neuralGrowth.actionCorrection(state(),a);
             scores[a]+=.075f/(float)Math.sqrt(1+samples[a]/16f);
             if(a==lastAction&&intervalsWithoutEnergy>=10)
                 scores[a]-=.14f*clip((intervalsWithoutEnergy-10)/20f,0,1);
@@ -305,6 +308,10 @@ public final class RecurrentCoreV22 {
             +Math.min(.018f,verifiedExternalMotion*.0025f),-1,1);
         float harm=clip(actualDamage/100f,0,1);
         Experience e=new Experience(pending,after,a,earned,harm,terminal);
+        // Train new connections only on executed non-heldout actions;
+        // holdouts only measure whether a candidate beats the old predictor.
+        neuralGrowth.observe(e.before,a,e.earned,read(reward,e.before,a),
+            train&&!holdout,holdout);
         if(holdout){
             float error=0,base=0;
             for(int j=0;j<F;j++){
@@ -343,9 +350,23 @@ public final class RecurrentCoreV22 {
         transitions++;if(terminal)terminals++;
         pending=null;pendingAction=-1;
     }
-    public void resetLife(){Arrays.fill(hidden,0);Arrays.fill(current,0);pending=null;pendingAction=-1;lastAction=-1;intervalsWithoutEnergy=0;}
+    public void resetLife(){Arrays.fill(hidden,0);Arrays.fill(current,0);pending=null;pendingAction=-1;lastAction=-1;intervalsWithoutEnergy=0;neuralGrowth.resetEpisode();}
     public void resumeLife(){pending=null;pendingAction=-1;}
     /** Read-only lifetime learning counters. Never changes the policy. */
+    public int initialNeurons(){return neuralGrowth.initialNeurons();}
+    public int addedNeurons(){return neuralGrowth.addedNeurons();}
+    public int totalNeurons(){return neuralGrowth.totalNeurons();}
+    public int maxNeurons(){return neuralGrowth.maxNeurons();}
+    public int growthAttempts(){return neuralGrowth.growthAttempts();}
+    public int rejectedGrowths(){return neuralGrowth.rejectedAttempts();}
+    public boolean growingCandidate(){return neuralGrowth.candidateInTraining();}
+    public float lastGrowthGain(){return neuralGrowth.lastAcceptedImprovement();}
+    public float neuronConnectionStrength(int newIndex){
+        return neuralGrowth.neuronStrength(newIndex);
+    }
+    public float grownNeuronRecurrentLink(int grownIndex,int originalIndex){
+        return neuralGrowth.recurrentLink(grownIndex,originalIndex);
+    }
     public long trainedTransitions(){return trainSteps;}
     public long decisionCount(){return choices;}
     public long terminalEvents(){return terminals;}
@@ -356,7 +377,7 @@ public final class RecurrentCoreV22 {
      * Order: dynamics, action-value, energy expectation, hazard expectation.
      * No reference to mutable training storage is exposed.
      */
-    public int parameterCount(){return dynamics.length+q.length+reward.length+risk.length;}
+    public int parameterCount(){return dynamics.length+q.length+reward.length+risk.length+neuralGrowth.addedParameters();}
     public float parameterAt(int index){
         if(index<0||index>=parameterCount())throw new IndexOutOfBoundsException();
         if(index<dynamics.length)return dynamics[index];
@@ -365,7 +386,8 @@ public final class RecurrentCoreV22 {
         index-=q.length;
         if(index<reward.length)return reward[index];
         index-=reward.length;
-        return risk[index];
+        if(index<risk.length)return risk[index];
+        return neuralGrowth.parameterAt(index-risk.length);
     }
     public static int dynamicsParameters(){return A*F*HEAD;}
     public static int headParameters(){return A*(Z+1);}
@@ -379,7 +401,9 @@ public final class RecurrentCoreV22 {
         return String.format(Locale.US,
             "ZERO 2.2 PRIMARY: lived=%d replay=%d/%d modelProbes=%d primaryDecisionsSession=%d intervalsNoEnergy=%d physicalReady=%d/%d physicalConfidence=%.3f energyReady=%d/%d margin=%.4f terminal=%d invalid=%d",
             transitions,replaySize(),replays,modelChoices,primaryDecisionsSession,intervalsWithoutEnergy,
-            physicalReady(),A,livePhysicalTrust,energyReady(),A,lastMargin,terminals,invalid);
+            physicalReady(),A,livePhysicalTrust,energyReady(),A,lastMargin,terminals,invalid)
+            +String.format(Locale.US," neurons=%d (%d original+%d grown) attempts=%d rejected=%d heldoutGain=%.3f",
+                totalNeurons(),initialNeurons(),addedNeurons(),growthAttempts(),rejectedGrowths(),lastGrowthGain());
     }
     private static void array(DataOutputStream out,float[] a)throws IOException{for(float v:a)out.writeFloat(v);}
     private static void readArray(DataInputStream in,float[] a,float bound)throws IOException{
@@ -404,7 +428,8 @@ public final class RecurrentCoreV22 {
         out.writeInt(0x5a433232);for(long v:new long[]{transitions,trainSteps,replays,choices,modelChoices,invalid,terminals})out.writeLong(v);
         for(int[] list:new int[][]{samples,validation})for(int n:list)out.writeInt(n);
         for(float[] list:new float[][]{dynamics,q,reward,risk,modelError,baselineError,energyError,energyBase,hidden,current})array(out,list);
-        bank(out,recent);bank(out,rare);out.flush();byte[] body=raw.toByteArray();CRC32 crc=new CRC32();crc.update(body);
+        bank(out,recent);bank(out,rare);
+        neuralGrowth.write(out);out.flush();byte[] body=raw.toByteArray();CRC32 crc=new CRC32();crc.update(body);
         ByteArrayOutputStream compressed=new ByteArrayOutputStream();DeflaterOutputStream zip=new DeflaterOutputStream(compressed);zip.write(body);zip.close();
         return "rc22|"+crc.getValue()+"|"+Base64CodecV22.encode(compressed.toByteArray());
     }catch(IOException ex){throw new IllegalStateException(ex);}}
@@ -422,11 +447,20 @@ public final class RecurrentCoreV22 {
             for(int[] list:new int[][]{c.samples,c.validation})for(int i=0;i<A;i++){list[i]=in.readInt();if(list[i]<0||list[i]>counters[0])return false;}
             for(float[] list:new float[][]{c.dynamics,c.q,c.reward,c.risk})readArray(in,list,3.001f);
             for(float[] list:new float[][]{c.modelError,c.baselineError,c.energyError,c.energyBase}){readArray(in,list,10);for(float v:list)if(v<0)return false;}
-            readArray(in,c.hidden,1.001f);readArray(in,c.current,1.601f);bank(in,c.recent,RECENT);bank(in,c.rare,RARE);if(in.available()!=0)return false;
+            readArray(in,c.hidden,1.001f);readArray(in,c.current,1.601f);
+            bank(in,c.recent,RECENT);bank(in,c.rare,RARE);
+            // The unmodified OTA158 checkpoint legitimately lacks this trailer.
+            if(in.available()>0){
+                if(in.readInt()!=NeurogenesisV22.MAGIC)return false;
+                c.neuralGrowth.read(in);
+            }
+            if(in.available()!=0)return false;
             for(float[][] pair:new float[][][]{ {c.dynamics,dynamics},{c.q,q},{c.reward,reward},{c.risk,risk}, {c.modelError,modelError},{c.baselineError,baselineError},{c.energyError,energyError},{c.energyBase,energyBase},{c.hidden,hidden},{c.current,current}})System.arraycopy(pair[0],0,pair[1],0,pair[0].length);
             System.arraycopy(c.samples,0,samples,0,A);System.arraycopy(c.validation,0,validation,0,A);
             transitions=counters[0];trainSteps=counters[1];replays=counters[2];choices=counters[3];modelChoices=counters[4];invalid=counters[5];terminals=counters[6];
-            recent.clear();recent.addAll(c.recent);rare.clear();rare.addAll(c.rare);recentCursor=rareCursor=0;resumeLife();return true;
+            recent.clear();recent.addAll(c.recent);rare.clear();rare.addAll(c.rare);
+            neuralGrowth.copyFrom(c.neuralGrowth);
+            recentCursor=rareCursor=0;resumeLife();return true;
         }catch(IOException|RuntimeException ex){return false;}
     }
 }
