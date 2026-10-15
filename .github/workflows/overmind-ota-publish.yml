@@ -873,6 +873,9 @@ jobs:
           from pathlib import Path
           from hashlib import sha1
           root=Path('app/src/main/java/com/overmind/zero')
+          # OTA150: make confidence-validated, actually learned proprioceptive
+          # evidence actionable within the SOLE recurrent 2.2 ranking.
+          # Only two tested source blobs updated, all other gates active.
           # OTA149: sensor wiring only, six explicitly reviewed Java source
           # blobs: true 96-patch motor targets, real executed efference,
           # achieved material stretch, tactile pulse decay and regression.
@@ -892,14 +895,14 @@ jobs:
           'Zero20PassiveSnapshot.java':'aad03161b82ef96f768927dec8193c9c43008923',
           'SaveSlotsActivity.java':'c85c98e5fb415c2c70e7441b4ccae21c43147931',
           'SaveSlotStore.java':'4d232fed8599f7f3eb42a080f3806b5a537f01fa',
-          'SymbioteMatterV1Regression.java':'83ed37ea1d891d30148b0e9343102f99921948f5',
+          'SymbioteMatterV1Regression.java':'e825dc554a022d3d4fe45e39eadbfa631f705c8a',
           'SymbioteMotorHeadV1.java':'e0a4b557b5e3f5a89e51db28ab6b1d3e7d640f01',
           'SymbioteMatterV1.java':'500c4d15fdc26e590a55b4ce970040bfabff7332',
           'RecurrentCoreV22.java':'665ab6138fb2d754e94de0e41d6b394a29e392f5',
           'ObjectContinuityV21.java':'73835ed4c3b15eefcfa3d1c615d7769b6fa1fa46',
           'CausalSequenceV23.java':'329344e296ec342e0b85b965babbae15a3eb6f83',
           'CausalSequenceV23Regression.java':'e8ea1df2ae038dd9f7db44132df3e247e643b6ae',
-          'SensorimotorMind.java':'fca84526d484039e63a7a12e658946cce2b3b023',
+          'SensorimotorMind.java':'088914641fb43bbe72d597f764a86bf5266b40c9',
           'DecisionBlackbox.java':'7fbac5e10cdf101bef3fd5ae050ae5db6074bc6c',
           'EnergyLifetimeCounters.java':'7c0a9d815937a39c5cfdaddb01896b39536d8afe',
           'ObjectExperienceV20.java':'39ada3745f8b22769e67c00f5def9a5a3ed6ba1a',
