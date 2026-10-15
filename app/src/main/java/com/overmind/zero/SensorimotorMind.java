@@ -28,6 +28,9 @@ public final class SensorimotorMind {
     private transient RecurrentCoreV22 activeCore;
     // Continuous active-fluid muscle readout, CONDITIONAL on the same core action.
     private transient SymbioteMotorHeadV1 symbioteHead;
+    /** Independently learned duration of the SAME active 2.2 action. */
+    private transient MotorDurationV22 motorDuration;
+    public synchronized void attachMotorDuration(MotorDurationV22 duration){motorDuration=duration;}
     private transient float[] executedControls=new float[6];
     private transient float[] executedMotor,executedHand,executedMembrane;
     public synchronized void attachActiveCore(RecurrentCoreV22 core){activeCore=core;}
@@ -323,6 +326,7 @@ public final class SensorimotorMind {
         if(causalSequence!=null)causalSequence.resetLife();
         if(unifiedArbiter!=null)unifiedArbiter.resetLife();
         if(activeCore!=null)activeCore.resetLife();
+        if(motorDuration!=null)motorDuration.resetLife();
         if(symbioteHead!=null)symbioteHead.resetLife();
         if(gripAffordanceV20!=null)gripAffordanceV20.resetLife();
         if(perceptualV20!=null)perceptualV20.resetLife();
@@ -356,6 +360,7 @@ public final class SensorimotorMind {
         if(causalSequence!=null)causalSequence.resetLife();
         if(unifiedArbiter!=null)unifiedArbiter.resetLife();
         if(activeCore!=null)activeCore.resetLife();
+        if(motorDuration!=null)motorDuration.resetLife();
         if(symbioteHead!=null)symbioteHead.resetLife();
         if(gripAffordanceV20!=null)gripAffordanceV20.resetLife();
         if(perceptualV20!=null)perceptualV20.resetLife();
@@ -397,6 +402,7 @@ public final class SensorimotorMind {
         if(objectContinuity!=null)objectContinuity.resumeLife();
         if(unifiedArbiter!=null)unifiedArbiter.resetLife();
         if(activeCore!=null)activeCore.resumeLife();
+        if(motorDuration!=null)motorDuration.resumeLife();
         if(symbioteHead!=null)symbioteHead.resumeLife();
         if(gripAffordanceV20!=null)gripAffordanceV20.resumeLife();
         if(perceptualV20!=null)perceptualV20.resumeLife();
@@ -564,6 +570,14 @@ public final class SensorimotorMind {
             chosen=random.nextInt(ACTIONS);
             actionExploratory=true;explorations++;
         }
+        // 2.2 chooses WHAT; a learned motor-duration option decides how long
+        // to maintain THAT action. Danger, exploration and strong alternatives
+        // may all interrupt; no heading or target is ever prescribed.
+        if(motorDuration!=null&&symbioteHead!=null)
+            chosen=motorDuration.select(chosen,greedyAction,scores,
+                actionExploratory,senses[0],actualContactHarm,
+                observedBody==null?Float.NaN:observedBody.cx,
+                observedBody==null?Float.NaN:observedBody.cy);
         if(motionShadow!=null)motionShadow.chosen(senses,chosen,observedBody);
         if(blackbox!=null){
             float[] breakdown=new float[DecisionBlackbox.TERMS];
@@ -941,6 +955,7 @@ public final class SensorimotorMind {
         // boundary. Previous-lifetime tissue is never reused after reset.
         if(skin!=null)lastActualGripSurface=skin;
         if(trialAction<0){
+            observedBody=body;
             if(bodySchema!=null&&body!=null&&skin!=null)
                 bodySchema.feed(BodyProprioception.sense(body,skin));
             if(distributedBody!=null&&body!=null&&skin!=null)
@@ -986,6 +1001,10 @@ public final class SensorimotorMind {
         boolean holdout=diagnostics.shouldHoldout();
         if(activeCore!=null){feedCore(after);activeCore.consequence(actualEnergySinceChoice,actualContactHarm,
                 Math.max(0f,physicalEffect),learning&&!holdout,holdout,false);}
+        if(motorDuration!=null&&symbioteHead!=null&&body!=null&&learning)
+            motorDuration.interval(trialAction,body.cx,body.cy,
+                actualEnergySinceChoice,actualContactHarm,
+                actualMotorEnergyCostSinceChoice,Math.max(0f,physicalEffect));
         if(symbioteHead!=null)symbioteHead.consequence(actualEnergySinceChoice,
                 actualContactHarm,actualAmbientLossSinceChoice,
                 actualMotorEnergyCostSinceChoice,learning&&!holdout,holdout);
