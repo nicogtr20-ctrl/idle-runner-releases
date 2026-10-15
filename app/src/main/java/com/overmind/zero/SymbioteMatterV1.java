@@ -35,6 +35,21 @@ public final class SymbioteMatterV1 {
     public SymbioteMatterV1(){}
     private static float clip(float a,float lo,float hi){return Math.max(lo,Math.min(hi,a));}
     private static float len(float a,float b){return (float)Math.sqrt(a*a+b*b);}
+    /** Normal from actual living polygon, NOT radius from the center. */
+    static void normalAt(Morphology.Surface skin,int i,float centerX,float centerY,
+                         float handedness,float[] out){
+        int prev=(i+SURFACE-1)%SURFACE,next=(i+1)%SURFACE;
+        float tx=skin.x[next]-skin.x[prev],ty=skin.y[next]-skin.y[prev];
+        float nx=handedness*ty,ny=-handedness*tx;
+        float ll=len(nx,ny);
+        if(ll<.001f){
+            nx=skin.x[i]-centerX;ny=skin.y[i]-centerY;
+            ll=len(nx,ny);
+        }
+        if(ll<.001f){nx=(float)Math.cos(i*TWO_PI/SURFACE);
+                       ny=(float)Math.sin(i*TWO_PI/SURFACE);ll=1f;}
+        out[0]=nx/ll;out[1]=ny/ll;
+    }
     /** Allocate distributed matter in deterministic concentric sample rings.
      * Initial matter coordinates are not permanent: no spoke constraints. */
     public void reset(MotorBrain.Body body,Morphology.Surface skin){
@@ -364,20 +379,26 @@ public final class SymbioteMatterV1 {
         skin.t+=dt;
         float pulseDecay=(float)Math.exp(-2.5f*dt);
         for(int i=0;i<SURFACE;i++)skin.touchPulse[i]*=pulseDecay;
-        skin.maxExtension=0f;skin.stretchedPoints=0;skin.intentionalPoints=0;
+        // A proprioceptive sensor must describe THIS frame, never a stale
+        // maximum recorded across previous extensions in the same life.
+        skin.maxExtension=0f;skin.peakExtension=0f;
+        skin.stretchedPoints=0;skin.intentionalPoints=0;
         // Valid snapshots keep their exact material positions. Only a
         // physically crossed saved contour needs localized rehabilitation.
         recoverPersistedCrossings(skin);
         observeBody(body,skin);
         float cx=body.cx,cy=body.cy;
+        float contourSign=signedArea(skin)>=0f?1f:-1f;
+        float[] physicalNormal=new float[2];
         for(int i=0;i<SURFACE;i++){
             lastSkinX[i]=skin.x[i];lastSkinY[i]=skin.y[i];
             float dx=skin.x[i]-cx,dy=skin.y[i]-cy;
             float rr=len(dx,dy);
             if(rr<.00001f){dx=(float)Math.cos(i*TWO_PI/SURFACE);dy=(float)Math.sin(i*TWO_PI/SURFACE);rr=1;}
-            // The physical outward gradient is a boundary-normal estimate,
-            // not the direction to a resource or a global target.
-            float ux=dx/rr,uy=dy/rr;
+            // A centroid ray can point INWARD on the concave bays of a
+            // live gel. Apply forces in the actual polygon's outward normal.
+            normalAt(skin,i,cx,cy,contourSign,physicalNormal);
+            float ux=physicalNormal[0],uy=physicalNormal[1];
             int sector=i*SECTORS/SURFACE;
             float extend=clip(cortex[sector*OUTPUTS],-1,1);
             float lateral=clip(cortex[sector*OUTPUTS+1],-1,1);
@@ -454,7 +475,28 @@ public final class SymbioteMatterV1 {
                 float d=len(fluidX[j]-lastSkinX[i],fluidY[j]-lastSkinY[i]);
                 if(d<24f)normalizer+=1f/(3f+d);
             }
-            if(normalizer<.0001f)continue;
+            if(normalizer<.0001f){
+                // A stretched tip may be >24 U from EVERY interior parcel.
+                // Skipping reaction makes a ghost muscle. Use the 3 closest
+                // REAL particles for the equal/opposite impulse instead.
+                int a=-1,b=-1,c=-1;
+                float da=Float.MAX_VALUE,db=Float.MAX_VALUE,dc=Float.MAX_VALUE;
+                for(int j=0;j<n;j++){
+                    float d=len(fluidX[j]-lastSkinX[i],fluidY[j]-lastSkinY[i]);
+                    if(d<da){c=b;dc=db;b=a;db=da;a=j;da=d;}
+                    else if(d<db){c=b;dc=db;b=j;db=d;}
+                    else if(d<dc){c=j;dc=d;}
+                }
+                float wa=1f/(3f+da),wb=1f/(3f+db),wc=1f/(3f+dc);
+                float norm=wa+wb+wc;
+                if(a>=0){impulsesX[a]-=fx[i]*dt*(wa/norm)*n/SURFACE;
+                         impulsesY[a]-=fy[i]*dt*(wa/norm)*n/SURFACE;}
+                if(b>=0){impulsesX[b]-=fx[i]*dt*(wb/norm)*n/SURFACE;
+                         impulsesY[b]-=fy[i]*dt*(wb/norm)*n/SURFACE;}
+                if(c>=0){impulsesX[c]-=fx[i]*dt*(wc/norm)*n/SURFACE;
+                         impulsesY[c]-=fy[i]*dt*(wc/norm)*n/SURFACE;}
+                continue;
+            }
             for(int j=0;j<n;j++){
                 float d=len(fluidX[j]-lastSkinX[i],fluidY[j]-lastSkinY[i]);
                 if(d>=24f)continue;
