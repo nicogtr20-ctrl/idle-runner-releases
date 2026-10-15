@@ -60,6 +60,11 @@ public final class Zero159NeurogenesisRegression {
         float signal=grown.actionCorrection(z,3);
         ok(Float.isFinite(signal)&&Math.abs(signal)>.000001f,
             "Accepted neuron is disconnected from active action scoring");
+        ok(grown.recurrentLink(0,5)==0f,
+            "Graph fabricated nonexistent recurrent input edge");
+        ok(Float.isFinite(grown.recurrentLink(0,0))&&
+           Math.abs(grown.recurrentLink(0,0))>.000001f,
+            "Newly accepted neuron has no actual incoming recurrent synapse");
         float[] brainParams=new float[grown.addedParameters()];
         for(int k=0;k<brainParams.length;k++)brainParams[k]=grown.parameterAt(k);
         DataOutputStream d;
