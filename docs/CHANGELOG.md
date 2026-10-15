@@ -1,3 +1,6 @@
+## CANDIDATO ZERO 2.2 OTA160 — 15 ottobre 2026 (NON PUBBLICATO)
+Correzione sperimentale della durata motoria del simbionte, senza movimenti prefabbricati: il nucleo 2.2 rimane l'unico arbitro, un nuovo modello `MotorDurationV22` impara se mantenere per 1, 2 o 4 intervalli una sua azione, con interruzione immediata per danni, riserva critica, esplorazione o scelte neurali chiaramente migliori. Persistenza opzionale `motor_duration_v160`, stessa app/salvataggi, valori reali visibili in Corpo/Evoluzione. Baseline Android: report `20261015-152553-130aa19184fe2`, 95.3–96.6% di cambi d'azione su due vite, ultimi 25 episodi con calo della locomozione e aumento dei contatti rossi. QA preliminare del ramo `fix/zero160-learned-motor-duration` **non eseguita**: Actions run `38765532027` fallito prima di qualsiasi step (infrastruttura). Nessuna APK160 firmata o prestazione post-correzione rivendicata. Paper completo: [ZERO_OTA160_LEARNED_DURATION_FORENSICS](ZERO_OTA160_LEARNED_DURATION_FORENSICS.md). Non unire al ramo che pubblica l'APK finché QA e build Android non sono verdi.
+
 # CHANGELOG — storico OVERMIND ZERO
 
 > Le versioni seguenti sono *esperimenti*, non un prodotto finito. Aggiornare questa pagina in OGNI release insieme al file HANDOFF.

@@ -32,6 +32,7 @@ public final class BrainStatsActivity extends Activity {
     private int coreOffset=0,motorOffset=0,selectedSkill=0;
     private RecurrentCoreV22 core;
     private SymbioteMotorHeadV1 muscle;
+    private MotorDurationV22 motorDuration;
     private BodyProprioception proprio;
     private DistributedBodySense distributed;
     private LocalImpedanceSense impedance;
@@ -46,7 +47,7 @@ public final class BrainStatsActivity extends Activity {
     private GoalContinuity goals;
     private GateBehaviorMetrics gates;
     private LifeStatistics lives;
-    private boolean bCore,bMuscle,bProprio,bDistributed,bImpedance,bInner,
+    private boolean bDuration,bCore,bMuscle,bProprio,bDistributed,bImpedance,bInner,
         bSpatial,bNavigation,bObjects,bCausal,bSequence,bTemporal,bSkills,bGoals,
         bGates,bLives;
     private long shownAt;
@@ -70,6 +71,7 @@ public final class BrainStatsActivity extends Activity {
     private void loadReadOnly(){
         core=new RecurrentCoreV22();
         muscle=new SymbioteMotorHeadV1();
+        motorDuration=new MotorDurationV22();
         proprio=new BodyProprioception();
         distributed=new DistributedBodySense();
         impedance=new LocalImpedanceSense();
@@ -86,6 +88,7 @@ public final class BrainStatsActivity extends Activity {
         lives=new LifeStatistics();
         bCore=core.restore(prefs.getString(RecurrentCoreV22.KEY,""));
         bMuscle=muscle.restore(prefs.getString(SymbioteMotorHeadV1.KEY,""));
+        bDuration=motorDuration.restore(prefs.getString(MotorDurationV22.KEY,""));
         bProprio=proprio.restore(prefs.getString(BodyProprioception.KEY,""));
         bDistributed=distributed.restore(prefs.getString(DistributedBodySense.KEY,""));
         bImpedance=impedance.restore(prefs.getString(LocalImpedanceSense.KEY,""));
@@ -227,6 +230,7 @@ public final class BrainStatsActivity extends Activity {
         switch(id){
             case "CORE":return "Nucleo ricorrente";
             case "MUSCLE":return "Corteccia muscolare";
+            case "DURATION":return "Durata motoria appresa";
             case "TEMP":return "Memoria temporale";
             case "SKILLS":return "Abilità consolidate";
             case "SKILL_ENTRY":return "Sequenza #"+(selectedSkill+1);
@@ -339,6 +343,9 @@ public final class BrainStatsActivity extends Activity {
                     " particelle interne e "+SymbioteMatterV1.SECTORS+" settori muscolari.");
                 tile(body,"CORTECCIA MUSCOLARE",bMuscle?num(muscle.trainedOutcomes())+
                     " aggiornamenti":"Nessun checkpoint muscolare",VIOLET,"MUSCLE");
+                tile(body,"DURATA DEL MOVIMENTO",bDuration?num(motorDuration.continuations())+
+                     " prosecuzioni • "+num(motorDuration.evaluated())+
+                     " sequenze valutate":"Inizia dagli esperimenti reali",GOLD,"DURATION");
                 tile(body,"PROPRIOCEZIONE",bProprio?pct(proprio.confidence())+
                     " affidabilità":"In attesa di dati",TEAL,"PROPRIO");
                 tile(body,"MEMBRANA DISTRIBUITA",bDistributed?pct(distributed.confidence())+
@@ -473,6 +480,8 @@ public final class BrainStatsActivity extends Activity {
         LinearLayout cortex=panel(body,"APPRENDIMENTO DEL CORPO",VIOLET);
         metric(cortex,"Decisioni motorie",absent(bMuscle,num(muscle.decisionCount())));
         metric(cortex,"Aggiornamenti appresi",absent(bMuscle,num(muscle.trainedOutcomes())));
+         metric(cortex,"Azioni mantenute",absent(bDuration,num(motorDuration.continuations())));
+         metric(cortex,"Sequenze motorie esaminate",absent(bDuration,num(motorDuration.evaluated())));
         metric(cortex,"Verifiche indipendenti",absent(bMuscle,num(muscle.heldoutOutcomes())));
         metric(cortex,"Abilità temporali consolidate",absent(bSkills,num(skills.consolidated())));
         note(cortex,"Il numero di aggiornamenti non equivale automaticamente a un miglioramento del movimento.");
@@ -498,6 +507,8 @@ public final class BrainStatsActivity extends Activity {
                 detailCore(body);break;
             case "MUSCLE":
                 detailMuscle(body);break;
+             case "DURATION":
+                 detailDuration(body);break;
             case "PROPRIO":
                 sensor(body,bProprio,proprio.transitions,proprio.validations,
                     proprio.confidence(),proprio.choiceInfluences,
@@ -677,7 +688,27 @@ public final class BrainStatsActivity extends Activity {
         note(c,"Questa rete parte da 24 neuroni ricorrenti e può aumentare gradualmente con vere unità trainabili. Nessun neurone è aggiunto per decorazione o per premiare una vita lunga.");
         tile(body,"ESPLORA I PESI","I singoli numeri, suddivisi per funzione",VIOLET,"WEIGHTS_CORE");
     }
-    private void detailMuscle(LinearLayout body){
+    private void detailDuration(LinearLayout body){
+         LinearLayout c=panel(body,"DURATA DELLE AZIONI 2.2",GOLD);
+         metric(c,"Stato",bDuration?"Esperienze salvate":"Nessuna esperienza");
+         if(bDuration){
+             metric(c,"Azioni iniziate",num(motorDuration.starts()));
+             metric(c,"Prosecuzioni",num(motorDuration.continuations()));
+             metric(c,"Interruzioni",num(motorDuration.interruptions()));
+             metric(c,"Sequenze valutate",num(motorDuration.evaluated()));
+             for(int t=0;t<MotorDurationV22.OPTIONS;t++){
+                 int train=0,test=0;
+                 for(int a=0;a<RecurrentCoreV22.A;a++){
+                     train+=motorDuration.trained(a,t);
+                     test+=motorDuration.heldout(a,t);
+                 }
+                 metric(c,"Opzione "+new int[]{1,2,4}[t]+" intervalli",train+
+                     " esperienze + "+test+" verifiche escluse dal training");
+             }
+         }
+         note(c,"Il nucleo ricorrente sceglie la direzione. ZERO esplora la durata dell'azione con conseguenze fisiche reali. Ogni 0,65 s verifica pericolo, esplorazione e alternative.");
+     }
+     private void detailMuscle(LinearLayout body){
         LinearLayout c=panel(body,"CONTROLLO MUSCOLARE DEL SIMBIONTE",VIOLET);
         metric(c,"Stato",bMuscle?"Dati salvati":"Non disponibile");
         metric(c,"Pesi addestrabili",muscle.parameterCount()+"");
