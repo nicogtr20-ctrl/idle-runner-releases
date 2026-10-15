@@ -41,7 +41,7 @@ jobs:
           assert 1000<=prior<=999999
           next_build=prior-1000+1
           with open(os.environ['GITHUB_ENV'],'a',encoding='utf-8') as env:
-              env.write('OVERMIND_BUILD_NUMBER='+str(next_build)+'\\n')
+              env.write('OVERMIND_BUILD_NUMBER='+str(next_build)+'\n')
           print('Sequential OTA build',next_build,'from signed code',prior)
           PY
       - name: Unit tests
