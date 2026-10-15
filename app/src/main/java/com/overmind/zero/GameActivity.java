@@ -46,6 +46,7 @@ public final class GameActivity extends Activity {
         ShelterEcology shelter=new ShelterEcology();
         DistributedBodySense distributedSense=new DistributedBodySense();
         LocalImpedanceSense localImpedance=new LocalImpedanceSense();
+        FluidInteroceptionV1 innerSense=new FluidInteroceptionV1();
         PredictiveWorldV20 predictiveWorldV20=new PredictiveWorldV20();
         TransferSkillsV20 transferV20=new TransferSkillsV20();
         FuturePlannerV20 futureV20=new FuturePlannerV20();
@@ -269,6 +270,9 @@ public final class GameActivity extends Activity {
             localImpedance=new LocalImpedanceSense();
             localImpedance.restore(prefs.getString(LocalImpedanceSense.KEY,""));
             sensorMind.attachImpedance(localImpedance);
+            innerSense=new FluidInteroceptionV1();
+            innerSense.restore(prefs.getString(FluidInteroceptionV1.KEY,""));
+            sensorMind.attachFluidInteroception(innerSense,null);
             predictiveWorldV20=new PredictiveWorldV20();
             predictiveWorldV20.restore(prefs.getString(PredictiveWorldV20.KEY,""));
             sensorMind.attachPredictiveWorldV20(predictiveWorldV20);
@@ -507,6 +511,7 @@ public final class GameActivity extends Activity {
                 // Only after the complete physical structure was verified.
                 creature=scene.body;surface=scene.skin;
                 symMatter=scene.matter;
+                sensorMind.setActualFluid(symMatter);
                 chamber=scene.room;environment=scene.objects;
                 shelter=decodedShelter;
                 episode=savedEpisode;phase=savedPhase;
@@ -541,6 +546,7 @@ public final class GameActivity extends Activity {
                 sensorMind.updateBodySense(creature,surface);
                 sensorMind.updateDistributedSense(creature,surface,chamber,environment);
                 sensorMind.updateImpedanceSense(creature,surface);
+                sensorMind.updateInnerSense(creature,surface);
                 sensorMind.resumeSpatialSense(creature,surface,chamber,environment);
                 sensorMind.updateNavigationSense(creature,chamber,environment);
                 motorGuard.resetLife(creature.cx,creature.cy);
@@ -601,6 +607,7 @@ public final class GameActivity extends Activity {
               .putString(BodyProprioception.KEY,bodySchema.encode())
               .putString(DistributedBodySense.KEY,distributedSense.encode())
               .putString(LocalImpedanceSense.KEY,localImpedance.encode())
+              .putString(FluidInteroceptionV1.KEY,innerSense.encode())
               // ZERO 2.0 shadow brain: optional independent persistence; no legacy changes.
               .putString(PredictiveWorldV20.KEY,predictiveWorldV20.encode())
               .putString(TransferSkillsV20.KEY,transferV20.encode())
@@ -691,7 +698,11 @@ public final class GameActivity extends Activity {
             if(useSymbiote){
                 symMatter=new SymbioteMatterV1();
                 symMatter.reset(creature,surface);
-            }else symMatter=null;
+                sensorMind.setActualFluid(symMatter);
+            }else{
+                symMatter=null;
+                sensorMind.setActualFluid(null);
+            }
             java.util.Arrays.fill(cyanLeds,0f);
             java.util.Arrays.fill(redLeds,0f);
             motorGuard.resetLife(creature.cx,creature.cy);
@@ -714,6 +725,7 @@ public final class GameActivity extends Activity {
             sensorMind.updateBodySense(creature,surface);
             sensorMind.updateDistributedSense(creature,surface,chamber,environment);
                 sensorMind.updateImpedanceSense(creature,surface);
+                sensorMind.updateInnerSense(creature,surface);
             // The newborn sees from actual membrane sites, never a centroid eye.
             sensorMind.updateSpatialSense(creature,surface,chamber,environment);
             sensorMind.updateNavigationSense(creature,chamber,environment);
