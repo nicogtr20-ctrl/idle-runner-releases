@@ -293,6 +293,17 @@ public final class BrainStatsActivity extends Activity {
             android.view.Gravity.BOTTOM|android.view.Gravity.CENTER_HORIZONTAL);
         cp.bottomMargin=dp(14);hero.addView(caption,cp);
         note(body,"UNA SOLA INTELLIGENZA • 16 AZIONI • CORPO SIMBIONTE");
+        LinearLayout growth=panel(body,"RETE NEURALE REALE",TEAL);
+        metric(growth,"Neuroni attivi",bCore?num(core.totalNeurons()):"Non ancora disponibile");
+        metric(growth,"Nucleo originario",bCore?num(core.initialNeurons()):"—");
+        metric(growth,"Nuovi neuroni accettati",bCore?num(core.addedNeurons()):"—");
+        if(bCore){
+            metric(growth,"Candidature testate",num(core.growthAttempts()));
+            metric(growth,"Scartate",num(core.rejectedGrowths()));
+            metric(growth,"Nuova candidatura",core.growingCandidate()?
+                "In verifica sulle esperienze":"Nessuna in corso");
+        }
+        note(growth,"Ogni punto della rete animata rappresenta un vero neurone ricorrente: verde = iniziale, viola = aggiunto dopo test indipendenti. Nessun punto fittizio.");
         homePair(body,"◉ CERVELLO","Memorie, nucleo e causalità",TEAL,"section-brain",
             "⬡ CORPO","Muscoli, tatto e sensori",VIOLET,"section-body");
         homePair(body,"◉ PERCEZIONE","Vista, mondo e oggetti",BLUE,"section-perception",
@@ -311,8 +322,9 @@ public final class BrainStatsActivity extends Activity {
         switch(s){
             case "BRAIN":
                 note(body,"Unico decisore: 2.2. I modelli forniscono indizi verificati, non comandi paralleli.");
-                tile(body,"NUCLEO 2.2",bCore?num(core.transitions())+" esperienze • "+
-                    core.physicalReady()+"/16 azioni con previsione verificata":"Nessun salvataggio del nucleo",TEAL,"CORE");
+                tile(body,"NUCLEO 2.2",bCore?num(core.totalNeurons())+" neuroni • "+
+                    core.addedNeurons()+" aggiunti • "+core.physicalReady()+
+                    "/16 previsioni fidate":"Nessun salvataggio del nucleo",TEAL,"CORE");
                 tile(body,"MEMORIA TEMPORALE",bTemporal?num(temporal.transitions)+
                     " transizioni • fiducia "+pct(temporal.confidence()):"In attesa di dati",VIOLET,"TEMP");
                 tile(body,"CAUSA ED EFFETTO",bCausal?num(causal.experiments)+
@@ -354,9 +366,9 @@ public final class BrainStatsActivity extends Activity {
             case "EVOLUTION":
                 evolutionPage(body);break;
             case "PARAMS":
-                note(body,"I numeri sono pesi reali salvati, non neuroni cresciuti o livelli di intelligenza.");
+                note(body,"I numeri sono pesi reali del nucleo: comprendono anche le connessioni dei neuroni aggiunti, solo dopo crescita validata.");
                 tile(body,"PESI NUCLEO 2.2",num(core.parameterCount())+
-                    " valori addestrabili • 12 per pagina",TEAL,"WEIGHTS_CORE");
+                    " valori reali (incluse "+core.addedNeurons()+" nuove unità) • 12 per pagina",TEAL,"WEIGHTS_CORE");
                 tile(body,"PESI MUSCOLARI",muscle.parameterCount()+
                     " parametri della corteccia reale",VIOLET,"WEIGHTS_MOTOR");
                 LinearLayout links=panel(body,"ALTRI MODELLI APPRESI",BLUE);
@@ -448,9 +460,16 @@ public final class BrainStatsActivity extends Activity {
         metric(brain,"Verifiche indipendenti",absent(bCore,num(core.heldoutTransitions())));
         metric(brain,"Replay di esperienza",absent(bCore,num(core.replayUpdates())));
         metric(brain,"Decisioni totali",absent(bCore,num(core.decisionCount())));
+        metric(brain,"Neuroni ricorrenti",absent(bCore,
+            num(core.initialNeurons())+" iniziali + "+num(core.addedNeurons())+
+            " aggiunti = "+num(core.totalNeurons())));
+        metric(brain,"Proposte di crescita",absent(bCore,num(core.growthAttempts())));
+        metric(brain,"Proposte rifiutate",absent(bCore,num(core.rejectedGrowths())));
+        metric(brain,"Ultimo miglioramento verificato",bCore?
+            pct(core.lastGrowthGain()):"Non disponibile");
         metric(brain,"Azioni con previsioni affidabili",bCore?
             core.physicalReady()+" / 16":"Non disponibile");
-        note(brain,"L'architettura non cresce da 10 a 11 neuroni: i parametri sono fissi e si modificano con l'esperienza.");
+        note(brain,"La neurogenesi aggiunge vere unità ricorrenti e connessioni ai punteggi del 2.2 solo se migliorano le previsioni energetiche su esperienze mai usate per addestrarle. Se non migliorano, vengono scartate.");
         LinearLayout cortex=panel(body,"APPRENDIMENTO DEL CORPO",VIOLET);
         metric(cortex,"Decisioni motorie",absent(bMuscle,num(muscle.decisionCount())));
         metric(cortex,"Aggiornamenti appresi",absent(bMuscle,num(muscle.trainedOutcomes())));
@@ -643,6 +662,11 @@ public final class BrainStatsActivity extends Activity {
         metric(c,"Stato interno",RecurrentCoreV22.H+"");
         metric(c,"Azioni",RecurrentCoreV22.A+"");
         metric(c,"Pesi addestrabili",num(core.parameterCount()));
+        metric(c,"Neuroni ricorrenti attuali",bCore?num(core.totalNeurons()):"Non disponibile");
+        metric(c,"Originari / aggiunti",bCore?
+            core.initialNeurons()+" / "+core.addedNeurons():"Non disponibile");
+        metric(c,"Tentativi / scarti",bCore?
+            core.growthAttempts()+" / "+core.rejectedGrowths():"Non disponibile");
         if(bCore){
             metric(c,"Esperienze vissute",num(core.transitions()));
             metric(c,"Apprendimenti",num(core.trainedTransitions()));
@@ -650,7 +674,7 @@ public final class BrainStatsActivity extends Activity {
             metric(c,"Azioni con previsioni fidate",core.physicalReady()+" / 16");
             metric(c,"Previsioni energetiche fidate",core.energyReady()+" / 16");
         }
-        note(c,"Le dimensioni della rete non crescono da sole. Evolvono i pesi e la qualità di previsione, misurabile solo su dati indipendenti.");
+        note(c,"Questa rete parte da 24 neuroni ricorrenti e può aumentare gradualmente con vere unità trainabili. Nessun neurone è aggiunto per decorazione o per premiare una vita lunga.");
         tile(body,"ESPLORA I PESI","I singoli numeri, suddivisi per funzione",VIOLET,"WEIGHTS_CORE");
     }
     private void detailMuscle(LinearLayout body){
@@ -700,20 +724,23 @@ public final class BrainStatsActivity extends Activity {
     private String bank(int index){
         int d=RecurrentCoreV22.dynamicsParameters(),h=RecurrentCoreV22.headParameters();
         return index<d?"Dinamica":index<d+h?"Azioni":
-            index<d+2*h?"Energia":"Rischio";
+            index<d+2*h?"Energia":index<d+3*h?"Rischio":"Neurone aggiunto";
     }
-    /** Lightweight software 3D orbit graphic. Not a representation of neuron
-     * count, not a generated chart, not used by the learner. 11fps max. */
+    /** 3D projection of the ACTUAL restored recurrent neuron count. Each
+     * dot is a neuron; grown connections affect live 2.2 choices, and are
+     * tinted violet here only after independent heldout acceptance. 11fps. */
     private final class NeuralView extends View {
         private final Paint paint=new Paint(3);
-        NeuralView(){super(BrainStatsActivity.this);setContentDescription("Rete neurale decorativa tridimensionale in movimento");}
+        NeuralView(){super(BrainStatsActivity.this);
+            setContentDescription("Rete ricorrente 2.2: "+core.totalNeurons()+
+                " neuroni reali, "+core.addedNeurons()+" aggiunti dopo verifica");}
         @Override protected void onDraw(Canvas canvas){
             super.onDraw(canvas);
             float w=getWidth(),h=getHeight();
             float centerX=w*.5f,centerY=h*.48f;
             float unit=Math.min(w*.38f,h*.39f);
             float angle=(SystemClock.uptimeMillis()%18000)/18000f*6.283185f;
-            final int count=44;
+            final int count=core.totalNeurons();
             float[] xx=new float[count],yy=new float[count],depth=new float[count];
             for(int i=0;i<count;i++){
                 float longitude=(float)(i*2.39996323);
@@ -739,15 +766,23 @@ public final class BrainStatsActivity extends Activity {
             for(int i=0;i<count;i++){
                 float bright=(depth[i]+1)*.5f;
                 int alpha=(int)(110+145*bright);
-                int tint=i%7==0?VIOLET:TEAL;
+                // Exactly the base 24 and accepted additional plastic nodes.
+                int tint=i>=core.initialNeurons()?VIOLET:TEAL;
                 paint.setStyle(Paint.Style.FILL);
                 paint.setColor(Color.argb(22,Color.red(tint),Color.green(tint),Color.blue(tint)));
                 canvas.drawCircle(xx[i],yy[i],dp(5+bright*3),paint);
                 paint.setColor(Color.argb(alpha,Color.red(tint),Color.green(tint),Color.blue(tint)));
                 canvas.drawCircle(xx[i],yy[i],dp(1.5f+bright*1.8f),paint);
             }
-            paint.setStyle(Paint.Style.FILL);paint.setColor(0x55d1fff3);
-            canvas.drawCircle(centerX,centerY,dp(3),paint);
+            // The active overlay shows total/added neuron count without
+            // inventing a neuron at the visual center.
+            paint.setStyle(Paint.Style.FILL);
+            paint.setColor(0xffe4fff8);
+            paint.setTypeface(android.graphics.Typeface.DEFAULT_BOLD);
+            paint.setTextSize(dp(11));
+            String countLabel=count+" NEURONI";
+            canvas.drawText(countLabel,centerX-paint.measureText(countLabel)*.5f,
+                centerY+dp(5),paint);
             if(getWindowVisibility()==VISIBLE)postInvalidateDelayed(90);
         }
     }
