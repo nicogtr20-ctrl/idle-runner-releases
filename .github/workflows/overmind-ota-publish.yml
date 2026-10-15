@@ -1456,7 +1456,8 @@ jobs:
           assert 'symMotor.restoreLocal(' in app and '.putString(SymbioteMotorHeadV1.LOCAL_KEY,' in app
           assert 'SymbioteMotorHeadV1.LOCAL_KEY' in reset
           assert 'muscle.localParameterAt(i)' in atlas and 'WEIGHTS_LOCAL' in atlas
-          assert 'selfContactPairs' in physical and 'fluidReflow' in physical
+          assert 'selfContactPairs' in physical and 'float extensionCompliance=extend>0f?1f/(1f+4f*strain):1f;' in physical
+          assert 'float traction=clip(.12f+1.45f*compression,0f,.95f);' in physical
           assert (root/'Zero161PhysicalCapabilityRegression.java').exists()
           assert (root/'Zero161CortexRegression.java').exists()
           assert (root/'Zero161OverstretchRegression.java').exists()
