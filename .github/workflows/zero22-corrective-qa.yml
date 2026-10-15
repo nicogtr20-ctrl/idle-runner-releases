@@ -236,12 +236,14 @@ jobs:
           for module in ('CORE','MUSCLE','PROPRIO','DISTRIBUTED',
                          'IMPEDANCE','FLUID','GATES','VISION','NAV','SPACE',
                          'OBJECTS','TEMP','SKILLS','GOALS','CAUSE','SEQUENCE',
-                         'WEIGHTS_CORE','WEIGHTS_MOTOR'):
+                         'WEIGHTS_CORE','WEIGHTS_MOTOR','SKILL_ENTRY'):
               assert 'case "'+module+'":' in atlas,module
           assert 'class NeuralView extends View' in atlas
           assert 'homePair(body,' in atlas and 'postInvalidateDelayed(90)' in atlas
           assert 'void evolutionPage(' in atlas and 'LifeStatistics.NET' in atlas
           assert 'void skillPage(' in atlas and 'skills.consolidated()' in atlas
+          assert 'skills.skillActionsAt(selectedSkill)' in atlas
+          assert 'VISTA DALLA MEMBRANA' in atlas
           assert 'core.trainedTransitions()' in atlas
           assert 'muscle.trainedOutcomes()' in atlas
           assert 'core.parameterAt(i)' in atlas and 'muscle.parameterAt(i)' in atlas
