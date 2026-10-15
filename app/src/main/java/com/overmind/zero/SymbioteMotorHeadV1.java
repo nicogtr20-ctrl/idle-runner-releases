@@ -13,7 +13,8 @@ import java.util.Locale;
 public final class SymbioteMotorHeadV1 {
     public static final String KEY="symbiote_motor_head_v1";
     private static final int N=SymbioteMatterV1.SECTORS,CHANNELS=SymbioteMatterV1.OUTPUTS;
-    private static final int FEATURE=14,OUTPUTS=N*CHANNELS;
+    private static final int LEGACY_FEATURE=14,FEATURE=LEGACY_FEATURE+FluidInteroceptionV1.CHANNELS,
+        OUTPUTS=N*CHANNELS;
     private final float[] weights=new float[CHANNELS*FEATURE];
     private final float[] feature=new float[N*FEATURE],commands=new float[OUTPUTS];
     private final float[] noise=new float[OUTPUTS],pending=new float[OUTPUTS];
@@ -23,7 +24,12 @@ public final class SymbioteMotorHeadV1 {
     private float meanReward=0f;
     public SymbioteMotorHeadV1(){
         // Small unbiased initial pathways. This is not a gait or hand recipe.
-        for(int i=0;i<weights.length;i++)weights[i]=random()*.056f;
+        // Preserve the precise old virgin seed sequence in the original
+        // 14 features of each output; the 7 new internal afferents begin at
+        // ZERO, so OTA151 does not suddenly alter newborn locomotion.
+        for(int channel=0;channel<CHANNELS;channel++)
+            for(int j=0;j<LEGACY_FEATURE;j++)
+                weights[channel*FEATURE+j]=random()*.056f;
     }
     private static float clip(float x,float a,float b){return Math.max(a,Math.min(b,x));}
     private float random(){
@@ -42,6 +48,11 @@ public final class SymbioteMotorHeadV1 {
      */
     public void chosen(int action,float[] bodySensors,float[] recurrent,
                        float exploration){
+        chosen(action,bodySensors,recurrent,exploration,null);
+    }
+    /** The SAME single decision; learned cortex sees actual living inside. */
+    public void chosen(int action,float[] bodySensors,float[] recurrent,
+                       float exploration,float[] internal){
         if(action<0||action>=RecurrentCoreV22.A||
            !valid(recurrent,RecurrentCoreV22.Z)||
            bodySensors==null||bodySensors.length!=DistributedBodySense.FEATURES)
@@ -66,6 +77,13 @@ public final class SymbioteMotorHeadV1 {
             feature[base+12]=clip(recurrent[RecurrentCoreV22.F+sector%
                                     RecurrentCoreV22.H],-1,1);
             feature[base+13]=1;
+            // Seven genuinely measured local fluid channels. Only freshly
+            // sampled real tissue is eligible; null from legacy leaves 0.
+            for(int ch=0;ch<FluidInteroceptionV1.CHANNELS;ch++)
+                feature[base+LEGACY_FEATURE+ch]=internal!=null&&
+                    internal.length==FluidInteroceptionV1.SUMMARY&&
+                    Float.isFinite(internal[ch*N+sector])
+                    ?clip(internal[ch*N+sector],-1f,1f):0f;
             for(int channel=0;channel<CHANNELS;channel++){
                 float z=0;
                 for(int j=0;j<FEATURE;j++)z+=weights[channel*FEATURE+j]*feature[base+j];
@@ -135,7 +153,8 @@ public final class SymbioteMotorHeadV1 {
         if(text==null||text.length()>12000||!text.startsWith("smh1|"))return false;
         try{
             String[] p=text.split("\\|",-1);
-            if(p.length!=6+weights.length)return false;
+            boolean old=p.length==6+CHANNELS*LEGACY_FEATURE;
+            if(!old&&p.length!=6+weights.length)return false;
             long newSeed=Long.parseLong(p[1]);
             long decisions=Long.parseLong(p[2]),learnt=Long.parseLong(p[3]),hold=Long.parseLong(p[4]);
             float baseline=Float.parseFloat(p[5]);
@@ -143,9 +162,15 @@ public final class SymbioteMotorHeadV1 {
                hold>decisions||learnt+hold>decisions||!Float.isFinite(baseline)||
                Math.abs(baseline)>2.01f)return false;
             float[] newWeights=new float[weights.length];
-            for(int i=0;i<weights.length;i++){
-                newWeights[i]=Float.parseFloat(p[6+i]);
-                if(!Float.isFinite(newWeights[i])||Math.abs(newWeights[i])>2.501f)return false;
+            for(int channel=0;channel<CHANNELS;channel++){
+                int width=old?LEGACY_FEATURE:FEATURE;
+                for(int j=0;j<width;j++){
+                    float v=Float.parseFloat(p[6+channel*width+j]);
+                    if(!Float.isFinite(v)||Math.abs(v)>2.501f)return false;
+                    newWeights[channel*FEATURE+j]=v;
+                }
+                // Newly added internal-fluid connections start EXACTLY 0,
+                // preserving every pre-existing muscle output on migration.
             }
             seed=newSeed;choices=decisions;updates=learnt;heldout=hold;meanReward=baseline;
             System.arraycopy(newWeights,0,weights,0,weights.length);
