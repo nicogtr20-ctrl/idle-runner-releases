@@ -88,8 +88,27 @@ public final class Zero154WholeSystemAudit {
                 "Navigation valence no longer learns before heldout split");
         require(diff(navi.visible(),new float[navi.visible().length])==0f,
                 "Navigation fixture unexpectedly observed light");
-        System.out.println("AUDIT_CONFIRMED 5 temporal_value_and_navigation_valence_update_pre_holdout");
-        System.out.println("AUDIT_CONFIRMED 6 physics_signature_passed_without_optical_validation");
-        System.out.println("AUDIT_ONLY PASS: reproduction of six deficiencies, no production source changed");
+        // Time-leaking extension: peakExtension is a lifetime maximum, yet
+        // channel 3 of the CURRENT 26D state reads it as though present now.
+        MotorBrain.Body now=new MotorBrain.Body();
+        Morphology.Surface cortex=new Morphology.Surface(now);
+        SymbioteMatterV1 matter=new SymbioteMatterV1();matter.reset(now,cortex);
+        cortex.peakExtension=98f; // legitimate value after a past extension
+        matter.step(now,cortex,new float[SymbioteMatterV1.SECTORS*
+            SymbioteMatterV1.OUTPUTS],.02f);
+        float currentReach=0f;
+        for(int idx=0;idx<Morphology.POINTS;idx++)
+            currentReach=Math.max(currentReach,(float)Math.hypot(
+                cortex.x[idx]-now.cx,cortex.y[idx]-now.cy)-28f);
+        float[] instant=SensorimotorMind.Senses.read(now,cortex,null,
+            new ArrayList<UnknownWorld.Entity>(),70f);
+        require(currentReach<30f&&instant[3]>.8f,
+            "Historical peak extension is no longer presented as current 26D shape");
+        System.out.println("AUDIT_CONFIRMED 5 lifetime_peak_reported_as_current_shape actual="+
+            currentReach+" reported="+instant[3]);
+        System.out.println("AUDIT_CONFIRMED 6 temporal_value_and_navigation_valence_update_pre_holdout");
+
+        System.out.println("AUDIT_CONFIRMED 7 physics_signature_passed_without_optical_validation");
+        System.out.println("AUDIT_ONLY PASS: reproduction of seven deficiencies, no production source changed");
     }
 }
