@@ -82,6 +82,8 @@ public final class Morphology {
         public int intentionalPoints=0;
         private final float[] ax=new float[POINTS],ay=new float[POINTS];
         private boolean lastActuationValid=false;
+        private boolean symbioteTargets=false;
+        private final float[] sx=new float[POINTS],sy=new float[POINTS];
         private final float[] nx=new float[POINTS],ny=new float[POINTS];
         private final float[] gx=new float[POINTS],gy=new float[POINTS];
         private final float[] fx=new float[POINTS],fy=new float[POINTS];
@@ -100,8 +102,17 @@ public final class Morphology {
         public float anchorY(int i){return ay[i];}
         public float normalX(int i){return nx[i];}
         public float normalY(int i){return ny[i];}
-        public float targetX(int i){return ax[i]+extension[i]*nx[i]-gx[i]*ny[i];}
-        public float targetY(int i){return ay[i]+extension[i]*ny[i]+gx[i]*nx[i];}
+        public float targetX(int i){return symbioteTargets?sx[i]:ax[i]+extension[i]*nx[i]-gx[i]*ny[i];}
+        public float targetY(int i){return symbioteTargets?sy[i]:ay[i]+extension[i]*ny[i]+gx[i]*nx[i];}
+        public boolean hasSymbioteMotorTargets(){return lastActuationValid&&symbioteTargets;}
+        /** Read-only record of ACTUAL free-step cortex drive. Coordinates
+         * refer to the pre-constraint material patch, never legacy spokes. */
+        void symbioteMotorTarget(int i,float preX,float preY,float normalX,
+                                 float normalY,float freeX,float freeY){
+            ax[i]=preX;ay[i]=preY;nx[i]=normalX;ny[i]=normalY;
+            sx[i]=freeX;sy[i]=freeY;
+            symbioteTargets=lastActuationValid=true;
+        }
         private void anchors(MotorBrain.Body body){
             for(int i=0;i<POINTS;i++){
                 // Continuous interpolation over the existing soft body; there
@@ -118,7 +129,7 @@ public final class Morphology {
             }
         }
         public void reset(MotorBrain.Body body){
-            anchors(body);lastActuationValid=false;
+            anchors(body);lastActuationValid=false;symbioteTargets=false;
             t=0;totalEffort=0;peakExtension=0;maxExtension=0;stretchedPoints=0;
             for(int i=0;i<POINTS;i++){
                 x[i]=ax[i];y[i]=ay[i];
@@ -132,7 +143,7 @@ public final class Morphology {
         /** New generic motor channel; the world model selects the gain.
             Physical adhesive traction STILL requires contact and grip hold. */
         public void step(MotorBrain.Body body,float[] brain,float targetX,float targetY,float dt,float gripDrive){
-            t+=dt;anchors(body);
+            t+=dt;anchors(body);symbioteTargets=false;
             // Recent disk pressure decays over actual simulation time, so
             // brief real contacts are still sensed at the next decision.
             // Only actual collisions below increase this channel.
