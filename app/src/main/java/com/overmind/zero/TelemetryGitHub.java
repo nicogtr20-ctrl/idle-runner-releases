@@ -146,6 +146,12 @@ final class TelemetryGitHub {
             Context.MODE_PRIVATE).getString(GripContactObserver.KEY,"");
         if(grip.startsWith("go1|")&&grip.length()<=60000)
             result.put("gripContactObserver",grip);
+        // Session boundaries are intentional. Export the archived preceding
+        // session separately only when user explicitly shares diagnostic data.
+        String pastGrip=c.getSharedPreferences(GripContactObserver.PREFS,
+            Context.MODE_PRIVATE).getString(GripContactObserver.PREVIOUS_SESSION,"");
+        if(pastGrip.startsWith("go1|")&&pastGrip.length()<=60000)
+            result.put("previousGripContactSession",pastGrip);
         // The controlled 18-trial A/B report is read-only and separate.
         String lab=c.getSharedPreferences("zero_behavior_lab_v113",
             Context.MODE_PRIVATE).getString("last","");

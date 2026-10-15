@@ -13,9 +13,19 @@ public final class WorldPlacement {
     static boolean free(UnknownWorld.Entity item,float originX,float originY,
                         ScarcityLab room,List<UnknownWorld.Entity> active,
                         List<UnknownWorld.Entity> proposed){
+        return free(item,originX,originY,room,active,proposed,null);
+    }
+    static boolean free(UnknownWorld.Entity item,float originX,float originY,
+                        ScarcityLab room,List<UnknownWorld.Entity> active,
+                        List<UnknownWorld.Entity> proposed,Morphology.Surface skin){
         if(item==null||item.concealed||item.consumed)return false;
         if(Math.hypot(item.x-originX,item.y-originY)<item.radius+68f)
             return false;
+        // The real 96-point body may extend well beyond the centroid.
+        // Suppress only physically overlapping new spawns, never remove
+        // already present objects or artificially extend vision.
+        if(skin!=null&&MaterialGeometry.touches(null,skin,item.x,item.y,
+                                                  item.radius+GAP))return false;
         if(room!=null&&room.overlapsRoom(item.x,item.y,item.radius+GAP))
             return false;
         for(UnknownWorld.Entity e:active)
@@ -34,6 +44,12 @@ public final class WorldPlacement {
     public static ArrayList<UnknownWorld.Entity> spawn(
         int episode,float originX,float originY,boolean scarce,
         ScarcityLab room,List<UnknownWorld.Entity> existing){
+        return spawn(episode,originX,originY,scarce,room,existing,null);
+    }
+    public static ArrayList<UnknownWorld.Entity> spawn(
+        int episode,float originX,float originY,boolean scarce,
+        ScarcityLab room,List<UnknownWorld.Entity> existing,
+        Morphology.Surface livingSkin){
         ArrayList<UnknownWorld.Entity> proposed=UnknownWorld.newHabitat(
             episode,originX,originY,scarce);
         ArrayList<UnknownWorld.Entity> safe=new ArrayList<>();
@@ -73,7 +89,7 @@ public final class WorldPlacement {
                         nearFreeEnergy=true;
                 if(nearFreeEnergy)continue;
             }
-            boolean valid=free(e,originX,originY,room,existing,safe);
+            boolean valid=free(e,originX,originY,room,existing,safe,livingSkin);
             if(!valid)continue;
             safe.add(e);
             // A hidden source is an inseparable spawn pair with its cover.

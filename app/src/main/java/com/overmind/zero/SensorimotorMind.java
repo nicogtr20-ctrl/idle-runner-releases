@@ -297,12 +297,14 @@ public final class SensorimotorMind {
     public int actionsReconsidered=0;
     public int action=0;
 
+    private boolean resumeRearmPending=false;
     public SensorimotorMind(){}
     public synchronized void setLearning(boolean enabled){learning=enabled;}
     public synchronized void begin(float[] observation){
         if(observation.length!=S)throw new IllegalArgumentException("sensory width");
         System.arraycopy(observation,0,trialState,0,S);
         trialAction=-1;elapsed=0;
+        resumeRearmPending=false;
         actualAmbientLossSinceChoice=0f;
         actualMotorEnergyCostSinceChoice=0f;
         contactCredit.newLife();
@@ -338,7 +340,7 @@ public final class SensorimotorMind {
         // Mortality resets bodily position and short-term context, never
         // destroys learned temporal/world parameters.
         if(first==null){
-            trialAction=-1;elapsed=0;contactCredit.newLife();
+            trialAction=-1;elapsed=0;resumeRearmPending=false;contactCredit.newLife();
             if(temporal!=null)temporal.resetLife();
             if(temporalSkills!=null)temporalSkills.resetLife();
             if(bodySchema!=null)bodySchema.resetLife();
@@ -378,6 +380,7 @@ public final class SensorimotorMind {
             throw new IllegalArgumentException("resume");
         System.arraycopy(observation,0,trialState,0,S);
         action=currentAction;trialAction=currentAction;elapsed=0;
+        resumeRearmPending=true;
         actualAmbientLossSinceChoice=0f;
         actualMotorEnergyCostSinceChoice=0f;
         if(temporal!=null)temporal.resumeAction(currentAction);
@@ -406,6 +409,20 @@ public final class SensorimotorMind {
         if(motionShadow!=null)motionShadow.resetLife();
         actualEnergySinceChoice=0;actualContactHarm=0;
         actualMotorEnergyCostSinceChoice=0f;
+    }
+    /** New real action after process resume. The interrupted pre-shutdown
+     * outcome was censored by resumeLife, and must never be credited as if
+     * this newly selected motor had performed it. Call after restoring the
+     * complete physical body, all skin senses and 2.2 hidden context. */
+    public synchronized void rearmAfterResume(MotorBrain.Body body,
+                                              Morphology.Surface skin){
+        if(activeCore==null||symbioteHead==null||trialAction<0||
+           !resumeRearmPending||body==null||skin==null)return;
+        resumeRearmPending=false;
+        observedBody=body;
+        lastActualGripSurface=skin;
+        trialAction=-1;elapsed=0;
+        choose(trialState.clone());
     }
     public synchronized float motorX(){return (float)Math.cos((action%8)*Math.PI/4);}
     public synchronized float motorY(){return (float)Math.sin((action%8)*Math.PI/4);}
@@ -509,7 +526,11 @@ public final class SensorimotorMind {
             maximumImpedance=Math.max(maximumImpedance,Math.abs(resistance));
             maximumInner=Math.max(maximumInner,Math.abs(inner));
             maximumSpatial=Math.max(maximumSpatial,Math.abs(space));
-            observedMeans[a]=nav+effect+object+seq+liveBodyEvidence(a)+space;
+            // All four previously computed but omitted body readouts feed
+            // the SOLE 2.2 controller only through independently validated
+            // heldout-confidence gates (zero when untrusted).
+            observedMeans[a]=nav+effect+object+seq+liveBodyEvidence(a)
+                +space+proprio+membrane+resistance+inner;
         }
         float[] scores=activeCore.primaryScores(observedMeans);
         // Observe whether real proprioceptive evidence earned meaningful

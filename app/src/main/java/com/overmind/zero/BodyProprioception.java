@@ -60,6 +60,9 @@ public final class BodyProprioception {
             count[k]++;
             v[k]+=clamp(Math.max(skin.touchSense[i],skin.touchPulse[i]),0,1);
             v[SECTORS+k]+=clamp(skin.gripHold[i]/.5f,0,1);
+            // Deliberate commanded motor EFFERENCE, not an assertion of
+            // achieved extension; preserve learned weight semantics. Physical
+            // radius is measured independently in channels 4/5 below.
             v[2*SECTORS+k]+=clamp(skin.extension[i]/110f,0,1);
             float radius=(float)Math.hypot(dx,dy);
             near[k]=Math.min(near[k],radius);
