@@ -54,7 +54,7 @@ public final class MotorDurationV22 {
         float score=clip(.25f*speed*coherence+
             .55f*clip(Math.max(0f,gain)/(22f*intervals),0f,2f)+
             .12f*clip(effect/(8f*intervals),0f,1f)-
-            .60f*clip(Math.max(0f,-gain)+damage,0f,35f)/35f-
+            .60f*clip(Math.max(Math.max(0f,-gain),damage),0f,35f)/35f-
             .15f*clip(cost/(2f*intervals),0f,1f),-1.5f,1.5f);
         int count=auditOnly?verified[at]:trained[at];
         float old=auditOnly?verifiedMean[at]:trainedMean[at];
@@ -159,6 +159,8 @@ public final class MotorDurationV22 {
             System.arraycopy(tm,0,trainedMean,0,CELLS);
             System.arraycopy(vm,0,verifiedMean,0,CELLS);
             choices=a;continuesCount=b;interruptsCount=c;episodes=d;
+            // Preserve holdout rotation across app restarts, not merely in RAM.
+            started=(int)(a%5L);
             resetLife();return true;
         }catch(RuntimeException bad){return false;}
     }
