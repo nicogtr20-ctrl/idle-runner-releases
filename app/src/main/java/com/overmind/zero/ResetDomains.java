@@ -17,7 +17,7 @@ public final class ResetDomains {
                                        EXPLORATION,ROOM,EPISODES,TEMPORAL_SKILLS,PROPRIOCEPTION,SPATIAL,CAUSAL,NAVIGATION,INTENTION,GATE_METRICS,ALL};
     public static String[] keys(String domain){
         switch(domain){
-            case WORLD:return new String[]{RecurrentCoreV22.KEY,"sensorimotor_model_v09","sensorimotor_diagnostics_v091",UnifiedArbiterV21.KEY,
+            case WORLD:return new String[]{RecurrentCoreV22.KEY,MotorDurationV22.KEY,"sensorimotor_model_v09","sensorimotor_diagnostics_v091",UnifiedArbiterV21.KEY,
                 "real_energy_credits_v098","real_damage_credits_v098","real_action_credits_v098",
                 "outcome_credit_v101","learned_planner_stats_v102",
                 "temporal_working_memory_v106",PredictiveWorldV20.KEY,FuturePlannerV20.KEY,MortalityLearning.KEY,UnifiedCognitionV21.KEY};
@@ -27,7 +27,7 @@ public final class ResetDomains {
                                   "explored_cells_v094","record_net_v094","energy_spent_v094",
                                   "online_accepted_motor_v094","online_rejected_motor_v094",
                                   "motor_recoveries_v097","motor_free_choices_v097",
-                                  "motor_skills_v098"};
+                                  "motor_skills_v098",MotorDurationV22.KEY};
             case MANIPULATION:return new String[]{"hand_brain_v04","hand_attempts_v04",
                  "hand_successes_v04","objects_displaced_v041","collisions_v041","max_displacement_v041",
                  "online_accepted_hand_v094","online_rejected_hand_v094",GripAffordanceV20.KEY};
