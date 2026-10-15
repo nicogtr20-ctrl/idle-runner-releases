@@ -194,8 +194,11 @@ jobs:
           game=(root/'GameActivity.java').read_text()
           reset=(root/'ResetDomains.java').read_text()
           policy=mind[mind.index('public synchronized int choose('):mind.index('return chosen;',mind.index('public synchronized int choose('))]
-          assert 'PerceptualAssociationsV20.KEY,perceptualV20.encode()' in game
-          assert 'attachPerceptualAssociationsV20(perceptualV20)' in game
+          # Retired observer is still covered by isolated tests, but neither
+          # stores stale weights nor observes every live Symbiote physics step.
+          assert 'PerceptualAssociationsV20.KEY,perceptualV20.encode()' not in game
+          assert 'attachPerceptualAssociationsV20(perceptualV20)' not in game
+          assert 'sensorMind.attachObjectExperienceV20(objectExperienceV20)' in game
           assert 'PerceptualAssociationsV20.KEY' in reset
           assert 'perceptualV20.choiceBias' not in policy
           assert 'perceptualV20.view' not in policy
@@ -959,7 +962,7 @@ jobs:
           'EnergyLifetimeCounters.java':'7c0a9d815937a39c5cfdaddb01896b39536d8afe',
           'ObjectExperienceV20.java':'39ada3745f8b22769e67c00f5def9a5a3ed6ba1a',
           'ObjectExperienceV20Regression.java':'44bccc8ebe5971ed5226e50f62f8e27f7fbc6ddd',
-          'GameActivity.java':'6068bec460312fc527f1de5d095ccb19df595e72',
+          'GameActivity.java':'54e6d1078571cf9eba8e3e37dea1d9e563d9ecf0',
           'ContactGeometryForensics.java':'661401bf03e4e586e5fe69d819db7af05a1a319d',
           'InstrumentalNavigation.java':'96a147f6f366a650a10be293370a0c16404dc220',
           'BehavioralLaboratory.java':'8a35099ddb4b4d7ef9a9a334cb2e50b9477285d8',
@@ -1141,7 +1144,11 @@ jobs:
           for old in ('sensorMind.attachUnifiedCognitionV21(unifiedCognitionV21)',
                       'sensorMind.attachUnifiedArbiterV21(unifiedArbiterV21)',
                       'sensorMind.attachTransferSkillsV20(transferV20)',
-                      'sensorMind.attachFuturePlannerV20(futureV20)'):
+                      'sensorMind.attachFuturePlannerV20(futureV20)',
+                      'sensorMind.attachPredictiveWorldV20(predictiveWorldV20)',
+                      'sensorMind.attachPhysicalConsequenceV20(physicalConsequenceV20)',
+                      'sensorMind.attachGripAffordanceV20(gripAffordanceV20)',
+                      'sensorMind.attachPerceptualAssociationsV20(perceptualV20)'):
               assert old not in game,old
           primary=mind[mind.index('private int choosePrimaryV22('):
                        mind.index('float[] scores=activeCore.primaryScores(')]
