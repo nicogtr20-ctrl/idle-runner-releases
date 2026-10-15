@@ -84,6 +84,10 @@ public final class Morphology {
         private boolean lastActuationValid=false;
         private boolean symbioteTargets=false;
         private final float[] sx=new float[POINTS],sy=new float[POINTS];
+        // Purely observational: never overwrite legacy physical anchor
+        // arrays, still used by contact repair in the old engine.
+        private final float[] sensorAx=new float[POINTS],sensorAy=new float[POINTS],
+            sensorNx=new float[POINTS],sensorNy=new float[POINTS];
         private final float[] nx=new float[POINTS],ny=new float[POINTS];
         private final float[] gx=new float[POINTS],gy=new float[POINTS];
         private final float[] fx=new float[POINTS],fy=new float[POINTS];
@@ -105,11 +109,16 @@ public final class Morphology {
         public float targetX(int i){return symbioteTargets?sx[i]:ax[i]+extension[i]*nx[i]-gx[i]*ny[i];}
         public float targetY(int i){return symbioteTargets?sy[i]:ay[i]+extension[i]*ny[i]+gx[i]*nx[i];}
         public boolean hasSymbioteMotorTargets(){return lastActuationValid&&symbioteTargets;}
+        public float sensorAnchorX(int i){return hasSymbioteMotorTargets()?sensorAx[i]:ax[i];}
+        public float sensorAnchorY(int i){return hasSymbioteMotorTargets()?sensorAy[i]:ay[i];}
+        public float sensorNormalX(int i){return hasSymbioteMotorTargets()?sensorNx[i]:nx[i];}
+        public float sensorNormalY(int i){return hasSymbioteMotorTargets()?sensorNy[i]:ny[i];}
         /** Read-only record of ACTUAL free-step cortex drive. Coordinates
          * refer to the pre-constraint material patch, never legacy spokes. */
         void symbioteMotorTarget(int i,float preX,float preY,float normalX,
                                  float normalY,float freeX,float freeY){
-            ax[i]=preX;ay[i]=preY;nx[i]=normalX;ny[i]=normalY;
+            sensorAx[i]=preX;sensorAy[i]=preY;
+            sensorNx[i]=normalX;sensorNy[i]=normalY;
             sx[i]=freeX;sy[i]=freeY;
             symbioteTargets=lastActuationValid=true;
         }
