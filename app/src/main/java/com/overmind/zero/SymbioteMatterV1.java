@@ -128,14 +128,16 @@ public final class SymbioteMatterV1 {
     }
     /**
      * A moderately extended patch must be able to pull material back even
-     * before it becomes an extreme filament. Preserve full tangential floor
+     * before it becomes an extreme filament. Preserve ordinary crawl footholds,
+     * which typically use milder contractions than a deliberate tip retract.
+     * Preserve full tangential floor
      * anchoring and NEVER release an actual obstacle hold. This is a passive
      * physical constitutive law, not a neural gait or food-directed impulse.
      */
     static float radialRetractionRelease(float radius,float extend,boolean obstacleHeld){
         if(obstacleHeld||!Float.isFinite(radius)||!Float.isFinite(extend))return 0f;
-        return clip((radius-(R+7f))/14f,0f,1f)*
-            clip((-extend-.45f)/.35f,0f,1f);
+        return clip((radius-(R+9f))/8f,0f,1f)*
+            clip((-extend-.83f)/.13f,0f,1f);
     }
     static float radialRetractionDrag(float traction,float release,float dt){
         return (float)Math.exp(-(1.8f+
@@ -484,10 +486,10 @@ public final class SymbioteMatterV1 {
             float preX=skin.x[i],preY=skin.y[i];
             float appliedVx=skin.vx[i]+fx[i]*dt;
             float appliedVy=skin.vy[i]+fy[i]*dt;
-            // OTA164: valid ordinary pseudopod retraction also needs radial
+            // OTA164: isolated strong pseudopod retraction needs radial
             // mobility. The original >R+32 gate never engaged on real ~43U
-            // extents. Release radial drag progressively from R+7 to R+21,
-            // ONLY during deliberate contraction of unheld material. Existing
+            // extents. Release radial drag progressively from R+9 to R+17
+            // ONLY under strong (> .83) contraction of unheld material. Existing
             // tangential traction is untouched; solid obstacle holds stay fixed.
             float release=radialRetractionRelease(rr,extend,
                 skin.gripHold[i]>=Morphology.GRIP_HOLD);
