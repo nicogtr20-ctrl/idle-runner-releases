@@ -171,6 +171,16 @@ public final class BrainToolsActivity extends Activity {
         line(memory,"Progressi obiettivi",go?goals.confirmed+" verificati":"In attesa di dati",WHITE);
         paragraph(memory,"La memoria può suggerire un'azione, ma non imporla. ZERO deve confermare con l'esperienza che una sequenza funziona; non riceve coordinate, regole di soluzione o premi per il semplice movimento.");
 
+        GateBehaviorMetrics gate=new GateBehaviorMetrics();
+        boolean gateLoaded=gate.restore(prefs.getString(GateBehaviorMetrics.KEY,""));
+        LinearLayout contacts=panel(body);
+        contacts.addView(label("05 / PRESE E CANCELLO",16,CYAN,true));
+        line(contacts,"Presa fisica mantenuta",gateLoaded?gate.heldFrames+" frame":"In attesa di dati",WHITE);
+        line(contacts,"Presa sui lati opposti",gateLoaded?gate.opposedFrames+" frame":"In attesa di dati",WHITE);
+        line(contacts,"Aperture / attraversamenti",gateLoaded?
+            gate.opened+" / "+gate.passages:"In attesa di dati",WHITE);
+        paragraph(contacts,"Misure di contatto reale: non sono abilità preprogrammate e non scelgono le azioni.");
+
         LinearLayout stats=panel(body);
         stats.addView(label("STATISTICHE DELLE VITE  ›",17,CYAN,true));
         paragraph(stats,"Vita attuale, medie delle ultime 25 vite complete, confronto fra 25 e 25 precedenti e storico complessivo. Casualità e ambiente possono influenzare le differenze.");
