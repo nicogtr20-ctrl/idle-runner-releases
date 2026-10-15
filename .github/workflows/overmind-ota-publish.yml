@@ -969,7 +969,7 @@ jobs:
           'SymbioteMatterV1Regression.java':'e825dc554a022d3d4fe45e39eadbfa631f705c8a',
           'SymbioteMotorHeadV1.java':'1ffcbe2558aa4f5e34c408704370e5552812ca6e',
           'SymbioteMatterV1.java':'e647f4d37eeaffc318965391c03724b7a5ec3016',
-          'RecurrentCoreV22.java':'acee037106b7fbe68c69659cfd54073cd270aebf',
+          'RecurrentCoreV22.java':'890fed9f421c771b78e1f55e3c8d056b2554e14b',
           'ObjectContinuityV21.java':'73835ed4c3b15eefcfa3d1c615d7769b6fa1fa46',
           'CausalSequenceV23.java':'329344e296ec342e0b85b965babbae15a3eb6f83',
           'CausalSequenceV23Regression.java':'e8ea1df2ae038dd9f7db44132df3e247e643b6ae',
@@ -998,13 +998,13 @@ jobs:
           'HabitatContinuity.java':'a8f8c5b51ae66f58b024167daa395c3e757ec9a6',
           'GripSurfaceComposition.java':'04847c6180ee638961d033e8b4ac01fd574dd312',
           'BrainToolsActivity.java':'4f7835554928c32c469b8c5dbeecaea7c3d3e3af',
-          'BrainStatsActivity.java':'46f62ee515d47f22df5ac2fe81bb6e3771a8e65b',
+          'BrainStatsActivity.java':'c33f52a2d9aca923b40febacfc01dcd808581aca',
           'StatisticsActivity.java':'94c65bc27b6bc0ccc1e0d1d9359ae572e85b95e1',
           'TelemetryActivity.java':'1c6d49cf0d78a6cb913be0708aebaaa43ab5aaaf',
           'Zero157DashboardRegression.java':'2ceb93a50bbb1269c872d4bcaa0699af581d9260',
           'Zero158EvolutionRegression.java':'795937b5ab393646ac644260825b268587992d92',
-          'NeurogenesisV22.java':'49123366519df6a70e7b73490d49e7b2bcf6df03',
-          'Zero159NeurogenesisRegression.java':'6bf27640f7cc0cb68182a19872bd644f09147436',
+          'NeurogenesisV22.java':'4f69eb30e32f0da16ec5921b73a6862d12c5c3c6',
+          'Zero159NeurogenesisRegression.java':'f1d464bf79e8ee06d6bb75c8f706c2b9292b8c72',
           'TemporalSkillBank.java':'00ace87c3f7e308649575acb68baa03168b1a9bb',
           'MortalityLearning.java':'106683098e58d03a1b901fd7293549ebd5bb6715',
           'ExperienceCredit.java':'fe8e0a1e5ac026596dd0b97c9eca29451796288b',
@@ -1406,6 +1406,8 @@ jobs:
           assert 'NeurogenesisV22.MAGIC' in core
           assert 'final int count=core.totalNeurons()' in atlas
           assert 'i>=core.initialNeurons()?VIOLET:TEAL' in atlas
+          assert 'core.grownNeuronRecurrentLink(j-original,i)' in atlas
+          assert 'public float recurrentLink(int newIndex,int originalIndex)' in growth
           assert 'metric(growth,"Neuroni attivi"' in atlas
           assert 'core.growthAttempts()' in atlas and 'core.addedNeurons()' in atlas
           assert 'RecurrentCoreV22.KEY,recurrentCore.encode()' in game
