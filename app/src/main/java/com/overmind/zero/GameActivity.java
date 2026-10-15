@@ -210,7 +210,8 @@ public final class GameActivity extends Activity {
             useSymbiote=prefs.getBoolean(SymbioteMatterV1.ENABLED,false);
             symMotor=useSymbiote?new SymbioteMotorHeadV1():null;
             if(symMotor!=null)
-                symMotor.restore(prefs.getString(SymbioteMotorHeadV1.KEY,""));
+                {symMotor.restore(prefs.getString(SymbioteMotorHeadV1.KEY,""));
+                 symMotor.restoreLocal(prefs.getString(SymbioteMotorHeadV1.LOCAL_KEY,""));}
             contactGeometry=new ContactGeometryForensics();
             if(!wasReset)
                 contactGeometry.restore(prefs.getString(ContactGeometryForensics.KEY,""));
@@ -599,6 +600,8 @@ public final class GameActivity extends Activity {
                .putString(MotorDurationV22.KEY,motorDuration.encode())
               .putString(SymbioteMotorHeadV1.KEY,
                   symMotor==null?"":symMotor.encode())
+              .putString(SymbioteMotorHeadV1.LOCAL_KEY,
+                  symMotor==null?"":symMotor.encodeLocal())
               .putString(SpatialPerception.KEY,spatialMap.encode())
               .putString(CausalExperiments.KEY,causalExperiments.encode())
               .putString(InstrumentalNavigation.KEY,navigation.encode())
