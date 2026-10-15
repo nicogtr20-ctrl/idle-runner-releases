@@ -75,6 +75,21 @@ public final class Zero154WholeSystemAudit {
             "The alleged overlap isn't real skin contact");
         System.out.println("AUDIT_CONFIRMED 4 center_only_spawn_clearance_allows_overlap");
 
-        System.out.println("AUDIT_ONLY PASS: reproduction of four deficits, no ZERO brain or production source changed");
+        // Memory/navigation: these also update learned value/valence on a
+        // raw event, before knowing whether the interval is a heldout sample.
+        TemporalWorkingMemory time=new TemporalWorkingMemory();
+        time.chosen(0);String t0=time.encode();time.energyOutcome(22);
+        require(!time.encode().equals(t0),
+                "Temporal value head no longer trains outside interval split");
+        InstrumentalNavigation navi=new InstrumentalNavigation();
+        require(navi.knownEffects()==0,"Non-virgin navigation fixture");
+        navi.energyOutcome(22,0,true);
+        require(navi.knownEffects()==1&&navi.signalValue(0)>0,
+                "Navigation valence no longer learns before heldout split");
+        require(diff(navi.visible(),new float[navi.visible().length])==0f,
+                "Navigation fixture unexpectedly observed light");
+        System.out.println("AUDIT_CONFIRMED 5 temporal_value_and_navigation_valence_update_pre_holdout");
+        System.out.println("AUDIT_CONFIRMED 6 physics_signature_passed_without_optical_validation");
+        System.out.println("AUDIT_ONLY PASS: reproduction of six deficiencies, no production source changed");
     }
 }
