@@ -270,7 +270,8 @@ jobs:
           assert 'surface.step(creature,lastAppliedMembrane,px,py,slice,' in app
           assert 'Morphology.collide(surface,object,dt)' in app
           assert 'float[] xx=surface.x, yy=surface.y;' in app
-          assert 'morph_brain_v07' in app and 'decision_brain_v05' in app
+          assert 'morph_brain_v07' in app and 'decision_brain_v05' not in app
+          assert 'RecurrentCoreV22.KEY,recurrentCore.encode()' in app
           assert 'hand_brain_v04' in app and 'putString("best"' in app
           assert 'CORTECCIA MUSCOLARE' in page
           world=Path('app/src/main/java/com/overmind/zero/UnknownWorld.java').read_text()
@@ -299,7 +300,7 @@ jobs:
           assert 'grab+=touch*w[LEGACY_PARAMS+HIDDEN+1]' in m
           assert 'if(surface.gripHold[i]>=Morphology.GRIP_HOLD&&' in a
           assert 'dualTouchNoGrip' in s and 'leftGrip>0&&rightGrip>0' in s
-          assert 'decision_brain_v05' in a and 'morph_brain_v07' in a
+          assert 'decision_brain_v05' not in a and 'morph_brain_v07' in a
           assert 'if(reserve<=0)' in a and 'resetEpisode();' in a
           print('Only actively commanding adhesive patches can drag gate; 74 learned weights preserved.')
           PY
@@ -319,7 +320,7 @@ jobs:
           assert 'contactCredit.adaptiveValue(senses,a)' in m and 'contactCredit.displaced(physicalEffect)' in m
           assert 'model[base+j]' in m and 'value[base+k]' in m
           assert 'core.restore(' in ui and 'SymbioteMotorHeadV1.KEY' in ui
-          assert 'morph_brain_v07' in a and 'decision_brain_v05' in a
+          assert 'morph_brain_v07' in a and 'decision_brain_v05' not in a
           print('ZERO-009 gates: no goal oracle, online sensory learning, old memory and mortal life preserved.')
           PY
       - name: Verify net exploration, persistent per-skill trial tracking and real comparison UI
