@@ -529,8 +529,8 @@ public final class SensorimotorMind {
             // All four previously computed but omitted body readouts feed
             // the SOLE 2.2 controller only through independently validated
             // heldout-confidence gates (zero when untrusted).
-            observedMeans[a]=nav+effect+object+seq+liveBodyEvidence(a)
-                +space+proprio+membrane+resistance+inner;
+            observedMeans[a]=nav+effect+object+seq+space
+                +proprio+membrane+resistance+inner;
         }
         float[] scores=activeCore.primaryScores(observedMeans);
         // Observe whether real proprioceptive evidence earned meaningful
