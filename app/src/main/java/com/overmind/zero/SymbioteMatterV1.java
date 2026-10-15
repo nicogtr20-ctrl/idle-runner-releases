@@ -52,6 +52,26 @@ public final class SymbioteMatterV1 {
                        ny=(float)Math.sin(i*TWO_PI/SURFACE);ll=1f;}
         out[0]=nx/ll;out[1]=ny/ll;
     }
+    /** A concave gel needs true outward normals, while ordinary convex
+     * material must preserve the already validated radial locomotor
+     * reaction. Smooth, local geometry-only adaptation; no heading/goal.
+     * Shared by the cortex proprioception and real physical solver.
+     */
+    static void actuatorDirectionAt(Morphology.Surface skin,int i,
+                                    float cx,float cy,float handedness,
+                                    float[] out){
+        normalAt(skin,i,cx,cy,handedness,out);
+        float dx=skin.x[i]-cx,dy=skin.y[i]-cy;
+        float radius=len(dx,dy);
+        if(radius<.001f)return;
+        float rx=dx/radius,ry=dy/radius;
+        float alignment=out[0]*rx+out[1]*ry;
+        float correction=clip((.55f-alignment)/.8f,0f,1f);
+        float ux=rx*(1f-correction)+out[0]*correction;
+        float uy=ry*(1f-correction)+out[1]*correction;
+        float mag=len(ux,uy);
+        if(mag>.001f){out[0]=ux/mag;out[1]=uy/mag;}
+    }
     /** Allocate distributed matter in deterministic concentric sample rings.
      * Initial matter coordinates are not permanent: no spoke constraints. */
     public void reset(MotorBrain.Body body,Morphology.Surface skin){
@@ -399,7 +419,7 @@ public final class SymbioteMatterV1 {
             if(rr<.00001f){dx=(float)Math.cos(i*TWO_PI/SURFACE);dy=(float)Math.sin(i*TWO_PI/SURFACE);rr=1;}
             // A centroid ray can point INWARD on the concave bays of a
             // live gel. Apply forces in the actual polygon's outward normal.
-            normalAt(skin,i,cx,cy,contourSign,physicalNormal);
+            actuatorDirectionAt(skin,i,cx,cy,contourSign,physicalNormal);
             float ux=physicalNormal[0],uy=physicalNormal[1];
             int sector=i*SECTORS/SURFACE;
             float extend=clip(cortex[sector*OUTPUTS],-1,1);
