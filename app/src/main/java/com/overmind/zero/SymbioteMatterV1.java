@@ -375,15 +375,21 @@ public final class SymbioteMatterV1 {
             // Local compression increases anchoring; extending cortex can
             // slide past it. Object-grip intention NEVER anchors open floor.
             float compression=Math.max(0f,-extend);
-            // OTA161: contact still resists slip more under compression,
-            // but must never lock the retracting muscle itself. The old
-            // near-static .95 friction erased almost all inward actuation,
-            // trapping extended arms and favoring permanently thin outlines.
-            float traction=clip(.12f+.90f*compression,0f,.78f);
-            float drag=(float)Math.exp(-(1.8f+28f*traction)*dt);
+            // OTA161 polarized substrate reaction: compressed tissue holds
+            // strongly against tangential slip, yet can still retract
+            // radially. A scalar friction coefficient had either locked
+            // the arm or eliminated the push-off reaction entirely.
+            // No preferred WORLD direction, rhythm or goal is injected.
+            float traction=clip(.12f+1.45f*compression,0f,.95f);
+            float slipDrag=(float)Math.exp(-(1.8f+66f*traction)*dt);
+            float retractDrag=(float)Math.exp(-(1.8f+
+                28f*clip(.12f+.90f*compression,0f,.78f))*dt);
             float preX=skin.x[i],preY=skin.y[i];
-            skin.vx[i]=clip((skin.vx[i]+fx[i]*dt)*drag,-140f,140f);
-            skin.vy[i]=clip((skin.vy[i]+fy[i]*dt)*drag,-140f,140f);
+            float freeVx=skin.vx[i]+fx[i]*dt,freeVy=skin.vy[i]+fy[i]*dt;
+            float normalSpeed=(freeVx*ux+freeVy*uy)*retractDrag;
+            float tangentSpeed=(-freeVx*uy+freeVy*ux)*slipDrag;
+            skin.vx[i]=clip(normalSpeed*ux-tangentSpeed*uy,-140f,140f);
+            skin.vy[i]=clip(normalSpeed*uy+tangentSpeed*ux,-140f,140f);
             float freeX=preX+skin.vx[i]*dt,freeY=preY+skin.vy[i]*dt;
             // Real pre-constraint cortical target, later compared with
             // achieved geometry AFTER density, shape and world collisions.
