@@ -347,6 +347,23 @@ public final class RecurrentCoreV22 {
     public void resumeLife(){pending=null;pendingAction=-1;}
     public long transitions(){return transitions;}
     public long replayUpdates(){return replays;}
+    /** Read-only trainable weights for the local parameter inspector.
+     * Order: dynamics, action-value, energy expectation, hazard expectation.
+     * No reference to mutable training storage is exposed.
+     */
+    public int parameterCount(){return dynamics.length+q.length+reward.length+risk.length;}
+    public float parameterAt(int index){
+        if(index<0||index>=parameterCount())throw new IndexOutOfBoundsException();
+        if(index<dynamics.length)return dynamics[index];
+        index-=dynamics.length;
+        if(index<q.length)return q[index];
+        index-=q.length;
+        if(index<reward.length)return reward[index];
+        index-=reward.length;
+        return risk[index];
+    }
+    public static int dynamicsParameters(){return A*F*HEAD;}
+    public static int headParameters(){return A*(Z+1);}
     public int replaySize(){return recent.size()+rare.size();}
     public long plannedChoices(){return modelChoices;}
     public int physicalReady(){int n=0;for(int a=0;a<A;a++)if(confidence(a)>0)n++;return n;}

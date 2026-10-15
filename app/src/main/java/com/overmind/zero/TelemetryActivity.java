@@ -63,22 +63,24 @@ public final class TelemetryActivity extends Activity {
         root.setOrientation(LinearLayout.VERTICAL);
         root.setPadding(dp(18),dp(30),dp(18),dp(24));scroll.addView(root);
         root.addView(text("CONDIVIDI DATI CON GPT",23,WHITE,true));
-        body(root,"ZERO 2.0 • osservazione passiva • GitHub privato");
+        body(root,"ZERO 2.2 • report del corpo attivo • GitHub privato");
         LinearLayout description=group(root);
         description.addView(text("Che cosa viene condiviso",16,CYAN,true));
-        body(description,"ZERO 2.0 analizza le esperienze REALI di ZERO ma NON decide i movimenti, non aggiunge energia e non cambia le leggi fisiche. Il cervello originale resta l\u0027unico a controllare il corpo.");
+        body(description,"Il cervello ricorrente ZERO 2.2 sceglie le azioni e la corteccia muscolare le traduce in contrazioni reali. L'esportazione legge una copia dell'ultimo salvataggio, non modifica l'apprendimento o la fisica.");
         body(description,"Insieme al profilo di gioco inviamo un riassunto dedicato: errori di previsione, affidabilita\u0027 contro il modello invariato, contatti energetici verificati, movimenti fisici, prese simultanee e motivi per cui il pianificatore si astiene. I dati grezzi dei 96 punti non vengono duplicati a ogni fotogramma.");
         body(description,"La copia del profilo di gioco ATTUALE: modelli neurali, "+
             "pesi motori, reti sensoriali, memorie, energie, vita e statistiche "+
             "storiche salvate. Include l'ultimo laboratorio A/B se disponibile "+
             "e la SCATOLA NERA degli ultimi 5 minuti simulati: sensi, azioni, "+
-            "contributi dei cervelli, scelte casuali e movimento effettivo. "+
+            "evidenza dei sensori, scelte esplorative e movimento effettivo. "+
             "Se ZERO e' morto, include anche la traccia congelata della "+
             "sua ultima vita, senza modificare l'apprendimento. "+
             "Include anche l'OSSERVATORE PRESA: confronto cancello/casse, "+
             "comandi dei punti, contatti, tenute e interruzioni fisiche, "+
             "senza cambiare i comportamenti di ZERO.");
-        body(description,"NON invia i 12 slot separati, nome/ID del telefono, "+
+        body(description,"Gli eventuali campi etichettati 2.0/2.1 sono archivi storici o diagnostici, NON altri cervelli attivi. "+
+            "Il rapporto potrebbe contenere dati storici rimasti nel profilo. "+
+            "NON invia i 12 slot separati, nome/ID del telefono, "+
             "account personali o credenziali. Non modifica mai il personaggio, "+
             "non avvia addestramento e non carica nulla automaticamente.");
         body(description,"I dati saranno salvati nel repository GitHub "+

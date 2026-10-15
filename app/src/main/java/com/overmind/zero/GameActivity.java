@@ -1956,17 +1956,17 @@ public final class GameActivity extends Activity {
             neonFrame(c,158,278,471,bottom,16);
             c.save();c.clipRect(164,283,465,bottom-8);
             text(c,"DATI TECNICI",174,303,12,TEAL,false);
-            text(c,"AZIONE "+(sensorMind.action%8+1)+"/8 • PRESA "+
-                (sensorMind.adhesion()>0?"ON":"OFF")+
-                " • ERRORE "+format(sensorMind.averagePredictionError),
+            text(c,"AZIONE 2.2 "+(sensorMind.action+1)+"/16 • DIREZ "+
+                (sensorMind.action%8+1)+"/8"+
+                " • ADESIONE "+(sensorMind.adhesion()>0?"ON":"OFF"),
                 174,324,9,0xffc3dee2,false);
             text(c,"URTI "+physicalContacts+" • DIST MAX "+(int)biggestDisplacement+
-                " U • PROVE "+handTrainer.attempts,174,341,9,MUTED,false);
-            text(c,"RICHIAMI "+episodic.replayed+" • MEMBRANA "+Morphology.POINTS+
-                " • EST "+(int)surface.peakExtension,174,357,9,MUTED,false);
+                " U • ESPERIENZE 2.2 "+recurrentCore.transitions(),174,341,9,MUTED,false);
+            text(c,"MEMBRANA "+Morphology.POINTS+" PUNTI • FLUIDO "+SymbioteMatterV1.INNER+
+                " • EST REALE "+(int)surface.peakExtension,174,357,9,MUTED,false);
             text(c,"PRESA E MANIPOLAZIONE",174,384,10,TEAL,false);
-            text(c,"PROVE "+shapeTrainer.gateAttempts+" • PRESE "+
-                (gripsEver+(chamber!=null?chamber.grasps:0)),174,403,9,GOLD,false);
+            text(c,"PRESE FISICHE "+(gripsEver+(chamber!=null?chamber.grasps:0))+
+                " • SETTORI MUSCOLO "+SymbioteMatterV1.SECTORS,174,403,9,GOLD,false);
             if(chamber!=null){
                 text(c,"PORTA "+(int)chamber.doorY+" U • DUE LATI "+
                     chamber.opposedContactFrames,174,421,9,MUTED,false);
@@ -1983,7 +1983,7 @@ public final class GameActivity extends Activity {
             text(c,(scarcity?"SCARSITA ATTIVA":"SCORTE NORMALI")+
                 " • MATERIALI "+shelter.placedCount(),174,515,9,MUTED,false);
             text(c,"ENERGIE "+energyEaten+" • STANZE "+chambersCleared+
-                " • TECNICHE "+gripBank.count(),174,531,9,MUTED,false);
+                " • SKILL 2.2 "+temporalSkillBank.stored(),174,531,9,MUTED,false);
             if(energyTotals.legacyPositive>0)
                 text(c,"POSITIVI STORICI NON DIVISIBILI "+
                     energyTotals.legacyPositive,174,547,9,GOLD,false);
@@ -2038,20 +2038,20 @@ public final class GameActivity extends Activity {
             smallChevron(c,419,top+32,true);
             String[] names={
                 "PARTITE E SALVATAGGI",
-                "ANALISI",
-                "STATISTICHE",
-                "CERVELLO • PARAMETRI",
-                "PROVE CORPOREE",
-                "PROVA STANZA",
+                "ANALISI CERVELLO 2.2",
+                "STATISTICHE VITE",
+                "PESI E PARAMETRI 2.2",
+                "LABORATORIO ISOLATO",
+                "ATTIVA STANZA",
                 "AGGIORNA APP"
             };
             String[] hints={
                 "Slot, carica, nuovo ZERO",
-                "Dati e apprendimento",
-                "Vite, record e andamento",
-                "Dettagli del cervello",
-                "Confronto fisico dei pesi",
-                "Ambiente e cancello",
+                "Memoria, sensi, affidabilita",
+                "Durata, eventi, medie 25 vite",
+                "Pesi reali: nucleo e muscoli",
+                "Confronto storico, non il corpo vivo",
+                "Ambiente e cancello fisico",
                 "Controlla la prossima OTA"
             };
             float first=top+78f,rowHeight=52f;
@@ -2222,6 +2222,10 @@ public final class GameActivity extends Activity {
                 case 5:
                     settingsExpanded=false;
                     if(chamber==null)activateChamber(true);
+                    else{
+                        updaterStatus="Stanza fisica gia attiva";
+                        updaterStatusUntil=uiTime+4f;
+                    }
                     break;
                 case 6:
                     updater.checkAndInstall();
