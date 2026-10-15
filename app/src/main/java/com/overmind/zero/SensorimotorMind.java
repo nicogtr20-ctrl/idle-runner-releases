@@ -38,6 +38,36 @@ public final class SensorimotorMind {
             executedMotor=motor;executedHand=hand;executedMembrane=membrane;
         }
     }
+    /**
+     * Six bounded proprioceptive efference projections from the muscle
+     * commands ACTUALLY applied to the 96 living cortex nodes. Previously
+     * the recurrent controller observed unused old motor/hand weight means.
+     * No external coordinates, entity labels or movement reward.
+     */
+    public synchronized void appliedSymbioteControls(float[] cortex){
+        if(cortex==null||cortex.length!=SymbioteMatterV1.SECTORS*SymbioteMatterV1.OUTPUTS)
+            return;
+        float radial=0f,anisX=0f,anisY=0f,lateral=0f,adhesion=0f,tension=0f;
+        for(int sector=0;sector<SymbioteMatterV1.SECTORS;sector++){
+            int k=sector*SymbioteMatterV1.OUTPUTS;
+            float r=Math.max(-1f,Math.min(1f,cortex[k]));
+            float t=Math.max(-1f,Math.min(1f,cortex[k+1]));
+            float g=Math.max(0f,Math.min(1f,cortex[k+2]));
+            float p=Math.max(-1f,Math.min(1f,cortex[k+3]));
+            if(!Float.isFinite(r)||!Float.isFinite(t)||
+               !Float.isFinite(g)||!Float.isFinite(p))return;
+            float a=(float)((sector+.5)*Math.PI*2/SymbioteMatterV1.SECTORS);
+            radial+=r;anisX+=r*(float)Math.cos(a);
+            anisY+=r*(float)Math.sin(a);
+            lateral+=t;adhesion+=g;tension+=p;
+        }
+        float inv=1f/SymbioteMatterV1.SECTORS;
+        executedControls=new float[]{radial*inv,anisX*inv,anisY*inv,
+            lateral*inv,adhesion*inv,tension*inv};
+        // Prevent a resumed/legacy motor-reference cache from masking
+        // changes in the actually executed cortex commands.
+        executedMotor=executedHand=executedMembrane=null;
+    }
     private void feedCore(float[] senses){
         if(activeCore!=null)activeCore.sense(senses,distributedBody==null?null:distributedBody.localMap(),
             spatial==null?null:spatial.eyeOrigins(),executedControls,spatial==null?null:spatial.ranges(),
