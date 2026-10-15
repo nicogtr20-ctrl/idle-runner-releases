@@ -2147,7 +2147,7 @@ public final class GameActivity extends Activity {
                         settingsExpanded=false;
                         save();
                         GameActivity.this.startActivity(new android.content.Intent(
-                            GameActivity.this,BrainToolsActivity.class));
+                            GameActivity.this,BrainStatsActivity.class));
                     }else if(x<301){
                         speed=speed==1?5:speed==5?20:1;
                         settingsExpanded=false;
@@ -2172,7 +2172,7 @@ public final class GameActivity extends Activity {
                 if(x<180){
                     save();
                     GameActivity.this.startActivity(new android.content.Intent(
-                        GameActivity.this,BrainToolsActivity.class));
+                        GameActivity.this,BrainStatsActivity.class));
                 }else if(x<300){
                     speed=speed==1?5:speed==5?20:1;
                 }else{
