@@ -754,12 +754,26 @@ public final class BrainStatsActivity extends Activity {
                 yy[i]=centerY+unit*py*.78f*perspective;
                 depth[i]=z;
             }
+            // Draw only REAL structural connections. The original 24
+            // recurrent units each use a neighbouring hidden unit (fixed
+            // .15 recurrence). Each grown neuron receives FOUR trainable
+            // recurrent inputs from original neurons 0,3,11,19.
+            int original=core.initialNeurons();
             for(int i=0;i<count;i++){
                 for(int j=i+1;j<count;j++){
-                    if((j-i!=3&&j-i!=8&&j-i!=13)||Math.abs(depth[j]-depth[i])>1.45f)continue;
-                    int alpha=(int)(34+28*(depth[i]+depth[j]+2)/4f);
-                    paint.setStyle(Paint.Style.STROKE);paint.setStrokeWidth(dp(.7f));
-                    paint.setColor(Color.argb(alpha,108,235,221));
+                    float link=0f;
+                    if(j<original&&(j==i+1||(i==0&&j==original-1)))
+                        link=.15f;
+                    else if(i<original&&j>=original)
+                        link=core.grownNeuronRecurrentLink(j-original,i);
+                    if(Math.abs(link)<.001f||
+                       Math.abs(depth[j]-depth[i])>1.65f)continue;
+                    int alpha=(int)(34+185f*Math.min(1f,Math.abs(link)/1.4f));
+                    paint.setStyle(Paint.Style.STROKE);
+                    paint.setStrokeWidth(dp(.55f+Math.min(1f,Math.abs(link))));
+                    int tint=j>=original?VIOLET:TEAL;
+                    paint.setColor(Color.argb(alpha,
+                        Color.red(tint),Color.green(tint),Color.blue(tint)));
                     canvas.drawLine(xx[i],yy[i],xx[j],yy[j],paint);
                 }
             }
