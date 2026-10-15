@@ -47,7 +47,7 @@ public final class BrainStatsActivity extends Activity {
     private GoalContinuity goals;
     private GateBehaviorMetrics gates;
     private LifeStatistics lives;
-    private boolean bLocal,bDuration,bCore,bMuscle,bProprio,bDistributed,bImpedance,bInner,
+    private boolean bCoordination,bLocal,bDuration,bCore,bMuscle,bProprio,bDistributed,bImpedance,bInner,
         bSpatial,bNavigation,bObjects,bCausal,bSequence,bTemporal,bSkills,bGoals,
         bGates,bLives;
     private long shownAt;
@@ -89,6 +89,7 @@ public final class BrainStatsActivity extends Activity {
         bCore=core.restore(prefs.getString(RecurrentCoreV22.KEY,""));
         bMuscle=muscle.restore(prefs.getString(SymbioteMotorHeadV1.KEY,""));
         bLocal=muscle.restoreLocal(prefs.getString(SymbioteMotorHeadV1.LOCAL_KEY,""));
+        bCoordination=muscle.restoreCoordination(prefs.getString(SymbioteCoordinationV162.KEY,""));
         bDuration=motorDuration.restore(prefs.getString(MotorDurationV22.KEY,""));
         bProprio=proprio.restore(prefs.getString(BodyProprioception.KEY,""));
         bDistributed=distributed.restore(prefs.getString(DistributedBodySense.KEY,""));
@@ -250,6 +251,7 @@ public final class BrainStatsActivity extends Activity {
             case "WEIGHTS_CORE":return "Parametri del nucleo";
             case "WEIGHTS_MOTOR":return "Pesi muscolari";
             case "WEIGHTS_LOCAL":return "Rete regionale corticale";
+            case "COORDINATION":return "Coordinazione sensomotoria";
             default:return id;
         }
     }
@@ -345,6 +347,9 @@ public final class BrainStatsActivity extends Activity {
                     " particelle interne e "+SymbioteMatterV1.SECTORS+" settori muscolari.");
                 tile(body,"CORTECCIA MUSCOLARE",bMuscle?num(muscle.trainedOutcomes())+
                     " aggiornamenti":"Nessun checkpoint muscolare",VIOLET,"MUSCLE");
+                tile(body,"COORDINAZIONE MOTORIA",bCoordination?
+                     num(muscle.coordination().trainedIntervals())+" intervalli fisici appresi":
+                     "Nuovo modello sul movimento reale",TEAL,"COORDINATION");
                 tile(body,"PLASTICITÀ LOCALE",bLocal?num(muscle.localTrainedOutcomes())+
                      " aggiornamenti • "+muscle.localParameterCount()+" connessioni":"Nuove connessioni a zero",TEAL,"MUSCLE");
                 tile(body,"DURATA DEL MOVIMENTO",bDuration?num(motorDuration.continuations())+
@@ -659,6 +664,8 @@ public final class BrainStatsActivity extends Activity {
                 weightPage(body,false);break;
             case "WEIGHTS_LOCAL":
                 localWeightPage(body);break;
+            case "COORDINATION":
+                detailCoordination(body);break;
         }
         tap(body,"‹  TORNA A "+sectionTitle(section),null,TEAL,()->{module="";render();});
     }
@@ -723,6 +730,8 @@ public final class BrainStatsActivity extends Activity {
         metric(c,"Connessioni regionali",muscle.localParameterCount()+"");
         metric(c,"Aggiornamenti regionali",bLocal?num(muscle.localTrainedOutcomes()):"0 • memoria nuova");
         metric(c,"Settori della membrana",SymbioteMatterV1.SECTORS+"");
+        metric(c,"Esiti di movimento osservati",num(muscle.coordination().intervals()));
+        metric(c,"Coordinazione allenata",num(muscle.coordination().trainedIntervals()));
         metric(c,"Comandi per settore",SymbioteMatterV1.OUTPUTS+"");
         if(bMuscle){
             metric(c,"Decisioni muscolari",num(muscle.decisionCount()));
@@ -732,6 +741,7 @@ public final class BrainStatsActivity extends Activity {
         note(c,"Il cervello sceglie l'azione; questa corteccia ne traduce gli effetti in spinte, tensione e adesione sul corpo.");
         tile(body,"ESPLORA 84 PESI", "Rete condivisa originale: dati invariati",TEAL,"WEIGHTS_MOTOR");
         tile(body,"ESPLORA 320 CONNESSIONI LOCALI", "Plasticità separata per settore e comando",VIOLET,"WEIGHTS_LOCAL");
+        tile(body,"COORDINAZIONE REALE", "Spinte antagoniste e movimenti eseguiti",TEAL,"COORDINATION");
     }
     private void weightPage(LinearLayout body,boolean brain){
         int total=brain?core.parameterCount():muscle.parameterCount();
@@ -762,6 +772,24 @@ public final class BrainStatsActivity extends Activity {
                 render();
             });
         }
+    }
+    private void detailCoordination(LinearLayout body){
+        LinearLayout c=panel(body,"COORDINAZIONE FISICA — ZERO 2.2",TEAL);
+        SymbioteCoordinationV162 k=muscle.coordination();
+        metric(c,"Dati salvati",bCoordination?"Sì • movimento reale":"Non ancora osservati");
+        metric(c,"Frame materiali verificati",num(k.frames()));
+        metric(c,"Intervalli fisici osservati",num(k.intervals()));
+        metric(c,"Intervalli allenati",num(k.trainedIntervals()));
+        metric(c,"Validazioni senza training",num(k.heldoutIntervals()));
+        if(k.intervals()>0){
+            metric(c,"Spinte nominali contrapposte",pct(k.cancellation()));
+            metric(c,"Realizzazione intenzione",String.format(Locale.ITALY,
+                "%+.1f%%",k.intentRealization()*100f));
+        }
+        note(c,"Spinte nominali contrapposte: confronto vettoriale dei 16 comandi, non prova che l'attrito sia sprecato. Direzione realizzata: proiezione misurata del baricentro sull'azione scelta dal cervello; valori negativi significano movimento contrario. Solo la corteccia muscolare locale apprende questo esito, MAI il valore del nucleo 2.2.");
+        for(int a=0;a<8;a++)if(k.actionSamples(a)>0)
+            metric(c,"Azione "+a+" • campioni",k.actionSamples(a)+
+                " • media "+String.format(Locale.ITALY,"%+.2f",k.actionBaseline(a)));
     }
     private void localWeightPage(LinearLayout body){
         int total=muscle.localParameterCount();

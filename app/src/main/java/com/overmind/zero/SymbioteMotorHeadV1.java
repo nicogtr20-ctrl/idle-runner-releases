@@ -21,6 +21,7 @@ public final class SymbioteMotorHeadV1 {
     private final float[] weights=new float[CHANNELS*FEATURE];
     private final float[] localWeights=new float[OUTPUTS*LOCAL_FEATURES];
     private final float[] localFeatures=new float[OUTPUTS*LOCAL_FEATURES];
+    private final SymbioteCoordinationV162 coordination=new SymbioteCoordinationV162();
     private int priorPhysicalAction=-1;
     private long localUpdates=0;
     private final float[] feature=new float[N*FEATURE],commands=new float[OUTPUTS];
@@ -173,7 +174,19 @@ public final class SymbioteMotorHeadV1 {
                 pending[at]=commands[at];
             }
         }
+        coordination.begin(action,sectorAngles);
     }
+    /** Real physical frame AFTER world contact and all solid collisions. */
+    public void observedPhysicalStep(float beforeX,float beforeY,
+                                     MotorBrain.Body now,Morphology.Surface skin){
+        if(now!=null&&skin!=null)
+            coordination.sample(beforeX,beforeY,now.cx,now.cy,commands);
+    }
+    public SymbioteCoordinationV162 coordination(){return coordination;}
+    public float observedNominalCancellation(){return coordination.cancellation();}
+    public float observedIntentRealization(){return coordination.intentRealization();}
+    public String encodeCoordination(){return coordination.encode();}
+    public boolean restoreCoordination(String data){return coordination.restore(data);}
     public float[] commands(){return commands;}
     /**
      * Only lived reserve gained/lost, real injury, and measured effort train
@@ -200,7 +213,7 @@ public final class SymbioteMotorHeadV1 {
         if(!Float.isFinite(actualContactEnergy)||!Float.isFinite(actualDamage)||
            !Float.isFinite(actualAmbientEnergyLoss)||!Float.isFinite(actualMotorEnergy)||
            actualDamage<0||actualAmbientEnergyLoss<0||actualMotorEnergy<0){
-            lastAction=-1;return;
+            lastAction=-1;coordination.resetLife();return;
         }
         float reward=clip(actualContactEnergy/35f-actualDamage/90f-
             actualAmbientEnergyLoss/35f-actualMotorEnergy/35f,-2,2);
@@ -238,9 +251,12 @@ public final class SymbioteMotorHeadV1 {
             meanReward=meanReward*.995f+reward*.005f;
             updates++;
         }
+        coordination.consequence(train,holdout,noise,pending,localFeatures,
+            localWeights,CHANNELS,LOCAL_FEATURES);
         lastAction=-1;
     }
     public void resetLife(){lastAction=-1;priorPhysicalAction=-1;
+        coordination.resetLife();
         Arrays.fill(commands,0);Arrays.fill(noise,0);}
     public void resumeLife(){resetLife();}
     /** Safe counters, sourced from the same authenticated saved cortex. */

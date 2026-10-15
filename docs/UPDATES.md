@@ -1,3 +1,13 @@
+## OTA162 — CANDIDATA: MOTOR COORDINATION, 15 ottobre 2026
+
+**Stato**: PR in preparazione, QA obbligatoria e successiva firma OTA NON ANCORA PUBBLICATA. Fino alla pubblicazione, OTA161 resta la release ufficiale. Report reale OTA161 `zero-telemetry/reports/20261015-202651-1411664defd37`: 81% di cambi di scelta tra decisioni adiacenti nell'ultima vita, 31% esplorazione, blackbox ~734U di percorso campionato ma ~63U di spostamento risultante; nuovi 320 pesi con media assoluta ~0.0000455, ~473 volte inferiore agli 84 originali. **Lentezza e antagonismo sono sospetti fondati, non ancora diagnosi certa di forze interne dai dati raccolti.**
+
+**Modifiche branch `fix/zero162-sensorimotor-coordination`**: `SymbioteCoordinationV162` registra veri frame del baricentro dopo fisica, box e collisioni, misura l'annullamento vettoriale NOMINALE dei comandi sui 16 settori e la realizzazione della direzione scelta solo dall'attivo cervello 2.2. Apprendimento locale di 320 pesi su segnale di controllo sensorimotorio misurato: solo azioni motorie 0-7, grip 8-15 esclusi, heldout non aggiorna nulla, niente direzione al cibo, nessun reward positivo di distanza in core. Limiti al gradiente, esclusione grandi salti anomali, modelli `smh1` e `cl161` preservati. Nuovo persistente `symbiote_coordination_v162` con validazione atomica, corretto reset membrana e autosave. UI **Corpo → Corteccia muscolare → Coordinazione reale** distingue opposizione nominale da efficacia, non spaccia parametri per neuroni.
+
+**Test**: `Zero162CoordinationRegression` con vera fisica `SymbioteMatterV1`, 640 step, movimento misurato, plasticità regionale e nessun credito alle prese/holdout/teleport, preserva ricordi e parametri vecchi; alla prima QA [run 38804260990](https://github.com/nicogtr20-ctrl/idle-runner-releases/actions/runs/38804260990) JVM+Android debug SUCCESS: netto ~21,26 U, indice opposizione NOMINALE ~0,786. Questo NON dimostra ancora miglioramento dell'azione autonoma sul telefono: misurare con nuovi report, preferibilmente 25+25 vite, NETTO/VIA, blu, episodi e metrica coordinazione.
+
+**Riferimento completo**: `docs/ZERO_OTA162_MOTOR_COORDINATION_AUDIT.md`. **Non disinstallare né azzerare ZERO**. OTA161 ufficiale firmata, OTA162 disponibile solo dopo publisher firmato e verifica pubblica SHA256.
+
 ## ZERO OTA161 — corpo fluido e plasticità regionale (CANDIDATO, NON FIRMATO)
 
 **Stato al 15 ottobre 2026:** ramo `fix/zero161-symbiote-physics-capability`, [PR #71](https://github.com/nicogtr20-ctrl/idle-runner-releases/pull/71). OTA160 **è stata firmata e pubblicata** (1160): manifest `updater/public/latest.json`. OTA161 è distinta, e NON sarà disponibile con AGGIORNA finché il publisher firmato non termina con successo.
