@@ -1299,6 +1299,41 @@ jobs:
           assert 'previousGripContactSession' in tel
           print('OTA155: active-cortex causal attribution, confidence body advice, rearm, shape intent and telemetry gates PASS')
           PY
+      - name: OTA157 genuine 2.2 menus and read-only model inspection gate
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          base=Path('app/src/main/java/com/overmind/zero')
+          analysis=(base/'BrainToolsActivity.java').read_text()
+          params=(base/'BrainStatsActivity.java').read_text()
+          game=(base/'GameActivity.java').read_text()
+          stats=(base/'StatisticsActivity.java').read_text()
+          report=(base/'TelemetryActivity.java').read_text()
+          core=(base/'RecurrentCoreV22.java').read_text()
+          muscle=(base/'SymbioteMotorHeadV1.java').read_text()
+          shown=analysis[analysis.index('void showPage()'):analysis.index('void resetButton(')]
+          assert 'core.summary()' in shown and 'muscle.summary()' in shown
+          assert 'RecurrentCoreV22.KEY' in shown and 'SymbioteMotorHeadV1.KEY' in shown
+          assert 'TemporalSkillBank' in shown and 'GoalContinuity' in shown
+          assert 'ResetDomains.WORLD' in shown and 'ResetDomains.MEMBRANE' in shown
+          assert 'ResetDomains.ALL,true' in shown and 'confirmReset(' in analysis
+          assert 'new Intent(this,TelemetryActivity.class)' in shown
+          for obsolete in ('UnifiedCognitionV21','UnifiedArbiterV21',
+                           'FuturePlannerV20','PredictiveWorldV20',
+                           'OnlineBodyLearning','GripSkillBank'):
+              assert obsolete not in shown,obsolete
+          assert 'core.parameterAt(i)' in params and 'cortex.parameterAt(i)' in params
+          assert 'core.parameterCount()' in params and 'cortex.parameterCount()' in params
+          assert 'DecisionBrain' not in params and 'movementStart' not in params
+          assert 'public float parameterAt(int index)' in core
+          assert 'public float parameterAt(int index)' in muscle
+          assert 'PESI E PARAMETRI 2.2' in game
+          assert 'sensorMind.action+1' in game and 'recurrentCore.transitions()' in game
+          assert 'MEDIE OSSERVATE' in stats and 'TENDENZA EVOLUTIVA' not in stats
+          assert 'activeSymbiote&&m==LifeStatistics.RECALL' in stats
+          assert 'Il cervello ricorrente ZERO 2.2' in report
+          print('OTA157 verified: only living brain data in menu, all buttons wired, safe resets, weight inspector read-only')
+          PY
       - name: Assemble stable signed APK
         if: env.signing_ready == 'true'
         run: gradle --no-daemon assembleRelease
