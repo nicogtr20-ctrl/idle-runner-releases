@@ -670,7 +670,7 @@ jobs:
           assert '.putString(LifeStatistics.KEY,lifeStats.encode())' in g
           assert 'ResetDomains.PROPRIOCEPTION' in a
           assert 'case PROPRIOCEPTION:return new String[]{BodyProprioception.KEY,DistributedBodySense.KEY,LocalImpedanceSense.KEY,FluidInteroceptionV1.KEY};' in reset
-          assert 'proprio.parameterCount()' in stats
+          assert 'case "PROPRIO":' in stats and 'BodyProprioception.PARAMETERS' in stats
           assert 'lifeStats.tick(dt);' in g and (
             'for(int i=0;i<speed;i++)' in g or all(x in g for x in (
              'for(int i=0;i<frameSteps;i++)',
@@ -718,7 +718,7 @@ jobs:
           assert '.putString(LifeStatistics.KEY,lifeStats.encode())' in g
           assert 'ResetDomains.SPATIAL' in ui and 'SpatialMapView extends View' in ui
           assert 'case SPATIAL:return new String[]{SpatialPerception.KEY,PerceptualAssociationsV20.KEY,ObjectExperienceV20.KEY,ObjectContinuityV21.KEY};' in reset
-          assert 'spatial.parameterCount()' in brain
+          assert 'case "SPACE":' in brain and 'SpatialPerception.PARAMETERS' in brain
           assert 'SaveProfileCodec.encode(capture())' in slots and 'SLOTS=12' in slots
           assert "applicationId 'com.overmind.zero.ota'" in gradle
           assert '0.11.6-ota' in gradle
@@ -773,7 +773,7 @@ jobs:
           assert '.putString(LifeStatistics.KEY,lifeStats.encode())' in g
           assert 'case CAUSAL:return new String[]{CausalExperiments.KEY,PhysicalConsequenceV20.KEY,CausalSequenceV23.KEY};' in reset
           assert 'ResetDomains.CAUSAL' in analyze
-          assert 'causal.learnedParameters()' in stats
+          assert 'case "CAUSE":' in stats and 'causal.experiments' in stats
           assert 'SaveProfileCodec.encode(capture())' in slots and 'SLOTS=12' in slots
           assert '0.11.6-ota' in gradle and "applicationId 'com.overmind.zero.ota'" in gradle
           assert 'lifeStats.tick(dt)' in g and (
@@ -818,7 +818,7 @@ jobs:
           assert 'float projection=(float)(dx*Math.cos(angle)+dy*Math.sin(angle))' in nav
           assert 'case NAVIGATION:return new String[]{InstrumentalNavigation.KEY};' in reset
           assert 'ResetDomains.NAVIGATION' in ui
-          assert 'nav.parameterCount()' in brain
+          assert 'case "NAV":' in brain and 'navigation.verifiedActions()' in brain
           assert 'SaveProfileCodec.encode(capture())' in slots and 'SLOTS=12' in slots
           assert 'public static final int S=26;' in mind
           for key in ['CausalExperiments.KEY','SpatialPerception.KEY','BodyProprioception.KEY']:
@@ -1342,6 +1342,9 @@ jobs:
           assert 'Il cervello ricorrente ZERO 2.2' in report
           print('OTA157 verified: only living brain data in menu, all buttons wired, safe resets, weight inspector read-only')
           PY
+      # Nested REAL 2.2 module pages replace the old flat 0.10.x source
+      # layout. The four original sensing-model safety assertions remain
+      # in their historic Python gate steps; they now inspect the new atlas.
       - name: OTA158 complete neural atlas, true skills and evolution verification
         run: |
           python3 - <<'PY'
