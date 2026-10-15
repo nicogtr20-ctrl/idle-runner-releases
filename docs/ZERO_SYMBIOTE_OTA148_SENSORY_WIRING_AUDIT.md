@@ -1,0 +1,49 @@
+# ZERO Symbiote OTA148 — sensori, propriocezione e circuito cervello-corpo: audit statico
+Data: 15 ottobre 2026, Europe/Rome. **Risultato:** sistema PARZIALMENTE integrato. Questa è una verifica del *codice sorgente OTA148* e dei test/salvataggi disponibili, non una nuova sperimentazione sensoriale OTA148 su telefono. **Nessuna correzione software applicata in questo audit.**
+
+## Moduli e dati controllati
+Codice Android sul ramo `feature/zero22-active-recurrent-ota117`, con OTA148 integrata. File:
+`SymbioteMatterV1.java`, `GameActivity.java`, `SensorimotorMind.java`, `RecurrentCoreV22.java`, `SymbioteMotorHeadV1.java`, `Morphology.java`, `BodyProprioception.java`, `DistributedBodySense.java`, `LocalImpedanceSense.java`, `SpatialPerception.java`, `MaterialGeometry.java`, `ShelterEcology.java`, `GripSurfaceComposition.java`, `GameSceneSnapshot.java`.
+Ultimi export telemetrici visti: `zero-telemetry/current.json` report `20261014-234158-fd2799d5a250`, acquisito **PRIMA della OTA148**; NON prova lo stato live sensoriale dopo l'aggiornamento. Utente ora riferisce direttamente movimento positivo con OTA148.
+
+## Catena attiva e verificata
+1. `GameActivity` quando `useSymbiote` esegue `symMatter.step(creature,surface,symMotor.commands(),slice)`. Il corpo aggiorna 96 coordinate membrane + 74 masse fluide (10 vecchie particelle + 64 nuove).
+2. `symMatter.observeBody` calcola `body.cx,cy,cvx,cvy` usando le **170 particelle**, metà peso alla membrana, metà alle 74 masse interne; richiamato anche dopo proiezioni di collisione e scene restaurate. Sensore globale di posizione/velocità: **collegato**.
+3. Al confine sensoriale di ~0.65 secondi simulati, dopo collisioni e meteo, `Senses.read(body,surface,...,reserve)` produce 26 canali (energia, velocità centro, estensione, contatto/presa, 8 raggi di prossimità con occhi sul corpo, colori ottici).
+4. `BodyProprioception.sense`: 48 caratteristiche di 8 settori della vera membrana, tra cui touch, grip, comando extension, speed radiale e raggi massimi/minimi. **Campionamento reale**. La predizione appresa usa il proprio modulo; i 48 canali non sono però passati direttamente al nucleo decisionale 2.2.
+5. `DistributedBodySense.sense`: 96 x 9 caratteristiche reali con touch, intenzione motor/grip, grip confermato, velocità radiale/tangenziale rispetto al baricentro, forma, tensione locale, occhi ottici di corto raggio. La mappa 864D viene salvata/aggiornata; `RecurrentCoreV22.sense` utilizza **solo 5** dei 9 canali, compressi in 16 settori (TOUCH, GRIP_HELD, SHAPE, STRAIN, OPTIC). `SymbioteMotorHeadV1.chosen` usa tutte e 9 le famiglie ma anch'esse mediate per 6 punti in 16 settori: il cervello/attuazione non dispongono di 96 controlli indipendenti.
+6. `SpatialPerception.observeEnvironment(body,skin,...)` usa `MaterialGeometry.eye` per 16 raggi dalla periferia reale e odometria dal baricentro della massa; il nucleo 2.2 riceve profondità/offset ottici. Visione esterna: **collegata**.
+7. I contatti solidi e le prese passano da fisica su particelle, gripHold composto da proprietari di veri solidi e `GripSurfaceComposition.compose`. Le collisioni con energia usano `MaterialGeometry.touches` (membrana vera e masse interne vecchie) e `SensorimotorMind.contactOutcome`. Energia reale e conseguenze: **collegate**.
+
+## Problemi di integrazione dimostrabili da lettura del codice
+
+### P1 — LocalImpedanceSense legge un target del vecchio motore che non esiste nel Symbiote (CRITICO)
+`LocalImpedanceSense.sense` restituisce 960 zeri se `!tissue.hasValidMotorTargets()`. `Morphology.Surface.reset` imposta `lastActuationValid=false`; soltanto `Morphology.Surface.step` imposta `lastActuationValid=true`. **Ma nel ramo `useSymbiote`, `GameActivity` chiama esclusivamente `SymbioteMatterV1.step`, non `Surface.step`**, e `SymbioteMatterV1.step` non popola gli anchor/target `ax/ay/nx/ny/gx/gy`. Per un Symbiote nato o ricaricato, la propriocezione di **mismatch intenzione/effetto, tessuto resistente, allungamento e compressione di 960 feature** è quindi sempre nulla nel modulo `LocalImpedanceSense`. Significa che ZERO *non* percepisce correttamente quando una pendice spinge senza riuscire a deformarsi. Correzione futura: creare target e normals reali derivati dal nuovo corpo/cortex, misurati sullo stesso intervallo fisico, preservando schema o versione; non fingere target del vecchio scheletro.
+
+### P2 — L'ingresso "quali comandi HO ESEGUITO" del cervello 2.2 usa pesi di motoristica non più applicata (CRITICO)
+In `GameActivity` a ogni frame, `sensorMind.appliedControls(lastAppliedMotor,lastAppliedHand,lastAppliedMembrane)` deriva una proiezione `RecurrentCoreV22.controlState()` su sei dimensioni e `SensorimotorMind.feedCore` inserisce queste nei canali 138–143. Ma `useSymbiote` **ignora quei vecchi tre controllori** e applica soltanto `symMotor.commands()`, i 64 output reali della corteccia. Lo stato neurale causa/effetto riceve quindi una falsa efferenza: parametri di un motore che ZERO non ha usato. Da correggere con sei statistiche fisiche normalizzate/riproducibili calcolate dagli output REALMENTE applicati, senza modificare le altre 158 feature o reset dei pesi.
+
+### P3 — Canale estensione globale inattivo e contatori shape obsoleti (IMPORTANTE)
+`SensorimotorMind.Senses.read()` imposta `v[3]=skin.peakExtension/110`. `skin.peakExtension`, `maxExtension`, `totalEffort`, `stretchedPoints`, `t` sono aggiornati dal vecchio `Morphology.Surface.step`, ma non da `SymbioteMatterV1.step`. Per un nuovo Symbiote `peakExtension` resta zero nonostante `skin.extension[i]` e raggi reali siano diversi da zero. Anche il valore di HUD `EST` e possibili diagnostiche/valutazioni sul vecchio motore sono inattendibili. Scegliere una definizione fisica consistente: estensione realizzata = variazione fisica della membrana rispetto a geometria di riferimento, distinguere comando `skin.extension` da deformazione effettivamente ottenuta. Non fabbricare progresso.
+
+### P4 — Impulsi tattili da collisione/vento non decadono in Symbiote (IMPORTANTE)
+`Morphology.collide` e `ShelterEcology.step` scrivono `surface.touchPulse`. Soltanto `Morphology.Surface.step` li moltiplica per `exp(-2.5*dt)`; la fisica Symbiote salta `Surface.step` e non esegue un equivalente. Perciò un colpo/vento una volta rilevato può rimanere nel campo `touchPulse` per l'intera vita, creando falsa sensazione di tocco persistente in `BodyProprioception` e `DistributedBodySense`. Correzione: decadimento per ogni passo di tempo simulato nella sola modalità Symbiote, **prima** che vengano aggiunti nuovi impatti; mantenere separati i veri hold dei solidi e il vento.
+
+### P5 — Il cervello vede la superficie, non lo stato interno del fluido (LIMITAZIONE ARCHITETTURALE)
+I 74 moti delle particelle interne modificano indirettamente il baricentro, ma non sono letti localmente da `BodyProprioception`, `DistributedBodySense` né dal `RecurrentCoreV22`. Mancano pressione/densità interna, shear, distribuzione di massa, impulsi interni e deformazione relativa alla corteccia. Il sistema vede forma/strain esterni ma non tutta la meccanica del proprio materiale fluido. È una limitazione scientifica, non un bug del collegamento esistente. Aggiungere sensori interocettivi fisicamente misurati solo dopo aver stabilizzato P1–P4 e mantenendo incompatibilità/normalizzazione esplicita.
+
+### P6 — Campionamento ogni ~0.65s simulati (LIMITAZIONE)
+`SensorimotorMind.observationDue` effettua scelte del nucleo a circa 0.65s; il motore/cortex mantiene il comando fra queste scelte, mentre `SymbioteMatterV1.step` evolve a ogni frame fisico. Un contatto o una deformazione più breve può non apparire come evento nello stato decisionale (anche se osservatori `sampleGripPhysicsFrame` tengono certi contatori). Valutare un sensore di picchi/eventi locali fisici accumulato e letto al confine, NON necessariamente aumentare artificialmente la frequenza delle scelte o aggiungere un gait.
+
+### P7 — Danno/integrità non è un interocettore dedicato del nucleo (LIMITAZIONE)
+`ShelterEcology.integrity` varia con la copertura al vento e produce `energyLoss`; il core legge `reserve` e touchPulse di esposizione (attualmente difettoso), e un modulo `mortality` riceve il danno ambientale. Ma non riceve un valore esplicito della **integrità tissutale**; dunque non dispone della percezione diretta del danno distribuito al tessuto, solo segnali indiretti. L'energia/stimolo negativo è collegata al feedback, ma la localizzazione del danno non è sensorialmente completa.
+
+## Osservazione epistemica chiave
+Il miglioramento visibile dopo OTA148 dimostra che la membrana sa muoversi ora, non che ZERO possa comprendere resistenze, controlli eseguiti o tutto il volume di materia. Non classificare P1–P4 come "deve imparare": sono difetti di segnale che impediscono un apprendimento onesto. **Nessun premio al movimento**.
+
+## Verifiche automatiche richieste PR successiva
+1. Con lo stesso cervello e salvaripristino, perturbare una membrana e rilevare dati reali nonzero e localizzati in `LocalImpedanceSense` e nessun input falso.
+2. In varianti di controllo corticali diversi ma stesso archivio legacy, i 6 ingressi d'efferenza 2.2 devono cambiare con `symMotor.commands()`, e non con pesi legacy inutilizzati; in modalità vecchio corpo la semantica deve restare invariata.
+3. `v[3]` e HUD EST devono corrispondere alla forma realmente raggiunta, distinguendo il comando dal risultato dopo vincoli/collisioni.
+4. Impulso di vento/urto con assenza di stimoli successivi deve decadere esponenzialmente con il tempo simulato in Symbiote. Contatto reale con solidi resta confinato al suo `touchSense/gripHold`.
+5. Confermare salvataggi e migrabilità, test runtime JVM e build Android firmata OTA, confronto corpo vecchio/nuovo, feedback e train/heldout senza premiare traslazione.
