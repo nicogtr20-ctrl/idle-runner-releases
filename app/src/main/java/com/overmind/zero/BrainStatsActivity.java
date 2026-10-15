@@ -29,7 +29,7 @@ public final class BrainStatsActivity extends Activity {
     private static final int PAGE=12;
     private SharedPreferences prefs;
     private String section="HOME", module="";
-    private int coreOffset=0,motorOffset=0;
+    private int coreOffset=0,motorOffset=0,selectedSkill=0;
     private RecurrentCoreV22 core;
     private SymbioteMotorHeadV1 muscle;
     private BodyProprioception proprio;
@@ -219,6 +219,7 @@ public final class BrainStatsActivity extends Activity {
             case "MUSCLE":return "Corteccia muscolare";
             case "TEMP":return "Memoria temporale";
             case "SKILLS":return "Abilità consolidate";
+            case "SKILL_ENTRY":return "Sequenza #"+(selectedSkill+1);
             case "GOALS":return "Continuità degli obiettivi";
             case "CAUSE":return "Esperimenti causa-effetto";
             case "SEQUENCE":return "Sequenze causali";
@@ -326,6 +327,7 @@ public final class BrainStatsActivity extends Activity {
                     " affidabilità":"In attesa di dati",BLUE,"FLUID");
                 tile(body,"TATTO / PRESE",bGates?num(gates.heldFrames)+
                     " frame di presa":"In attesa di dati",ORANGE,"GATES");
+                tile(body,"VISTA DALLA MEMBRANA","Luce rilevata dal corpo reale",TEAL,"VISION");
                 break;
             case "PERCEPTION":
                 note(body,"I sensi fisici osservano il mondo: nessun obiettivo nascosto è comunicato al cervello.");
@@ -369,7 +371,18 @@ public final class BrainStatsActivity extends Activity {
         metric(k,"Esecuzioni concluse",absent(bSkills,num(skills.completions)));
         metric(k,"Ripetizioni fallite",absent(bSkills,num(skills.failedReplays)));
         note(k,"Una sequenza è una capacità candidata soltanto dopo conferme ripetute. Può essere suggerita al 2.2, mai eseguita al suo posto.");
-        tile(body,"ESPLORA LE SEQUENZE","Dettagli sulla loro affidabilità e memoria",VIOLET,"SKILLS");
+        if(bSkills&&skills.stored()>0){
+            add(body,label("SEQUENZE SCOPERTE",17,GOLD,true),20);
+            for(int i=0;i<skills.stored();i++){
+                final int index=i;
+                tap(body,"SEQUENZA #"+(i+1),
+                    skills.skillLengthAt(i)+" azioni • "+skills.skillConfirmationsAt(i)+
+                    " conferme • fiducia "+pct(skills.skillConfidenceAt(i)),GOLD,()->{
+                        selectedSkill=index;module="SKILL_ENTRY";render();
+                    });
+            }
+        }else note(body,"ZERO non ha ancora conservato sequenze temporali nel salvataggio.");
+        tile(body,"RIEPILOGO ABILITÀ","Consolidamento, esecuzioni ed errori",VIOLET,"SKILLS");
         LinearLayout motor=panel(body,"COMPETENZE MOTORIE",TEAL);
         metric(motor,"Azioni con movimento verificato",bNavigation?
             navigation.verifiedActions()+" / 16":"Non disponibile");
@@ -562,6 +575,27 @@ public final class BrainStatsActivity extends Activity {
                     metric(gate,"Attraversamenti parziali",num(gates.partialEntrances));
                 }
                 note(gate,"Sono contatti misurati, non miglioramenti garantiti.");
+                break;
+            case "SKILL_ENTRY":
+                LinearLayout entry=panel(body,"DETTAGLIO DELLA SEQUENZA APPRESA",GOLD);
+                if(!bSkills||selectedSkill<0||selectedSkill>=skills.stored()){
+                    note(entry,"La sequenza non è presente nel checkpoint.");
+                }else{
+                    metric(entry,"Numero", "#"+(selectedSkill+1));
+                    metric(entry,"Lunghezza",num(skills.skillLengthAt(selectedSkill))+" azioni");
+                    metric(entry,"Conferme",num(skills.skillConfirmationsAt(selectedSkill)));
+                    metric(entry,"Fallimenti",num(skills.skillFailuresAt(selectedSkill)));
+                    metric(entry,"Completamenti",num(skills.skillCompletionsAt(selectedSkill)));
+                    metric(entry,"Affidabilità",pct(skills.skillConfidenceAt(selectedSkill)));
+                    int[] actions=skills.skillActionsAt(selectedSkill);
+                    StringBuilder chain=new StringBuilder();
+                    for(int i=0;i<actions.length;i++){
+                        if(i>0)chain.append("  →  ");
+                        chain.append("A").append(actions[i]+1);
+                    }
+                    line(entry,"Sequenza delle azioni",chain.toString(),
+                        "Le A1–A16 sono intenzioni apprese; il modello decide sempre se seguirle.",TEAL);
+                }
                 break;
             case "SKILLS":
                 LinearLayout k=panel(body,"SEQUENZE DEL 2.2",GOLD);
