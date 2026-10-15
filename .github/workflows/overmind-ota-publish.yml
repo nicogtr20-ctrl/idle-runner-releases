@@ -234,11 +234,16 @@ jobs:
           assert 'BrainStatsActivity.class' in game
           assert 'android:name="com.overmind.zero.BrainStatsActivity"' in manifest
           assert 'core.parameterAt(i)' in ui and 'muscle.parameterAt(i)' in ui
-          assert 'PARAMETRI' in ui and 'EVOLUZIONE' in ui and 'ABILITA' in ui
+          # The old "ABILITA" static placeholder has been replaced by the
+          # actual, navigable 2.2 skill explorer (Unicode Italian label).
+          assert 'PARAMETRI' in ui and 'EVOLUZIONE' in ui and 'ABILITÀ' in ui
+          assert 'skills.skillActionsAt(selectedSkill)' in ui
+          assert 'void skillPage(' in ui and 'void evolutionPage(' in ui
+          assert 'class NeuralView extends View' in ui
           assert 'decision_brain_v05' in game and 'hand_brain_v04' in game
           assert 'growthAttempts' in brain and 'growthAccepted' in brain
           assert 'if(parts.length>0&&"v1".equals(parts[0]))' in brain
-          print('ZERO-006 signed release gate passed: migration, real weight sheet, growth')
+          print('ZERO-006 signed release gate passed: isolated legacy migration, real 2.2 weights, navigable skills/evolution')
           PY
       - name: Verify 96-point physical grip and finite supplies in signed APK
         run: |
