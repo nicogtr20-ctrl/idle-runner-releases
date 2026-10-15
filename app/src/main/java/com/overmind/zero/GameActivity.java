@@ -211,7 +211,8 @@ public final class GameActivity extends Activity {
             symMotor=useSymbiote?new SymbioteMotorHeadV1():null;
             if(symMotor!=null)
                 {symMotor.restore(prefs.getString(SymbioteMotorHeadV1.KEY,""));
-                 symMotor.restoreLocal(prefs.getString(SymbioteMotorHeadV1.LOCAL_KEY,""));}
+                 symMotor.restoreLocal(prefs.getString(SymbioteMotorHeadV1.LOCAL_KEY,""));
+                 symMotor.restoreCoordination(prefs.getString(SymbioteCoordinationV162.KEY,""));}
             contactGeometry=new ContactGeometryForensics();
             if(!wasReset)
                 contactGeometry.restore(prefs.getString(ContactGeometryForensics.KEY,""));
@@ -602,6 +603,8 @@ public final class GameActivity extends Activity {
                   symMotor==null?"":symMotor.encode())
               .putString(SymbioteMotorHeadV1.LOCAL_KEY,
                   symMotor==null?"":symMotor.encodeLocal())
+              .putString(SymbioteCoordinationV162.KEY,
+                  symMotor==null?"":symMotor.encodeCoordination())
               .putString(SpatialPerception.KEY,spatialMap.encode())
               .putString(CausalExperiments.KEY,causalExperiments.encode())
               .putString(InstrumentalNavigation.KEY,navigation.encode())
@@ -1312,6 +1315,11 @@ public final class GameActivity extends Activity {
                         nextChamber=elapsedLife+40;
                         save();
                     }
+                    // OTA162: one cheap actual motor outcome per completed
+                    // material frame, after box/door collisions and object motion.
+                    // No new physical force or action chooser. Exclude respawns.
+                    if(lifeStamp==episode&&useSymbiote&&symMotor!=null)
+                        symMotor.observedPhysicalStep(oldCoreX,oldCoreY,creature,surface);
                     // The journal observes the lived world, never suggests a
                     // destination to ZERO. Do not count death/respawn as travel.
                     if(lifeStamp==episode){
