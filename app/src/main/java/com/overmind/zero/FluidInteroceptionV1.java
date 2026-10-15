@@ -119,7 +119,10 @@ public final class FluidInteroceptionV1 {
                     float length2=ex*ex+ey*ey;
                     float t=length2>1e-6f?clip((dx*ex+dy*ey)/length2,0f,1f):0f;
                     float fx=dx-ex*t,fy=dy-ey*t,d2=fx*fx+fy*fy;
-                    if(Float.isFinite(d2)&&d2<best){
+                    // Stable tie-breaking by physical material index:
+                    // nearly equidistant segments around the liquid centre
+                    // must not remap during a rigid world rotation.
+                    if(Float.isFinite(d2)&&d2<best-1e-3f){
                         best=d2;
                         sector=k/(Morphology.POINTS/SECTORS);
                     }
