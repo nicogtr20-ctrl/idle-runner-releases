@@ -15,6 +15,7 @@ import java.util.Locale;
 final class GripContactObserver {
     static final String PREFS="zero_grip_observer_v1169";
     static final String KEY="report";
+    static final String PREVIOUS_SESSION="previous_session_report";
     private static final int MAX_SAMPLES=190;
     private static final float SAMPLE_INTERVAL=.80f;
     private static final float TOUCH_MARGIN=4f;
