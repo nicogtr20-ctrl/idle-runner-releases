@@ -874,6 +874,9 @@ jobs:
           from pathlib import Path
           from hashlib import sha1
           root=Path('app/src/main/java/com/overmind/zero')
+          # OTA151: newly measured all 74 inner liquid parcels with 7 channels,
+          # learned action consequences and motor-head zero-effect migration.
+          # All 6 changed/new reviewed blobs pinned, no signing or QA waiver.
           # OTA150: make confidence-validated, actually learned proprioceptive
           # evidence actionable within the SOLE recurrent 2.2 ranking.
           # Only two tested source blobs updated, all other gates active.
@@ -893,27 +896,29 @@ jobs:
           # OTA132 reviewed changes: sole recurrent action selection and updated flight provenance.
           # All other physical and historical file hashes remain pinned unchanged.
           pins={
+          'FluidInteroceptionRegression.java':'5a325eaf23867f00dd03eadc27990fe60537eb40',
+          'FluidInteroceptionV1.java':'8e8143b220e91b135084e3157ab167dbda0cc14a',
           'Zero20PassiveSnapshot.java':'aad03161b82ef96f768927dec8193c9c43008923',
           'SaveSlotsActivity.java':'c85c98e5fb415c2c70e7441b4ccae21c43147931',
           'SaveSlotStore.java':'4d232fed8599f7f3eb42a080f3806b5a537f01fa',
           'SymbioteMatterV1Regression.java':'e825dc554a022d3d4fe45e39eadbfa631f705c8a',
-          'SymbioteMotorHeadV1.java':'e0a4b557b5e3f5a89e51db28ab6b1d3e7d640f01',
+          'SymbioteMotorHeadV1.java':'a56087a525d3a4c6197f3d6f90debf97aa8094f8',
           'SymbioteMatterV1.java':'500c4d15fdc26e590a55b4ce970040bfabff7332',
           'RecurrentCoreV22.java':'665ab6138fb2d754e94de0e41d6b394a29e392f5',
           'ObjectContinuityV21.java':'73835ed4c3b15eefcfa3d1c615d7769b6fa1fa46',
           'CausalSequenceV23.java':'329344e296ec342e0b85b965babbae15a3eb6f83',
           'CausalSequenceV23Regression.java':'e8ea1df2ae038dd9f7db44132df3e247e643b6ae',
-          'SensorimotorMind.java':'088914641fb43bbe72d597f764a86bf5266b40c9',
+          'SensorimotorMind.java':'d57ddce87c2ad56c880581bd4555444f3f2cf10d',
           'DecisionBlackbox.java':'7fbac5e10cdf101bef3fd5ae050ae5db6074bc6c',
           'EnergyLifetimeCounters.java':'7c0a9d815937a39c5cfdaddb01896b39536d8afe',
           'ObjectExperienceV20.java':'39ada3745f8b22769e67c00f5def9a5a3ed6ba1a',
           'ObjectExperienceV20Regression.java':'44bccc8ebe5971ed5226e50f62f8e27f7fbc6ddd',
-          'GameActivity.java':'ed7286011bc698b8b8ab70596fbfda7f42371709',
+          'GameActivity.java':'ed664a93af4e6daf88ec60ef8b588f36cae5bf02',
           'ContactGeometryForensics.java':'661401bf03e4e586e5fe69d819db7af05a1a319d',
           'InstrumentalNavigation.java':'fb95ae5b19a8b2602cb4338641d8851bebf8fa26',
           'BehavioralLaboratory.java':'8a35099ddb4b4d7ef9a9a334cb2e50b9477285d8',
           'BehavioralLabActivity.java':'007fc2986932cbe0a3956d8d2c36e94e7dd2a47a',
-          'ResetDomains.java':'ab8d30aa423c93b870c1f56070fcace43129a1e1',
+          'ResetDomains.java':'24732c268bed4e3c82241887e7dab61c41111611',
           'ScarcityLab.java':'51d04604c79c728c53dd819971116bd7d710dc60',
           'UnknownWorld.java':'4443b7e2e44a8229fae19c3e8237db9f23b822f2',
           'GameSceneSnapshot.java':'c3dab75b8f71fbc4e9fefa455831484468acd465',
