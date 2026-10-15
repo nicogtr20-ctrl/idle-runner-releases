@@ -83,7 +83,7 @@ public final class SymbioteMotorHeadV1 {
                 int i=sector*width+k;
                 // Same living membrane normal that the physical muscles
                 // actually use; no centroid-ray contradiction in concavity.
-                SymbioteMatterV1.normalAt(skin,i,body.cx,body.cy,
+                SymbioteMatterV1.actuatorDirectionAt(skin,i,body.cx,body.cy,
                     handedness,surfaceNormal);
                 x+=surfaceNormal[0];y+=surfaceNormal[1];
             }
