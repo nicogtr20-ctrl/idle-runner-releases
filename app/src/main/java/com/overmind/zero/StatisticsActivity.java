@@ -22,6 +22,7 @@ public final class StatisticsActivity extends Activity {
     private static final int RED=0xffef9397,GOLD=0xfff6c783;
     private static final int WINDOW=25;
     private LifeStatistics stats;
+    private boolean activeSymbiote=true;
 
     int dp(float x){return (int)(x*getResources().getDisplayMetrics().density+.5f);}
     @Override public void onCreate(Bundle state){
@@ -95,6 +96,7 @@ public final class StatisticsActivity extends Activity {
             LifeStatistics.GATE,LifeStatistics.ROOMS,LifeStatistics.RECALL};
         double sum=0;int used=0;
         for(int m:metrics){
+            if(activeSymbiote&&m==LifeStatistics.RECALL)continue;
             double a=stats.average(m,0,WINDOW),b=stats.average(m,WINDOW,WINDOW);
             if(Double.isNaN(a)||Double.isNaN(b)||(a==0&&b==0))continue;
             // Symmetric relative change is bounded and does not explode at baseline zero.
@@ -114,7 +116,7 @@ public final class StatisticsActivity extends Activity {
         gap(body,5);
         body.addView(label("Dati fisici del corpo e dell'ambiente • nessuna influenza sulle decisioni del 2.2",12,MUTED,false));
 
-        boolean activeSymbiote=getSharedPreferences(SaveSlotStore.WORKING,MODE_PRIVATE)
+        activeSymbiote=getSharedPreferences(SaveSlotStore.WORKING,MODE_PRIVATE)
             .getBoolean(SymbioteMatterV1.ENABLED,true);
         LifeStatistics.Life live=stats.current();
         LinearLayout now=panel(body);
