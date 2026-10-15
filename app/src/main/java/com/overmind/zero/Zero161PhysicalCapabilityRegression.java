@@ -64,8 +64,8 @@ public final class Zero161PhysicalCapabilityRegression {
         int strong=0;
         for(int k=0;k<3;k++)if(peaks[k]>gaps[k]+2f && peaks[k]>31f)strong++;
         float before0=radii[0],before5=radii[5],before10=radii[10];
-        float[] independent=drive(0,5,10);independent[5*4]=1f;
-        independent[4*4]=.85f;independent[6*4]=.85f;
+        float[] independent=drive(0,5,10);independent[5*4]=-.92f;
+        independent[4*4]=-.52f;independent[6*4]=-.52f;
         for(int i=0;i<65;i++){m.step(b,s,independent,dt);}
         stable(m,s);
         float delta0=sectorRadius(b,s,0)-before0;
