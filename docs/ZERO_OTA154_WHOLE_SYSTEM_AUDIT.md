@@ -16,3 +16,26 @@ Review active Android `GameActivity` rather than trusting stand-alone module uni
 
 ## Correct release decision
 This is a forensic branch and no OTA155 is authorized or distributed by this audit alone. Any correction needs causal A/B between executed and non-executed candidates, heldout purity, phase continuity, no brain reset, per-save isolation, 96-site physics, 74-fluid sensing, initial and rotated tissues, independent real Android gameplay review. CI green alone is not proof of autonomy.
+
+## VERIFIED executable forensic evidence (code unchanged)
+
+Research QA GitHub Actions [38730869706](https://github.com/nicogtr20-ctrl/idle-runner-releases/actions/runs/38730869706) **SUCCESS** — entire historical JVM battery, `Zero154SensorimotorRegression`, new `Zero154WholeSystemAudit`, static call-path assertions, Android debug build. This is a **successful REPRODUCTION** of faults, NOT a pass stating these faults have been corrected.
+
+Exact observed outputs:
+- Command-only `skin.extension` change, no geometry movement: BodyProprioception channel aggregate difference 7.636363. Thus the claimed proprioceptive shape is contaminated by motor intent.
+- After charged muscle work followed by a zero-command frame: `SymbioteMatterV1.work` unchanged, `MotorBrain.Body.totalWork` increases by 3.5999997e-7. Fuel debit in GameActivity still uses the correct difference `freshWork`.
+- `BodyProprioception`, `DistributedBodySense`, `LocalImpedanceSense`, `FluidInteroceptionV1`: `actualEnergy()` immediately changes learned value weights *before* the shared future decision-boundary heldout split. Predictive weights' independent heldout MSE do not necessarily change at this instant; issue is strict train/evaluation contamination of VALUE heads, not proof that every predictor gate is invalid.
+- `WorldPlacement.free` approves an object exactly on stretched material membrane because it sees only the supplied centre. Sample actual physical membrane distance is zero.
+- **Additional high priority proprioception issue:** `SymbioteMatterV1.step` maintains `skin.peakExtension` as monotonic life-to-date maximum, and main `SensorimotorMind.Senses.read` channel 3 treats it as current 26D extension. A real skin with extension near 0.0004406 produces 26D feature **0.8909091** from a historical maximum 98 units. This is not current bodily pose.
+- `TemporalWorkingMemory.energyOutcome` and `InstrumentalNavigation.energyOutcome` also modify learned values before the heldout interval closes. Other immediate event consumers should be reviewed individually; `ObjectContinuityV21` explicitly buffers energies until split and does not have the same issue.
+- Navigation accepts `observedSignature` in `energyOutcome` with all 24 optical bins zero. `GameActivity` passes `object.signature` directly through `SensorimotorMind.contactOutcome`; there is no optical evidence gate at that callsite. The separate `ObjectExperienceV20` model DOES check actual 26D spectra, but that does not protect navigation. Decide explicitly whether a new tactile/taste wavelength sensor is warranted; otherwise an optical oracle leak exists.
+- Read-path static confirmation: `GameActivity` continues to evaluate unexecuted old `OnlineBodyLearning` mutants while symbiote uses independent `SymbioteMotorHeadV1.commands`. Do not use these legacy candidate acceptance counts as evidence of learning with the actual symbiote.
+- Read-path static confirmation: `GameActivity.load` deletes `zero_grip_observer_v1169.report` despite a separate save+telemetry export. Report retention across app restarts is broken.
+
+## Priority order for a corrective OTA (not performed by this audit)
+**P0** disable false legacy candidate attribution only when the symbiote is actually active, maintaining old profiles; assign heldout status at the beginning of real motor intervals, then route raw contacts/temporal value/valence training according to that status, counting each actual contact exactly once.
+**P1** repair current-measured physical shape sense while retaining the historical maximum as explicitly labeled diagnostic; distinguish command/efference from achieved reach, preserve schema compatibility and old trained weights.
+**P1** honor actual 96-node body footprint at spawn, avoiding incidental energy pickups and overlapped solids; do not script a route or alter scarcity labels.
+**P2** correct double-integrated body work and restore grip observer report on restart; guard source-wavelength attribution with real sensory evidence or an explicit new sense.
+
+REQUIRE same-body before/after A/B on Galaxy S21, no reset, preserve all twelve named slots, valid body topology and same signed package. No OTA155 APK created in this audit.
