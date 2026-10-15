@@ -210,6 +210,12 @@ public final class SymbioteMotorHeadV1 {
     }
     public void resetLife(){lastAction=-1;Arrays.fill(commands,0);Arrays.fill(noise,0);}
     public void resumeLife(){resetLife();}
+    /** Read-only learned muscle-cortex weights; 84 trainable scalars. */
+    public int parameterCount(){return weights.length;}
+    public float parameterAt(int index){
+        if(index<0||index>=weights.length)throw new IndexOutOfBoundsException();
+        return weights[index];
+    }
     public String summary(){return String.format(Locale.US,
         "SYMBIOTE cortex motor head: decisions=%d trained=%d heldout=%d",choices,updates,heldout);}
     /** Compact backward-compatible schema, no side effects on malformed data. */
