@@ -96,6 +96,12 @@ public final class FluidInteroceptionV1 {
     /** Each material parcel contributes once to its current physical sector.
      * Empty sectors remain 0, not a fabricated sensory value. */
     public void feed(float[] reading,MotorBrain.Body b,SymbioteMatterV1 matter){
+        feed(reading,b,matter,null);
+    }
+    /** Pool parcel data by its nearest REAL tissue sector (6 skin nodes),
+     * never by a world-fixed azimuth unrelated to muscle IDs. */
+    public void feed(float[] reading,MotorBrain.Body b,SymbioteMatterV1 matter,
+                     Morphology.Surface skin){
         if(!valid(reading,FEATURES)||b==null||matter==null)return;
         System.arraycopy(reading,0,local,0,FEATURES);
         Arrays.fill(pooled,0f);
@@ -103,9 +109,29 @@ public final class FluidInteroceptionV1 {
         for(int i=0;i<PARTICLES;i++){
             float x=i<MotorBrain.N?b.x[i]:matter.x[i-MotorBrain.N];
             float y=i<MotorBrain.N?b.y[i]:matter.y[i-MotorBrain.N];
-            int sector=((int)Math.floor((Math.atan2(y-b.cy,x-b.cx)+Math.PI*2)
-                               /(Math.PI*2/SECTORS)))%SECTORS;
-            if(sector<0)sector+=SECTORS;
+            int sector=0;
+            if(skin!=null){
+                float best=Float.POSITIVE_INFINITY;
+                for(int k=0;k<Morphology.POINTS;k++){
+                    int next=(k+1)%Morphology.POINTS;
+                    float ex=skin.x[next]-skin.x[k],ey=skin.y[next]-skin.y[k];
+                    float dx=x-skin.x[k],dy=y-skin.y[k];
+                    float length2=ex*ex+ey*ey;
+                    float t=length2>1e-6f?clip((dx*ex+dy*ey)/length2,0f,1f):0f;
+                    float fx=dx-ex*t,fy=dy-ey*t,d2=fx*fx+fy*fy;
+                    // Stable tie-breaking by physical material index:
+                    // nearly equidistant segments around the liquid centre
+                    // must not remap during a rigid world rotation.
+                    if(Float.isFinite(d2)&&d2<best-1e-3f){
+                        best=d2;
+                        sector=k/(Morphology.POINTS/SECTORS);
+                    }
+                }
+            }else{
+                sector=((int)Math.floor((Math.atan2(y-b.cy,x-b.cx)+Math.PI*2)
+                                   /(Math.PI*2/SECTORS)))%SECTORS;
+                if(sector<0)sector+=SECTORS;
+            }
             n[sector]++;
             for(int ch=0;ch<CHANNELS;ch++)
                 pooled[ch*SECTORS+sector]+=reading[i*CHANNELS+ch];
@@ -147,10 +173,15 @@ public final class FluidInteroceptionV1 {
     public void noteDecision(float magnitude){if(magnitude>.008f)choiceInfluences++;}
     public void consequence(float[] next,MotorBrain.Body body,SymbioteMatterV1 matter,
         int action,float realEnergy,float realHarm,boolean train,boolean heldout){
+        consequence(next,body,matter,null,action,realEnergy,realHarm,train,heldout);
+    }
+    public void consequence(float[] next,MotorBrain.Body body,SymbioteMatterV1 matter,
+        Morphology.Surface skin,int action,float realEnergy,float realHarm,
+        boolean train,boolean heldout){
         if(!valid(next,FEATURES)||body==null||matter==null)return;
-        if(pending!=action){feed(next,body,matter);return;}
+        if(pending!=action){feed(next,body,matter,skin);return;}
         float[] prior=before.clone();
-        feed(next,body,matter);
+        feed(next,body,matter,skin);
         float e=0,baseline=0;
         for(int j=0;j<SUMMARY;j++){
             float change=pooled[j]-prior[j],diff=change-expected(prior,action,j);

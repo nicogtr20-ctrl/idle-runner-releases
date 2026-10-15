@@ -45,6 +45,12 @@ public final class SensorimotorMind {
      * No external coordinates, entity labels or movement reward.
      */
     public synchronized void appliedSymbioteControls(float[] cortex){
+        appliedSymbioteControls(cortex,null,null);
+    }
+    /** World-space executed motor feedback follows live tissue, not birth indices. */
+    public synchronized void appliedSymbioteControls(float[] cortex,
+        MotorBrain.Body body,Morphology.Surface skin){
+        float[] angles=SymbioteMotorHeadV1.measuredSectorAngles(body,skin);
         if(cortex==null||cortex.length!=SymbioteMatterV1.SECTORS*SymbioteMatterV1.OUTPUTS)
             return;
         float radial=0f,anisX=0f,anisY=0f,lateral=0f,adhesion=0f,tension=0f;
@@ -56,7 +62,8 @@ public final class SensorimotorMind {
             float p=Math.max(-1f,Math.min(1f,cortex[k+3]));
             if(!Float.isFinite(r)||!Float.isFinite(t)||
                !Float.isFinite(g)||!Float.isFinite(p))return;
-            float a=(float)((sector+.5)*Math.PI*2/SymbioteMatterV1.SECTORS);
+            float a=angles!=null&&Float.isFinite(angles[sector])
+                ?angles[sector]:(float)((sector+.5)*Math.PI*2/SymbioteMatterV1.SECTORS);
             radial+=r;anisX+=r*(float)Math.cos(a);
             anisY+=r*(float)Math.sin(a);
             lateral+=t;adhesion+=g;tension+=p;
@@ -204,7 +211,7 @@ public final class SensorimotorMind {
     public synchronized void setActualFluid(SymbioteMatterV1 matter){actualLiquid=matter;}
     public synchronized void updateInnerSense(MotorBrain.Body body,Morphology.Surface skin){
         if(innerSense!=null&&actualLiquid!=null)
-            innerSense.feed(FluidInteroceptionV1.sense(body,skin,actualLiquid),body,actualLiquid);
+            innerSense.feed(FluidInteroceptionV1.sense(body,skin,actualLiquid),body,actualLiquid,skin);
     }
     public synchronized FluidInteroceptionV1 fluidInteroception(){return innerSense;}
     public synchronized void attachPredictiveWorldV20(PredictiveWorldV20 model){worldV20=model;}
@@ -237,8 +244,12 @@ public final class SensorimotorMind {
     public synchronized InstrumentalNavigation navigation(){return navigation;}
     public synchronized void updateNavigationSense(MotorBrain.Body b,ScarcityLab room,
         ArrayList<UnknownWorld.Entity> objects){
+        updateNavigationSense(b,null,room,objects);
+    }
+    public synchronized void updateNavigationSense(MotorBrain.Body b,Morphology.Surface skin,
+        ScarcityLab room,ArrayList<UnknownWorld.Entity> objects){
         observedBody=b;
-        if(navigation!=null)navigation.sense(b,room,objects);
+        if(navigation!=null)navigation.sense(b,skin,room,objects);
     }
     public synchronized void updateSpatialSense(MotorBrain.Body b,ScarcityLab room,
         ArrayList<UnknownWorld.Entity> objects){
@@ -404,8 +415,14 @@ public final class SensorimotorMind {
                                             MotorBrain.Body body){
         // An interrupted trace at death is censored, not a fake failure.
         if(causalSequence!=null)causalSequence.resetLife();
-        if(activeCore!=null){feedCore(observed);boolean held=diagnostics.shouldHoldout();
+        // One and the same heldout split closes BOTH the recurrent decision
+        // and its actual cortex action before resetLife destroys the pending action.
+        boolean held=diagnostics.shouldHoldout();
+        if(activeCore!=null){feedCore(observed);
             activeCore.consequence(actualEnergySinceChoice,actualContactHarm,learning&&!held,held,true);}
+        if(symbioteHead!=null)symbioteHead.consequence(actualEnergySinceChoice,
+            actualContactHarm,actualAmbientLossSinceChoice,
+            actualMotorEnergyCostSinceChoice,learning&&!held,held);
         if(blackbox!=null)blackbox.terminal(observed,actualEnergySinceChoice,
                                            physicalEffect,body);
     }
@@ -461,7 +478,7 @@ public final class SensorimotorMind {
             causalTerms=new float[ACTIONS],objectTerms=new float[ACTIONS],
             sequenceTerms=new float[ACTIONS];
         float maximumBody=0f,maximumDistributed=0f,maximumImpedance=0f,
-            maximumInner=0f;
+            maximumInner=0f,maximumSpatial=0f;
         for(int a=0;a<ACTIONS;a++){
             float nav=navigation!=null&&navigationAdviceEnabled
                 ?navigation.bias(a,senses[0]):0f;
@@ -482,13 +499,17 @@ public final class SensorimotorMind {
             float membrane=distributedBody==null?0f:distributedBody.choiceBias(a);
             float resistance=impedance==null?0f:impedance.choiceBias(a);
             float inner=innerSense==null||actualLiquid==null?0f:innerSense.choiceBias(a);
+            // The spatial model speaks only after its own independent heldout
+            // gate approves; the active 2.2 arbiter remains the sole chooser.
+            float space=spatial==null?0f:spatial.choiceBias(a);
             navTerms[a]=nav;causalTerms[a]=effect;objectTerms[a]=object;
             sequenceTerms[a]=seq;
             maximumBody=Math.max(maximumBody,Math.abs(proprio));
             maximumDistributed=Math.max(maximumDistributed,Math.abs(membrane));
             maximumImpedance=Math.max(maximumImpedance,Math.abs(resistance));
             maximumInner=Math.max(maximumInner,Math.abs(inner));
-            observedMeans[a]=nav+effect+object+seq+liveBodyEvidence(a);
+            maximumSpatial=Math.max(maximumSpatial,Math.abs(space));
+            observedMeans[a]=nav+effect+object+seq+liveBodyEvidence(a)+space;
         }
         float[] scores=activeCore.primaryScores(observedMeans);
         // Observe whether real proprioceptive evidence earned meaningful
@@ -498,6 +519,7 @@ public final class SensorimotorMind {
         if(distributedBody!=null)distributedBody.noteDecision(maximumDistributed);
         if(impedance!=null)impedance.noteDecision(maximumImpedance);
         if(innerSense!=null&&actualLiquid!=null)innerSense.noteDecision(maximumInner);
+        if(spatial!=null)spatial.noteDecision(maximumSpatial);
         int greedyAction=0;
         for(int a=1;a<ACTIONS;a++)
             if(scores[a]>scores[greedyAction])greedyAction=a;
@@ -893,7 +915,7 @@ public final class SensorimotorMind {
                 impedance.feed(LocalImpedanceSense.sense(body,skin));
             if(innerSense!=null&&actualLiquid!=null&&body!=null&&skin!=null)
                 innerSense.feed(FluidInteroceptionV1.sense(body,skin,actualLiquid),
-                    body,actualLiquid);
+                    body,actualLiquid,skin);
             if(spatial!=null&&body!=null&&objects!=null)
                 spatial.observeEnvironment(body,skin,room,objects);
             if(perceptualV20!=null&&spatial!=null&&body!=null&&objects!=null)
@@ -903,7 +925,7 @@ public final class SensorimotorMind {
             if(objectContinuity!=null&&spatial!=null)
                 objectContinuity.view(spatial.ranges(),spatial.perceivedX(),
                     spatial.perceivedY(),after[4],learning,spatial.eyeOrigins());
-            updateNavigationSense(body,room,objects);
+            updateNavigationSense(body,skin,room,objects);
             choose(after);return;
         }
         if(blackbox!=null)blackbox.tick(Math.max(0,dt));
@@ -911,7 +933,7 @@ public final class SensorimotorMind {
         if(elapsed<.65f)return;
         observedBody=body;
         if(navigation!=null&&body!=null&&objects!=null)
-            navigation.sense(body,room,objects);
+            navigation.sense(body,skin,room,objects);
         float[] bodyAfter=bodySchema!=null&&body!=null&&skin!=null?
             BodyProprioception.sense(body,skin):null;
         if(bodySchema!=null&&bodyAfter!=null)bodySchema.feed(bodyAfter);
@@ -995,7 +1017,7 @@ public final class SensorimotorMind {
             impedance.consequence(impedanceAfter,trialAction,lastReward,physicalEffect,
                                   learning&&!holdout,holdout);
         if(innerSense!=null&&innerAfter!=null)
-            innerSense.consequence(innerAfter,body,actualLiquid,trialAction,
+            innerSense.consequence(innerAfter,body,actualLiquid,skin,trialAction,
                 actualEnergySinceChoice,actualContactHarm,
                 learning&&!holdout,holdout);
         // Isolated predictive readout. No change to reward, action scoring or
@@ -1071,20 +1093,31 @@ public final class SensorimotorMind {
          * A visible inactive (cooling-down) hazard stays optically present. */
         public static float[] spectral8(MotorBrain.Body b,ScarcityLab lab,
                                          ArrayList<UnknownWorld.Entity> objects){
-            return spectral8(b,lab,objects,true);
+            return spectral8(b,null,lab,objects,true);
         }
-        /** cueEnabled=false is the control for paired perceptual lab tests. */
+        /** Legacy lab overload keeps its original eye semantics. */
         public static float[] spectral8(MotorBrain.Body b,ScarcityLab lab,
                                          ArrayList<UnknownWorld.Entity> objects,
+                                         boolean cueEnabled){
+            return spectral8(b,null,lab,objects,cueEnabled);
+        }
+        public static float[] spectral8(MotorBrain.Body b,Morphology.Surface skin,
+                                         ScarcityLab lab,ArrayList<UnknownWorld.Entity> objects){
+            return spectral8(b,skin,lab,objects,true);
+        }
+        /** A world-azimuth channel is sensed from the real protruding retina. */
+        public static float[] spectral8(MotorBrain.Body b,Morphology.Surface skin,
+                                         ScarcityLab lab,ArrayList<UnknownWorld.Entity> objects,
                                          boolean cueEnabled){
             float[] v=new float[UnknownWorld.SIGNATURES*8];
             if(b==null||objects==null)return v;
             for(UnknownWorld.Entity e:objects){
                 if(e.consumed||e.concealed)continue;
-                float dx=e.x-b.cx,dy=e.y-b.cy;
+                float[] eye=MaterialGeometry.eye(skin,b.cx,b.cy,e.x-b.cx,e.y-b.cy);
+                float dx=e.x-eye[0],dy=e.y-eye[1];
                 float d=(float)Math.hypot(dx,dy);
                 if(!Float.isFinite(d)||d<.1f||d>210f)continue;
-                if(occluded(lab,b.cx,b.cy,e.x,e.y,objects,e,cueEnabled))continue;
+                if(occluded(lab,eye[0],eye[1],e.x,e.y,objects,e,cueEnabled))continue;
                 int sector=((int)Math.floor((Math.atan2(dy,dx)+Math.PI/8)/
                     (Math.PI/4))+8)%8;
                 float bright=Math.max(0f,1f-d/230f);
@@ -1097,15 +1130,16 @@ public final class SensorimotorMind {
                     if(cover==null)continue;
                     float px=OpticalCues.rimX(b.cx,b.cy,cover),
                           py=OpticalCues.rimY(b.cx,b.cy,cover);
-                    float dx=px-b.cx,dy=py-b.cy;
-                    float strength=OpticalCues.leakBrightness(
-                        (float)Math.hypot(dx,dy));
+                    float[] eye=MaterialGeometry.eye(skin,b.cx,b.cy,px-b.cx,py-b.cy);
+                    px=OpticalCues.rimX(eye[0],eye[1],cover);
+                    py=OpticalCues.rimY(eye[0],eye[1],cover);
+                    float dx=px-eye[0],dy=py-eye[1];
+                    float strength=OpticalCues.leakBrightness((float)Math.hypot(dx,dy));
                     if(strength<=0||
-                       occluded(lab,b.cx,b.cy,px,py,objects,e,true))continue;
+                       occluded(lab,eye[0],eye[1],px,py,objects,e,true))continue;
                     int sector=((int)Math.floor((Math.atan2(dy,dx)+Math.PI/8)/
                         (Math.PI/4))+8)%8;
                     v[e.signature*8+sector]=Math.max(v[e.signature*8+sector],strength);
-                    // Existing rare-wavelength mixing; no new category label.
                     v[2*8+sector]=Math.max(v[2*8+sector],strength*.85f);
                 }
             }
@@ -1150,12 +1184,12 @@ public final class SensorimotorMind {
             // "danger" or action values. Occluded objects are invisible.
             for(UnknownWorld.Entity e:objects){
                 if(e.consumed||e.concealed)continue;
-                float dx=e.x-b.cx,dy=e.y-b.cy;
+                float[] sight=MaterialGeometry.eye(skin,b.cx,b.cy,e.x-b.cx,e.y-b.cy);
+                float dx=e.x-sight[0],dy=e.y-sight[1];
                 float d=(float)Math.hypot(dx,dy);
-                if(d>210||d<.1f)continue;
+                if(!Float.isFinite(d)||d>210||d<.1f)continue;
                 int sector=(int)Math.floor((Math.atan2(dy,dx)+Math.PI)/(Math.PI/2));
                 sector=Math.max(0,Math.min(3,sector));
-                float[] sight=MaterialGeometry.eye(skin,b.cx,b.cy,dx,dy);
                 if(occluded(lab,sight[0],sight[1],e.x,e.y,objects,e,cueEnabled))continue;
                 int channel=14+e.signature*4+sector;
                 if(channel<14||channel>=S)continue;
@@ -1175,13 +1209,14 @@ public final class SensorimotorMind {
                     if(cover==null)continue;
                     float px=OpticalCues.rimX(b.cx,b.cy,cover),
                           py=OpticalCues.rimY(b.cx,b.cy,cover);
-                    float dx=px-b.cx,dy=py-b.cy;
+                    float[] eye=MaterialGeometry.eye(skin,b.cx,b.cy,px-b.cx,py-b.cy);
+                    px=OpticalCues.rimX(eye[0],eye[1],cover);
+                    py=OpticalCues.rimY(eye[0],eye[1],cover);
+                    float dx=px-eye[0],dy=py-eye[1];
                     float brightness=OpticalCues.leakBrightness(
                         (float)Math.hypot(dx,dy));
                     if(brightness<=0||
-                       occluded(lab,MaterialGeometry.eye(skin,b.cx,b.cy,dx,dy)[0],
-                          MaterialGeometry.eye(skin,b.cx,b.cy,dx,dy)[1],
-                          px,py,objects,e,true))continue;
+                       occluded(lab,eye[0],eye[1],px,py,objects,e,true))continue;
                     int sector=(int)Math.floor((Math.atan2(dy,dx)+Math.PI)/(Math.PI/2));
                     sector=Math.max(0,Math.min(3,sector));
                     v[14+e.signature*4+sector]=
