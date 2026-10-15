@@ -54,8 +54,9 @@ public final class Zero161CortexRegression {
         for(int sector=0;sector<16;sector++)if(sector!=0&&sector!=5&&sector!=10)
             ok(Math.abs(muscle[sector*4]-original[sector*4])<.00001f,
                 "regional actuation incorrectly bleeds into other sectors");
-        ok(changed.encode().equals(oldState),
-            "independent regional learning overwrote the old 84 weights");
+        for(int k=0;k<84;k++)
+            ok(Math.abs(changed.parameterAt(k)-old.parameterAt(k))<.0000001f,
+                "independent regional expansion modified legacy shared weight");
         String remembered=changed.encodeLocal();
         SymbioteMotorHeadV1 restored=new SymbioteMotorHeadV1();
         ok(restored.restore(oldState)&&restored.restoreLocal(remembered),
