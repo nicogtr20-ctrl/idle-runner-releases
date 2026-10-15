@@ -1,4 +1,5 @@
 name: Verify LIVE OVERMIND OTA delivery
+# OTA163 independent public manifest/APK HTTP-200 + SHA-256 integrity recheck.
 # OTA162 independent signed APK URL/manifest HTTP status, size and SHA256 verification.
 # OTA161 signed independent public byte+SHA-256 verification; requires versionCode 1161.
 # OTA160: verify public in-app update 1160 after signed publisher and Vercel production alias READY.
