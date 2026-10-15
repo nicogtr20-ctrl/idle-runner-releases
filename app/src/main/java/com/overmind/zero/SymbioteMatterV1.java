@@ -30,7 +30,7 @@ public final class SymbioteMatterV1 {
     private final float[] fluidVx=new float[MotorBrain.N+INNER],fluidVy=new float[MotorBrain.N+INNER];
     private static final float TWO_PI=(float)(2*Math.PI), R=28f;
     public float restArea=(float)Math.PI*R*R,areaError=0f,work=0f,maxReach=0f;
-    public long ticks=0,invalid=0,topologyRepairs=0;
+    public long ticks=0,invalid=0,topologyRepairs=0,radialReflowSteps=0;
     private float time=0f;
     public SymbioteMatterV1(){}
     private static float clip(float a,float lo,float hi){return Math.max(lo,Math.min(hi,a));}
@@ -66,7 +66,7 @@ public final class SymbioteMatterV1 {
         }
         restArea=absArea(skin);
         areaError=work=maxReach=time=0;
-        ticks=invalid=topologyRepairs=0;
+        ticks=invalid=topologyRepairs=radialReflowSteps=0;
         observeBody(body,skin);
     }
     /** Mass-weighted center of all 170 material nodes, never an accelerated core. */
@@ -346,6 +346,7 @@ public final class SymbioteMatterV1 {
                 fluidReflow=true;break;
             }
         }
+        if(fluidReflow)radialReflowSteps++;
         for(int i=0;i<SURFACE;i++){
             lastSkinX[i]=skin.x[i];lastSkinY[i]=skin.y[i];
             float dx=skin.x[i]-cx,dy=skin.y[i]-cy;
