@@ -47,10 +47,6 @@ public final class GameActivity extends Activity {
         DistributedBodySense distributedSense=new DistributedBodySense();
         LocalImpedanceSense localImpedance=new LocalImpedanceSense();
         FluidInteroceptionV1 innerSense=new FluidInteroceptionV1();
-        PredictiveWorldV20 predictiveWorldV20=new PredictiveWorldV20();
-        PhysicalConsequenceV20 physicalConsequenceV20=new PhysicalConsequenceV20();
-        GripAffordanceV20 gripAffordanceV20=new GripAffordanceV20();
-        PerceptualAssociationsV20 perceptualV20=new PerceptualAssociationsV20();
         ObjectExperienceV20 objectExperienceV20=new ObjectExperienceV20();
         ObjectContinuityV21 objectContinuityV21=new ObjectContinuityV21();
         CausalSequenceV23 causalSequenceV23=new CausalSequenceV23();
@@ -278,18 +274,6 @@ public final class GameActivity extends Activity {
             innerSense=new FluidInteroceptionV1();
             innerSense.restore(prefs.getString(FluidInteroceptionV1.KEY,""));
             sensorMind.attachFluidInteroception(innerSense,null);
-            predictiveWorldV20=new PredictiveWorldV20();
-            predictiveWorldV20.restore(prefs.getString(PredictiveWorldV20.KEY,""));
-            sensorMind.attachPredictiveWorldV20(predictiveWorldV20);
-            physicalConsequenceV20=new PhysicalConsequenceV20();
-            physicalConsequenceV20.restore(prefs.getString(PhysicalConsequenceV20.KEY,""));
-            sensorMind.attachPhysicalConsequenceV20(physicalConsequenceV20);
-            gripAffordanceV20=new GripAffordanceV20();
-            gripAffordanceV20.restore(prefs.getString(GripAffordanceV20.KEY,""));
-            sensorMind.attachGripAffordanceV20(gripAffordanceV20);
-            perceptualV20=new PerceptualAssociationsV20();
-            perceptualV20.restore(prefs.getString(PerceptualAssociationsV20.KEY,""));
-            sensorMind.attachPerceptualAssociationsV20(perceptualV20);
             objectExperienceV20=new ObjectExperienceV20();
             objectExperienceV20.restore(prefs.getString(ObjectExperienceV20.KEY,""));
             sensorMind.attachObjectExperienceV20(objectExperienceV20);
@@ -607,10 +591,6 @@ public final class GameActivity extends Activity {
               .putString(LocalImpedanceSense.KEY,localImpedance.encode())
               .putString(FluidInteroceptionV1.KEY,innerSense.encode())
               // ZERO 2.0 shadow brain: optional independent persistence; no legacy changes.
-              .putString(PredictiveWorldV20.KEY,predictiveWorldV20.encode())
-              .putString(PhysicalConsequenceV20.KEY,physicalConsequenceV20.encode())
-              .putString(GripAffordanceV20.KEY,gripAffordanceV20.encode())
-              .putString(PerceptualAssociationsV20.KEY,perceptualV20.encode())
               .putString(ObjectExperienceV20.KEY,objectExperienceV20.encode())
               .putString(ObjectContinuityV21.KEY,objectContinuityV21.encode())
               .putString(CausalSequenceV23.KEY,causalSequenceV23.encode())
