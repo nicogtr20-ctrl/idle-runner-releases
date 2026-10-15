@@ -383,7 +383,7 @@ public final class SymbioteMatterV1 {
             float traction=clip(.12f+1.45f*compression,0f,.95f);
             float slipDrag=(float)Math.exp(-(1.8f+66f*traction)*dt);
             float retractDrag=(float)Math.exp(-(1.8f+
-                28f*clip(.12f+.90f*compression,0f,.78f))*dt);
+                44f*clip(.12f+.90f*compression,0f,.78f))*dt);
             float preX=skin.x[i],preY=skin.y[i];
             float freeVx=skin.vx[i]+fx[i]*dt,freeVy=skin.vy[i]+fy[i]*dt;
             float normalSpeed=(freeVx*ux+freeVy*uy)*retractDrag;
