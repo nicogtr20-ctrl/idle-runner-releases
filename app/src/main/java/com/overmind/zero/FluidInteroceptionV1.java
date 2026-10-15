@@ -55,9 +55,13 @@ public final class FluidInteroceptionV1 {
                 if(i==j)continue;
                 float x=px[j]-px[i],y=py[j]-py[i];
                 float d2=x*x+y*y;
-                if(d2>=144f||d2<.000001f)continue;
-                float d=(float)Math.sqrt(d2);
+                if(d2>=144f)continue;
+                // Coincident parcels still count as real local crowding.
+                // Their direction is undefined, so do not invent a normal
+                // for compression/shear, but NEVER pretend density is empty.
                 nearby++;
+                if(d2<.000001f)continue;
+                float d=(float)Math.sqrt(d2);
                 float dvx=ux[j]-ux[i],dvy=uy[j]-uy[i];
                 approach+=Math.max(0f,-(dvx*x+dvy*y)/d)/75f;
                 shear+=Math.abs(dvx*y-dvy*x)/(d*100f);
