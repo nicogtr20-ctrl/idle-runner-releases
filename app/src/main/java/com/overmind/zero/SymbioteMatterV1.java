@@ -474,7 +474,7 @@ public final class SymbioteMatterV1 {
             // Keep normal crawl traction and TANGENTIAL foothold friction.
             // Only release radial resistance of the truly overstretched,
             // voluntarily retracting skin (no desired gait or target).
-            if(rr>R+19f&&extend<-.65f){
+            if(rr>R+32f&&extend<-.65f){
                 float radial=appliedVx*ux+appliedVy*uy;
                 float tangent=-appliedVx*uy+appliedVy*ux;
                 float radialDrag=(float)Math.exp(-(1.8f+
