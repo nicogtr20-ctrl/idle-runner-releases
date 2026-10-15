@@ -332,6 +332,20 @@ public final class SymbioteMatterV1 {
         recoverPersistedCrossings(skin);
         observeBody(body,skin);
         float cx=body.cx,cy=body.cy;
+        // A strongly elongated retracting pseudopod cannot reduce length
+        // unless the conserved gel can redistribute its area elsewhere.
+        // Temporarily yield radial substrate resistance across the liquid
+        // when ACTUAL tissue stretch and voluntary contraction coexist.
+        // Ordinary strokes retain the previous measured crawl footing.
+        boolean fluidReflow=false;
+        for(int i=0;i<SURFACE;i++){
+            float dx=skin.x[i]-cx,dy=skin.y[i]-cy;
+            int sector=i*SECTORS/SURFACE;
+            if(dx*dx+dy*dy>(R+32f)*(R+32f)&&
+               cortex[sector*OUTPUTS]<-.65f){
+                fluidReflow=true;break;
+            }
+        }
         for(int i=0;i<SURFACE;i++){
             lastSkinX[i]=skin.x[i];lastSkinY[i]=skin.y[i];
             float dx=skin.x[i]-cx,dy=skin.y[i]-cy;
@@ -375,18 +389,17 @@ public final class SymbioteMatterV1 {
             // Local compression increases anchoring; extending cortex can
             // slide past it. Object-grip intention NEVER anchors open floor.
             float compression=Math.max(0f,-extend);
-            // Preserve OTA160 substrate anchoring for ordinary crawling.
-            // On a demonstrably extended tip (measured living radius > R+12)
-            // that voluntarily pulls IN, permit radial sliding while its
-            // tangential footing remains anchored. The old scalar friction
-            // locked such limbs; globally releasing it ruined locomotion.
-            // No brain action, goal, timing, resource or orientation is known.
+            // The original traction makes a stable foothold; when
+            // severely stretched material starts to contract, permit
+            // volume-conserving radial reflow in the WHOLE connected gel.
+            // Without this coupled yield the membrane tip cannot retreat.
+            // No preferred angle, direction, food or timing is consulted.
             float traction=clip(.12f+1.45f*compression,0f,.95f);
             float slipDrag=(float)Math.exp(-(1.8f+66f*traction)*dt);
-            float radialDrag=slipDrag;
-            if(rr>R+12f&&extend<-.5f)
-                radialDrag=(float)Math.exp(-(1.8f+
-                    28f*clip(.12f+.90f*compression,0f,.78f))*dt);
+            float radialDrag=fluidReflow?
+                (float)Math.exp(-(1.8f+
+                    28f*clip(.12f+.90f*compression,0f,.78f))*dt):
+                slipDrag;
             float preX=skin.x[i],preY=skin.y[i];
             float freeVx=skin.vx[i]+fx[i]*dt,freeVy=skin.vy[i]+fy[i]*dt;
             float normalSpeed=(freeVx*ux+freeVy*uy)*radialDrag;
