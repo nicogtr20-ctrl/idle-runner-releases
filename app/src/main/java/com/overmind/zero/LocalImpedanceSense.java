@@ -68,8 +68,13 @@ public final class LocalImpedanceSense {
             float delta=((curPrev-restPrev)+(curNext-restNext))*.5f;
             float vx=tissue.vx[i]-body.cvx,vy=tissue.vy[i]-body.cvy;
             int p=i*CHANNELS;
-            result[p+RADIAL_ERROR]=limit(radial/80f,-1,1);
-            result[p+TANGENT_ERROR]=limit(tangent/65f,-1,1);
+            // For symbiote, target is the physically computed one-step
+            // free material position (typically 0-5 units), not an old
+            // 80-unit spring extension. The same normalized feature width
+            // remains stable; legacy body's scales are unchanged.
+            float errorScale=tissue.hasSymbioteMotorTargets()?10f:80f;
+            result[p+RADIAL_ERROR]=limit(radial/errorScale,-1,1);
+            result[p+TANGENT_ERROR]=limit(tangent/(tissue.hasSymbioteMotorTargets()?10f:65f),-1,1);
             result[p+STRETCH]=limit(Math.max(0,delta)/24f,0,1);
             result[p+COMPRESSION]=limit(Math.max(0,-delta)/14f,0,1);
             result[p+RADIAL_SPEED]=limit((vx*nx+vy*ny)/130f,-1,1);
@@ -82,7 +87,8 @@ public final class LocalImpedanceSense {
             float demandedX=tissue.targetX(i)-tissue.anchorX(i);
             float demandedY=tissue.targetY(i)-tissue.anchorY(i);
             result[p+MOTOR_DEMAND]=limit(
-                (float)Math.hypot(demandedX,demandedY)/100f,0,1);
+                (float)Math.hypot(demandedX,demandedY)/
+                    (tissue.hasSymbioteMotorTargets()?5f:100f),0,1);
         }
         return result;
     }
