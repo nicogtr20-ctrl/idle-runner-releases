@@ -31,6 +31,8 @@ public final class SymbioteMatterV1 {
     private static final float TWO_PI=(float)(2*Math.PI), R=28f;
     public float restArea=(float)Math.PI*R*R,areaError=0f,work=0f,maxReach=0f;
     public long ticks=0,invalid=0,topologyRepairs=0,selfContactPairs=0;
+    /** Physics QA only: membrane sites formerly missing opposite fluid force. */
+    public long longTipReactionFallbacks=0;
     private float time=0f;
     public SymbioteMatterV1(){}
     private static float clip(float a,float lo,float hi){return Math.max(lo,Math.min(hi,a));}
@@ -81,7 +83,7 @@ public final class SymbioteMatterV1 {
         }
         restArea=absArea(skin);
         areaError=work=maxReach=time=0;
-        ticks=invalid=topologyRepairs=selfContactPairs=0;
+        ticks=invalid=topologyRepairs=selfContactPairs=longTipReactionFallbacks=0;
         observeBody(body,skin);
     }
     /** Mass-weighted center of all 170 material nodes, never an accelerated core. */
@@ -476,6 +478,7 @@ public final class SymbioteMatterV1 {
                 if(d<24f)normalizer+=1f/(3f+d);
             }
             if(normalizer<.0001f){
+                longTipReactionFallbacks++;
                 // A stretched tip may be >24 U from EVERY interior parcel.
                 // Skipping reaction makes a ghost muscle. Use the 3 closest
                 // REAL particles for the equal/opposite impulse instead.
