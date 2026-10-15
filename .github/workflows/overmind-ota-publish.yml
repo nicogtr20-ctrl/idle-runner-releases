@@ -984,11 +984,12 @@ jobs:
           'HabitatContinuity.java':'a8f8c5b51ae66f58b024167daa395c3e757ec9a6',
           'GripSurfaceComposition.java':'04847c6180ee638961d033e8b4ac01fd574dd312',
           'BrainToolsActivity.java':'4f7835554928c32c469b8c5dbeecaea7c3d3e3af',
-          'BrainStatsActivity.java':'8bb73e2cba4fd98aafd5e434be2b87395420983e',
+          'BrainStatsActivity.java':'1a10fcf45d02613554f8b07fc295c8473d846c0c',
           'StatisticsActivity.java':'94c65bc27b6bc0ccc1e0d1d9359ae572e85b95e1',
           'TelemetryActivity.java':'1c6d49cf0d78a6cb913be0708aebaaa43ab5aaaf',
           'Zero157DashboardRegression.java':'2ceb93a50bbb1269c872d4bcaa0699af581d9260',
-          'Zero158EvolutionRegression.java':'22fdd6aa0b751acb5cd229464cf84fcf09e0a3bc',
+          'Zero158EvolutionRegression.java':'795937b5ab393646ac644260825b268587992d92',
+          'TemporalSkillBank.java':'00ace87c3f7e308649575acb68baa03168b1a9bb',
           'MortalityLearning.java':'106683098e58d03a1b901fd7293549ebd5bb6715',
           'ExperienceCredit.java':'fe8e0a1e5ac026596dd0b97c9eca29451796288b',
           'MaterialVisionRegression.java':'0ce4a8420961c27d2959be197f436981790f089e',
@@ -1350,9 +1351,11 @@ jobs:
           for node in ('CORE','MUSCLE','PROPRIO','DISTRIBUTED','IMPEDANCE',
                        'FLUID','GATES','VISION','NAV','SPACE','OBJECTS',
                        'TEMP','SKILLS','GOALS','CAUSE','SEQUENCE',
-                       'WEIGHTS_CORE','WEIGHTS_MOTOR'):
+                       'WEIGHTS_CORE','WEIGHTS_MOTOR','SKILL_ENTRY'):
               assert 'case "'+node+'":' in atlas,node
           assert 'void skillPage(' in atlas and 'skills.consolidated()' in atlas
+          assert 'skills.skillActionsAt(selectedSkill)' in atlas
+          assert 'VISTA DALLA MEMBRANA' in atlas
           assert 'void evolutionPage(' in atlas and 'LifeStatistics.NET' in atlas
           assert 'lives.average(metric,25,25)' in atlas
           assert 'core.trainedTransitions()' in atlas
