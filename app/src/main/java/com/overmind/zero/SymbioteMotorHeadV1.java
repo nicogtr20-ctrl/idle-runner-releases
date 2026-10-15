@@ -12,10 +12,17 @@ import java.util.Locale;
  */
 public final class SymbioteMotorHeadV1 {
     public static final String KEY="symbiote_motor_head_v1";
+    /** Optional sector-specific living cortex. Old 84 shared weights stay byte-identical. */
+    public static final String LOCAL_KEY="symbiote_cortex_local_v161";
     private static final int N=SymbioteMatterV1.SECTORS,CHANNELS=SymbioteMatterV1.OUTPUTS;
     private static final int LEGACY_FEATURE=14,FEATURE=LEGACY_FEATURE+FluidInteroceptionV1.CHANNELS,
         OUTPUTS=N*CHANNELS;
+    private static final int LOCAL_FEATURES=5;
     private final float[] weights=new float[CHANNELS*FEATURE];
+    private final float[] localWeights=new float[OUTPUTS*LOCAL_FEATURES];
+    private final float[] localFeatures=new float[OUTPUTS*LOCAL_FEATURES];
+    private int priorPhysicalAction=-1;
+    private long localUpdates=0;
     private final float[] feature=new float[N*FEATURE],commands=new float[OUTPUTS];
     private final float[] noise=new float[OUTPUTS],pending=new float[OUTPUTS];
     private float[] previousState;
@@ -103,6 +110,8 @@ public final class SymbioteMotorHeadV1 {
            bodySensors==null||bodySensors.length!=DistributedBodySense.FEATURES)
             return;
         choices++;
+        boolean samePhysicalCommand=priorPhysicalAction==action;
+        priorPhysicalAction=action;
         lastAction=action;
         previousState=recurrent.clone();
         float goal=action%8*(float)Math.PI/4f;
@@ -136,6 +145,17 @@ public final class SymbioteMotorHeadV1 {
                 float z=0;
                 for(int j=0;j<FEATURE;j++)z+=weights[channel*FEATURE+j]*feature[base+j];
                 int at=sector*CHANNELS+channel;
+                // Five independently learnable real-tissue features per site.
+                // Threefold angular basis is a representational capability,
+                // NOT a prewired three-limb behavior; every new weight is zero.
+                int localBase=at*LOCAL_FEATURES;
+                localFeatures[localBase]=1f;
+                localFeatures[localBase+1]=feature[base+DistributedBodySense.SHAPE];
+                localFeatures[localBase+2]=feature[base+DistributedBodySense.OPTIC];
+                localFeatures[localBase+3]=(float)Math.cos(3f*(a-goal));
+                localFeatures[localBase+4]=(float)Math.sin(3f*(a-goal));
+                for(int j=0;j<LOCAL_FEATURES;j++)
+                    z+=localWeights[localBase+j]*localFeatures[localBase+j];
                 float explore=clip(exploration,0,1)*.48f;
                 noise[at]=random()*explore;
                 // Exploration is localized and smooth enough not to make a
@@ -144,7 +164,12 @@ public final class SymbioteMotorHeadV1 {
                 // The active 2.2 action bank 8..15 explicitly requests grip;
                 // action%8 alone in OTA143 had discarded this motor intention.
                 float gripIntent=channel==2&&action>=8?.55f:0f;
-                commands[at]=(float)Math.tanh(2.8f*z+1.4f*noise[at]+gripIntent);
+                float proposed=(float)Math.tanh(2.8f*z+1.4f*noise[at]+gripIntent);
+                // Hold a real muscle contraction while the SAME 2.2 action
+                // continues. New action, danger-driven policy change and
+                // episode start may replace it immediately (no persistent gait).
+                commands[at]=samePhysicalCommand?
+                    clip(.55f*commands[at]+.45f*proposed,-1f,1f):proposed;
                 pending[at]=commands[at];
             }
         }
@@ -199,8 +224,15 @@ public final class SymbioteMotorHeadV1 {
                     int base=sector*FEATURE;
                     for(int j=0;j<FEATURE;j++)
                         gradient[channel*FEATURE+j]+=g*feature[base+j];
+                    // Independent local plasticity from exactly the same
+                    // REAL survived/paid consequence; heldout never trains.
+                    int localBase=at*LOCAL_FEATURES;
+                    for(int j=0;j<LOCAL_FEATURES;j++)
+                        localWeights[localBase+j]=clip(localWeights[localBase+j]+
+                            8f*g*localFeatures[localBase+j],-1.5f,1.5f);
                 }
             }
+            localUpdates++;
             for(int i=0;i<weights.length;i++)
                 weights[i]=clip(weights[i]+gradient[i],-2.5f,2.5f);
             meanReward=meanReward*.995f+reward*.005f;
@@ -208,7 +240,8 @@ public final class SymbioteMotorHeadV1 {
         }
         lastAction=-1;
     }
-    public void resetLife(){lastAction=-1;Arrays.fill(commands,0);Arrays.fill(noise,0);}
+    public void resetLife(){lastAction=-1;priorPhysicalAction=-1;
+        Arrays.fill(commands,0);Arrays.fill(noise,0);}
     public void resumeLife(){resetLife();}
     /** Safe counters, sourced from the same authenticated saved cortex. */
     public long decisionCount(){return choices;}
@@ -216,6 +249,34 @@ public final class SymbioteMotorHeadV1 {
     public long heldoutOutcomes(){return heldout;}
     /** Read-only learned muscle-cortex weights; 84 trainable scalars. */
     public int parameterCount(){return weights.length;}
+    public int localParameterCount(){return localWeights.length;}
+    public long localTrainedOutcomes(){return localUpdates;}
+    public float localParameterAt(int index){
+        if(index<0||index>=localWeights.length)throw new IndexOutOfBoundsException();
+        return localWeights[index];
+    }
+    /** Separate optional save; never changes the legacy smh1 format. */
+    public String encodeLocal(){
+        StringBuilder out=new StringBuilder("cl161|").append(localUpdates);
+        for(float w:localWeights)out.append("|").append(w);
+        return out.toString();
+    }
+    public boolean restoreLocal(String raw){
+        if(raw==null||raw.length()>17000||!raw.startsWith("cl161|"))return false;
+        try{
+            String[] parts=raw.split("\\|",-1);
+            if(parts.length!=2+localWeights.length)return false;
+            long steps=Long.parseLong(parts[1]);
+            if(steps<0||steps>1000000000L)return false;
+            float[] saved=new float[localWeights.length];
+            for(int i=0;i<saved.length;i++){
+                saved[i]=Float.parseFloat(parts[2+i]);
+                if(!Float.isFinite(saved[i])||Math.abs(saved[i])>1.501f)return false;
+            }
+            System.arraycopy(saved,0,localWeights,0,saved.length);
+            localUpdates=steps;return true;
+        }catch(RuntimeException malformed){return false;}
+    }
     public float parameterAt(int index){
         if(index<0||index>=weights.length)throw new IndexOutOfBoundsException();
         return weights[index];
