@@ -297,12 +297,14 @@ public final class SensorimotorMind {
     public int actionsReconsidered=0;
     public int action=0;
 
+    private boolean resumeRearmPending=false;
     public SensorimotorMind(){}
     public synchronized void setLearning(boolean enabled){learning=enabled;}
     public synchronized void begin(float[] observation){
         if(observation.length!=S)throw new IllegalArgumentException("sensory width");
         System.arraycopy(observation,0,trialState,0,S);
         trialAction=-1;elapsed=0;
+        resumeRearmPending=false;
         actualAmbientLossSinceChoice=0f;
         actualMotorEnergyCostSinceChoice=0f;
         contactCredit.newLife();
@@ -338,7 +340,7 @@ public final class SensorimotorMind {
         // Mortality resets bodily position and short-term context, never
         // destroys learned temporal/world parameters.
         if(first==null){
-            trialAction=-1;elapsed=0;contactCredit.newLife();
+            trialAction=-1;elapsed=0;resumeRearmPending=false;contactCredit.newLife();
             if(temporal!=null)temporal.resetLife();
             if(temporalSkills!=null)temporalSkills.resetLife();
             if(bodySchema!=null)bodySchema.resetLife();
@@ -378,6 +380,7 @@ public final class SensorimotorMind {
             throw new IllegalArgumentException("resume");
         System.arraycopy(observation,0,trialState,0,S);
         action=currentAction;trialAction=currentAction;elapsed=0;
+        resumeRearmPending=true;
         actualAmbientLossSinceChoice=0f;
         actualMotorEnergyCostSinceChoice=0f;
         if(temporal!=null)temporal.resumeAction(currentAction);
@@ -414,7 +417,8 @@ public final class SensorimotorMind {
     public synchronized void rearmAfterResume(MotorBrain.Body body,
                                               Morphology.Surface skin){
         if(activeCore==null||symbioteHead==null||trialAction<0||
-           body==null||skin==null)return;
+           !resumeRearmPending||body==null||skin==null)return;
+        resumeRearmPending=false;
         observedBody=body;
         lastActualGripSurface=skin;
         trialAction=-1;elapsed=0;
