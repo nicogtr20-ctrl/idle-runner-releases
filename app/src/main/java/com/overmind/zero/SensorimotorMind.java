@@ -411,8 +411,12 @@ public final class SensorimotorMind {
      * outcome was censored by resumeLife, and must never be credited as if
      * this newly selected motor had performed it. Call after restoring the
      * complete physical body, all skin senses and 2.2 hidden context. */
-    public synchronized void rearmAfterResume(){
-        if(activeCore==null||symbioteHead==null||trialAction<0)return;
+    public synchronized void rearmAfterResume(MotorBrain.Body body,
+                                              Morphology.Surface skin){
+        if(activeCore==null||symbioteHead==null||trialAction<0||
+           body==null||skin==null)return;
+        observedBody=body;
+        lastActualGripSurface=skin;
         trialAction=-1;elapsed=0;
         choose(trialState.clone());
     }
