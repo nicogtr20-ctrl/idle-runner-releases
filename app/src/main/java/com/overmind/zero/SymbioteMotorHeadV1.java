@@ -107,13 +107,36 @@ public final class SymbioteMotorHeadV1 {
      * the downstream neural motor channel. Heldout intervals cannot train.
      * REINFORCE with an updated reward baseline; no imagined success data.
      */
+    /** Kept for old JVM callers; the five-input form has no ambient loss.
+     * "effort" must be a REAL charged motor energy cost, never distance. */
     public void consequence(float actualContactEnergy,float actualDamage,
-                            float effort,boolean train,boolean holdout){
+                            float actualMotorEnergy,boolean train,boolean holdout){
+        consequence(actualContactEnergy,actualDamage,0f,actualMotorEnergy,
+                    train,holdout);
+    }
+    /**
+     * Every non-zero motor learning outcome corresponds to REAL externally
+     * credited resource gain, contact harm, storm energy loss, or physically
+     * debited muscle metabolism. Passive/base hunger is deliberately NOT
+     * attributed to the chosen muscles. No distance/forward/gait reward.
+     */
+    public void consequence(float actualContactEnergy,float actualDamage,
+                            float actualAmbientEnergyLoss,float actualMotorEnergy,
+                            boolean train,boolean holdout){
         if(lastAction<0)return;
         if(!Float.isFinite(actualContactEnergy)||!Float.isFinite(actualDamage)||
-           !Float.isFinite(effort)||actualDamage<0||effort<0){lastAction=-1;return;}
-        float reward=clip(actualContactEnergy/35f-actualDamage/90f-.0008f*effort,-2,2);
-        float advantage=clip(reward-meanReward,-2,2);
+           !Float.isFinite(actualAmbientEnergyLoss)||!Float.isFinite(actualMotorEnergy)||
+           actualDamage<0||actualAmbientEnergyLoss<0||actualMotorEnergy<0){
+            lastAction=-1;return;
+        }
+        float reward=clip(actualContactEnergy/35f-actualDamage/90f-
+            actualAmbientEnergyLoss/35f-actualMotorEnergy/35f,-2,2);
+        // In a purely eventless interval, the cortex has no evidence
+        // that ANY perturbation was better. Keep virgin muscles neutral;
+        // a rising count is not evidence of learning.
+        boolean experienced=actualContactEnergy!=0f||actualDamage>0f||
+             actualAmbientEnergyLoss>0f||actualMotorEnergy>0f;
+        float advantage=experienced?clip(reward-meanReward,-2,2):0f;
         if(holdout)heldout++;
         else if(train){
             float lr=.0018f;
