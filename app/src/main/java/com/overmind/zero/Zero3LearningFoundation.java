@@ -187,6 +187,11 @@ public final class Zero3LearningFoundation {
         public long discarded(){return discarded;}
         public boolean pending(){return active!=null;}
         public void begin(MotorIntent intent,MotorBrain.Body b,boolean train,boolean heldout){
+            begin(intent,b,train,heldout,train);
+        }
+        /** Optional matched heldout experiment uses exploration but NEVER gradients. */
+        public void begin(MotorIntent intent,MotorBrain.Body b,boolean train,boolean heldout,
+                          boolean exploration){
             if(intent==null||b==null||active!=null)throw new IllegalStateException("pending or null");
             if(train==heldout)throw new IllegalArgumentException("must choose train XOR heldout");
             if(intent.decisionId<=lastDecision&&intent.episodeId==episode)
@@ -196,7 +201,7 @@ public final class Zero3LearningFoundation {
             lastDecision=intent.decisionId;episode=intent.episodeId;startedRevision=cortex.revision();
             startX=lastX=endX=b.cx;startY=lastY=endY=b.cy;
             frames=0;gross=work=impulse=seconds=0;
-            cortex.begin(train);
+            cortex.begin(exploration);
         }
         public float[] actuate(MotorBrain.Body body,Morphology.Surface skin,float dt){
             if(active==null)throw new IllegalStateException("no decision");
