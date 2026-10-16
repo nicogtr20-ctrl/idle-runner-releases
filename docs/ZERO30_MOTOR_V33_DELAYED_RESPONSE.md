@@ -86,3 +86,27 @@ Rispetto ai test precedenti, questa versione ricava l'orientamento iniziale dall
 **Risultato verificato:** il segnale senso-motorio con orientamento misurato e le interazioni muscolo/frame descrivono bene una risposta **locale e ritardata** del corpo su una famiglia di posture ruotate. È un progresso concreto sui due precedenti modelli e sulla ricostruzione del ritardo. **Gate G3 locomozione autonoma ancora BLOCCATO**: le scene hanno la stessa morfologia/materiale e non introducono urti diversi, stati di deformazione indipendenti, inerzia iniziale, energia, ostacoli, gemme, più seed o vite intere. **G5 world model completo NON superato**: è soltanto una piccola testa muscolare di risposta, non il modello del mondo unificato.
 
 **Prossima attività:** stress test di condizioni iniziali deformate e velocità preesistente prima di usare il predittore per scegliere muscoli nel gioco, quindi modulo riutilizzabile e integrazione graduale con vincoli di energia/rollback e UI V3 da vera diagnostica.
+
+
+## 7. Validazione a TRE gruppi separati (prevenzione leakage) — CI 38976457410
+
+**[GitHub Actions 38976457410 — SUCCESS](https://github.com/nicogtr20-ctrl/idle-runner-releases/actions/runs/38976457410)** su codice sperimentale \`497ad8aae0359ec231d71e418fe362973e351ce6\`. Il laboratorio è stato ulteriormente corretto perché il fit e il gate di affidabilità NON devono riutilizzare la stessa valutazione finale.
+
+Gruppi irrevocabili:
+1. **TRAIN**: 256 coppie fisiche (pose 0°, 90°), regredisce i 42 coefficienti di feature per ciascuna delle tre uscite.
+2. **CALIBRAZIONE**: 256 coppie fisiche (pose ±22,5°), serve **solo** a decidere se il modello predittivo possa suggerire candidate (soglia preregistrata: MSE almeno 10% inferiore alla baseline zero su tutte e tre le uscite).
+3. **TEST FINALE**: 512 coppie fisiche (pose ±45° e ±67,5°), **mai usate per il fit o per decidere il gate**. La selezione dell'intervento viene fatta sul risultato PREDETTO, non sul risultato fisico osservato.
+
+| MSE sulla misura reale | Calibrazione modello | Calibrazione zero | Finale modello | Finale zero |
+|---|---:|---:|---:|---:|
+| Spostamento immediato | 0.000483834 | 0.005338025 | **0.000486545** | 0.005329266 |
+| Spostamento ritardato | 0.000691119 | 0.018579312 | **0.000781880** | 0.018596275 |
+| Costo differenziale | 0.000000000238 | 0.000000007722 | **0.000000000485** | 0.000000007751 |
+
+**Gate di calibrazione: ACCEPTED_FOR_LAB_ONLY.**
+
+**Risultato FINALE non riutilizzato per selezione:** **16/16** contesti pose×intenzione con spostamento utile positivo, **16/16** rispettano limite di lavoro aggiuntivo 0.005; spostamento addizionale firmato totale **+9.09315 U**, utilità penalizzata **+8.97825**, lavoro extra **0.00255325**. Baseline di un singolo intervento predefinito per contesto: **+0.10942 U**. Questi sono risultati del laboratorio di perturbazioni locali, **non** risultati di una politica che cammina in una vita autonoma.
+
+L'effetto ritardato nella sola valutazione finale ammonta in ampiezza assoluta aggregata a **41.921 U**, contro **20.384 U** durante la contrazione. Ancora una volta è circa il doppio, confermando un marcato ritardo fisico da attribuire correttamente.
+
+**Prossimi blocchi espliciti:** variare deformazione iniziale, contatto, supporto, stato muscolare, inerzia e seed ambientali; poi modellare l'errore dovuto all'effettiva stato corporeo, consolidare competenze e aggiornare in sicurezza il cortex solo dopo prove indipendenti. **ZERO 3.0 NON è attivo nell'app, la UI 3.0 NON è implementata e G3/G5 rimangono NON superati.**
