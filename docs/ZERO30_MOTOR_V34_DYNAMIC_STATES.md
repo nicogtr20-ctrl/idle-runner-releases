@@ -122,3 +122,19 @@ Esempi fattuali:
 5. Solo con prestazioni migliori su più pose/stati/seed, collegare la previsione al controller 3.0; poi allenamento da vera esperienza, memorie, salvataggio, UI e test Galaxy S21.
 
 **Non dichiarare G3 o la nuova versione pronti.** Il test a ciclo chiuso attuale resta **4/16** condizioni migliorate, costo maggiore, e nessun OTA V3.
+
+
+## Esperimento V3.4-D — registro temporale di credito e pausa dei nuovi impulsi
+
+**Codice sperimentale aggiunto:** [Zero3MotorCreditWindow.java](https://github.com/nicogtr20-ctrl/idle-runner-releases/blob/feature/zero30-foundation-g0-g3-20261016/app/src/main/java/com/overmind/zero/Zero3MotorCreditWindow.java) e [Zero3MotorCreditWindowRegression.java](https://github.com/nicogtr20-ctrl/idle-runner-releases/blob/feature/zero30-foundation-g0-g3-20261016/app/src/main/java/com/overmind/zero/Zero3MotorCreditWindowRegression.java).
+
+- Un esperimento locale apre **un'unica finestra di responsabilità**, con \`decisionId\`, frame fisico iniziale, body state prima dell'azione e lavoro muscolare già osservato.
+- Il ledger non permette una seconda perturbazione esplorativa finché la risposta del primo impulso non è stata **effettivamente osservata dal solver** per l'intervallo configurato. Le normali contrazioni volontarie del cortex continuano: non esiste un gait codificato, né forze dirette al baricentro.
+- **Orizzonte prototipale 384 frame**, che copre 12 frame preimpulso, 12 di impulso e 360 successivi dello studio fisico appena completato. **Non è una garanzia che l'effetto finisca sempre a 384 frame:** è l'intervallo studiato, da validare in ulteriori condizioni.
+- L'outcome della finestra è una **osservazione del movimento cumulativo e del lavoro**, NON una differenza causale controllata disponibile a ZERO durante la vita. Il kernel NON riceve da questo ledger alcun reward artificiale, non allena sinapsi, non si attiva nel gioco.
+- A/B preregistrato: **16 condizioni × 80 decisioni continue**, confrontando baseline senza perturbazioni, V3.4 guida ogni decisione (regressione nota), guida con **un'unica perturbazione ogni finestra osservativa conclusa**. Misure: spostamento firmato, lavoro, numero perturbazioni, successo entro vincolo di energia e stabilità.
+- Proibito definire il risultato «apprendimento» se si limita a un minor danno: un credito più corretto richiederà in seguito plasticità online, memorie e validazione indipendente su 2.000+ decisioni, mondo e Galaxy S21.
+
+**Esito quantitativo:** da verificare sul workflow [ZERO3 motor model QA](https://github.com/nicogtr20-ctrl/idle-runner-releases/actions) e registrare qui. Se il credito ritardato non aumenta il controllo direzionale o riduce soltanto il numero di perturbazioni, tenere il gate G3 bloccato e progettare controllore più contestuale.
+
+Questo **non è** l'OTA né la nuova UI di ZERO 3.0.
