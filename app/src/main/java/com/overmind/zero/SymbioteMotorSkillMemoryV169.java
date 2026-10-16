@@ -277,6 +277,22 @@ public final class SymbioteMotorSkillMemoryV169 {
                 }else{
                     rollback=recoveryOriginal.clone();
                     recoveryReverted++;
+                    // Do not cyclically reapply a proven-bad old skill.
+                    // After two independently failed live recovery trials,
+                    // retain the configuration as an unverified memory only.
+                    for(int n=champions.size()-1;n>=0;n--){
+                        Entry wrong=champions.get(n);
+                        if(wrong.action!=recoveryAction)continue;
+                        wrong.failed=Math.min(3,wrong.failed+1);
+                        if(wrong.failed>=2){
+                            champions.remove(n);
+                            wrong.verifications=0;wrong.failed=0;
+                            wrong.firstLife=wrong.lastLife=life;
+                            if(candidates.size()<MAX_CANDIDATES)
+                                candidates.add(wrong);
+                        }
+                        break;
+                    }
                 }
                 recoveryOriginal=null;recoveryAction=-1;recoveryTrials=0;
                 recoveryPasses=0;recoveryDeadline=0;recoverySum=0f;
