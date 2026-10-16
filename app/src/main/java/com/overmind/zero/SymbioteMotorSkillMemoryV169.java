@@ -29,7 +29,8 @@ public final class SymbioteMotorSkillMemoryV169 {
     private static final float MIN_ACTIVE_MUSCLE_IMPULSE=.5f;
     private static final float MAX_INITIAL_CENTER_SPEED=5.0f;
     private final ArrayList<Entry> candidates=new ArrayList<>(),champions=new ArrayList<>();
-    private int failedAction=-1,badStreak=0;
+    private int failedAction=-1,badStreak=0,failureScoreCount=0;
+    private float recentFailureScore=0f;
     private final float[] trial=new float[WIDTH],trialContext=new float[CONTEXT];
     private int action=-1,life=1,validFrames=0,cooldown=0,externalFrames=0;
     private float netX,netY,gross,angularMotion,activeImpulse,initialSpeed;
@@ -99,11 +100,15 @@ public final class SymbioteMotorSkillMemoryV169 {
         if(life<1000000000)life++;
         cancelTrial();
         badStreak=0;failedAction=-1;
+        recentFailureScore=0f;failureScoreCount=0;
         // An unfinished A/B recovery must never be silently accepted when
         // crossing a death boundary. The caller will undo it at the boundary.
         recoveryDeadline=0;
     }
-    public void resumeLife(){cancelTrial();badStreak=0;failedAction=-1;}
+    public void resumeLife(){
+        cancelTrial();badStreak=0;failedAction=-1;
+        recentFailureScore=0f;failureScoreCount=0;
+    }
     public void cancelTrial(){
         action=-1;netX=netY=gross=angularMotion=activeImpulse=initialSpeed=0f;
         validFrames=externalFrames=0;
@@ -234,9 +239,25 @@ public final class SymbioteMotorSkillMemoryV169 {
         samples++;
         if(heldout)heldoutSamples++;
         if(cooldown>0)cooldown--;
-        if(failedAction!=a){failedAction=a;badStreak=0;}
-        if(actualProgress)badStreak=0;
-        else if(validFrames>=4&&badStreak<100)badStreak++;
+        if(failedAction!=a){
+            failedAction=a;badStreak=0;
+            recentFailureScore=0f;failureScoreCount=0;
+        }
+        if(actualProgress){
+            badStreak=0;recentFailureScore=0f;failureScoreCount=0;
+        }else if(validFrames>=4&&externalFrames==0&&
+                 initialSpeed<=MAX_INITIAL_CENTER_SPEED){
+            if(badStreak<100)badStreak++;
+            recentFailureScore+=clip(quality,-1f,1f);
+            failureScoreCount++;
+            if(failureScoreCount>4){
+                // Keep a bounded moving estimate of last failed trials.
+                recentFailureScore*=.8f;failureScoreCount=4;
+            }
+        }else{
+            // External motion breaks comparability and consecutiveness.
+            badStreak=0;recentFailureScore=0f;failureScoreCount=0;
+        }
 
         float[] rollback=null;
         // Quantified post-recovery behavioral A/B with the SAME brain intent.
@@ -350,6 +371,7 @@ public final class SymbioteMotorSkillMemoryV169 {
         // same action in this same life; gaps or other intents break the run.
         if(chosen!=failedAction){
             badStreak=0;failedAction=-1;
+            recentFailureScore=0f;failureScoreCount=0;
         }
         if(chosen<0||chosen>=A||failedAction!=chosen||badStreak<4||
            cooldown>0||recoveryOriginal!=null||context==null||
@@ -363,9 +385,13 @@ public final class SymbioteMotorSkillMemoryV169 {
         if(best==null||distance(best.config,current)<.005f)return null;
         recoveryOriginal=current.clone();
         recoveryAction=chosen;
-        recoveryBaseline=0f; // conservative comparison to observed failure
+        recoveryBaseline=failureScoreCount>0?
+            recentFailureScore/failureScoreCount:0f;
+        // Compare against ZERO's actual last failed trials, never a
+        // fabricated zero, or a different brain intent.
         recoveryDeadline=18;recoveryTrials=recoveryPasses=0;recoverySum=0f;
         cooldown=32;badStreak=0;
+        recentFailureScore=0f;failureScoreCount=0;
         recoveries++;
         return best.config.clone();
     }
