@@ -90,6 +90,7 @@ public final class BrainStatsActivity extends Activity {
         bMuscle=muscle.restore(prefs.getString(SymbioteMotorHeadV1.KEY,""));
         bLocal=muscle.restoreLocal(prefs.getString(SymbioteMotorHeadV1.LOCAL_KEY,""));
         bCoordination=muscle.restoreCoordination(prefs.getString(SymbioteCoordinationV162.KEY,""));
+        muscle.responseJournal().restore(prefs.getString(MotorResponseJournalV172.KEY,""));
         bFast=muscle.restoreFast(prefs.getString(FastSomaticCircuitV167.KEY,""));
         bMotorMemory=muscle.restoreMemory(prefs.getString(SymbioteMotorSkillMemoryV169.KEY,""));
         muscle.restoreManipulation(prefs.getString(SymbioteMotorSkillMemoryV169.MANIPULATION_KEY,""));
@@ -752,6 +753,7 @@ public final class BrainStatsActivity extends Activity {
                      " esperienze + "+test+" verifiche escluse dal training");
              }
          }
+         note(c,muscle.responseJournal().summary());
          note(c,"Il nucleo ricorrente sceglie la direzione. ZERO esplora la durata dell'azione con conseguenze fisiche reali. Ogni 0,65 s verifica pericolo e alternative forti. Una nuova scelta casuale attende la fine della prova; le prove interrotte non certificano una durata.");
      }
      private void detailMuscle(LinearLayout body){

@@ -585,17 +585,17 @@ public final class SensorimotorMind {
             actionExploratory=true;
         }
         // 2.2 chooses WHAT; a learned motor-duration option decides how long
-        // to maintain THAT action. Danger, exploration and strong alternatives
-        // may all interrupt; no heading or target is ever prescribed.
+        // to maintain THAT action. Danger and strong current alternatives may
+        // interrupt; independent exploration waits for the experiment boundary.
         int exploratoryProposal=chosen;
         if(motorDuration!=null&&symbioteHead!=null)
             chosen=motorDuration.select(chosen,greedyAction,scores,
                 actionExploratory,senses[0],actualContactHarm,
                 observedBody==null?Float.NaN:observedBody.cx,
                 observedBody==null?Float.NaN:observedBody.cy);
-                actionExploratory=actionExploratory&&chosen==exploratoryProposal;
+        actionExploratory=actionExploratory&&chosen==exploratoryProposal;
         if(actionExploratory)explorations++;
-if(motionShadow!=null)motionShadow.chosen(senses,chosen,observedBody);
+        if(motionShadow!=null)motionShadow.chosen(senses,chosen,observedBody);
         if(blackbox!=null){
             float[] breakdown=new float[DecisionBlackbox.TERMS];
             breakdown[12]=.40f*navTerms[chosen];

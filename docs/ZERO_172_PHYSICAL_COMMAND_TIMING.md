@@ -41,3 +41,25 @@ Across the four rotated resource scenes, mean final displacement40.021→86.520U
 - Original rc22/smh1/cl161/sf167/co162/ms170 learned values are unchanged at migration. Original package `com.overmind.zero.ota`, installed signing identity, named slots and world generation are unchanged. No fake reward, automatic grip, resource direction, new neuron grant or scripted gait.
 - CI must run Android debug/release builds, all97 JVM entrypoints, all existing source/signing/permissions gates and the new timing/context gate. Every changed/new Java source is pinned before signed publication.
 - Device efficacy remains unverified. Zero pickups in screening and regressions in individual cases are material open results; do not suppress them.
+
+## Additional environment checks — adverse results retained
+
+After selecting the final correction, five additional distinct environments were screened: four rotations of a panel/resource arena and one fixed room (the room ignores the seed, so duplicates are not independent tests). Same real saved brain,195 simulated seconds, same old/new physical policy loop.
+
+| Additional scene | Net displacement old→new (U) | Signed motion old→new (U) | Reverse intervals old→new | Pickups old→new |
+|---|---:|---:|---:|---:|
+| Panel/resource0 |31.283→43.239 |93.614→36.680 |126→141 |0→0 |
+| Panel/resource90 |17.319→9.404 |86.286→71.370 |127→154 |0→0 |
+| Panel/resource180 |70.794→38.835 |113.131→72.613 |110→129 |1→0 |
+| Panel/resource270 |40.238→53.385 |92.889→0.973 |125→162 |0→0 |
+| Fixed room |7.600→65.605 |21.835→74.058 |156→128 |0→0 |
+
+The panel cases regress directionally; the only pickup in this additional baseline set is lost. Therefore these results **do not establish a generally better walking policy or resource-seeking capability**. The duration/context defects remain independently reproduced and corrected, but a universal solution claim or monotonic-improvement claim would be false. Real device effectiveness remains an open question.
+
+## Passive actual-command journal
+
+`MotorResponseJournalV172`, optional `motor_response_journal_v172`, records128 recent real completed command intervals. It has no RNG, scoring, policy feedback, neural update or actuator writes. It is owned by the actual neural motor head and fed by the existing real post-contact physical callback. It loads/saves alongside the brain, follows named slots automatically, has atomic validation and belongs to the membrane reset domain. Non-symbiote modes guard the nullable motor head. The duration diagnostics show its summary.
+
+Schema mr172: header completed count; each21-field row is action, consecutive-command age, actual frames, elapsed milliseconds, start vx/vy×1000, end vx/vy×1000, actual dx/dy×1000, gross path×1000, active muscle impulse×1000, external disturbance, training-request flag, heldout flag, directional-eligibility flag, fast-probe flag, actual radial/tangential/adhesion/tension command means×1000. Scaled scalar fields are bounded at±30000; impulse is diagnostic bounded magnitude, not a reconstructed force vector. Training-request flags are permissions, **not proof a synapse changed**. No absolute world/resource positions or device identifiers are added. No missing startup data is fabricated into old logs.
+
+The new regression exercises actual production recording, exact save/restore, corrupt-save rejection and generic named-slot codec preservation. Existing physical/brain tests continue to pass (97 entrypoints).

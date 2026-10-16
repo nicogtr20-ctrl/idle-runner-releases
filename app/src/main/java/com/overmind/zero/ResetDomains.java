@@ -33,7 +33,7 @@ public final class ResetDomains {
                  "online_accepted_hand_v094","online_rejected_hand_v094",GripAffordanceV20.KEY};
             case MEMBRANE:return new String[]{"morph_brain_v07","morph_attempts_v07",
                  "morph_accepted_v07","morph_gate_attempts_v08","morph_gate_success_v08",SymbioteMotorHeadV1.KEY,SymbioteMotorHeadV1.LOCAL_KEY,SymbioteCoordinationV162.KEY,
-                 FastSomaticCircuitV167.KEY,SymbioteMotorSkillMemoryV169.KEY,SymbioteMotorSkillMemoryV169.MANIPULATION_KEY,
+                 FastSomaticCircuitV167.KEY,SymbioteMotorSkillMemoryV169.KEY,MotorResponseJournalV172.KEY,SymbioteMotorSkillMemoryV169.MANIPULATION_KEY,
                  "online_accepted_membrane_v094","online_rejected_membrane_v094",
                   "grip_skills_v099",CompetenceMemoryV21.KEY};
             case EXPLORATION:return new String[]{"world_knowledge_v03",

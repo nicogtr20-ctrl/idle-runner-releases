@@ -58,7 +58,7 @@ public final class Zero172MotorResponseRegression {
         for(int interval=0;interval<16;interval++){
             int a=interval<8?0:4;float x=b.cx;
             h.chosen(a,DistributedBodySense.sense(b,s,null,empty),z,.2f,FluidInteroceptionV1.sense(b,s,gel),SymbioteMotorHeadV1.measuredSectorAngles(b,s),b,s);
-            for(int tick=0;tick<39;tick++){h.fastTick(b,s,1f/60);gel.step(b,s,h.commands(),1f/60);}
+            for(int tick=0;tick<39;tick++){float x0=b.cx,y0=b.cy;h.fastTick(b,s,1f/60);gel.step(b,s,h.commands(),1f/60);h.observedPhysicalStep(x0,y0,b,s,gel.lastMuscleReactionImpulse,false,1f/60);}
             float signed=(b.cx-x)*(a==0?1:-1);
             if(interval>=8&&interval<=9&&signed<0)reverse++;
             if(interval==8)first=signed;if(interval==15)last=signed;
@@ -66,6 +66,13 @@ public final class Zero172MotorResponseRegression {
         }
         check(reverse>0&&last>0,"real material response no longer reproduces transient reversal followed by intended movement");
         check(gel.invalid==0&&MaterialGeometry.selfCrossings(s)==0,"latency fixture invalid material");
+        check(h.responseJournal().completed()==16,"real physics command journal did not close all intervals");
+        String rows=h.responseJournal().encode();MotorResponseJournalV172 restored=new MotorResponseJournalV172();
+        check(restored.restore(rows)&&rows.equals(restored.encode()),"passive journal exact roundtrip");
+        check(!restored.restore(rows+"bad")&&rows.equals(restored.encode()),"bad passive journal erased evidence");
+        Map<String,Object> profile=new LinkedHashMap<>();profile.put(MotorResponseJournalV172.KEY,rows);
+        Map<String,Object> decoded=SaveProfileCodec.decode(SaveProfileCodec.encode(profile));
+        check(rows.equals(decoded.get(MotorResponseJournalV172.KEY)),"named-slot codec omitted journal");
         System.out.printf(Locale.US,"REAL NEURAL LATENCY: first reversed-command interval %.3f U; settled interval %.3f U%n",first,last);
     }
     public static void main(String[]args){duration();context();physicalLatency();System.out.println("ZERO172 PASS: complete motor experiments, safe interrupts, honest legacy migration, signed velocity, current epoch capacity and actual material response");}
