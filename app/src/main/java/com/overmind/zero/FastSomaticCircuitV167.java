@@ -21,7 +21,8 @@ public final class FastSomaticCircuitV167 {
         INPUTS=10, N=S*CHANNELS, PARAMETERS=N*INPUTS;
     private final float[] weights=new float[PARAMETERS];
     private final float[] state=new float[N],drift=new float[N];
-    private final float[] eligibility=new float[PARAMETERS],input=new float[INPUTS];
+    private final float[] eligibility=new float[PARAMETERS],input=new float[INPUTS],
+        next=new float[N];
     private final float[] baseline=new float[RecurrentCoreV22.A];
     private final int[] baselineSamples=new int[RecurrentCoreV22.A];
     private long frames,trainings,holdouts,episodes;
@@ -62,7 +63,7 @@ public final class FastSomaticCircuitV167 {
         float theta=(action%8)*(float)Math.PI/4f;
         float goalX=(float)Math.cos(theta),goalY=(float)Math.sin(theta);
         float alpha=1f-(float)Math.exp(-5.2f*dt);
-        float[] next=new float[N];
+        // Reuse arrays on every ~25ms physics step; no per-frame GC.
         for(int sector=0;sector<S;sector++){
             // Local membrane patch is TRUE material; no fixed birth-angle,
             // artificial bone, imaginary central anchor or energy coordinate.
