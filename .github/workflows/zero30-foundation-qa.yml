@@ -59,7 +59,8 @@ jobs:
                     'app/src/main/java/com/overmind/zero/Zero3MotorAdaptiveFeedbackRegression.java',
                     'app/src/main/java/com/overmind/zero/Zero3MotorLongHorizonRegression.java',
                     'app/src/main/java/com/overmind/zero/Zero3MotorTemporalHistoryRegression.java',
-                    'app/src/main/java/com/overmind/zero/Zero3MotorTemporalScalingRegression.java']
+                    'app/src/main/java/com/overmind/zero/Zero3MotorTemporalScalingRegression.java',
+                    'app/src/main/java/com/overmind/zero/Zero3MotorRecurrentTrajectoryRegression.java']
           print('Compiling',len(command)-3,'real application Java sources')
           subprocess.run(command,check=True)
           PY
