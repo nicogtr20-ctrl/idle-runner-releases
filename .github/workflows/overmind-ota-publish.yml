@@ -1530,7 +1530,7 @@ jobs:
           assert '.putString(SymbioteCoordinationV162.KEY,' in game
           assert 'SymbioteCoordinationV162.KEY' in reset
           assert 'private final SymbioteCoordinationV162 coordination' in motor
-          assert 'coordination.consequence(train,holdout' in motor
+          assert 'coordination.consequence(train&&!fastProbe,holdout' in motor
           assert 'public static final String KEY="symbiote_coordination_v162";' in coordinator
           assert 'if(learn&&!isHeldout&&action>=0&&action<ACTIONS&&gross>=.8f' in coordinator
           assert 'if(i%channels==2)continue;' in coordinator
