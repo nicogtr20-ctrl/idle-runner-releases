@@ -1,5 +1,8 @@
 # OVERMIND ZERO — MASTER PROJECT ZERO 3.0
 
+> **STATO SPERIMENTALE V3.5:** [Finestra di credito fisico 384 frame + test di astensione dopo feedback reale](docs/ZERO30_MOTOR_V35_ADAPTIVE_CREDIT.md). Il sistema **non è attivo in gameplay** e G3 resta BLOCCATO: i test positivi sugli impulsi isolati non valgono come locomozione autonoma.
+
+
 > **ULTIMO STATO MOTOR V3.4 (17/10/2026):** [Corpi deformati + kernel condiviso + fallimento a ciclo chiuso (4/16)](docs/ZERO30_MOTOR_V34_DYNAMIC_STATES.md). Le previsioni degli impulsi isolati sono attendibili, **MA il modello guidato a ogni decisione peggiora locomozione e costo**. Sono attive nuove prove sul ritardo cumulativo. G3 e nuova UI V3 NON completati; niente OTA.
 
 
