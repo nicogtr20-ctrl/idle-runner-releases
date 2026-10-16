@@ -81,15 +81,11 @@ public final class SymbioteMotorSkillMemoryV169 {
     }
     public void resumeLife(){cancelTrial();}
     public void cancelTrial(){action=-1;netX=netY=gross=angularMotion=0f;validFrames=0;}
-    public void begin(int chosen,float[] shared,float[] local,float[] fast){
+    public void begin(int chosen,float[] combinedSnapshot){
         cancelTrial();
-        if(chosen<0||chosen>=A||shared==null||shared.length!=SHARED||
-           local==null||local.length!=REGIONAL||fast==null||fast.length!=FAST)
-            return;
-        System.arraycopy(shared,0,trial,0,SHARED);
-        System.arraycopy(local,0,trial,SHARED,REGIONAL);
-        System.arraycopy(fast,0,trial,SHARED+REGIONAL,FAST);
-        if(valid(trial))action=chosen;
+        if(chosen<0||chosen>=A||!valid(combinedSnapshot))return;
+        System.arraycopy(combinedSnapshot,0,trial,0,WIDTH);
+        action=chosen;
     }
     /** Every REAL post-collision physics frame. Relative membrane rotation
      * is only a regularizer; never counts as net movement or earned energy. */
