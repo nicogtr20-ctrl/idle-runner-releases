@@ -978,9 +978,9 @@ jobs:
           # ZERO171: reviewed integration sources re-pinned, including causal
           # motor eligibility, continuous geometry and isolated actual-body lab.
           pins={
-          'MotorResponseJournalV172.java':'589b22281b536f736bf8bd8f87f47e367abae884',
-          'Zero172MotorResponseRegression.java':'3d580e8fa80a9fc26a39f79e52a72b5e723984c1',
-          'ContextualNavigationV172.java':'e265521fbae50e66dcc94fb6a5426d25b14e5c23',
+          'MotorResponseJournalV172.java':'7f1874a9db38042bb74d7ab2dd7b871fec5c15a8',
+          'Zero172MotorResponseRegression.java':'6323c99a0809df970aead8faa6ee01046d2a9259',
+          'ContextualNavigationV172.java':'6dcf1554a816a578ed7289f9c21a2107cfd545ec',
           'LearningDiagnostics.java':'a4b3af6e8b87112f9a14505bbdde6170d4dd9d9e',
           'CoreLabActivityV22.java':'5be3f7d42b8dc69256af7a21cd742d3b8791814f',
           'CoreComparisonV22.java':'b1a20ab63199b21279b9c1c0b1d674656a5ad7fa',
@@ -1008,12 +1008,12 @@ jobs:
           'ObjectContinuityV21.java':'73835ed4c3b15eefcfa3d1c615d7769b6fa1fa46',
           'CausalSequenceV23.java':'329344e296ec342e0b85b965babbae15a3eb6f83',
           'CausalSequenceV23Regression.java':'e8ea1df2ae038dd9f7db44132df3e247e643b6ae',
-          'SensorimotorMind.java':'54e925be6abe610ecc832d5d4e95c1b570ad3c3e',
+          'SensorimotorMind.java':'ab2c9e652fd12f194015d6b1854c56543a0ab2cc',
           'DecisionBlackbox.java':'7fbac5e10cdf101bef3fd5ae050ae5db6074bc6c',
           'EnergyLifetimeCounters.java':'7c0a9d815937a39c5cfdaddb01896b39536d8afe',
           'ObjectExperienceV20.java':'39ada3745f8b22769e67c00f5def9a5a3ed6ba1a',
           'ObjectExperienceV20Regression.java':'44bccc8ebe5971ed5226e50f62f8e27f7fbc6ddd',
-          'GameActivity.java':'a85c8336a3ab63271a9599ee51a775aec8bf4b78',
+          'GameActivity.java':'448e03693015754b62d1e25a686dd0a779a28088',
           'ContactGeometryForensics.java':'661401bf03e4e586e5fe69d819db7af05a1a319d',
           'InstrumentalNavigation.java':'da8c34c36b996629fd6a9d0d9615febda22d4cc5',
           'BehavioralLaboratory.java':'8a35099ddb4b4d7ef9a9a334cb2e50b9477285d8',
