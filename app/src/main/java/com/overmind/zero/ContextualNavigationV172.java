@@ -5,7 +5,7 @@ import java.util.*;
 public final class ContextualNavigationV172 {
     public static final String KEY="contextual_navigation_v172";
     private static final int A=16,C=20,PER_ACTION=6;
-    private static final float MATCH=.065f;
+    private static final float MATCH=.14f;
     private final ArrayList<Cell> cells=new ArrayList<>();
     private float[] context,pending;
     private int pendingAction=-1,epoch=0;
@@ -39,7 +39,14 @@ public final class ContextualNavigationV172 {
         context=c;
     }
     private static float distance(float[] x,float[] y){
-        if(x==null||y==null)return Float.POSITIVE_INFINITY;
+        if(x==null||y==null||x.length!=C||y.length!=C)
+            return Float.POSITIVE_INFINITY;
+        // With a broader pose neighborhood, retain a strict independent
+        // velocity veto. Bodies still moving in opposing directions cannot
+        // inherit one another's displacement predictions.
+        if(x[18]*y[18]<-.01f||x[19]*y[19]<-.01f||
+           Math.hypot(x[18]-y[18],x[19]-y[19])>.40f)
+            return Float.POSITIVE_INFINITY;
         float d=0;for(int i=0;i<C;i++){float a=x[i]-y[i];d+=a*a;}
         return (float)Math.sqrt(d/C);
     }
