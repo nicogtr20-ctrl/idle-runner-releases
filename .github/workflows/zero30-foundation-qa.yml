@@ -37,7 +37,8 @@ jobs:
                     'app/src/main/java/com/overmind/zero/Zero3MotorSkillAB.java',
                     'app/src/main/java/com/overmind/zero/Zero3MotorRetentionRegression.java',
                     'app/src/main/java/com/overmind/zero/Zero3MotorRateSweepRegression.java',
-                    'app/src/main/java/com/overmind/zero/Zero3MotorPromotionGate.java']
+                    'app/src/main/java/com/overmind/zero/Zero3MotorPromotionGate.java',
+                    'app/src/main/java/com/overmind/zero/Zero3MotorEpisodicSearchRegression.java']
           print('Compiling',len(command)-3,'real application Java sources')
           subprocess.run(command,check=True)
           PY
@@ -57,6 +58,8 @@ jobs:
         run: java -cp /tmp/overmind com.overmind.zero.Zero3MotorRetentionRegression
       - name: Measure preregistered motor learning-rate grid (tuning only, not final proof)
         run: java -cp /tmp/overmind com.overmind.zero.Zero3MotorRateSweepRegression
+      - name: Test unscripted local cortex candidate search with repeated real physics episodes
+        run: java -cp /tmp/overmind com.overmind.zero.Zero3MotorEpisodicSearchRegression
       - name: Android build smoke without publishing APK
         run: |
           gradle --version || true
