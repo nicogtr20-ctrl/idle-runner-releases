@@ -127,6 +127,48 @@ public final class SymbioteMatterV1 {
         body.cvx=centerVx+mvx*fluidWeight;body.cvy=centerVy+mvy*fluidWeight;
     }
     /**
+     * OTA166: real viscous cross-layer material coupling. The cortex alone
+     * loses velocity to its substrate, while internal muscle reactions could
+     * otherwise counter-spin with almost no membrane/interior shear exchange.
+     * Each liquid parcel exchanges velocity with its CLOSEST real membrane
+     * point. Equal and opposite impulses conserve weighted total momentum
+     * for unheld material; a genuinely object-held point transfers the
+     * reaction to the obstacle. No center anchor, direction, gait or reward.
+     */
+    static void exchangeCortexFluidShear(Morphology.Surface skin,
+            float[] px,float[] py,float[] pvx,float[] pvy,float dt){
+        if(skin==null||px==null||py==null||pvx==null||pvy==null||
+            px.length!=MotorBrain.N+INNER||py.length!=px.length||
+            pvx.length!=px.length||pvy.length!=px.length||
+            !Float.isFinite(dt)||dt<=0||dt>.04f)
+            throw new IllegalArgumentException("Invalid living fluid shear");
+        final float cutoff2=20f*20f;
+        float base=1f-(float)Math.exp(-6f*dt);
+        final float fluidRatio=(float)(MotorBrain.N+INNER)/SURFACE;
+        for(int j=0;j<px.length;j++){
+            float nearest=cutoff2;
+            int closest=-1;
+            for(int i=0;i<SURFACE;i++){
+                float dx=px[j]-skin.x[i],dy=py[j]-skin.y[i];
+                float d2=dx*dx+dy*dy;
+                if(d2<nearest){nearest=d2;closest=i;}
+            }
+            if(closest<0)continue;
+            float alpha=.55f*base*(1f-nearest/cutoff2);
+            float dvx=pvx[j]-skin.vx[closest],dvy=pvy[j]-skin.vy[closest];
+            if(skin.gripHold[closest]>=Morphology.GRIP_HOLD){
+                // An actually contacted solid is the external sink.
+                pvx[j]-=alpha*dvx;
+                pvy[j]-=alpha*dvy;
+            }else{
+                float sx=alpha*dvx,sy=alpha*dvy;
+                skin.vx[closest]+=sx;skin.vy[closest]+=sy;
+                skin.x[closest]+=sx*dt;skin.y[closest]+=sy*dt;
+                pvx[j]-=fluidRatio*sx;pvy[j]-=fluidRatio*sy;
+            }
+        }
+    }
+    /**
      * A moderately extended patch must be able to pull material back even
      * before it becomes an extreme filament. Preserve ordinary crawl footholds,
      * which typically use milder contractions than a deliberate tip retract.
@@ -572,6 +614,10 @@ public final class SymbioteMatterV1 {
             fluidVx[j]=clip((fluidVx[j]+impulsesX[j])*drag,-140f,140f);
             fluidVy[j]=clip((fluidVy[j]+impulsesY[j])*drag,-140f,140f);
         }
+        // The liquid must also exchange shear with its real CORTEX, not
+        // only with itself. Without this, strong opposite spin can build
+        // up in the mobile inner core while the substrate slows the shell.
+        exchangeCortexFluidShear(skin,fluidX,fluidY,fluidVx,fluidVy,dt);
         // XSPH viscosity exchanges velocity between neighbouring *real*
         // parcels. Pairwise impulses sum to zero: fluid shear diffuses,
         // rather than each particle behaving like an independent rubber ball.
