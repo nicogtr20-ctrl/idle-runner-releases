@@ -39,7 +39,8 @@ jobs:
                     'app/src/main/java/com/overmind/zero/Zero3MotorRateSweepRegression.java',
                     'app/src/main/java/com/overmind/zero/Zero3MotorPromotionGate.java',
                     'app/src/main/java/com/overmind/zero/Zero3MotorEpisodicSearchRegression.java',
-                    'app/src/main/java/com/overmind/zero/Zero3Motor2000Regression.java']
+                    'app/src/main/java/com/overmind/zero/Zero3Motor2000Regression.java',
+                    'app/src/main/java/com/overmind/zero/Zero3MotorEfficientSearchRegression.java']
           print('Compiling',len(command)-3,'real application Java sources')
           subprocess.run(command,check=True)
           PY
@@ -63,6 +64,8 @@ jobs:
         run: java -cp /tmp/overmind com.overmind.zero.Zero3MotorEpisodicSearchRegression
       - name: Long-horizon 2000 experience x 4 headings with 400/1000/2000 cold-body validations
         run: java -cp /tmp/overmind com.overmind.zero.Zero3Motor2000Regression
+      - name: Probe cost constrained skill discovery with unseen rotated poses (research only)
+        run: java -cp /tmp/overmind com.overmind.zero.Zero3MotorEfficientSearchRegression
       - name: Android build smoke without publishing APK
         run: |
           gradle --version || true
