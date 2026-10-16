@@ -630,7 +630,10 @@ public final class SensorimotorMind {
         if(spatial!=null)spatial.chosen(chosen);
         if(causal!=null&&spatial!=null)
             causal.chosen(spatial,chosen,actionExploratory);
-        if(navigation!=null)navigation.chosen(chosen,observedBody);
+        // For a living symbiote, capture navigation AFTER the neural motor
+        // head has applied any verified skill recovery and the new 724-weight
+        // actuator epoch is known. Other body modes still capture here.
+        if(navigation!=null&&symbioteHead==null)navigation.chosen(chosen,observedBody);
         if(intention!=null&&navigation!=null&&navigationAdviceEnabled)
             intention.chosen(navigation,chosen,senses[0]);
         actualEnergySinceChoice=actualContactHarm=actualAmbientLossSinceChoice=

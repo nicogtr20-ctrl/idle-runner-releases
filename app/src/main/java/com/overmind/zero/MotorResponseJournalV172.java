@@ -30,6 +30,17 @@ public final class MotorResponseJournalV172 {
         for(int i:v){if(s.length()>0)s.append(',');s.append(i);}records.add(s.toString());while(records.size()>LIMIT)records.removeFirst();completed++;action=-1;
     }
     public void resetLife(){action=previous=-1;age=0;frames=0;}
+    /** Contact alone is proprioceptive evidence, not exogenous motion.
+     * Reject a locomotor trial only for measured forced displacement,
+     * externally moved objects, storms, or an actually held surface.
+     * Invalid measurements fail closed; this method never changes physics. */
+    public static boolean externalMotionContaminated(float correctionX,
+            float correctionY,float worldEffectDelta,boolean storm,boolean held){
+        return !Float.isFinite(correctionX)||!Float.isFinite(correctionY)||
+            !Float.isFinite(worldEffectDelta)||
+            Math.hypot(correctionX,correctionY)>.08f||
+            worldEffectDelta>.03f||storm||held;
+    }
     public long completed(){return completed;}
     public String encode(){StringBuilder s=new StringBuilder("mr172|").append(completed).append('\n');for(String r:records)s.append(r).append('\n');return s.toString();}
     public boolean restore(String raw){

@@ -51,6 +51,56 @@ public final class Zero172MotorResponseRegression {
         check(!restored.restore(data+"|bad")&&data.equals(restored.encode()),"malformed context reset learned memory");
         check(Arrays.asList(ResetDomains.keys(ResetDomains.NAVIGATION)).contains(ContextualNavigationV172.KEY),"context selective reset missing");
     }
+    /** OTA173: the legacy 0.065 RMS gate fragmented nearly all observed
+     * postures; independent real outcomes must accumulate in neighboring
+     * contexts while opposing residual velocities remain isolated. */
+    private static void nearbyPhysicalContexts(){
+        MotorBrain.Body b=new MotorBrain.Body();
+        Morphology.Surface surface=new Morphology.Surface(b);
+        float[]w=new float[724];b.cvx=3f;
+        float[]first=SymbioteMotorSkillMemoryV169.bodyContext(b,surface);
+        int selected=-1;
+        for(int offset=1;offset<=70;offset++){
+            b.cx=offset;
+            float[]next=SymbioteMotorSkillMemoryV169.bodyContext(b,surface);
+            float distance=0f;
+            for(int i=0;i<10;i++)distance+=(first[i]-next[i])*(first[i]-next[i]);
+            distance=(float)Math.sqrt(distance/20f);
+            if(distance>.072f&&distance<.13f){selected=offset;break;}
+        }
+        check(selected>0,"fixture did not find distinct but nearby real posture");
+        ContextualNavigationV172 model=new ContextualNavigationV172();
+        for(int i=0;i<14;i++){
+            b.cx=(i%2==0?0:selected);
+            model.context(b,surface,w);model.chosen(0);
+            model.consequence(0,2,0,i<10,i>=10,true);
+        }
+        b.cx=selected;model.context(b,surface,w);
+        check(model.verified(0),"neighboring real posture outcomes never converge");
+        // The same posture under opposite physical momentum is a DIFFERENT
+        // experiment, regardless of outcome agreement or spatial smoothing.
+        b.cvx=-3f;model.context(b,surface,w);
+        check(!model.verified(0),"opposite momentum inherited forward evidence");
+        String saved=model.encode();ContextualNavigationV172 loaded=new ContextualNavigationV172();
+        check(loaded.restore(saved)&&saved.equals(loaded.encode()),"nearby contexts did not survive an exact save");
+    }
+    private static void worldMotionProvenance(){
+        // Touch and friction are legitimate consequences of body actuation:
+        // the caller must not flag ordinary tactile perception as an
+        // unobserved exogenous force.
+        check(!MotorResponseJournalV172.externalMotionContaminated(
+            .02f,0f,0f,false,false),"minor physical correction mislabeled");
+        check(MotorResponseJournalV172.externalMotionContaminated(
+            .12f,0f,0f,false,false),"real collision displacement not excluded");
+        check(MotorResponseJournalV172.externalMotionContaminated(
+            0f,0f,.04f,false,false),"externally moved world not excluded");
+        check(MotorResponseJournalV172.externalMotionContaminated(
+            0f,0f,0f,true,false),"storm force not excluded");
+        check(MotorResponseJournalV172.externalMotionContaminated(
+            0f,0f,0f,false,true),"gripped external object not excluded");
+        check(MotorResponseJournalV172.externalMotionContaminated(
+            Float.NaN,0f,0f,false,false),"unmeasurable force granted credit");
+    }
     private static void physicalLatency(){
         MotorBrain.Body b=new MotorBrain.Body();Morphology.Surface s=new Morphology.Surface(b);SymbioteMatterV1 gel=new SymbioteMatterV1();gel.reset(b,s);
         SymbioteMotorHeadV1 h=new SymbioteMotorHeadV1();h.setAdaptationEnabled(false);float[]z=new float[RecurrentCoreV22.Z];z[0]=.7f;
@@ -75,5 +125,5 @@ public final class Zero172MotorResponseRegression {
         check(rows.equals(decoded.get(MotorResponseJournalV172.KEY)),"named-slot codec omitted journal");
         System.out.printf(Locale.US,"REAL NEURAL LATENCY: first reversed-command interval %.3f U; settled interval %.3f U%n",first,last);
     }
-    public static void main(String[]args){duration();context();physicalLatency();System.out.println("ZERO172 PASS: complete motor experiments, safe interrupts, honest legacy migration, signed velocity, current epoch capacity and actual material response");}
+    public static void main(String[]args){duration();context();nearbyPhysicalContexts();worldMotionProvenance();physicalLatency();System.out.println("ZERO172 PASS: complete motor experiments, safe interrupts, honest legacy migration, signed velocity, current epoch capacity and actual material response");}
 }
