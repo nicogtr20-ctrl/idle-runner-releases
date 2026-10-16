@@ -60,9 +60,9 @@ public final class Zero3LearningCurveRegression {
         return sample;
     }
     public static void main(String[] args){
-        for(int count:new int[]{40,400}){
+        for(int count:new int[]{40,400,2000}){
             Sample frozen=run(count,false),learned=run(count,true);
-            System.out.println("ZERO3 LEARNING CURVE SCREENING steps="+count+
+            System.out.println("ZERO3 AUTONOMOUS LEARNING CURVE SCREENING steps="+count+
                 " FROZEN{"+frozen+"} TRAIN{"+learned+"}");
         }
         // No assertion that TRAIN must outperform FROZEN: doing so would
