@@ -46,6 +46,7 @@ public final class Zero3MotorAdaptiveGate {
             baselineReady=true;
         }
     }
+    public boolean baselineReady(){return baselineReady;}
     public boolean mayTry(){
         return initialized&&baselineReady&&!blocked;
     }
