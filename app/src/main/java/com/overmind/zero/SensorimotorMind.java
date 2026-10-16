@@ -637,7 +637,8 @@ public final class SensorimotorMind {
             // stable world-space action/physical-consequence attribution.
             actualLiquid==null||observedBody==null||lastActualGripSurface==null
                 ?null:SymbioteMotorHeadV1.measuredSectorAngles(
-                    observedBody,lastActualGripSurface));
+                    observedBody,lastActualGripSurface),
+            observedBody,lastActualGripSurface);
         activeCore.chosen(chosen);
         if(worldV20!=null)worldV20.chosen(chosen,senses);
         if(transferV20!=null)transferV20.chosen(chosen,senses);
