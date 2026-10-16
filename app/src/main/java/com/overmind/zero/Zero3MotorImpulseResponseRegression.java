@@ -213,7 +213,7 @@ public final class Zero3MotorImpulseResponseRegression {
         }
         return b;
     }
-    private static void printError(ResponseModel m,ArrayList<Trial> holdout){
+    private static boolean printError(ResponseModel m,ArrayList<Trial> holdout,String label){
         double[] mse=new double[OUTPUTS],zero=new double[OUTPUTS],delayAbs=new double[2];
         for(Trial t:holdout){
             double[] p=m.infer(t);
@@ -230,14 +230,17 @@ public final class Zero3MotorImpulseResponseRegression {
             assertTrue(Double.isFinite(mse[o]),"nonfinite prediction");
         }
         System.out.printf(Locale.US,
-            "ZERO3 IMPULSE MODEL holdout=%d earlyMSE=%.9f zeroEarlyMSE=%.9f"+
+            "ZERO3 IMPULSE MODEL split=%s heldout=%d earlyMSE=%.9f zeroEarlyMSE=%.9f"+
             " lateMSE=%.9f zeroLateMSE=%.9f costMSE=%.12f zeroCostMSE=%.12f"+
             " totalEarlyAbs=%.3f totalDelayedAbs=%.3f%n",
-            holdout.size(),mse[0],zero[0],mse[1],zero[1],
+            label,holdout.size(),mse[0],zero[0],mse[1],zero[1],
             mse[2],zero[2],delayAbs[0],delayAbs[1]);
+        return mse[0]<zero[0]*.9 && mse[1]<zero[1]*.9 &&
+               mse[2]<zero[2]*.9;
     }
     public static void main(String[] args){
         ArrayList<Trial> training=new ArrayList<>();
+        ArrayList<Trial> calibration=new ArrayList<>();
         ArrayList<Trial> holdout=new ArrayList<>();
         // Experimental interventions are not 2,000 consecutive life decisions:
         // they are REPEATED matched real-physics counterfactual pair trials.
@@ -250,17 +253,29 @@ public final class Zero3MotorImpulseResponseRegression {
             for(float pose:TEST_POSES)
                 for(int channel=0;channel<4;channel++)
                     for(int sector:SECTORS)
-                        for(int sign:new int[]{-1,1})
-                            holdout.add(physical(dir,pose,sector,channel,sign));
+                        for(int sign:new int[]{-1,1}){
+                            Trial sample=physical(dir,pose,sector,channel,sign);
+                            if(Math.abs(Math.abs(pose)-(float)(Math.PI/8))<.001f)
+                                calibration.add(sample);
+                            else holdout.add(sample);
+                        }
         }
-        assertTrue(training.size()==256&&holdout.size()==768,"unexpected train/heldout");
+        assertTrue(training.size()==256&&calibration.size()==256&&
+            holdout.size()==512,"train/calibration/blind test contamination");
         ResponseModel model=new ResponseModel(training);
-        printError(model,holdout);
+        // Only the dedicated calibration poses are allowed to accept the model
+        // as usable. The final 45/67.5-degree poses do NOT select the gate.
+        boolean calibrated=printError(model,calibration,"CALIBRATION_22_5");
+        printError(model,holdout,"BLIND_45_67_5");
+        System.out.println("ZERO3 IMPULSE CALIBRATION GATE="+
+            (calibrated?"ACCEPTED_FOR_LAB_ONLY":"REJECTED")+
+            " (requires 10% advantage vs zero on all 3 outputs)");
         double fullGain=0,totalCost=0,selectedSigned=0,randomSigned=0;
         int better=0,costControlled=0,positive=0;
-        // 4 directions x 2 unseen heldout poses: choose purely from model
-        // predictions, then score physically observed unseen-pose outcomes.
+        // Choose ONLY on untouched final evaluation poses: neither ridge
+        // training nor the calibration gate has ever used these outcomes.
         for(int dir=0;dir<4;dir++)for(float pose:TEST_POSES){
+            if(Math.abs(Math.abs(pose)-(float)(Math.PI/8))<.001f)continue;
             Trial selected=null,random=null;
             double bestPred=0; // do nothing is allowed
             for(Trial t:holdout){
@@ -268,10 +283,11 @@ public final class Zero3MotorImpulseResponseRegression {
                 if(random==null)random=t;
                 double[] p=model.infer(t);
                 double projected=p[0]+p[1]-45*Math.max(0,p[2]);
-                if(Double.isFinite(projected)&&projected>bestPred){
+                if(calibrated&&Double.isFinite(projected)&&projected>bestPred){
                     bestPred=projected;selected=t;
                 }
             }
+            assertTrue(random!=null,"missing untouched test pose");
             double realised=selected==null?0:selected.usefulScore();
             double signed=selected==null?0:selected.signedResponse();
             double cost=selected==null?0:selected.extraWork;
@@ -290,16 +306,18 @@ public final class Zero3MotorImpulseResponseRegression {
                     selected.channel+"/sign"+selected.polarity),
                 bestPred,realised,signed,cost,random.signedResponse());
         }
-        int scenarios=DIRS.length*TEST_POSES.length;
+        int scenarios=DIRS.length*(TEST_POSES.length-2);
         System.out.printf(Locale.US,
-            "ZERO3 IMPULSE RESPONSE SUMMARY trainPhysicalPairs=%d heldoutPhysicalPairs=%d"+
+            "ZERO3 IMPULSE RESPONSE SUMMARY trainPhysicalPairs=%d calibrationPhysicalPairs=%d"+
+            " heldoutPhysicalPairs=%d calibrated=%s"+
             " totalPhysicalFrames=%d blindPoseCases=%d usefulPositive=%d/%d"+
             " positiveDirectional=%d/%d costBelow0.005=%d/%d"+
             " totalObservedUtility=%.5f totalSignedGain=%.5f"+
             " totalAddedWork=%.8f randomBaselineSignedGain=%.5f"+
             " (NO AUTOMATIC MOTOR PROMOTION; no independent worlds/seeds)%n",
-            training.size(),holdout.size(),
-            (training.size()+holdout.size())*2*(WARMUP+PULSE+SETTLE),
+            training.size(),calibration.size(),holdout.size(),Boolean.toString(calibrated),
+            (training.size()+calibration.size()+holdout.size())*
+                2*(WARMUP+PULSE+SETTLE),
             scenarios,better,scenarios,positive,scenarios,costControlled,scenarios,
             fullGain,selectedSigned,totalCost,randomSigned);
     }
