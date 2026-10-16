@@ -22,9 +22,11 @@ public final class SymbioteMotorHeadV1 {
     private final float[] localWeights=new float[OUTPUTS*LOCAL_FEATURES];
     private final float[] localFeatures=new float[OUTPUTS*LOCAL_FEATURES];
     private final SymbioteCoordinationV162 coordination=new SymbioteCoordinationV162();
+    private final FastSomaticCircuitV167 somatic=new FastSomaticCircuitV167();
     private int priorPhysicalAction=-1;
     private long localUpdates=0;
-    private final float[] feature=new float[N*FEATURE],commands=new float[OUTPUTS];
+    private final float[] feature=new float[N*FEATURE],commands=new float[OUTPUTS],
+        decisionCommands=new float[OUTPUTS];
     private final float[] noise=new float[OUTPUTS],pending=new float[OUTPUTS];
     private float[] previousState;
     private int lastAction=-1;
@@ -176,13 +178,28 @@ public final class SymbioteMotorHeadV1 {
                 pending[at]=commands[at];
             }
         }
+        // The one recurrent 2.2 intention owns the slower cortical readout.
+        // Copy it unchanged; fast proprioceptive recurrence can only refine
+        // this output until the next real brain decision.
+        System.arraycopy(commands,0,decisionCommands,0,OUTPUTS);
+        somatic.chosen(action);
         coordination.begin(action,sectorAngles);
     }
+    /** Update REAL musculoskeletal commands before EACH physics step.
+     * Not a second discrete-action chooser or a sinusoid/time signal. */
+    public void fastTick(MotorBrain.Body body,Morphology.Surface skin,float dt){
+        somatic.advance(body,skin,decisionCommands,commands,dt);
+    }
+    public String encodeFast(){return somatic.encode();}
+    public boolean restoreFast(String raw){return somatic.restore(raw);}
+    public FastSomaticCircuitV167 fastCircuit(){return somatic;}
     /** Real physical frame AFTER world contact and all solid collisions. */
     public void observedPhysicalStep(float beforeX,float beforeY,
                                      MotorBrain.Body now,Morphology.Surface skin){
-        if(now!=null&&skin!=null)
+        if(now!=null&&skin!=null){
             coordination.sample(beforeX,beforeY,now.cx,now.cy,commands);
+            somatic.observed(beforeX,beforeY,now);
+        }
     }
     public SymbioteCoordinationV162 coordination(){return coordination;}
     public float observedNominalCancellation(){return coordination.cancellation();}
@@ -215,7 +232,7 @@ public final class SymbioteMotorHeadV1 {
         if(!Float.isFinite(actualContactEnergy)||!Float.isFinite(actualDamage)||
            !Float.isFinite(actualAmbientEnergyLoss)||!Float.isFinite(actualMotorEnergy)||
            actualDamage<0||actualAmbientEnergyLoss<0||actualMotorEnergy<0){
-            lastAction=-1;coordination.resetLife();return;
+            lastAction=-1;coordination.resetLife();somatic.resetLife();return;
         }
         float reward=clip(actualContactEnergy/35f-actualDamage/90f-
             actualAmbientEnergyLoss/35f-actualMotorEnergy/35f,-2,2);
@@ -255,11 +272,12 @@ public final class SymbioteMotorHeadV1 {
         }
         coordination.consequence(train,holdout,noise,pending,localFeatures,
             localWeights,CHANNELS,LOCAL_FEATURES);
+        somatic.consequence(train,holdout);
         lastAction=-1;
     }
     public void resetLife(){lastAction=-1;priorPhysicalAction=-1;
-        coordination.resetLife();
-        Arrays.fill(commands,0);Arrays.fill(noise,0);}
+        coordination.resetLife();somatic.resetLife();
+        Arrays.fill(commands,0);Arrays.fill(decisionCommands,0);Arrays.fill(noise,0);}
     public void resumeLife(){resetLife();}
     /** Safe counters, sourced from the same authenticated saved cortex. */
     public long decisionCount(){return choices;}
