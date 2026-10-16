@@ -32,3 +32,28 @@ Sul ramo ZERO3 il workflow `.github/workflows/zero30-foundation-qa.yml` include 
 **Da compilare solo dopo la lettura di CI conclusa**, riportando tutte e quattro le direzioni, costi, esiti negativi, sintesi e limiti. La compilazione riuscita NON è una prova di apprendimento riuscito.
 
 **Gate G3 resta BLOCCATO** finché non esiste evidenza più forte che la nuova proposta controlli davvero il gel meglio, a parità di intenzione, energia e condizioni non viste.
+
+## RISULTATI VERIFICATI CI 38974164028 — 16/10/2026 UTC
+
+**[GitHub Actions SUCCESS](https://github.com/nicogtr20-ctrl/idle-runner-releases/actions/runs/38974164028):** tutte le prove del corpo e 2.000 decisioni, ricerca locale energeticamente penalizzata, build Android Debug superate. La **qualità delle skill resta in parte insufficiente**.
+
+**Dati reali:** 64 proposte per ciascuna delle quattro direzioni, **12.288 decisioni fisiche totali usate per selezionare i pesi** sulle due pose di training, più valutazione su ±45° mai impiegate nella scelta. Il corpo viene reinizializzato a ogni proposta (NON una vita continua di 12.288 scelte).
+
+| Intenzione | Proposte accettate | Utility vergine su ±45° | Utility candidata su ±45° | Rispetta costo in entrambe le pose? | Skill valida? |
+|---|---:|---:|---:|---|---|
+| Est +X | 15/64 | +28.806 | +31.108 | **No** (0.0473→0.0697 e 0.0562→0.0723) | **NO** |
+| Sud +Y | 9/64 | +4.476 | +52.749 | **Sì** (0.0562→0.0549 e 0.0510→0.0543) | **SOLO candidata di laboratorio** |
+| Ovest −X | 10/64 | −49.582 | +30.913 | **No** (0.0510→0.0882 e 0.0525→0.0894) | **NO** |
+| Nord −Y | 6/64 | −24.705 | −11.633 | **No** (0.0525→0.0556 e 0.0473→0.0599) | **NO** |
+| **Aggregato** | 40/256 | **−41.005** | **+103.137** | **1/4** | **G3 BLOCCATO** |
+
+L'aggregato di utility cresce, ma **il lavoro muscolare totale valutato sale da 0.4139 a 0.5443** (circa +31.5%). È scorretto presentare il risultato come locomozione generalizzata o maggiore efficienza del corpo. Solo Sud supera il vincolo di costo in entrambe le pose mai usate per la selezione; è un segnale preliminare promettente **su quella famiglia di pose**, non una competenza operativa.
+
+### Diagnosi ingegneristica
+
+- **Confronto di scala:** a differenza del learner online V3.1, la ricerca di bias locali produce miglioramenti direzionali robusti in alcuni contesti dopo molti test fisici, ma tende ancora a scegliere modi molto costosi di muovere il gel.
+- **Conclusione verificabile:** un sistema di selezione e rollback offre un'alternativa plausibile alla plasticità online non controllata; le soglie di costo e gli stati corporei **devono essere resi parte della competenza contestuale**, non solo un filtro a posteriori.
+- **Limitazione cruciale:** tutte le prove avvengono nello stesso mondo di fisica, senza risorse e ostacoli; le pose ±45° sono tenute fuori dalla selezione, ma non sono mondi/test ambientali indipendenti e **non** dimostrano generalizzazione multiseme.
+- **Prossimo blocco:** ricerca e credito che tenga conto di inerzia iniziale, contatto reale e previsione condizionata dalla postura, più convalida ambientale; proibita la promozione delle altre tre direzioni.
+
+**Dopo CI:** nessun aggiornamento della vera app, nessun collegamento al controllo ZERO 2.2/3.0 in gameplay, nessun OTA firmato.
