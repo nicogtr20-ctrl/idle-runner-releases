@@ -310,7 +310,7 @@ public final class GameActivity extends Activity {
             sensorMind.attachCausalExperiments(causalExperiments);
             navigation=new InstrumentalNavigation();
             navigation.restore(prefs.getString(InstrumentalNavigation.KEY,""));
-            navigation.restoreContextual(prefs.getString(ContextualNavigationV171.KEY,""));
+            navigation.restoreContextual(prefs.getString(ContextualNavigationV172.KEY,""));
             sensorMind.attachNavigation(navigation);
             intentions=new GoalContinuity();
             intentions.restore(prefs.getString(GoalContinuity.KEY,""));
@@ -622,7 +622,7 @@ public final class GameActivity extends Activity {
               .putString(SpatialPerception.KEY,spatialMap.encode())
               .putString(CausalExperiments.KEY,causalExperiments.encode())
               .putString(InstrumentalNavigation.KEY,navigation.encode())
-              .putString(ContextualNavigationV171.KEY,navigation.encodeContextual())
+              .putString(ContextualNavigationV172.KEY,navigation.encodeContextual())
               .putString(GoalContinuity.KEY,intentions.encode())
               .putString(ContactGeometryForensics.KEY,contactGeometry.encode())
               .putString(GateBehaviorMetrics.KEY,gateMetrics.encode())

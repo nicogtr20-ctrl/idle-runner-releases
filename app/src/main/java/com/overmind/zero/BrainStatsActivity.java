@@ -100,6 +100,13 @@ public final class BrainStatsActivity extends Activity {
         bInner=inner.restore(prefs.getString(FluidInteroceptionV1.KEY,""));
         bSpatial=spatial.restore(prefs.getString(SpatialPerception.KEY,""));
         bNavigation=navigation.restore(prefs.getString(InstrumentalNavigation.KEY,""));
+        navigation.restoreContextual(prefs.getString(ContextualNavigationV172.KEY,""));
+        if(prefs.getBoolean(SymbioteMatterV1.ENABLED,false)){
+            GameSceneSnapshot.Scene scene=GameSceneSnapshot.workingPosture(
+                prefs.getString("physical_scene_v100",""));
+            navigation.motorContext(scene==null?null:scene.body,
+                scene==null?null:scene.skin,muscle.verifiedMotorSnapshot());
+        }
         bObjects=objects.restore(prefs.getString(ObjectContinuityV21.KEY,""));
         bCausal=causal.restore(prefs.getString(CausalExperiments.KEY,""));
         bSequence=sequence.restore(prefs.getString(CausalSequenceV23.KEY,""));
@@ -741,11 +748,11 @@ public final class BrainStatsActivity extends Activity {
                      train+=motorDuration.trained(a,t);
                      test+=motorDuration.heldout(a,t);
                  }
-                 metric(c,"Opzione "+new int[]{1,2,4}[t]+" intervalli",train+
+                 metric(c,"Opzione "+MotorDurationV22.ticksAt(t)+" intervalli",train+
                      " esperienze + "+test+" verifiche escluse dal training");
              }
          }
-         note(c,"Il nucleo ricorrente sceglie la direzione. ZERO esplora la durata dell'azione con conseguenze fisiche reali. Ogni 0,65 s verifica pericolo, esplorazione e alternative.");
+         note(c,"Il nucleo ricorrente sceglie la direzione. ZERO esplora la durata dell'azione con conseguenze fisiche reali. Ogni 0,65 s verifica pericolo e alternative forti. Una nuova scelta casuale attende la fine della prova; le prove interrotte non certificano una durata.");
      }
      private void detailMuscle(LinearLayout body){
         LinearLayout c=panel(body,"CONTROLLO MUSCOLARE DEL SIMBIONTE",VIOLET);

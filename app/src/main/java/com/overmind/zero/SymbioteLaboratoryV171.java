@@ -30,7 +30,7 @@ public final class SymbioteLaboratoryV171 {
         LocalImpedanceSense impedance=new LocalImpedanceSense();impedance.restore(text(saved,impedance.KEY));mind.attachImpedance(impedance);
         FluidInteroceptionV1 inner=new FluidInteroceptionV1();inner.restore(text(saved,inner.KEY));mind.attachFluidInteroception(inner,matter);
         SpatialPerception space=new SpatialPerception();space.restore(text(saved,space.KEY));mind.attachSpatialPerception(space);
-        InstrumentalNavigation nav=new InstrumentalNavigation();nav.restore(text(saved,nav.KEY));nav.restoreContextual(text(saved,ContextualNavigationV171.KEY));mind.attachNavigation(nav);
+        InstrumentalNavigation nav=new InstrumentalNavigation();nav.restore(text(saved,nav.KEY));nav.restoreContextual(text(saved,ContextualNavigationV172.KEY));mind.attachNavigation(nav);
         CausalExperiments causal=new CausalExperiments();causal.restore(text(saved,causal.KEY));mind.attachCausalExperiments(causal);
         GoalContinuity goal=new GoalContinuity();goal.restore(text(saved,goal.KEY));mind.attachGoalContinuity(goal);
         TemporalWorkingMemory time=new TemporalWorkingMemory();time.restore(text(saved,"temporal_working_memory_v106"));mind.attachWorkingMemory(time);

@@ -136,9 +136,9 @@ final class TelemetryGitHub {
         result.put("recordedAtUtc",System.currentTimeMillis());
         result.put("source","ANDROID_EXPLICIT_SHARE");
         result.put("gameplayBaseline",Boolean.TRUE.equals(all.get(SymbioteMatterV1.ENABLED))?
-            "ZERO 2.2 / symbiote integrated sensorimotor runtime 171":"ZERO historical material runtime");
+            "ZERO 2.2 / symbiote temporal motor runtime 172":"ZERO historical material runtime");
         android.content.pm.PackageInfo installed=c.getPackageManager().getPackageInfo(c.getPackageName(),0);
-        result.put("runtimeRevision","sensorimotor-171");
+        result.put("runtimeRevision","sensorimotor-172");
         result.put("installedVersionName",installed.versionName);
         result.put("installedVersionCode",android.os.Build.VERSION.SDK_INT>=28?
             installed.getLongVersionCode():installed.versionCode);

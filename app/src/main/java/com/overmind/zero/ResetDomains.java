@@ -46,7 +46,7 @@ public final class ResetDomains {
             case PROPRIOCEPTION:return new String[]{BodyProprioception.KEY,DistributedBodySense.KEY,LocalImpedanceSense.KEY,FluidInteroceptionV1.KEY};
             case SPATIAL:return new String[]{SpatialPerception.KEY,PerceptualAssociationsV20.KEY,ObjectExperienceV20.KEY,ObjectContinuityV21.KEY};
             case CAUSAL:return new String[]{CausalExperiments.KEY,PhysicalConsequenceV20.KEY,CausalSequenceV23.KEY};
-            case NAVIGATION:return new String[]{InstrumentalNavigation.KEY,ContextualNavigationV171.KEY};
+            case NAVIGATION:return new String[]{InstrumentalNavigation.KEY,ContextualNavigationV171.KEY,ContextualNavigationV172.KEY};
             case INTENTION:return new String[]{GoalContinuity.KEY};
             case GATE_METRICS:return new String[]{GateBehaviorMetrics.KEY};
             case ALL:return new String[0]; // handled by Editor.clear()
