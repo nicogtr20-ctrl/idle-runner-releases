@@ -1,12 +1,13 @@
-<!-- Current authoritative status; older sections below are historical. -->
-# Current release status — ZERO171, 16 October 2026 — AUTHORIZED, VALIDATING
+<!-- Current authoritative release status; older sections below are historical. -->
+# Verified release — OTA170 / Android1170, runtime ZERO171 — 16 October 2026
 
-Official installed/public baseline: **OTA169 / 1169**. Current correction branch:
-`fix/zero171-integrated-sensorimotor-corrections` from unpublished ZERO170 `249563fd`.
-Read [ZERO_171_INTEGRATED_SENSORIMOTOR_CORRECTIONS.md](docs/ZERO_171_INTEGRATED_SENSORIMOTOR_CORRECTIONS.md) for the complete current architecture, all thirteen audit findings, fixes, optional persistence keys, tests and remaining device validation.
-**User explicitly authorized source publication and signed APK OTA publication on 16 October 2026: “Si autorizzo. Pubblica anche apk tramite ota”.** Complete release checks, promote the reviewed sources to the stable source branch, preserve the installed signing identity and named slots, then verify the public manifest and APK. Keep Idle Runner sources on main intact. OTA169 remains the published baseline until the next release is verified. Earlier no-publication instructions below are historical and superseded by this explicit authorization.
+The user explicitly authorized source and signed APK OTA publication. **Published and downloaded from BOTH Vercel and GitHub: `0.11.6-ota.170`, versionCode `1170`, package `com.overmind.zero.ota`.** The runtime correction revision **171** is not the OTA number. Install through **AGGIORNA**, over the existing app; do not uninstall or reset saved brains/slots.
 
-One active RecurrentCoreV22 + actual 724-synapse motor head; corrected panel/concave geometry, fixed 1/60s integration, context-conditioned movement, physically attributed motor learning, distinct verified manipulation memory and genuine current-symbiote comparison. No scripted gait or food target, no forced confidence, no reset of existing brains/slots. Passing tests is not proof of improved autonomous behavior on the Galaxy S21.
+APK: 497912 bytes, SHA256 `5fd2bb087e55fe7eae4d5b74e5ce7b7c31106bf71eb2077f6c1ee4ed915ba02e`. Original stable certificate SHA256 `45010684b4fd74de00f87fb81ca89e1e79b58409cf9fefc497b445b0fe19f583` matched; APK v2 signature AND signed content digest independently verified on both public downloads. Both manifests and exact bytes match, HTTP200. Main Idle Runner app/build/settings remain unchanged.
+
+[Release](https://github.com/nicogtr20-ctrl/idle-runner-releases/releases/tag/overmind-zero-v0.11.6-ota.170) · [successful signed publisher](https://github.com/nicogtr20-ctrl/idle-runner-releases/actions/runs/38926908265) · [integrated source review #83](https://github.com/nicogtr20-ctrl/idle-runner-releases/pull/83).
+
+Read [ZERO171 integrated correction and release evidence](docs/ZERO_171_INTEGRATED_SENSORIMOTOR_CORRECTIONS.md) for all audit findings, integrated fixes, optional persistence keys, verification and behavioral limits. 96 JVM entrypoints, seven staging integration gates, 34 publisher source gates, Gradle debug/release builds and original signing identity passed. One living recurrent cortex and 724 motor weights; no authored gait, food coordinate, forced confidence or brain reset. **Improved autonomous locomotion/food seeking on the Galaxy S21 is still unproven.** Preserve that distinction in future work. Earlier publication holds and version/status claims below are superseded by this verified release.
 
 ## OTA162 — CANDIDATA: MOTOR COORDINATION, 15 ottobre 2026
 

@@ -1,6 +1,6 @@
-# ZERO 171 — integrated correction, OTA publication authorized
+# ZERO171 — integrated corrections published as OTA170 / Android1170
 
-2026-10-16. Branch `fix/zero171-integrated-sensorimotor-corrections`, based on unpublished ZERO170 `249563fd`. Installed/public baseline remains **OTA169 / 1169**. The user has now explicitly authorized source and signed APK OTA publication: “Si autorizzo. Pubblica anche apk tramite ota”. Release checks and stable-source promotion are in progress; do not claim publication until the served manifest and signed bytes are verified. The runtime revision 171 is independent of the next sequential OTA number.
+2026-10-16. Corrections reviewed in PR #83 and published as **0.11.6-ota.170 / versionCode1170**. Runtime revision 171 is separate from the sequential OTA number. Release source commit `445b11b0a8bca58a6a476779e09bbe068c31c766`; signed publisher run `38926908265`; main OTA publication commit `2e36c205`. User explicitly authorized source and APK OTA publication.
 
 ## Scope and evidence
 
@@ -42,7 +42,7 @@ Local JVM historical suite: 94/94 passing after correcting fixture inputs, plus 
 
 Full local Android API35 Java compilation: **152 source files PASS**, including the complete application, activities and regressions. Seven staging Python integration gates PASS. This is source/API compilation, **not a Gradle-packaged or signed APK**.
 
-The automatic approval reviewer blocked the branch push to the public GitHub repository, treating source publication as conflicting with the instruction not to publish, and stating the destination had not been verified as trusted. Subsequent read-only connector metadata confirmed this is the user's existing repository with admin/push permissions; no alternative write route was used. No GitHub CI run or remote branch exists for this correction. Commit and all verification remain local pending explicit authorization for source-branch upload. Never merge stable/main or publish an APK/OTA implicitly.
+Historical staging note: the automatic approval reviewer initially blocked source publication while the earlier no-publication instruction was active. No alternate write route bypassed that rejection. The user's later explicit authorization superseded the hold; source upload, CI, stable promotion and signed OTA170 publication are now completed and verified below.
 
 Read-only `origin/main/updater/public/latest.json` remains `0.11.6-ota.169`, code1169, SHA256 `fee775106adc55485d39ad8722a683a6ae345d467398d7f83757e24f0c55c599`; app/build.gradle, updater and publisher are unchanged from the base.
 
@@ -52,6 +52,21 @@ No on-device installation, packaged APK test, or new phone efficacy is claimed. 
 
 ## Explicit release authorization — 16 October 2026
 
-The latest user instruction supersedes the earlier publication hold and authorizes the source push, stable-source promotion and signed APK OTA. The earlier automatic rejection was respected; no alternate route bypassed it. Retain all 95 JVM regressions, source integration gates, exact reviewed source pins, stable signing identity and updater verification. Release remains in progress until public bytes and manifest match.
+The latest user instruction supersedes the earlier publication hold and authorizes the source push, stable-source promotion and signed APK OTA. The earlier automatic rejection was respected; no alternate route bypassed it. Retain all 95 JVM regressions, source integration gates, exact reviewed source pins, stable signing identity and updater verification. Public bytes and both manifests now match; see final verification below.
 
 Release preparation: all 33 publisher Python source gates passed locally. The publisher now runs the full staging suite plus the previously publisher-only MaterialContactRegression (96 entrypoints), pins the reviewed 170/171 files, preserves all previous safety assertions with updated production expressions, and checks the real signed APK certificate against OTA169 SHA256 `45010684b4fd74de00f87fb81ca89e1e79b58409cf9fefc497b445b0fe19f583` before any release or hosting write. This fingerprint was independently extracted from the APK v2 signing block of the original committed OTA169 binary.
+
+## Final signed release verification — completed 16 October 2026
+
+- Staging run `38926325876`: **96/96 JVM entrypoints**, seven source integration gates and Gradle `assembleDebug` PASS on reviewed head `1d7d34f2114f6c5c936aef93d19691bbcae50d83`. Merged PR #83 to source stable branch; source tree verified identical to local reviewed tree.
+- Signed publisher run `38926908265`: 96 JVM entrypoints, all 34 Python source gates including actual-body/persistence integration, Gradle debug/release and lint-vital checks, updater manifest/provider permissions, original certificate and packaged version checks PASS. Every modified/new Java source is exactly pinned. No test assertion was dropped to publish.
+- Two release-infrastructure issues were corrected: newly restored MaterialContactRegression needed explicit compilation in both CI lists; current apksigner emits `V2 Signer:` instead of old `Signer #1`. The verifier now checks exactly one signer and all reported certificate SHA256 digests against the original certificate, independent of display prefix. The initial runs stopped before publication. These fixes did not change application code or consume an OTA number.
+- Published **OTA170**, code1170, `com.overmind.zero.ota`, 497912 bytes. APK SHA256 **`5fd2bb087e55fe7eae4d5b74e5ce7b7c31106bf71eb2077f6c1ee4ed915ba02e`**. Stable certificate **`45010684b4fd74de00f87fb81ca89e1e79b58409cf9fefc497b445b0fe19f583`**.
+- Independently downloaded Vercel and GitHub APKs: HTTP200, exact byte equality/size/hash, APK v2 cryptographic RSA signature and chunked signed-content digest PASS. Parsed binary AndroidManifest confirms package, version1170/name and network/install permissions.
+- Public Vercel `/latest.json` and GitHub main backup manifest both report the same OTA170/hash/size/URL. Vercel's connected administration API returned403, but normal deployment completed and the actual public manifest and APK were verified directly. No admin bypass used.
+- Main Idle Runner `app`, `build.gradle` and `settings.gradle` tree/blob hashes unchanged across release. Existing learned brain/muscle keys and 12 named slots preserved by code and migration tests; no device data was erased and no device uninstall performed. Device installation itself is not observable from this workspace.
+- Current primary download: https://overmind-zero-updates.vercel.app/apk/overmind-zero-1170-5fd2bb087e55.apk
+- Independent signed release: https://github.com/nicogtr20-ctrl/idle-runner-releases/releases/tag/overmind-zero-v0.11.6-ota.170
+- Runtime repair does not establish improved autonomous behavior. Same-save on-phone movement and energy collection still need measurement; earlier frozen/online results above remain disclosed without uplift claims.
+
+Earlier validation/authorization paragraphs above document the staged history and are superseded by this completed release status. Documentation-only follow-up uses `[skip ci]` to avoid creating another Android OTA for release notes alone.
