@@ -1,0 +1,396 @@
+# OVERMIND ZERO 3.0 — MASTER BLUEPRINT (DOCUMENTO CANONICO)
+
+> **STATO: PROGETTAZIONE APPROVATA COME DIREZIONE, NON IMPLEMENTATO.**
+> **Priorità: P0 — LEGGERE PRIMA DI QUALSIASI MODIFICA A OVERMIND ZERO.**
+> **Versione documento:** ZERO3-BLUEPRINT-v1.0 — 16 ottobre 2026.
+> **Lingua:** italiano.
+> **Destinatari:** ChatGPT in tutte le chat future, agenti di sviluppo, manutentori e revisori.
+> **Altri documenti obbligatori:** [Contratto di implementazione e verifica](ZERO30_IMPLEMENTATION_CONTRACT.md) e [Specifiche UI/UX ZERO 3.0](ZERO30_UI_UX_SPEC.md).
+> **Entrata principale:** [README](../README.md), [OVERMIND_START_HERE](../OVERMIND_START_HERE.md), [AGENTS.md](../AGENTS.md).
+
+## 0. ORDINE E CONTRATTO DI LETTURA — LEGGERE DAVVERO
+
+Per ogni richiesta futura che riguardi cervello, apprendimento, locomozione, corpo, simulazione, memoria, salvataggi, schermate, statistiche, abilità, evoluzione, neuroni, aggiornamenti o test di OVERMIND ZERO:
+
+1. **Prima di progettare o modificare codice**, aprire e leggere per intero questo documento **e** i due documenti collegati. Non limitarsi al titolo o al riassunto.
+2. Leggere **AGENTS.md** alla radice, **OVERMIND_START_HERE.md**, gli audit storici pertinenti e lo stato reale del ramo sorgente; non interpretare vecchie note di rilascio come stato corrente.
+3. Verificare le implementazioni e i dati prima di dichiarare che un componente è già funzionante: distinguere codice, test sintetici, benchmark autonomi, telemetria Galaxy S21.
+4. Applicare il contratto di implementazione, tenere aggiornata la checklist e i registri delle decisioni. Per ogni PR, indicare esplicitamente quali sezioni del piano sono rispettate e quali sono ancora pendenti.
+5. **Non modificare la fisica, l'identità dell'app, la firma, i 12 slot, i salvataggi 2.2 o l'OTA senza prove e senza preservazione.** Non creare andature hardcoded, attrazione programmata verso gemme, target nascosti, ricompense finte, falsi neuroni o metriche dimostrative spacciate per valori reali.
+6. Non considerare "test verdi" sinonimo di apprendimento dimostrato. Nessuna promessa di intelligenza perfetta.
+7. Se una modifica richiede una deviazione da questa specifica, **documentare prima** ragione, alternativa, rischi, test e compatibilità. Non cancellare silenziosamente questo piano.
+8. Per una richiesta di **sola progettazione/documentazione**, non pubblicare APK/OTA e non implementare funzionalità non richieste.
+9. I documenti su **main** sono la copia canonica. Il sorgente APK ha storicamente un ramo di pubblicazione dedicato: prima di lavorarci leggere i documenti su **main**, anche se la copia presente nel ramo sorgente è più vecchia.
+
+Questo è il *contratto di progetto* richiesto dall'utente. È un'istruzione per collaboratori e agenti, non una garanzia tecnica che tutte le chat leggano automaticamente GitHub: all'inizio di una nuova chat l'agente deve aprire queste risorse con il collegamento GitHub.
+
+## 1. Visione e limiti della promessa
+
+ZERO 3.0 deve essere un organismo artificiale che **impara autonomamente** percezione, azione, movimento, coordinazione, memoria, conseguenze, obiettivi, previsione, abilità riutilizzabili e strategie di sopravvivenza attraverso il solo mondo fisico simulato. Non è un LLM. L'obiettivo è superare misurabilmente l'efficienza di apprendimento di ZERO 2.2 e avvicinarsi o superare il vecchio ZERO nel numero di esperienze necessarie alla locomozione.
+
+"Perfetto" non è un risultato scientificamente garantibile a progetto: qui significa una specifica verificabile, con nessun salto nascosto fra intenzione, comando, fisica, esperienza, aggiornamento e riutilizzo. Le scelte architetturali e gli iperparametri sono **ipotesi tecniche**, da accettare o rifiutare con esperimenti indipendenti. Separare sempre obiettivo, progettazione, implementazione e misura.
+
+### Vincoli non negoziabili
+
+- Conservare **corpo simbionte e mondo**, salvo errori fisici comprovati. Il corpo va verificato *prima* di imputare ogni fallimento al cervello.
+- Conservare input sensoriali reali e 64 uscite fisiche muscolari: **16 settori × 4 canali** (radiale, tangenziale, adesione, tensione), attraverso l'interfaccia effettiva del solver.
+- **Niente locomozione prescritta:** niente sinusoidi comandate, andature, traiettorie, coordinate delle risorse, forze correttive al baricentro, premi di sola distanza per la politica di sopravvivenza.
+- Un **solo decisore di intenzioni**; reti specializzate possono apprendere o eseguire ma non sovrascrivere silenziosamente la scelta.
+- Apprendimento vero su esiti **post-fisica/post-collisione**, attribuiti al comando reale; episodi immaginati non si trasformano in esperienze di addestramento.
+- Preservare cervelli precedenti, nomi/profili, tutti i **12 slot** e le statistiche; migrazione reversibile. Niente disinstallazione per aggiornare.
+- Tutto deve essere realizzabile **offline su Galaxy S21** entro budget RAM/CPU, x1/x5/x20/TEST MAX senza trasformare la semantica temporale.
+- Il prodotto comprende obbligatoriamente una **NUOVA INTERFACCIA ZERO 3.0** per impostazioni, cervello, neuroni reali, abilità, evoluzione, corpo, sensori, memoria, statistiche, analisi, test, salvataggi e aggiornamenti che **sostituisce** le schermate 2.2 (specifica dettagliata separata).
+
+## 2. Motivo della riprogettazione: prove disponibili al 16/10/2026
+
+Confronto qualitativo riferito dall'utente: vecchio ZERO mostra locomozione a circa 400 esperienze, raccolta blu e traversate dopo circa 2.000 e vita massima di circa 49 minuti; con simbionte/2.2 oltre 70.000 esperienze mostra locomozione scarsa. È un confronto storico riferito dall'utente, non ancora un benchmark controllato su fisica identica.
+
+Ultima telemetria esaminata in audit: **OTA171**, report \`zero-telemetry/reports/20261016-190008-18aef703b5d67\`. La pubblicazione firmata corrente è **OTA172**, \`0.11.6-ota.172\`, code1172, manifest \`main/updater/public/latest.json\`; ancora **nessuna prova telefonica OTA172** nel dataset esaminato. Non confondere il numero OTA con la revisione runtime.
+
+Sintomi quantificati dal salvataggio:
+- 45.287 transizioni sensoriali persistenti; circa 9.066 holdout; zero "choiceInfluences" registrate in propriocezione, corpo distribuito, impedenza, spazio, esperimenti causali. Sono **contatori con soglia**, non prova assoluta di influenza identicamente nulla.
+- Previsione ricorrente attiva: errore **0.04280661** contro baseline costante **0.041163225** nel diagnostico; non batte il riferimento.
+- Nella corteccia \`SymbioteMotorHeadV1\`, 84 pesi globali quasi immutati dalla sequenza iniziale: variazione media assoluta ricostruita ~**0.00000606** dopo 36.348 update registrati. Questo non misura la variazione dei 320 pesi locali o 320 pesi somatici veloci.
+- Archivio abilità motorie \`ms170\`: ~45.436 decisioni, **0 campioni champion attivi**, 9 candidati, 543 scarti, 1 recupero e 1 rollback (nel salvataggio esaminato).
+- \`CausalSequenceV23\`: nessun collegamento causale confermato nel report esaminato.
+- Nel vecchio sistema esistevano un riferimento ritmico e mutazione/valutazione di abilità \`OnlineBodyLearning\`. Nel simbionte la scoperta di locomozione richiede più meccanismi e validazioni separate, con scarso segnale di apprendimento.
+- Gli audit precedenti identificarono un veto troppo esteso degli intervalli "external" e matching contestuale eccessivamente restrittivo. **OTA172 ha corretto parte del problema**, ma non equivale a una prova di locomozione appresa.
+
+Conclusione supportata: **architettura integrata insufficiente/inefficace nei dati esaminati**. Non affermare che il corpo sia intrinsecamente ingovernabile o che ogni modulo sia rotto senza test.
+
+## 3. Architettura funzionale unificata ZUAB 3.0
+
+Un coordinatore autorevole rende ogni esperienza disponibile alle parti pertinenti senza lasciare arbitratori nascosti.
+
+\`\`\`text
+SensoryFrame (vista, somatica, contatto, fisiologia, efferenza reale)
+       |
+PerceptualEncoder + normalization (locale + globale)
+       |
+SharedRecurrentState <--> WorldModel + uncertainty
+       |                   |
+Goal/Value/Critic       Episodic/Procedural Memory
+       |                   |
+Unified Actor / Intention Policy (+ bounded Planner)
+       |
+MotorIntent(directionX,Y,effort,adhesion,duration,confidence,id)
+       |
+AdaptiveMotorCortex (ricorrenza condivisa + stati locali)
+       |
+ActuatorFrame: 16x4 COMANDI reali
+       |
+SymbioteMatterV1 + mondo e collisioni (INVARIANTI salvo fix provati)
+       |
+PhysicsOutcome / CausalCredit / ExperienceLedger
+       |
+TrainingCoordinator: world model, critic/actor, cortex, memory
+       + holdouts, regressioni, checkpoint, diagnostica
+\`\`\`
+
+Responsabilità:
+- **PerceptualEncoder:** codifica sensi, senza conoscere ID segreti/target risorse; stati locali mantengono differenze fra le 96 patch.
+- **RecurrentState:** contesto persistente della vita e dinamiche temporali **allenabili**.
+- **WorldModel:** previsione delle conseguenze sensoriali e fisiche, energia/danno/termine, incertezza per uscita.
+- **Goal + Actor/Critic:** stima valore futuro e decide UNA intenzione continua; nessuna ricompensa muscolare di movimento nelle preferenze biologiche.
+- **Planner:** confronta un piccolo numero di opzioni tramite modello **solo quando validato**; non allena su fantasia.
+- **AdaptiveMotorCortex:** trasforma intenzione in comandi reali e apprende *come eseguire* un'intenzione dal feedback corporeo.
+- **Memory:** episodi significativi, replay reale e competenze convalidabili, contestuali e riutilizzabili.
+- **TrainingCoordinator:** serializza causalmente decisioni, intervalli, versioni dei pesi, holdout, aggiornamenti, checkpoint; una sola responsabilità sul calendario di training.
+
+Unificazione **non significa** che actor, critic, world model e muscoli condividano un solo identico vettore di pesi/gradiente. Significa stato e dati coerenti, obiettivi espliciti, responsabilità non sovrapposte e un solo proprietario per decisione/credito temporale.
+
+## 4. Parametri di partenza — ipotesi, non ottimo dimostrato
+
+| Sottosistema | Proposta iniziale | Verifica richiesta |
+|---|---|---|
+| Encoder | MLP + proiezioni settoriali, latente 64 | Sensibilità a contatto, forma, vista, controllo |
+| Ricorrenza centrale | GRU 64 unità allenabili | Truncated BPTT, memoria, stabilità, costo |
+| World model | Dinamica action-conditioned, teste separate | Heldout per categoria, vantaggio sui baseline |
+| Incertezza | 3 predittori/ensemble leggero | Calibrazione per situazione e orizzonte |
+| Actor | Politica continua e bounded | Capacità di esplorazione e graduale controllo |
+| Critic | Due teste di valore + target networks | Stabilità, distribuzioni reali, danno |
+| Corteccia | Ricorrenza condivisa 48 unità + 8 stati per settore | Motor competence A/B, senza gait hardcoded |
+| Attuatori | 64 uscite finite/clamped, 16 × 4 | Mappa esatta solver e proprietà di adesione |
+| Experience replay | ~4.096 transizioni campionabili | RAM, varietà contesti, assenza leakage |
+| Neurogenesi | Crescita candidata fino a ~32 unità aggiuntive | Miglioramento indipendente, reversibilità |
+| Validation | Partizione 80/20 + intere scene/seed non visti | Nessuna contaminazione replay |
+| Tempo fisico | Passo ~0,025s attuale | Costanza x1/x5/x20/test |
+| Decisioni alte | Intervallo adattivo iniziale 0,25–0,65s simulati | Latenza fisica, sample efficiency |
+
+Tutti i numeri devono comparire in una configurazione versionata; cambiarli richiede un confronto controllato. Non forzare una classe/gruppo di output se i contratti correnti del solver richiedono conversioni; documentare la mappatura.
+
+## 5. Contratto sensoriale e riferimenti spaziali
+
+Sei gruppi: **vista** (spettri, raggi e continuità anonima), **propriocezione** (forme, tessuti, velocità locali), **tatto** (pressione/urto/adesione reale), **interocezione** (riserva e dispendio, danno, tensione, stato liquido), **efferenza** (64 comandi realmente applicati, non solo pesi progettati), **stato temporale** (sequenza recentissima).
+
+- Ogni patch mantiene coordinate/velocità locali; il cervello riceve aggregazioni globali senza cancellare le disomogeneità importanti.
+- Separare angoli relativi al tessuto dagli assi mondo; l'ID della patch **non** equivale all'azimut.
+- Normalizzazioni verificabili, gestione NaN/Inf, sensori mancanti dichiarati; nessun fallback a falsi dati normali.
+- Snapshot coerente e timestamp simulato: percezione pre-decisione, efferenza pre-step, contatto e outcome post-collisione.
+- Sensori **mai** contengono coordinate della gemma, identificativi di oggetti, flag di "soluzione" o semantica nascosta.
+- Test proprietari: world rotation equivariance, contatto solo su un lato, pseudopodio lungo, corpo concavo, collasso, repliche same-seed.
+
+## 6. Intenzione e politica unica
+
+\`\`\`text
+MotorIntentV3 {
+  episodeId, decisionId, controllerVersion
+  directionX, directionY     // direzione continua normalizzata o zero
+  desiredEffort              // intenzione, non forza esterna
+  adhesionPreference         // richiesta, NON grip fisico forzato
+  durationSimSeconds
+  confidence                 // metrica stimata, non certezza inventata
+}
+\`\`\`
+
+Nessuna delle 16 vecchie azioni discrete è imposta come unico vocabolario del 3.0. La sostituzione va testata contro comportamento backward-compatible. La direzione desiderata nasce dalla politica, non dal vettore verso gemme. Durata temporale appresa e interrotta per danno, evento, forte alternativa o fine periodo; le interruzioni censurano gli intervalli, mai premiarle come durata completata.
+
+**Unica autorità sullo scopo:** actor. Critic valuta; cortex traduce. Planner può proporre opzioni bounded; l'actor autorizza la scelta, e la tracciabilità registra chi ha influenzato cosa.
+
+## 7. Corteccia motoria e apprendimento della locomozione
+
+Il progetto mantiene **radiale, tangenziale, adesione locale, tensione** per ciascuna delle 16 regioni. Il solver e le forze effettive non vengono modificati per simulare intelligenza.
+
+**Architettura:**
+- rete ricorrente veloce condivisa con parametri allenabili e stato temporale;
+- encoder locale per 16 settori, stato per settore e messaggi dei vicini, pesi condivisi con adattamenti specifici quando necessari;
+- output continui clamped/validati; applicazione ogni frame fisico, niente allocazione/GC importante nel loop;
+- apprendimento di oscillazioni/alternanze **emergenti**, senza sine wave, fase preimpostata, gait o sequenze fissate.
+
+**Motor babbling fisicamente vincolato:**
+- esplorazione persistente temporalmente, correlata tra settori vicini, non rumore indipendente a ogni frame;
+- scelta autonoma di MotorIntent, variazione muscolare da seed registrato; varia una sottoparte causalmente identificabile per volta;
+- conservare baseline e registrare perturbazione, comandi post-clamp, contatti, esternalità, inerzia e outcome;
+- aggiornare con apprendimento motorio locale da azioni eseguite, non dalla sola ricompensa energetica;
+- nessuna forma imposta e nessun training sull'immaginazione.
+
+**Distinzione fondamentale:**
+- \`r_survival\`: bilancio energetico reale, danno, termine e valore futuro; allena GOAL/ACTOR/CRITIC.
+- \`r_motor\`: errore di realizzazione della **propria** intenzione, spostamento netto vs gross, controllo, costo dei muscoli, stabilità, danno fisico del tessuto; allena CORTECCIA.
+- \`r_info\`: progresso informativo affidabile, limitato, solo se aumenta effettivamente la qualità predittiva; esplorazione, non una fame di rumore.
+
+La corteccia deve poter migliorare **senza raccogliere energia**. La politica non riceve premio artificiale per pura distanza o verso una gemma. Se lo scopo del cervello è stare fermo, non allenare il movimento come se avesse scelto di avanzare. Un esperimento motorio tiene esplicita l'intenzione effettivamente selezionata.
+
+**Feedback motorio:**
+- direzione ottenuta \`dot(deltaCOM, normalizedIntent)\`, ampiezza reale, coerenza rispetto alla distanza lorda, consumo, tensione, adesione e reazioni;
+- controllo di passività/inerzia residua pre-azione, vento, tempeste, urti, correzioni del solver, oggetti trascinati, reset;
+- la reazione del suolo *causata da una contrazione* è un effetto utile, **non** un disturbo da scartare perché esiste contatto;
+- normalizzare anche per sforzo, durata, posizione e limiti di fisica. Mai attribuire un salto di respawn come successo.
+
+Il criterio di attribuzione sarà **continuo o classificato per ragione** (\`clean\`, \`touch\`, \`grip\`, \`storm\`, \`solver correction\`, \`held object\`, \`teleport\`, \`passive momentum\`) e dichiarerà il motivo delle esclusioni. Vietato scartare la maggioranza di crawling solo per il tocco.
+
+## 8. Modello del mondo, previsione e pianificazione
+
+Il modello \`P(z_{t+1}, proprioception, contact, energy, harm, terminal | z_t, executedAction)\` è aggiornato **sulle azioni realmente applicate e completate**. Il predittore non deve confondere controllo scelto e efferenza effettiva.
+
+Previsioni separatamente verificabili: sensi, postura/velocità, contatti, costo, energia, danno, termine, incertezza.
+
+- Baseline: stato immutato, dinamica passiva/cinematica semplice, ove pertinente; confronto sullo **stesso** campione indipendente.
+- Nessuna confidence globale bloccante: affidabilità per testa, per contesto e per orizzonte, con verifica del disaccordo fra modelli.
+- Predizioni possono essere usate per ranking solo quando superano soglie preregistrate; come ipotesi iniziale valutare >=10% di vantaggio locale, da calibrare sperimentalmente.
+- Brevi rollout immaginati **non** sono esperienza reale, non alimentano reward history, replay di training, contatori di gemme o skill.
+- Planner limita costo computazionale, profondità e uso nei contesti non affidabili; registrare tasso di utilizzo, miglioramento vs policy senza planner.
+
+## 9. Decisione, valore e curiosità
+
+Cervello \`actor–critic\` off-policy, con valutatori doppi / reti bersaglio, replay pesato e controllo della stabilità dell'ottimizzatore. L'algoritmo specifico e gli aggiornamenti devono essere descritti *prima* dell'implementazione e testati contro semplici baseline.
+
+La ricompensa di sopravvivenza nasce da misure reali: delta riserva, contatti con energia, danno, condizioni terminali, costo. Gli intervalli censurati sono marcati, non inventati. I ritardi reali vengono tracciati causalmente per assegnare credito alle azioni precedenti solo quando l'evidenza lo consente.
+
+La curiosità deve premiare la **riduzione dell'errore predittivo su dati nuovi**, non la sorpresa continua; attenuare rumore/effetti incontrollabili. Evitare reward hacking; misurare performance ambientale senza bonus interni.
+
+## 10. Obiettivi e percezione di valore
+
+Il cervello non conosce a priori "blu buono" o "rosso cattivo". Impara da segnali spettrali anonimi e contatti energetici reali.
+
+Tre competenze indipendenti ma collegate:
+1. **Valore percettivo:** esperienza di un certo segnale precede beneficio/danno.
+2. **Controllabilità:** mosse realmente eseguite possono avvicinare/alterare un segnale.
+3. **Persistenza dell'intenzione:** mantenere un'opzione quando il vantaggio previsto regge, interromperla quando la situazione cambia.
+
+Nessun \`atan2(blueGem - body)\` nella politica o cortex. Usare optical change come proxy imperfetto, non prova assoluta di distanza. Una competenza "cercare energia" è emergente solo se supera prove su scene nuove, oltre casualità, e la policy generalizza ad altri stimoli utili.
+
+## 11. Memoria a tre livelli
+
+**Working memory:** stato ricorrente per continuità temporale; si azzera sulla nascita, si ricostruisce correttamente al resume; non svuota i pesi.
+
+**Episodic/replay:** transizioni reali, rare e comuni, campionate in modo controllato con regole di train/validation irrevocabili per l'esperimento; nessuna etichetta di successo immaginato; conservare ricordi energetici, morfologici, oggetti, morte e successo motorio. Dati JSON/debug possono essere ridotti ma versionati.
+
+**Procedural/skills:** \`{skillId, learnedContext, policyParameters, trainedSamples, validationSamples, winRate, energyCost, currentValidity, failureContexts, generation, usageHistory}\`. Candidate -> holdout -> champion -> contextual recall -> probation A/B -> keep/rollback -> retirement if bad. Non richiedere prove irrealisticamente impossibili che impediscano ogni consolidamento, ma **mai** validare sullo stesso training label. Trasferimento di abilità tra posture simili solo con misure e incertezza.
+
+Nuove abilità possono essere composte in opzioni temporali: sequenze scoperte da ZERO, non scritte nel codice come "grip/extend/retract" o inseguimento.
+
+## 12. Neurogenesi e plasticità
+
+GRU + readout allenabili di base; proposta di crescita solo quando errori persistenti su holdout indicano insufficienza di capacità; candidate inizialmente shadow, con ingressi, uscita, ricorrenza e optimizer reali, testata su dati indipendenti.
+
+Criteri: performance incrementale, effetto reale sui punteggi o sui controlli, limiti su RAM/CPU, conservazione delle prestazioni precedenti, reversibilità. Il numero totale di neuroni deve corrispondere a **unità neurali reali**; distinguere da parametri, canali sensoriali, particelle e sinapsi. Grafico 3D con connessioni reali, etichette tipo/ruolo e segnali attivi; no neuroni decorativi.
+
+## 13. Ciclo temporale e credito univoco
+
+Ogni intervallo avrà schema immutabile/versionato:
+\`\`\`text
+ExperienceV3 {
+  schemaVersion, runId, episodeId, decisionId, physicsFrameStart/End,
+  beforeSensoryHash, priorRecurrentState, intendedMotorIntent,
+  controllerIdAndWeightRevision, actualActuatorCommandsSummary,
+  perturbationSeedAndEpoch, elapsedSimSeconds,
+  motionBefore/After, activeMuscleImpulse, passiveMomentumEstimate,
+  contact/adhesion, collision/solver corrections, storm/wind,
+  energyGained, metabolicCost, harm, terminal, interruptionReason,
+  holdoutPartition, afterSensoryHash, validationFlags
+}
+\`\`\`
+
+Gli snapshot completi vanno conservati nel replay interno; per la telemetria si possono produrre hash, aggregati e tracciati compatti, ma mai perdere gli ID e la provenienza.
+
+Ordine deterministico:
+**ObserveBefore -> DecideIntent -> CortexActuate -> PhysicsIntegrate -> ObserveAfter -> CausalFinalize -> Train OR Holdout -> Consolidate -> NextDecision**.
+
+Vincoli:
+- esattamente un \`chosen\` e un \`consequence\` per decisionId completato; no double-credit;
+- action/weights revision registrati prima del test e costanti nel confronto; se skill recovery o mutate cambiano durante l'intervallo, censurare;
+- holdout non allena modelli/pesi né modifica i replay train; metriche di validation restano intatte;
+- resume, death, pause, reset e app close **censurano** i trial incompleti; zero reward post-mortem fittizi;
+- frame sim-time fissi e test x1/x5/x20/testMax di equivalenza numerica a parità di seed;
+- update solo con dati finite; gradient clipping, target network, rollback a checkpoint stabile.
+
+## 14. Persistenza, OTA, reversibilità
+
+- Snapshot integrale **read-only** del cervello/profilo 2.2 prima della migrazione. I vecchi \`KEY\` non vanno riutilizzati con strutture incompatibili.
+- Nuovo schema \`brain_v3\` e \`motor_v3\` con manifest, versioni, hash SHA-256, checksums, dimensioni, optimizer state, scheduler, replay metadata, skill memory e ID.
+- SaveProfileCodec attuale: **MAX_BYTES 8 MiB**, **MAX_ENTRY 4 MiB**, MAX_KEYS 256. Progettare storage v3 separato con manifest e commit atomico oppure dimostrare che i checkpoint entrano nei limiti. Mai aumentare limiti senza QA.
+- Scrittura a due generazioni (stabile/candidato), verifica completa prima dello switch, rollback automatico dei soli dati v3 corrotti, mai cancellazione spontanea dei 12 slot.
+- Resume riprende stessa vita con memoria temporale coerente; death termina la vita ma preserva pesi, storia e competenze; backup e clone testabili.
+- Identità APK \`com.overmind.zero.ota\`, firma storica e percorso **AGGIORNA** intatti; nessun OTA firmato senza CI, benchmark, provenienza dell'APK e verifica live.
+- Gli archivi e metriche 2.2 sono \`LEGACY/HISTORICAL\`, non stampati falsamente come metriche 3.0. Una migrazione di competenza richiede verifica fisica esplicita.
+
+## 15. Software structure suggerita
+
+\`\`\`text
+app/src/main/java/com/overmind/zero/v3/
+ core/{ZeroBrainV3,LearningCoordinator,NeuralRuntime,BrainConfiguration}
+ perception/{SensoryEncoder,BodyStateEncoder,VisualEncoder,SensorNormalizer}
+ cognition/{RecurrentState,WorldModel,ValueNetwork,IntentionPolicy,ShortHorizonPlanner}
+ motor/{MotorIntent,AdaptiveMotorCortex,LocalMotorState,MotorLearning,MotorCompetenceEvaluator}
+ memory/{ExperienceBuffer,EpisodicMemory,ProceduralMemory,SkillConsolidator,MemoryReplay}
+ learning/{CausalCredit,RewardLedger,ValidationManager,CuriosityEstimator,GradientOptimizer,NeuralGrowth}
+ persistence/{BrainCheckpointV3,LegacyArchiveReader,CheckpointValidator}
+ diagnostics/{LearningHealth,BrainMotorTrace,BenchmarkReport}
+\`\`\`
+
+Dipendenze unidirezionali per interfaccia: \`SensoryFrame\` immutabile -> \`MotorIntent\` -> \`ActuatorFrame\` -> \`PhysicsOutcome\` -> \`Experience\`. I tipi reali saranno specificati e testati senza dipendenze da Android UI nei moduli puri.
+
+Nessuna integrazione affrettata in \`GameActivity\` senza adattatore testato, parallel-run e rollback. Il *source of truth* del game runtime va identificato nel ramo attivo OTA, non dedotto dal contenuto storico su main.
+
+## 16. Prove di controllabilità del corpo PRE-REQUISITO
+
+Prima di dichiarare che una rete potrà imparare a camminare, dimostrare che **esiste almeno una sequenza legalmente applicabile di 64 comandi** che produce locomozione controllabile con fisica reale, in scene vuote e con contatti vari.
+
+Laboratorio separato, nessuna sequenza consegnata come comportamento programmato alla rete:
+- corpo senza comando, deriva passiva;
+- impulso radiale/tangenziale/adesione/tensione isolati e combinati;
+- regioni frontali/posteriori e pseudopodi prolungati;
+- presa reale vs grip comandato, reazioni del substrato, interno fluido;
+- contatto concavo/ostacolo/parete e risposta in differenti orientamenti;
+- durate variabili, trazione reversibile, spostamento netto vs gross;
+- dinamiche realistiche delle correzioni/teleport, stabilità, conservazione dei vincoli fisici;
+- stesso seed + stessi comandi -> outcome riproducibile; diversi seed e posture.
+
+Se questi test falliscono: correggere la fisica documentando quale errore, **senza aggiungere forza/mossa che imbrogli l'apprendimento**.
+
+## 17. Benchmark e criteri di accettazione
+
+Vedi il [CONTRATTO](ZERO30_IMPLEMENTATION_CONTRACT.md) per matrici, soglie e tracciabilità.
+
+Test da cervello vergine e stesso budget: **400, 2.000, 5.000, 10.000** esperienze; più episodi lunghi. Minimo proposto **20 seed indipendenti** per l'accettazione finale, con ambienti realmente tenuti fuori dal training.
+
+Misurare:
+- spostamento netto, percorso lordo, rapporto netto/lordo, velocità controllata, tempo immobilità;
+- accordo intenzione/risultato, abilità convalidate e successo al recall, energia per unità di progresso;
+- risorse raccolte, danni, durata, esplorazione, obiettivi persistenti;
+- MSE holdout world model vs baseline per testa; policy vs random, vs vecchio ZERO e vs ablations;
+- regressione dopo death/resume/save/OTA e performance x1/x5/x20/TEST MAX;
+- mediana, casi peggiori, intervalli di confidenza, non il miglior run.
+
+**Accettazione minima di funzionalità:** prova che dalla nascita le abilità motorie migliorano rispetto a politica vergine, che l'apprendimento è persistente, che le intenzioni controllano il movimento meglio di random su scene nuove e che le misure cognitive superano appropriate baseline.
+
+**Accettazione di superiorità:** confronto controllato con 2.2 e, ove sensato, vecchio corpo/cervello; non proclamare superiorità se il risultato resta inferiore o statististicamente ambiguo. Un traguardo user-facing è recuperare la velocità di apprendimento riportata per vecchio ZERO, senza assumere che basti un singolo seed fortunato.
+
+## 18. Diagnostica e trasparenza
+
+Da implementare come dati reali, **non solo dashboard**:
+- ogni modulo espone \`observed / train / holdout / attempted / accepted / blockedReason\`, magnitudine delta pesi, gradient norm e tasso di attività;
+- per cortex: dati per 16 settori e quattro uscite, sforzo, movimento netto, allineamento, grip fisico, inerzia, vento, correzioni;
+- per brain: neurons original/additional, vere sinapsi, activity, confidence, specific heldout errors, planner usage e valore;
+- per goals/skills: candidate/champion/recall/revert, contesti, prove, vite distinte, miglioramento A/B;
+- per memoria: usage, replay effective, integrity e save age;
+- allarmi: pesi quasi identici dopo N update, predittore peggiore baseline, 0 competenze, 0 decisioni influenzate, perdita conoscenza, attrito/solver anomali, falsi reward, NaN;
+- overlay e API **read-only**; solo le opzioni explicitamente abilitate possono cambiare comportamento; non introdurre editor di "skill" che imponga un gait.
+
+## 19. UI/UX ZERO 3.0 OBBLIGATORIA (non opzionale)
+
+**L'interfaccia 2.2 deve essere sostituita**, non solo rinominata. La nuova UI mostrerà le reali proprietà e i dati del 3.0, con navigazione chiara stile gioco/neural HUD, pannello 3D neurale, sottosezioni separate di corpo/sensori/corteccia e statistiche.
+
+Percorsi richiesti:
+- **Panoramica ZERO** (vita, energia, progressi e stato dell'apprendimento),
+- **Cervello** (architettura, neuroni, connessioni, modelli, significato),
+- **Neuroni / Atlante 3D** (neuroni realmente esistenti, crescita/ruolo, selezione),
+- **Abilità** (candidate, consolidate, recall, fallite, evoluzione),
+- **Corpo** (visuale anatomica 96 + 74 nodi interni, 16 settori, 64 attuatori, fisica e propriocezione),
+- **Percezione** (vista, tatto, interocezione, efferenza),
+- **Memoria** (episodica, procedurale, stato attivo),
+- **Obiettivi e pianificazione** (valore, intenzione, attendibilità previsioni),
+- **Evoluzione** (modifiche parametri, neurogenesi autentica, competenze),
+- **Analisi e benchmark** (imparato vs soltanto provato, holdout, confronto baseline),
+- **Impostazioni** (simulazione, velocità, learning/test, diagnostica, backup, aggiornamenti).
+Per l'interfaccia completa, responsabilità dei data provider, tabelloni, wireframe, stati di disponibilità, navigazione Android, test e accettazione: **[ZERO30_UI_UX_SPEC.md](ZERO30_UI_UX_SPEC.md)**.
+
+Un pannello non può mostrare un neurone inesistente o metriche 2.2 come "3.0". I menu vecchi restano solo per lettura storica quando un profilo legacy è aperto, con etichetta esplicita.
+
+## 20. Roadmap approvabile per fasi con gate
+
+0. Baseline e backup della stable OTA172, audit fisica/code e benchmark baseline, regole git/OTA.
+1. Test **controllabilità fisica**, reazione/adesione/materiali/post-collisioni.
+2. \`MotorIntentV3\`, \`ActuatorFrame\`, \`ExperienceV3\` e \`LearningCoordinator\` con causal credit univoco.
+3. Cortex neurale learnable + motor babbling + consolidamento primi skill; testa autonomia su world real.
+4. Encoder, GRU, actor-critic e contesto unificato; benchmark vergine.
+5. World model multi-output/uncertainty e planner bounded; holdout per testa.
+6. Goals, valenze percettive, memoria episodi/procedura, opzioni temporali apprese.
+7. Neurogenesi genuina, protezione regressioni, persistenza e migrazione reversibile.
+8. **Nuova UI 3.0**: dati provider veri, atlante neurale, corpo, abilità, evoluzione, sensori, statistiche, test e settings; sostituisce UI 2.2 quando profilo 3.0.
+9. Android Galaxy S21 offline, batterie di benchmark, profili legacy, x1/x5/x20/testMax, stabilità, OTA firmato SOLO dopo approvazione.
+
+Le fasi possono avere PR minori, ma **nessuna fase superata senza il suo gate oggettivo**. Pianificare UI e telemetry insieme al dominio fin dalla prima fase, non aggiungerle soltanto dopo.
+
+## 21. Anti-regressioni e fallimenti da prevenire
+
+- Contatore \`trainingSteps\` che cresce con pesi quasi invariati: verificare norm effettivi vs reset, reale optimizer step.
+- Simboli o pannelli "neuroni" che mostrano particelle/sinapsi come neuroni.
+- Visione sensoriale corretta ma blocchi di fiducia globale che azzerano influenza utile.
+- \`holdout\` che entra in train o replay; modello che sembra ottimo sul proprio training.
+- Pseudopodio che si muove mentre il corpo si comprime: distinguere movimento interno da locomozione reale.
+- \`touch\` trattato come prova di moto esterno; assenza di contatto scartata per errore.
+- \`chosen\` duplicato, comandi effettivi non coincidenti con \`intent\`, saldo energetico attribuito a wrong epoch.
+- Salvare solo peso ma dimenticare optimizer/normalizer/memoria/seed, riprendendo training inconsistenti.
+- Migration che scrive sopra brain 2.2 o salvataggi dei 12 slot.
+- Benchmark su app/scene diverse senza riferire il confronto.
+- Aggiunta moduli shadow senza collegamento e senza misure dell'influenza effettiva.
+- Cambiamento menu con etichette nuove e provider vecchi/stale.
+- Rilascio OTA o Android debug senza verifica produzione, firma, permessi, package, SHA e test sul telefono.
+
+## 22. Gerarchia dei documenti e manutenzione
+
+- **Questa pagina** = requisiti, obiettivi, architettura e limiti.
+- **ZERO30_IMPLEMENTATION_CONTRACT.md** = interfacce, test, criteri di accettazione, incrementi e processo di PR.
+- **ZERO30_UI_UX_SPEC.md** = nuova UI/UX obbligatoria e verifica dei dati.
+- Gli audit \`ZERO_17*\` e \`ZERO_OTA*\` = prove **storiche**, non autorizzazione a sovrascrivere il progetto.
+- \`AGENTS.md\`, \`OVERMIND_START_HERE.md\`, README e istruzioni per assistenti servono a farlo trovare in ogni chat.
+- Per ogni cambiamento sostanziale aggiungere **Decision Record** datato al contratto o a un ADR dedicato (problema, opzioni, scelta, prova, rischio, rollback).
+- Le PR devono contenere link al piano e checklist degli invarianti; ogni deviazione va dichiarata, non nascosta.
+
+## 23. Stato reale e prossimo passo
+
+**Al 16/10/2026 la presente è una SPECIFICA, non una implementazione.** La prima attività tecnica consentita, dopo la revisione del progetto, sarà il **Gate 0: snapshot/benchmark baseline e Gate 1: controllabilità fisica**. Non creare subito un APK 3.0 spacciandolo per completo.
+
+**Risultato desiderato:** un ZERO vergine impara a governare autonomamente la massa gelatinosa, migliora dopo esperienza reale, ricorda e riusa capacità, apprende le conseguenze delle sue scelte e generalizza su nuovi contesti; solo benchmark indipendenti possono confermare che il traguardo è raggiunto.
