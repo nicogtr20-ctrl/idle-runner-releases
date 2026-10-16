@@ -70,7 +70,26 @@ public final class Zero3LearningFoundation {
         private int samples;
         private boolean probing;
         private long randomState=0x61C8864680B583EBL,revision,updates;
-        private float baseline;
+        private final float[] contextBaseline=new float[8];
+        private final long[] contextSamples=new long[8];
+        private long perturbationEpisodes;
+        private int activeChannel=-1,contextBucket;
+        private float lastAcceptedGradientNorm,lastAdvantage;
+        /** No prescribed gait: a spatially correlated noise field in one muscle channel. */
+        private void sampleProbe(){
+            activeChannel=(int)(perturbationEpisodes++%CHANNELS);
+            float[] anchors=new float[4];
+            for(int i=0;i<4;i++)anchors[i]=random()*2f-1f;
+            for(int sector=0;sector<SECTORS;sector++){
+                int group=sector/4,step=sector%4;
+                float t=step*.25f;
+                float v=anchors[group]*(1-t)+anchors[(group+1)%4]*t;
+                noise[sector*CHANNELS+activeChannel]=.14f*v;
+            }
+        }
+        public float lastAcceptedGradientNorm(){return lastAcceptedGradientNorm;}
+        public float lastAdvantage(){return lastAdvantage;}
+        public int lastActiveProbeChannel(){return activeChannel;}
         public AdaptiveCortex(){
             for(int i=0;i<weights.length;i++)
                 weights[i]=(random()-.5f)*.06f;
@@ -84,14 +103,19 @@ public final class Zero3LearningFoundation {
         public long updates(){return updates;}
         public float[] weights(){return weights.clone();}
         public float[] lastCommands(){return output.clone();}
-        public void begin(boolean explore){
+        public void begin(boolean explore){begin(explore,null);}
+        public void begin(boolean explore,MotorIntent intent){
             Arrays.fill(noise,0f);Arrays.fill(accumulated,0f);samples=0;
-            probing=explore;
-            if(explore)for(int i=0;i<OUTPUTS;i++)
-                noise[i]=(random()-random())*.22f;
+            probing=explore;activeChannel=-1;lastAcceptedGradientNorm=0f;
+            if(intent!=null){
+                float angle=(float)Math.atan2(intent.y,intent.x);
+                contextBucket=((int)Math.floor((angle+Math.PI)/(Math.PI/4)))&7;
+            }
+            if(explore)sampleProbe();
         }
         void discard(){
             Arrays.fill(noise,0);Arrays.fill(accumulated,0);samples=0;probing=false;
+            activeChannel=-1;
         }
         /**
          * Actual geometry is read every physical substep. OUTPUTS are the
@@ -146,21 +170,26 @@ public final class Zero3LearningFoundation {
         void learn(float score,boolean valid){
             if(!valid||!probing||samples<1){discard();return;}
             finite(score,"motor score");
+            float baseline=contextBaseline[contextBucket];
             float advantage=limit(score-baseline,-1f,1f);
+            lastAdvantage=advantage;
             float effectiveL2=0f;
-            // Score-function update for a persistent exploratory actuator
-            // intervention. Train ONLY after the corresponding real outcome.
-            final float lr=.055f;
+            // Credit ONLY the selected muscle channel's localized intervention.
+            // This stochastic estimate remains unproven until matched lab A/B.
+            final float lr=.013f;
             for(int out=0;out<OUTPUTS;out++)for(int f=0;f<INPUTS;f++){
                 int ix=out*INPUTS+f;
                 float feat=limit(accumulated[ix]/samples,-2,2);
-                float delta=limit(lr*advantage*noise[out]*feat,-.012f,.012f);
+                float delta=limit(lr*advantage*noise[out]*feat,-.002f,.002f);
                 float previous=weights[ix];
                 weights[ix]=limit(previous+delta,-1.5f,1.5f);
                 float actual=weights[ix]-previous;
                 effectiveL2+=actual*actual;
             }
-            baseline=.95f*baseline+.05f*score;
+            float beta=contextSamples[contextBucket]<24 ? .12f : .025f;
+            contextBaseline[contextBucket]+=beta*(score-contextBaseline[contextBucket]);
+            contextSamples[contextBucket]++;
+            lastAcceptedGradientNorm=(float)Math.sqrt(effectiveL2);
             if(effectiveL2>1e-16f){updates++;revision++;}
             discard();
         }
@@ -201,7 +230,7 @@ public final class Zero3LearningFoundation {
             lastDecision=intent.decisionId;episode=intent.episodeId;startedRevision=cortex.revision();
             startX=lastX=endX=b.cx;startY=lastY=endY=b.cy;
             frames=0;gross=work=impulse=seconds=0;
-            cortex.begin(exploration);
+            cortex.begin(exploration,intent);
         }
         public float[] actuate(MotorBrain.Body body,Morphology.Surface skin,float dt){
             if(active==null)throw new IllegalStateException("no decision");
