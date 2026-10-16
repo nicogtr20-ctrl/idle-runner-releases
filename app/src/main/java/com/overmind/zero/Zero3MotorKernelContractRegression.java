@@ -33,11 +33,21 @@ public final class Zero3MotorKernelContractRegression {
         Zero3MotorResponseKernel.Predictor model=
             new Zero3MotorResponseKernel.Predictor(train,.5);
         check(!model.isLabCalibrated(),"pretrained without independent validation");
+        boolean rejectedLeak=false;
+        try{model.calibrate(train);}catch(IllegalArgumentException expected){
+            rejectedLeak=true;
+        }
+        check(rejectedLeak,"accepted calibration on the very same training transitions");
         int[] allowed={0,4,8,12};
         check(model.suggest(1,0,.2f,allowed,.005)==null,
             "uncalibrated model proposed muscle command");
         double[] before=model.parameterSnapshot();
         check(model.calibrate(calib),"model failed known independent calibration");
+        boolean rejectedRetune=false;
+        try{model.calibrate(calib);}catch(IllegalStateException expected){
+            rejectedRetune=true;
+        }
+        check(rejectedRetune,"allowed repeated selection on calibration outcomes");
         check(Arrays.equals(before,model.parameterSnapshot()),
             "calibration illegally fitted synapses");
         Zero3MotorImpulseResponseRegression.Scenario virgin=
