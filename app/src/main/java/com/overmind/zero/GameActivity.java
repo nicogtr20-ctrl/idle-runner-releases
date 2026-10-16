@@ -1359,6 +1359,13 @@ public final class GameActivity extends Activity {
                                 creature.cy-uncorrectedY)>.08f||
                             environmentEffectSinceAction>worldEffectAtFrameStart+.03f||
                             shelter.storm(worldTime);
+                        // Moving a door or box is an external intervention,
+                        // not an independent demonstration of crawling skill.
+                        for(int i=0;i<Morphology.POINTS;i++)
+                            if(surface.touchSense[i]>.25f||
+                               surface.gripHold[i]>=Morphology.GRIP_HOLD){
+                                externalDisturbance=true;break;
+                            }
                         symMotor.observedPhysicalStep(oldCoreX,oldCoreY,
                             creature,surface,witnessedMuscleImpulse,
                             externalDisturbance);
