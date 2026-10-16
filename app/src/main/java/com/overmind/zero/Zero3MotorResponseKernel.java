@@ -1,6 +1,7 @@
 package com.overmind.zero;
 
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
 
 /**
@@ -117,7 +118,8 @@ public final class Zero3MotorResponseKernel {
     public static final class Predictor {
         private final double[][] weights=new double[TARGETS][FEATURES];
         private final int trainingCount;
-        private boolean calibrated;
+        private final HashSet<String> trainingIdentities=new HashSet<>();
+        private boolean calibrated,calibrationAttempted;
         private double[] calibrationMse=new double[TARGETS],baselineMse=new double[TARGETS];
         public Predictor(List<PhysicalSample> training,double ridge){
             if(training==null||training.size()<64)
@@ -127,6 +129,8 @@ public final class Zero3MotorResponseKernel {
             double[][] gram=new double[FEATURES][FEATURES];
             double[][] target=new double[TARGETS][FEATURES];
             for(PhysicalSample t:training){
+                if(!trainingIdentities.add(t.episode+":"+t.decision))
+                    throw new IllegalArgumentException("duplicate physical training transition");
                 double[] x=t.features;
                 double[] y={t.immediate,t.delayed,1000*t.extraWork};
                 for(int j=0;j<FEATURES;j++){
@@ -169,10 +173,16 @@ public final class Zero3MotorResponseKernel {
          * across fitting and calibration via caller check in the lab.
          */
         public boolean calibrate(List<PhysicalSample> validation){
+            if(calibrationAttempted)
+                throw new IllegalStateException("calibration is immutable; new data requires new model");
             if(validation==null||validation.size()<64)
                 throw new IllegalArgumentException("insufficient calibration");
+            HashSet<String> calibrationIdentities=new HashSet<>();
             double[] mse=new double[TARGETS],zero=new double[TARGETS];
             for(PhysicalSample row:validation){
+                String key=row.episode+":"+row.decision;
+                if(trainingIdentities.contains(key)||!calibrationIdentities.add(key))
+                    throw new IllegalArgumentException("calibration reused physical experience");
                 double[] real=row.targets();
                 Consequence c=predictRaw(row.features);
                 double[] p={c.immediate,c.delayed,c.extraWork};
@@ -185,6 +195,7 @@ public final class Zero3MotorResponseKernel {
                 calibrationMse[i]=mse[i]/validation.size();
                 baselineMse[i]=zero[i]/validation.size();
             }
+            calibrationAttempted=true;
             calibrated=calibrationMse[0]<baselineMse[0]*.9 &&
                        calibrationMse[1]<baselineMse[1]*.9 &&
                        calibrationMse[2]<baselineMse[2]*.9;
