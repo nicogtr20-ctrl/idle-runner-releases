@@ -138,3 +138,20 @@ Esempi fattuali:
 **Esito quantitativo:** da verificare sul workflow [ZERO3 motor model QA](https://github.com/nicogtr20-ctrl/idle-runner-releases/actions) e registrare qui. Se il credito ritardato non aumenta il controllo direzionale o riduce soltanto il numero di perturbazioni, tenere il gate G3 bloccato e progettare controllore più contestuale.
 
 Questo **non è** l'OTA né la nuova UI di ZERO 3.0.
+
+
+## ESITO VERIFICATO DELLA FINESTRA DI CREDITO 384 FRAME — CI 38978753306
+
+**[GitHub Actions run 38978753306: SUCCESS tecnico](https://github.com/nicogtr20-ctrl/idle-runner-releases/actions/runs/38978753306)**. Confronto sul **medesimo solver reale** in 16 condizioni (4 intenzioni direzionali del solo laboratorio × 2 pose × 2 stati fisici), **80 decisioni contigue per braccio e condizione**. Il ledger osserva soltanto vera posizione post-solver e il lavoro muscolare, senza clonare uno stato per creare ricompense durante il gioco.
+
+| Controllo nel laboratorio | Somma spostamento firmato (U) | Lavoro muscolare totale | Condizioni migliorate entro limite di costo | Numero impulsi |
+|---|---:|---:|---:|---:|
+| Baseline senza impulsi extra | **+164,83965** | **1,248223** | Riferimento | 0 |
+| Predittore: impulso a ogni decisione | +34,88900 | 1,465575 | 4/16 | 1.280 |
+| Predittore: intervallo 384 frame, outcome realmente osservato | **+163,08493** | **1,279668** | **8/16** | 192 |
+
+**La pausa fisica è un miglioramento significativo RISPETTO AL CONTROLLO CONTINUO**, perché riduce la frequenza dei nuovi interventi e impedisce il grosso della deriva negativa; in tutte le 16 condizioni il lavoro è inferiore a quello degli impulsi continui.
+
+**MA NON BATTE IL CONTROLLO SENZA IMPULSI:** differenza di spostamento -1,75472 U, aumento di lavoro +0,031445 e solo 8/16 condizioni superiori. Pertanto **non è un sistema di locomozione efficace** e va mantenuto inattivo nella partita. La finestra di 384 frame è un requisito di causalità temporale sperimentale, NON un'approvazione del momento in cui scegliere il prossimo muscolo.
+
+**Decisione di progetto:** conservare il ledger per prevenire accrediti prematuri; nuovo G3 necessario: selezione/astensione **dipendente dallo stato corporeo corrente e dai risultati osservati di azioni precedenti**, senza impiegare gli outcome del holdout per scegliere la soglia. Successive valutazioni a ciclo chiuso su condizioni non usate in tuning. Non confondere questo con un programma di andatura o con apprendimento motorio generalizzato; G3 resta bloccato, UI e OTA V3 non realizzati.
