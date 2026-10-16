@@ -24,6 +24,10 @@ public final class SymbioteMatterV1 {
     private final float[] lastSkinX=new float[SURFACE],lastSkinY=new float[SURFACE];
     private final float[] lastBodyX=new float[MotorBrain.N],lastBodyY=new float[MotorBrain.N];
     private final float[] fx=new float[SURFACE],fy=new float[SURFACE];
+    // ONLY true active muscle forces get an opposite LIQUID reaction.
+    // Neighbor elasticity is an INTERNAL shell-to-shell pair force;
+    // feeding it to the fluid double counts the reaction and adds torque.
+    private final float[] muscleFx=new float[SURFACE],muscleFy=new float[SURFACE];
     private final float[] nx=new float[SURFACE],ny=new float[SURFACE];
     private final float[] impulsesX=new float[MotorBrain.N+INNER],impulsesY=new float[MotorBrain.N+INNER];
     private final float[] fluidX=new float[MotorBrain.N+INNER],fluidY=new float[MotorBrain.N+INNER];
@@ -471,6 +475,13 @@ public final class SymbioteMatterV1 {
         float cx=body.cx,cy=body.cy;
         float contourSign=signedArea(skin)>=0f?1f:-1f;
         float[] physicalNormal=new float[2];
+        // Optional *differential* voluntary floor-grip: ordinary high-bank
+        // obstacle grip is never a global ground anchor. Uniform grip must
+        // have exactly zero impact; relative local differences can change
+        // substrate resistance independently of contractile muscle pressure.
+        float gripMean=0f;
+        for(int sector=0;sector<SECTORS;sector++)
+            gripMean+=Math.max(0f,clip(cortex[sector*OUTPUTS+2],-1f,1f))/SECTORS;
         for(int i=0;i<SURFACE;i++){
             lastSkinX[i]=skin.x[i];lastSkinY[i]=skin.y[i];
             float dx=skin.x[i]-cx,dy=skin.y[i]-cy;
@@ -493,8 +504,9 @@ public final class SymbioteMatterV1 {
             // This modifies no neural command, center target or world goal.
             float strain=Math.max(0f,rr/R-1f);
             float extensionCompliance=extend>0f?1f/(1f+4f*strain):1f;
-            fx[i]=ux*extend*680f*extensionCompliance-uy*lateral*210f;
-            fy[i]=uy*extend*680f*extensionCompliance+ux*lateral*210f;
+            muscleFx[i]=ux*extend*680f*extensionCompliance-uy*lateral*210f;
+            muscleFy[i]=uy*extend*680f*extensionCompliance+ux*lateral*210f;
+            fx[i]=muscleFx[i];fy[i]=muscleFy[i];
             // Neighbour smoothing = surface tension; stiffness modulates
             // corticoelastic relaxation without a fixed radial spring.
             int p=(i+SURFACE-1)%SURFACE,n=(i+1)%SURFACE;
@@ -523,7 +535,13 @@ public final class SymbioteMatterV1 {
             float compression=Math.max(0f,-extend);
             // Original OTA160 floor traction is unchanged. The physics
             // fix is excluded-volume self-contact, not weaker footholds.
-            float traction=clip(.12f+1.45f*compression,0f,.95f);
+            // Local grip control works without requiring muscle contraction,
+            // but subtract its mean so the all-grip action cannot weld every
+            // perimeter site to the ground. Zero differential preserves
+            // the pre-168 proven passive/friction mechanics byte-for-byte.
+            float localGroundGrip=clip(adhesive-gripMean,-1f,1f);
+            float traction=clip(.12f+1.45f*compression+
+                .72f*localGroundGrip,0f,.95f);
             float drag=(float)Math.exp(-(1.8f+66f*traction)*dt);
             float preX=skin.x[i],preY=skin.y[i];
             float appliedVx=skin.vx[i]+fx[i]*dt;
@@ -588,12 +606,12 @@ public final class SymbioteMatterV1 {
                 }
                 float wa=1f/(3f+da),wb=1f/(3f+db),wc=1f/(3f+dc);
                 float norm=wa+wb+wc;
-                if(a>=0){impulsesX[a]-=fx[i]*dt*(wa/norm)*n/SURFACE;
-                         impulsesY[a]-=fy[i]*dt*(wa/norm)*n/SURFACE;}
-                if(b>=0){impulsesX[b]-=fx[i]*dt*(wb/norm)*n/SURFACE;
-                         impulsesY[b]-=fy[i]*dt*(wb/norm)*n/SURFACE;}
-                if(c>=0){impulsesX[c]-=fx[i]*dt*(wc/norm)*n/SURFACE;
-                         impulsesY[c]-=fy[i]*dt*(wc/norm)*n/SURFACE;}
+                if(a>=0){impulsesX[a]-=muscleFx[i]*dt*(wa/norm)*n/SURFACE;
+                         impulsesY[a]-=muscleFy[i]*dt*(wa/norm)*n/SURFACE;}
+                if(b>=0){impulsesX[b]-=muscleFx[i]*dt*(wb/norm)*n/SURFACE;
+                         impulsesY[b]-=muscleFy[i]*dt*(wb/norm)*n/SURFACE;}
+                if(c>=0){impulsesX[c]-=muscleFx[i]*dt*(wc/norm)*n/SURFACE;
+                         impulsesY[c]-=muscleFy[i]*dt*(wc/norm)*n/SURFACE;}
                 continue;
             }
             for(int j=0;j<n;j++){
@@ -604,8 +622,8 @@ public final class SymbioteMatterV1 {
                 // and the interior parcels also sum to mass 1. Convert a
                 // patch's force into equal/opposite parcel acceleration.
                 // This is not an impulse absorbed by a fictional centroid.
-                impulsesX[j]-=fx[i]*dt*share*n/SURFACE;
-                impulsesY[j]-=fy[i]*dt*share*n/SURFACE;
+                impulsesX[j]-=muscleFx[i]*dt*share*n/SURFACE;
+                impulsesY[j]-=muscleFy[i]*dt*share*n/SURFACE;
             }
         }
         for(int j=0;j<n;j++){
