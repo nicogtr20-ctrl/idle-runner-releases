@@ -45,3 +45,24 @@ Ogni coppia genera 2 × (96+384) = 960 integrazioni fisiche; **983.040 integrazi
 Il workflow specifico è stato avviato: [runs ZERO3 3.8](https://github.com/nicogtr20-ctrl/idle-runner-releases/actions). Registrare il numero di CI, MSE per tutte e tre le teste, la traiettoria e il risultato positivo/negativo soltanto dopo la lettura dei log conclusi. Se il risultato è negativo, non rifare i test sullo stesso blind ottimizzando le costanti; procedere su una nuova partizione preregistrata e analizzare l'origine del drift.
 
 **G3 locomozione appresa / G5 modello del mondo generale: NON SUPERATI. UI 3.0 e OTA: NON IMPLEMENTATI.**
+
+
+## RISULTATI VERIFICATI — V3.8, primo modello ricorrente, run 38983535530
+
+**[GitHub Actions 38983535530 — SUCCESS di compilazione e fisica](https://github.com/nicogtr20-ctrl/idle-runner-releases/actions/runs/38983535530).** Test realmente concluso sul corpo gel: **384 coppie train**, **384 calibrazione**, **256 blind** su pose ±10°/±80°, **983.040 passi fisici del solver**, 32 campioni consecutivi della traiettoria di ciascuna coppia.
+
+| MSE | Baseline zero | Modello statico 68D | Ricorrente 24 unità |
+|---|---:|---:|---:|
+| CAL: immediata | 0,003654589 | 0,000466536 | **0,015652896** |
+| CAL: ritardata a 384 frame | 0,032314788 | 0,027701058 | **0,034991960** |
+| TEST NUOVO: immediata | 0,003229027 | 0,000616392 | **0,042353996** |
+| TEST NUOVO: ritardata a 384 frame | 0,029724185 | 0,031067743 | **0,033926378** |
+| TEST NUOVO: costo | 0,000000007659 | 0,000000000515 | 0,000000001548 |
+
+MSE della traiettoria a 32 scadenze sul test blind **0,055894499**, contro baseline zero **0,031732958**. **Gate calibrazione = FALSE; gate blind = FALSE; nessuna proposta selezionata** (0/0, perché il gate blocca l'intervento). Guadagno MSE tardivo vs modello statico **−9,201%**, vs baseline zero **−14,137%**: valori negativi indicano un peggioramento, NON un miglioramento.
+
+**Analisi:** l'attuale reservoir a stati ricorrenti fissi e readout ridge comune alle 32 finestre sta perdendo la capacità di rappresentare il piccolissimo effetto immediato e non segue la risposta meccanica lunga in stati corporei nuovi. Non è evidenza che «la ricorrenza in sé non funziona»: la ricorrenza NON è stata addestrata tramite gradiente e il modello non osserva la storia delle future azioni volontarie del cortex. Il risultato smentisce **questa implementazione concreta**, non il valore di una transizione fisica sequenziale state/action-conditioned appresa.
+
+**Controllo aggiuntivo time-only SENZA stato ricorrente:** aggiunto al sorgente **prima di leggere i risultati di questo secondo confronto**, con CI [38983664233](https://github.com/nicogtr20-ctrl/idle-runner-releases/actions/runs/38983664233). Il suo risultato è ancora da verificare: nessun valore va dichiarato prima dei log.
+
+**Stato progetto:** *G3 apprendimento motorio ancora BLOCCATO; G5 modello mondo completo BLOCCATO; nessuna abilità, nessuna UI V3, nessun cervello 2.2 modificato, nessun OTA V3.*
