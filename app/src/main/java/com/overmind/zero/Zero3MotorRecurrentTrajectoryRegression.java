@@ -195,15 +195,18 @@ public final class Zero3MotorRecurrentTrajectoryRegression {
     /** Fits measured cumulative physical response at EACH 12-frame horizon. */
     static final class LearnedDynamics {
         final Reservoir encoder;
+        final boolean recurrent;
         final double[][] w=new double[2][FEATURES];
-        LearnedDynamics(ArrayList<Trajectory> train){
+        LearnedDynamics(ArrayList<Trajectory> train){this(train,true);}
+        LearnedDynamics(ArrayList<Trajectory> train,boolean enabled){
+            recurrent=enabled;
             encoder=new Reservoir(train);
             double[][] gram=new double[FEATURES][FEATURES];
             double[][] target=new double[2][FEATURES];
             for(Trajectory trace:train){
                 double[][] x=encoder.rolloutFeatures(trace);
                 for(int t=0;t<BINS;t++){
-                    double[] f=x[t];
+                    double[] f=ablation(x[t]);
                     double[] y={trace.response[t][0],
                                 1000*trace.response[t][1]};
                     for(int i=0;i<FEATURES;i++){
@@ -221,13 +224,22 @@ public final class Zero3MotorRecurrentTrajectoryRegression {
                 w[k]=Zero3MotorResponseKernel.solve(a,target[k]);
             }
         }
+        double[] ablation(double[] original){
+            if(recurrent)return original;
+            double[] x=original.clone();
+            // Same 68 sensed inputs and time basis, but NO recurrent state.
+            // This isolates the value of the evolving reservoir itself.
+            for(int i=1+INPUT;i<1+INPUT+HIDDEN;i++)x[i]=0;
+            return x;
+        }
         double[][] predict(Trajectory trace){
             double[][] features=encoder.rolloutFeatures(trace);
             double[][] response=new double[BINS][2];
             for(int t=0;t<BINS;t++){
+                double[] x=ablation(features[t]);
                 for(int k=0;k<2;k++)
                     for(int i=0;i<FEATURES;i++)
-                        response[t][k]+=w[k][i]*features[t][i];
+                        response[t][k]+=w[k][i]*x[i];
                 response[t][1]/=1000;
             }
             return response;
@@ -286,12 +298,15 @@ public final class Zero3MotorRecurrentTrajectoryRegression {
         ArrayList<Trajectory> cal=collect(CAL,new int[]{0,1,2});
         check(fit.size()==384&&cal.size()==384,"missing physical train or calibration");
         LearnedDynamics recurrent=new LearnedDynamics(fit);
+        LearnedDynamics timeOnly=new LearnedDynamics(fit,false);
         Zero3MotorTemporalHistoryRegression.Ridge static68=
             new Zero3MotorTemporalHistoryRegression.Ridge(cases(fit),INPUT);
         Metrics calM=new Metrics(cal,recurrent);
+        Metrics calTime=new Metrics(cal,timeOnly);
         double[] cal68=staticError(static68,cases(cal));
         boolean calibrated=calM.gate();
         System.out.println("ZERO3 V38 CAL RECURRENT "+calM.show());
+        System.out.println("ZERO3 V38 CAL TIME-ONLY "+calTime.show());
         System.out.printf(Locale.US,
             "ZERO3 V38 CAL STATIC68 early=%.9f late=%.9f work=%.12f%n",
             cal68[0],cal68[1],cal68[2]);
@@ -301,12 +316,15 @@ public final class Zero3MotorRecurrentTrajectoryRegression {
         ArrayList<Trajectory> blind=collect(BLIND,new int[]{3});
         check(blind.size()==256,"incomplete blind physics");
         Metrics blindM=new Metrics(blind,recurrent);
+        Metrics blindTime=new Metrics(blind,timeOnly);
         double[] blind68=staticError(static68,cases(blind));
         System.out.println("ZERO3 V38 NEW BLIND RECURRENT "+blindM.show());
+        System.out.println("ZERO3 V38 NEW BLIND TIME-ONLY "+blindTime.show());
         System.out.printf(Locale.US,
             "ZERO3 V38 NEW BLIND STATIC68 early=%.9f late=%.9f work=%.12f%n",
             blind68[0],blind68[1],blind68[2]);
         double lateGain=100*(1-blindM.mse[1]/blind68[1]);
+        double lateGainVsTimeOnly=100*(1-blindM.mse[1]/blindTime.mse[1]);
         double delayedZeroGain=100*(1-blindM.mse[1]/blindM.zero[1]);
         int useful=0,unsafe=0,picks=0;
         double signed=0,extraWork=0;
@@ -335,13 +353,15 @@ public final class Zero3MotorRecurrentTrajectoryRegression {
             "ZERO3 V38 SUMMARY trainPairs=%d calPairs=%d newBlindPairs=%d"+
             " pairedPhysicsFrames=%d bins=%d recurrentUnits=%d"+
             " calibrationGate=%s blindGate=%s"+
-            " delayedMseGainVsStaticPercent=%.3f delayedGainVsZeroPercent=%.3f"+
+            " delayedMseGainVsStaticPercent=%.3f"+
+            " delayedGainVsTimeOnlyPercent=%.3f delayedGainVsZeroPercent=%.3f"+
             " selectedUseful=%d/%d selectedCostly=%d"+
             " blindSelectedSigned=%.5f extraWork=%.7f"+
             " (no online learning / no game integration / no OTA)%n",
             fit.size(),cal.size(),blind.size(),
             (fit.size()+cal.size()+blind.size())*2*(HISTORY+HORIZON),
             BINS,HIDDEN,calibrated,blindM.gate(),
-            lateGain,delayedZeroGain,useful,picks,unsafe,signed,extraWork);
+            lateGain,lateGainVsTimeOnly,delayedZeroGain,
+            useful,picks,unsafe,signed,extraWork);
     }
 }
