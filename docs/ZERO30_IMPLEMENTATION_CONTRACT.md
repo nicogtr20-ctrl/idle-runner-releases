@@ -1,5 +1,8 @@
 # ZERO 3.0 — CONTRATTO DI IMPLEMENTAZIONE, TEST E HANDOFF TRA CHAT
 
+> **TEST V3.8 IN CORSO:** [modello ricorrente delle conseguenze muscolari su 32 intervalli, confronto statico e senza ricorrenza](ZERO30_MOTOR_V38_RECURRENT_TRAJECTORY.md). Prototipo **soltanto Java/solver**, non integrato nel cervello dell'app. Validazione su pose ±10°/±80° separate, nessuna OTA V3. Il gate G3 locomozione resta BLOCCATO fino a risultati dimostrati.
+
+
 > **ULTIMO ESPERIMENTO MOTORIO V3.7:** [Memoria delle 96 contrazioni pre-azione, test 384-frame](ZERO30_MOTOR_V37_TEMPORAL_MEMORY.md): codice e CI corretti, ma **gate di affidabilità FALLITO** sulle 256 prove non viste, miglioramento della memoria su modello statico solo **0,019%**. [V3.7-B: nuove pose con memoria normalizzata, GATE FALLITO](ZERO30_MOTOR_V37B_TRAIN_SCALE.md) **verificata su 256 nuove prove**: MSE ritardata 0,035384825 contro 0,033472508 della baseline zero; **NON supera il gate**. **ZERO 3.0 NON ATTIVO, G3 BLOCCATO, OTA172 INVARIATA.**
 
 
