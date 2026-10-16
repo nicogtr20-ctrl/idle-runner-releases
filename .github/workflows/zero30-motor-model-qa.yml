@@ -6,6 +6,7 @@ on:
       - 'app/src/main/java/com/overmind/zero/Zero3MotorImpulseResponseRegression.java'
       - 'app/src/main/java/com/overmind/zero/Zero3MotorDynamicResponseRegression.java'
       - 'app/src/main/java/com/overmind/zero/Zero3MotorResponseKernel.java'
+      - 'app/src/main/java/com/overmind/zero/Zero3MotorKernelContractRegression.java'
       - '.github/workflows/zero30-motor-model-qa.yml'
   workflow_dispatch:
 permissions:
@@ -34,10 +35,13 @@ jobs:
             'app/src/main/java/com/overmind/zero/Zero3MotorRetentionRegression.java',
             'app/src/main/java/com/overmind/zero/Zero3MotorImpulseResponseRegression.java',
             'app/src/main/java/com/overmind/zero/Zero3MotorDynamicResponseRegression.java',
-            'app/src/main/java/com/overmind/zero/Zero3MotorResponseKernel.java']
+            'app/src/main/java/com/overmind/zero/Zero3MotorResponseKernel.java',
+            'app/src/main/java/com/overmind/zero/Zero3MotorKernelContractRegression.java']
           subprocess.run(cmd,check=True)
           PY
       - name: Heldout 45-degree counterfactual material pulse response
         run: java -cp /tmp/overmind com.overmind.zero.Zero3MotorImpulseResponseRegression
       - name: Stress test pretrained impulse model with deformed and moving body states
         run: java -cp /tmp/overmind com.overmind.zero.Zero3MotorDynamicResponseRegression
+      - name: Verify independent model calibration and real-world 64-output bounded motor proposal
+        run: java -cp /tmp/overmind com.overmind.zero.Zero3MotorKernelContractRegression
