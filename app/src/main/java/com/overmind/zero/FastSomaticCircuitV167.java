@@ -37,6 +37,17 @@ public final class FastSomaticCircuitV167 {
     }
     public int parameterCount(){return PARAMETERS;}
     public float parameterAt(int i){return weights[i];}
+    /** Protected neural snapshot; never includes random motor exploration. */
+    public float[] copySkillWeights(){return weights.clone();}
+    /** Adopt ONLY verified historical synapses, not another brain decision.
+     * Preserve all true trained/heldout counters and metabolic baselines. */
+    public boolean installVerifiedSkill(float[] learned){
+        if(learned==null||learned.length!=PARAMETERS)return false;
+        for(float w:learned)if(!Float.isFinite(w)||Math.abs(w)>1.101f)return false;
+        System.arraycopy(learned,0,weights,0,PARAMETERS);
+        Arrays.fill(state,0f);Arrays.fill(drift,0f);Arrays.fill(eligibility,0f);
+        return true;
+    }
     public long trained(){return trainings;}
     public long validated(){return holdouts;}
     public long physicalFrames(){return frames;}
