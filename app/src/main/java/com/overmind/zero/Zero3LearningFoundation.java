@@ -102,6 +102,13 @@ public final class Zero3LearningFoundation {
         public long revision(){return revision;}
         public long updates(){return updates;}
         public float[] weights(){return weights.clone();}
+        /** Cold-start a read-only evaluation clone; no weights are trained. */
+        public AdaptiveCortex forkForEvaluation(){
+            AdaptiveCortex fresh=new AdaptiveCortex();
+            System.arraycopy(weights,0,fresh.weights,0,weights.length);
+            fresh.revision=revision;
+            return fresh;
+        }
         public float[] lastCommands(){return output.clone();}
         public void begin(boolean explore){begin(explore,null);}
         public void begin(boolean explore,MotorIntent intent){
