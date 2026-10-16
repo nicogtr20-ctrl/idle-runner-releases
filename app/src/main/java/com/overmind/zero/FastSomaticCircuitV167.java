@@ -28,6 +28,7 @@ public final class FastSomaticCircuitV167 {
     private long frames,trainings,holdouts,episodes;
     private long seed=0x16722ba5L;
     private int action=-1,intervalFrames;
+    private boolean exploratoryTrial=true;
     private float netX,netY,gross,lastAgreement;
     private static float clip(float x,float a,float b){return Math.max(a,Math.min(b,x));}
     private float random(){
@@ -42,10 +43,14 @@ public final class FastSomaticCircuitV167 {
     public float lastDirectionalAgreement(){return lastAgreement;}
     public int activeAction(){return action;}
     /** Resets the experimental trial, not learned synaptic parameters. */
-    public void chosen(int selected){
+    public void chosen(int selected){chosen(selected,true);}
+    /** Genuine causal motor experiments: one actuator layer explores at a time. */
+    public void chosen(int selected,boolean allowExploration){
         if(selected<0||selected>=RecurrentCoreV22.A)return;
-        action=selected;intervalFrames=0;netX=netY=gross=0f;
+        action=selected;exploratoryTrial=allowExploration;
+        intervalFrames=0;netX=netY=gross=0f;
         Arrays.fill(eligibility,0f);
+        if(!allowExploration)Arrays.fill(drift,0f);
     }
     /**
      * Called BEFORE each real physical step, independently of decision rate.
@@ -97,7 +102,8 @@ public final class FastSomaticCircuitV167 {
                 for(int j=0;j<INPUTS;j++)z+=weights[off+j]*input[j];
                 // Correlated MOTOR EXPLORATION, not a sinusoidal waveform:
                 // each sector can test changes within a held brain action.
-                drift[i]=clip(.92f*drift[i]+.08f*random(),-.55f,.55f);
+                drift[i]=exploratoryTrial?
+                    clip(.92f*drift[i]+.08f*random(),-.55f,.55f):0f;
                 float proposed=(float)Math.tanh(z+.38f*drift[i]);
                 next[i]=clip(state[i]+alpha*(proposed-state[i]),-1f,1f);
                 // Eligibility of the actual random motor perturbations is
@@ -151,7 +157,8 @@ public final class FastSomaticCircuitV167 {
                 Math.min(96f,seen+1f);
             trainings++;episodes++;
         }
-        action=-1;intervalFrames=0;netX=netY=gross=0f;
+        action=-1;exploratoryTrial=true;
+        intervalFrames=0;netX=netY=gross=0f;
         Arrays.fill(eligibility,0f);
     }
     /** Death cancels current motor reflex, NEVER erases the learned weights. */
