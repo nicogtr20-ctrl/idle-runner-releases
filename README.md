@@ -5,6 +5,8 @@
 
 > **📌 CHATGPT / AI DEVELOPMENT — START HERE:** prima di modificare una sola riga relativa a OVERMIND ZERO, leggere i documenti di progettazione canonici su **main**. Questa documentazione è intenzionalmente visibile in cima al repository per consentire alle chat future di riprendere l'intero progetto, anche senza il contesto della conversazione originale.
 
+**AGGIORNAMENTO MOTOR V3.1:** [Modifiche e risultati oggettivi, gate G3 bloccato](docs/ZERO30_MOTOR_V31_ENGINEERING.md) · [CI di verifica](https://github.com/nicogtr20-ctrl/idle-runner-releases/actions/runs/38972240462). Un test compilato non significa locomozione appresa; nessuna OTA V3 pubblicata.
+
 ## 📘 Progetto da realizzare: ZERO 3.0
 
 | Ordine | Documentazione ufficiale | Contenuto |
