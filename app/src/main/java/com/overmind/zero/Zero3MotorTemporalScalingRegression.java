@@ -151,7 +151,8 @@ public final class Zero3MotorTemporalScalingRegression {
             double predicted=0;
             for(Zero3MotorTemporalHistoryRegression.Case row:blind){
                 if(row.dir!=d||Math.abs(row.pose-pose)>.001f)continue;
-                double[] p=scaled.predict(row),value=p[0]+p[1]-45*Math.max(0,p[2]);
+                double[] p=scaled.predict(row);
+                double value=p[0]+p[1]-45*Math.max(0,p[2]);
                 if(calibrationPass&&value>predicted){predicted=value;best=row;}
             }
             if(best!=null){
