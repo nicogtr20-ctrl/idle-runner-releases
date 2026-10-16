@@ -29,7 +29,7 @@ public final class Zero3MotorImpulseResponseRegression {
     private static void assertTrue(boolean b,String msg){
         if(!b)throw new AssertionError("ZERO3 PHYSICAL RESPONSE "+msg);
     }
-    private static class Scenario {
+    static class Scenario {
         final MotorBrain.Body body=new MotorBrain.Body();
         final Morphology.Surface skin=new Morphology.Surface(body);
         final SymbioteMatterV1 gel=new SymbioteMatterV1();
@@ -39,7 +39,8 @@ public final class Zero3MotorImpulseResponseRegression {
         final float observedPose;
         double work,gross,impulse;
         float prevX,prevY;
-        Scenario(int direction,float rotation){
+        Scenario(int direction,float rotation){this(direction,rotation,0);}
+        Scenario(int direction,float rotation,int condition){
             gel.reset(body,skin);
             // Proprioceptive anatomical frame, measured from the actual skin.
             // Never pass the laboratory's hidden rotation to the predictor.
@@ -51,6 +52,7 @@ public final class Zero3MotorImpulseResponseRegression {
                 Zero3MotorRetentionRegression.rotate(gel.x,gel.y,body.cx,body.cy,cs,sn);
                 gel.observeBody(body,skin);
             }
+            if(condition!=0)precondition(condition);
             float angle=(float)(skinAxisAngle()-baseAngle);
             while(angle>Math.PI)angle-=(float)(2*Math.PI);
             while(angle<-Math.PI)angle+=(float)(2*Math.PI);
@@ -58,6 +60,29 @@ public final class Zero3MotorImpulseResponseRegression {
             intent=new Zero3LearningFoundation.MotorIntent(
                 300,0,0,DIRS[direction][0],DIRS[direction][1],1f,.3f,.5f);
             prevX=body.cx;prevY=body.cy;
+        }
+        /**
+         * Physics-generated initial deformation/momentum fixture ONLY:
+         * real 64-actuator commands and ordinary solver dynamics, never
+         * manual centroid displacement or made-up passive velocities.
+         */
+        private void precondition(int condition){
+            if(condition<1||condition>3)throw new IllegalArgumentException("fixture condition");
+            int frames=condition==1?16:condition==2?40:64;
+            for(int t=0;t<frames;t++){
+                float[] m=cortex.command(new Zero3LearningFoundation.MotorIntent(
+                    301,1,0,1,0,1,.3f,.5f),body,skin,DT);
+                int sector=condition==1?3:condition==2?11:6;
+                int channel=condition==3?1:0;
+                float strength=condition==1?.17f:condition==2?.23f:.28f;
+                for(int d=-1;d<=1;d++){
+                    int idx=((sector+d+16)%16)*4+channel;
+                    m[idx]=Math.max(-1f,Math.min(1f,m[idx]+strength*(2-Math.abs(d))/2f));
+                }
+                gel.step(body,skin,m,DT);
+                assertTrue(gel.invalid==0&&
+                    MaterialGeometry.selfCrossings(skin)==0,"preconditioning invalid body");
+            }
         }
         /** Measured orientation from the true shell, not a world/oracle angle. */
         private float skinAxisAngle(){
@@ -87,7 +112,7 @@ public final class Zero3MotorImpulseResponseRegression {
             impulse+=gel.lastMuscleReactionImpulse;
         }
     }
-    private static class Trial {
+    static class Trial {
         final int dir,channel,sector,polarity;
         final float pose;
         final double early,late,extraWork,grossDelta,delayedFraction;
@@ -136,13 +161,20 @@ public final class Zero3MotorImpulseResponseRegression {
         x[38+channel]=sign*wy;
         return x;
     }
-    private static Trial physical(int dir,float pose,int sector,int channel,int sign){
-        Scenario base=new Scenario(dir,pose);
-        Scenario probe=new Scenario(dir,pose);
+    static Trial physical(int dir,float pose,int sector,int channel,int sign){
+        return physical(dir,pose,sector,channel,sign,0);
+    }
+    static Trial physical(int dir,float pose,int sector,int channel,int sign,int condition){
+        Scenario base=new Scenario(dir,pose,condition);
+        Scenario probe=new Scenario(dir,pose,condition);
         assertTrue(Math.abs(base.observedPose-probe.observedPose)<.0001f,
             "paired bodies have different proprioceptive orientation");
-        assertTrue(Math.abs(probe.observedPose-pose)<.001f,
-            "skin orientation reconstruction failed");
+        if(condition==0)
+            assertTrue(Math.abs(probe.observedPose-pose)<.001f,
+                "skin orientation reconstruction failed");
+        assertTrue(Math.abs(base.body.cx-probe.body.cx)<1e-6 &&
+            Math.abs(base.body.cvx-probe.body.cvx)<1e-6,
+            "paired preconditioned starts diverged");
         double early=0;
         final int total=WARMUP+PULSE+SETTLE;
         for(int frame=0;frame<total;frame++){
@@ -160,7 +192,7 @@ public final class Zero3MotorImpulseResponseRegression {
                          probe.gross-base.gross);
     }
     /** Fixed-size ridge least squares; only physically observed training pairs. */
-    private static final class ResponseModel {
+    static final class ResponseModel {
         final double[][] weights=new double[OUTPUTS][F];
         ResponseModel(ArrayList<Trial> training){
             double[][] gram=new double[F][F];
