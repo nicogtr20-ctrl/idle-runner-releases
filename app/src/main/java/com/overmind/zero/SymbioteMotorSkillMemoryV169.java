@@ -20,7 +20,7 @@ import java.util.Locale;
 public final class SymbioteMotorSkillMemoryV169 {
     public static final String KEY="symbiote_motor_skills_v169";
     static final int SHARED=84,REGIONAL=320,FAST=FastSomaticCircuitV167.PARAMETERS;
-    public static final int WIDTH=SHARED+REGIONAL+FAST,MAX_CHAMPIONS=4,MAX_CANDIDATES=6;
+    public static final int WIDTH=SHARED+REGIONAL+FAST,MAX_CHAMPIONS=4,MAX_CANDIDATES=10;
     private static final int A=RecurrentCoreV22.A;
     private static final float MIN_FORWARD=1.8f,MIN_RATIO=.38f;
     private static final float MAX_SNAPSHOT_RMS=.036f;
