@@ -97,14 +97,17 @@ public final class Zero169MotorMemoryRegression {
 
         MotorBrain.Body failedBody=new MotorBrain.Body();
         Morphology.Surface failedSkin=new Morphology.Surface(failedBody);
-        for(int i=0;i<4;i++){
-            copied.begin(action,mutated,failedBody,failedSkin);
-            // No physical displacement; no fabricated success.
-            copied.finish(false,false,0f);
-        }
         ok(copied.recoverIfStalled((action+1)%16,mutated,
             failedBody,failedSkin)==null,
             "skill recall overrode an unrelated brain-selected direction");
+        for(int i=0;i<4;i++){
+            copied.begin(action,mutated,failedBody,failedSkin);
+            // No physical displacement; no fabricated success.
+            for(int k=0;k<8;k++)
+                copied.physical(failedBody.cx,failedBody.cy,
+                    failedBody,failedSkin,0f,false);
+            copied.finish(false,false,0f);
+        }
         float[] recalled=copied.recoverIfStalled(action,mutated,
             failedBody,failedSkin);
         ok(recalled!=null&&Arrays.equals(recalled,proven)&&
