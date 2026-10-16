@@ -12,6 +12,8 @@ on:
       - '!app/src/main/java/com/overmind/zero/Zero3MotorKernelContractRegression.java'
       - '!app/src/main/java/com/overmind/zero/Zero3MotorClosedLoopRegression.java'
       - '!app/src/main/java/com/overmind/zero/Zero3MotorTailLatencyRegression.java'
+      - '!app/src/main/java/com/overmind/zero/Zero3MotorCreditWindow.java'
+      - '!app/src/main/java/com/overmind/zero/Zero3MotorCreditWindowRegression.java'
       - '.github/workflows/zero30-foundation-qa.yml'
   workflow_dispatch:
 permissions:
@@ -54,7 +56,9 @@ jobs:
                     'app/src/main/java/com/overmind/zero/Zero3MotorResponseKernel.java',
                     'app/src/main/java/com/overmind/zero/Zero3MotorKernelContractRegression.java',
                     'app/src/main/java/com/overmind/zero/Zero3MotorClosedLoopRegression.java',
-                    'app/src/main/java/com/overmind/zero/Zero3MotorTailLatencyRegression.java']
+                    'app/src/main/java/com/overmind/zero/Zero3MotorTailLatencyRegression.java',
+                    'app/src/main/java/com/overmind/zero/Zero3MotorCreditWindow.java',
+                    'app/src/main/java/com/overmind/zero/Zero3MotorCreditWindowRegression.java']
           print('Compiling',len(command)-3,'real application Java sources')
           subprocess.run(command,check=True)
           PY
