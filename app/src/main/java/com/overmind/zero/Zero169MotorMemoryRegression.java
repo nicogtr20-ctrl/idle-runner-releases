@@ -96,7 +96,7 @@ public final class Zero169MotorMemoryRegression {
             "invalid neural skill snapshot was accepted");
 
         for(int i=0;i<4;i++){
-            copied.begin(action,mutated);
+            copied.begin(action,mutated,failedBody,failedSkin);
             // No physical displacement; no fabricated success.
             copied.finish(false,false,0f);
         }
