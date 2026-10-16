@@ -155,6 +155,10 @@ Interazioni:
 
 ## 5. CORPO SIMBIONTE E CORTECCIA
 
+**Requisito aggiuntivo per V3.1:** quando esisterà un vero provider dati di sviluppo motorio, visualizzare in Corpo/Analisi il *canale attuatore in esplorazione*, l'ampiezza del probe, il costo, l'aggiornamento effettivo dei pesi e lo **stato del gate** (candidato, rifiutato o validato), con distinzione tra esperimenti ripetuti in laboratorio e competenza imparata nell'app. Vietato presentare lo screening come abilità consolidata. Documento tecnico: [V3.1 motricità](ZERO30_MOTOR_V31_ENGINEERING.md).
+
+
+
 ### 5.1 Vista anatomica interattiva
 
 - 96 punti della membrana, 74 masse interne (10 body + 64 liquid), registrati come materia, NON neuroni;
