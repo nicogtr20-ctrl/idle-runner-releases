@@ -1,3 +1,21 @@
+# ⛔ ZERO 3.0 — ISTRUZIONE OPERATIVA PRIORITARIA PER CHATGPT / AGENTI — 16/10/2026
+
+**PRIMA DI QUALSIASI MODIFICA A OVERMIND ZERO, LEGGERE INTEGRAMENTE (DA \`main\`):**
+
+1. **[PROGETTO MASTER ZERO 3.0](docs/ZERO30_MASTER_BLUEPRINT.md)** — specifica completa, architettura, sensori, cortex, world model, memorie, neurogenesi, vincoli.
+2. **[CONTRATTO DI IMPLEMENTAZIONE E TEST](docs/ZERO30_IMPLEMENTATION_CONTRACT.md)** — interfacce, invarianti, fasi G0–G10, benchmark, handoff fra chat, checklist da aggiornare.
+3. **[NUOVA UI/UX ZERO 3.0](docs/ZERO30_UI_UX_SPEC.md)** — sostituzione delle schermate 2.2 per profili V3, con **nuove impostazioni, abilità, neuroni reali/3D, evoluzione, cervello, corpo, sensori, memoria e analisi** collegate davvero al nuovo cervello.
+
+**Questi tre file sono la direzione progettuale AUTOREVOLE dell'utente, anche per nuove chat ChatGPT.** Prima di cambiare sorgenti/codice, aprirli con GitHub e citarne le sezioni nel piano operativo/PR. Non presumere che siano presenti in un vecchio ramo: leggere la versione aggiornata su \`main\` e acquisirla nel contesto del ramo di lavoro. Se una chat non li ha ancora letti, questa è la prima attività.
+
+**Stato V3:** progettato, **NON implementato**, nessun OTA V3. Il corpo/mondo esistenti restano, con fisica verificata e corretta solo su prova; l'apprendimento e la rete cognitivo-motoria saranno riprogettati. Niente gait hardcoded, target gemma privilegiati, premi falsi, contatori fake, reset cervelli o 12 slot. Nessun claim di locomozione realmente appresa senza benchmark autonoma + Galaxy S21.
+
+**Ultima release stabile verificata alla redazione:** **OTA172**, \`0.11.6-ota.172\`, Android versionCode **1172**, GitHub [Release](https://github.com/nicogtr20-ctrl/idle-runner-releases/releases/tag/overmind-zero-v0.11.6-ota.172) / [CI SUCCESS](https://github.com/nicogtr20-ctrl/idle-runner-releases/actions/runs/38956731145). Ultima telemetria del dispositivo analizzata in audit: **OTA171**, non prova di efficacia della 172. Non confondere revisione runtime e numero OTA. Per release successive verificare sempre \`main/updater/public/latest.json\`.
+
+**Questo repository contiene una lunga cronologia di esperimenti vecchi. Tutto ciò che segue sotto il separatore è DOCUMENTAZIONE STORICA e non prevale sul progetto master 3.0.** Non usare note vecchie che promettono OTA/architetture anteriori come stato attuale.
+
+---
+
 # Verified release — OTA171 / Android1171, runtime ZERO172 — 16 October 2026
 
 Published and independently downloaded from Vercel and GitHub: **0.11.6-ota.171**, code1171, `com.overmind.zero.ota`,502916 bytes. APK SHA256 `62e0b5a96916fc8005d5e21aa91de4194ba57ec8b8c1ebf6f27c5bc2a51a0bb0`; original stable certificate `45010684b4fd74de00f87fb81ca89e1e79b58409cf9fefc497b445b0fe19f583`. Both public manifests/bytes match, HTTP200; APK v2 RSA signature, signed content digest and packaged Android identity/permissions independently verified. Update with **AGGIORNA**, without uninstalling or resetting brains/slots.
