@@ -133,8 +133,11 @@ public final class SymbioteMotorSkillMemoryV169 {
         c[0]=clip((float)(rs/Morphology.POINTS)/42f,0f,2f);
         c[1]=clip(maxR/80f,0f,2f);
         c[2]=clip((float)(anis/Math.max(1,xx+yy)),0f,1f);
-        c[3]=anis>.001?clip((float)((xx-yy)/anis),-1f,1f):0f;
-        c[4]=anis>.001?clip((float)(2*xy/anis),-1f,1f):0f;
+        // For nearly circular bodies, a principal-axis angle is undefined.
+        // Multiply orientation by anisotropy so tiny numeric asymmetry cannot
+        // invent a completely different motor-skill body context.
+        c[3]=clip((float)((xx-yy)/Math.max(1,xx+yy)),-1f,1f);
+        c[4]=clip((float)((2*xy)/Math.max(1,xx+yy)),-1f,1f);
         c[5]=clip((float)(rv/Morphology.POINTS)/50f,-1f,1f);
         c[6]=clip((float)(tv/Morphology.POINTS)/50f,-1f,1f);
         c[7]/=Morphology.POINTS;c[8]/=Morphology.POINTS;
