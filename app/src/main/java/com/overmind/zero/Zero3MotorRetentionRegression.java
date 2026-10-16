@@ -54,6 +54,9 @@ public final class Zero3MotorRetentionRegression {
     public static void main(String[] args){
         int improved=0;
         double totalLearn=0,totalVirgin=0;
+        double[] virginForward=new double[4],learnedForward=new double[4];
+        double[] virginCost=new double[4],learnedCost=new double[4];
+        int index=0;
         for(float[] intent:INTENTS){
             Zero3LearningFoundation.AdaptiveCortex trained=
                 new Zero3LearningFoundation.AdaptiveCortex();
@@ -69,10 +72,16 @@ public final class Zero3MotorRetentionRegression {
             if(virgin.updates()!=0)throw new AssertionError("virgin control trained");
             if(scoreTrain.forward>scoreVirgin.forward)improved++;
             totalLearn+=scoreTrain.forward;totalVirgin+=scoreVirgin.forward;
+            virginForward[index]=scoreVirgin.forward;learnedForward[index]=scoreTrain.forward;
+            virginCost[index]=scoreVirgin.work;learnedCost[index]=scoreTrain.work;index++;
             System.out.printf(Locale.US,
                 "ZERO3 G3 RETENTION dir=[%.0f,%.0f] train400{%s} virgin160{%s} learned160{%s}%n",
                 intent[0],intent[1],during,scoreVirgin,scoreTrain);
         }
+        Zero3MotorPromotionGate.Decision gate=Zero3MotorPromotionGate.evaluate(
+            virginForward,learnedForward,virginCost,learnedCost);
+        System.out.println("ZERO3 G3 PROMOTION="+(gate.promote?"CANDIDATE":"REJECTED")+
+            " "+gate.reason+" (NO on-device promotion)");
         System.out.printf(Locale.US,
             "ZERO3 G3 RETENTION SUMMARY improvedDirections=%d/4 totalForwardVirgin=%.3f totalForwardLearned=%.3f; G3 efficacy requires stronger independent multi-seed evidence%n",
             improved,totalVirgin,totalLearn);
