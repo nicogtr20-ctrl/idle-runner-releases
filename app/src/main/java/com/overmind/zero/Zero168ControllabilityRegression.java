@@ -119,10 +119,10 @@ public final class Zero168ControllabilityRegression {
                 head.observedPhysicalStep(x,y,hb,hs);
             }
             head.consequence(0f,0f,0f,0f,true,false);
-            if(trial==0)ok(head.fastCircuit().trained()==0,
-                "slow cortical probe contaminated fast motor synapses");
+            if(trial==0)ok(head.fastCircuit().trained()==1,
+                "the newborn fast circuit was denied its first exploratory trial");
             else ok(head.fastCircuit().trained()==1,
-                "fast cortex probe did not learn from its own trial");
+                "subsequent slow cortical probe contaminated fast synapses");
         }
         ok(hm.invalid==0&&MaterialGeometry.selfCrossings(hs)==0,
             "two-level live controller damaged the fluid body");
