@@ -118,7 +118,7 @@ public final class SymbioteMotorHeadV1 {
            bodySensors==null||bodySensors.length!=DistributedBodySense.FEATURES)
             return;
         choices++;
-        fastProbe=(choices&1L)==0L;
+        fastProbe=(choices&1L)==1L;
         boolean samePhysicalCommand=priorPhysicalAction==action;
         priorPhysicalAction=action;
         lastAction=action;
