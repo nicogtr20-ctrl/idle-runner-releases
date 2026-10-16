@@ -31,3 +31,35 @@ Registrare esattamente MSE immediate, delayed, cost su calibrazione e test final
 Esecuzione tramite [workflow dedicato ZERO3 384-frame motor QA](https://github.com/nicogtr20-ctrl/idle-runner-releases/actions), senza APK. Compilazione o test eseguito non equivale a qualità motoria. Inserire qui i risultati numerici **solo dopo lettura completa dei log**.
 
 **G3 locomozione autonoma, G5 world model generale, UI V3 e OTA: NON COMPLETATI.**
+
+
+## RISULTATI VERIFICATI — CI 38981238274
+
+**[GitHub Actions 38981238274 — SUCCESS tecnico](https://github.com/nicogtr20-ctrl/idle-runner-releases/actions/runs/38981238274)**. Compilazione JVM e **1.024 coppie fisiche** su solver reale a 384 frame/prova = **786.432 integrazioni fisiche** di soli due rami matched (esclusi warmup precondizionamenti). È un benchmark di laboratorio: né crescita neurale né esperienze di una singola vita autonoma.
+
+| Split e modello | MSE immediata | MSE ritardata fino a 384 frame | MSE costo | MSE ritardata baseline zero |
+|---|---:|---:|---:|---:|
+| Calibrazione, 42 feature | 0,000429242 | 0,017958093 | 0,000000000191 | 0,022563066 |
+| Calibrazione, **52 feature (stato/inerzia)** | **0,000429052** | **0,017813648** | 0,000000000193 | 0,022563066 |
+| Finale non usato nel fit, 42 feature | 0,000492590 | 0,022757698 | **0,000000000390** | 0,023833805 |
+| Finale non usato nel fit, **52 feature** | **0,000492345** | **0,022099238** | 0,000000000393 | 0,023833805 |
+
+Errore immediato baseline zero: **0,004761218** sul set calibrazione e **0,003995303** sul finale. Errore costo baseline zero: **0,000000007763** sul set calibrazione, **0,000000007784** sul finale.
+
+**Verifica delle soglie:**
+- Il modello 52 feature supera il gate del **10%** contro la baseline zero su tutti e tre i target in *calibrazione*, quindi solo lì risulta «calibrato».
+- Sul set finale a pose ±30/±60 con precondizionamento 3, migliora la previsione ritardata contro zero del **7,28%**, insufficiente per superare la stessa soglia del 10% fuori distribuzione. **Il gate indipendente di robustezza NON è superato.**
+- Il miglioramento della MSE ritardata passando da 42 a 52 feature sul set finale è circa **2,89%**: aggiungere semplicemente dieci sensori non risolve la complessità della coda fisica.
+- Le perturbazioni scelte soltanto sulla base delle previsioni sono positive in 16/16 situazioni finali e ciascuna costa meno di 0,005 nell'unità registrata; delta firmato complessivo **+6,11873 U**; extra work **0,0024375**; utilità penalizzata **+6,00905**. Questi risultati riguardano **un singolo impulso gemello su corpi inizialmente precondizionati**, non prove di locomozione a lungo termine, e **non ribaltano** il fallimento del gate di previsione.
+
+**Conclusione di implementazione:** usare +384 frame invece di +48 rende la predizione scientificamente più corretta ma mette alla luce un limite del modello statico: il suo errore di evoluzione ritardata non generalizza abbastanza bene su nuovi stati. **NON integrare il modello 52 nel controllo motorio di produzione**, non addestrare sinapsi o promuovere skill con i risultati di questo laboratorio.
+
+### Ipotesi per la fase successiva, non ancora implementate
+
+1. Modello dinamico ricorrente/temporale con stato storico *preazione*: velocità locali, collassi, distribuzione di tensione, adesione vera, impulsi precedenti e tempo da ultimo intervento, non solo feature statiche a un unico istante.
+2. Allenamento esclusivamente su transizioni fisiche realmente osservate in evoluzione, con bootstrap e maschere delle perturbazioni effettivamente applicate, senza usare lo stesso contesto due volte per train e certificazione.
+3. Selezione dell'azione conservativa con **incertezza calibrata**: astenersi quando il lungo orizzonte non batte una previsione nulla o quando il costo domina; leggere la qualità su scene e seed differenti dall'attuale stessa fisica.
+4. Benchmarks di 2.000+ decisioni per più vite/seed con actor autonomo, memoria procedurale vera e migliori capacità in 3/4 direzioni + vincolo di costo **prima** della promozione nel gioco.
+5. Nuova UI V3 e persistenza: progettate nei documenti, **non ancora create**. App stabile OTA172 non alterata.
+
+**Gate G3 apprendimento motorio e G5 modello del mondo completo: BLOCCATI.**
