@@ -20,12 +20,30 @@ public final class Zero3MotorRetentionRegression {
             "forward=%.3f gross=%.3f net=%.3f work=%.4f updates=%d",
             forward,gross,net,work,updates);}
     }
+    static void rotate(float[] xx,float[] yy,float cx,float cy,float cosine,float sine){
+        for(int k=0;k<xx.length;k++){
+            float x=xx[k]-cx,y=yy[k]-cy;
+            xx[k]=cx+cosine*x-sine*y;
+            yy[k]=cy+sine*x+cosine*y;
+        }
+    }
     static Measures session(Zero3LearningFoundation.AdaptiveCortex cortex,
         float dx,float dy,int decisions,boolean train){
+        return session(cortex,dx,dy,decisions,train,0f);
+    }
+    static Measures session(Zero3LearningFoundation.AdaptiveCortex cortex,
+        float dx,float dy,int decisions,boolean train,float rotateBodyRadians){
         MotorBrain.Body body=new MotorBrain.Body();
         Morphology.Surface skin=new Morphology.Surface(body);
         SymbioteMatterV1 matter=new SymbioteMatterV1();
         matter.reset(body,skin);
+        if(rotateBodyRadians!=0){
+            float cs=(float)Math.cos(rotateBodyRadians),sn=(float)Math.sin(rotateBodyRadians);
+            rotate(skin.x,skin.y,body.cx,body.cy,cs,sn);
+            rotate(body.x,body.y,body.cx,body.cy,cs,sn);
+            rotate(matter.x,matter.y,body.cx,body.cy,cs,sn);
+            matter.observeBody(body,skin);
+        }
         Zero3LearningFoundation.Coordinator coordinator=new Zero3LearningFoundation.Coordinator(cortex);
         float startX=body.cx,startY=body.cy;
         Measures summary=new Measures();
