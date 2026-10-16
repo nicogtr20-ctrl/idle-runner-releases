@@ -1361,9 +1361,9 @@ public final class GameActivity extends Activity {
                             shelter.storm(worldTime);
                         // Moving a door or box is an external intervention,
                         // not an independent demonstration of crawling skill.
-                        for(int i=0;i<Morphology.POINTS;i++)
-                            if(surface.touchSense[i]>.25f||
-                               surface.gripHold[i]>=Morphology.GRIP_HOLD){
+                        for(int siteIndex=0;siteIndex<Morphology.POINTS;siteIndex++)
+                            if(surface.touchSense[siteIndex]>.25f||
+                               surface.gripHold[siteIndex]>=Morphology.GRIP_HOLD){
                                 externalDisturbance=true;break;
                             }
                         symMotor.observedPhysicalStep(oldCoreX,oldCoreY,
