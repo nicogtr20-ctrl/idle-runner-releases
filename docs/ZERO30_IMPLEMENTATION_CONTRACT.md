@@ -1,5 +1,7 @@
 # ZERO 3.0 — CONTRATTO DI IMPLEMENTAZIONE, TEST E HANDOFF TRA CHAT
 
+> **NUOVO ESPERIMENTO MOTORIO V3.2:** [Ricerca muscolare con vincoli energetici e verifica su posture escluse dall'allenamento](ZERO30_MOTOR_V32_COST_CONSTRAINED.md). Restano prototipo isolato e gate G3 bloccato finché non arrivano prove indipendenti.
+
 > **TEST 2.000 ESPERIENZE VERIFICATI:** [Report completo motorio e autonomo, checkpoint 400/1000/2000](ZERO30_LONG_HORIZON_2000_20261017.md). **G3 ANCORA BLOCCATO**: a 2.000 decisioni la corteccia non supera il vergine in nessuna delle 4 direzioni nella postura iniziale; misure coerenti ma negative. Nessun OTA V3.
 
 > **G3 MOTOR V3.1 — AGGIORNAMENTO:** [Progetto degli esperimenti, perturbazioni strutturate, benchmark 4 direzioni e gate di promozione](ZERO30_MOTOR_V31_ENGINEERING.md). L'ultimo controllo a 400 decisioni ha rifiutato la promozione del learner online: ancora nessuna evidenza sufficiente di locomozione appresa.
