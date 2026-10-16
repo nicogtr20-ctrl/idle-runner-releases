@@ -24,6 +24,10 @@ public final class SymbioteMatterV1 {
     private final float[] lastSkinX=new float[SURFACE],lastSkinY=new float[SURFACE];
     private final float[] lastBodyX=new float[MotorBrain.N],lastBodyY=new float[MotorBrain.N];
     private final float[] fx=new float[SURFACE],fy=new float[SURFACE];
+    // ONLY true active muscle forces get an opposite LIQUID reaction.
+    // Neighbor elasticity is an INTERNAL shell-to-shell pair force;
+    // feeding it to the fluid double counts the reaction and adds torque.
+    private final float[] muscleFx=new float[SURFACE],muscleFy=new float[SURFACE];
     private final float[] nx=new float[SURFACE],ny=new float[SURFACE];
     private final float[] impulsesX=new float[MotorBrain.N+INNER],impulsesY=new float[MotorBrain.N+INNER];
     private final float[] fluidX=new float[MotorBrain.N+INNER],fluidY=new float[MotorBrain.N+INNER];
@@ -33,6 +37,9 @@ public final class SymbioteMatterV1 {
     public long ticks=0,invalid=0,topologyRepairs=0,selfContactPairs=0;
     /** Physics QA only: membrane sites formerly missing opposite fluid force. */
     public long longTipReactionFallbacks=0;
+    // Read-only physics forensics; zero motor input MUST produce no
+    // motor-to-fluid reaction, even when the shell is elastically strained.
+    public float lastMuscleReactionImpulse=0f,lastElasticForceMagnitude=0f;
     private float time=0f;
     public SymbioteMatterV1(){}
     private static float clip(float a,float lo,float hi){return Math.max(lo,Math.min(hi,a));}
@@ -180,6 +187,16 @@ public final class SymbioteMatterV1 {
         if(obstacleHeld||!Float.isFinite(radius)||!Float.isFinite(extend))return 0f;
         return clip((radius-(R+9f))/8f,0f,1f)*
             clip((-extend-.83f)/.13f,0f,1f);
+    }
+    static float substrateTraction(float extend,float tension,float meanTension){
+        float compression=Math.max(0f,-extend);
+        // Material cortex tension, NOT the separate object-grip command,
+        // changes the local ground's normal loading. Uniform extra tension
+        // cannot secretly pin the entire symbiote to the substrate.
+        float delta=tension-meanTension;
+        if(Math.abs(delta)<.0001f)delta=0f;
+        return clip(.12f+1.45f*compression+
+            .72f*clip(delta,-1f,1f),0f,.95f);
     }
     static float radialRetractionDrag(float traction,float release,float dt){
         return (float)Math.exp(-(1.8f+
@@ -453,6 +470,7 @@ public final class SymbioteMatterV1 {
         for(float v:cortex)if(!Float.isFinite(v)||v<-1.01f||v>1.01f)
             throw new IllegalArgumentException("Non-finite muscle command");
         float previousCumulativeEffort=work;
+        lastMuscleReactionImpulse=lastElasticForceMagnitude=0f;
         time+=dt;body.time+=dt;ticks++;
         // This living tissue, not the inactive legacy membrane motor,
         // owns simulated-time pulse decay in Symbiote mode. New real
@@ -471,6 +489,12 @@ public final class SymbioteMatterV1 {
         float cx=body.cx,cy=body.cy;
         float contourSign=signedArea(skin)>=0f?1f:-1f;
         float[] physicalNormal=new float[2];
+        // Local cortical TENSION may vary floor-normal loading without
+        // adding a fifth motor channel or hijacking the object-grip command.
+        // Object grip MUST stay strictly disconnected from uncontacted floor.
+        float meanTension=0f;
+        for(int sector=0;sector<SECTORS;sector++)
+            meanTension+=(clip(cortex[sector*OUTPUTS+3],-1f,1f)*.5f+.5f)/SECTORS;
         for(int i=0;i<SURFACE;i++){
             lastSkinX[i]=skin.x[i];lastSkinY[i]=skin.y[i];
             float dx=skin.x[i]-cx,dy=skin.y[i]-cy;
@@ -493,13 +517,16 @@ public final class SymbioteMatterV1 {
             // This modifies no neural command, center target or world goal.
             float strain=Math.max(0f,rr/R-1f);
             float extensionCompliance=extend>0f?1f/(1f+4f*strain):1f;
-            fx[i]=ux*extend*680f*extensionCompliance-uy*lateral*210f;
-            fy[i]=uy*extend*680f*extensionCompliance+ux*lateral*210f;
+            muscleFx[i]=ux*extend*680f*extensionCompliance-uy*lateral*210f;
+            muscleFy[i]=uy*extend*680f*extensionCompliance+ux*lateral*210f;
+            fx[i]=muscleFx[i];fy[i]=muscleFy[i];
             // Neighbour smoothing = surface tension; stiffness modulates
             // corticoelastic relaxation without a fixed radial spring.
             int p=(i+SURFACE-1)%SURFACE,n=(i+1)%SURFACE;
             fx[i]+=(skin.x[p]+skin.x[n]-2*skin.x[i])*(85f+stiffness*190f);
             fy[i]+=(skin.y[p]+skin.y[n]-2*skin.y[i])*(85f+stiffness*190f);
+            lastElasticForceMagnitude+=len(fx[i]-muscleFx[i],fy[i]-muscleFy[i]);
+            lastMuscleReactionImpulse+=len(muscleFx[i],muscleFy[i])*dt;
             // Grip command is an INTENTION. Real box/door contact solver owns
             // the hold timer. No compulsory automatic adhesion.
             skin.gripCommand[i]=adhesive;
@@ -523,7 +550,10 @@ public final class SymbioteMatterV1 {
             float compression=Math.max(0f,-extend);
             // Original OTA160 floor traction is unchanged. The physics
             // fix is excluded-volume self-contact, not weaker footholds.
-            float traction=clip(.12f+1.45f*compression,0f,.95f);
+            // A stiffer-than-average cortex patch bears more substrate
+            // loading; a softer patch can slip. This control is independent
+            // of the radial contraction and never uses object-grip intent.
+            float traction=substrateTraction(extend,stiffness,meanTension);
             float drag=(float)Math.exp(-(1.8f+66f*traction)*dt);
             float preX=skin.x[i],preY=skin.y[i];
             float appliedVx=skin.vx[i]+fx[i]*dt;
@@ -588,12 +618,12 @@ public final class SymbioteMatterV1 {
                 }
                 float wa=1f/(3f+da),wb=1f/(3f+db),wc=1f/(3f+dc);
                 float norm=wa+wb+wc;
-                if(a>=0){impulsesX[a]-=fx[i]*dt*(wa/norm)*n/SURFACE;
-                         impulsesY[a]-=fy[i]*dt*(wa/norm)*n/SURFACE;}
-                if(b>=0){impulsesX[b]-=fx[i]*dt*(wb/norm)*n/SURFACE;
-                         impulsesY[b]-=fy[i]*dt*(wb/norm)*n/SURFACE;}
-                if(c>=0){impulsesX[c]-=fx[i]*dt*(wc/norm)*n/SURFACE;
-                         impulsesY[c]-=fy[i]*dt*(wc/norm)*n/SURFACE;}
+                if(a>=0){impulsesX[a]-=muscleFx[i]*dt*(wa/norm)*n/SURFACE;
+                         impulsesY[a]-=muscleFy[i]*dt*(wa/norm)*n/SURFACE;}
+                if(b>=0){impulsesX[b]-=muscleFx[i]*dt*(wb/norm)*n/SURFACE;
+                         impulsesY[b]-=muscleFy[i]*dt*(wb/norm)*n/SURFACE;}
+                if(c>=0){impulsesX[c]-=muscleFx[i]*dt*(wc/norm)*n/SURFACE;
+                         impulsesY[c]-=muscleFy[i]*dt*(wc/norm)*n/SURFACE;}
                 continue;
             }
             for(int j=0;j<n;j++){
@@ -604,8 +634,8 @@ public final class SymbioteMatterV1 {
                 // and the interior parcels also sum to mass 1. Convert a
                 // patch's force into equal/opposite parcel acceleration.
                 // This is not an impulse absorbed by a fictional centroid.
-                impulsesX[j]-=fx[i]*dt*share*n/SURFACE;
-                impulsesY[j]-=fy[i]*dt*share*n/SURFACE;
+                impulsesX[j]-=muscleFx[i]*dt*share*n/SURFACE;
+                impulsesY[j]-=muscleFy[i]*dt*share*n/SURFACE;
             }
         }
         for(int j=0;j<n;j++){
