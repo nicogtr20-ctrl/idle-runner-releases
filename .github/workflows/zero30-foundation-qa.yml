@@ -33,7 +33,8 @@ jobs:
                     'app/src/main/java/com/overmind/zero/Zero3FoundationRegression.java',
                     'app/src/main/java/com/overmind/zero/Zero3RecurrentBrain.java',
                     'app/src/main/java/com/overmind/zero/Zero3RecurrentBrainRegression.java',
-                    'app/src/main/java/com/overmind/zero/Zero3LearningCurveRegression.java']
+                    'app/src/main/java/com/overmind/zero/Zero3LearningCurveRegression.java',
+                    'app/src/main/java/com/overmind/zero/Zero3MotorSkillAB.java']
           print('Compiling',len(command)-3,'real application Java sources')
           subprocess.run(command,check=True)
           PY
@@ -47,6 +48,8 @@ jobs:
         run: java -cp /tmp/overmind com.overmind.zero.Zero3RecurrentBrainRegression
       - name: Screen real physical 40 / 400 experiences without fake success gate
         run: java -cp /tmp/overmind com.overmind.zero.Zero3LearningCurveRegression
+      - name: Reveal 4-direction motor-only 400-step learning performance
+        run: java -cp /tmp/overmind com.overmind.zero.Zero3MotorSkillAB
       - name: Android build smoke without publishing APK
         run: |
           gradle --version || true
