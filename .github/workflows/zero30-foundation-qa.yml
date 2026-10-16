@@ -36,7 +36,8 @@ jobs:
                     'app/src/main/java/com/overmind/zero/Zero3LearningCurveRegression.java',
                     'app/src/main/java/com/overmind/zero/Zero3MotorSkillAB.java',
                     'app/src/main/java/com/overmind/zero/Zero3MotorRetentionRegression.java',
-                    'app/src/main/java/com/overmind/zero/Zero3MotorRateSweepRegression.java']
+                    'app/src/main/java/com/overmind/zero/Zero3MotorRateSweepRegression.java',
+                    'app/src/main/java/com/overmind/zero/Zero3MotorPromotionGate.java']
           print('Compiling',len(command)-3,'real application Java sources')
           subprocess.run(command,check=True)
           PY
