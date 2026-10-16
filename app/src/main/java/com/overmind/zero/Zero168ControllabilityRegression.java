@@ -58,9 +58,9 @@ public final class Zero168ControllabilityRegression {
         float t=SymbioteMatterV1.substrateTraction(0f,.5f,.5f);
         ok(Math.abs(t-.12f)<1e-6f,"uniform grip anchored the entire body");
         ok(SymbioteMatterV1.substrateTraction(0f,1f,.5f)>t+.25f,
-            "voluntary foot grip is still yoked to muscle compression");
+            "local tissue tension is still yoked to muscle compression");
         ok(SymbioteMatterV1.substrateTraction(0f,0f,.5f)<t,
-            "release foothold cannot reduce local ground resistance");
+            "locally reduced tissue tension cannot reduce ground loading");
         ok(SymbioteMatterV1.substrateTraction(-.5f,.5f,.5f)>
             SymbioteMatterV1.substrateTraction(0f,.5f,.5f),
             "historic compressed foothold has disappeared");
@@ -82,16 +82,16 @@ public final class Zero168ControllabilityRegression {
         b=new MotorBrain.Body();s=new Morphology.Surface(b);
         m=new SymbioteMatterV1();m.reset(b,s);
         float[] cmd=new float[64];cmd[1]=.85f;
-        for(int k=0;k<16;k++)cmd[4*k+2]=.5f;
+        for(int k=0;k<16;k++)cmd[4*k+3]=0f;
         m.step(b,s,cmd,.025f);
         float ordinaryFoot=speed(s,0,6);
         b=new MotorBrain.Body();s=new Morphology.Surface(b);
         m=new SymbioteMatterV1();m.reset(b,s);
-        cmd[2]=1f;cmd[6]=0f;
+        cmd[3]=1f;cmd[7]=-1f;
         m.step(b,s,cmd,.025f);
         float deliberateFoot=speed(s,0,6);
         ok(Math.abs(ordinaryFoot-deliberateFoot)>.005f,
-            "physically commanded floor adhesion has no observable effect");
+            "physically changed cortex tension has no effect on local substrate motion");
 
         // Controller can be measured independently from its brain. No gait
         // in the shipped controller; preset laboratory probes measure plant.
@@ -128,7 +128,7 @@ public final class Zero168ControllabilityRegression {
             "two-level live controller damaged the fluid body");
         System.out.printf(Locale.US,
             "ZERO168 PASS passiveNet=%.3f staticNet=%.3f alternatingNet=%.3f gross=%.3f "+
-            "independentGripSpeed=[%.4f %.4f], elasticImpulse=0, "+
+            "tensionFootSpeed=[%.4f %.4f], elasticImpulse=0, "+
             "one-owner neural plasticity and no programmed gait%n",
             still.net,staticDrive.net,alternating.net,alternating.gross,
             ordinaryFoot,deliberateFoot);
