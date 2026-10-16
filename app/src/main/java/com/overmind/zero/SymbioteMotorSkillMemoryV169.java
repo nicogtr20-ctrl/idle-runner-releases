@@ -210,23 +210,71 @@ public final class SymbioteMotorSkillMemoryV169 {
      * but ONLY ordinary TRAIN outcomes nominate skills; only independent
      * HELDOUT outcomes can confirm them. Never train on heldout labels.
      */
-    public void finish(boolean train,boolean heldout,float realMotorEnergy){
-        if(action<0)return;
+    /** Returns the previous controller only if the real recovery A/B
+     * failed. Caller must install BEFORE any additional training writes. */
+    public float[] finish(boolean train,boolean heldout,float realMotorEnergy){
+        if(action<0)return null;
         int a=action;
-        float direction=a%8*(float)Math.PI/4f;
-        float forward=netX*(float)Math.cos(direction)+
-                      netY*(float)Math.sin(direction);
+        float theta=(a%8)*(float)Math.PI/4f;
+        float forward=netX*(float)Math.cos(theta)+
+                      netY*(float)Math.sin(theta);
         float quality=score(forward,gross,angularMotion,Math.max(0f,realMotorEnergy));
-        boolean actualProgress=validFrames>=4&&gross>=2.8f&&
+        // A moving body is NOT proof of a learned skill. No passive/coasting
+        // momentum, no box/door correction, storm, wind or teleport may label
+        // an active actuator as successful.
+        boolean credible=validFrames>=4&&externalFrames==0&&
+            initialSpeed<=MAX_INITIAL_CENTER_SPEED&&
+            activeImpulse>=MIN_ACTIVE_MUSCLE_IMPULSE;
+        boolean actualProgress=credible&&gross>=2.8f&&
             forward>=MIN_FORWARD&&forward/gross>=MIN_RATIO&&
             quality>=.39f;
         samples++;
         if(heldout)heldoutSamples++;
         if(cooldown>0)cooldown--;
-        if(actualProgress)badStreak[a]=0;
-        else if(badStreak[a]<100)badStreak[a]++;
-        if(train&&!heldout&&actualProgress){
-            Entry similar=match(candidates,a,trial);
+        if(failedAction!=a){failedAction=a;badStreak=0;}
+        if(actualProgress)badStreak=0;
+        else if(validFrames>=4&&badStreak<100)badStreak++;
+
+        float[] rollback=null;
+        // Quantified post-recovery behavioral A/B with the SAME brain intent.
+        // A brief lucky move is not enough to keep overwritten synapses.
+        if(recoveryOriginal!=null){
+            recoveryDeadline--;
+            if(a==recoveryAction&&validFrames>=4){
+                recoveryTrials++;
+                recoverySum+=quality;
+                if(actualProgress&&quality>=recoveryBaseline+.14f)
+                    recoveryPasses++;
+            }
+            if(recoveryTrials>=3||recoveryDeadline<=0){
+                if(recoveryTrials>=3&&recoveryPasses>=2&&
+                    recoverySum/recoveryTrials>=recoveryBaseline+.14f){
+                    recoveryConfirmed++;
+                }else{
+                    rollback=recoveryOriginal.clone();
+                    recoveryReverted++;
+                }
+                recoveryOriginal=null;recoveryAction=-1;recoveryTrials=0;
+                recoveryPasses=0;recoveryDeadline=0;recoverySum=0f;
+            }
+        }
+
+        if(train&&!heldout&&actualProgress&&rollback==null){
+            Entry similar=match(candidates,a,trial,trialContext,true);
+            if(similar==null){
+                // Keep legacy 169 records as untrusted evidence, but never
+                // auto-recover them until remeasured with new posture + motor
+                // causality and TWO fresh independent heldout life samples.
+                Entry orphan=match(candidates,a,trial,trialContext,false);
+                if(orphan!=null&&!orphan.contextKnown){
+                    System.arraycopy(trialContext,0,orphan.context,0,CONTEXT);
+                    orphan.contextKnown=true;
+                    orphan.firstLife=orphan.lastLife=life;
+                    orphan.verifications=orphan.failed=0;
+                    orphan.quality=quality;
+                    similar=orphan;
+                }
+            }
             if(similar==null){
                 if(candidates.size()>=MAX_CANDIDATES){
                     int worst=0;
@@ -234,31 +282,26 @@ public final class SymbioteMotorSkillMemoryV169 {
                         if(candidates.get(j).quality<candidates.get(worst).quality)
                             worst=j;
                     if(quality<=candidates.get(worst).quality){
-                        discarded++;cancelTrial();return;
+                        discarded++;
+                    }else{
+                        candidates.remove(worst);
+                        candidates.add(new Entry(a,life,quality,trial,trialContext));
                     }
-                    candidates.remove(worst);
-                }
-                candidates.add(new Entry(a,life,quality,trial));
+                }else candidates.add(new Entry(a,life,quality,trial,trialContext));
             }else{
-                // A candidate's actual trained configuration is immutable.
-                // Only the quality estimate improves; otherwise the heldout
-                // experiment would validate a moving target.
                 similar.quality=Math.max(similar.quality,quality);
             }
-        }else if(heldout){
-            Entry e=match(candidates,a,trial);
+        }else if(heldout&&rollback==null){
+            Entry e=match(candidates,a,trial,trialContext,true);
             if(e!=null){
-                if(actualProgress&&quality>=.39f){
-                    // At most ONE corroboration per life; heldout counts
-                    // are not independent simply because 100 frames elapsed.
+                if(actualProgress){
                     if(e.lastLife!=life){
                         e.verifications++;
                         e.lastLife=life;
                         e.quality=.8f*e.quality+.2f*quality;
                     }
                     if(e.verifications>=2&&life>e.firstLife+1){
-                        promote(e);
-                        candidates.remove(e);
+                        promote(e);candidates.remove(e);
                     }
                 }else if(++e.failed>=3){
                     candidates.remove(e);discarded++;
@@ -266,9 +309,10 @@ public final class SymbioteMotorSkillMemoryV169 {
             }
         }
         cancelTrial();
+        return rollback;
     }
     private void promote(Entry e){
-        Entry same=match(champions,e.action,e.config);
+        Entry same=match(champions,e.action,e.config,e.context,true);
         if(same!=null){
             if(e.quality>same.quality){
                 System.arraycopy(e.config,0,same.config,0,WIDTH);
@@ -296,25 +340,53 @@ public final class SymbioteMotorSkillMemoryV169 {
      * realize that action have failed. No covert choice change, no gait.
      * Returns null rather than installing an unverified or identical cortex.
      */
-    public float[] recoverIfStalled(int chosen,float[] current){
-        if(chosen<0||chosen>=A||cooldown>0||badStreak[chosen]<4||
+    public float[] recoverIfStalled(int chosen,float[] current,
+                                   MotorBrain.Body body,Morphology.Surface skin){
+        float[] context=bodyContext(body,skin);
+        // Count must correspond to four ACTUALLY CONSECUTIVE outcomes on the
+        // same action in this same life; gaps or other intents break the run.
+        if(chosen<0||chosen>=A||failedAction!=chosen||badStreak<4||
+           cooldown>0||recoveryOriginal!=null||context==null||
            !valid(current))return null;
         Entry best=null;
-        for(Entry e:champions)
-            if(e.action==chosen&&(best==null||e.quality>best.quality))
-                best=e;
+        for(Entry e:champions){
+            if(e.action!=chosen||!e.contextKnown||
+               contextRms(e.context,context)>MAX_CONTEXT_RMS)continue;
+            if(best==null||e.quality>best.quality)best=e;
+        }
         if(best==null||distance(best.config,current)<.005f)return null;
-        cooldown=32;
-        badStreak[chosen]=0;
+        recoveryOriginal=current.clone();
+        recoveryAction=chosen;
+        recoveryBaseline=0f; // conservative comparison to observed failure
+        recoveryDeadline=18;recoveryTrials=recoveryPasses=0;recoverySum=0f;
+        cooldown=32;badStreak=0;
         recoveries++;
         return best.config.clone();
     }
+    /** Death/restart must NEVER treat an unfinished test as validated. */
+    public float[] abortIncompleteRecovery(){
+        if(recoveryOriginal==null)return null;
+        float[] rollback=recoveryOriginal.clone();
+        recoveryOriginal=null;recoveryAction=-1;recoveryDeadline=0;
+        recoveryTrials=recoveryPasses=0;recoverySum=0f;
+        recoveryReverted++;
+        return rollback;
+    }
     public String encode(){
-        StringBuilder s=new StringBuilder("ms169|").append(life).append('|')
+        StringBuilder s=new StringBuilder("ms170|").append(life).append('|')
             .append(samples).append('|').append(heldoutSamples).append('|')
             .append(confirmed).append('|').append(recoveries).append('|')
             .append(discarded).append('|').append(champions.size()).append('|')
-            .append(candidates.size());
+            .append(candidates.size()).append('|')
+            .append(recoveryConfirmed).append('|').append(recoveryReverted);
+        if(recoveryOriginal==null)s.append("|-");
+        else{
+            s.append('|').append(recoveryAction).append(',')
+                .append(recoveryTrials).append(',').append(recoveryPasses)
+                .append(',').append(recoveryDeadline).append(',')
+                .append(recoveryBaseline).append(',').append(recoverySum);
+            for(float f:recoveryOriginal)s.append(',').append(f);
+        }
         for(Entry e:champions)appendEntry(s,e);
         for(Entry e:candidates)appendEntry(s,e);
         return s.toString();
@@ -324,27 +396,48 @@ public final class SymbioteMotorSkillMemoryV169 {
             .append(',').append(e.lastLife).append(',').append(e.verifications)
             .append(',').append(e.failed).append(',').append(e.quality);
         for(float w:e.config)b.append(',').append(w);
+        b.append(',').append(e.contextKnown?1:0);
+        for(float x:e.context)b.append(',').append(x);
     }
     public boolean restore(String raw){
-        if(raw==null||!raw.startsWith("ms169|")||raw.length()>155000)return false;
+        if(raw==null||raw.length()>180000||
+            !(raw.startsWith("ms170|")||raw.startsWith("ms169|")))return false;
         try{
             String[] parts=raw.split("\\|",-1);
-            if(parts.length<9)return false;
+            boolean old=parts[0].equals("ms169");
+            int start=old?9:12;
+            if(parts.length<start)return false;
             int l=Integer.parseInt(parts[1]);
-            long samplesRead=Long.parseLong(parts[2]),holdRead=Long.parseLong(parts[3]),
-                confirmedRead=Long.parseLong(parts[4]),recovRead=Long.parseLong(parts[5]),
-                rejectedRead=Long.parseLong(parts[6]);
+            long sr=Long.parseLong(parts[2]),hr=Long.parseLong(parts[3]),
+                cr=Long.parseLong(parts[4]),rr=Long.parseLong(parts[5]),
+                dr=Long.parseLong(parts[6]);
             int nc=Integer.parseInt(parts[7]),np=Integer.parseInt(parts[8]);
+            long kept=old?0:Long.parseLong(parts[9]),
+                reverted=old?0:Long.parseLong(parts[10]);
             if(l<1||l>1000000000||nc<0||nc>MAX_CHAMPIONS||
-               np<0||np>MAX_CANDIDATES||parts.length!=9+nc+np||
-               samplesRead<0||holdRead<0||holdRead>samplesRead||
-               confirmedRead<0||recovRead<0||rejectedRead<0||
-               confirmedRead>samplesRead||recovRead>samplesRead||
-               samplesRead>1000000000L)return false;
-            ArrayList<Entry> good=new ArrayList<>(),tentative=new ArrayList<>();
-            for(int n=0;n<nc+np;n++){
-                String[] q=parts[9+n].split(",",-1);
+               np<0||np>MAX_CANDIDATES||parts.length!=start+nc+np||
+               sr<0||hr<0||hr>sr||cr<0||rr<0||dr<0||
+               cr>sr||rr>sr||sr>1000000000L||
+               kept<0||reverted<0||kept+reverted>rr)return false;
+            float[] oldMotor=null;
+            int ra=-1,rt=0,rp=0,rd=0;float rb=0f,rs=0f;
+            if(!old&&!parts[11].equals("-")){
+                String[] q=parts[11].split(",",-1);
                 if(q.length!=6+WIDTH)return false;
+                ra=Integer.parseInt(q[0]);rt=Integer.parseInt(q[1]);
+                rp=Integer.parseInt(q[2]);rd=Integer.parseInt(q[3]);
+                rb=Float.parseFloat(q[4]);rs=Float.parseFloat(q[5]);
+                if(ra<0||ra>=A||rt<0||rt>3||rp<0||rp>rt||
+                   rd<1||rd>18||!Float.isFinite(rb)||
+                   !Float.isFinite(rs)||Math.abs(rs)>3f)return false;
+                oldMotor=new float[WIDTH];
+                for(int i=0;i<WIDTH;i++)oldMotor[i]=Float.parseFloat(q[6+i]);
+                if(!valid(oldMotor))return false;
+            }
+            ArrayList<Entry> checked=new ArrayList<>(),pending=new ArrayList<>();
+            for(int n=0;n<nc+np;n++){
+                String[] q=parts[start+n].split(",",-1);
+                if(q.length!=(old?6+WIDTH:7+WIDTH+CONTEXT))return false;
                 int a=Integer.parseInt(q[0]),first=Integer.parseInt(q[1]),
                     last=Integer.parseInt(q[2]),verified=Integer.parseInt(q[3]),
                     failed=Integer.parseInt(q[4]);
@@ -356,15 +449,37 @@ public final class SymbioteMotorSkillMemoryV169 {
                 float[] w=new float[WIDTH];
                 for(int i=0;i<WIDTH;i++)w[i]=Float.parseFloat(q[6+i]);
                 if(!valid(w))return false;
-                Entry e=new Entry(a,first,quality,w);
+                float[] ctx=null;
+                if(!old){
+                    int known=Integer.parseInt(q[6+WIDTH]);
+                    if(known!=0&&known!=1)return false;
+                    float[] context=new float[CONTEXT];
+                    for(int k=0;k<CONTEXT;k++){
+                        context[k]=Float.parseFloat(q[7+WIDTH+k]);
+                        if(!Float.isFinite(context[k])||
+                           Math.abs(context[k])>2.01f)return false;
+                    }
+                    if(known==1)ctx=context;
+                    if(n<nc&&ctx==null)return false;
+                }
+                Entry e=new Entry(a,first,quality,w,ctx);
                 e.lastLife=last;e.verifications=verified;e.failed=failed;
-                (n<nc?good:tentative).add(e);
+                if(old){
+                    // No historically stored posture or active-force evidence.
+                    // Keep legacy memories only as candidates, NEVER champions.
+                    e.verifications=0;e.failed=0;
+                    if(pending.size()<MAX_CANDIDATES)pending.add(e);
+                }else (n<nc?checked:pending).add(e);
             }
-            champions.clear();champions.addAll(good);
-            candidates.clear();candidates.addAll(tentative);
-            life=l;samples=samplesRead;heldoutSamples=holdRead;
-            confirmed=confirmedRead;recoveries=recovRead;discarded=rejectedRead;
-            cooldown=0;Arrays.fill(badStreak,0);cancelTrial();
+            champions.clear();champions.addAll(checked);
+            candidates.clear();candidates.addAll(pending);
+            life=l;samples=sr;heldoutSamples=hr;
+            confirmed=old?0:cr;recoveries=rr;discarded=dr;
+            recoveryConfirmed=kept;recoveryReverted=reverted;
+            recoveryOriginal=oldMotor;recoveryAction=ra;
+            recoveryTrials=rt;recoveryPasses=rp;recoveryDeadline=rd;
+            recoveryBaseline=rb;recoverySum=rs;
+            cooldown=0;badStreak=0;failedAction=-1;cancelTrial();
             return true;
         }catch(RuntimeException bad){return false;}
     }
