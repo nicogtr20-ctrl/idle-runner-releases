@@ -114,7 +114,7 @@ public final class Zero3MotorRecurrentTrajectoryRegression {
         ArrayList<Trajectory> result=new ArrayList<>();
         for(int direction=0;direction<4;direction++)
             for(float pose:poses)for(int condition:conditions)
-                for(int channel=0;channel<4;channel)
+                for(int channel=0;channel<4;channel++)
                     for(int sector:SECTORS)
                         for(int sign:new int[]{-1,1})
                             result.add(physical(direction,pose,condition,
