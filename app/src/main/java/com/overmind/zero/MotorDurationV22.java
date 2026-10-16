@@ -114,13 +114,13 @@ public final class MotorDurationV22 {
     /**
      * Retain the brain's OWN previous action only while its selected motor
      * interval is still running. New high-confidence policy changes, random
-     * exploration, danger contacts and near-death reserve ALWAYS interrupt.
+     * exploration and danger contacts ALWAYS interrupt. Hunger alone does not.
      */
     public int select(int proposal,int greedy,float[] scores,boolean exploratory,
                       float reserve,float harmfulContact,float x,float y){
         if(proposal<0||proposal>=ACTIONS||greedy<0||greedy>=ACTIONS)
             return proposal;
-        boolean safe=Float.isFinite(reserve)&&reserve>.16f&&
+        boolean safe=Float.isFinite(reserve)&&reserve>0f&&
                      !exploratory&&harmfulContact<=0f;
         boolean challenger=false;
         if(scores!=null&&scores.length==ACTIONS&&selected>=0)

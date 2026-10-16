@@ -19,6 +19,17 @@ import java.util.Locale;
  */
 public final class SymbioteMotorSkillMemoryV169 {
     public static final String KEY="symbiote_motor_skills_v169";
+    public static final String MANIPULATION_KEY="symbiote_manipulation_skills_v171";
+    private final boolean manipulation;
+    private float manipulatedTravel;
+    private int heldFrames;
+    public SymbioteMotorSkillMemoryV169(){this(false);}
+    public SymbioteMotorSkillMemoryV169(boolean manipulation){this.manipulation=manipulation;}
+    public void manipulation(float travel,boolean held){
+        if(action>=0&&held&&Float.isFinite(travel)&&travel>=0f&&travel<=3f){
+            manipulatedTravel+=travel;heldFrames++;
+        }
+    }
     static final int SHARED=84,REGIONAL=320,FAST=FastSomaticCircuitV167.PARAMETERS;
     public static final int WIDTH=SHARED+REGIONAL+FAST,MAX_CHAMPIONS=4,MAX_CANDIDATES=10;
     private static final int A=RecurrentCoreV22.A;
@@ -111,7 +122,7 @@ public final class SymbioteMotorSkillMemoryV169 {
     }
     public void cancelTrial(){
         action=-1;netX=netY=gross=angularMotion=activeImpulse=initialSpeed=0f;
-        validFrames=externalFrames=0;
+        validFrames=externalFrames=heldFrames=0;manipulatedTravel=0f;
     }
     /** All context values are measured from the real 96-site living cortex.
      * No target coordinate, resource category, reward or prescribed posture. */
@@ -172,6 +183,11 @@ public final class SymbioteMotorSkillMemoryV169 {
     public void physical(float oldX,float oldY,MotorBrain.Body body,
                          Morphology.Surface skin,float realMuscleImpulse,
                          boolean externalDisturbance){
+        physical(oldX,oldY,body,skin,realMuscleImpulse,externalDisturbance,.025f);
+    }
+    public void physical(float oldX,float oldY,MotorBrain.Body body,
+                         Morphology.Surface skin,float realMuscleImpulse,
+                         boolean externalDisturbance,float dt){
         if(action<0||body==null||skin==null)return;
         float dx=body.cx-oldX,dy=body.cy-oldY;
         if(!Float.isFinite(dx)||!Float.isFinite(dy))return;
@@ -189,7 +205,7 @@ public final class SymbioteMotorSkillMemoryV169 {
         }
         if(inertia>1e-3){
             float omega=(float)(torque/inertia);
-            if(Float.isFinite(omega))angularMotion+=clip(Math.abs(omega)*.025f,0f,.25f);
+            if(Float.isFinite(omega))angularMotion+=clip(Math.abs(omega)*Math.max(0f,Math.min(.04f,dt)),0f,.25f);
         }
     }
     private static float score(float forward,float gross,float spin,float cost){
@@ -230,12 +246,17 @@ public final class SymbioteMotorSkillMemoryV169 {
         // A moving body is NOT proof of a learned skill. No passive/coasting
         // momentum, no box/door correction, storm, wind or teleport may label
         // an active actuator as successful.
-        boolean credible=validFrames>=4&&externalFrames==0&&
+        boolean credible=validFrames>=4&&(manipulation||externalFrames==0)&&
             initialSpeed<=MAX_INITIAL_CENTER_SPEED&&
             activeImpulse>=MIN_ACTIVE_MUSCLE_IMPULSE;
         boolean actualProgress=credible&&gross>=2.8f&&
             forward>=MIN_FORWARD&&forward/gross>=MIN_RATIO&&
             quality>=.39f;
+        if(manipulation){
+            quality=clip(.7f*heldFrames/Math.max(1f,validFrames)+
+                .3f*clip(manipulatedTravel/3f,0f,1f),0f,1f);
+            actualProgress=credible&&a>=8&&heldFrames>=4&&manipulatedTravel>=.15f&&quality>=.39f;
+        }
         samples++;
         if(heldout)heldoutSamples++;
         if(cooldown>0)cooldown--;
@@ -245,7 +266,7 @@ public final class SymbioteMotorSkillMemoryV169 {
         }
         if(actualProgress){
             badStreak=0;recentFailureScore=0f;failureScoreCount=0;
-        }else if(validFrames>=4&&externalFrames==0&&
+        }else if(validFrames>=4&&(manipulation||externalFrames==0)&&
                  initialSpeed<=MAX_INITIAL_CENTER_SPEED){
             if(badStreak<100)badStreak++;
             recentFailureScore+=clip(quality,-1f,1f);
@@ -389,6 +410,7 @@ public final class SymbioteMotorSkillMemoryV169 {
             badStreak=0;failedAction=-1;
             recentFailureScore=0f;failureScoreCount=0;
         }
+        if(manipulation&&(chosen<8||context==null||context[7]+context[8]<.01f))return null;
         if(chosen<0||chosen>=A||failedAction!=chosen||badStreak<4||
            cooldown>0||recoveryOriginal!=null||context==null||
            !valid(current))return null;

@@ -68,12 +68,10 @@ public final class DistributedBodySense {
             out[p+STRAIN]=clip((distanceNext+distancePrev)/60f,0,1);
             float obstacle=0;
             if(objects!=null){
-                for(int step=1;step<=6;step++){
-                    float x=s.x[i]+nx*step*22f,y=s.y[i]+ny*step*22f;
-                    if(SensorimotorMind.Senses.solid(room,x,y,objects)){
-                        obstacle=(7-step)/6f;break;
-                    }
-                }
+                float hit=SensorimotorMind.Senses.firstSolidDistance(room,objects,
+                    s.x[i],s.y[i],nx,ny,132f);
+                if(Float.isFinite(hit))obstacle=clip(1f-hit/154f,0f,1f);
+
             }
             out[p+OPTIC]=obstacle;
         }

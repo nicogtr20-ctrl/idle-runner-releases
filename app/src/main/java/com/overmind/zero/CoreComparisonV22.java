@@ -51,10 +51,11 @@ public final class CoreComparisonV22 {
     }
     public static final class Result {
         public int finished,wins,losses,ties;
+        public String symbioteReport;
         public double energyDelta,damageDelta,survivalDelta,gripDelta;
         private final StringBuilder details=new StringBuilder();
         public int total(){return SEEDS.length*LAYOUTS.length*2;}
-        public String report(){int pairs=finished/2;return String.format(Locale.US,
+        public String report(){if(symbioteReport!=null)return symbioteReport;int pairs=finished/2;return String.format(Locale.US,
             "ZERO 2.2 / CONFRONTO FISICO\n%d/%d prove, %d coppie. Vittorie %d, sconfitte %d, pareggi %d.\n"+
             "ATTIVO meno CONTROLLO: energia netta %+.3f, danni %+.3f, sopravvivenza %+.3f s, frame prese opposte %+.3f (medie).\n"+
             "Cloni identici del profilo salvato; 170s simulati per prova, apprendimento locale in entrambe. Il CONTROLLO usa la policy precedente; ATTIVO usa il nuovo nucleo e recupero contestuale.\n"+
@@ -63,6 +64,8 @@ public final class CoreComparisonV22 {
             survivalDelta/Math.max(1,pairs),gripDelta/Math.max(1,pairs),details.toString());}
     }
     public static Result run(Profile p,BehavioralLaboratory.Progress progress,BehavioralLaboratory.Cancel cancel)throws Exception{
+        if(Boolean.TRUE.equals(p.saved.get(SymbioteMatterV1.ENABLED)))
+            return SymbioteLaboratoryV171.compare(p.saved,progress,cancel,170f);
         Result report=new Result();
         for(int layout:LAYOUTS)for(int seed:SEEDS){
             if(cancel!=null&&cancel.stopped())return report;

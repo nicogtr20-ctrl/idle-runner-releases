@@ -24,6 +24,14 @@ public final class SymbioteMotorHeadV1 {
     private final SymbioteCoordinationV162 coordination=new SymbioteCoordinationV162();
     private final FastSomaticCircuitV167 somatic=new FastSomaticCircuitV167();
     private final SymbioteMotorSkillMemoryV169 motorMemory=new SymbioteMotorSkillMemoryV169();
+    private final SymbioteMotorSkillMemoryV169 manipulationMemory=new SymbioteMotorSkillMemoryV169(true);
+    private boolean cleanDirectionalTrial=true,physicalEvidence=false;
+    private float activeImpulse=0f;
+    public boolean cleanDirectionalTrial(){return cleanDirectionalTrial&&physicalEvidence&&activeImpulse>.5f;}
+    public String encodeManipulation(){return manipulationMemory.encode();}
+    public boolean restoreManipulation(String raw){return manipulationMemory.restore(raw);}
+    public SymbioteMotorSkillMemoryV169 manipulationMemory(){return manipulationMemory;}
+    public void observedManipulation(float distance,boolean held){manipulationMemory.manipulation(distance,held);}
     private final float[] skillSnapshot=new float[SymbioteMotorSkillMemoryV169.WIDTH];
     private int priorPhysicalAction=-1;
     private long localUpdates=0;
@@ -35,6 +43,8 @@ public final class SymbioteMotorHeadV1 {
     // Exactly one motor learner probes per live decision. The two controllers
     // must not both attribute the same perturbation to themselves.
     private boolean fastProbe=false;
+    private boolean adaptationEnabled=true;
+    public void setAdaptationEnabled(boolean enabled){adaptationEnabled=enabled;}
     private long seed=0x3910b15dceef41L,choices,updates,heldout;
     private float meanReward=0f;
     public SymbioteMotorHeadV1(){
@@ -155,8 +165,10 @@ public final class SymbioteMotorHeadV1 {
             return;
         // A confirmed motor memory may only be recovered BEFORE the brain's
         // SAME independently selected intent is turned into new activations.
-        float[] rescued=motorMemory.recoverIfStalled(
-            action,verifiedMotorSnapshot(),body,skin);
+        float[] rescued=!adaptationEnabled||manipulationMemory.recoveryUnderReview()?null:
+            motorMemory.recoverIfStalled(action,verifiedMotorSnapshot(),body,skin);
+        if(adaptationEnabled&&rescued==null&&!motorMemory.recoveryUnderReview())
+            rescued=manipulationMemory.recoverIfStalled(action,verifiedMotorSnapshot(),body,skin);
         if(rescued!=null)restoreVerifiedMotor(rescued);
         choices++;
         fastProbe=(choices%3L)==1L;
@@ -230,6 +242,8 @@ public final class SymbioteMotorHeadV1 {
         somatic.chosen(action,fastProbe);
         coordination.begin(action,sectorAngles);
         motorMemory.begin(action,verifiedMotorSnapshot(),body,skin);
+        manipulationMemory.begin(action,verifiedMotorSnapshot(),body,skin);
+        cleanDirectionalTrial=true;physicalEvidence=false;activeImpulse=0f;
     }
     /** Update REAL musculoskeletal commands before EACH physics step.
      * Not a second discrete-action chooser or a sinusoid/time signal. */
@@ -250,11 +264,18 @@ public final class SymbioteMotorHeadV1 {
     public void observedPhysicalStep(float beforeX,float beforeY,
                                      MotorBrain.Body now,Morphology.Surface skin,
                                      float actualMuscleImpulse,boolean external){
+        observedPhysicalStep(beforeX,beforeY,now,skin,actualMuscleImpulse,external,.025f);
+    }
+    public void observedPhysicalStep(float beforeX,float beforeY,
+        MotorBrain.Body now,Morphology.Surface skin,
+        float actualMuscleImpulse,boolean external,float dt){
         if(now!=null&&skin!=null){
             coordination.sample(beforeX,beforeY,now.cx,now.cy,commands);
             somatic.observed(beforeX,beforeY,now);
-            motorMemory.physical(beforeX,beforeY,now,skin,
-                actualMuscleImpulse,external);
+            physicalEvidence=true;activeImpulse+=Math.max(0f,actualMuscleImpulse);
+            cleanDirectionalTrial&=!external;
+            motorMemory.physical(beforeX,beforeY,now,skin,actualMuscleImpulse,external,dt);
+            manipulationMemory.physical(beforeX,beforeY,now,skin,actualMuscleImpulse,external,dt);
         }
     }
     public SymbioteCoordinationV162 coordination(){return coordination;}
@@ -285,6 +306,7 @@ public final class SymbioteMotorHeadV1 {
                             float actualAmbientEnergyLoss,float actualMotorEnergy,
                             boolean train,boolean holdout){
         if(lastAction<0)return;
+        if(!adaptationEnabled){train=false;holdout=false;motorMemory.cancelTrial();manipulationMemory.cancelTrial();}
         if(!Float.isFinite(actualContactEnergy)||!Float.isFinite(actualDamage)||
            !Float.isFinite(actualAmbientEnergyLoss)||!Float.isFinite(actualMotorEnergy)||
            actualDamage<0||actualAmbientEnergyLoss<0||actualMotorEnergy<0){
@@ -299,6 +321,8 @@ public final class SymbioteMotorHeadV1 {
         // Snapshot corresponds to muscles BEFORE the consequent synaptic
         // update. Heldout is corroboration, never a train signal.
         float[] failedRecovery=motorMemory.finish(train,holdout,actualMotorEnergy);
+        float[] failedManipulation=manipulationMemory.finish(train,holdout,actualMotorEnergy);
+        if(failedRecovery==null)failedRecovery=failedManipulation;
         boolean recoveryRolledBack=failedRecovery!=null&&
             restoreVerifiedMotor(failedRecovery);
         if(recoveryRolledBack)train=false;
@@ -336,9 +360,10 @@ public final class SymbioteMotorHeadV1 {
         // Signed real displacement is shared for OBSERVATION, but only the
         // actually probed cortex level gets plastic credit. This removes
         // the OTA167 concurrent motor credit assignment ambiguity.
-        coordination.consequence(train&&!fastProbe,holdout,noise,pending,localFeatures,
+        boolean eligible=cleanDirectionalTrial();
+        coordination.consequence(train&&!fastProbe&&eligible,holdout&&eligible,noise,pending,localFeatures,
             localWeights,CHANNELS,LOCAL_FEATURES);
-        somatic.consequence(train&&fastProbe,holdout);
+        somatic.consequence(train&&fastProbe&&eligible,holdout&&eligible);
         lastAction=-1;
     }
     private void clearLiveMotor(){
@@ -349,12 +374,16 @@ public final class SymbioteMotorHeadV1 {
     public void resetLife(){
         float[] pending=motorMemory.abortIncompleteRecovery();
         if(pending!=null)restoreVerifiedMotor(pending);
-        clearLiveMotor();motorMemory.newLife();
+        float[] other=manipulationMemory.abortIncompleteRecovery();
+        if(other!=null)restoreVerifiedMotor(other);
+        clearLiveMotor();motorMemory.newLife();manipulationMemory.newLife();
     }
     public void resumeLife(){
         float[] pending=motorMemory.abortIncompleteRecovery();
         if(pending!=null)restoreVerifiedMotor(pending);
-        clearLiveMotor();motorMemory.resumeLife();
+        float[] other=manipulationMemory.abortIncompleteRecovery();
+        if(other!=null)restoreVerifiedMotor(other);
+        clearLiveMotor();motorMemory.resumeLife();manipulationMemory.resumeLife();
     }
     /** Safe counters, sourced from the same authenticated saved cortex. */
     public long decisionCount(){return choices;}

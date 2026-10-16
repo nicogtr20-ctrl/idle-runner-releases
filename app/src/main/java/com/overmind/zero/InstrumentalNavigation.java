@@ -33,6 +33,13 @@ public final class InstrumentalNavigation {
     private final float[] visual=new float[SIGNALS*SECTORS];
     private float startX,startY;
     private int pending=-1;
+    private final ContextualNavigationV171 contextual=new ContextualNavigationV171();
+    private boolean embodiedContext=false;
+    public void motorContext(MotorBrain.Body b,Morphology.Surface s,float[] weights){
+        embodiedContext=true;contextual.context(b,s,weights);
+    }
+    public String encodeContextual(){return contextual.encode();}
+    public boolean restoreContextual(String raw){return contextual.restore(raw);}
     public long completed=0;
     public int positiveOutcomes=0,negativeOutcomes=0,choicesInfluenced=0,
                approachedPositive=0,avoidedNegative=0,uncertain=0;
@@ -46,12 +53,13 @@ public final class InstrumentalNavigation {
     public int[] actionTrials(){return trials.clone();}
     /** Read-only diagnostic baseline. The old policy uses the same means. */
     public float motionEstimateX(int action){
-        return action<0||action>=ACTIONS?0f:motorDx[action];
+        return action<0||action>=ACTIONS?0f:embodiedContext?contextual.x(action):motorDx[action];
     }
     public float motionEstimateY(int action){
-        return action<0||action>=ACTIONS?0f:motorDy[action];
+        return action<0||action>=ACTIONS?0f:embodiedContext?contextual.y(action):motorDy[action];
     }
     public boolean motionEstimateVerified(int action){
+        if(embodiedContext)return contextual.verified(action);
         return action>=0&&action<ACTIONS&&trials[action]>=3&&
             holdouts[action]>=2&&zeroError[action]>=2f&&
             testError[action]<zeroError[action]*.99f;
@@ -62,8 +70,8 @@ public final class InstrumentalNavigation {
         int n=0;for(int a=0;a<ACTIONS;a++)if(trials[a]>=3)n++;return n;
     }
     public int verifiedActions(){
-        int n=0;for(int a=0;a<ACTIONS;a++)if(trials[a]>=3&&holdouts[a]>=2&&
-            testError[a]<zeroError[a]*.99f)n++;return n;
+        if(embodiedContext)return contextual.verified();
+        int n=0;for(int a=0;a<ACTIONS;a++)if(motionEstimateVerified(a))n++;return n;
     }
     public void sense(MotorBrain.Body b,ScarcityLab room,
                       java.util.ArrayList<UnknownWorld.Entity> objects){
@@ -79,13 +87,14 @@ public final class InstrumentalNavigation {
         if(pending<0){startX=b.cx;startY=b.cy;}
     }
     public void resetLife(){
-        pending=-1;Arrays.fill(visual,0);
+        pending=-1;contextual.cancel();Arrays.fill(visual,0);
         latestMovement=latestUtility=0;
     }
-    public void resumeLife(){pending=-1;}
+    public void resumeLife(){pending=-1;contextual.cancel();}
     public void chosen(int action,MotorBrain.Body b){
         if(action<0||action>=ACTIONS||b==null)return;
         pending=action;startX=b.cx;startY=b.cy;
+        if(embodiedContext)contextual.chosen(action);
     }
     /** Ground every sign in the measured change of ENERGY from contact.
      * A physical moved disk has zero valence unless it actually changes
@@ -104,10 +113,13 @@ public final class InstrumentalNavigation {
      * which fails to move the body will be learned as nearly ineffective.
      * Held-out samples evaluate honest prediction vs zero displacement. */
     public void consequence(int action,MotorBrain.Body b,boolean learning,
-                            boolean heldout){
+                            boolean heldout){consequence(action,b,learning,heldout,true);}
+    public void consequence(int action,MotorBrain.Body b,boolean learning,
+        boolean heldout,boolean clean){
         if(pending!=action||b==null||!Float.isFinite(b.cx)||!Float.isFinite(b.cy))return;
         float dx=clamp(b.cx-startX,-120,120),dy=clamp(b.cy-startY,-120,120);
         latestMovement=(float)Math.hypot(dx,dy);
+        if(embodiedContext)contextual.consequence(action,dx,dy,learning,heldout,clean);
         if(heldout){
             holdouts[action]++;
             float err=(float)Math.hypot(dx-motorDx[action],dy-motorDy[action]);
@@ -128,10 +140,8 @@ public final class InstrumentalNavigation {
      * not a payoff on travel length, spinning, raw changed pixels or
      * the act of selecting a heading. No learned values -> exact zero. */
     public float bias(int action,float energyFraction){
-        if(action<0||action>=ACTIONS||trials[action]<3||
-           holdouts[action]<2||testError[action]>=zeroError[action]*.99f||
-           zeroError[action]<2f)return 0;
-        float dx=motorDx[action],dy=motorDy[action];
+        if(!motionEstimateVerified(action))return 0;
+        float dx=motionEstimateX(action),dy=motionEstimateY(action);
         if(!Float.isFinite(dx)||!Float.isFinite(dy))return 0;
         float score=0,weight=0;
         float need=.35f+1.25f*clamp(1-energyFraction,0,1);

@@ -67,13 +67,9 @@ public final class SpatialPerception {
         for(int r=0;r<RAYS;r++){
             float angle=rad(r);
             float dx=(float)Math.cos(angle),dy=(float)Math.sin(angle);
-            for(int s=1;s<=STEPS;s++){
-                float x=cx+dx*s*STEP,y=cy+dy*s*STEP;
-                if(SensorimotorMind.Senses.solid(room,x,y,objects)){
-                    result[r]=(float)s/(STEPS+1);
-                    break;
-                }
-            }
+            float hit=SensorimotorMind.Senses.firstSolidDistance(room,objects,cx,cy,dx,dy,RANGE);
+            if(Float.isFinite(hit))result[r]=Math.max(0f,hit/(STEP*(STEPS+1)));
+
         }
         return result;
     }
@@ -101,16 +97,21 @@ public final class SpatialPerception {
             float theta=rad(r);
             float dx=(float)Math.cos(theta),dy=(float)Math.sin(theta);
             boolean blocked=distances[r]<.999f;
-            int hit=blocked?Math.round(distances[r]*(STEPS+1)):STEPS+1;
+            float hitDistance=blocked?distances[r]*STEP*(STEPS+1):RANGE+STEP;
             for(int step=1;step<=STEPS;step++){
-                if(blocked&&step>hit)break;
+                if(blocked&&STEP*step>=hitDistance)break;
                 float offsetX=physicalOrigins==null?0:physicalOrigins[2*r];
                 float offsetY=physicalOrigins==null?0:physicalOrigins[2*r+1];
                 float x=odometryX+offsetX+dx*STEP*step,
                       y=odometryY+offsetY+dy*STEP*step;
                 int gx=cell(x),gy=cell(y);
-                if(blocked&&step==hit)blockedThisScan.add(key(gx,gy));
-                else putCell(gx,gy,-1);
+                putCell(gx,gy,-1);
+            }
+            if(blocked){
+                float ox=physicalOrigins==null?0f:physicalOrigins[2*r];
+                float oy=physicalOrigins==null?0f:physicalOrigins[2*r+1];
+                blockedThisScan.add(key(cell(odometryX+ox+dx*hitDistance),
+                    cell(odometryY+oy+dy*hitDistance)));
             }
         }
         for(long k:blockedThisScan){
@@ -131,12 +132,10 @@ public final class SpatialPerception {
             float angle=rad(r),dx=(float)Math.cos(angle),dy=(float)Math.sin(angle);
             float[] eye=MaterialGeometry.eye(skin,body.cx,body.cy,dx,dy);
             origins[2*r]=eye[0]-body.cx;origins[2*r+1]=eye[1]-body.cy;
-            for(int step=1;step<=STEPS;step++){
-                float x=eye[0]+dx*step*STEP,y=eye[1]+dy*step*STEP;
-                if(SensorimotorMind.Senses.solid(room,x,y,objects)){
-                    result[r]=step/(float)(STEPS+1);break;
-                }
-            }
+            float hit=SensorimotorMind.Senses.firstSolidDistance(room,objects,
+                eye[0],eye[1],dx,dy,RANGE);
+            if(Float.isFinite(hit))result[r]=Math.max(0f,hit/(STEP*(STEPS+1)));
+
         }
         return result;
     }

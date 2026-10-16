@@ -34,7 +34,7 @@ public final class SensorimotorMind {
     private transient float[] executedControls=new float[6];
     private transient float[] executedMotor,executedHand,executedMembrane;
     public synchronized void attachActiveCore(RecurrentCoreV22 core){activeCore=core;}
-    public synchronized void attachSymbioteMotorHead(SymbioteMotorHeadV1 head){symbioteHead=head;}
+    public synchronized void attachSymbioteMotorHead(SymbioteMotorHeadV1 head){symbioteHead=head;if(head!=null)head.setAdaptationEnabled(learning);}
     public synchronized void appliedControls(float[] motor,float[] hand,float[] membrane){
         if(motor!=executedMotor||hand!=executedHand||membrane!=executedMembrane){
             executedControls=RecurrentCoreV22.controlState(motor,hand,membrane);
@@ -172,16 +172,22 @@ public final class SensorimotorMind {
             if(objectContinuity!=null)objectContinuity.energyContact(actualEnergyDelta);
             if(causalSequence!=null)causalSequence.contactEnergy(actualEnergyDelta,visuallyObservedSignature);
             if(physicalChainV20!=null)physicalChainV20.energyOutcome(actualEnergyDelta);
-            if(bodySchema!=null)bodySchema.actualEnergy(actualEnergyDelta);
-            if(distributedBody!=null)distributedBody.actualEnergy(actualEnergyDelta);
-            if(impedance!=null)impedance.actualEnergy(actualEnergyDelta);
-            if(innerSense!=null&&actualLiquid!=null)innerSense.actualEnergy(actualEnergyDelta);
+            if(activeCore==null&&bodySchema!=null)bodySchema.actualEnergy(actualEnergyDelta);
+            if(activeCore==null&&distributedBody!=null)distributedBody.actualEnergy(actualEnergyDelta);
+            if(activeCore==null&&impedance!=null)impedance.actualEnergy(actualEnergyDelta);
+            if(activeCore==null&&innerSense!=null&&actualLiquid!=null)innerSense.actualEnergy(actualEnergyDelta);
             if(causal!=null)causal.energyOutcome(actualEnergyDelta);
             if(navigation!=null)navigation.energyOutcome(actualEnergyDelta,
                 visuallyObservedSignature,true);
             actualEnergySinceChoice+=actualEnergyDelta;
             actualContactHarm+=Math.max(0,-actualEnergyDelta);
         }
+    }
+    private void flushBodyContactEnergy(){
+        if(bodySchema!=null)bodySchema.actualEnergy(actualEnergySinceChoice);
+        if(distributedBody!=null)distributedBody.actualEnergy(actualEnergySinceChoice);
+        if(impedance!=null)impedance.actualEnergy(actualEnergySinceChoice);
+        if(innerSense!=null&&actualLiquid!=null)innerSense.actualEnergy(actualEnergySinceChoice);
     }
     public synchronized String outcomeModel(){return contactCredit.encode();}
     public synchronized boolean restoreOutcomeModel(String stored){
@@ -291,6 +297,8 @@ public final class SensorimotorMind {
     private int trialAction=-1;
     private boolean learning=true;
     public final LearningDiagnostics diagnostics=new LearningDiagnostics();
+    public final LearningDiagnostics activeDiagnostics=new LearningDiagnostics();
+    private boolean validationDue(){return activeCore==null?diagnostics.shouldHoldout():activeDiagnostics.shouldHoldout();}
     private boolean actionExploratory=false;
     private float elapsed=0;
     public long experiences=0,explorations=0,decisions=0;
@@ -302,7 +310,7 @@ public final class SensorimotorMind {
 
     private boolean resumeRearmPending=false;
     public SensorimotorMind(){}
-    public synchronized void setLearning(boolean enabled){learning=enabled;}
+    public synchronized void setLearning(boolean enabled){learning=enabled;if(symbioteHead!=null)symbioteHead.setAdaptationEnabled(enabled);}
     public synchronized void begin(float[] observation){
         if(observation.length!=S)throw new IllegalArgumentException("sensory width");
         System.arraycopy(observation,0,trialState,0,S);
@@ -440,8 +448,12 @@ public final class SensorimotorMind {
         if(causalSequence!=null)causalSequence.resetLife();
         // One and the same heldout split closes BOTH the recurrent decision
         // and its actual cortex action before resetLife destroys the pending action.
-        boolean held=diagnostics.shouldHoldout();
+        boolean held=learning&&validationDue();
+        if(activeCore!=null&&learning&&!held)flushBodyContactEnergy();
         if(activeCore!=null){feedCore(observed);
+            float[] terminalError=activeCore.observedPredictionErrors();
+            activeDiagnostics.record(terminalError[0],terminalError[1],
+                clampEnergyReward(actualEnergySinceChoice),actionExploratory);
             activeCore.consequence(actualEnergySinceChoice,actualContactHarm,learning&&!held,held,true);}
         if(symbioteHead!=null)symbioteHead.consequence(actualEnergySinceChoice,
             actualContactHarm,actualAmbientLossSinceChoice,
@@ -496,6 +508,8 @@ public final class SensorimotorMind {
                (innerSense==null||actualLiquid==null?0f:innerSense.choiceBias(action));
     }
     private int choosePrimaryV22(float[] senses){
+        if(navigation!=null&&symbioteHead!=null)navigation.motorContext(
+            observedBody,lastActualGripSurface,symbioteHead.verifiedMotorSnapshot());
         feedCore(senses);
         float[] observedMeans=new float[ACTIONS],navTerms=new float[ACTIONS],
             causalTerms=new float[ACTIONS],objectTerms=new float[ACTIONS],
@@ -639,6 +653,10 @@ public final class SensorimotorMind {
                 ?null:SymbioteMotorHeadV1.measuredSectorAngles(
                     observedBody,lastActualGripSurface),
             observedBody,lastActualGripSurface);
+        if(navigation!=null&&symbioteHead!=null){
+            navigation.motorContext(observedBody,lastActualGripSurface,symbioteHead.verifiedMotorSnapshot());
+            navigation.chosen(chosen,observedBody);
+        }
         activeCore.chosen(chosen);
         if(worldV20!=null)worldV20.chosen(chosen,senses);
         if(transferV20!=null)transferV20.chosen(chosen,senses);
@@ -999,8 +1017,11 @@ public final class SensorimotorMind {
         if(spatial!=null&&body!=null&&objects!=null)
             spatial.observeEnvironment(body,skin,room,objects);
         float[] before=trialState;
-        boolean holdout=diagnostics.shouldHoldout();
-        if(activeCore!=null){feedCore(after);activeCore.consequence(actualEnergySinceChoice,actualContactHarm,
+        boolean holdout=learning&&validationDue();
+        if(activeCore!=null&&learning&&!holdout)flushBodyContactEnergy();
+        float[] coreErrors=null;float temporalBaseline=Float.NaN;
+        if(activeCore!=null){feedCore(after);coreErrors=activeCore.observedPredictionErrors();
+            temporalBaseline=activeCore.observedPredictionErrors(S)[0];activeCore.consequence(actualEnergySinceChoice,actualContactHarm,
                 Math.max(0f,physicalEffect),learning&&!holdout,holdout,false);}
         if(motorDuration!=null&&symbioteHead!=null&&body!=null&&learning)
             motorDuration.interval(trialAction,body.cx,body.cy,
@@ -1027,7 +1048,8 @@ public final class SensorimotorMind {
                 model[base+S]=Math.max(-3,Math.min(3,model[base+S]+g));
             }
         }
-        float error=(float)Math.sqrt(err/S);
+        float legacyError=(float)Math.sqrt(err/S);
+        float error=coreErrors==null?legacyError:coreErrors[0];
         // "Progress" means correcting a prediction error. It is a generic
         // drive, not a manually recognized moving door or solved room.
         float progress=Float.isNaN(previousError)?0:
@@ -1051,7 +1073,8 @@ public final class SensorimotorMind {
                     +.025f*Math.min(2,sensoryChange)
                     +.15f*progress-.018f;
         if(temporal!=null){
-            temporal.observe(before,trialAction,after,lastReward,error,
+            temporal.observe(before,trialAction,after,lastReward,
+                Float.isFinite(temporalBaseline)?temporalBaseline:error,
                 learning&&!holdout,holdout);
             if(temporalSkills!=null)temporalSkills.transition(temporal.contextCopy());
             if(learning&&physicalEffect>.015f){
@@ -1117,9 +1140,11 @@ public final class SensorimotorMind {
             navigation==null?0f:navigation.motionEstimateY(trialAction),
             navigation!=null&&navigation.motionEstimateVerified(trialAction));
         if(navigation!=null&&body!=null)
-            navigation.consequence(trialAction,body,learning&&!holdout,holdout);
+            navigation.consequence(trialAction,body,learning&&!holdout,holdout,
+                symbioteHead==null||symbioteHead.cleanDirectionalTrial());
         if(intention!=null&&navigation!=null&&body!=null&&navigationAdviceEnabled)
-            intention.consequence(navigation,trialAction,navigation.latestMovement);
+            intention.consequence(navigation,trialAction,
+                symbioteHead==null||symbioteHead.cleanDirectionalTrial()?navigation.latestMovement:0f);
         // The obsolete 26D TD brain freezes when recurrent 2.2 is primary.
         // It never silently relearns a competing action policy.
         if(learning&&!holdout&&activeCore==null){
@@ -1129,8 +1154,9 @@ public final class SensorimotorMind {
                 value[base+k]=Math.max(-4,Math.min(4,value[base+k]+VALUE_LR*td*before[k]));
             value[base+S]=Math.max(-4,Math.min(4,value[base+S]+VALUE_LR*td));
         }
-        diagnostics.record(error,(float)Math.sqrt(naiveErr/S),
+        diagnostics.record(legacyError,(float)Math.sqrt(naiveErr/S),
             lastReward,actionExploratory);
+        if(coreErrors!=null)activeDiagnostics.record(coreErrors[0],coreErrors[1],lastReward,actionExploratory);
         if(blackbox!=null)blackbox.finished(after,actualEnergySinceChoice,
             physicalEffect,error,body);
         experiences++;
@@ -1224,14 +1250,10 @@ public final class SensorimotorMind {
                 float ang=(float)(r*Math.PI/4);
                 float vx=(float)Math.cos(ang),vy=(float)Math.sin(ang);
                 float proximity=0;
-                for(int step=1;step<=7;step++){
-                    float distance=step*22;
-                    float[] eye=MaterialGeometry.eye(skin,b.cx,b.cy,vx,vy);
-                    float x=eye[0]+vx*distance,y=eye[1]+vy*distance;
-                    if(solid(lab,x,y,objects)){
-                        proximity=1-distance/175f;break;
-                    }
-                }
+                float[] eye=MaterialGeometry.eye(skin,b.cx,b.cy,vx,vy);
+                float hit=firstSolidDistance(lab,objects,eye[0],eye[1],vx,vy,154f);
+                if(Float.isFinite(hit))proximity=Math.max(0f,1f-hit/175f);
+
                 v[6+r]=proximity;
             }
             // Raw channel identities are VISUAL frequencies, not "food",
@@ -1283,14 +1305,66 @@ public final class SensorimotorMind {
         private static boolean occluded(ScarcityLab lab,float ax,float ay,float bx,float by,
                                         ArrayList<UnknownWorld.Entity> objects,UnknownWorld.Entity self,
                                         boolean transparentGlass){
-            // Real movable solids occlude light even outside the chamber.
-            for(int i=1;i<15;i++){
-                float t=i/15f;
-                if(solid(lab,ax+(bx-ax)*t,ay+(by-ay)*t,objects,self,
-                         transparentGlass))return true;
-            }
-            return false;
+            float length=(float)Math.hypot(bx-ax,by-ay);
+            if(length<.001f)return false;
+            return firstSolidDistance(lab,objects,ax,ay,(bx-ax)/length,
+                (by-ay)/length,length,self,transparentGlass)<length-.001f;
         }
+        /** Continuous object intersections; a 14U plate cannot hide between
+         * 22U samples. Room slabs are resolved at <=1U, below wall thickness. */
+        static float firstSolidDistance(ScarcityLab lab,ArrayList<UnknownWorld.Entity> objects,
+            float x,float y,float dx,float dy,float range){
+            return firstSolidDistance(lab,objects,x,y,dx,dy,range,null,false);
+        }
+        private static float firstSolidDistance(ScarcityLab lab,ArrayList<UnknownWorld.Entity> objects,
+            float x,float y,float dx,float dy,float range,UnknownWorld.Entity ignore,boolean glass){
+            float best=Float.POSITIVE_INFINITY;
+            if(objects!=null)for(UnknownWorld.Entity e:objects){
+                if(e==ignore||e.concealed||e.consumed)continue;
+                if(e.isBox()){
+                    float ox=x-e.x,oy=y-e.y,ux=dx,uy=dy;
+                    float halfX=SquareGripPuzzle.HALF,halfY=halfX;
+                    if(e.isConstruction()){
+                        float c=(float)Math.cos(e.angle),sn=(float)Math.sin(e.angle);
+                        float localX=ox*c+oy*sn;oy=-ox*sn+oy*c;ox=localX;
+                        float localDx=ux*c+uy*sn;uy=-ux*sn+uy*c;ux=localDx;
+                        halfX=PanelPhysics.halfLength(e);halfY=PanelPhysics.HALF_THICKNESS;
+                    }
+                    best=Math.min(best,rayRectangle(ox,oy,ux,uy,halfX,halfY,range));
+                }else if(e.isMovable()){
+                    float ox=x-e.x,oy=y-e.y,b=ox*dx+oy*dy;
+                    float c=ox*ox+oy*oy-e.radius*e.radius;
+                    float disc=b*b-c;
+                    if(c<=0f)best=0f;
+                    else if(disc>=0f){float hit=-b-(float)Math.sqrt(disc);
+                        if(hit>=0f&&hit<=range)best=Math.min(best,hit);}
+                }
+            }
+            if(lab!=null){
+                ArrayList<UnknownWorld.Entity> empty=new ArrayList<>();
+                int n=Math.max(1,(int)Math.ceil(Math.min(range,best)));
+                for(int i=0;i<=n;i++){
+                    float distance=Math.min(range,best)*i/n;
+                    if(!Float.isFinite(distance))distance=range*i/n;
+                    if(solid(lab,x+dx*distance,y+dy*distance,empty,null,glass)){
+                        best=Math.min(best,distance);break;
+                    }
+                }
+            }
+            return best;
+        }
+        private static float rayRectangle(float x,float y,float dx,float dy,
+            float hx,float hy,float range){
+            float enter=0f,exit=range;
+            if(Math.abs(dx)<1e-7f){if(Math.abs(x)>hx)return Float.POSITIVE_INFINITY;}
+            else{float a=(-hx-x)/dx,b=(hx-x)/dx;
+                enter=Math.max(enter,Math.min(a,b));exit=Math.min(exit,Math.max(a,b));}
+            if(Math.abs(dy)<1e-7f){if(Math.abs(y)>hy)return Float.POSITIVE_INFINITY;}
+            else{float a=(-hy-y)/dy,b=(hy-y)/dy;
+                enter=Math.max(enter,Math.min(a,b));exit=Math.min(exit,Math.max(a,b));}
+            return enter<=exit?enter:Float.POSITIVE_INFINITY;
+        }
+
         static boolean solid(ScarcityLab lab,float x,float y,ArrayList<UnknownWorld.Entity> obj){
             return solid(lab,x,y,obj,null,false);
         }
@@ -1313,8 +1387,14 @@ public final class SensorimotorMind {
                 if(front||ceiling||floor||back||gate)return true;
             }
             for(UnknownWorld.Entity e:obj){
-                if(e==ignore||e.concealed||!e.ready())continue;
-                if(e.isBox()&&Math.abs(x-e.x)<=SquareGripPuzzle.HALF&&
+                if(e==ignore||e.concealed||e.consumed)continue;
+                if(e.isConstruction()){
+                    float[] local=PanelPhysics.local(e,x,y);
+                    if(Math.abs(local[0])<=PanelPhysics.halfLength(e)&&
+                       Math.abs(local[1])<=PanelPhysics.HALF_THICKNESS)return true;
+                    continue;
+                }
+                if(e.isBilateralBox()&&Math.abs(x-e.x)<=SquareGripPuzzle.HALF&&
                    Math.abs(y-e.y)<=SquareGripPuzzle.HALF)return true;
                 if(!e.isMovable())continue;
                 if(Math.hypot(x-e.x,y-e.y)<e.radius)return true;

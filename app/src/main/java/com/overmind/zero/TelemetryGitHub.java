@@ -135,7 +135,15 @@ final class TelemetryGitHub {
         result.put("schema","overmind-zero-telemetry-v1");
         result.put("recordedAtUtc",System.currentTimeMillis());
         result.put("source","ANDROID_EXPLICIT_SHARE");
-        result.put("gameplayBaseline","ZERO 0.11.4 behavior; no 0.11.5 pain change");
+        result.put("gameplayBaseline",Boolean.TRUE.equals(all.get(SymbioteMatterV1.ENABLED))?
+            "ZERO 2.2 / symbiote integrated sensorimotor runtime 171":"ZERO historical material runtime");
+        android.content.pm.PackageInfo installed=c.getPackageManager().getPackageInfo(c.getPackageName(),0);
+        result.put("runtimeRevision","sensorimotor-171");
+        result.put("installedVersionName",installed.versionName);
+        result.put("installedVersionCode",android.os.Build.VERSION.SDK_INT>=28?
+            installed.getLongVersionCode():installed.versionCode);
+        result.put("predictionDiagnostic",Boolean.TRUE.equals(all.get(SymbioteMatterV1.ENABLED))?
+            "active recurrent 164D predictor in active_recurrent_diagnostics_v171; legacy journal separate":"legacy 26D predictor");
         result.put("liveProfileKeys",copied);
         result.put("dataPolicy","Current ZERO working game data only; no named slots, device identifiers, private contacts, user account, or GitHub token");
         result.put("currentZero",values);
@@ -402,6 +410,8 @@ final class TelemetryGitHub {
         index.put("source",data.getString("source"));
         index.put("dataPolicy",data.getString("dataPolicy"));
         index.put("gameplayBaseline",data.getString("gameplayBaseline"));
+        for(String meta:new String[]{"runtimeRevision","installedVersionName","installedVersionCode","predictionDiagnostic"})
+            if(data.has(meta))index.put(meta,data.get(meta));
         index.put("liveProfileKeys",data.getInt("liveProfileKeys"));
         index.put("currentZero",inline);
         index.put("parts",entries);
