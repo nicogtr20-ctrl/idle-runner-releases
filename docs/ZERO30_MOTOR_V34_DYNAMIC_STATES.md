@@ -60,3 +60,31 @@ Il test aggiuntivo \`Zero3MotorClosedLoopRegression\` non giudica un singolo imp
 **Attenzione:** il kernel è inizialmente allenato su coppie fisiche precedenti, **non impara ancora nuove competenze durante le 80 decisioni di ciascuna vita**. La direzione fissa esiste solo nel laboratorio. Anche se il pilota ha valori positivi non si deve dichiarare G3 superato: manca l'apprendimento durante una vita, memoria, generalizzazione ambientale e reale scelta autonoma di obiettivi. Nessuna implementazione GameActivity/OTA.
 
 **Risultati del ciclo chiuso:** da aggiungere dopo il completamento e la lettura integrale del relativo log GitHub. La CI compilata non equivale al gate di apprendimento superato.
+
+
+## RISULTATO CRITICO: IL PILOTA A CICLO CHIUSO NON SUPERA IL GATE
+
+**[GitHub Actions 38977817743 — SUCCESS tecnico, FAIL qualitativo motorio](https://github.com/nicogtr20-ctrl/idle-runner-releases/actions/runs/38977817743).**
+
+\`Zero3MotorClosedLoopRegression.java\` ha verificato 16 condizioni fisiche (4 intenzioni di laboratorio × 2 pose × 2 stati iniziali), **80 decisioni consecutive per ciascun controllo** con stesso organismo senza reset all'interno della sequenza, 60 frame/decisione. Per ogni condizione confronto baseline normale (corteccia senza perturbazione extra) vs kernel predittivo che propone un impulso locale a ogni decisione previa calibrazione. **Le 80 decisioni sono in serie, non 80 episodi indipendenti.** Il kernel NON aggiorna i suoi parametri durante il test.
+
+| Misura aggregata, 16 condizioni | Baseline senza aggiunta | Modello guidato a ogni decisione |
+|---|---:|---:|
+| Somma spostamento firmato lungo intenzione (U) | **+164,8396** | **+34,8890** |
+| Lavoro muscolare cumulativo | **1,24822** | **1,46557** |
+| Condizioni in miglioramento entro tolleranza costo | — | **4/16** |
+| Riparazioni topologiche osservate | 0 | 0 |
+
+Esempio di regressione: \`Nord -Y, posa 0°, condizione iniziale 0\`: baseline \`-3,992 U\`, modello \`-29,763 U\`; lavoro \`0,07331\` vs \`0,08830\`. Alcune situazioni migliorano (Est +X in posa 0°, Sud +Y in posa 45°), ma la generalizzazione è **insufficiente**.
+
+**Interpretazione obbligatoria:** il precedente 24/24 (impulsi isolati sul corpo precondizionato) NON era una dimostrazione di controllo sequenziale. La policy che riapplica il miglior impulso locale a ogni decisione provoca spesso deriva o lotta contro le altre contrazioni, pur mantenendo il corpo fisicamente valido. **Questo algoritmo NON VA COLLEGATO al gameplay.** Lo stato G3 rimane BLOCCATO, non promuovere alcuna abilità.
+
+### Come proseguire — diagnosi concreta
+
+1. Misurare la **coda temporale degli effetti** di una contrazione ben oltre i 48 frame di assestamento, includendo l'inerzia del corpo già in movimento. Senza questo, il predittore ignora le conseguenze residue quando è scelta la prossima azione.
+2. Introdurre uno **stato motorio osservabile e un temporizzatore di credito** che non consenta di attribuire esiti non conclusi alla prossima contrazione. La latenza è un limite fisico misurabile, NON una andatura precodificata.
+3. Testare esplorazione con **pochi impulsi adattivi, non spinta ogni decisione**, confrontata con baseline senza impulsi e con stessa energia. Scoprire se migliora l'allineamento senza costo netto maggiore, in pose e scene differenti.
+4. Rendere il modello predittivo **state-/history-conditioned**, con velocità, strain e contatti, e apprendere dalle conseguenze effettivamente post-fisica anche tra decisioni. Non proporre patch "tutti i muscoli verso obiettivo" o attrazioni artificiali.
+5. Prima della futura integrazione, dimostrare **A/B su molte vite con scelte autonome**, skills persistenti e criterio multi-seed. Nessun OTA, nessuna sostituzione delle schermate 2.2.
+
+**Conclusione documentale:** la capacità di prevedere un impulso localizzato e quella di controllare un organismo distribuito in sequenza sono due cose diverse; la prima è supportata da dati, **la seconda oggi è smentita dal benchmark**.
