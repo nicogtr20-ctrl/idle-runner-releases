@@ -32,6 +32,11 @@ public final class Zero3MotorClosedLoopRegression {
     static Metrics run(Zero3MotorResponseKernel.Predictor predictor,
                        int heading,float orientation,int initialCondition,
                        boolean guided,float referenceAxis){
+        return run(predictor,heading,orientation,initialCondition,guided,referenceAxis,0);
+    }
+    static Metrics run(Zero3MotorResponseKernel.Predictor predictor,
+                       int heading,float orientation,int initialCondition,
+                       boolean guided,float referenceAxis,int settlingFrames){
         Zero3MotorImpulseResponseRegression.Scenario initial=
             new Zero3MotorImpulseResponseRegression.Scenario(
                 heading,orientation,initialCondition);
@@ -43,12 +48,20 @@ public final class Zero3MotorClosedLoopRegression {
         Metrics metrics=new Metrics();
         final float dx=DIR[heading][0],dy=DIR[heading][1];
         double priorWork=gel.work;
+        Zero3MotorCreditWindow credit=settlingFrames==0?null:
+            new Zero3MotorCreditWindow(settlingFrames);
         for(int d=0;d<STEPS;d++){
             float observedPose=Zero3MotorResponseKernel.relativePose(
                 Zero3MotorResponseKernel.membraneAxis(body,skin),referenceAxis);
-            Zero3MotorResponseKernel.Suggestion p=guided?
+            boolean ready=credit==null||credit.mayExplore((long)d*FRAMES);
+            Zero3MotorResponseKernel.Suggestion p=guided&&ready?
                 predictor.suggest(dx,dy,observedPose,REGIONS,.005):null;
-            if(p!=null)metrics.proposals++;
+            if(p!=null){
+                if(credit!=null)
+                    check(credit.begin(d,(long)d*FRAMES,body.cx,body.cy,gel.work),
+                        "overlapping muscle intervention accepted");
+                metrics.proposals++;
+            }
             float oldX=body.cx,oldY=body.cy;
             float[] command=null;
             for(int f=0;f<FRAMES;f++){
@@ -57,6 +70,8 @@ public final class Zero3MotorClosedLoopRegression {
                     Zero3MotorResponseKernel.applyLocalPulse(command,p,.20f);
                 float prevX=body.cx,prevY=body.cy;
                 gel.step(body,skin,command,DT);
+                if(credit!=null)
+                    credit.observe((long)d*FRAMES+f,body.cx,body.cy,gel.work);
                 check(gel.invalid==0&&Float.isFinite(body.cx)&&
                       Float.isFinite(body.cy)&&MaterialGeometry.selfCrossings(skin)==0,
                       "physical invalid at decision="+d+" frame="+f);
