@@ -1,4 +1,7 @@
 # OVERMIND ZERO — MASTER PROJECT ZERO 3.0
+
+> **TEST 2.000 ESPERIENZE VERIFICATI:** [Report completo motorio e autonomo, checkpoint 400/1000/2000](docs/ZERO30_LONG_HORIZON_2000_20261017.md). **G3 ANCORA BLOCCATO**: a 2.000 decisioni la corteccia non supera il vergine in nessuna delle 4 direzioni nella postura iniziale; misure coerenti ma negative. Nessun OTA V3.
+
 > **APPRENDIMENTO MOTORIO V3.1 (ATTUALIZZAZIONE 16/10/2026):** [Documento tecnico, prove A/B, risultati e limiti](docs/ZERO30_MOTOR_V31_ENGINEERING.md). Il modello online iniziale è stato **rifiutato dal gate indipendente**; il progetto ricerca un apprendimento motorio effettivamente più efficace. Nessun OTA ZERO3 pubblicato.
 
 > **SVILUPPO ZERO 3.0 IN CORSO:** [Stato reale, primi moduli Java, benchmark 400 esperienze e prossimi gate](docs/ZERO30_BUILD_STATUS_20261016.md) · [PR sperimentale #87 (DRAFT, non pubblicare OTA)](https://github.com/nicogtr20-ctrl/idle-runner-releases/pull/87).
