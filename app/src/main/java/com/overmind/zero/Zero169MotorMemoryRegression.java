@@ -95,13 +95,13 @@ public final class Zero169MotorMemoryRegression {
             saved.equals(copied.encode()),
             "invalid neural skill snapshot was accepted");
 
+        MotorBrain.Body failedBody=new MotorBrain.Body();
+        Morphology.Surface failedSkin=new Morphology.Surface(failedBody);
         for(int i=0;i<4;i++){
             copied.begin(action,mutated,failedBody,failedSkin);
             // No physical displacement; no fabricated success.
             copied.finish(false,false,0f);
         }
-        MotorBrain.Body failedBody=new MotorBrain.Body();
-        Morphology.Surface failedSkin=new Morphology.Surface(failedBody);
         ok(copied.recoverIfStalled((action+1)%16,mutated,
             failedBody,failedSkin)==null,
             "skill recall overrode an unrelated brain-selected direction");
