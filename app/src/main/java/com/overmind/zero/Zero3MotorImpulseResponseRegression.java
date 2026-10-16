@@ -15,7 +15,7 @@ import java.util.Locale;
  * No walking gait is hardcoded; this is an isolated controllability test.
  */
 public final class Zero3MotorImpulseResponseRegression {
-    private static final int F=22, OUTPUTS=3;
+    private static final int F=42, OUTPUTS=3;
     private static final int WARMUP=12, PULSE=12, SETTLE=48;
     private static final float DT=.025f,AMP=.20f;
     private static final float[][] DIRS={{1,0},{0,1},{-1,0},{0,-1}};
@@ -83,19 +83,37 @@ public final class Zero3MotorImpulseResponseRegression {
         double signedResponse(){return early+late;}
         double usefulScore(){return signedResponse()-45*Math.max(0,extraWork);}
     }
+    /**
+     * Physically motivated, rotationally aware descriptors. A muscle sector
+     * is not a fixed world compass heading: use the body's current orientation
+     * to project local radial/tangent axes onto a voluntary intent.
+     *
+     * Channel-interaction terms let adhesion and radial/tangential responses
+     * differ; no learned gait or resource coordinates are encoded.
+     */
     private static double[] features(int dir,float pose,int sector,int channel,int sign){
-        double[] x=new double[F];x[0]=1;
+        double[] x=new double[F];
         double dx=DIRS[dir][0],dy=DIRS[dir][1];
         double sn=Math.sin(pose),cs=Math.cos(pose);
         double local=(sector+.5)*Math.PI*2/16;
-        double sx=Math.cos(local),sy=Math.sin(local);
+        double world=local+pose;
+        double wx=Math.cos(world),wy=Math.sin(world);
+        double radial=wx*dx+wy*dy;
+        double tangent=-wy*dx+wx*dy;
+        x[0]=1;
         x[1]=dx;x[2]=dy;x[3]=sn;x[4]=cs;
         x[5+channel]=1;
-        x[9]=sx;x[10]=sy;x[11]=sign;
+        x[9]=wx;x[10]=wy;x[11]=sign;
         x[12]=sign*dx;x[13]=sign*dy;
         x[14]=sign*sn;x[15]=sign*cs;
-        x[16]=sign*sx;x[17]=sign*sy;
+        x[16]=sign*wx;x[17]=sign*wy;
         x[18+channel]=sign;
+        x[22]=radial;x[23]=tangent;
+        x[24]=sign*radial;x[25]=sign*tangent;
+        x[26+channel]=sign*radial;
+        x[30+channel]=sign*tangent;
+        x[34+channel]=sign*wx;
+        x[38+channel]=sign*wy;
         return x;
     }
     private static Trial physical(int dir,float pose,int sector,int channel,int sign){
