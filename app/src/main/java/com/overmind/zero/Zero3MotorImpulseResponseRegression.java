@@ -123,43 +123,11 @@ public final class Zero3MotorImpulseResponseRegression {
             this.channel=channel;polarity=sign;
             this.early=early;this.late=late;extraWork=cost;grossDelta=gross;
             delayedFraction=Math.abs(late)/(1e-9+Math.abs(early)+Math.abs(late));
-            features=features(dir,pose,sector,channel,sign);
+            features=Zero3MotorResponseKernel.encode(DIRS[dir][0],DIRS[dir][1],
+                pose,sector,channel,sign);
         }
         double signedResponse(){return early+late;}
         double usefulScore(){return signedResponse()-45*Math.max(0,extraWork);}
-    }
-    /**
-     * Physically motivated, rotationally aware descriptors. A muscle sector
-     * is not a fixed world compass heading: use the body's current orientation
-     * to project local radial/tangent axes onto a voluntary intent.
-     *
-     * Channel-interaction terms let adhesion and radial/tangential responses
-     * differ; no learned gait or resource coordinates are encoded.
-     */
-    private static double[] features(int dir,float pose,int sector,int channel,int sign){
-        double[] x=new double[F];
-        double dx=DIRS[dir][0],dy=DIRS[dir][1];
-        double sn=Math.sin(pose),cs=Math.cos(pose);
-        double local=(sector+.5)*Math.PI*2/16;
-        double world=local+pose;
-        double wx=Math.cos(world),wy=Math.sin(world);
-        double radial=wx*dx+wy*dy;
-        double tangent=-wy*dx+wx*dy;
-        x[0]=1;
-        x[1]=dx;x[2]=dy;x[3]=sn;x[4]=cs;
-        x[5+channel]=1;
-        x[9]=wx;x[10]=wy;x[11]=sign;
-        x[12]=sign*dx;x[13]=sign*dy;
-        x[14]=sign*sn;x[15]=sign*cs;
-        x[16]=sign*wx;x[17]=sign*wy;
-        x[18+channel]=sign;
-        x[22]=radial;x[23]=tangent;
-        x[24]=sign*radial;x[25]=sign*tangent;
-        x[26+channel]=sign*radial;
-        x[30+channel]=sign*tangent;
-        x[34+channel]=sign*wx;
-        x[38+channel]=sign*wy;
-        return x;
     }
     static Trial physical(int dir,float pose,int sector,int channel,int sign){
         return physical(dir,pose,sector,channel,sign,0);
@@ -192,58 +160,32 @@ public final class Zero3MotorImpulseResponseRegression {
                          probe.gross-base.gross);
     }
     /** Fixed-size ridge least squares; only physically observed training pairs. */
+    /** Adapter used by historical regressions. Fit and inference now go
+     * through the SAME reusable V3 response module; not a duplicate solver. */
     static final class ResponseModel {
-        final double[][] weights=new double[OUTPUTS][F];
+        final Zero3MotorResponseKernel.Predictor kernel;
         ResponseModel(ArrayList<Trial> training){
-            double[][] gram=new double[F][F];
-            double[][] target=new double[OUTPUTS][F];
-            for(Trial t:training){
-                double[] x=t.features;
-                double[] ys={t.early,t.late,1000*t.extraWork};
-                for(int j=0;j<F;j++){
-                    for(int k=0;k<F;k++)gram[j][k]+=x[j]*x[k];
-                    for(int o=0;o<OUTPUTS;o++)target[o][j]+=x[j]*ys[o];
-                }
+            ArrayList<Zero3MotorResponseKernel.PhysicalSample> rows=new ArrayList<>();
+            for(int i=0;i<training.size();i++){
+                Trial t=training.get(i);
+                rows.add(new Zero3MotorResponseKernel.PhysicalSample(
+                    t.features,t.early,t.late,t.extraWork,300,i,72,false));
             }
-            for(int o=0;o<OUTPUTS;o++){
-                double[][] regularized=new double[F][F];
-                for(int j=0;j<F;j++){
-                    System.arraycopy(gram[j],0,regularized[j],0,F);
-                    regularized[j][j]+=.5; // regularization controls overfit
-                }
-                weights[o]=solve(regularized,target[o]);
-            }
+            kernel=new Zero3MotorResponseKernel.Predictor(rows,.5);
         }
-        double[] infer(Trial t){
-            double[] p=new double[OUTPUTS];
-            for(int i=0;i<OUTPUTS;i++){
-                for(int j=0;j<F;j++)p[i]+=weights[i][j]*t.features[j];
+        boolean calibrate(ArrayList<Trial> samples){
+            ArrayList<Zero3MotorResponseKernel.PhysicalSample> rows=new ArrayList<>();
+            for(int i=0;i<samples.size();i++){
+                Trial t=samples.get(i);
+                rows.add(new Zero3MotorResponseKernel.PhysicalSample(
+                    t.features,t.early,t.late,t.extraWork,301,i,72,false));
             }
-            p[2]/=1000;
-            return p;
+            return kernel.calibrate(rows);
         }
-    }
-    private static double[] solve(double[][] a,double[] rhs){
-        final int n=rhs.length;
-        double[] b=rhs.clone();
-        for(int pivot=0;pivot<n;pivot++){
-            int best=pivot;
-            for(int r=pivot+1;r<n;r++)
-                if(Math.abs(a[r][pivot])>Math.abs(a[best][pivot]))best=r;
-            double[] sw=a[pivot];a[pivot]=a[best];a[best]=sw;
-            double v=b[pivot];b[pivot]=b[best];b[best]=v;
-            assertTrue(Math.abs(a[pivot][pivot])>1e-10,"singular regression");
-            double div=a[pivot][pivot];
-            for(int col=pivot;col<n;col++)a[pivot][col]/=div;
-            b[pivot]/=div;
-            for(int r=0;r<n;r++){
-                if(r==pivot)continue;
-                double scale=a[r][pivot];
-                for(int col=pivot;col<n;col++)a[r][col]-=scale*a[pivot][col];
-                b[r]-=scale*b[pivot];
-            }
+        double[] infer(Trial trial){
+            Zero3MotorResponseKernel.Consequence c=kernel.predictRaw(trial.features);
+            return new double[]{c.immediate,c.delayed,c.extraWork};
         }
-        return b;
     }
     private static boolean printError(ResponseModel m,ArrayList<Trial> holdout,String label){
         double[] mse=new double[OUTPUTS],zero=new double[OUTPUTS],delayAbs=new double[2];
@@ -297,7 +239,9 @@ public final class Zero3MotorImpulseResponseRegression {
         ResponseModel model=new ResponseModel(training);
         // Only the dedicated calibration poses are allowed to accept the model
         // as usable. The final 45/67.5-degree poses do NOT select the gate.
-        boolean calibrated=printError(model,calibration,"CALIBRATION_22_5");
+        boolean calibrated=model.calibrate(calibration);
+        boolean probePass=printError(model,calibration,"CALIBRATION_22_5");
+        assertTrue(probePass==calibrated,"calibration and inference mismatch");
         printError(model,holdout,"BLIND_45_67_5");
         System.out.println("ZERO3 IMPULSE CALIBRATION GATE="+
             (calibrated?"ACCEPTED_FOR_LAB_ONLY":"REJECTED")+
