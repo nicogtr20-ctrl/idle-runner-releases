@@ -345,6 +345,9 @@ public final class SymbioteMotorSkillMemoryV169 {
         float[] context=bodyContext(body,skin);
         // Count must correspond to four ACTUALLY CONSECUTIVE outcomes on the
         // same action in this same life; gaps or other intents break the run.
+        if(chosen!=failedAction){
+            badStreak=0;failedAction=-1;
+        }
         if(chosen<0||chosen>=A||failedAction!=chosen||badStreak<4||
            cooldown>0||recoveryOriginal!=null||context==null||
            !valid(current))return null;
