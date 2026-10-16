@@ -1058,6 +1058,10 @@ public final class GameActivity extends Activity {
                     System.arraycopy(creature.x,0,squarePrevBodyX,0,MotorBrain.N);
                     System.arraycopy(creature.y,0,squarePrevBodyY,0,MotorBrain.N);
                     float oldCoreX=creature.cx,oldCoreY=creature.cy;
+                    // True motor impulse from physical fluid reactions,
+                    // recorded BEFORE the external collision solver runs.
+                    float witnessedMuscleImpulse=0f;
+                    float uncorrectedX=oldCoreX,uncorrectedY=oldCoreY;
                     if(useSymbiote&&symMatter!=null&&symMotor!=null){
                         // Keep OTA148/151 physics EXACTLY unchanged. Cortex
                         // work is an actually measured material quantity;
@@ -1066,6 +1070,8 @@ public final class GameActivity extends Activity {
                         // No positive feedback for distance or deformation.
                         float workBefore=symMatter.work;
                         symMatter.step(creature,surface,symMotor.commands(),slice);
+                        witnessedMuscleImpulse=symMatter.lastMuscleReactionImpulse;
+                        uncorrectedX=creature.cx;uncorrectedY=creature.cy;
                         float freshWork=Math.max(0f,symMatter.work-workBefore);
                         if(Float.isFinite(freshWork)&&freshWork>0f){
                             // Physical work -> resource units calibration.
@@ -1347,8 +1353,16 @@ public final class GameActivity extends Activity {
                     // OTA162: real actuator credit from the same completed
                     // material frame, after box/door collisions and object motion.
                     // No new physical force or action chooser. Exclude respawns.
-                    if(lifeStamp==episode&&useSymbiote&&symMotor!=null)
-                        symMotor.observedPhysicalStep(oldCoreX,oldCoreY,creature,surface);
+                    if(lifeStamp==episode&&useSymbiote&&symMotor!=null){
+                        boolean externalDisturbance=
+                            (float)Math.hypot(creature.cx-uncorrectedX,
+                                creature.cy-uncorrectedY)>.08f||
+                            environmentEffectSinceAction>worldEffectAtFrameStart+.03f||
+                            shelter.storm(worldTime);
+                        symMotor.observedPhysicalStep(oldCoreX,oldCoreY,
+                            creature,surface,witnessedMuscleImpulse,
+                            externalDisturbance);
+                    }
                     // The journal observes the lived world, never suggests a
                     // destination to ZERO. Do not count death/respawn as travel.
                     if(lifeStamp==episode){
