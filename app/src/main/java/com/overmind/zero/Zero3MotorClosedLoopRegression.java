@@ -37,6 +37,13 @@ public final class Zero3MotorClosedLoopRegression {
     static Metrics run(Zero3MotorResponseKernel.Predictor predictor,
                        int heading,float orientation,int initialCondition,
                        boolean guided,float referenceAxis,int settlingFrames){
+        return run(predictor,heading,orientation,initialCondition,
+            guided,referenceAxis,settlingFrames,false);
+    }
+    static Metrics run(Zero3MotorResponseKernel.Predictor predictor,
+                       int heading,float orientation,int initialCondition,
+                       boolean guided,float referenceAxis,int settlingFrames,
+                       boolean adaptive){
         Zero3MotorImpulseResponseRegression.Scenario initial=
             new Zero3MotorImpulseResponseRegression.Scenario(
                 heading,orientation,initialCondition);
@@ -50,10 +57,16 @@ public final class Zero3MotorClosedLoopRegression {
         double priorWork=gel.work;
         Zero3MotorCreditWindow credit=settlingFrames==0?null:
             new Zero3MotorCreditWindow(settlingFrames);
+        if(adaptive&&credit==null)throw new IllegalArgumentException("feedback needs delayed observation");
+        Zero3MotorAdaptiveGate veto=adaptive?
+            new Zero3MotorAdaptiveGate(settlingFrames,1.0,1.15):null;
+        if(veto!=null)veto.start(body.cx,body.cy,gel.work,dx,dy);
+        long processed=0;
         for(int d=0;d<STEPS;d++){
             float observedPose=Zero3MotorResponseKernel.relativePose(
                 Zero3MotorResponseKernel.membraneAxis(body,skin),referenceAxis);
-            boolean ready=credit==null||credit.mayExplore((long)d*FRAMES);
+            boolean ready=(credit==null||credit.mayExplore((long)d*FRAMES))&&
+                (veto==null||veto.mayTry());
             Zero3MotorResponseKernel.Suggestion p=guided&&ready?
                 predictor.suggest(dx,dy,observedPose,REGIONS,.005):null;
             if(p!=null){
@@ -70,8 +83,18 @@ public final class Zero3MotorClosedLoopRegression {
                     Zero3MotorResponseKernel.applyLocalPulse(command,p,.20f);
                 float prevX=body.cx,prevY=body.cy;
                 gel.step(body,skin,command,DT);
-                if(credit!=null)
-                    credit.observe((long)d*FRAMES+f,body.cx,body.cy,gel.work);
+                if(credit!=null){
+                    long globalFrame=(long)d*FRAMES+f;
+                    credit.observe(globalFrame,body.cx,body.cy,gel.work);
+                    if(veto!=null){
+                        if(!veto.baselineReady())
+                            veto.observeBaseline((int)globalFrame+1,body.cx,body.cy,gel.work);
+                        if(credit.completedCount()>processed){
+                            veto.acceptObserved(credit.lastCompleted());
+                            processed=credit.completedCount();
+                        }
+                    }
+                }
                 check(gel.invalid==0&&Float.isFinite(body.cx)&&
                       Float.isFinite(body.cy)&&MaterialGeometry.selfCrossings(skin)==0,
                       "physical invalid at decision="+d+" frame="+f);
