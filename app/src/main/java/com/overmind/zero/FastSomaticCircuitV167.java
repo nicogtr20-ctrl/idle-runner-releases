@@ -39,6 +39,11 @@ public final class FastSomaticCircuitV167 {
     public float parameterAt(int i){return weights[i];}
     /** Protected neural snapshot; never includes random motor exploration. */
     public float[] copySkillWeights(){return weights.clone();}
+    public void writeSkillWeights(float[] destination,int offset){
+        if(destination==null||offset<0||destination.length-offset<PARAMETERS)
+            throw new IllegalArgumentException("Motor snapshot shape");
+        System.arraycopy(weights,0,destination,offset,PARAMETERS);
+    }
     /** Adopt ONLY verified historical synapses, not another brain decision.
      * Preserve all true trained/heldout counters and metabolic baselines. */
     public boolean installVerifiedSkill(float[] learned){
