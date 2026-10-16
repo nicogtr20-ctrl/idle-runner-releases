@@ -97,3 +97,28 @@ Il modulo sperimentale \`Zero3MotorResponseKernel.Predictor\` ora mantiene **ide
 **[CI 38978039795 — SUCCESS](https://github.com/nicogtr20-ctrl/idle-runner-releases/actions/runs/38978039795)** conferma la regressione contro fuga train→calibration e doppia verifica, oltre a 24/24 casi dinamici. **Questo certifica l'integrità del sistema di misure, non la locomozione.** Le tre proprietà sono comunque utili quando si introdurrà il vero meccanismo di credito online.
 
 La nuova prova \`Zero3MotorTailLatencyRegression\` misura gli effetti residuali fino a **360 frame dopo la contrazione**, sempre con due corpi e le stesse effettive forze del solver; risultati quantitativi da riportare dal CI una volta verificati. Nessun intervento di quel laboratorio è una camminata predefinita: serve a costruire una timeline causale con latenza sufficiente e prevenire gratificazioni premature.
+
+
+## PROVA TEMPORALE VERIFICATA — LA CODA DEL MOVIMENTO CAMBIA IL SEGNO E IL CREDITO
+
+**[GitHub Actions 38978287412 — SUCCESS tecnico](https://github.com/nicogtr20-ctrl/idle-runner-releases/actions/runs/38978287412)**, codice \`Zero3MotorTailLatencyRegression.java\`, vera fisica del corpo, 16 coppie controllo/intervento (4 direzioni × 2 orientamenti × 2 condizioni iniziali). Impulso singolo limitato a 12 frame dopo 12 frame di assestamento; confronto del delta spostamento firmato vs controllo inalterato **alla fine dell'impulso, dopo 48, 120, 240 e 360 frame**. Non è una strategia motoria.
+
+- **13/16** coppie cambiano di più di **0,1 unità fisiche** dopo il checkpoint a +48 frame.
+- **2/16** coppie **invertono il segno** dello spostamento attribuibile all'impulso tra +48 e +360 frame.
+- Somma dei delta firmati a +48 frame **+8,62372 U**; a +360 frame **+5,67202 U**.
+- Ampiezza media assoluta della variazione successiva a +48 frame **0,26688 U per condizione**.
+
+Esempi fattuali:
+- Intento Ovest −X, posa iniziale 0°, condizione 2: a +48 il segnale del muscolo è **+0,57160 U**, ma a +360 scende a **−0,00067 U** (il suo segno si inverte). Dunque un segnale di successo precoce può diventare inutile/negativo.
+- Intento Nord −Y, posa 45°, condizione 0: **+0,40793 U** a +48, poi **−0,17915 U** a +360, inversione netta.
+
+**Interpretazione tecnica:** un premio motorio assegnato dopo il solo intervallo +48 è **prematuro in molte condizioni osservate**. Un altro impulso emesso mentre la prima perturbazione ha ancora conseguenze contamina l'attribuzione temporale. **Questa è evidenza misurata di un problema di timing del credito**, non prova unica o sufficiente che spieghi tutti i fallimenti: potrebbero aggiungersi saturazioni del gel, cambiamento della postura, scelta delle intenzioni e costi. Non interpretare +360 come durata massima certificata della risposta (l'esperimento si interrompe lì).
+
+### ADR ZERO3-M34 — prossima correzione da implementare/testare
+1. Esplicitare intervallo pending tra inizi della perturbazione e fine della finestra osservata; **non ricompensare il muscolo sul solo movimento immediato**.
+2. Se la finestra non è conclusa, bloccare nuove perturbazioni esplorative dello stesso tipo (lasciare la normale contrazione endogena del cervello), senza imporre andature o direzioni.
+3. Confrontare un controllore con finestre di credito adeguate contro versione che interviene sempre e contro baseline senza extra contrazione; registrare tradeoff energia, precisione e opportunità di intervento.
+4. Riprogettare le predizioni usando lo **stato corporeo pre-azione e la storia delle azioni**, non il solo angolo e un modello di impulsi di 48 frame.
+5. Solo con prestazioni migliori su più pose/stati/seed, collegare la previsione al controller 3.0; poi allenamento da vera esperienza, memorie, salvataggio, UI e test Galaxy S21.
+
+**Non dichiarare G3 o la nuova versione pronti.** Il test a ciclo chiuso attuale resta **4/16** condizioni migliorate, costo maggiore, e nessun OTA V3.
