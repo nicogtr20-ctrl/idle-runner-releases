@@ -1,5 +1,8 @@
 # ZERO 3.0 — MOTOR LEARNING V3.1: DIAGNOSI, CORREZIONI SPERIMENTALI, TEST E HANDOFF
 
+> **TEST 2.000 ESPERIENZE VERIFICATI:** [Report completo motorio e autonomo, checkpoint 400/1000/2000](ZERO30_LONG_HORIZON_2000_20261017.md). **G3 ANCORA BLOCCATO**: a 2.000 decisioni la corteccia non supera il vergine in nessuna delle 4 direzioni nella postura iniziale; misure coerenti ma negative. Nessun OTA V3.
+
+
 **Stato:** SVILUPPO SPERIMENTALE; nessuna attivazione in gameplay, nessuna nuova OTA.  
 **Sorgente:** [feature/zero30-foundation-g0-g3-20261016](https://github.com/nicogtr20-ctrl/idle-runner-releases/tree/feature/zero30-foundation-g0-g3-20261016).  
 **Review protetta:** [PR #87 — DRAFT, non fare merge sul ramo publisher OTA](https://github.com/nicogtr20-ctrl/idle-runner-releases/pull/87).  
