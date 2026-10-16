@@ -1,6 +1,7 @@
 package com.overmind.zero;
 
 import java.util.Locale;
+import java.util.Arrays;
 
 /**
  * G3 holdout: compares the EXACT same initial body and physical solver
@@ -60,10 +61,11 @@ public final class Zero3MotorRetentionRegression {
             Zero3LearningFoundation.AdaptiveCortex cold=trained.forkForEvaluation();
             Zero3LearningFoundation.AdaptiveCortex virgin=
                 new Zero3LearningFoundation.AdaptiveCortex();
+            float[] beforeHoldout=cold.weights();
             Measures scoreTrain=session(cold,intent[0],intent[1],EVAL_DECISIONS,false);
             Measures scoreVirgin=session(virgin,intent[0],intent[1],EVAL_DECISIONS,false);
-            if(cold.updates()!=trained.updates())
-                throw new AssertionError("eval mutated training updates");
+            if(cold.updates()!=0||!Arrays.equals(beforeHoldout,cold.weights()))
+                throw new AssertionError("holdout evaluation mutated weights");
             if(virgin.updates()!=0)throw new AssertionError("virgin control trained");
             if(scoreTrain.forward>scoreVirgin.forward)improved++;
             totalLearn+=scoreTrain.forward;totalVirgin+=scoreVirgin.forward;
