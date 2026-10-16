@@ -1,5 +1,8 @@
 # ZERO 3.0 — CONTRATTO DI IMPLEMENTAZIONE, TEST E HANDOFF TRA CHAT
 
+> **ESITO V3.6 VERIFICATO:** [Predizione muscolare a 384 frame su 1.024 coppie fisiche](ZERO30_MOTOR_V36_LONG_HORIZON.md): il modello 52 sensori migliora la previsione ma **non supera il gate di generalizzazione del 10% sui risultati ritardati** (miglioramento 7,28%). Nessun nuovo cervello 3.0 attivo, **G3 BLOCCATO e nessun OTA**.
+
+
 > **ESITO V3.5 VERIFICATO:** [32 test a ciclo chiuso](ZERO30_MOTOR_V35_ADAPTIVE_CREDIT.md) — astensione adattiva supera leggermente lo spostamento aggregato senza impulsi, ma **consuma di più e migliora soltanto 6/16 condizioni nuove**. **G3 NON SUPERATO, ZERO 3.0 NON ATTIVO E NESSUNA OTA.**
 
 
