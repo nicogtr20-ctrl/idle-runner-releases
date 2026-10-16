@@ -1,4 +1,5 @@
 name: Verify LIVE OVERMIND OTA delivery
+# ZERO OTA169 — independent HTTPS signed APK byte/hash/package verification after new motor-memory archive.
 # ZERO OTA168 — independently fetch signed production APK, verify exact SHA256, bytes and application ID.
 # OTA167: independently fetch publicly signed APK and validate byte size, SHA-256 and applicationId.
 # OTA166 — independent public signed APK bytes, SHA-256 and manifest release gate.
