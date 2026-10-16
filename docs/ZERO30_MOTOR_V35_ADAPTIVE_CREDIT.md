@@ -36,3 +36,25 @@ Nessun numero di utilità del set unseen deve cambiare **retroattivamente** la r
 ## 4. Risultati effettivi
 
 CI avviata: [GitHub Actions ZERO3 motor QA](https://github.com/nicogtr20-ctrl/idle-runner-releases/actions), sul ramo feature, da registrare qui con numeri esatti e PASS/FAIL qualità. **G3 non superato finché non esiste evidenza positiva di vera locomozione autonoma.**
+
+
+## 5. Risultati VERIFICATI — GitHub Actions 38980285846
+
+**[CI ZERO3 motor QA 38980285846: SUCCESS](https://github.com/nicogtr20-ctrl/idle-runner-releases/actions/runs/38980285846)**. Test effettivamente eseguiti sul vero solver: calibrato il predittore, ripetute le prove di risposta e credito V3.4, poi 32 comparazioni con **80 decisioni consecutive per braccio per condizione**. Sviluppo su branch sperimentale, non APK V3.
+
+| Batteria | Controllo senza impulsi: forward, lavoro | Intervallo fisso 384: forward, lavoro | Nuova astensione adattiva: forward, lavoro | Casi adattivi migliorati sulla baseline entro costo |
+|---|---|---|---|---|
+| SCREEN: 16 condizioni vecchie | **+164,83965 U**, **1,248223** | +163,08493 U, 1,279668 | **+165,55224 U**, **1,264525** | **10/16** |
+| UNSEEN_POSE_STATE: 16 condizioni pose 30°/60°, condizioni fisiche 1/3 | **+160,33313 U**, **1,246740** | +163,01742 U, 1,279571 | **+163,31613 U**, **1,261322** | **6/16** |
+
+**Quantità di perturbazioni**: SCREEN 192 con pausa fissa vs **102 adattative**; NUOVE 192 vs **92 adattative**. In tutti i 32 casi l'astensione consuma meno lavoro della perturbazione fissa, grazie a meno impulsi; resta però **più costosa della baseline senza impulsi** (+0,016302 e +0,014582 complessivi rispettivamente). Il guadagno di distanza firmata sulla baseline è **+0,71259 U** nel set SCREEN e **+2,98300 U** nelle 16 nuove pose/stati.
+
+**Cosa si può dire:** la regola conservativa usa osservazioni post-fisica per rifiutare esperimenti successivi e mitiga il danno dovuto alla ripetizione sistematica. La metrica aggregata migliora leggermente in entrambe le batterie, ma nelle condizioni finali soltanto 6/16 migliorano entro il vincolo energetico. **Non supera il gate qualitativo preregistrato**: costo totale superiore al controllo normale, prestazione non ripetibilmente migliore. Non autorizza l'utilizzo nel vero cortex né un'abilità memorizzata.
+
+**Cosa NON si può dire:** non abbiamo dimostrato apprendibilità autonoma di gait, né migliore sopravvivenza, né vera causalità per la differenza del feedback osservativo. Lo stesso mondo materiale e poche condizioni non bastano per multiseed. **Il mondo è ancora privo di gemme, ostacoli, attriti variabili e collisioni sconosciute in queste prove.**
+
+### Prossima decisione scientifica
+
+Non ottimizzare queste soglie sulla stessa batteria già visionata. L'orizzonte di previsione originale del kernel è di soli 48 frame dopo l'impulso, mentre **13/16** prove temporali hanno cambiato risposta oltre +48 frame e **2/16** invertono il segno entro +360. Occorre **predire conseguenze a un orizzonte fisico adeguato (384 frame)**, condizionandole su velocità, deformazione e stato della membrana, e validarle su altri corpi/pose/situazioni indipendenti **prima** di generare un controllore a ciclo chiuso. Un sistema che impara a non intervenire non è ancora un organismo che ha imparato a muoversi.
+
+**G3: BLOCCATO. Progetto UI/skill/slot V3: NON IMPLEMENTATO. NESSUN OTA V3.**
