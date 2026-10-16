@@ -37,6 +37,9 @@ public final class SymbioteMatterV1 {
     public long ticks=0,invalid=0,topologyRepairs=0,selfContactPairs=0;
     /** Physics QA only: membrane sites formerly missing opposite fluid force. */
     public long longTipReactionFallbacks=0;
+    // Read-only physics forensics; zero motor input MUST produce no
+    // motor-to-fluid reaction, even when the shell is elastically strained.
+    public float lastMuscleReactionImpulse=0f,lastElasticForceMagnitude=0f;
     private float time=0f;
     public SymbioteMatterV1(){}
     private static float clip(float a,float lo,float hi){return Math.max(lo,Math.min(hi,a));}
@@ -184,6 +187,11 @@ public final class SymbioteMatterV1 {
         if(obstacleHeld||!Float.isFinite(radius)||!Float.isFinite(extend))return 0f;
         return clip((radius-(R+9f))/8f,0f,1f)*
             clip((-extend-.83f)/.13f,0f,1f);
+    }
+    static float substrateTraction(float extend,float grip,float meanGrip){
+        float compression=Math.max(0f,-extend);
+        return clip(.12f+1.45f*compression+
+            .72f*clip(grip-meanGrip,-1f,1f),0f,.95f);
     }
     static float radialRetractionDrag(float traction,float release,float dt){
         return (float)Math.exp(-(1.8f+
@@ -457,6 +465,7 @@ public final class SymbioteMatterV1 {
         for(float v:cortex)if(!Float.isFinite(v)||v<-1.01f||v>1.01f)
             throw new IllegalArgumentException("Non-finite muscle command");
         float previousCumulativeEffort=work;
+        lastMuscleReactionImpulse=lastElasticForceMagnitude=0f;
         time+=dt;body.time+=dt;ticks++;
         // This living tissue, not the inactive legacy membrane motor,
         // owns simulated-time pulse decay in Symbiote mode. New real
@@ -512,6 +521,8 @@ public final class SymbioteMatterV1 {
             int p=(i+SURFACE-1)%SURFACE,n=(i+1)%SURFACE;
             fx[i]+=(skin.x[p]+skin.x[n]-2*skin.x[i])*(85f+stiffness*190f);
             fy[i]+=(skin.y[p]+skin.y[n]-2*skin.y[i])*(85f+stiffness*190f);
+            lastElasticForceMagnitude+=len(fx[i]-muscleFx[i],fy[i]-muscleFy[i]);
+            lastMuscleReactionImpulse+=len(muscleFx[i],muscleFy[i])*dt;
             // Grip command is an INTENTION. Real box/door contact solver owns
             // the hold timer. No compulsory automatic adhesion.
             skin.gripCommand[i]=adhesive;
@@ -539,9 +550,7 @@ public final class SymbioteMatterV1 {
             // but subtract its mean so the all-grip action cannot weld every
             // perimeter site to the ground. Zero differential preserves
             // the pre-168 proven passive/friction mechanics byte-for-byte.
-            float localGroundGrip=clip(adhesive-gripMean,-1f,1f);
-            float traction=clip(.12f+1.45f*compression+
-                .72f*localGroundGrip,0f,.95f);
+            float traction=substrateTraction(extend,adhesive,gripMean);
             float drag=(float)Math.exp(-(1.8f+66f*traction)*dt);
             float preX=skin.x[i],preY=skin.y[i];
             float appliedVx=skin.vx[i]+fx[i]*dt;
