@@ -142,13 +142,21 @@ public final class SymbioteMotorHeadV1 {
     /** The same single recurrent chosen action, now aligned to real tissue. */
     public void chosen(int action,float[] bodySensors,float[] recurrent,
                        float exploration,float[] internal,float[] sectorAngles){
+        chosen(action,bodySensors,recurrent,exploration,internal,sectorAngles,
+            null,null);
+    }
+    /** The skill archive reads only REAL pre-decision body posture. */
+    public void chosen(int action,float[] bodySensors,float[] recurrent,
+                       float exploration,float[] internal,float[] sectorAngles,
+                       MotorBrain.Body body,Morphology.Surface skin){
         if(action<0||action>=RecurrentCoreV22.A||
            !valid(recurrent,RecurrentCoreV22.Z)||
            bodySensors==null||bodySensors.length!=DistributedBodySense.FEATURES)
             return;
         // A confirmed motor memory may only be recovered BEFORE the brain's
         // SAME independently selected intent is turned into new activations.
-        float[] rescued=motorMemory.recoverIfStalled(action,verifiedMotorSnapshot());
+        float[] rescued=motorMemory.recoverIfStalled(
+            action,verifiedMotorSnapshot(),body,skin);
         if(rescued!=null)restoreVerifiedMotor(rescued);
         choices++;
         fastProbe=(choices%3L)==1L;
@@ -221,7 +229,7 @@ public final class SymbioteMotorHeadV1 {
         System.arraycopy(commands,0,decisionCommands,0,OUTPUTS);
         somatic.chosen(action,fastProbe);
         coordination.begin(action,sectorAngles);
-        motorMemory.begin(action,verifiedMotorSnapshot());
+        motorMemory.begin(action,verifiedMotorSnapshot(),body,skin);
     }
     /** Update REAL musculoskeletal commands before EACH physics step.
      * Not a second discrete-action chooser or a sinusoid/time signal. */
@@ -234,10 +242,19 @@ public final class SymbioteMotorHeadV1 {
     /** Real physical frame AFTER world contact and all solid collisions. */
     public void observedPhysicalStep(float beforeX,float beforeY,
                                      MotorBrain.Body now,Morphology.Surface skin){
+        observedPhysicalStep(beforeX,beforeY,now,skin,0f,false);
+    }
+    /** No unobserved world force or passive coasting may become skill proof.
+     * Only the world integrator can attest actual motor reaction and whether
+     * a collision, storm or other external correction occurred this step. */
+    public void observedPhysicalStep(float beforeX,float beforeY,
+                                     MotorBrain.Body now,Morphology.Surface skin,
+                                     float actualMuscleImpulse,boolean external){
         if(now!=null&&skin!=null){
             coordination.sample(beforeX,beforeY,now.cx,now.cy,commands);
             somatic.observed(beforeX,beforeY,now);
-            motorMemory.physical(beforeX,beforeY,now,skin);
+            motorMemory.physical(beforeX,beforeY,now,skin,
+                actualMuscleImpulse,external);
         }
     }
     public SymbioteCoordinationV162 coordination(){return coordination;}
@@ -281,7 +298,10 @@ public final class SymbioteMotorHeadV1 {
         // a rising count is not evidence of learning.
         // Snapshot corresponds to muscles BEFORE the consequent synaptic
         // update. Heldout is corroboration, never a train signal.
-        motorMemory.finish(train,holdout,actualMotorEnergy);
+        float[] failedRecovery=motorMemory.finish(train,holdout,actualMotorEnergy);
+        boolean recoveryRolledBack=failedRecovery!=null&&
+            restoreVerifiedMotor(failedRecovery);
+        if(recoveryRolledBack)train=false;
         boolean experienced=actualContactEnergy!=0f||actualDamage>0f||
              actualAmbientEnergyLoss>0f||actualMotorEnergy>0f;
         float advantage=experienced?clip(reward-meanReward,-2,2):0f;
@@ -326,8 +346,16 @@ public final class SymbioteMotorHeadV1 {
         coordination.resetLife();somatic.resetLife();
         Arrays.fill(commands,0);Arrays.fill(decisionCommands,0);Arrays.fill(noise,0);
     }
-    public void resetLife(){clearLiveMotor();motorMemory.newLife();}
-    public void resumeLife(){clearLiveMotor();motorMemory.resumeLife();}
+    public void resetLife(){
+        float[] pending=motorMemory.abortIncompleteRecovery();
+        if(pending!=null)restoreVerifiedMotor(pending);
+        clearLiveMotor();motorMemory.newLife();
+    }
+    public void resumeLife(){
+        float[] pending=motorMemory.abortIncompleteRecovery();
+        if(pending!=null)restoreVerifiedMotor(pending);
+        clearLiveMotor();motorMemory.resumeLife();
+    }
     /** Safe counters, sourced from the same authenticated saved cortex. */
     public long decisionCount(){return choices;}
     public long trainedOutcomes(){return updates;}
