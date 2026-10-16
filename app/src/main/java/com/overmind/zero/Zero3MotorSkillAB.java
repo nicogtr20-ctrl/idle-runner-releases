@@ -12,7 +12,8 @@ public final class Zero3MotorSkillAB {
         double forward,net,gross,work;
         int updates;long endRevision;
     }
-    static Data run(int choices,float x,float y,boolean train){
+    static Data run(int choices,float x,float y,int mode){
+        boolean train=mode==2;
         MotorBrain.Body b=new MotorBrain.Body();
         Morphology.Surface s=new Morphology.Surface(b);
         SymbioteMatterV1 gel=new SymbioteMatterV1();gel.reset(b,s);
@@ -22,7 +23,7 @@ public final class Zero3MotorSkillAB {
         for(int d=0;d<choices;d++){
             Zero3LearningFoundation.MotorIntent intent=
                 new Zero3LearningFoundation.MotorIntent(1,d,cortex.revision(),x,y,1f,.3f,.5f);
-            co.begin(intent,b,train,!train);
+            co.begin(intent,b,train,!train,mode!=0);
             for(int f=0;f<20;f++){
                 float effortBefore=gel.work;
                 gel.step(b,s,co.actuate(b,s,.025f),.025f);
@@ -41,10 +42,12 @@ public final class Zero3MotorSkillAB {
     public static void main(String[] args){
         int steps=400;float[][] headings={{1,0},{0,1},{-1,0},{0,-1}};
         for(float[] dir:headings){
-            Data off=run(steps,dir[0],dir[1],false),on=run(steps,dir[0],dir[1],true);
+            Data off=run(steps,dir[0],dir[1],0),probe=run(steps,dir[0],dir[1],1),
+                on=run(steps,dir[0],dir[1],2);
             System.out.printf(Locale.US,
-                "ZERO3 MOTOR LAB intent=[%.0f %.0f] decisions=%d FROZEN{forward=%.3f net=%.3f gross=%.3f work=%.3f} TRAIN{forward=%.3f net=%.3f gross=%.3f work=%.3f updates=%d}%n",
+                "ZERO3 MOTOR LAB intent=[%.0f %.0f] decisions=%d FROZEN-CLEAN{forward=%.3f net=%.3f gross=%.3f work=%.3f} FROZEN-PROBE{forward=%.3f net=%.3f gross=%.3f work=%.3f} TRAIN-PROBE{forward=%.3f net=%.3f gross=%.3f work=%.3f updates=%d}%n",
                 dir[0],dir[1],steps,off.forward,off.net,off.gross,off.work,
+                probe.forward,probe.net,probe.gross,probe.work,
                 on.forward,on.net,on.gross,on.work,on.updates);
         }
         // No assertion of victory: all four directions are preregistered and
