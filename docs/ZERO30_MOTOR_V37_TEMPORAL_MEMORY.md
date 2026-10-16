@@ -52,3 +52,28 @@ Il risultato su 1.024 coppie NON è il test di 2.000 esperienze in una singola v
 **Prima dell'esecuzione:** in attesa dei log GitHub del nuovo workflow; registrare qui numeri precisi, eventuali errori di compilazione e il gate reale. Compilazione SUCCESS non significa apprendimento motorio SUCCESS.
 
 **Decisione sino a nuove prove:** G3 e G5 completi **BLOCCATI**. UI 3.0 e persistenza V3 **ancora da implementare**.
+
+
+## 6. RISULTATI REALI E VERIFICATI — CI 38982032827
+
+**[GitHub Actions 38982032827 — SUCCESS tecnico](https://github.com/nicogtr20-ctrl/idle-runner-releases/actions/runs/38982032827):** compilazione JVM, **1.024 coppie** (384 train, 384 calibrazione, 256 test) con **983.040 integrazioni della fisica reale** fra controllo e intervento, storia pre-azione di 96 frame e osservazione del futuro per 384 frame. Lo stato stabile non è stato modificato. **SUCCESS tecnico NON è PASS dell'efficacia**.
+
+| Test | MSE baseline zero immediata | MSE immediata (52) | MSE immediata (68) | MSE baseline zero ritardata | MSE ritardata (52) | MSE ritardata (68) |
+|---|---:|---:|---:|---:|---:|---:|
+| CALIBRAZIONE (384) | 0,003654589 | 0,000470035 | **0,000466536** | 0,032314788 | 0,027753204 | **0,027701058** |
+| TEST CIECO (256) | 0,003400356 | 0,000547288 | **0,000544011** | 0,027482904 | 0,026684365 | **0,026679250** |
+
+Costo finale: baseline zero MSE **0,000000007806**, entrambi i modelli **0,000000000429**.
+
+La memoria a 68 feature migliora l'MSE della risposta ritardata nel test finale di appena **0,019% rispetto alle 52 feature**. Rispetto al riferimento zero l'MSE ritardata migliora del solo **2,92%**, contro la soglia preregistrata del **10%**. Il modello con memoria aveva passato il gate sul set di calibrazione, ma **FALLISCE il gate sul set non usato nell'allenamento/calibrazione**, come fallisce il 52 nello stesso ambiente.
+
+Selezionando piccoli impulsi solo dalle predizioni, **13/16** hanno avuto una conseguenza firmata positiva a costo sotto 0,005 in **16/16** casi (le scelte nulle sono comprese nel conteggio dei casi sotto budget). Guadagno firmato aggregato **+3,91126 U**, lavoro extra **0,0019250**. **Non costituisce una abilità utile al gioco**, non è una sequenza di decisioni autonoma e l'esito è nettamente inferiore a una previsione affidabile sul lungo periodo.
+
+### Analisi e decisione
+
+- **Confermato:** il registro dei **veri 64 comandi pregressi** è tecnicamente realizzato; il target è calcolato esclusivamente dal vero solver; identiche storie e stati fisici prima dell'azione eliminano il confondimento da differenze iniziali tra i due bracci.
+- **Confermato in questo esperimento:** aggiungere 16 riassunti di storia a una regressione statica ridge non produce un miglioramento sostanziale della generalizzazione ai corpi precondizionati non visti.
+- **Da verificare prima di concludere che «la memoria non serve»:** normalizzazione delle 16 feature temporali (possono avere scale molto diverse), capacità non-lineare/ricorrente di attribuzione agli impulsi, previsione multi-step condizionata dalle future azioni effettivamente eseguite, eventi di adesione/contatto e stabilità oltre il set visto. Non modificare le soglie in funzione del risultato finale già conosciuto: eventuali esperimenti di scaling richiedono **NUOVE pose/seed finali non già esaminate**.
+- **Gate G3 motorio e G5 world model completo: BLOCCATI.** Non aggiungere il test-ridge della V3.7 alla corteccia del gameplay; no skill, no nuovi neuron count fittizi, no UI V3, no OTA.
+
+**Passo tecnico motivato:** se si sperimenta una normalizzazione della memoria o un modello di stato dinamico, stimare tutti i parametri esclusivamente dal train, effettuare il gate sulla calibrazione e confrontare su **nuovi** corpi/pose/sequenze non usati per ottimizzare; solo dopo test di 2.000+ decisioni e apprendimento davvero online.
