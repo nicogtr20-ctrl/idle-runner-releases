@@ -30,6 +30,9 @@ public final class SymbioteMotorHeadV1 {
     private final float[] noise=new float[OUTPUTS],pending=new float[OUTPUTS];
     private float[] previousState;
     private int lastAction=-1;
+    // Exactly one motor learner probes per live decision. The two controllers
+    // must not both attribute the same perturbation to themselves.
+    private boolean fastProbe=false;
     private long seed=0x3910b15dceef41L,choices,updates,heldout;
     private float meanReward=0f;
     public SymbioteMotorHeadV1(){
@@ -115,6 +118,7 @@ public final class SymbioteMotorHeadV1 {
            bodySensors==null||bodySensors.length!=DistributedBodySense.FEATURES)
             return;
         choices++;
+        fastProbe=(choices&1L)==0L;
         boolean samePhysicalCommand=priorPhysicalAction==action;
         priorPhysicalAction=action;
         lastAction=action;
@@ -161,7 +165,7 @@ public final class SymbioteMotorHeadV1 {
                 localFeatures[localBase+4]=(float)Math.sin(3f*(a-goal));
                 for(int j=0;j<LOCAL_FEATURES;j++)
                     z+=localWeights[localBase+j]*localFeatures[localBase+j];
-                float explore=clip(exploration,0,1)*.48f;
+                float explore=fastProbe?0f:clip(exploration,0,1)*.48f;
                 noise[at]=random()*explore;
                 // Exploration is localized and smooth enough not to make a
                 // single 96-node patch teleport relative to its neighbours.
@@ -182,7 +186,7 @@ public final class SymbioteMotorHeadV1 {
         // Copy it unchanged; fast proprioceptive recurrence can only refine
         // this output until the next real brain decision.
         System.arraycopy(commands,0,decisionCommands,0,OUTPUTS);
-        somatic.chosen(action);
+        somatic.chosen(action,fastProbe);
         coordination.begin(action,sectorAngles);
     }
     /** Update REAL musculoskeletal commands before EACH physics step.
@@ -270,12 +274,16 @@ public final class SymbioteMotorHeadV1 {
             meanReward=meanReward*.995f+reward*.005f;
             updates++;
         }
-        coordination.consequence(train,holdout,noise,pending,localFeatures,
+        // Signed real displacement is shared for OBSERVATION, but only the
+        // actually probed cortex level gets plastic credit. This removes
+        // the OTA167 concurrent motor credit assignment ambiguity.
+        coordination.consequence(train&&!fastProbe,holdout,noise,pending,localFeatures,
             localWeights,CHANNELS,LOCAL_FEATURES);
-        somatic.consequence(train,holdout);
+        somatic.consequence(train&&fastProbe,holdout);
         lastAction=-1;
     }
     public void resetLife(){lastAction=-1;priorPhysicalAction=-1;
+        fastProbe=false;
         coordination.resetLife();somatic.resetLife();
         Arrays.fill(commands,0);Arrays.fill(decisionCommands,0);Arrays.fill(noise,0);}
     public void resumeLife(){resetLife();}
