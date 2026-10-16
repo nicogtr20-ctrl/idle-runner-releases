@@ -1,5 +1,8 @@
 # OVERMIND ZERO — MASTER PROJECT ZERO 3.0
 
+> **ESITO V3.5 VERIFICATO:** [32 test a ciclo chiuso](docs/ZERO30_MOTOR_V35_ADAPTIVE_CREDIT.md) — astensione adattiva supera leggermente lo spostamento aggregato senza impulsi, ma **consuma di più e migliora soltanto 6/16 condizioni nuove**. **G3 NON SUPERATO, ZERO 3.0 NON ATTIVO E NESSUNA OTA.**
+
+
 > **STATO SPERIMENTALE V3.5:** [Finestra di credito fisico 384 frame + test di astensione dopo feedback reale](docs/ZERO30_MOTOR_V35_ADAPTIVE_CREDIT.md). Il sistema **non è attivo in gameplay** e G3 resta BLOCCATO: i test positivi sugli impulsi isolati non valgono come locomozione autonoma.
 
 
