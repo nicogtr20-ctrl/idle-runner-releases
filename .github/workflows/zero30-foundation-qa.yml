@@ -30,7 +30,9 @@ jobs:
           if not m:raise RuntimeError('Production JVM source list unavailable; do not silently weaken test')
           command=shlex.split(m.group(1))
           command+=['app/src/main/java/com/overmind/zero/Zero3LearningFoundation.java',
-                    'app/src/main/java/com/overmind/zero/Zero3FoundationRegression.java']
+                    'app/src/main/java/com/overmind/zero/Zero3FoundationRegression.java',
+                    'app/src/main/java/com/overmind/zero/Zero3RecurrentBrain.java',
+                    'app/src/main/java/com/overmind/zero/Zero3RecurrentBrainRegression.java']
           print('Compiling',len(command)-3,'real application Java sources')
           subprocess.run(command,check=True)
           PY
@@ -40,6 +42,8 @@ jobs:
           java -cp /tmp/overmind com.overmind.zero.Zero168ControllabilityRegression
       - name: Verify ZERO3 causal motor foundation without fake reward or hardcoded gait
         run: java -cp /tmp/overmind com.overmind.zero.Zero3FoundationRegression
+      - name: Verify ZERO3 trainable GRU / actor-critic / world prediction through real material
+        run: java -cp /tmp/overmind com.overmind.zero.Zero3RecurrentBrainRegression
       - name: Android build smoke without publishing APK
         run: |
           gradle --version || true
