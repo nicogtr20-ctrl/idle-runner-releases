@@ -979,7 +979,7 @@ jobs:
           'SaveSlotStore.java':'4d232fed8599f7f3eb42a080f3806b5a537f01fa',
           'SymbioteMatterV1Regression.java':'e825dc554a022d3d4fe45e39eadbfa631f705c8a',
           'SymbioteMotorHeadV1.java':'b4ac0e7e2409a6b1fc91a94394f7d1d287c8839a',
-          'SymbioteMatterV1.java':'75acb2f540baff2e30a2599708f8b239900da07e',
+          'SymbioteMatterV1.java':'7811d00f64b5aa54b2da972e724e3378c1c9c77b',
           'RecurrentCoreV22.java':'890fed9f421c771b78e1f55e3c8d056b2554e14b',
           'ObjectContinuityV21.java':'73835ed4c3b15eefcfa3d1c615d7769b6fa1fa46',
           'CausalSequenceV23.java':'329344e296ec342e0b85b965babbae15a3eb6f83',
@@ -1028,7 +1028,7 @@ jobs:
           'Zero166CortexFluidShearRegression.java':'e2f875ab0b72893108bca9c1f23822d7dbdd55fe',
           'FastSomaticCircuitV167.java':'8ccdf096f46ee5257c7ec315e7f89749beda40e3',
           'Zero167SomaticLoopRegression.java':'aec8f8e5d89725be8ff1951132447b4968aa71b1',
-          'Zero168ControllabilityRegression.java':'46ea4f0fe39fd3295bef5bc0d54f462e3eed57b0',
+          'Zero168ControllabilityRegression.java':'c2e523273952fc1e9f6ccdefa3fc6551dc0ccfe1',
           'Zero164TractionRegression.java':'abd91b84edfa069af903e7706ef658cda6e30982',
           'TemporalSkillBank.java':'00ace87c3f7e308649575acb68baa03168b1a9bb',
           'MortalityLearning.java':'106683098e58d03a1b901fd7293549ebd5bb6715',
@@ -1495,9 +1495,11 @@ jobs:
           assert 'selfContactPairs' in physical and 'float extensionCompliance=extend>0f?1f/(1f+4f*strain):1f;' in physical
           # Old compression-only traction is superseded by the SAME .12+1.45
           # constitutive law PLUS strictly local mean-neutral voluntary grip.
-          assert 'float traction=substrateTraction(extend,adhesive,gripMean);' in physical
+          assert 'float traction=substrateTraction(extend,stiffness,meanTension);' in physical
           assert 'return clip(.12f+1.45f*compression+' in physical
-          assert '.72f*clip(grip-meanGrip,-1f,1f),0f,.95f);' in physical
+          assert '.72f*clip(delta,-1f,1f),0f,.95f);' in physical
+          assert 'tension-meanTension' in physical
+          assert 'adhesive-gripMean' not in physical
           assert 'impulsesX[j]-=muscleFx[i]*dt*share*n/SURFACE;' in physical
           assert 'impulsesY[j]-=muscleFy[i]*dt*share*n/SURFACE;' in physical
           assert 'impulsesX[j]-=fx[i]*dt' not in physical
