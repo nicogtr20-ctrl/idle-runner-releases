@@ -1471,10 +1471,10 @@ jobs:
           # EVERY actual physics frame. No second action, sinusoid or time gait.
           fast=(root/'FastSomaticCircuitV167.java').read_text()
           physical_game=(root/'GameActivity.java').read_text()
-          assert 'somatic.chosen(action);' in cortex
+          assert 'somatic.chosen(action,fastProbe);' in cortex
           assert 'somatic.advance(body,skin,decisionCommands,commands,dt)' in cortex
           assert 'somatic.observed(beforeX,beforeY,now)' in cortex
-          assert 'somatic.consequence(train,holdout)' in cortex
+          assert 'somatic.consequence(train&&fastProbe,holdout)' in cortex
           assert 'symMotor.fastTick(creature,surface,slice);' in physical_game
           assert 'symMatter.step(creature,surface,symMotor.commands(),slice)' in physical_game
           assert 'symMotor.restoreFast(prefs.getString(FastSomaticCircuitV167.KEY' in physical_game
@@ -1494,7 +1494,7 @@ jobs:
           assert 'muscle.localParameterAt(i)' in atlas and 'WEIGHTS_LOCAL' in atlas
           assert 'selfContactPairs' in physical and 'float extensionCompliance=extend>0f?1f/(1f+4f*strain):1f;' in physical
           # Old compression-only traction is superseded by the SAME .12+1.45
-          # constitutive law PLUS strictly local mean-neutral voluntary grip.
+          # constitutive law PLUS a localized mean-neutral TENSION response.
           assert 'float traction=substrateTraction(extend,stiffness,meanTension);' in physical
           assert 'return clip(.12f+1.45f*compression+' in physical
           assert '.72f*clip(delta,-1f,1f),0f,.95f);' in physical
