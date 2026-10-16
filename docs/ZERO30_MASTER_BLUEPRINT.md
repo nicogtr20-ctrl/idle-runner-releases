@@ -149,6 +149,10 @@ Nessuna delle 16 vecchie azioni discrete è imposta come unico vocabolario del 3
 
 ## 7. Corteccia motoria e apprendimento della locomozione
 
+**Documento tecnico e risultati sperimentali della revisione motor V3.1:** [ZERO30_MOTOR_V31_ENGINEERING.md](ZERO30_MOTOR_V31_ENGINEERING.md). Nota: la corteccia 3.0 non è ancora validata; il gate dei movimenti rimane aperto. Questa integrazione è parte della specifica, non un rilascio.
+
+
+
 Il progetto mantiene **radiale, tangenziale, adesione locale, tensione** per ciascuna delle 16 regioni. Il solver e le forze effettive non vengono modificati per simulare intelligenza.
 
 **Architettura:**
