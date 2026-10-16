@@ -1,4 +1,6 @@
 # ZERO 3.0 — CONTRATTO DI IMPLEMENTAZIONE, TEST E HANDOFF TRA CHAT
+> **G3 MOTOR V3.1 — AGGIORNAMENTO:** [Progetto degli esperimenti, perturbazioni strutturate, benchmark 4 direzioni e gate di promozione](ZERO30_MOTOR_V31_ENGINEERING.md). L'ultimo controllo a 400 decisioni ha rifiutato la promozione del learner online: ancora nessuna evidenza sufficiente di locomozione appresa.
+
 > **STATO IMPLEMENTAZIONE AGGIORNATO:** [Primo prototipo ZERO3 + risultati CI e limiti (16/10/2026)](ZERO30_BUILD_STATUS_20261016.md). Leggere questo handoff prima di riprendere da altre chat. ZERO3 NON È ANCORA ATTIVO NEL GIOCO O PUBBLICATO.
 
 **OBBLIGATORIO** insieme a [MASTER BLUEPRINT](ZERO30_MASTER_BLUEPRINT.md) e [SPECIFICA UI/UX](ZERO30_UI_UX_SPEC.md). Aggiornare questo documento durante l'implementazione, mai spacciarlo per report di test eseguiti.
