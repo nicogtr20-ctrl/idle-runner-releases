@@ -23,6 +23,8 @@ public final class SymbioteMotorHeadV1 {
     private final float[] localFeatures=new float[OUTPUTS*LOCAL_FEATURES];
     private final SymbioteCoordinationV162 coordination=new SymbioteCoordinationV162();
     private final FastSomaticCircuitV167 somatic=new FastSomaticCircuitV167();
+    private final SymbioteMotorSkillMemoryV169 motorMemory=new SymbioteMotorSkillMemoryV169();
+    private final float[] skillSnapshot=new float[SymbioteMotorSkillMemoryV169.WIDTH];
     private int priorPhysicalAction=-1;
     private long localUpdates=0;
     private final float[] feature=new float[N*FEATURE],commands=new float[OUTPUTS],
@@ -49,6 +51,33 @@ public final class SymbioteMotorHeadV1 {
         seed^=seed<<13;seed^=seed>>>7;seed^=seed<<17;
         return ((seed>>>40)/16777216f-.5f)*2;
     }
+    /** The complete 724-synapse motor configuration: old shared, local
+     * 16-sector cortex and fast 25-ms recurrent tissue. NEVER the 2.2 brain. */
+    public float[] verifiedMotorSnapshot(){
+        System.arraycopy(weights,0,skillSnapshot,0,weights.length);
+        System.arraycopy(localWeights,0,skillSnapshot,weights.length,localWeights.length);
+        somatic.writeSkillWeights(skillSnapshot,weights.length+localWeights.length);
+        return skillSnapshot.clone();
+    }
+    /** Atomic before-action recovery; preserves all actual learned counters.
+     * No motor-action substitution and no synthetic reward or movement. */
+    private boolean restoreVerifiedMotor(float[] snap){
+        if(snap==null||snap.length!=SymbioteMotorSkillMemoryV169.WIDTH)return false;
+        for(int i=0;i<snap.length;i++){
+            float limit=i<weights.length?2.501f:
+                i<weights.length+localWeights.length?1.501f:1.101f;
+            if(!Float.isFinite(snap[i])||Math.abs(snap[i])>limit)return false;
+        }
+        float[] fast=new float[FastSomaticCircuitV167.PARAMETERS];
+        System.arraycopy(snap,weights.length+localWeights.length,fast,0,fast.length);
+        if(!somatic.installVerifiedSkill(fast))return false;
+        System.arraycopy(snap,0,weights,0,weights.length);
+        System.arraycopy(snap,weights.length,localWeights,0,localWeights.length);
+        return true;
+    }
+    public String encodeMemory(){return motorMemory.encode();}
+    public boolean restoreMemory(String raw){return motorMemory.restore(raw);}
+    public SymbioteMotorSkillMemoryV169 skillMemory(){return motorMemory;}
     private static boolean valid(float[] a,int n){
         if(a==null||a.length!=n)return false;
         for(float v:a)if(!Float.isFinite(v)||Math.abs(v)>5)return false;
@@ -117,6 +146,10 @@ public final class SymbioteMotorHeadV1 {
            !valid(recurrent,RecurrentCoreV22.Z)||
            bodySensors==null||bodySensors.length!=DistributedBodySense.FEATURES)
             return;
+        // A confirmed motor memory may only be recovered BEFORE the brain's
+        // SAME independently selected intent is turned into new activations.
+        float[] rescued=motorMemory.recoverIfStalled(action,verifiedMotorSnapshot());
+        if(rescued!=null)restoreVerifiedMotor(rescued);
         choices++;
         fastProbe=(choices%3L)==1L;
         boolean samePhysicalCommand=priorPhysicalAction==action;
@@ -188,6 +221,7 @@ public final class SymbioteMotorHeadV1 {
         System.arraycopy(commands,0,decisionCommands,0,OUTPUTS);
         somatic.chosen(action,fastProbe);
         coordination.begin(action,sectorAngles);
+        motorMemory.begin(action,verifiedMotorSnapshot());
     }
     /** Update REAL musculoskeletal commands before EACH physics step.
      * Not a second discrete-action chooser or a sinusoid/time signal. */
@@ -203,6 +237,7 @@ public final class SymbioteMotorHeadV1 {
         if(now!=null&&skin!=null){
             coordination.sample(beforeX,beforeY,now.cx,now.cy,commands);
             somatic.observed(beforeX,beforeY,now);
+            motorMemory.physical(beforeX,beforeY,now,skin);
         }
     }
     public SymbioteCoordinationV162 coordination(){return coordination;}
@@ -236,13 +271,17 @@ public final class SymbioteMotorHeadV1 {
         if(!Float.isFinite(actualContactEnergy)||!Float.isFinite(actualDamage)||
            !Float.isFinite(actualAmbientEnergyLoss)||!Float.isFinite(actualMotorEnergy)||
            actualDamage<0||actualAmbientEnergyLoss<0||actualMotorEnergy<0){
-            lastAction=-1;coordination.resetLife();somatic.resetLife();return;
+            lastAction=-1;coordination.resetLife();somatic.resetLife();
+            motorMemory.cancelTrial();return;
         }
         float reward=clip(actualContactEnergy/35f-actualDamage/90f-
             actualAmbientEnergyLoss/35f-actualMotorEnergy/35f,-2,2);
         // In a purely eventless interval, the cortex has no evidence
         // that ANY perturbation was better. Keep virgin muscles neutral;
         // a rising count is not evidence of learning.
+        // Snapshot corresponds to muscles BEFORE the consequent synaptic
+        // update. Heldout is corroboration, never a train signal.
+        motorMemory.finish(train,holdout,actualMotorEnergy);
         boolean experienced=actualContactEnergy!=0f||actualDamage>0f||
              actualAmbientEnergyLoss>0f||actualMotorEnergy>0f;
         float advantage=experienced?clip(reward-meanReward,-2,2):0f;
@@ -282,11 +321,13 @@ public final class SymbioteMotorHeadV1 {
         somatic.consequence(train&&fastProbe,holdout);
         lastAction=-1;
     }
-    public void resetLife(){lastAction=-1;priorPhysicalAction=-1;
-        fastProbe=false;
+    private void clearLiveMotor(){
+        lastAction=-1;priorPhysicalAction=-1;fastProbe=false;
         coordination.resetLife();somatic.resetLife();
-        Arrays.fill(commands,0);Arrays.fill(decisionCommands,0);Arrays.fill(noise,0);}
-    public void resumeLife(){resetLife();}
+        Arrays.fill(commands,0);Arrays.fill(decisionCommands,0);Arrays.fill(noise,0);
+    }
+    public void resetLife(){clearLiveMotor();motorMemory.newLife();}
+    public void resumeLife(){clearLiveMotor();motorMemory.resumeLife();}
     /** Safe counters, sourced from the same authenticated saved cortex. */
     public long decisionCount(){return choices;}
     public long trainedOutcomes(){return updates;}
