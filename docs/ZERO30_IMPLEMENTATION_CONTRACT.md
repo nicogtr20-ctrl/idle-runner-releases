@@ -5,7 +5,7 @@
 
 **OBBLIGATORIO** insieme a [MASTER BLUEPRINT](ZERO30_MASTER_BLUEPRINT.md) e [SPECIFICA UI/UX](ZERO30_UI_UX_SPEC.md). Aggiornare questo documento durante l'implementazione, mai spacciarlo per report di test eseguiti.
 
-**Stato:** SPECIFICA v1.0, 16 ottobre 2026. **Implementazione V3: NON INIZIATA.**
+**Stato:** SPECIFICA v1.0, 16 ottobre 2026. **Produzione V3: NON ATTIVA.** Sono presenti prototipi isolati per G2-G4 sul ramo sperimentale; **G3 APPRENDIMENTO MOTORIO NON SUPERATO** (vedi MOTOR V3.1). La nuova UI, persistenza V3 e rilascio restano non implementati.
 
 ## 0. Prima operazione di ogni ChatGPT / agente
 
