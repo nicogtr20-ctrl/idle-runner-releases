@@ -73,3 +73,35 @@ Il confronto fisico è eseguito a corpo freddo con inizializzazione **identica**
 5. Solo dopo integrare nello ZERO3 completo, memoria/skills, neurogenesi, salvataggi e **nuova UI di apprendimento** (neuroni, abilità, evoluzione, corpo, impostazioni).
 
 **Verdetto di questo documento finché non ci sono benchmark indipendenti positivi: correzione sperimentale dell'esplorazione e del processo di promozione; locomozione appresa non dimostrata.**
+
+
+## 7. RISULTATI CI VERIFICATI — 16/10/2026, 21:52–21:54 UTC
+
+**[GitHub Actions run 38972240462 — SUCCESS per compilazione/test infrastrutturali](https://github.com/nicogtr20-ctrl/idle-runner-releases/actions/runs/38972240462).** Il successo della CI NON equivale a promozione del learner.
+
+La correzione che usa sondaggio correlato su un singolo canale, baseline per direzione e passi di aggiornamento limitati ha ridotto molto il danno rispetto alla perturbazione originaria, ma il test **senza esplorazione** su corpo appena inizializzato, dopo 400 decisioni di allenamento, riporta:
+
+- Direzioni in miglioramento: **1/4**.
+- Somma spostamento firmato lungo le quattro intenzioni su 160 decisioni di valutazione per direzione: **vergine 27.970 U**, **allenato 9.047 U**.
+- Peggioramento aggregato: **-18.923 U**; peggior direzione **-9.002 U**.
+- Rapporto dei costi muscolari: **1.015**.
+- Risposta automatica del gate di promozione: **REJECTED**, nessun inserimento nel controller live.
+- Partizione "fresh body" significa nuova istanza fisica con stato iniziale equivalente, **non** scena diversa, né prova statistica multiseme.
+
+### Griglia preregistrata di learning rate (TUNING, non holdout indipendente)
+
+| Tasso `lr` | Somma spostamento firmato (U) | Direzioni con risultato positivo | Consumo cumulativo |
+|---:|---:|---:|---:|
+| 0.000 (no plasticità, esplorazione consentita in training) | **27.970** | 2/4 | 0.209209 |
+| 0.013 | 9.047 | 2/4 | 0.212320 |
+| 0.040 | -1.959 | 2/4 | 0.224586 |
+| 0.100 | -14.692 | 2/4 | 0.258019 |
+| 0.220 | -66.928 | 1/4 | 0.321856 |
+
+**Diagnosi rafforzata:** aumentare l'intensità dell'aggiornamento peggiora sistematicamente la prestazione aggregata in questa batteria. Non è un semplice problema di aggiornamenti troppo piccoli: il **segnale/estimatore del credito motorio è insufficiente o mal allineato al controllo**. Congelare i pesi è meglio che continuare la plasticità corrente, in attesa di un algoritmo alternativo con evidenza autonoma.
+
+### Test aggiuntivo ancora sperimentale
+
+Sul ramo sperimentale è presente `Zero3MotorEpisodicSearchRegression`: un esperimento di ricerca di **modifiche locali dei parametri**, accettate solo sulla base di risultati del vero solver, con 60 candidate per direzione e valutazione separata su un orizzonte di 160 decisioni. Non è un'andatura codificata né una nuova policy gameplay. Anche se migliora, **non bastano same-scene e same-initial-body per convalidare una vera abilità generalizzabile**; richiede molte scene, seed e controllabilità contestuale.
+
+**Gate G3: BLOCCATO**, indipendentemente dal risultato della compilazione. ZERO 2.2/OTA resta intatto.
