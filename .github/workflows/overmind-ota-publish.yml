@@ -977,6 +977,10 @@ jobs:
           # ZERO171: reviewed integration sources re-pinned, including causal
           # motor eligibility, continuous geometry and isolated actual-body lab.
           pins={
+          'LearningDiagnostics.java':'a4b3af6e8b87112f9a14505bbdde6170d4dd9d9e',
+          'CoreLabActivityV22.java':'5be3f7d42b8dc69256af7a21cd742d3b8791814f',
+          'CoreComparisonV22.java':'b1a20ab63199b21279b9c1c0b1d674656a5ad7fa',
+          'CausalExperiments.java':'3308252cfa2aac3293c92d187cf8df5c47494b25',
           'Zero170MotorReliabilityRegression.java':'cbad796e2129cf3ce9a7317a7711ef77049e465b',
           'Zero171IntegratedRegression.java':'4fa0a726c93159d1813d36e5be7d6b78ca2b0cdd',
           'SymbioteLaboratoryV171.java':'cc2bcd06125066c2cfeb08ea69287bbf5f480b0f',
