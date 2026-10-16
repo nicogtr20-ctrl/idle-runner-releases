@@ -17,6 +17,10 @@ public final class MotorDurationV22 {
     private static final int CELLS=ACTIONS*OPTIONS;
     private final int[] trained=new int[CELLS],verified=new int[CELLS];
     private final float[] trainedMean=new float[CELLS],verifiedMean=new float[CELLS];
+    // OTA165: new, independently heldout directional evidence. Historical
+    // md160 reward means are preserved, never relabeled as direction evidence.
+    private final int[] headingTrained=new int[CELLS],headingVerified=new int[CELLS];
+    private final float[] headingTrainMean=new float[CELLS],headingVerifyMean=new float[CELLS];
     private final Random random=new Random(0x16022b0dL);
     private int selected=-1,option=-1,remaining,intervals,started;
     private boolean auditOnly;
@@ -56,6 +60,23 @@ public final class MotorDurationV22 {
             .12f*clip(effect/(8f*intervals),0f,1f)-
             .60f*clip(Math.max(Math.max(0f,-gain),damage),0f,35f)/35f-
             .15f*clip(cost/(2f*intervals),0f,1f),-1.5f,1.5f);
+        // An action whose body goes sideways/backwards is NOT a successful
+        // motor duration merely because it spent little muscle fuel. This
+        // direction is the 2.2 brain's OWN action, not a food/location hint.
+        float forward=0f;
+        if(hasPosition&&net>0f){
+            float angle=(selected%8)*(float)(Math.PI/4);
+            forward=(lastX-startX)*(float)Math.cos(angle)+
+                (lastY-startY)*(float)Math.sin(angle);
+        }
+        float headingScore=gross>1f?
+            clip(forward/Math.max(1f,gross),-1f,1f)*
+            clip(net/(3f*intervals),0f,1f):0f;
+        int hCount=auditOnly?headingVerified[at]:headingTrained[at];
+        float hOld=auditOnly?headingVerifyMean[at]:headingTrainMean[at];
+        float hMean=hOld+(headingScore-hOld)/(Math.min(80,hCount)+1f);
+        if(auditOnly){headingVerified[at]++;headingVerifyMean[at]=hMean;}
+        else{headingTrained[at]++;headingTrainMean[at]=hMean;}
         int count=auditOnly?verified[at]:trained[at];
         float old=auditOnly?verifiedMean[at]:trainedMean[at];
         float mean=old+(score-old)/(Math.min(80,count)+1f);
@@ -66,20 +87,29 @@ public final class MotorDurationV22 {
     private int chooseOption(int action){
         // Short, medium and long interventions are experimentally sampled,
         // never a scripted walking rhythm, heading or compelled food chase.
-        if(random.nextFloat()<.22f)return random.nextInt(OPTIONS);
+        // Still experiment with every duration, including short precision
+        // movements, but do not blindly inherit md160's 15/16 preference
+        // for one tick: those means never measured heading agreement.
+        if(random.nextFloat()<.15f)return random.nextInt(OPTIONS);
         int best=-1;
         float value=-Float.MAX_VALUE;
         for(int k=0;k<OPTIONS;k++){
             int at=action*OPTIONS+k;
             // Physical learning + genuinely untouched validation are BOTH
             // required before duration predictions can control execution.
-            if(trained[at]<16||verified[at]<6)continue;
-            float validated=verifiedMean[at],inSample=trainedMean[at];
-            if(Math.abs(validated-inSample)>.30f)continue;
-            float estimate=.5f*(validated+inSample);
+            // A 160 legacy score is NEVER considered validated directional
+            // evidence. New action/duration holdouts must independently agree.
+            if(headingTrained[at]<16||headingVerified[at]<6)continue;
+            float observed=headingTrainMean[at],validated=headingVerifyMean[at];
+            if(Math.abs(validated-observed)>.32f)continue;
+            float old=.5f*(verifiedMean[at]+trainedMean[at]);
+            float estimate=.25f*old+.40f*.5f*(observed+validated);
             if(estimate>value){value=estimate;best=k;}
         }
-        return best>=0?best:random.nextInt(OPTIONS);
+        // While mapping the real body, experimentally sample 2/4 decisions.
+        // Dangerous contact, serious alternative or exploration can always
+        // interrupt; NO locomotion pattern or world direction is prescribed.
+        return best>=0?best:1+random.nextInt(OPTIONS-1);
     }
     /**
      * Retain the brain's OWN previous action only while its selected motor
@@ -118,6 +148,13 @@ public final class MotorDurationV22 {
     public long continuations(){return continuesCount;}
     public long interruptions(){return interruptsCount;}
     public long evaluated(){return episodes;}
+    public int selectedTicks(){return option<0?0:TICKS[option];}
+    public int directionalSamples(int action,int duration){
+        return headingTrained[action*OPTIONS+duration];
+    }
+    public int directionalHoldouts(int action,int duration){
+        return headingVerified[action*OPTIONS+duration];
+    }
     public int trained(int action,int duration){
         return trained[action*OPTIONS+duration];
     }
@@ -125,18 +162,23 @@ public final class MotorDurationV22 {
         return verified[action*OPTIONS+duration];
     }
     public String encode(){
-        StringBuilder out=new StringBuilder("md160|").append(choices)
+        StringBuilder out=new StringBuilder("md165|").append(choices)
             .append('|').append(continuesCount).append('|').append(interruptsCount)
             .append('|').append(episodes);
         for(int i=0;i<CELLS;i++)out.append('|').append(trained[i]).append(',')
             .append(verified[i]).append(',')
             .append(String.format(Locale.US,"%.7f",trainedMean[i])).append(',')
-            .append(String.format(Locale.US,"%.7f",verifiedMean[i]));
+            .append(String.format(Locale.US,"%.7f",verifiedMean[i])).append(',')
+            .append(headingTrained[i]).append(',').append(headingVerified[i])
+            .append(',').append(String.format(Locale.US,"%.7f",headingTrainMean[i]))
+            .append(',').append(String.format(Locale.US,"%.7f",headingVerifyMean[i]));
         return out.toString();
     }
     public boolean restore(String raw){
-        if(raw==null||raw.length()>10000||!raw.startsWith("md160|"))return false;
+        if(raw==null||raw.length()>16000||
+           !(raw.startsWith("md160|")||raw.startsWith("md165|")))return false;
         try{
+            boolean legacy=raw.startsWith("md160|");
             String[] s=raw.split("\\|",-1);
             if(s.length!=5+CELLS)return false;
             long a=Long.parseLong(s[1]),b=Long.parseLong(s[2]),
@@ -144,16 +186,30 @@ public final class MotorDurationV22 {
             if(a<0||b<0||c<0||d<0||a>1000000000L||
                b>1000000000L||c>1000000000L||d>1000000000L)return false;
             int[] t=new int[CELLS],v=new int[CELLS];
-            float[] tm=new float[CELLS],vm=new float[CELLS];
+            float[] tm=new float[CELLS],vm=new float[CELLS],
+                htMean=new float[CELLS],hvMean=new float[CELLS];
+            int[] ht=new int[CELLS],hv=new int[CELLS];
             for(int i=0;i<CELLS;i++){
                 String[] row=s[i+5].split(",",-1);
-                if(row.length!=4)return false;
+                if(row.length!=(legacy?4:8))return false;
                 t[i]=Integer.parseInt(row[0]);v[i]=Integer.parseInt(row[1]);
                 tm[i]=Float.parseFloat(row[2]);vm[i]=Float.parseFloat(row[3]);
                 if(t[i]<0||v[i]<0||t[i]>1000000000||v[i]>1000000000||
                    !Float.isFinite(tm[i])||!Float.isFinite(vm[i])||
                    Math.abs(tm[i])>1.501f||Math.abs(vm[i])>1.501f)return false;
+                if(!legacy){
+                    ht[i]=Integer.parseInt(row[4]);hv[i]=Integer.parseInt(row[5]);
+                    htMean[i]=Float.parseFloat(row[6]);hvMean[i]=Float.parseFloat(row[7]);
+                    if(ht[i]<0||hv[i]<0||ht[i]>t[i]||hv[i]>v[i]||
+                       !Float.isFinite(htMean[i])||!Float.isFinite(hvMean[i])||
+                       Math.abs(htMean[i])>1.001f||Math.abs(hvMean[i])>1.001f)
+                        return false;
+                }
             }
+            System.arraycopy(ht,0,headingTrained,0,CELLS);
+            System.arraycopy(hv,0,headingVerified,0,CELLS);
+            System.arraycopy(htMean,0,headingTrainMean,0,CELLS);
+            System.arraycopy(hvMean,0,headingVerifyMean,0,CELLS);
             System.arraycopy(t,0,trained,0,CELLS);
             System.arraycopy(v,0,verified,0,CELLS);
             System.arraycopy(tm,0,trainedMean,0,CELLS);
