@@ -1478,7 +1478,8 @@ jobs:
           assert 'symMotor.restoreFast(prefs.getString(FastSomaticCircuitV167.KEY' in physical_game
           assert '.putString(FastSomaticCircuitV167.KEY,' in physical_game
           assert 'if(heldout){holdouts++;episodes++;}' in fast
-          assert 'Math.sin(' not in fast
+          assert 'Math.sin(time' not in fast and 'Math.sin(phase' not in fast
+          assert 'Math.sin(theta)' in fast  # Own discrete-action heading geometry, NOT an oscillator
           assert 'System.arraycopy(base,0,commands,0,base.length);' in fast
           assert 'commands[motor]=clip(base[motor]+.42f*next[i]' in fast
           assert 'public static final String LOCAL_KEY="symbiote_cortex_local_v161";' in cortex
