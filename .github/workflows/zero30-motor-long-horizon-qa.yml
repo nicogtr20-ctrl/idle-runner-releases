@@ -31,6 +31,7 @@ jobs:
             'app/src/main/java/com/overmind/zero/Zero3LearningFoundation.java',
             'app/src/main/java/com/overmind/zero/Zero3MotorResponseKernel.java',
             'app/src/main/java/com/overmind/zero/Zero3MotorRetentionRegression.java',
+            'app/src/main/java/com/overmind/zero/Zero3MotorPromotionGate.java',
             'app/src/main/java/com/overmind/zero/Zero3MotorImpulseResponseRegression.java',
             'app/src/main/java/com/overmind/zero/Zero3MotorLongHorizonRegression.java']
           subprocess.run(cmd,check=True)
