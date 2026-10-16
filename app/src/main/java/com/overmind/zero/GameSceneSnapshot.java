@@ -170,6 +170,11 @@ public final class GameSceneSnapshot {
             return root.toString();
         }catch(Exception error){throw new IllegalStateException("Cannot snapshot physical scene",error);}
     }
+    /** Read-only posture for saved neural diagnostics, not a live restore. */
+    public static Scene workingPosture(String raw){
+        try{return restore(new JSONObject(raw).getJSONObject("physical").toString());}
+        catch(Exception invalid){return null;}
+    }
     public static Scene restore(String raw){
         try{
             if(raw==null||raw.isEmpty()||raw.length()>2000000)return null;

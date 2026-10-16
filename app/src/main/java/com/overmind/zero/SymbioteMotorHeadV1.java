@@ -25,6 +25,8 @@ public final class SymbioteMotorHeadV1 {
     private final FastSomaticCircuitV167 somatic=new FastSomaticCircuitV167();
     private final SymbioteMotorSkillMemoryV169 motorMemory=new SymbioteMotorSkillMemoryV169();
     private final SymbioteMotorSkillMemoryV169 manipulationMemory=new SymbioteMotorSkillMemoryV169(true);
+    private final MotorResponseJournalV172 responses=new MotorResponseJournalV172();
+    public MotorResponseJournalV172 responseJournal(){return responses;}
     private boolean cleanDirectionalTrial=true,physicalEvidence=false;
     private float activeImpulse=0f;
     public boolean cleanDirectionalTrial(){return cleanDirectionalTrial&&physicalEvidence&&activeImpulse>.5f;}
@@ -170,6 +172,7 @@ public final class SymbioteMotorHeadV1 {
         if(adaptationEnabled&&rescued==null&&!motorMemory.recoveryUnderReview())
             rescued=manipulationMemory.recoverIfStalled(action,verifiedMotorSnapshot(),body,skin);
         if(rescued!=null)restoreVerifiedMotor(rescued);
+        responses.begin(action,body);
         choices++;
         fastProbe=(choices%3L)==1L;
         boolean samePhysicalCommand=priorPhysicalAction==action;
@@ -270,6 +273,7 @@ public final class SymbioteMotorHeadV1 {
         MotorBrain.Body now,Morphology.Surface skin,
         float actualMuscleImpulse,boolean external,float dt){
         if(now!=null&&skin!=null){
+            responses.frame(beforeX,beforeY,now,commands,actualMuscleImpulse,external,dt);
             coordination.sample(beforeX,beforeY,now.cx,now.cy,commands);
             somatic.observed(beforeX,beforeY,now);
             physicalEvidence=true;activeImpulse+=Math.max(0f,actualMuscleImpulse);
@@ -361,13 +365,14 @@ public final class SymbioteMotorHeadV1 {
         // actually probed cortex level gets plastic credit. This removes
         // the OTA167 concurrent motor credit assignment ambiguity.
         boolean eligible=cleanDirectionalTrial();
+        responses.finish(train,holdout,eligible,fastProbe);
         coordination.consequence(train&&!fastProbe&&eligible,holdout&&eligible,noise,pending,localFeatures,
             localWeights,CHANNELS,LOCAL_FEATURES);
         somatic.consequence(train&&fastProbe&&eligible,holdout&&eligible);
         lastAction=-1;
     }
     private void clearLiveMotor(){
-        lastAction=-1;priorPhysicalAction=-1;fastProbe=false;
+        lastAction=-1;priorPhysicalAction=-1;fastProbe=false;responses.resetLife();
         coordination.resetLife();somatic.resetLife();
         Arrays.fill(commands,0);Arrays.fill(decisionCommands,0);Arrays.fill(noise,0);
     }

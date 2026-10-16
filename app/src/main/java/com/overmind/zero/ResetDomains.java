@@ -33,7 +33,7 @@ public final class ResetDomains {
                  "online_accepted_hand_v094","online_rejected_hand_v094",GripAffordanceV20.KEY};
             case MEMBRANE:return new String[]{"morph_brain_v07","morph_attempts_v07",
                  "morph_accepted_v07","morph_gate_attempts_v08","morph_gate_success_v08",SymbioteMotorHeadV1.KEY,SymbioteMotorHeadV1.LOCAL_KEY,SymbioteCoordinationV162.KEY,
-                 FastSomaticCircuitV167.KEY,SymbioteMotorSkillMemoryV169.KEY,SymbioteMotorSkillMemoryV169.MANIPULATION_KEY,
+                 FastSomaticCircuitV167.KEY,SymbioteMotorSkillMemoryV169.KEY,MotorResponseJournalV172.KEY,SymbioteMotorSkillMemoryV169.MANIPULATION_KEY,
                  "online_accepted_membrane_v094","online_rejected_membrane_v094",
                   "grip_skills_v099",CompetenceMemoryV21.KEY};
             case EXPLORATION:return new String[]{"world_knowledge_v03",
@@ -46,7 +46,7 @@ public final class ResetDomains {
             case PROPRIOCEPTION:return new String[]{BodyProprioception.KEY,DistributedBodySense.KEY,LocalImpedanceSense.KEY,FluidInteroceptionV1.KEY};
             case SPATIAL:return new String[]{SpatialPerception.KEY,PerceptualAssociationsV20.KEY,ObjectExperienceV20.KEY,ObjectContinuityV21.KEY};
             case CAUSAL:return new String[]{CausalExperiments.KEY,PhysicalConsequenceV20.KEY,CausalSequenceV23.KEY};
-            case NAVIGATION:return new String[]{InstrumentalNavigation.KEY,ContextualNavigationV171.KEY};
+            case NAVIGATION:return new String[]{InstrumentalNavigation.KEY,ContextualNavigationV171.KEY,ContextualNavigationV172.KEY};
             case INTENTION:return new String[]{GoalContinuity.KEY};
             case GATE_METRICS:return new String[]{GateBehaviorMetrics.KEY};
             case ALL:return new String[0]; // handled by Editor.clear()

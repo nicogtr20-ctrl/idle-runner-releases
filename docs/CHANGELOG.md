@@ -1,3 +1,9 @@
+# Current work — ZERO172 physical command timing, 16 October 2026
+
+OTA170 / Android1170 is the last verified public release. The user reported persistent walking failure, requested a concrete causal check/correction and then “Riprendi”; source/APK OTA authorization remains in the conversation. Current branch `fix/zero172-proven-locomotor-learning` repairs interrupted-duration evidence and random interruption of an unfinished physical option, adds signed residual velocity to the contextual predictor, and reclaims stale controller-epoch capacity. No authored gait, food coordinate, forced confidence, reset or change of installed identity.
+
+Read [ZERO172 timing audit and correction](ZERO_172_PHYSICAL_COMMAND_TIMING.md) for causal reproductions, exact before/after results, rejected changes, persistence contracts and remaining limits. 97 local JVM entrypoints PASS. Android release validation and publication are still pending. **Corrected screens still collect zero energy; panel scenes regress and lose one baseline pickup. Do not claim generally improved walking or solved navigation.** The new passive `motor_response_journal_v172` records actual command age, velocity, displacement and motor-credit permissions for subsequent device verification. Earlier OTA170 status below remains its historical release record.
+
 <!-- Current authoritative release status; older sections below are historical. -->
 # Verified release — OTA170 / Android1170, runtime ZERO171 — 16 October 2026
 

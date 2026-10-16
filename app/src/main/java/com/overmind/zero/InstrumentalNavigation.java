@@ -33,7 +33,7 @@ public final class InstrumentalNavigation {
     private final float[] visual=new float[SIGNALS*SECTORS];
     private float startX,startY;
     private int pending=-1;
-    private final ContextualNavigationV171 contextual=new ContextualNavigationV171();
+    private final ContextualNavigationV172 contextual=new ContextualNavigationV172();
     private boolean embodiedContext=false;
     public void motorContext(MotorBrain.Body b,Morphology.Surface s,float[] weights){
         embodiedContext=true;contextual.context(b,s,weights);

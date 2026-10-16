@@ -47,7 +47,7 @@ jobs:
       - name: Unit tests
         run: |
           mkdir -p /tmp/overmind
-          javac -d /tmp/overmind app/src/main/java/com/overmind/zero/MotorBrain.java app/src/main/java/com/overmind/zero/OpticalCues.java app/src/main/java/com/overmind/zero/OpticalCueRegression.java app/src/main/java/com/overmind/zero/HabitatContinuity.java app/src/main/java/com/overmind/zero/DecisionBlackbox.java app/src/main/java/com/overmind/zero/GateLifeJournal.java app/src/main/java/com/overmind/zero/ContextualMotionProbe.java app/src/main/java/com/overmind/zero/ShadowNonInterferenceRegression.java app/src/main/java/com/overmind/zero/UnknownWorld.java app/src/main/java/com/overmind/zero/PanelPhysics.java app/src/main/java/com/overmind/zero/PanelPhysicsRegression.java app/src/main/java/com/overmind/zero/SquareGripPuzzle.java app/src/main/java/com/overmind/zero/SquareCollisionSolver.java app/src/main/java/com/overmind/zero/GripParityRegression.java app/src/main/java/com/overmind/zero/GateBoxGripIsolationRegression.java app/src/main/java/com/overmind/zero/MultiObjectGripRegression.java app/src/main/java/com/overmind/zero/GripSurfaceComposition.java app/src/main/java/com/overmind/zero/WorldPlacement.java app/src/main/java/com/overmind/zero/ContactLearning.java app/src/main/java/com/overmind/zero/DecisionBrain.java app/src/main/java/com/overmind/zero/Morphology.java app/src/main/java/com/overmind/zero/ScarcityLab.java app/src/main/java/com/overmind/zero/SensorimotorMind.java app/src/main/java/com/overmind/zero/GoalContinuity.java app/src/main/java/com/overmind/zero/GateBehaviorMetrics.java app/src/main/java/com/overmind/zero/BehavioralLaboratory.java app/src/main/java/com/overmind/zero/InstrumentalNavigation.java app/src/main/java/com/overmind/zero/SpatialPerception.java app/src/main/java/com/overmind/zero/CausalExperiments.java app/src/main/java/com/overmind/zero/BodyProprioception.java app/src/main/java/com/overmind/zero/DistributedBodySense.java app/src/main/java/com/overmind/zero/DistributedBodyRegression.java app/src/main/java/com/overmind/zero/LocalImpedanceSense.java app/src/main/java/com/overmind/zero/LocalImpedanceRegression.java app/src/main/java/com/overmind/zero/ShelterEcology.java app/src/main/java/com/overmind/zero/ShelterEcologyRegression.java app/src/main/java/com/overmind/zero/TemporalWorkingMemory.java app/src/main/java/com/overmind/zero/TemporalSkillBank.java app/src/main/java/com/overmind/zero/TemporalPersistenceRegression.java app/src/main/java/com/overmind/zero/LearnedSequencePlanner.java app/src/main/java/com/overmind/zero/LearningDiagnostics.java app/src/main/java/com/overmind/zero/ResetDomains.java app/src/main/java/com/overmind/zero/OnlineBodyLearning.java app/src/main/java/com/overmind/zero/MotionExploration.java app/src/main/java/com/overmind/zero/EpisodicMemory.java app/src/main/java/com/overmind/zero/MotorAutonomyGuard.java app/src/main/java/com/overmind/zero/MotorSkillBank.java app/src/main/java/com/overmind/zero/ExperienceCredit.java app/src/main/java/com/overmind/zero/GripSkillBank.java app/src/main/java/com/overmind/zero/SaveProfileCodec.java app/src/main/java/com/overmind/zero/LifeStatistics.java app/src/main/java/com/overmind/zero/GripContactObserver.java app/src/main/java/com/overmind/zero/GripContactObserverRegression.java app/src/main/java/com/overmind/zero/MortalityLearning.java app/src/main/java/com/overmind/zero/BodyIntegrity.java app/src/main/java/com/overmind/zero/BodyIntegrityRecoveredSnapshotsRegression.java app/src/main/java/com/overmind/zero/BodyIntegrityObstacleRegression.java app/src/main/java/com/overmind/zero/MaterialGeometry.java app/src/main/java/com/overmind/zero/MaterialSymbioteRegression.java app/src/main/java/com/overmind/zero/MaterialMotionRegression.java app/src/main/java/com/overmind/zero/MaterialVisionRegression.java app/src/main/java/com/overmind/zero/TelemetryChunks.java app/src/main/java/com/overmind/zero/TelemetryChunksRegression.java app/src/main/java/com/overmind/zero/PredictiveWorldV20.java app/src/main/java/com/overmind/zero/PredictiveWorldV20Regression.java app/src/main/java/com/overmind/zero/TransferSkillsV20.java app/src/main/java/com/overmind/zero/FuturePlannerV20.java app/src/main/java/com/overmind/zero/Zero20HierarchicalRegression.java app/src/main/java/com/overmind/zero/PhysicalConsequenceV20.java app/src/main/java/com/overmind/zero/PhysicalConsequenceV20Regression.java app/src/main/java/com/overmind/zero/GripAffordanceV20.java app/src/main/java/com/overmind/zero/GripAffordanceV20Regression.java app/src/main/java/com/overmind/zero/Zero20PassiveSnapshot.java app/src/main/java/com/overmind/zero/Zero20PassiveSnapshotRegression.java app/src/main/java/com/overmind/zero/BoxGripRetentionRegression.java app/src/main/java/com/overmind/zero/PerceptualAssociationsV20.java app/src/main/java/com/overmind/zero/PerceptualAssociationsV20Regression.java app/src/main/java/com/overmind/zero/ObjectExperienceV20.java app/src/main/java/com/overmind/zero/ObjectExperienceV20Regression.java app/src/main/java/com/overmind/zero/EnergyLifetimeCounters.java app/src/main/java/com/overmind/zero/UnifiedCognitionV21.java app/src/main/java/com/overmind/zero/UnifiedCognitionV21Regression.java app/src/main/java/com/overmind/zero/ObjectContinuityV21.java app/src/main/java/com/overmind/zero/ObjectContinuityV21Regression.java app/src/main/java/com/overmind/zero/CompetenceMemoryV21.java app/src/main/java/com/overmind/zero/CompetenceMemoryV21Regression.java app/src/main/java/com/overmind/zero/UnifiedArbiterV21.java app/src/main/java/com/overmind/zero/UnifiedArbiterV21Regression.java app/src/main/java/com/overmind/zero/UnifiedPolicyParityV21Regression.java app/src/main/java/com/overmind/zero/SymbioteMatterV1.java app/src/main/java/com/overmind/zero/FluidInteroceptionV1.java app/src/main/java/com/overmind/zero/FluidInteroceptionRegression.java app/src/main/java/com/overmind/zero/SymbioteMotorConsequenceRegression.java app/src/main/java/com/overmind/zero/SymbioteHeadingGeometryRegression.java app/src/main/java/com/overmind/zero/Zero154SensorimotorRegression.java app/src/main/java/com/overmind/zero/Zero155SystemIntegrityRegression.java app/src/main/java/com/overmind/zero/Zero157DashboardRegression.java app/src/main/java/com/overmind/zero/Zero158EvolutionRegression.java app/src/main/java/com/overmind/zero/SymbioteMotorHeadV1.java app/src/main/java/com/overmind/zero/SymbioteMatterV1Regression.java app/src/main/java/com/overmind/zero/CausalSequenceV23.java app/src/main/java/com/overmind/zero/CausalSequenceV23Regression.java app/src/main/java/com/overmind/zero/NeurogenesisV22.java app/src/main/java/com/overmind/zero/Zero159NeurogenesisRegression.java app/src/main/java/com/overmind/zero/MotorDurationV22.java app/src/main/java/com/overmind/zero/Zero160MotorDurationRegression.java app/src/main/java/com/overmind/zero/Zero161PhysicalCapabilityRegression.java app/src/main/java/com/overmind/zero/Zero161CortexRegression.java app/src/main/java/com/overmind/zero/Zero161OverstretchRegression.java app/src/main/java/com/overmind/zero/SymbioteCoordinationV162.java app/src/main/java/com/overmind/zero/Zero162CoordinationRegression.java app/src/main/java/com/overmind/zero/Zero163MaterialIntegrationRegression.java app/src/main/java/com/overmind/zero/Zero164TractionRegression.java app/src/main/java/com/overmind/zero/Zero165MotorPersistenceRegression.java app/src/main/java/com/overmind/zero/Zero166CortexFluidShearRegression.java app/src/main/java/com/overmind/zero/FastSomaticCircuitV167.java app/src/main/java/com/overmind/zero/Zero167SomaticLoopRegression.java app/src/main/java/com/overmind/zero/Zero168ControllabilityRegression.java app/src/main/java/com/overmind/zero/SymbioteMotorSkillMemoryV169.java app/src/main/java/com/overmind/zero/Zero169MotorMemoryRegression.java app/src/main/java/com/overmind/zero/Zero170MotorReliabilityRegression.java app/src/main/java/com/overmind/zero/RecurrentCoreV22.java app/src/main/java/com/overmind/zero/Base64CodecV22.java app/src/main/java/com/overmind/zero/SkillExecutionV22.java app/src/main/java/com/overmind/zero/RecurrentCoreV22Regression.java app/src/main/java/com/overmind/zero/SkillExecutionIndependentRegression.java app/src/main/java/com/overmind/zero/Zero22LabCheck.java app/src/main/java/com/overmind/zero/CoreComparisonV22.java app/src/main/java/com/overmind/zero/Zero20CoveredEnergyBenchmark.java app/src/main/java/com/overmind/zero/PhysicsClockV171.java app/src/main/java/com/overmind/zero/ContextualNavigationV171.java app/src/main/java/com/overmind/zero/SymbioteWorldStepV171.java app/src/main/java/com/overmind/zero/SymbioteLaboratoryV171.java app/src/main/java/com/overmind/zero/Zero171IntegratedRegression.java app/src/main/java/com/overmind/zero/MaterialContactConstraints.java app/src/main/java/com/overmind/zero/MaterialContactRegression.java
+          javac -d /tmp/overmind app/src/main/java/com/overmind/zero/MotorBrain.java app/src/main/java/com/overmind/zero/OpticalCues.java app/src/main/java/com/overmind/zero/OpticalCueRegression.java app/src/main/java/com/overmind/zero/HabitatContinuity.java app/src/main/java/com/overmind/zero/DecisionBlackbox.java app/src/main/java/com/overmind/zero/GateLifeJournal.java app/src/main/java/com/overmind/zero/ContextualMotionProbe.java app/src/main/java/com/overmind/zero/ShadowNonInterferenceRegression.java app/src/main/java/com/overmind/zero/UnknownWorld.java app/src/main/java/com/overmind/zero/PanelPhysics.java app/src/main/java/com/overmind/zero/PanelPhysicsRegression.java app/src/main/java/com/overmind/zero/SquareGripPuzzle.java app/src/main/java/com/overmind/zero/SquareCollisionSolver.java app/src/main/java/com/overmind/zero/GripParityRegression.java app/src/main/java/com/overmind/zero/GateBoxGripIsolationRegression.java app/src/main/java/com/overmind/zero/MultiObjectGripRegression.java app/src/main/java/com/overmind/zero/GripSurfaceComposition.java app/src/main/java/com/overmind/zero/WorldPlacement.java app/src/main/java/com/overmind/zero/ContactLearning.java app/src/main/java/com/overmind/zero/DecisionBrain.java app/src/main/java/com/overmind/zero/Morphology.java app/src/main/java/com/overmind/zero/ScarcityLab.java app/src/main/java/com/overmind/zero/SensorimotorMind.java app/src/main/java/com/overmind/zero/GoalContinuity.java app/src/main/java/com/overmind/zero/GateBehaviorMetrics.java app/src/main/java/com/overmind/zero/BehavioralLaboratory.java app/src/main/java/com/overmind/zero/InstrumentalNavigation.java app/src/main/java/com/overmind/zero/SpatialPerception.java app/src/main/java/com/overmind/zero/CausalExperiments.java app/src/main/java/com/overmind/zero/BodyProprioception.java app/src/main/java/com/overmind/zero/DistributedBodySense.java app/src/main/java/com/overmind/zero/DistributedBodyRegression.java app/src/main/java/com/overmind/zero/LocalImpedanceSense.java app/src/main/java/com/overmind/zero/LocalImpedanceRegression.java app/src/main/java/com/overmind/zero/ShelterEcology.java app/src/main/java/com/overmind/zero/ShelterEcologyRegression.java app/src/main/java/com/overmind/zero/TemporalWorkingMemory.java app/src/main/java/com/overmind/zero/TemporalSkillBank.java app/src/main/java/com/overmind/zero/TemporalPersistenceRegression.java app/src/main/java/com/overmind/zero/LearnedSequencePlanner.java app/src/main/java/com/overmind/zero/LearningDiagnostics.java app/src/main/java/com/overmind/zero/ResetDomains.java app/src/main/java/com/overmind/zero/OnlineBodyLearning.java app/src/main/java/com/overmind/zero/MotionExploration.java app/src/main/java/com/overmind/zero/EpisodicMemory.java app/src/main/java/com/overmind/zero/MotorAutonomyGuard.java app/src/main/java/com/overmind/zero/MotorSkillBank.java app/src/main/java/com/overmind/zero/ExperienceCredit.java app/src/main/java/com/overmind/zero/GripSkillBank.java app/src/main/java/com/overmind/zero/SaveProfileCodec.java app/src/main/java/com/overmind/zero/LifeStatistics.java app/src/main/java/com/overmind/zero/GripContactObserver.java app/src/main/java/com/overmind/zero/GripContactObserverRegression.java app/src/main/java/com/overmind/zero/MortalityLearning.java app/src/main/java/com/overmind/zero/BodyIntegrity.java app/src/main/java/com/overmind/zero/BodyIntegrityRecoveredSnapshotsRegression.java app/src/main/java/com/overmind/zero/BodyIntegrityObstacleRegression.java app/src/main/java/com/overmind/zero/MaterialGeometry.java app/src/main/java/com/overmind/zero/MaterialSymbioteRegression.java app/src/main/java/com/overmind/zero/MaterialMotionRegression.java app/src/main/java/com/overmind/zero/MaterialVisionRegression.java app/src/main/java/com/overmind/zero/TelemetryChunks.java app/src/main/java/com/overmind/zero/TelemetryChunksRegression.java app/src/main/java/com/overmind/zero/PredictiveWorldV20.java app/src/main/java/com/overmind/zero/PredictiveWorldV20Regression.java app/src/main/java/com/overmind/zero/TransferSkillsV20.java app/src/main/java/com/overmind/zero/FuturePlannerV20.java app/src/main/java/com/overmind/zero/Zero20HierarchicalRegression.java app/src/main/java/com/overmind/zero/PhysicalConsequenceV20.java app/src/main/java/com/overmind/zero/PhysicalConsequenceV20Regression.java app/src/main/java/com/overmind/zero/GripAffordanceV20.java app/src/main/java/com/overmind/zero/GripAffordanceV20Regression.java app/src/main/java/com/overmind/zero/Zero20PassiveSnapshot.java app/src/main/java/com/overmind/zero/Zero20PassiveSnapshotRegression.java app/src/main/java/com/overmind/zero/BoxGripRetentionRegression.java app/src/main/java/com/overmind/zero/PerceptualAssociationsV20.java app/src/main/java/com/overmind/zero/PerceptualAssociationsV20Regression.java app/src/main/java/com/overmind/zero/ObjectExperienceV20.java app/src/main/java/com/overmind/zero/ObjectExperienceV20Regression.java app/src/main/java/com/overmind/zero/EnergyLifetimeCounters.java app/src/main/java/com/overmind/zero/UnifiedCognitionV21.java app/src/main/java/com/overmind/zero/UnifiedCognitionV21Regression.java app/src/main/java/com/overmind/zero/ObjectContinuityV21.java app/src/main/java/com/overmind/zero/ObjectContinuityV21Regression.java app/src/main/java/com/overmind/zero/CompetenceMemoryV21.java app/src/main/java/com/overmind/zero/CompetenceMemoryV21Regression.java app/src/main/java/com/overmind/zero/UnifiedArbiterV21.java app/src/main/java/com/overmind/zero/UnifiedArbiterV21Regression.java app/src/main/java/com/overmind/zero/UnifiedPolicyParityV21Regression.java app/src/main/java/com/overmind/zero/SymbioteMatterV1.java app/src/main/java/com/overmind/zero/FluidInteroceptionV1.java app/src/main/java/com/overmind/zero/FluidInteroceptionRegression.java app/src/main/java/com/overmind/zero/SymbioteMotorConsequenceRegression.java app/src/main/java/com/overmind/zero/SymbioteHeadingGeometryRegression.java app/src/main/java/com/overmind/zero/Zero154SensorimotorRegression.java app/src/main/java/com/overmind/zero/Zero155SystemIntegrityRegression.java app/src/main/java/com/overmind/zero/Zero157DashboardRegression.java app/src/main/java/com/overmind/zero/Zero158EvolutionRegression.java app/src/main/java/com/overmind/zero/SymbioteMotorHeadV1.java app/src/main/java/com/overmind/zero/SymbioteMatterV1Regression.java app/src/main/java/com/overmind/zero/CausalSequenceV23.java app/src/main/java/com/overmind/zero/CausalSequenceV23Regression.java app/src/main/java/com/overmind/zero/NeurogenesisV22.java app/src/main/java/com/overmind/zero/Zero159NeurogenesisRegression.java app/src/main/java/com/overmind/zero/MotorDurationV22.java app/src/main/java/com/overmind/zero/Zero160MotorDurationRegression.java app/src/main/java/com/overmind/zero/Zero161PhysicalCapabilityRegression.java app/src/main/java/com/overmind/zero/Zero161CortexRegression.java app/src/main/java/com/overmind/zero/Zero161OverstretchRegression.java app/src/main/java/com/overmind/zero/SymbioteCoordinationV162.java app/src/main/java/com/overmind/zero/Zero162CoordinationRegression.java app/src/main/java/com/overmind/zero/Zero163MaterialIntegrationRegression.java app/src/main/java/com/overmind/zero/Zero164TractionRegression.java app/src/main/java/com/overmind/zero/Zero165MotorPersistenceRegression.java app/src/main/java/com/overmind/zero/Zero166CortexFluidShearRegression.java app/src/main/java/com/overmind/zero/FastSomaticCircuitV167.java app/src/main/java/com/overmind/zero/Zero167SomaticLoopRegression.java app/src/main/java/com/overmind/zero/Zero168ControllabilityRegression.java app/src/main/java/com/overmind/zero/SymbioteMotorSkillMemoryV169.java app/src/main/java/com/overmind/zero/Zero169MotorMemoryRegression.java app/src/main/java/com/overmind/zero/Zero170MotorReliabilityRegression.java app/src/main/java/com/overmind/zero/RecurrentCoreV22.java app/src/main/java/com/overmind/zero/Base64CodecV22.java app/src/main/java/com/overmind/zero/SkillExecutionV22.java app/src/main/java/com/overmind/zero/RecurrentCoreV22Regression.java app/src/main/java/com/overmind/zero/SkillExecutionIndependentRegression.java app/src/main/java/com/overmind/zero/Zero22LabCheck.java app/src/main/java/com/overmind/zero/CoreComparisonV22.java app/src/main/java/com/overmind/zero/Zero20CoveredEnergyBenchmark.java app/src/main/java/com/overmind/zero/PhysicsClockV171.java app/src/main/java/com/overmind/zero/ContextualNavigationV171.java app/src/main/java/com/overmind/zero/SymbioteWorldStepV171.java app/src/main/java/com/overmind/zero/SymbioteLaboratoryV171.java app/src/main/java/com/overmind/zero/Zero171IntegratedRegression.java app/src/main/java/com/overmind/zero/MaterialContactConstraints.java app/src/main/java/com/overmind/zero/MaterialContactRegression.java app/src/main/java/com/overmind/zero/ContextualNavigationV172.java app/src/main/java/com/overmind/zero/Zero172MotorResponseRegression.java app/src/main/java/com/overmind/zero/MotorResponseJournalV172.java
           java -cp /tmp/overmind com.overmind.zero.GripContactObserverRegression
           java -cp /tmp/overmind com.overmind.zero.MotorBrain
           java -cp /tmp/overmind com.overmind.zero.UnknownWorld
@@ -137,6 +137,7 @@ jobs:
           java -cp /tmp/overmind com.overmind.zero.Zero169MotorMemoryRegression
           java -cp /tmp/overmind com.overmind.zero.Zero170MotorReliabilityRegression
           java -cp /tmp/overmind com.overmind.zero.Zero171IntegratedRegression
+          java -cp /tmp/overmind com.overmind.zero.Zero172MotorResponseRegression
           java -cp /tmp/overmind com.overmind.zero.SymbioteMotorConsequenceRegression
           java -cp /tmp/overmind com.overmind.zero.FluidInteroceptionRegression
           java -cp /tmp/overmind com.overmind.zero.SymbioteMatterV1Regression
@@ -844,7 +845,7 @@ jobs:
           assert 'trials[action]>=3' in nav and 'holdouts[action]>=2' in nav
           assert 'symbioteHead==null||symbioteHead.cleanDirectionalTrial()' in mind
           assert 'float projection=(float)(dx*Math.cos(angle)+dy*Math.sin(angle))' in nav
-          assert 'case NAVIGATION:return new String[]{InstrumentalNavigation.KEY,ContextualNavigationV171.KEY};' in reset
+          assert 'case NAVIGATION:return new String[]{InstrumentalNavigation.KEY,ContextualNavigationV171.KEY,ContextualNavigationV172.KEY};' in reset
           assert 'ResetDomains.NAVIGATION' in ui
           assert 'case "NAV":' in brain and 'navigation.verifiedActions()' in brain
           assert 'SaveProfileCodec.encode(capture())' in slots and 'SLOTS=12' in slots
@@ -977,16 +978,19 @@ jobs:
           # ZERO171: reviewed integration sources re-pinned, including causal
           # motor eligibility, continuous geometry and isolated actual-body lab.
           pins={
+          'MotorResponseJournalV172.java':'589b22281b536f736bf8bd8f87f47e367abae884',
+          'Zero172MotorResponseRegression.java':'3d580e8fa80a9fc26a39f79e52a72b5e723984c1',
+          'ContextualNavigationV172.java':'e265521fbae50e66dcc94fb6a5426d25b14e5c23',
           'LearningDiagnostics.java':'a4b3af6e8b87112f9a14505bbdde6170d4dd9d9e',
           'CoreLabActivityV22.java':'5be3f7d42b8dc69256af7a21cd742d3b8791814f',
           'CoreComparisonV22.java':'b1a20ab63199b21279b9c1c0b1d674656a5ad7fa',
           'CausalExperiments.java':'3308252cfa2aac3293c92d187cf8df5c47494b25',
           'Zero170MotorReliabilityRegression.java':'cbad796e2129cf3ce9a7317a7711ef77049e465b',
           'Zero171IntegratedRegression.java':'4fa0a726c93159d1813d36e5be7d6b78ca2b0cdd',
-          'SymbioteLaboratoryV171.java':'cc2bcd06125066c2cfeb08ea69287bbf5f480b0f',
+          'SymbioteLaboratoryV171.java':'3b00be5824ea25ee3eda289752e17e79149fd333',
           'SymbioteWorldStepV171.java':'91454cd05b8e9bcc1d4bc3919e0919351c4a8750',
           'PhysicsClockV171.java':'c1dd1ecee466aab07aebabadc5d05b8647ec6e9f',
-          'ContextualNavigationV171.java':'9dbce41cb883af0559cc39036a09655d0c447a3c',
+          'ContextualNavigationV171.java':'53b0c07d84d20d6f42615c98963cb378df8e7d1a',
           'SymbioteHeadingGeometryRegression.java':'417fe6f9218a694b2c361f45046837003ab46d28',
           'Zero154SensorimotorRegression.java':'df87dc0b983f8ae9dadbdf302ac7c1d85d0ad595',
           'Zero155SystemIntegrityRegression.java':'1efbd3a75210bc6c3435acec4034cc0d711050d1',
@@ -998,26 +1002,26 @@ jobs:
           'SaveSlotsActivity.java':'c85c98e5fb415c2c70e7441b4ccae21c43147931',
           'SaveSlotStore.java':'4d232fed8599f7f3eb42a080f3806b5a537f01fa',
           'SymbioteMatterV1Regression.java':'e825dc554a022d3d4fe45e39eadbfa631f705c8a',
-          'SymbioteMotorHeadV1.java':'2c865b11d26d1438ef956f86bafce6f6fb75f671',
+          'SymbioteMotorHeadV1.java':'2dafa2527d20d7d909595e9a4c8ea837c7cf0b1c',
           'SymbioteMatterV1.java':'3e98305fa1fd514be1f1c8a16d212d0d936aef3a',
           'RecurrentCoreV22.java':'f03a6b3056499c1148a21da2fd6ae7ee7b264ea8',
           'ObjectContinuityV21.java':'73835ed4c3b15eefcfa3d1c615d7769b6fa1fa46',
           'CausalSequenceV23.java':'329344e296ec342e0b85b965babbae15a3eb6f83',
           'CausalSequenceV23Regression.java':'e8ea1df2ae038dd9f7db44132df3e247e643b6ae',
-          'SensorimotorMind.java':'2839a7b3aa98989385b918ccc1ec6934241e48a1',
+          'SensorimotorMind.java':'54e925be6abe610ecc832d5d4e95c1b570ad3c3e',
           'DecisionBlackbox.java':'7fbac5e10cdf101bef3fd5ae050ae5db6074bc6c',
           'EnergyLifetimeCounters.java':'7c0a9d815937a39c5cfdaddb01896b39536d8afe',
           'ObjectExperienceV20.java':'39ada3745f8b22769e67c00f5def9a5a3ed6ba1a',
           'ObjectExperienceV20Regression.java':'44bccc8ebe5971ed5226e50f62f8e27f7fbc6ddd',
-          'GameActivity.java':'b0dace6608c4b6e9fba8ca4ce7009e12fcb26270',
+          'GameActivity.java':'a85c8336a3ab63271a9599ee51a775aec8bf4b78',
           'ContactGeometryForensics.java':'661401bf03e4e586e5fe69d819db7af05a1a319d',
-          'InstrumentalNavigation.java':'7afe9a386f51b4a8db9c48c84def1e29c9b9cf2c',
+          'InstrumentalNavigation.java':'da8c34c36b996629fd6a9d0d9615febda22d4cc5',
           'BehavioralLaboratory.java':'8a35099ddb4b4d7ef9a9a334cb2e50b9477285d8',
           'BehavioralLabActivity.java':'d5ab9789aed58f97494567df97ad40089921cd8e',
-          'ResetDomains.java':'4ca7dabe06b1e389a7c95802c2856d1f1c621d11',
+          'ResetDomains.java':'15c4aaa736c997526a8509eb0c307d302cba00d1',
           'ScarcityLab.java':'851f86278ad1795d8bae3ebfd6cb7a18c80c3165',
           'UnknownWorld.java':'4443b7e2e44a8229fae19c3e8237db9f23b822f2',
-          'GameSceneSnapshot.java':'c3dab75b8f71fbc4e9fefa455831484468acd465',
+          'GameSceneSnapshot.java':'343f87225cc2e0a2ed7b3509f743377d4bd612d9',
           'SquareGripPuzzle.java':'781d250161f5c4fa8b4a7dfd57eae932682e0f19',
           'SquareCollisionSolver.java':'c27786f4b3557149f901831a774cf8be4a96bac8',
           'WorldPlacement.java':'cbe03d688d5cdcd981c83ebba0dcc7de29497ae9',
@@ -1028,15 +1032,15 @@ jobs:
           'OpticalCueRegression.java':'78a9df279beb12b450f7792b0a3871762ec1d177',
           'HabitatContinuity.java':'a8f8c5b51ae66f58b024167daa395c3e757ec9a6',
           'GripSurfaceComposition.java':'04847c6180ee638961d033e8b4ac01fd574dd312',
-          'BrainToolsActivity.java':'ea1a8fa4fe41a4019ac864f30ff188f7c7d08711',
-          'BrainStatsActivity.java':'9a67dd71f340b19ff5c0d0754de9de58f8321ac1',
+          'BrainToolsActivity.java':'fd89f00ac1dd1b2c57a449530d77f7d1d316379f',
+          'BrainStatsActivity.java':'699bf3d4584eed93f7323b0ccddf183a2d1afde0',
           'StatisticsActivity.java':'94c65bc27b6bc0ccc1e0d1d9359ae572e85b95e1',
           'TelemetryActivity.java':'1c6d49cf0d78a6cb913be0708aebaaa43ab5aaaf',
           'Zero157DashboardRegression.java':'2ceb93a50bbb1269c872d4bcaa0699af581d9260',
           'Zero158EvolutionRegression.java':'795937b5ab393646ac644260825b268587992d92',
           'NeurogenesisV22.java':'4f69eb30e32f0da16ec5921b73a6862d12c5c3c6',
           'Zero159NeurogenesisRegression.java':'f1d464bf79e8ee06d6bb75c8f706c2b9292b8c72',
-          'MotorDurationV22.java':'58c3fbef77e94aacebadea40c5c8899885d6d34d',
+          'MotorDurationV22.java':'298c38fc8c7a4248f12f0824ba680b51a2877aea',
           'Zero160MotorDurationRegression.java':'df5bf7830aa3b3a012c31b4a78ef7e45234b95e1',
           'Zero161PhysicalCapabilityRegression.java':'80e51549afe10a1a313cd7c412335949bd7f8323',
           'Zero161CortexRegression.java':'ffdcfde1925dd31f8d4e7bf1a33434dafffb6e53',
@@ -1044,7 +1048,7 @@ jobs:
           'SymbioteCoordinationV162.java':'5cd1b499d0abd0dae3a41a66b6ba2e39f85a9e91',
           'Zero162CoordinationRegression.java':'82eaa69ed6df58613a95dc2f39314cfb4abba0af',
           'Zero163MaterialIntegrationRegression.java':'8664a5898fdad240ae9f9992e820f888805d5b99',
-          'Zero165MotorPersistenceRegression.java':'82b9184b43f72f2f52f431b16864957ff84d043b',
+          'Zero165MotorPersistenceRegression.java':'d96228ff726e7105d5cc19d5fc56c1e5256d5c41',
           'Zero166CortexFluidShearRegression.java':'e2f875ab0b72893108bca9c1f23822d7dbdd55fe',
           'FastSomaticCircuitV167.java':'ed4aa4fe6a5d2011c944c01d539bb89166d31bde',
           'Zero167SomaticLoopRegression.java':'7e8017718ccb9891dbfefcad8f3c439f66da352a',
@@ -1071,7 +1075,7 @@ jobs:
           'PanelPhysics.java':'e2cc99c98084a6f5cc2f41e2b9debcbb1d6c3005',
           'PanelPhysicsRegression.java':'438d489b54d82fc4596721e6ad8564a88b9c9fb3',
           'WindArt.java':'1fba6d3437c42f6f5c9068f0d22a1111c14ce7b4',
-          'TelemetryGitHub.java':'501d961644073e0cc172237b88c4319b402b187c',
+          'TelemetryGitHub.java':'bb9d94692a388cbbc59334035d47614ba05ff011',
           'TelemetryChunks.java':'9f8af4e550db409098e16f51b948fde699e5e67d',
           'TelemetryChunksRegression.java':'c29156e14934dba37a2c53412e984cbb1eb18696',
           'SpatialPerception.java':'cbbbc3bd81df9e23d5f6aec7b8ce4432972c1ad0',
@@ -1097,7 +1101,7 @@ jobs:
           assert 'if(selected>=0&&remaining>0&&safe&&!challenger)' in duration
           assert 'if(auditOnly){verified[at]++' in duration
           assert 'headingTrained[at]<16||headingVerified[at]<6' in duration
-          assert 'raw.startsWith("md160|")||raw.startsWith("md165|")' in duration
+          assert 'raw.startsWith("md160|")||raw.startsWith("md165|")||raw.startsWith("md172|")' in duration
           assert 'return best>=0?best:1+random.nextInt(OPTIONS-1);' in duration
           assert 'motorDuration=new MotorDurationV22();' in actual
           # OTA132: all game actions originate in recurrent primary Q/forward model;
@@ -1636,7 +1640,7 @@ jobs:
           assert 'SymbioteWorldStepV171.interior(symMatter,creature,surface,' in game
           assert 'externalDisturbance,slice)' in game
           assert 'observedManipulation(heldTravel,actualHold&&!shelter.storm(worldTime))' in game
-          for key in ('ContextualNavigationV171.KEY','SymbioteMotorSkillMemoryV169.MANIPULATION_KEY','LearningDiagnostics.ACTIVE_KEY'):
+          for key in ('ContextualNavigationV172.KEY','SymbioteMotorSkillMemoryV169.MANIPULATION_KEY','LearningDiagnostics.ACTIVE_KEY'):
               assert key in reset and game.count(key)>=2,key
           assert 'navigation.motorContext(' in mind
           assert 'symbioteHead.cleanDirectionalTrial()' in mind
@@ -1648,6 +1652,33 @@ jobs:
           assert 'zero_motorbrain_001' in (p/'SaveSlotStore.java').read_text()
           print('ZERO171 live world, motor provenance, predictor dimensions, optional saves/reset and installed version: PASS')
           PYTEST
+      - name: ZERO172 real option timing and signed velocity persistence
+        run: |
+          python3 - <<'PY172'
+          from pathlib import Path
+          root=Path('app/src/main/java/com/overmind/zero')
+          duration=(root/'MotorDurationV22.java').read_text()
+          mind=(root/'SensorimotorMind.java').read_text()
+          nav=(root/'ContextualNavigationV172.java').read_text()
+          game=(root/'GameActivity.java').read_text()
+          lab=(root/'SymbioteLaboratoryV171.java').read_text()
+          atlas=(root/'BrainStatsActivity.java').read_text()
+          analysis=(root/'BrainToolsActivity.java').read_text()
+          assert 'intervals!=TICKS[option]' in duration
+          assert '!exploratory&&harmfulContact' not in duration
+          assert 'scores[greedy]-scores[selected]>.24f' in duration
+          assert 'actionExploratory=actionExploratory&&chosen==exploratoryProposal' in mind
+          assert 'b.cvx/8f' in nav and 'b.cvy/8f' in nav
+          assert 'c.epoch!=epoch&&weakest.epoch==epoch' in nav
+          assert 'navigation.restoreContextual(prefs.getString(ContextualNavigationV172.KEY' in game
+          assert '.putString(ContextualNavigationV172.KEY,navigation.encodeContextual())' in game
+          assert 'nav.restoreContextual(text(saved,ContextualNavigationV172.KEY))' in lab
+          for text in (atlas,analysis):
+              assert 'ContextualNavigationV172.KEY' in text and 'GameSceneSnapshot.workingPosture(' in text
+          assert 'sensorimotor-172' in (root/'TelemetryGitHub.java').read_text()
+          assert 'MotorResponseJournalV172.KEY' in game and 'symMotor==null?' in game
+          print('ZERO172 timing, danger interrupts, migration, signed momentum and actual saved diagnostics PASS')
+          PY172
       - name: Assemble stable signed APK
         if: env.signing_ready == 'true'
         run: gradle --no-daemon assembleRelease

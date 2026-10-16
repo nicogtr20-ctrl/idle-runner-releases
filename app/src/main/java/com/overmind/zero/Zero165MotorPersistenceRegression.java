@@ -11,11 +11,13 @@ public final class Zero165MotorPersistenceRegression {
     private static String asMd160(String current){
         String[] raw=current.split("\\|",-1);
         raw[0]="md160";
-        for(int i=5;i<raw.length;i++){
-            String[] row=raw[i].split(",",-1);
-            raw[i]=row[0]+","+row[1]+","+row[2]+","+row[3];
+        java.util.ArrayList<String> old=new java.util.ArrayList<>();
+        for(int i=0;i<5;i++)old.add(raw[i]);
+        for(int a=0;a<16;a++)for(int k=0;k<3;k++){
+            String[] row=raw[5+a*MotorDurationV22.OPTIONS+k].split(",",-1);
+            old.add(row[0]+","+row[1]+","+row[2]+","+row[3]);
         }
-        return String.join("|",raw);
+        return String.join("|",old);
     }
     public static void main(String[] args){
         MotorDurationV22 learned=new MotorDurationV22();
@@ -30,7 +32,7 @@ public final class Zero165MotorPersistenceRegression {
             int chosen=learned.select(0,0,neutral,false,.8f,0f,x,0f);
             ok(chosen==0,"duration selected an independent direction");
             int ticks=learned.selectedTicks();
-            ok(ticks==1||ticks==2||ticks==4,"invalid learned time option");
+            ok(ticks==1||ticks==2||ticks==4||ticks==8,"invalid learned time option");
             if(trial<100&&ticks==1)earlyShort++;
             if(trial>=1200&&ticks==1)lateShort++;
             if(ticks>=2)longCount++;
@@ -55,7 +57,7 @@ public final class Zero165MotorPersistenceRegression {
             "no living duration outcomes were observed");
 
         String saved=learned.encode();
-        ok(saved.startsWith("md165|"),"new directional calibration not persisted");
+        ok(saved.startsWith("md172|"),"new directional calibration not persisted");
         MotorDurationV22 restored=new MotorDurationV22();
         ok(restored.restore(saved)&&saved.equals(restored.encode()),
             "new directional holdout data failed exact save/reload");
@@ -69,15 +71,15 @@ public final class Zero165MotorPersistenceRegression {
         ok(migrated.evaluated()==learned.evaluated(),
             "old duration experiences disappeared on migration");
         for(int k=0;k<MotorDurationV22.OPTIONS;k++){
-            ok(migrated.trained(0,k)==learned.trained(0,k)&&
-                migrated.heldout(0,k)==learned.heldout(0,k),
+            ok(migrated.trained(0,k)==(k<3?learned.trained(0,k):0)&&
+                migrated.heldout(0,k)==(k<3?learned.heldout(0,k):0),
                 "historical learned energy and contact outcomes discarded");
             ok(migrated.directionalSamples(0,k)==0&&
                 migrated.directionalHoldouts(0,k)==0,
                 "old md160 score was falsely relabeled as directional skill");
         }
         String clean=migrated.encode();
-        ok(clean.startsWith("md165|")&&new MotorDurationV22().restore(clean),
+        ok(clean.startsWith("md172|")&&new MotorDurationV22().restore(clean),
             "migration did not produce restart-safe new records");
 
         // A real danger interrupts a sustained option even if the preference

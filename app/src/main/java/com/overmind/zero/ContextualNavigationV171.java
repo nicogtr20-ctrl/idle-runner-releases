@@ -54,7 +54,11 @@ public final class ContextualNavigationV171 {
         if(cell==null&&train&&!held){
             int count=0;Cell weakest=null;
             for(Cell c:cells)if(c.action==action){count++;
-                if(weakest==null||c.train+c.hold<weakest.train+weakest.hold)weakest=c;}
+                // Old controller epochs cannot guide this policy. Reclaim
+                // their bounded capacity before evicting new live evidence.
+                if(weakest==null||(c.epoch!=epoch&&weakest.epoch==epoch)||
+                    ((c.epoch==epoch)==(weakest.epoch==epoch)&&
+                     c.train+c.hold<weakest.train+weakest.hold))weakest=c;}
             if(count>=PER_ACTION)cells.remove(weakest);
             cell=new Cell(action,pending);cell.epoch=epoch;cells.add(cell);
         }

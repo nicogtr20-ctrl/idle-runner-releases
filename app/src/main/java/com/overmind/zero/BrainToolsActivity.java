@@ -151,9 +151,14 @@ public final class BrainToolsActivity extends Activity {
         }else line(spatialPanel,"Mappa fisica","Nessun salvataggio disponibile",AMBER);
         line(spatialPanel,"Esperimenti causa/effetto",ca?causal.experiments+"":"Non ancora registrati",WHITE);
         if(ca)line(spatialPanel,"Fiducia causale",percent(causal.confidence()),CYAN);
-        navigation.restoreContextual(prefs.getString(ContextualNavigationV171.KEY,""));
-        if(symbiote)navigation.motorContext(null,null,muscle.verifiedMotorSnapshot());
-        line(spatialPanel,"Movimenti verificati nel contesto",symbiote?"Verificati sulla postura nel gioco":nav?navigation.verifiedActions()+" / 16":"In attesa di dati",WHITE);
+        navigation.restoreContextual(prefs.getString(ContextualNavigationV172.KEY,""));
+        if(symbiote){
+            GameSceneSnapshot.Scene scene=GameSceneSnapshot.workingPosture(
+                prefs.getString("physical_scene_v100",""));
+            navigation.motorContext(scene==null?null:scene.body,
+                scene==null?null:scene.skin,muscle.verifiedMotorSnapshot());
+        }
+        line(spatialPanel,"Movimenti verificati nella postura salvata",nav?navigation.verifiedActions()+" / 16":"In attesa di dati",WHITE);
         paragraph(spatialPanel,"Fiducia zero: il sensore raccoglie dati, ma non ha ancora superato la verifica predittiva. Il contributo alle scelte resta sospeso; non significa sensore scollegato.");
         line(spatialPanel,"Tracce oggetti anonimi",oc?objects.trackedViews()+"":"In attesa di dati",WHITE);
         line(spatialPanel,"Sequenze causali",seq?sequence.validations()+" prove esterne":"In attesa di dati",WHITE);

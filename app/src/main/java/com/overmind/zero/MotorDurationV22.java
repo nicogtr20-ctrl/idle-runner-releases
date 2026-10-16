@@ -4,6 +4,10 @@ import java.util.Locale;
 import java.util.Random;
 
 /**
+ * ZERO172: experimentally complete physical motor options before judging them.
+ * A random new proposal waits until the option boundary; harm or a strong
+ * current neural alternative still interrupts immediately. Censored options
+ * cannot masquerade as evidence for their originally selected duration.
  * ZERO 160: learn how long a self-selected 2.2 motor action is worth executing.
  * This is an action-duration controller, NOT a second action selector.
  * It never receives object identity, destination, target direction or colour.
@@ -48,7 +52,9 @@ public final class MotorDurationV22 {
         if(Float.isFinite(movedObject))effect+=clip(movedObject,0,100f);
     }
     private void finish(){
-        if(selected<0||option<0||intervals<=0)return;
+        // An interrupted two/four-tick intervention was NOT a test of that
+        // duration. Keep historical counters but do not train on censoring.
+        if(selected<0||option<0||intervals!=TICKS[option])return;
         int at=selected*OPTIONS+option;
         float net=hasPosition?(float)Math.hypot(lastX-startX,lastY-startY):0f;
         // Measured motor skill quality ONLY; no motion reward enters the 2.2
@@ -113,15 +119,16 @@ public final class MotorDurationV22 {
     }
     /**
      * Retain the brain's OWN previous action only while its selected motor
-     * interval is still running. New high-confidence policy changes, random
-     * exploration and danger contacts ALWAYS interrupt. Hunger alone does not.
+     * interval is still running. Danger and strong current neural alternatives
+     * interrupt. Independent exploration is sampled at option boundaries,
+     * otherwise physical lag is repeatedly judged against a newer command.
      */
     public int select(int proposal,int greedy,float[] scores,boolean exploratory,
                       float reserve,float harmfulContact,float x,float y){
         if(proposal<0||proposal>=ACTIONS||greedy<0||greedy>=ACTIONS)
             return proposal;
         boolean safe=Float.isFinite(reserve)&&reserve>0f&&
-                     !exploratory&&harmfulContact<=0f;
+                     harmfulContact<=0f;
         boolean challenger=false;
         if(scores!=null&&scores.length==ACTIONS&&selected>=0)
             challenger=Float.isFinite(scores[greedy])&&Float.isFinite(scores[selected])&&
@@ -148,6 +155,7 @@ public final class MotorDurationV22 {
     public long continuations(){return continuesCount;}
     public long interruptions(){return interruptsCount;}
     public long evaluated(){return episodes;}
+    public static int ticksAt(int option){return TICKS[option];}
     public int selectedTicks(){return option<0?0:TICKS[option];}
     public int directionalSamples(int action,int duration){
         return headingTrained[action*OPTIONS+duration];
@@ -162,7 +170,7 @@ public final class MotorDurationV22 {
         return verified[action*OPTIONS+duration];
     }
     public String encode(){
-        StringBuilder out=new StringBuilder("md165|").append(choices)
+        StringBuilder out=new StringBuilder("md172|").append(choices)
             .append('|').append(continuesCount).append('|').append(interruptsCount)
             .append('|').append(episodes);
         for(int i=0;i<CELLS;i++)out.append('|').append(trained[i]).append(',')
@@ -176,7 +184,7 @@ public final class MotorDurationV22 {
     }
     public boolean restore(String raw){
         if(raw==null||raw.length()>16000||
-           !(raw.startsWith("md160|")||raw.startsWith("md165|")))return false;
+           !(raw.startsWith("md160|")||raw.startsWith("md165|")||raw.startsWith("md172|")))return false;
         try{
             boolean legacy=raw.startsWith("md160|");
             String[] s=raw.split("\\|",-1);
@@ -205,6 +213,13 @@ public final class MotorDurationV22 {
                        Math.abs(htMean[i])>1.001f||Math.abs(hvMean[i])>1.001f)
                         return false;
                 }
+            }
+            // The old format mixed interrupted and completed durations.
+            // Retain historical energy/contact/counter records, but only
+            // newly completed experiments may grant directional confidence.
+            if(!raw.startsWith("md172|")){
+                java.util.Arrays.fill(ht,0);java.util.Arrays.fill(hv,0);
+                java.util.Arrays.fill(htMean,0f);java.util.Arrays.fill(hvMean,0f);
             }
             System.arraycopy(ht,0,headingTrained,0,CELLS);
             System.arraycopy(hv,0,headingVerified,0,CELLS);
