@@ -26,3 +26,29 @@ Il modello può risultare calibrato solo se batte la baseline che prevede effett
 ## Risultati verificati
 
 Da popolare SOLO dopo il completamento della relativa CI GitHub, distinguendo SUCCESS compilazione/JVM dalla qualità del modello. Nessun utilizzo di V3.7B nella app, nuova UI e neurogenesi V3 non realizzate.
+
+
+## RISULTATI V37-B VERIFICATI — CI 38982506125
+
+**[GitHub Actions 38982506125 — SUCCESS tecnico, gate qualitativo FALLITO](https://github.com/nicogtr20-ctrl/idle-runner-releases/actions/runs/38982506125)**. Stesso vero solver materiale, 96 frame di storia preazione, target a +384 frame; **384 coppie TRAIN + 384 CAL + 256 NUOVE coppie blind ±15°/±75°, stato fisico 3**, per **983.040 integrazioni** di controllo e intervento. Media e deviazione standard della memoria stimate **solo dal training**, con pavimento 0,005; min scala 0,005 max 0,033801. Nessuna contaminazione della normalizzazione con outcome del test.
+
+Il modello con storia normalizzata supera la baseline zero sui tre output **in calibrazione**: MSE risposta immediata **0,000458268** vs zero **0,003654589**; ritardata **0,028134822** vs zero **0,032314788**; costo **0,000000000207** vs zero **0,000000007768**. L'approvazione di calibrazione NON equivale a validità nelle nuove condizioni.
+
+| Test FINALE mai visto (256 coppie) | MSE immediata | MSE ritardata +384 | MSE lavoro |
+|---|---:|---:|---:|
+| Baseline senza effetto | 0,003286281 | **0,033472508** | 0,000000007783 |
+| 52D stato corrente | 0,000568402 | 0,035810702 | 0,000000000495 |
+| 68D memoria grezza | 0,000563285 | 0,035728649 | 0,000000000495 |
+| **68D memoria normalizzata sul solo train** | **0,000540796** | **0,035384825** | **0,000000000490** |
+
+La normalizzazione migliora l'MSE ritardata di **0,962% rispetto a memoria grezza** e **1,189% rispetto al modello 52D**, ma il risultato è **circa 5,71% PEGGIORE** del semplice predittore zero sull'effetto ritardato. Il gate su nuovi corpi e pose è quindi **FALLITO**.
+
+Interventi selezionati esclusivamente dalle predizioni calibrate: **10/16 utili con costo accettabile** su nuove posture, non 16/16. Questa selezione non è stata addestrata su un mondo reale autonomo e non ha dimostrato alcuna skill.
+
+### Decisione scientifica esplicita
+
+- **La V3.7 e V3.7-B sono completate come prove di laboratorio, NON come locomozione appresa.** Il vantaggio di rappresentare la storia motoria è reale ma molto piccolo entro questa famiglia di ridge lineari; la generalizzazione sul lungo orizzonte peggiora fuori distribuzione.
+- Non effettuare ulteriore retuning su ±15°/±75°: anche questa partizione è stata consumata come test finale. Per nuovi algoritmi preparare altre scene/seed/perturbazioni, senza riciclare i due blind come dati decisionali.
+- **Prossima ipotesi da implementare:** modello **dinamico ricorrente / evoluzione multi-step** che predica stato e risultato in dipendenza dalle **azioni realmente successive**, con osservazione di tensioni, adesione, velocità, errori causali e interferenza dei muscoli. Misurare previsione passo per passo, lungo termine e prestazioni motorie in una sola vita prima di promuovere una skill.
+- La fisica mostra effetti residui e inversioni di segno dopo le finestre di 48 frame, quindi una sola etichetta 384-frame da stato iniziale statico è un obiettivo insufficiente.
+- **G3 locomozione autonoma e G5 world model complessivo BLOCCATI; nessuna integrazione GameActivity, nessun cervello 2.2 modificato, nessun APK V3 e nessuna nuova UI.**
