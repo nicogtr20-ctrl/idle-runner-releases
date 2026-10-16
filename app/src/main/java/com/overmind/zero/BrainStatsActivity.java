@@ -47,7 +47,7 @@ public final class BrainStatsActivity extends Activity {
     private GoalContinuity goals;
     private GateBehaviorMetrics gates;
     private LifeStatistics lives;
-    private boolean bCoordination,bLocal,bDuration,bCore,bMuscle,bProprio,bDistributed,bImpedance,bInner,
+    private boolean bCoordination,bLocal,bFast,bMotorMemory,bDuration,bCore,bMuscle,bProprio,bDistributed,bImpedance,bInner,
         bSpatial,bNavigation,bObjects,bCausal,bSequence,bTemporal,bSkills,bGoals,
         bGates,bLives;
     private long shownAt;
@@ -90,6 +90,8 @@ public final class BrainStatsActivity extends Activity {
         bMuscle=muscle.restore(prefs.getString(SymbioteMotorHeadV1.KEY,""));
         bLocal=muscle.restoreLocal(prefs.getString(SymbioteMotorHeadV1.LOCAL_KEY,""));
         bCoordination=muscle.restoreCoordination(prefs.getString(SymbioteCoordinationV162.KEY,""));
+        bFast=muscle.restoreFast(prefs.getString(FastSomaticCircuitV167.KEY,""));
+        bMotorMemory=muscle.restoreMemory(prefs.getString(SymbioteMotorSkillMemoryV169.KEY,""));
         bDuration=motorDuration.restore(prefs.getString(MotorDurationV22.KEY,""));
         bProprio=proprio.restore(prefs.getString(BodyProprioception.KEY,""));
         bDistributed=distributed.restore(prefs.getString(DistributedBodySense.KEY,""));
@@ -347,6 +349,10 @@ public final class BrainStatsActivity extends Activity {
                     " particelle interne e "+SymbioteMatterV1.SECTORS+" settori muscolari.");
                 tile(body,"CORTECCIA MUSCOLARE",bMuscle?num(muscle.trainedOutcomes())+
                     " aggiornamenti":"Nessun checkpoint muscolare",VIOLET,"MUSCLE");
+                tile(body,"MEMORIA MOTORIA DEL SIMBIONTE",bMotorMemory?
+                    muscle.skillMemory().verifiedCount()+" tecniche verificate • "+
+                    muscle.skillMemory().candidatesCount()+" in osservazione":
+                    "Nessuna tecnica verificata ancora",TEAL,"MUSCLE");
                 tile(body,"COORDINAZIONE MOTORIA",bCoordination?
                      num(muscle.coordination().trainedIntervals())+" intervalli fisici appresi":
                      "Nuovo modello sul movimento reale",TEAL,"COORDINATION");
@@ -432,6 +438,17 @@ public final class BrainStatsActivity extends Activity {
             core.energyReady()+" / 16":"Non disponibile");
         metric(motor,"Aggiornamenti della corteccia",bMuscle?
             num(muscle.trainedOutcomes()):"Non disponibile");
+        metric(motor,"Tecniche motorie confermate su vite diverse",bMotorMemory?
+            muscle.skillMemory().verifiedCount()+" / "+
+            SymbioteMotorSkillMemoryV169.MAX_CHAMPIONS:"Non disponibili");
+        metric(motor,"Candidati motori da verificare",bMotorMemory?
+            num(muscle.skillMemory().candidatesCount()):"Non disponibili");
+        metric(motor,"Configurazioni motorie recuperate",bMotorMemory?
+            num(muscle.skillMemory().recoveryCount()):"Non disponibili");
+        metric(motor,"Verifiche fisiche indipendenti",bMotorMemory?
+            num(muscle.skillMemory().measuredHeldouts()):"Non disponibili");
+        metric(motor,"Connessioni motorie veloci",bFast?
+            num(muscle.fastCircuit().parameterCount()):"Non disponibili");
         note(motor,"Queste sono evidenze d'apprendimento, non prove che ZERO sappia già camminare bene.");
         LinearLayout goal=panel(body,"MANIPOLAZIONE E OBIETTIVI",BLUE);
         metric(goal,"Progressi obiettivo confermati",absent(bGoals,num(goals.confirmed)));
@@ -494,6 +511,10 @@ public final class BrainStatsActivity extends Activity {
          metric(cortex,"Azioni mantenute",absent(bDuration,num(motorDuration.continuations())));
          metric(cortex,"Sequenze motorie esaminate",absent(bDuration,num(motorDuration.evaluated())));
         metric(cortex,"Verifiche indipendenti",absent(bMuscle,num(muscle.heldoutOutcomes())));
+        metric(cortex,"Tecniche motorie verificate",bMotorMemory?
+            num(muscle.skillMemory().verifiedCount()):"Non disponibili");
+        metric(cortex,"Recuperi di tecniche consolidate",bMotorMemory?
+            num(muscle.skillMemory().recoveryCount()):"Non disponibili");
         metric(cortex,"Abilità temporali consolidate",absent(bSkills,num(skills.consolidated())));
         note(cortex,"Il numero di aggiornamenti non equivale automaticamente a un miglioramento del movimento.");
         add(body,label("CAMBIAMENTO DEL COMPORTAMENTO",18,GOLD,true),22);
