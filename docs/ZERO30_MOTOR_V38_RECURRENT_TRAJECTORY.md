@@ -63,6 +63,23 @@ MSE della traiettoria a 32 scadenze sul test blind **0,055894499**, contro basel
 
 **Analisi:** l'attuale reservoir a stati ricorrenti fissi e readout ridge comune alle 32 finestre sta perdendo la capacità di rappresentare il piccolissimo effetto immediato e non segue la risposta meccanica lunga in stati corporei nuovi. Non è evidenza che «la ricorrenza in sé non funziona»: la ricorrenza NON è stata addestrata tramite gradiente e il modello non osserva la storia delle future azioni volontarie del cortex. Il risultato smentisce **questa implementazione concreta**, non il valore di una transizione fisica sequenziale state/action-conditioned appresa.
 
-**Controllo aggiuntivo time-only SENZA stato ricorrente:** aggiunto al sorgente **prima di leggere i risultati di questo secondo confronto**, con CI [38983664233](https://github.com/nicogtr20-ctrl/idle-runner-releases/actions/runs/38983664233). Il suo risultato è ancora da verificare: nessun valore va dichiarato prima dei log.
+### Confronto aggiuntivo time-only COMPLETATO — CI 38983664233
+
+**[GitHub Actions 38983664233 — SUCCESS tecnico](https://github.com/nicogtr20-ctrl/idle-runner-releases/actions/runs/38983664233)**. Ablazione progettata prima della lettura di questo secondo test: stessa rappresentazione statica di 68 input, stesso stimolo e stessa informazione del tempo, **24 unità ricorrenti azzerate durante training e valutazione**. I dati fisici e le partizioni sono gli stessi del modello completo.
+
+| Modello | MSE immediata finale | MSE ritardata finale | MSE di tutta la traiettoria (32 intervalli) |
+|---|---:|---:|---:|
+| Nessun effetto, baseline zero | **0,003229027** | **0,029724185** | **0,031732958** |
+| Statico 68D, previsione diretta finale | **0,000616392** | 0,031067743 | Non misurata |
+| Temporale senza ricorrenza | 0,050032347 | **0,029652199** | 0,065089761 |
+| **Ricorrente V3.8** | 0,042353996 | 0,033926378 | 0,055894499 |
+
+La ricorrenza riduce l'errore sulla **traiettoria complessiva** rispetto al modello temporale senza ricorrenza (0,055894 vs 0,065090), ma **resta decisamente peggiore della baseline zero**. Sull'esito ritardato finale, il ricorrente è **14,414% peggiore del temporale senza ricorrenza**, e **14,137% peggiore della baseline zero**. Anche le previsioni immediate sono molto peggiori del 68D statico.
+
+**GATE QUALITÀ V3.8: FALLITO sia in calibrazione sia sul blind.** Nessuna perturbazione consentita, perché il controllo di calibrazione respinge il modello; lo 0/0 dei suggerimenti non significa 0 fallimenti su 16, ma **nessuna selezione eseguita**. Su questa famiglia di dati l'architettura reservoir/shared-readout di V3.8 non dimostra una dinamica affidabile per il controllo motorio. **Non addestrare o selezionare altri hyperparameter sulle pose blind ormai viste**.
+
+**Diagnosi utile per il prossimo tentativo:** i dati a 12 frame e a 384 frame hanno scale/sensibilità diverse e il readout unico è supervisionato su tutte le finestre; può sacrificare la precisione delle conseguenze iniziali. Occorre verificare una vera transizione **state(t), action(t) → state(t+1)** e obiettivi separati per orizzonti brevi/lunghi, includendo le future effettive azioni fisiche invece di chiedere al reservoir di prevedere a 384 frame senza sapere come si comporterà il cortex nei 372 frame successivi. Questo è un'ipotesi da sottoporre a nuovi test e non una causa già provata.
+
+**Livelli di evidenza:** compilazione/test solver E2, nessun test vita autonoma E3, Galaxy S21 E4 o OTA E5. UI 3.0, persistenza V3, skill, evoluzione e integrazione GameActivity **ancora non realizzate**.
 
 **Stato progetto:** *G3 apprendimento motorio ancora BLOCCATO; G5 modello mondo completo BLOCCATO; nessuna abilità, nessuna UI V3, nessun cervello 2.2 modificato, nessun OTA V3.*
