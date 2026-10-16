@@ -75,6 +75,7 @@ public final class Zero3LearningFoundation {
         private long perturbationEpisodes;
         private int activeChannel=-1,contextBucket;
         private float lastAcceptedGradientNorm,lastAdvantage;
+        private final float learningRate;
         /** No prescribed gait: a spatially correlated noise field in one muscle channel. */
         private void sampleProbe(){
             activeChannel=(int)(perturbationEpisodes++%CHANNELS);
@@ -90,7 +91,12 @@ public final class Zero3LearningFoundation {
         public float lastAcceptedGradientNorm(){return lastAcceptedGradientNorm;}
         public float lastAdvantage(){return lastAdvantage;}
         public int lastActiveProbeChannel(){return activeChannel;}
-        public AdaptiveCortex(){
+        public AdaptiveCortex(){this(.013f);}
+        /** Research knob; not autonomously edited by UI and not an approved default. */
+        public AdaptiveCortex(float rate){
+            finite(rate,"motor learning rate");
+            if(rate<0f||rate>.3f)throw new IllegalArgumentException("motor learning rate");
+            learningRate=rate;
             for(int i=0;i<weights.length;i++)
                 weights[i]=(random()-.5f)*.06f;
         }
@@ -104,7 +110,7 @@ public final class Zero3LearningFoundation {
         public float[] weights(){return weights.clone();}
         /** Cold-start a read-only evaluation clone; no weights are trained. */
         public AdaptiveCortex forkForEvaluation(){
-            AdaptiveCortex fresh=new AdaptiveCortex();
+            AdaptiveCortex fresh=new AdaptiveCortex(learningRate);
             System.arraycopy(weights,0,fresh.weights,0,weights.length);
             fresh.revision=revision;
             return fresh;
@@ -183,7 +189,7 @@ public final class Zero3LearningFoundation {
             float effectiveL2=0f;
             // Credit ONLY the selected muscle channel's localized intervention.
             // This stochastic estimate remains unproven until matched lab A/B.
-            final float lr=.013f;
+            final float lr=learningRate;
             for(int out=0;out<OUTPUTS;out++)for(int f=0;f<INPUTS;f++){
                 int ix=out*INPUTS+f;
                 float feat=limit(accumulated[ix]/samples,-2,2);
