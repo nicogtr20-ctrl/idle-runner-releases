@@ -1,5 +1,8 @@
 # ZERO 3.0 — CONTRATTO DI IMPLEMENTAZIONE, TEST E HANDOFF TRA CHAT
 
+> **ULTIMO ESPERIMENTO MOTORIO V3.7:** [Memoria delle 96 contrazioni pre-azione, test 384-frame](ZERO30_MOTOR_V37_TEMPORAL_MEMORY.md): codice e CI corretti, ma **gate di affidabilità FALLITO** sulle 256 prove non viste, miglioramento della memoria su modello statico solo **0,019%**. [Verifica V3.7-B su scale numeriche e nuove pose](ZERO30_MOTOR_V37B_TRAIN_SCALE.md) separata, senza alterare il blind precedente. **ZERO 3.0 NON ATTIVO, G3 BLOCCATO, OTA172 INVARIATA.**
+
+
 > **ESITO V3.6 VERIFICATO:** [Predizione muscolare a 384 frame su 1.024 coppie fisiche](ZERO30_MOTOR_V36_LONG_HORIZON.md): il modello 52 sensori migliora la previsione ma **non supera il gate di generalizzazione del 10% sui risultati ritardati** (miglioramento 7,28%). Nessun nuovo cervello 3.0 attivo, **G3 BLOCCATO e nessun OTA**.
 
 
