@@ -188,10 +188,15 @@ public final class SymbioteMatterV1 {
         return clip((radius-(R+9f))/8f,0f,1f)*
             clip((-extend-.83f)/.13f,0f,1f);
     }
-    static float substrateTraction(float extend,float grip,float meanGrip){
+    static float substrateTraction(float extend,float tension,float meanTension){
         float compression=Math.max(0f,-extend);
+        // Material cortex tension, NOT the separate object-grip command,
+        // changes the local ground's normal loading. Uniform extra tension
+        // cannot secretly pin the entire symbiote to the substrate.
+        float delta=tension-meanTension;
+        if(Math.abs(delta)<.0001f)delta=0f;
         return clip(.12f+1.45f*compression+
-            .72f*clip(grip-meanGrip,-1f,1f),0f,.95f);
+            .72f*clip(delta,-1f,1f),0f,.95f);
     }
     static float radialRetractionDrag(float traction,float release,float dt){
         return (float)Math.exp(-(1.8f+
@@ -484,13 +489,12 @@ public final class SymbioteMatterV1 {
         float cx=body.cx,cy=body.cy;
         float contourSign=signedArea(skin)>=0f?1f:-1f;
         float[] physicalNormal=new float[2];
-        // Optional *differential* voluntary floor-grip: ordinary high-bank
-        // obstacle grip is never a global ground anchor. Uniform grip must
-        // have exactly zero impact; relative local differences can change
-        // substrate resistance independently of contractile muscle pressure.
-        float gripMean=0f;
+        // Local cortical TENSION may vary floor-normal loading without
+        // adding a fifth motor channel or hijacking the object-grip command.
+        // Object grip MUST stay strictly disconnected from uncontacted floor.
+        float meanTension=0f;
         for(int sector=0;sector<SECTORS;sector++)
-            gripMean+=Math.max(0f,clip(cortex[sector*OUTPUTS+2],-1f,1f))/SECTORS;
+            meanTension+=(clip(cortex[sector*OUTPUTS+3],-1f,1f)*.5f+.5f)/SECTORS;
         for(int i=0;i<SURFACE;i++){
             lastSkinX[i]=skin.x[i];lastSkinY[i]=skin.y[i];
             float dx=skin.x[i]-cx,dy=skin.y[i]-cy;
@@ -546,11 +550,10 @@ public final class SymbioteMatterV1 {
             float compression=Math.max(0f,-extend);
             // Original OTA160 floor traction is unchanged. The physics
             // fix is excluded-volume self-contact, not weaker footholds.
-            // Local grip control works without requiring muscle contraction,
-            // but subtract its mean so the all-grip action cannot weld every
-            // perimeter site to the ground. Zero differential preserves
-            // the pre-168 proven passive/friction mechanics byte-for-byte.
-            float traction=substrateTraction(extend,adhesive,gripMean);
+            // A stiffer-than-average cortex patch bears more substrate
+            // loading; a softer patch can slip. This control is independent
+            // of the radial contraction and never uses object-grip intent.
+            float traction=substrateTraction(extend,stiffness,meanTension);
             float drag=(float)Math.exp(-(1.8f+66f*traction)*dt);
             float preX=skin.x[i],preY=skin.y[i];
             float appliedVx=skin.vx[i]+fx[i]*dt;
