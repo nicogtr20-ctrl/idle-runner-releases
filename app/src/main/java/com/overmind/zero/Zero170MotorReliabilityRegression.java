@@ -211,6 +211,43 @@ public final class Zero170MotorReliabilityRegression {
         check(!copy.restore(saved+"TRUNC")&&saved.equals(copy.encode()),
             "corrupted save replaced good physically validated memory");
 
+        // Full live linkage: a 2.2-chosen action can install ONLY the proven
+        // motor cortex, not silently choose or alter an action.
+        SymbioteMotorHeadV1 cortical=new SymbioteMotorHeadV1();
+        check(cortical.restoreMemory(success.encode()),
+            "skill archive disconnected from living symbiote controller");
+        float[] incumbent=cortical.verifiedMotorSnapshot();
+        Fixture neuralBody=new Fixture();
+        failures(cortical.skillMemory(),action,4,incumbent);
+        float[] sensors=new float[DistributedBodySense.FEATURES];
+        float[] brainState=new float[RecurrentCoreV22.Z];
+        cortical.chosen(action,sensors,brainState,.25f,null,
+            SymbioteMotorHeadV1.measuredSectorAngles(
+                neuralBody.body,neuralBody.skin),
+            neuralBody.body,neuralBody.skin);
+        check(cortical.skillMemory().recoveryUnderReview()&&
+            Arrays.equals(cortical.verifiedMotorSnapshot(),known)&&
+            cortical.decisionCount()==1,
+            "verified motor recovery not actually applied by living 2.2 action");
+
+        // Mid-recovery crash/restart: preserve untrusted A/B state in full
+        // profile, then fail closed and restore previous motor synapses.
+        SymbioteMotorSkillMemoryV169 pending=verified(action,known);
+        failures(pending,action,4,other);
+        Fixture same=new Fixture();
+        check(pending.recoverIfStalled(action,other,
+            same.body,same.skin)!=null,"A/B checkpoint not initiated");
+        String checkpoint=pending.encode();
+        SymbioteMotorSkillMemoryV169 resumed=new SymbioteMotorSkillMemoryV169();
+        check(resumed.restore(checkpoint)&&
+            resumed.recoveryUnderReview()&&
+            checkpoint.equals(resumed.encode()),
+            "pending A/B motor experiment was not serialized safely");
+        check(Arrays.equals(resumed.abortIncompleteRecovery(),other)&&
+            resumed.recoveryRollbackCount()==1&&
+            !resumed.recoveryUnderReview(),
+            "restarting application accepted an unvalidated motor recovery");
+
         // Never publish or set application updater version from this test.
         System.out.printf(Locale.US,
             "ZERO170 PASS: 96+74 actuator actualNet=%.3f gross=%.3f; "+
