@@ -1,0 +1,46 @@
+name: ZERO 3.0 foundation G0-G3 — isolated experimental QA
+on:
+  push:
+    branches: [feature/zero30-foundation-g0-g3-20261016]
+    paths:
+      - 'app/src/main/java/com/overmind/zero/Zero3*.java'
+      - '.github/workflows/zero30-foundation-qa.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  foundation:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+      - name: Compile with existing verified pure-Java production dependency set
+        run: |
+          set -euo pipefail
+          mkdir -p /tmp/overmind
+          python3 - <<'PY'
+          import pathlib,re,shlex,subprocess
+          p=pathlib.Path('.github/workflows/overmind-ota-publish.yml')
+          text=p.read_text()
+          m=re.search(r'^\s*(javac -d /tmp/overmind [^\n]+)',text,re.M)
+          if not m:raise RuntimeError('Production JVM source list unavailable; do not silently weaken test')
+          command=shlex.split(m.group(1))
+          command+=['app/src/main/java/com/overmind/zero/Zero3LearningFoundation.java',
+                    'app/src/main/java/com/overmind/zero/Zero3FoundationRegression.java']
+          print('Compiling',len(command)-3,'real application Java sources')
+          subprocess.run(command,check=True)
+          PY
+      - name: Verify physics controllability (real material 96+74)
+        run: |
+          java -cp /tmp/overmind com.overmind.zero.Zero161PhysicalCapabilityRegression
+          java -cp /tmp/overmind com.overmind.zero.Zero168ControllabilityRegression
+      - name: Verify ZERO3 causal motor foundation without fake reward or hardcoded gait
+        run: java -cp /tmp/overmind com.overmind.zero.Zero3FoundationRegression
+      - name: Android build smoke without publishing APK
+        run: |
+          gradle --version || true
+          gradle --no-daemon assembleDebug
