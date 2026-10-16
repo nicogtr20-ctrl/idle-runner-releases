@@ -1,0 +1,42 @@
+name: ZERO3 train-only normalized motor memory independent holdout QA
+on:
+  push:
+    branches: [feature/zero30-foundation-g0-g3-20261016]
+    paths:
+      - 'app/src/main/java/com/overmind/zero/Zero3MotorTemporalScalingRegression.java'
+      - '.github/workflows/zero30-motor-temporal-scaling-qa.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  feature-scaling:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+      - name: Compile actual symbiote physical solver and sensory history models
+        run: |
+          set -euo pipefail
+          mkdir -p /tmp/overmind
+          python3 - <<'PY'
+          import pathlib,re,shlex,subprocess
+          v=pathlib.Path('.github/workflows/overmind-ota-publish.yml').read_text()
+          m=re.search(r'^\s*(javac -d /tmp/overmind [^\n]+)',v,re.M)
+          if m is None: raise RuntimeError('missing production physical regression dependency list')
+          args=shlex.split(m.group(1))+[
+              'app/src/main/java/com/overmind/zero/Zero3LearningFoundation.java',
+              'app/src/main/java/com/overmind/zero/Zero3MotorResponseKernel.java',
+              'app/src/main/java/com/overmind/zero/Zero3MotorRetentionRegression.java',
+              'app/src/main/java/com/overmind/zero/Zero3MotorPromotionGate.java',
+              'app/src/main/java/com/overmind/zero/Zero3MotorImpulseResponseRegression.java',
+              'app/src/main/java/com/overmind/zero/Zero3MotorLongHorizonRegression.java',
+              'app/src/main/java/com/overmind/zero/Zero3MotorTemporalHistoryRegression.java',
+              'app/src/main/java/com/overmind/zero/Zero3MotorTemporalScalingRegression.java']
+          subprocess.run(args,check=True)
+          PY
+      - name: Test train-only motor memory scaling against untouched +/-15 and +/-75-degree physics
+        run: java -cp /tmp/overmind com.overmind.zero.Zero3MotorTemporalScalingRegression
