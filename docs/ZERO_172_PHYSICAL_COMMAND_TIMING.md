@@ -63,3 +63,17 @@ The panel cases regress directionally; the only pickup in this additional baseli
 Schema mr172: header completed count; each21-field row is action, consecutive-command age, actual frames, elapsed milliseconds, start vx/vy×1000, end vx/vy×1000, actual dx/dy×1000, gross path×1000, active muscle impulse×1000, external disturbance, training-request flag, heldout flag, directional-eligibility flag, fast-probe flag, actual radial/tangential/adhesion/tension command means×1000. Scaled scalar fields are bounded at±30000; impulse is diagnostic bounded magnitude, not a reconstructed force vector. Training-request flags are permissions, **not proof a synapse changed**. No absolute world/resource positions or device identifiers are added. No missing startup data is fabricated into old logs.
 
 The new regression exercises actual production recording, exact save/restore, corrupt-save rejection and generic named-slot codec preservation. Existing physical/brain tests continue to pass (97 entrypoints).
+
+## Completed signed release — 16 October 2026
+
+- PR84 merged to the stable source branch as `b19cdc626c01cb537cb2d6ad4e4e32c32bc4095c` after exact-head QA `38937318762`: all97 JVM entrypoints,8 integration gates and Android Gradle debug build PASS. The final source tree matched the reviewed local tree exactly.
+- Signed publisher `38937559068`: all97 regressions,35 source gates, Android debug/release/lint-vital, updater permissions/provider, single stable signer and sequential packaged version PASS. Every modified/new Java source pinned; no signing or safety waiver.
+- **OTA171 / Android1171 / runtime172**, `0.11.6-ota.171`,502916 bytes, package `com.overmind.zero.ota`. APK SHA256 **`62e0b5a96916fc8005d5e21aa91de4194ba57ec8b8c1ebf6f27c5bc2a51a0bb0`**. Original certificate SHA256 **`45010684b4fd74de00f87fb81ca89e1e79b58409cf9fefc497b445b0fe19f583`**.
+- Main OTA publication `86636974290be92459e59e0a3eae92f9a391f879`; only manifest, new APK and changelog changed. Idle Runner app/build/settings tree/blob hashes unchanged.
+- Public Vercel and GitHub backup manifests match. Both APK downloads returnHTTP200 and are byte-identical with exact recorded hash/size. Independent cryptographic APKv2 RSA signature and signed-content chunk digest verification PASS; binary manifest confirms actual packaged1171/version/package and network/install permissions.
+- Final post-journal real-profile check exactly reproduces95.852U net /55.813U signed /140 backward intervals /0 pickups in the direction0 open-resource screen; passive instrumentation does not improve the reported behavior by itself.
+- Installed-data preservation is covered by load/save/codec tests and unchanged original brain formats. Device installation and behavioral efficacy cannot be observed from this workspace. Remaining mixed results above remain open; passing builds is not evidence walking is solved.
+- Primary APK: https://overmind-zero-updates.vercel.app/apk/overmind-zero-1171-62e0b5a96916.apk
+- Signed fallback: https://github.com/nicogtr20-ctrl/idle-runner-releases/releases/tag/overmind-zero-v0.11.6-ota.171
+
+This completed release status supersedes earlier preparation text. Documentation-only follow-up uses `[skip ci]` to avoid generating a second APK for evidence/status updates alone.
