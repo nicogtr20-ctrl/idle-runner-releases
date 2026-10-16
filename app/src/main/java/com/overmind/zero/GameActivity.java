@@ -1367,18 +1367,22 @@ public final class GameActivity extends Activity {
                     // material frame, after box/door collisions and object motion.
                     // No new physical force or action chooser. Exclude respawns.
                     if(lifeStamp==episode&&useSymbiote&&symMotor!=null){
-                        boolean externalDisturbance=
-                            (float)Math.hypot(creature.cx-uncorrectedX,
-                                creature.cy-uncorrectedY)>.08f||
-                            environmentEffectSinceAction>worldEffectAtFrameStart+.03f||
-                            shelter.storm(worldTime);
-                        // Moving a door or box is an external intervention,
-                        // not an independent demonstration of crawling skill.
+                        // A felt touch is useful somatic feedback, not
+                        // evidence of exogenous displacement. OTA172 marked
+                        // nearly every crawling interval as externally
+                        // disturbed, preventing a real action->motion model.
+                        // Preserve strict exclusion for solver impulses,
+                        // actually moved objects, storms and held materials.
+                        boolean heldExternal=false;
                         for(int siteIndex=0;siteIndex<Morphology.POINTS;siteIndex++)
-                            if(surface.touchSense[siteIndex]>.25f||
-                               surface.gripHold[siteIndex]>=Morphology.GRIP_HOLD){
-                                externalDisturbance=true;break;
+                            if(surface.gripHold[siteIndex]>=Morphology.GRIP_HOLD){
+                                heldExternal=true;break;
                             }
+                        boolean externalDisturbance=
+                            MotorResponseJournalV172.externalMotionContaminated(
+                                creature.cx-uncorrectedX,creature.cy-uncorrectedY,
+                                environmentEffectSinceAction-worldEffectAtFrameStart,
+                                shelter.storm(worldTime),heldExternal);
                         float heldTravel=0f;boolean actualHold=false;
                         if(chamber!=null&&chamber.gateHeldFrames>previousFrameGateHolds){
                             heldTravel+=Math.abs(chamber.doorY-gateStart);actualHold=true;
