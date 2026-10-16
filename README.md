@@ -1,5 +1,8 @@
 # OVERMIND ZERO — MASTER PROJECT ZERO 3.0
 
+> **RISULTATO MOTORIO 3.3 (17/10/2026):** [Confronto fisico dei comandi, attribuzione dell'effetto ritardato, test su sei posture escluse dall'allenamento](docs/ZERO30_MOTOR_V33_DELAYED_RESPONSE.md). **24/24 piccoli interventi riusciti nel laboratorio**, previsione migliore di baseline; **NON dimostra locomozione autonoma o G3 completato**. Code branch sperimentale, nessuna nuova OTA.
+
+
 > **NUOVO ESPERIMENTO MOTORIO V3.2:** [Ricerca muscolare con vincoli energetici e verifica su posture escluse dall'allenamento](docs/ZERO30_MOTOR_V32_COST_CONSTRAINED.md). Restano prototipo isolato e gate G3 bloccato finché non arrivano prove indipendenti.
 
 > **TEST 2.000 ESPERIENZE VERIFICATI:** [Report completo motorio e autonomo, checkpoint 400/1000/2000](docs/ZERO30_LONG_HORIZON_2000_20261017.md). **G3 ANCORA BLOCCATO**: a 2.000 decisioni la corteccia non supera il vergine in nessuna delle 4 direzioni nella postura iniziale; misure coerenti ma negative. Nessun OTA V3.
