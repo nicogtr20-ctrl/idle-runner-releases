@@ -35,7 +35,8 @@ jobs:
                     'app/src/main/java/com/overmind/zero/Zero3RecurrentBrainRegression.java',
                     'app/src/main/java/com/overmind/zero/Zero3LearningCurveRegression.java',
                     'app/src/main/java/com/overmind/zero/Zero3MotorSkillAB.java',
-                    'app/src/main/java/com/overmind/zero/Zero3MotorRetentionRegression.java']
+                    'app/src/main/java/com/overmind/zero/Zero3MotorRetentionRegression.java',
+                    'app/src/main/java/com/overmind/zero/Zero3MotorRateSweepRegression.java']
           print('Compiling',len(command)-3,'real application Java sources')
           subprocess.run(command,check=True)
           PY
@@ -53,6 +54,8 @@ jobs:
         run: java -cp /tmp/overmind com.overmind.zero.Zero3MotorSkillAB
       - name: Test learned motor policy cold-start without exploration against untouched virgin
         run: java -cp /tmp/overmind com.overmind.zero.Zero3MotorRetentionRegression
+      - name: Measure preregistered motor learning-rate grid (tuning only, not final proof)
+        run: java -cp /tmp/overmind com.overmind.zero.Zero3MotorRateSweepRegression
       - name: Android build smoke without publishing APK
         run: |
           gradle --version || true
