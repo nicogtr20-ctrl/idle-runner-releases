@@ -67,3 +67,28 @@ Non modificati: GameActivity, SensorimotorMind, SymbioteMatterV1, fisica di prod
 6. Test completi multi-seed, device S21, comparazione con vecchio ZERO, release OTA firmata e AGGIORNA solo dopo le prove.
 
 Non dichiarare la versione V3 finita o pronta all'installazione finché questi requisiti non sono verificati.
+
+
+## ADDENDUM: diagnosi controllata della regressione motoria (CI 38969432748)
+
+**[CI SUCCESS a livello integrità e build Android](https://github.com/nicogtr20-ctrl/idle-runner-releases/actions/runs/38969432748), ma G3 di EFFICACIA MOTOR NON SUPERATO.**
+
+Il nuovo benchmark separa TRE condizioni sulla stessa intenzione per 400 decisioni: (1) frozen clean, (2) frozen con le stesse perturbazioni esplorative, SENZA gradienti, (3) training con le stesse perturbazioni e gradienti. I numeri sono lo **spostamento firmato lungo la direzione richiesta**, non lo spostamento netto assoluto.
+
+| Intenzione (solo laboratorio) | Frozen clean | Frozen + probe | Training + probe |
+|---|---:|---:|---:|
+| Est +X | +98.937 | +26.058 | **-18.549** |
+| Sud +Y | +39.141 | +28.703 | **-32.237** |
+| Ovest -X | -60.528 | -17.470 | **-90.140** |
+| Nord -Y | -2.861 | -13.693 | **-61.956** |
+
+I costi motori sperimentali sono circa 0.38–0.39 con perturbazioni rispetto 0.12–0.14 senza. **L'effetto del rumore esplorativo è molto grande**, e il learning attuale è ancora peggiore del controllo con lo stesso rumore in tutte e quattro le direzioni. Quindi **non attribuire tutto il problema solo all'esplorazione**: il criterio/algoritmo di credito e plasticità motorie prototipali è **effettivamente inefficace** in queste condizioni.
+
+**Azioni necessarie prima del Gate G3:**
+1. Ridurre/strutturare l'esplorazione in perturbazioni spazialmente e temporalmente coerenti, senza programmare gait.
+2. Misurare lag di risposta fisica, inerzia preesistente e credito del comando corrente, contro comandi precedenti; il punteggio su tutto l'intervallo può confondere dinamiche ritardate.
+3. Valutare periodicamente **senza rumore** le reti allenate vs clone vergine in fisica e pose corrispondenti, su campioni heldout. Se la rete non batte baseline, rollback o correzione dell'algoritmo.
+4. Non premiare la sola attività/traettoria lorda. Controllo direzionale, rapporto netto/lordo, costi e stabilità devono vincere con evidenza indipendente.
+5. Non convertire il benchmark in una camminata preimpostata: il test usa una intenzione fissa *solo per isolare il problema fisico*, non nel cervello.
+
+Questi risultati rendono non accettabile attivare oggi ZERO 3.0 nel gioco. L'integrità del codice è provata, **l'efficacia del learner è ancora insufficiente**. Il rilascio OTA172 e i cervelli 2.2 sono rimasti immutati.
