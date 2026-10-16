@@ -213,7 +213,8 @@ public final class GameActivity extends Activity {
                 {symMotor.restore(prefs.getString(SymbioteMotorHeadV1.KEY,""));
                  symMotor.restoreLocal(prefs.getString(SymbioteMotorHeadV1.LOCAL_KEY,""));
                  symMotor.restoreCoordination(prefs.getString(SymbioteCoordinationV162.KEY,""));
-                 symMotor.restoreFast(prefs.getString(FastSomaticCircuitV167.KEY,""));}
+                 symMotor.restoreFast(prefs.getString(FastSomaticCircuitV167.KEY,""));
+                 symMotor.restoreMemory(prefs.getString(SymbioteMotorSkillMemoryV169.KEY,""));}
             contactGeometry=new ContactGeometryForensics();
             if(!wasReset)
                 contactGeometry.restore(prefs.getString(ContactGeometryForensics.KEY,""));
@@ -608,6 +609,8 @@ public final class GameActivity extends Activity {
                   symMotor==null?"":symMotor.encodeCoordination())
               .putString(FastSomaticCircuitV167.KEY,
                   symMotor==null?"":symMotor.encodeFast())
+              .putString(SymbioteMotorSkillMemoryV169.KEY,
+                  symMotor==null?"":symMotor.encodeMemory())
               .putString(SpatialPerception.KEY,spatialMap.encode())
               .putString(CausalExperiments.KEY,causalExperiments.encode())
               .putString(InstrumentalNavigation.KEY,navigation.encode())
@@ -1820,7 +1823,8 @@ public final class GameActivity extends Activity {
             text(c,"DISCHI "+pushes+" • BLOCCHI "+boxesUncovered+" • ZONE "+journey.lifeCells+
                 " • STANZE "+chambersCleared,173,195,9,GOLD,false);
             text(c,useSymbiote?
-                "CERVELLO 2.2 • SKILL TEMPORALI "+temporalSkillBank.stored():
+                "CERVELLO 2.2 • SKILL TEMPO "+temporalSkillBank.stored()+
+                " • MOTORIE "+(symMotor==null?0:symMotor.skillMemory().verifiedCount()):
                 "ABILITA "+skillBank.count()+" • RICORDI "+episodic.stored()+
                 " • TECNICHE "+gripBank.count(),173,210,9,TEAL,false);
 
