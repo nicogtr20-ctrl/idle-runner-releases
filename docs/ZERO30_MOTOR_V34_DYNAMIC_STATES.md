@@ -88,3 +88,12 @@ Esempio di regressione: \`Nord -Y, posa 0°, condizione iniziale 0\`: baseline \
 5. Prima della futura integrazione, dimostrare **A/B su molte vite con scelte autonome**, skills persistenti e criterio multi-seed. Nessun OTA, nessuna sostituzione delle schermate 2.2.
 
 **Conclusione documentale:** la capacità di prevedere un impulso localizzato e quella di controllare un organismo distribuito in sequenza sono due cose diverse; la prima è supportata da dati, **la seconda oggi è smentita dal benchmark**.
+
+
+## ADR V3.4-C — protezioni di attribuzione e calibrazione nel modulo condiviso
+
+Il modulo sperimentale \`Zero3MotorResponseKernel.Predictor\` ora mantiene **identificatori episodio/decisione** separati in training e calibrazione; vieta campioni duplicati, gli stessi identificativi riutilizzati nei due gruppi e la **ricalibrazione ripetuta** della stessa istanza dopo il primo test. Non può suggerire impulsi prima dell'esito positivo della calibrazione. I parametri sono immutabili durante predizione e valutazione; nessun salvataggio/app/OTA usa ancora questa API.
+
+**[CI 38978039795 — SUCCESS](https://github.com/nicogtr20-ctrl/idle-runner-releases/actions/runs/38978039795)** conferma la regressione contro fuga train→calibration e doppia verifica, oltre a 24/24 casi dinamici. **Questo certifica l'integrità del sistema di misure, non la locomozione.** Le tre proprietà sono comunque utili quando si introdurrà il vero meccanismo di credito online.
+
+La nuova prova \`Zero3MotorTailLatencyRegression\` misura gli effetti residuali fino a **360 frame dopo la contrazione**, sempre con due corpi e le stesse effettive forze del solver; risultati quantitativi da riportare dal CI una volta verificati. Nessun intervento di quel laboratorio è una camminata predefinita: serve a costruire una timeline causale con latenza sufficiente e prevenire gratificazioni premature.
