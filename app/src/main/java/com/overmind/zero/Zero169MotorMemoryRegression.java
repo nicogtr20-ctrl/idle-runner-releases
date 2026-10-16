@@ -36,12 +36,13 @@ public final class Zero169MotorMemoryRegression {
         float[] signal=lab();
         Record result=new Record();
         float sx=b.cx,sy=b.cy,prevX=b.cx,prevY=b.cy;
-        if(memory!=null)memory.begin(action,config);
+        if(memory!=null)memory.begin(action,config,b,skin);
         for(int t=0;t<320;t++){
             float x=b.cx,y=b.cy;
             matter.step(b,skin,signal,.025f);
             result.gross+=(float)Math.hypot(b.cx-x,b.cy-y);
-            if(memory!=null)memory.physical(x,y,b,skin);
+            if(memory!=null)
+                memory.physical(x,y,b,skin,matter.lastMuscleReactionImpulse,false);
             ok(matter.invalid==0&&MaterialGeometry.selfCrossings(skin)==0,
                 "moving material lost physical topology");
             prevX=b.cx;prevY=b.cy;
@@ -71,7 +72,8 @@ public final class Zero169MotorMemoryRegression {
             "single trained movement was prematurely called a proven skill");
         float[] mutated=proven.clone();mutated[0]+=.4f;mutated[84]+=.32f;
         mutated[404]+=.4f;
-        ok(bank.recoverIfStalled(action,mutated)==null,
+        ok(bank.recoverIfStalled(action,mutated,new MotorBrain.Body(),
+            new Morphology.Surface(new MotorBrain.Body()))==null,
             "unverified movement illegally restored the muscles");
         bank.newLife();
         actualBody(action,proven,bank,false,true);
@@ -98,13 +100,18 @@ public final class Zero169MotorMemoryRegression {
             // No physical displacement; no fabricated success.
             copied.finish(false,false,0f);
         }
-        ok(copied.recoverIfStalled((action+1)%16,mutated)==null,
+        MotorBrain.Body failedBody=new MotorBrain.Body();
+        Morphology.Surface failedSkin=new Morphology.Surface(failedBody);
+        ok(copied.recoverIfStalled((action+1)%16,mutated,
+            failedBody,failedSkin)==null,
             "skill recall overrode an unrelated brain-selected direction");
-        float[] recalled=copied.recoverIfStalled(action,mutated);
+        float[] recalled=copied.recoverIfStalled(action,mutated,
+            failedBody,failedSkin);
         ok(recalled!=null&&Arrays.equals(recalled,proven)&&
             copied.recoveryCount()==1,
             "four actual stalls could not safely recall the proven motor cortex");
-        ok(copied.recoverIfStalled(action,mutated)==null,
+        ok(copied.recoverIfStalled(action,mutated,
+            failedBody,failedSkin)==null,
             "recalled skill was repeatedly applied on every decision");
         copied.newLife();
         ok(copied.verifiedCount()==1&&copied.isProvenFor(action),
