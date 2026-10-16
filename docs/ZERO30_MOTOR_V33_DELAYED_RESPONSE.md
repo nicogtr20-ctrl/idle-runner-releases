@@ -44,7 +44,15 @@ Campioni previsti: 4 intenzioni × 2 pose training × 4 canali × 4 zone × 2 po
 
 ### Risultati verificati e ADR successive
 
-In attesa di lettura del run CI. **G3 (locomozione appresa) e G5 (world model predittivo utile) restano BLOCCATI** fino a verifica indipendente.
+### CI reali e risultato del modello corretto
+
+- **[Primo modello 22 feature — CI 38975682552 SUCCESS](https://github.com/nicogtr20-ctrl/idle-runner-releases/actions/runs/38975682552):** MSE immediate 0.005319504 (baseline zero 0.005320521); MSE ritardata 0.018453053 (zero 0.018610250). Miglioramento insufficiente, selezione vera di interventi utile in 4/8 condizioni.
+- **[Modello corretto 42 feature — CI 38975833848 SUCCESS](https://github.com/nicogtr20-ctrl/idle-runner-releases/actions/runs/38975833848):** aggiunte proiezioni geometriche **radiali/tangenziali dell'intenzione nel frame del corpo** e interazioni differenziate per ciascuno dei 4 tipi muscolari (non un filtro sul colore o un gait). Stesso dataset di 256 coppie train, 256 pose esclusivamente validation. MSE effetto immediato **0.000486950** vs baseline zero **0.005320521**; MSE effetto ritardato **0.000766748** vs baseline zero **0.018610250**. Miglioramento relativo circa **90.8% / 95.9%** sul confronto zero per l'MSE, nelle pose testate. MSE costo 0.000000000380 vs baseline zero 0.000000007780.
+- Effetto fisico: somma ampiezze risposta immediata **10.589 U**, effetto aggiuntivo accumulato **dopo la contrazione** 21.759 U nel set heldout; il secondo contributo è circa 2.05 volte il primo (somme delle ampiezze, non singola traiettoria).
+- **Selezione degli interventi:** 8/8 contesti direzione × posa testata producono incremento direzionale positivo, con lavoro aggiuntivo sotto 0.005; incremento complessivo fisicamente misurato **+4.24760 U**, lavoro addizionale **0.00120341**, utilità dopo penalizzazione costo **+4.19345**. Il singolo candidato casuale predefinito per ogni contesto ha somma firmata **+0.04763 U**; campione casuale è un riferimento esplorativo, non una distribuzione random completa.
+- **Esito ingegneristico:** il modello predittivo specializzato **supera nettamente il baseline zero su due output motori** e propone interventi utili in questa famiglia ristretta di posture. È una prima **dimostrazione di controllabilità per piccoli interventi**, non G3 superato: non sono testate vite complete, competenze persistenti, shock, diversi corpi/scene, multi-seed, ricompensa di sopravvivenza o integrazione del brain 3.0. Il predictor è attualmente **interno alla regression Java**, non modulo di produzione, e non modifica alcun peso del cervello nel gioco.
+
+**Decisione:** G3 apprendimento autonomo della locomozione **BLOCCATO**. G5 modello del mondo generale **BLOCCATO** (pur essendoci risultati positivi per la piccola testa di risposta motoria). **Nessun OTA e nessuna UI V3 simulata come implementata.**
 
 ## 5. Prossimo sviluppo necessario
 
