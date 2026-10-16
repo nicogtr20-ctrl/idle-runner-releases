@@ -56,7 +56,7 @@ public final class Zero167SomaticLoopRegression {
                 "fast motor overwrote the learned stiffness command");
             float beforeX=body.cx,beforeY=body.cy;
             gel.step(body,skin,motor.commands(),dt);
-            motor.observedPhysicalStep(beforeX,beforeY,body,skin);
+            motor.observedPhysicalStep(beforeX,beforeY,body,skin,gel.lastMuscleReactionImpulse,false,dt);
         }
         ok(changed>10,"no recurrent sub-decision motor adjustment at real physics rate");
         ok(motor.encode().equals(sharedCheckpoint)&&

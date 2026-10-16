@@ -129,6 +129,8 @@ public final class GameActivity extends Activity {
         boolean showHelp=true,resetArmed=false,simulationRunning=true,showBenchmark=false;
         boolean detailsExpanded=false,settingsExpanded=false;
         long lastFrame=0,lastSave=0;
+        final PhysicsClockV171 physicsClock=new PhysicsClockV171();
+        final java.util.IdentityHashMap<UnknownWorld.Entity,float[]> materialBefore=new java.util.IdentityHashMap<>();
         float H=850,clock=0,phase=0,uiTime=0,heading=0,trailClock=0;
         float[] trailX=new float[46],trailY=new float[46];
         int trailCount=0,speed=1,episode=0;
@@ -214,7 +216,8 @@ public final class GameActivity extends Activity {
                  symMotor.restoreLocal(prefs.getString(SymbioteMotorHeadV1.LOCAL_KEY,""));
                  symMotor.restoreCoordination(prefs.getString(SymbioteCoordinationV162.KEY,""));
                  symMotor.restoreFast(prefs.getString(FastSomaticCircuitV167.KEY,""));
-                 symMotor.restoreMemory(prefs.getString(SymbioteMotorSkillMemoryV169.KEY,""));}
+                 symMotor.restoreMemory(prefs.getString(SymbioteMotorSkillMemoryV169.KEY,""));
+                 symMotor.restoreManipulation(prefs.getString(SymbioteMotorSkillMemoryV169.MANIPULATION_KEY,""));}
             contactGeometry=new ContactGeometryForensics();
             if(!wasReset)
                 contactGeometry.restore(prefs.getString(ContactGeometryForensics.KEY,""));
@@ -258,6 +261,7 @@ public final class GameActivity extends Activity {
             sensorMind.restorePlanningStats(prefs.getString("learned_planner_stats_v102",""));
             sensorMind.diagnostics.restore(
                 prefs.getString("sensorimotor_diagnostics_v091",""));
+            sensorMind.activeDiagnostics.restore(prefs.getString(LearningDiagnostics.ACTIVE_KEY,""));
             workingMemory=new TemporalWorkingMemory();
             workingMemory.restore(prefs.getString("temporal_working_memory_v106",""));
             sensorMind.attachWorkingMemory(workingMemory);
@@ -306,6 +310,7 @@ public final class GameActivity extends Activity {
             sensorMind.attachCausalExperiments(causalExperiments);
             navigation=new InstrumentalNavigation();
             navigation.restore(prefs.getString(InstrumentalNavigation.KEY,""));
+            navigation.restoreContextual(prefs.getString(ContextualNavigationV171.KEY,""));
             sensorMind.attachNavigation(navigation);
             intentions=new GoalContinuity();
             intentions.restore(prefs.getString(GoalContinuity.KEY,""));
@@ -584,6 +589,7 @@ public final class GameActivity extends Activity {
               .putFloat("max_displacement_v041",biggestDisplacement)
               .putString("sensorimotor_model_v09",sensorMind.serialize())
               .putString("sensorimotor_diagnostics_v091",sensorMind.diagnostics.encode())
+              .putString(LearningDiagnostics.ACTIVE_KEY,sensorMind.activeDiagnostics.encode())
               .putString("episodic_memory_v095",episodic.encode())
               // 0.10.8: persist learned temporal readouts, hidden context and
               // consolidated action sequences alongside the existing brain.
@@ -611,9 +617,12 @@ public final class GameActivity extends Activity {
                   symMotor==null?"":symMotor.encodeFast())
               .putString(SymbioteMotorSkillMemoryV169.KEY,
                   symMotor==null?"":symMotor.encodeMemory())
+              .putString(SymbioteMotorSkillMemoryV169.MANIPULATION_KEY,
+                  symMotor==null?"":symMotor.encodeManipulation())
               .putString(SpatialPerception.KEY,spatialMap.encode())
               .putString(CausalExperiments.KEY,causalExperiments.encode())
               .putString(InstrumentalNavigation.KEY,navigation.encode())
+              .putString(ContextualNavigationV171.KEY,navigation.encodeContextual())
               .putString(GoalContinuity.KEY,intentions.encode())
               .putString(ContactGeometryForensics.KEY,contactGeometry.encode())
               .putString(GateBehaviorMetrics.KEY,gateMetrics.encode())
@@ -646,7 +655,7 @@ public final class GameActivity extends Activity {
             if(prefs.contains(ResetDomains.REQUEST)||
                prefs.getBoolean(SaveSlotStore.PENDING_RELOAD,false))load();
             learning=true;
-            enabled=true;lastFrame=0;postInvalidateOnAnimation();
+            enabled=true;lastFrame=0;physicsClock.reset();postInvalidateOnAnimation();
             // All adaptation happens in the visible world. Inherited motor
             // and membrane weights persist until a lived test is accepted.
             sensorMind.setLearning(true);
@@ -656,7 +665,7 @@ public final class GameActivity extends Activity {
             testMax=false;
             // Pause and FLUSH BOTH cognition and physical state before the
             // named-slot screen is allowed to inspect the working profile.
-            enabled=false;
+            enabled=false;physicsClock.reset();
             save();
             saveScene();
             lastFrame=0;
@@ -981,7 +990,8 @@ public final class GameActivity extends Activity {
                     }
                 }
             }
-            final int frameSteps=fullSpeed?TEST_MAX_MAX_STEPS:speed;
+            final int frameSteps=fullSpeed?TEST_MAX_MAX_STEPS:
+                physicsClock.steps(simulationRunning?dt:0f,speed);
             // Short bounded burst, always returning control to UI/touch.
             final long burstDeadline=System.nanoTime()+
                 (testMaxThermalStatus>=android.os.PowerManager.THERMAL_STATUS_MODERATE
@@ -989,7 +999,7 @@ public final class GameActivity extends Activity {
             if(simulationRunning){
                 for(int i=0;i<frameSteps;i++){
                     if(fullSpeed&&i>0&&(i&15)==0&&System.nanoTime()>=burstDeadline)break;
-                    float slice=fullSpeed?TEST_MAX_FIXED_DT:Math.min(dt,.035f);
+                    float slice=TEST_MAX_FIXED_DT;
                     // OTA144 CRITICAL: Android's first onDraw after launch,
                     // save-slot switch or Activity resume has lastFrame==0,
                     // so dt==0. The new physical fluid solver correctly
@@ -1000,6 +1010,14 @@ public final class GameActivity extends Activity {
                     if(!Float.isFinite(slice)||slice<=0f)continue;
                     if(fullSpeed)testMaxSimSeconds+=slice;
                     float energyBeforeFrame=reserve;
+                    float gateStart=chamber==null?0f:chamber.doorY;
+                    long previousFrameGateHolds=chamber==null?0:chamber.gateHeldFrames;
+                    materialBefore.keySet().retainAll(environment);
+                    if(useSymbiote)for(UnknownWorld.Entity e:environment)if(e.isBox()){
+                        float[] prior=materialBefore.get(e);
+                        if(prior==null){prior=new float[2];materialBefore.put(e,prior);}
+                        prior[0]=e.x;prior[1]=e.y;
+                    }
                     int lifeStamp=episode;
                     updateHabitat(slice);
                     // ACTION is sampled from learned sensory-action
@@ -1058,6 +1076,10 @@ public final class GameActivity extends Activity {
                     System.arraycopy(creature.x,0,squarePrevBodyX,0,MotorBrain.N);
                     System.arraycopy(creature.y,0,squarePrevBodyY,0,MotorBrain.N);
                     float oldCoreX=creature.cx,oldCoreY=creature.cy;
+                    // True motor impulse from physical fluid reactions,
+                    // recorded BEFORE the external collision solver runs.
+                    float witnessedMuscleImpulse=0f;
+                    float uncorrectedX=oldCoreX,uncorrectedY=oldCoreY;
                     if(useSymbiote&&symMatter!=null&&symMotor!=null){
                         // Keep OTA148/151 physics EXACTLY unchanged. Cortex
                         // work is an actually measured material quantity;
@@ -1066,6 +1088,8 @@ public final class GameActivity extends Activity {
                         // No positive feedback for distance or deformation.
                         float workBefore=symMatter.work;
                         symMatter.step(creature,surface,symMotor.commands(),slice);
+                        witnessedMuscleImpulse=symMatter.lastMuscleReactionImpulse;
+                        uncorrectedX=creature.cx;uncorrectedY=creature.cy;
                         float freshWork=Math.max(0f,symMatter.work-workBefore);
                         if(Float.isFinite(freshWork)&&freshWork>0f){
                             // Physical work -> resource units calibration.
@@ -1245,15 +1269,8 @@ public final class GameActivity extends Activity {
                     if(useSymbiote&&symMatter!=null){
                         // EXACTLY HERE: contact correction on 96 membrane,
                         // 10 old body masses and 64 liquid parcels of same gel.
-                        if(chamber!=null)chamber.constrainInterior(symMatter,slice);
-                        for(UnknownWorld.Entity obstacle:environment){
-                            if(obstacle.consumed)continue;
-                            if(obstacle.isBox())
-                                SquareCollisionSolver.constrainInterior(symMatter,obstacle,slice);
-                            else if(obstacle.isConstruction())
-                                PanelPhysics.constrainInterior(symMatter,obstacle,slice);
-                        }
-                        symMatter.observeBody(creature,surface);
+                        SymbioteWorldStepV171.interior(symMatter,creature,surface,
+                            chamber,environment,slice);
                     }else MaterialGeometry.observe(creature);
                     // Restore the union of physically valid object-owned holds
                     // for vision and next-frame tactile input only.
@@ -1347,8 +1364,34 @@ public final class GameActivity extends Activity {
                     // OTA162: real actuator credit from the same completed
                     // material frame, after box/door collisions and object motion.
                     // No new physical force or action chooser. Exclude respawns.
-                    if(lifeStamp==episode&&useSymbiote&&symMotor!=null)
-                        symMotor.observedPhysicalStep(oldCoreX,oldCoreY,creature,surface);
+                    if(lifeStamp==episode&&useSymbiote&&symMotor!=null){
+                        boolean externalDisturbance=
+                            (float)Math.hypot(creature.cx-uncorrectedX,
+                                creature.cy-uncorrectedY)>.08f||
+                            environmentEffectSinceAction>worldEffectAtFrameStart+.03f||
+                            shelter.storm(worldTime);
+                        // Moving a door or box is an external intervention,
+                        // not an independent demonstration of crawling skill.
+                        for(int siteIndex=0;siteIndex<Morphology.POINTS;siteIndex++)
+                            if(surface.touchSense[siteIndex]>.25f||
+                               surface.gripHold[siteIndex]>=Morphology.GRIP_HOLD){
+                                externalDisturbance=true;break;
+                            }
+                        float heldTravel=0f;boolean actualHold=false;
+                        if(chamber!=null&&chamber.gateHeldFrames>previousFrameGateHolds){
+                            heldTravel+=Math.abs(chamber.doorY-gateStart);actualHold=true;
+                        }
+                        for(UnknownWorld.Entity e:environment){
+                            float[] old=materialBefore.get(e);
+                            if(old==null)continue;
+                            boolean held=e.isConstruction()?PanelPhysics.anyHeld(e):e.bilateralHeldNow;
+                            if(held){actualHold=true;heldTravel+=(float)Math.hypot(e.x-old[0],e.y-old[1]);}
+                        }
+                        symMotor.observedManipulation(heldTravel,actualHold&&!shelter.storm(worldTime));
+                        symMotor.observedPhysicalStep(oldCoreX,oldCoreY,
+                            creature,surface,witnessedMuscleImpulse,
+                            externalDisturbance,slice);
+                    }
                     // The journal observes the lived world, never suggests a
                     // destination to ZERO. Do not count death/respawn as travel.
                     if(lifeStamp==episode){

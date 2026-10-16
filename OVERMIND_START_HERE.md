@@ -1,3 +1,13 @@
+<!-- Current authoritative status; older sections below are historical. -->
+# Current release status — ZERO171, 16 October 2026 — AUTHORIZED, VALIDATING
+
+Official installed/public baseline: **OTA169 / 1169**. Current correction branch:
+`fix/zero171-integrated-sensorimotor-corrections` from unpublished ZERO170 `249563fd`.
+Read [ZERO_171_INTEGRATED_SENSORIMOTOR_CORRECTIONS.md](docs/ZERO_171_INTEGRATED_SENSORIMOTOR_CORRECTIONS.md) for the complete current architecture, all thirteen audit findings, fixes, optional persistence keys, tests and remaining device validation.
+**User explicitly authorized source publication and signed APK OTA publication on 16 October 2026: “Si autorizzo. Pubblica anche apk tramite ota”.** Complete release checks, promote the reviewed sources to the stable source branch, preserve the installed signing identity and named slots, then verify the public manifest and APK. Keep Idle Runner sources on main intact. OTA169 remains the published baseline until the next release is verified. Earlier no-publication instructions below are historical and superseded by this explicit authorization.
+
+One active RecurrentCoreV22 + actual 724-synapse motor head; corrected panel/concave geometry, fixed 1/60s integration, context-conditioned movement, physically attributed motor learning, distinct verified manipulation memory and genuine current-symbiote comparison. No scripted gait or food target, no forced confidence, no reset of existing brains/slots. Passing tests is not proof of improved autonomous behavior on the Galaxy S21.
+
 ## OTA162 — CANDIDATA: MOTOR COORDINATION, 15 ottobre 2026
 
 **Stato**: PR in preparazione, QA obbligatoria e successiva firma OTA NON ANCORA PUBBLICATA. Fino alla pubblicazione, OTA161 resta la release ufficiale. Report reale OTA161 `zero-telemetry/reports/20261015-202651-1411664defd37`: 81% di cambi di scelta tra decisioni adiacenti nell'ultima vita, 31% esplorazione, blackbox ~734U di percorso campionato ma ~63U di spostamento risultante; nuovi 320 pesi con media assoluta ~0.0000455, ~473 volte inferiore agli 84 originali. **Lentezza e antagonismo sono sospetti fondati, non ancora diagnosi certa di forze interne dai dati raccolti.**

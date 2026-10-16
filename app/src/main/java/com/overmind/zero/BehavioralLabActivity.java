@@ -70,14 +70,14 @@ public final class BehavioralLabActivity extends Activity {
         paragraph(root,"TEST FISICI RIPETIBILI • NON MODIFICA ZERO");
         LinearLayout description=card(root);
         description.addView(txt("Che cosa misuriamo?",16,TEAL,true));
-        paragraph(description,"Tre prove: raggiungere energia, evitare danno e "+
-            "interagire con una stanza dotata di cancello. Tre varianti di "+
-            "posizione/velocita' iniziale per ciascuna.");
-        paragraph(description,"Confronto cervello 2.2: A usa il controllo precedente, B usa il nuovo controllore ricorrente. Ogni coppia parte dalla stessa copia dello ZERO e dalle stesse condizioni fisiche. L'apprendimento delle due copie resta isolato dal personaggio reale.");
-        paragraph(description,"Ogni prova usa il motore fisico reale del gioco "+
-            "per 32 secondi simulati. I risultati riportano veri contatti, "+
-            "energia guadagnata/persa, vicinanza, spostamento del cancello "+
-            "e attraversamento. Non forniamo bersagli o traiettorie al cervello.");
+        boolean symbiote=getSharedPreferences(SaveSlotStore.WORKING,MODE_PRIVATE).getBoolean(SymbioteMatterV1.ENABLED,false);
+        paragraph(description,symbiote?
+            "Tre ambienti: energia libera, energia con lastra e stanza con cancello. Quattro varianti per ciascuno, 24 prove di 32 secondi simulati.":
+            "Tre prove storiche: energia, danno e cancello. Tre varianti per ciascuna, 18 prove di 32 secondi simulati.");
+        paragraph(description,symbiote?
+            "A mantiene congelati i pesi salvati; B apprende online. Entrambe usano il cervello 2.2, il corpo fluido e gli attuatori neurali attuali. Ogni coppia parte dalla stessa copia dello ZERO e dalla stessa scena.":
+            "Confronto storico: controllo precedente e nucleo ricorrente attivo, su copie isolate della stessa partita.");
+        paragraph(description,"Misuriamo riserva, raccolte, movimento netto, percorso e direzione realizzata. Nessuna traiettoria viene fornita al cervello. L'arena controllata esclude streaming e tempeste.");
         paragraph(description,"La prova usa una COPIA dello ZERO attualmente "+
             "salvato, non cancella né allena il personaggio reale. "+
             "Se il cervello ricorrente non ha ancora imparato, "+
@@ -87,7 +87,7 @@ public final class BehavioralLabActivity extends Activity {
         controls.addView(run);
         cancel=new Button(this);cancel.setText("INTERROMPI");
         cancel.setEnabled(false);controls.addView(cancel);
-        status=txt("Pronto per 18 prove fisiche isolate",13,GOLD,true);
+        status=txt("Pronto per prove fisiche isolate",13,GOLD,true);
         paragraph(controls,"Per interrompere la simulazione tocca INTERROMPI "+
             "o esci dalla schermata: i salvataggi reali non vengono toccati.");
         controls.addView(status);
@@ -154,18 +154,27 @@ public final class BehavioralLabActivity extends Activity {
     private void runLab(){
         if(running)return;
         final BehavioralLaboratory.Profile source=captured();
+        final java.util.Map<String,?> physicalProfile=new java.util.LinkedHashMap<>(
+            getSharedPreferences(SaveSlotStore.WORKING,MODE_PRIVATE).getAll());
         running=true;canceled=false;run.setEnabled(false);cancel.setEnabled(true);
         status.setText("Preparazione di prove fisiche... non chiudere per ottenere il report completo.");
         worker=new Thread(()->{
             Process.setThreadPriority(Process.THREAD_PRIORITY_BACKGROUND);
             try{
-                BehavioralLaboratory.Result result=BehavioralLaboratory.run(
-                    source,(done,total,label)->runOnUiThread(()->{
-                        if(!isFinishing()&&!isDestroyed())status.setText(
-                            String.format(Locale.US,"%d / %d • %s",done,total,label));
-                    }),()->canceled||Thread.currentThread().isInterrupted());
-                String text=result.report();
-                boolean complete=result.finished==result.total();
+                final String text;final boolean complete;
+                if(Boolean.TRUE.equals(physicalProfile.get(SymbioteMatterV1.ENABLED))){
+                    CoreComparisonV22.Result result=SymbioteLaboratoryV171.compare(
+                        physicalProfile,(done,total,label)->runOnUiThread(()->{
+                            if(!isFinishing()&&!isDestroyed())status.setText(done+" / "+total+" • "+label);
+                        }),()->canceled||Thread.currentThread().isInterrupted(),32f);
+                    text=result.report();complete=result.finished==result.total();
+                }else{
+                    BehavioralLaboratory.Result result=BehavioralLaboratory.run(
+                        source,(done,total,label)->runOnUiThread(()->{
+                            if(!isFinishing()&&!isDestroyed())status.setText(done+" / "+total+" • "+label);
+                        }),()->canceled||Thread.currentThread().isInterrupted());
+                    text=result.report();complete=result.finished==result.total();
+                }
                 if(complete&&!canceled){
                     getSharedPreferences(RESULTS,MODE_PRIVATE).edit()
                         .putString("last",text).apply();
@@ -174,7 +183,7 @@ public final class BehavioralLabActivity extends Activity {
                     if(isFinishing()||isDestroyed())return;
                     report.setText(text);
                     status.setText(complete&&!canceled?
-                        "18 prove completate — risultati isolati dal personaggio.":
+                        "Prove completate — risultati isolati dal personaggio.":
                         "Confronto interrotto — report parziale non salvato.");
                 });
             }catch(Throwable failure){

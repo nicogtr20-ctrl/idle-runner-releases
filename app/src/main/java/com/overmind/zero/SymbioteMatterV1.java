@@ -393,7 +393,7 @@ public final class SymbioteMatterV1 {
             float px=fluidX[i]+clip(impulsesX[i],-1.8f,1.8f);
             float py=fluidY[i]+clip(impulsesY[i],-1.8f,1.8f);
             if(!inside(skin,px,py)){
-                float best=Float.MAX_VALUE,cx=px,cy=py;
+                float best=Float.MAX_VALUE,cx=px,cy=py;int closestSegment=-1;
                 for(int j=0;j<SURFACE;j++){
                     int next=(j+1)%SURFACE;
                     float ax=skin.x[j],ay=skin.y[j],bx=skin.x[next],by=skin.y[next];
@@ -401,23 +401,38 @@ public final class SymbioteMatterV1 {
                     float t=div<.00001f?0:clip(((px-ax)*dx+(py-ay)*dy)/div,0,1);
                     float nearX=ax+t*dx,nearY=ay+t*dy;
                     float dist=(px-nearX)*(px-nearX)+(py-nearY)*(py-nearY);
-                    if(dist<best){best=dist;cx=nearX;cy=nearY;}
+                    if(dist<best){best=dist;cx=nearX;cy=nearY;closestSegment=j;}
                 }
-                // Retreat only a tiny epsilon into the oriented perimeter,
-                // regardless of what the organism might be reaching toward.
-                float signed=signedArea(skin);
-                float towardX=0,towardY=0;
-                // In a degenerate/disconnected contour skip the correction.
-                // This will be reported as topology loss by validation.
-                if(Math.abs(signed)>.01f){
-                    float insideX=0,insideY=0;
-                    for(int j=0;j<SURFACE;j++){insideX+=skin.x[j];insideY+=skin.y[j];}
-                    insideX/=SURFACE;insideY/=SURFACE;
-                    towardX=insideX-cx;towardY=insideY-cy;
-                    float norm=len(towardX,towardY);
-                    if(norm>.001f){towardX/=norm;towardY/=norm;}
+                float orientation=signedArea(skin)>=0f?1f:-1f;
+                float bestInside=Float.POSITIVE_INFINITY;
+                boolean found=false;
+                // Centroids need not be inside concave living tissue. Search
+                // the actual oriented edge, then verify with the polygon test.
+                for(int order=0;order<=SURFACE;order++){
+                    // The nearest face normally suffices. Exhaustive fallback
+                    // is only for a degenerate vertex, never the ordinary tick.
+                    int j=order==0?closestSegment:order-1;
+                    if(j<0||(order>0&&j==closestSegment))continue;
+                    if(order>0&&found)break;
+                    int next=(j+1)%SURFACE;
+                    float ax=skin.x[j],ay=skin.y[j],ex=skin.x[next]-ax,ey=skin.y[next]-ay;
+                    float length2=ex*ex+ey*ey;
+                    if(length2<1e-8f)continue;
+                    float along=clip(((px-ax)*ex+(py-ay)*ey)/length2,0f,1f);
+                    float qx=ax+along*ex,qy=ay+along*ey;
+                    float length=(float)Math.sqrt(length2);
+                    for(int attempt=0;attempt<3;attempt++){
+                        float epsilon=attempt==0?.05f:attempt==1?.2f:.8f;
+                        float ix=qx-orientation*ey/length*epsilon;
+                        float iy=qy+orientation*ex/length*epsilon;
+                        float distance=(ix-px)*(ix-px)+(iy-py)*(iy-py);
+                        if(distance<bestInside&&inside(skin,ix,iy)){
+                            bestInside=distance;cx=ix;cy=iy;found=true;
+                        }
+                    }
                 }
-                px=cx+towardX*.8f;py=cy+towardY*.8f;
+                if(found){px=cx;py=cy;}
+
             }
             fluidX[i]=px;fluidY[i]=py;
         }

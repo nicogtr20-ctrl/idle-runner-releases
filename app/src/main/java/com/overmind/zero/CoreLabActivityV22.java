@@ -21,7 +21,10 @@ public final class CoreLabActivityV22 extends Activity {
         LinearLayout root=new LinearLayout(this);root.setOrientation(LinearLayout.VERTICAL);root.setPadding(30,40,30,30);
         root.setBackgroundColor(0xff07121d);scroll.addView(root);setContentView(scroll);
         text(root,"ZERO 2.2 • CONFRONTO ESTESO",21);
-        text(root,"Dodici coppie dello stesso profilo salvato negli stessi ambienti. Controllo precedente e nucleo attivo: energia, danni, sopravvivenza e prese fisiche. Ogni prova arriva fino a 170 secondi simulati o alla morte. Le copie imparano localmente; il tuo ZERO resta invariato.",15);
+        boolean symbiote=getSharedPreferences(SaveSlotStore.WORKING,MODE_PRIVATE).getBoolean(SymbioteMatterV1.ENABLED,false);
+        text(root,symbiote?
+            "Dodici coppie identiche del tuo simbionte: A mantiene congelati i pesi, B apprende online. Tre ambienti e quattro varianti; fino a 170 secondi simulati per prova. Confrontiamo riserva, raccolte, movimento netto, percorso e direzione realizzata. Il tuo ZERO resta invariato.":
+            "Dodici coppie del profilo storico: controllo precedente e nucleo attivo. Fino a 170 secondi simulati per prova; il tuo ZERO resta invariato.",15);
         text(root,"Arena ridotta: casse, lastre e pericoli reali, senza streaming o tempeste. Lo screening può mostrare anche regressioni. Nessun pareggio o singola vittoria certifica intelligenza generale.",14);
         run=new Button(this);run.setText("AVVIA 24 PROVE ISOLATE");root.addView(run);
         Button stop=new Button(this);stop.setText("INTERROMPI");root.addView(stop);

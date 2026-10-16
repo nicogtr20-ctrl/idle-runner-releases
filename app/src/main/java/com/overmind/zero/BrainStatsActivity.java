@@ -92,6 +92,7 @@ public final class BrainStatsActivity extends Activity {
         bCoordination=muscle.restoreCoordination(prefs.getString(SymbioteCoordinationV162.KEY,""));
         bFast=muscle.restoreFast(prefs.getString(FastSomaticCircuitV167.KEY,""));
         bMotorMemory=muscle.restoreMemory(prefs.getString(SymbioteMotorSkillMemoryV169.KEY,""));
+        muscle.restoreManipulation(prefs.getString(SymbioteMotorSkillMemoryV169.MANIPULATION_KEY,""));
         bDuration=motorDuration.restore(prefs.getString(MotorDurationV22.KEY,""));
         bProprio=proprio.restore(prefs.getString(BodyProprioception.KEY,""));
         bDistributed=distributed.restore(prefs.getString(DistributedBodySense.KEY,""));
@@ -431,7 +432,7 @@ public final class BrainStatsActivity extends Activity {
         tile(body,"RIEPILOGO ABILITÀ","Consolidamento, esecuzioni ed errori",VIOLET,"SKILLS");
         LinearLayout motor=panel(body,"COMPETENZE MOTORIE",TEAL);
         metric(motor,"Azioni con movimento verificato",bNavigation?
-            navigation.verifiedActions()+" / 16":"Non disponibile");
+            "Valutazione contestuale nel gioco":"Non disponibile");
         metric(motor,"Azioni con modello fisico affidabile",bCore?
             core.physicalReady()+" / 16":"Non disponibile");
         metric(motor,"Azioni con previsione energetica affidabile",bCore?
@@ -451,6 +452,8 @@ public final class BrainStatsActivity extends Activity {
             num(muscle.fastCircuit().parameterCount()):"Non disponibili");
         note(motor,"Queste sono evidenze d'apprendimento, non prove che ZERO sappia già camminare bene.");
         LinearLayout goal=panel(body,"MANIPOLAZIONE E OBIETTIVI",BLUE);
+        metric(goal,"Tecniche di manipolazione confermate",muscle.manipulationMemory().verifiedCount()+"");
+        metric(goal,"Tecniche di manipolazione da verificare",muscle.manipulationMemory().candidatesCount()+"");
         metric(goal,"Progressi obiettivo confermati",absent(bGoals,num(goals.confirmed)));
         metric(goal,"Prosecuzioni riuscite",absent(bGoals,num(goals.continued)));
         metric(goal,"Attraversamenti completi",absent(bGates,num(gates.realEntrances)));

@@ -116,7 +116,7 @@ public final class Zero168ControllabilityRegression {
                 float x=hb.cx,y=hb.cy;
                 head.fastTick(hb,hs,.025f);
                 hm.step(hb,hs,head.commands(),.025f);
-                head.observedPhysicalStep(x,y,hb,hs);
+                head.observedPhysicalStep(x,y,hb,hs,hm.lastMuscleReactionImpulse,false,.025f);
             }
             head.consequence(0f,0f,0f,0f,true,false);
             if(trial==0)ok(head.fastCircuit().trained()==1,

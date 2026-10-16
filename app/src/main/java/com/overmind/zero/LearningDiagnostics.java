@@ -8,6 +8,7 @@ import java.util.Locale;
  * is a prediction baseline, NOT an unobserved random-agent simulation.
  */
 public final class LearningDiagnostics {
+    public static final String ACTIVE_KEY="active_recurrent_diagnostics_v171";
     public static final int HISTORY=48;
     public static final int HOLDOUT_PERIOD=5;
     public final float[] modelCurve=new float[HISTORY],baselineCurve=new float[HISTORY];

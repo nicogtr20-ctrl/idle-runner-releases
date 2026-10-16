@@ -350,6 +350,19 @@ public final class RecurrentCoreV22 {
         transitions++;if(terminal)terminals++;
         pending=null;pendingAction=-1;
     }
+    public float[] observedPredictionErrors(){return observedPredictionErrors(F);}
+    public float[] observedPredictionErrors(int dimensions){
+        if(dimensions<1||dimensions>F)throw new IllegalArgumentException("sensory dimensions");
+        if(pending==null||pendingAction<0)return new float[]{0f,0f};
+        float error=0f,base=0f;int count=0;
+        for(int j=0;j<dimensions;j++){
+            if(j>=138&&j<144)continue;
+            float delta=current[j]-pending[j];
+            float residual=delta-forecastDelta(pending,pendingAction,j);
+            error+=residual*residual;base+=delta*delta;count++;
+        }
+        return new float[]{(float)Math.sqrt(error/count),(float)Math.sqrt(base/count)};
+    }
     public void resetLife(){Arrays.fill(hidden,0);Arrays.fill(current,0);pending=null;pendingAction=-1;lastAction=-1;intervalsWithoutEnergy=0;neuralGrowth.resetEpisode();}
     public void resumeLife(){pending=null;pendingAction=-1;}
     /** Read-only lifetime learning counters. Never changes the policy. */

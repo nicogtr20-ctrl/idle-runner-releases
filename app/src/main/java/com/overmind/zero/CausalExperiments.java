@@ -366,7 +366,9 @@ public final class CausalExperiments {
         check(changed.tentativeOpenings>0&&changed.confirmedPassages==0,
             "An unvisited potential passage counted as a confirmed crossing");
         changed.chosen(changedSpace,0,true);
-        stationary.cx+=90;
+        // Continuous ray first hits this radius-19 disk at x=71 (cell 1).
+        // Visit the actually observed former solid cell, not its hidden center.
+        stationary.cx+=70;
         changedSpace.observeEnvironment(stationary,null,disks);
         changed.consequence(changedSpace,0,0,true,false);
         check(changed.confirmedPassages>=1,

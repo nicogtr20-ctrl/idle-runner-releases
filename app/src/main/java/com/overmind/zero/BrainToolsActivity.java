@@ -93,8 +93,14 @@ public final class BrainToolsActivity extends Activity {
         line(active,"Decisioni possibili",RecurrentCoreV22.A+"",WHITE);
         line(active,"Ingressi al nucleo",RecurrentCoreV22.F+"",WHITE);
         line(active,"Pesi del nucleo",core.parameterCount()+"",WHITE);
-        line(active,"Pesi muscolari",muscle.parameterCount()+"",WHITE);
+        line(active,"Pesi muscolari totali",SymbioteMotorSkillMemoryV169.WIDTH+"",WHITE);
+        line(active,"Passo fisico","1/60 s a tutte le velocità",WHITE);
         paragraph(active,coreReady?core.summary():"Il nucleo sarà disponibile dopo il primo checkpoint completo.");
+        LearningDiagnostics activePrediction=new LearningDiagnostics();
+        if(activePrediction.restore(prefs.getString(LearningDiagnostics.ACTIVE_KEY,""))){
+            line(active,"Verifiche del predittore 2.2",activePrediction.heldoutTransitions+"",WHITE);
+            line(active,"Errore 2.2 / nessun cambiamento",String.format(Locale.US,"%.4f / %.4f",activePrediction.modelError,activePrediction.baselineError),CYAN);
+        }
         paragraph(active,muscleReady?muscle.summary():"La corteccia muscolare non ha ancora un checkpoint valido.");
         paragraph(active,"Le azioni sono scelte dal nucleo 2.2. Il controllore muscolare traduce le 16 scelte in contrazioni locali; non esiste un secondo cervello attivo.");
 
@@ -145,7 +151,10 @@ public final class BrainToolsActivity extends Activity {
         }else line(spatialPanel,"Mappa fisica","Nessun salvataggio disponibile",AMBER);
         line(spatialPanel,"Esperimenti causa/effetto",ca?causal.experiments+"":"Non ancora registrati",WHITE);
         if(ca)line(spatialPanel,"Fiducia causale",percent(causal.confidence()),CYAN);
-        line(spatialPanel,"Movimenti verificati",nav?navigation.verifiedActions()+" / 16":"In attesa di dati",WHITE);
+        navigation.restoreContextual(prefs.getString(ContextualNavigationV171.KEY,""));
+        if(symbiote)navigation.motorContext(null,null,muscle.verifiedMotorSnapshot());
+        line(spatialPanel,"Movimenti verificati nel contesto",symbiote?"Verificati sulla postura nel gioco":nav?navigation.verifiedActions()+" / 16":"In attesa di dati",WHITE);
+        paragraph(spatialPanel,"Fiducia zero: il sensore raccoglie dati, ma non ha ancora superato la verifica predittiva. Il contributo alle scelte resta sospeso; non significa sensore scollegato.");
         line(spatialPanel,"Tracce oggetti anonimi",oc?objects.trackedViews()+"":"In attesa di dati",WHITE);
         line(spatialPanel,"Sequenze causali",seq?sequence.validations()+" prove esterne":"In attesa di dati",WHITE);
         paragraph(spatialPanel,"Continuità degli oggetti e sequenze causali restano utili anche se alcuni file conservano nomi 2.1/2.3. Il vecchio arbitro 2.1 e il pianificatore 2.0 non comandano il corpo.");
@@ -168,6 +177,10 @@ public final class BrainToolsActivity extends Activity {
             line(memory,"Sequenze consolidate",skills.consolidated()+"",CYAN);
             line(memory,"Esecuzioni riuscite",skills.completions+"",WHITE);
         }
+        SymbioteMotorSkillMemoryV169 manipulation=new SymbioteMotorSkillMemoryV169(true);
+        manipulation.restore(prefs.getString(SymbioteMotorSkillMemoryV169.MANIPULATION_KEY,""));
+        line(memory,"Tecniche di manipolazione verificate",manipulation.verifiedCount()+"",CYAN);
+        line(memory,"Tecniche da verificare",manipulation.candidatesCount()+"",WHITE);
         line(memory,"Progressi obiettivi",go?goals.confirmed+" verificati":"In attesa di dati",WHITE);
         paragraph(memory,"La memoria può suggerire un'azione, ma non imporla. ZERO deve confermare con l'esperienza che una sequenza funziona; non riceve coordinate, regole di soluzione o premi per il semplice movimento.");
 
@@ -193,8 +206,8 @@ public final class BrainToolsActivity extends Activity {
 
         LinearLayout lab=panel(body);
         lab.addView(label("LABORATORI • TEST ISOLATI",17,CYAN,true));
-        paragraph(lab,"I confronti A/B usano copie dei modelli e ambienti controllati. Alcuni scenari del laboratorio utilizzano ancora la vecchia fisica: NON equivalgono a osservare il corpo simbionte vivo.");
-        TextView basic=label("CONFRONTO COMPORTAMENTALE STORICO  ›",15,WHITE,true);
+        paragraph(lab,"Sul simbionte i confronti usano il corpo fluido e gli attuatori neurali attuali: A mantiene congelati i pesi, B apprende online. Le vecchie partite mantengono i laboratori storici. Streaming e tempeste non fanno parte delle arene controllate.");
+        TextView basic=label("CONFRONTO FISICO BREVE  ›",15,WHITE,true);
         basic.setPadding(0,dp(17),0,dp(12));basic.setOnClickListener(v->
             startActivity(new Intent(this,BehavioralLabActivity.class)));lab.addView(basic);
         TextView extended=label("PROVE ESTESE 2.2 / CASSE  ›",15,WHITE,true);

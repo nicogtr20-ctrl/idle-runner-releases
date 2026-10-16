@@ -118,8 +118,10 @@ public final class FastSomaticCircuitV167 {
                 for(int j=0;j<INPUTS;j++)z+=weights[off+j]*input[j];
                 // Correlated MOTOR EXPLORATION, not a sinusoidal waveform:
                 // each sector can test changes within a held brain action.
+                float decay=(float)Math.pow(.92f,dt/.025f);
+                float diffusion=.08f*(float)Math.sqrt((1f-decay*decay)/(1f-.92f*.92f));
                 drift[i]=exploratoryTrial?
-                    clip(.92f*drift[i]+.08f*random(),-.55f,.55f):0f;
+                    clip(decay*drift[i]+diffusion*random(),-.55f,.55f):0f;
                 float proposed=(float)Math.tanh(z+.38f*drift[i]);
                 next[i]=clip(state[i]+alpha*(proposed-state[i]),-1f,1f);
                 // Eligibility of the actual random motor perturbations is
