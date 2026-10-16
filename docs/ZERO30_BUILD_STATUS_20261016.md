@@ -1,5 +1,8 @@
 # ZERO 3.0 — HANDOFF TECNICO 16 OTTOBRE 2026
 
+> **RISULTATO MOTORIO 3.3 (17/10/2026):** [Confronto fisico dei comandi, attribuzione dell'effetto ritardato, test su sei posture escluse dall'allenamento](ZERO30_MOTOR_V33_DELAYED_RESPONSE.md). **24/24 piccoli interventi riusciti nel laboratorio**, previsione migliore di baseline; **NON dimostra locomozione autonoma o G3 completato**. Code branch sperimentale, nessuna nuova OTA.
+
+
 > **LEGGERE DOPO** [MASTER](ZERO30_MASTER_BLUEPRINT.md), [CONTRATTO](ZERO30_IMPLEMENTATION_CONTRACT.md) e [UI/UX](ZERO30_UI_UX_SPEC.md).
 > **Stato:** primo prototipo in corso, ZERO 3.0 NON IMPLEMENTATO nel gioco e NON PUBBLICATO via OTA.
 > **Sorgente sperimentale:** [branch ZERO3](https://github.com/nicogtr20-ctrl/idle-runner-releases/tree/feature/zero30-foundation-g0-g3-20261016).
