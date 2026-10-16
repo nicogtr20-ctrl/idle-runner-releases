@@ -24,22 +24,38 @@ public final class SymbioteMotorSkillMemoryV169 {
     private static final int A=RecurrentCoreV22.A;
     private static final float MIN_FORWARD=1.8f,MIN_RATIO=.38f;
     private static final float MAX_SNAPSHOT_RMS=.036f;
+    private static final int CONTEXT=10;
+    private static final float MAX_CONTEXT_RMS=.22f;
+    private static final float MIN_ACTIVE_MUSCLE_IMPULSE=.5f;
+    private static final float MAX_INITIAL_CENTER_SPEED=5.0f;
     private final ArrayList<Entry> candidates=new ArrayList<>(),champions=new ArrayList<>();
-    private final int[] badStreak=new int[A];
-    private final float[] trial=new float[WIDTH];
-    private int action=-1,life=1,validFrames=0,cooldown=0;
-    private float netX,netY,gross,angularMotion;
+    private int failedAction=-1,badStreak=0;
+    private final float[] trial=new float[WIDTH],trialContext=new float[CONTEXT];
+    private int action=-1,life=1,validFrames=0,cooldown=0,externalFrames=0;
+    private float netX,netY,gross,angularMotion,activeImpulse,initialSpeed;
+    // A recalled configuration is temporarily ON PROBATION. It must beat its
+    // own observed failure baseline or the previous 724 weights are returned.
+    private float[] recoveryOriginal=null;
+    private int recoveryAction=-1,recoveryTrials=0,recoveryPasses=0,recoveryDeadline=0;
+    private float recoveryBaseline=0f,recoverySum=0f;
+    private long recoveryConfirmed=0,recoveryReverted=0;
     private long samples=0,heldoutSamples=0,confirmed=0,recoveries=0,discarded=0;
     private static final class Entry{
         int action,firstLife,lastLife,verifications,failed;
         float quality;
-        final float[] config=new float[WIDTH];
-        Entry(int a,int life,float score,float[] w){
+        boolean contextKnown;
+        final float[] config=new float[WIDTH],context=new float[CONTEXT];
+        Entry(int a,int life,float score,float[] w,float[] context){
             action=a;firstLife=lastLife=life;quality=score;
             System.arraycopy(w,0,config,0,WIDTH);
+            if(context!=null&&context.length==CONTEXT){
+                System.arraycopy(context,0,this.context,0,CONTEXT);
+                contextKnown=true;
+            }
         }
         Entry copy(){
-            Entry e=new Entry(action,firstLife,quality,config);
+            Entry e=new Entry(action,firstLife,quality,config,
+                contextKnown?context:null);
             e.lastLife=lastLife;e.verifications=verifications;e.failed=failed;
             return e;
         }
@@ -67,6 +83,11 @@ public final class SymbioteMotorSkillMemoryV169 {
     public long confirmedCount(){return confirmed;}
     public long recoveryCount(){return recoveries;}
     public long rejectedCount(){return discarded;}
+    public long recoveryProvenCount(){return recoveryConfirmed;}
+    public long recoveryRollbackCount(){return recoveryReverted;}
+    public int lastConsecutiveFailedAction(){return failedAction;}
+    public int consecutiveFailedCount(){return badStreak;}
+    public boolean recoveryUnderReview(){return recoveryOriginal!=null;}
     public int currentLife(){return life;}
     public long measuredDecisions(){return samples;}
     public long measuredHeldouts(){return heldoutSamples;}
@@ -77,26 +98,81 @@ public final class SymbioteMotorSkillMemoryV169 {
     public void newLife(){
         if(life<1000000000)life++;
         cancelTrial();
-        Arrays.fill(badStreak,0);
+        badStreak=0;failedAction=-1;
+        // An unfinished A/B recovery must never be silently accepted when
+        // crossing a death boundary. The caller will undo it at the boundary.
+        recoveryDeadline=0;
     }
-    public void resumeLife(){cancelTrial();}
-    public void cancelTrial(){action=-1;netX=netY=gross=angularMotion=0f;validFrames=0;}
-    public void begin(int chosen,float[] combinedSnapshot){
+    public void resumeLife(){cancelTrial();badStreak=0;failedAction=-1;}
+    public void cancelTrial(){
+        action=-1;netX=netY=gross=angularMotion=activeImpulse=initialSpeed=0f;
+        validFrames=externalFrames=0;
+    }
+    /** All context values are measured from the real 96-site living cortex.
+     * No target coordinate, resource category, reward or prescribed posture. */
+    public static float[] bodyContext(MotorBrain.Body body,Morphology.Surface skin){
+        if(body==null||skin==null)return null;
+        float[] c=new float[CONTEXT];
+        double xx=0,yy=0,xy=0,rv=0,tv=0,rs=0;
+        float maxR=0f;
+        for(int i=0;i<Morphology.POINTS;i++){
+            float x=skin.x[i]-body.cx,y=skin.y[i]-body.cy;
+            float r=(float)Math.hypot(x,y);
+            if(!Float.isFinite(r)||!Float.isFinite(skin.vx[i])||
+                !Float.isFinite(skin.vy[i]))return null;
+            maxR=Math.max(maxR,r);rs+=r;
+            xx+=x*x;yy+=y*y;xy+=x*y;
+            if(r>.001f){
+                float vx=skin.vx[i]-body.cvx,vy=skin.vy[i]-body.cvy;
+                rv+=(x*vx+y*vy)/r;tv+=(x*vy-y*vx)/r;
+            }
+            if(skin.touchSense[i]>.20f)c[7]+=1f;
+            if(skin.gripHold[i]>=Morphology.GRIP_HOLD)c[8]+=1f;
+        }
+        double anis=Math.sqrt((xx-yy)*(xx-yy)+4*xy*xy);
+        c[0]=clip((float)(rs/Morphology.POINTS)/42f,0f,2f);
+        c[1]=clip(maxR/80f,0f,2f);
+        c[2]=clip((float)(anis/Math.max(1,xx+yy)),0f,1f);
+        c[3]=anis>.001?clip((float)((xx-yy)/anis),-1f,1f):0f;
+        c[4]=anis>.001?clip((float)(2*xy/anis),-1f,1f):0f;
+        c[5]=clip((float)(rv/Morphology.POINTS)/50f,-1f,1f);
+        c[6]=clip((float)(tv/Morphology.POINTS)/50f,-1f,1f);
+        c[7]/=Morphology.POINTS;c[8]/=Morphology.POINTS;
+        c[9]=clip((float)Math.hypot(body.cvx,body.cvy)/60f,0f,2f);
+        for(float v:c)if(!Float.isFinite(v))return null;
+        return c;
+    }
+    private static float contextRms(float[] a,float[] b){
+        if(a==null||b==null||a.length!=CONTEXT||b.length!=CONTEXT)
+            return Float.POSITIVE_INFINITY;
+        float sum=0;
+        for(int i=0;i<CONTEXT;i++){float d=a[i]-b[i];sum+=d*d;}
+        return (float)Math.sqrt(sum/CONTEXT);
+    }
+    public void begin(int chosen,float[] combinedSnapshot,
+                      MotorBrain.Body body,Morphology.Surface skin){
         cancelTrial();
-        if(chosen<0||chosen>=A||!valid(combinedSnapshot))return;
+        float[] ctx=bodyContext(body,skin);
+        if(chosen<0||chosen>=A||!valid(combinedSnapshot)||ctx==null)return;
         System.arraycopy(combinedSnapshot,0,trial,0,WIDTH);
+        System.arraycopy(ctx,0,trialContext,0,CONTEXT);
+        initialSpeed=(float)Math.hypot(body.cvx,body.cvy);
         action=chosen;
     }
     /** Every REAL post-collision physics frame. Relative membrane rotation
      * is only a regularizer; never counts as net movement or earned energy. */
     public void physical(float oldX,float oldY,MotorBrain.Body body,
-                         Morphology.Surface skin){
+                         Morphology.Surface skin,float realMuscleImpulse,
+                         boolean externalDisturbance){
         if(action<0||body==null||skin==null)return;
         float dx=body.cx-oldX,dy=body.cy-oldY;
         if(!Float.isFinite(dx)||!Float.isFinite(dy))return;
         float m=(float)Math.hypot(dx,dy);
         if(m>3f)return; // rejected teleport/reset/collision spike
         netX+=dx;netY+=dy;gross+=m;validFrames++;
+        if(Float.isFinite(realMuscleImpulse)&&realMuscleImpulse>0f)
+            activeImpulse+=Math.min(500f,realMuscleImpulse);
+        if(externalDisturbance)externalFrames++;
         double torque=0,inertia=0;
         for(int i=0;i<Morphology.POINTS;i++){
             float x=skin.x[i]-body.cx,y=skin.y[i]-body.cy;
@@ -117,10 +193,13 @@ public final class SymbioteMotorSkillMemoryV169 {
             .10f*clip(spin,0f,3f)-
             .06f*clip(cost/10f,0f,1f),-1f,1f);
     }
-    private Entry match(ArrayList<Entry> list,int chosen,float[] snap){
+    private Entry match(ArrayList<Entry> list,int chosen,float[] snap,
+                        float[] context,boolean contextRequired){
         Entry nearest=null;float distance=MAX_SNAPSHOT_RMS;
         for(Entry entry:list){
             if(entry.action!=chosen)continue;
+            if(contextRequired&&(!entry.contextKnown||
+                contextRms(entry.context,context)>MAX_CONTEXT_RMS))continue;
             float d=distance(entry.config,snap);
             if(d<distance){nearest=entry;distance=d;}
         }
