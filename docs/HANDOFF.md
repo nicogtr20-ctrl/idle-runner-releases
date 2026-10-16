@@ -1,3 +1,13 @@
+# Verified release — OTA171 / Android1171, runtime ZERO172 — 16 October 2026
+
+Published and independently downloaded from Vercel and GitHub: **0.11.6-ota.171**, code1171, `com.overmind.zero.ota`,502916 bytes. APK SHA256 `62e0b5a96916fc8005d5e21aa91de4194ba57ec8b8c1ebf6f27c5bc2a51a0bb0`; original stable certificate `45010684b4fd74de00f87fb81ca89e1e79b58409cf9fefc497b445b0fe19f583`. Both public manifests/bytes match, HTTP200; APK v2 RSA signature, signed content digest and packaged Android identity/permissions independently verified. Update with **AGGIORNA**, without uninstalling or resetting brains/slots.
+
+Fixes: safe motor experiments complete before random replacement; incomplete durations cannot train a completed-duration label; current context distinguishes signed residual velocity and reclaims obsolete controller-epoch capacity. New passive `motor_response_journal_v172` records actual command response and does not actuate or train. Read [ZERO172 timing audit and correction](ZERO_172_PHYSICAL_COMMAND_TIMING.md) for full causal reproductions and before/after results, including rejected changes and adverse cases.
+
+**Mixed behavioral results: no general walking/navigation solution claim.** Mean net displacement improves in four open resource scenes, but panel direction worsens and one baseline pickup is lost. Corrected screens still have0 pickups. This release fixes reproduced code defects and enables precise phone verification; on-device walking/learning efficacy remains open. No authored gait, target coordinate, fake reward, forced confidence, brain reset or changed world generation. All97 JVM entrypoints,8 staging gates,35 publisher source gates, Gradle debug/release and stable signing checks PASS.
+
+[Review #84](https://github.com/nicogtr20-ctrl/idle-runner-releases/pull/84) · [Signed publisher](https://github.com/nicogtr20-ctrl/idle-runner-releases/actions/runs/38937559068) · [Release](https://github.com/nicogtr20-ctrl/idle-runner-releases/releases/tag/overmind-zero-v0.11.6-ota.171). Earlier statuses below are historical and superseded by this block. Runtime172 and OTA171 are different numbering systems.
+
 <!-- Current authoritative release status; older sections below are historical. -->
 # Verified release — OTA170 / Android1170, runtime ZERO171 — 16 October 2026
 
