@@ -115,6 +115,26 @@ public final class Zero3LearningFoundation {
             fresh.revision=revision;
             return fresh;
         }
+        /**
+         * Laboratory/episodic search only: candidate candidate differs in a
+         * spatially local bias group. The values and winning region are NOT a
+         * predefined gait; they must be discovered by physical trials.
+         */
+        public AdaptiveCortex forkCandidate(int center,int channel,float delta){
+            if(center<0||center>=SECTORS||channel<0||channel>=CHANNELS)
+                throw new IllegalArgumentException("motor search group");
+            finite(delta,"search delta");
+            if(Math.abs(delta)>.8f)throw new IllegalArgumentException("search amplitude");
+            AdaptiveCortex fresh=forkForEvaluation();
+            for(int n=-3;n<=3;n++){
+                int sector=(center+n+SECTORS)%SECTORS;
+                int offset=(sector*CHANNELS+channel)*INPUTS;
+                float taper=(4f-Math.abs(n))/4f;
+                fresh.weights[offset]=limit(fresh.weights[offset]+delta*taper,-1.5f,1.5f);
+            }
+            fresh.revision++;
+            return fresh;
+        }
         public float[] lastCommands(){return output.clone();}
         public void begin(boolean explore){begin(explore,null);}
         public void begin(boolean explore,MotorIntent intent){
