@@ -61,3 +61,28 @@ Campioni previsti: 4 intenzioni × 2 pose training × 4 canali × 4 zone × 2 po
 3. Produrre nuove prove con posture e urti/adesione differenti e variabilità non vista, confrontare gradienti vs perturbazione-paired e validazione a lungo termine.
 4. Solo dopo introdurre memoria procedurale, life-long learning, neurogenesi, integrazione \`GameActivity\`, persistenza schema V3 e **UI V3 realmente collegata**.
 5. Nessun merge nella branch publisher OTA né attivazione silenziosa del nuovo motore prima dei benchmark G3/G5 completi.
+
+
+## 6. Stress test di generalizzazione geometrica su SEI orientamenti non usati nel fit
+
+**[GitHub Actions fast 38976063930 — SUCCESS](https://github.com/nicogtr20-ctrl/idle-runner-releases/actions/runs/38976063930)**, commit del codice sperimentale \`05822efb4c740705514b814539e98e60c835d006\`.
+
+Rispetto ai test precedenti, questa versione ricava l'orientamento iniziale dalla **propriocezione effettiva di sei patch del mantello** confrontata con la geometria di riferimento del corpo vergine, non dall'angolo fornito al laboratorio. Verifica l'angolo così misurato entro una tolleranza di .001 rad. Le feature geometriche comprendono direzioni locali radiali e tangenziali trasformate nel mondo, il tipo di muscolo e il segno dell'intervento.
+
+**Dataset:** 256 coppie train di vere simulazioni matching baseline/intervento nelle sole posture 0° e 90°; **768 coppie heldout** a ±22,5°, ±45°, ±67,5°, mai usate per apprendere i pesi del predittore. **147.456 passi fisici del solver reale** tra esperimenti di controllo e intervento. La predizione viene usata per scegliere un intervento prima di controllare l'esito della relativa simulazione heldout.
+
+| Errore medio quadratico sulle 768 prove non usate nel training | Modello | Baseline «nessun effetto» |
+|---|---:|---:|
+| Conseguenza immediata | **0.000485641** | 0.005332185 |
+| Conseguenza ritardata | **0.000751627** | 0.018590621 |
+| Costo del muscolo | **0.000000000403** | 0.000000007742 |
+
+- Effetto immediato in valore assoluto aggregato: **30.179 U**.
+- Effetto ritardato dopo la perturbazione: **62.080 U** (circa 2.06× l'immediato).
+- 4 direzioni intenzionali × 6 pose heldout: **24/24** interventi scelti con progresso firmato positivo e costo incrementale inferiore a 0.005.
+- Progresso direzionale addizionale totale **+13.93799 U** contro singola alternativa casuale deterministica totale **+0.17049 U**; qualità penalizzata per costo **+13.76235**; lavoro muscolare incrementale totale **0.00390309**.
+- Una piccola perturbazione efficace in una prova controllata **NON** equivale a una strategia di locomozione continuativa, né a una capacità ricordata.
+
+**Risultato verificato:** il segnale senso-motorio con orientamento misurato e le interazioni muscolo/frame descrivono bene una risposta **locale e ritardata** del corpo su una famiglia di posture ruotate. È un progresso concreto sui due precedenti modelli e sulla ricostruzione del ritardo. **Gate G3 locomozione autonoma ancora BLOCCATO**: le scene hanno la stessa morfologia/materiale e non introducono urti diversi, stati di deformazione indipendenti, inerzia iniziale, energia, ostacoli, gemme, più seed o vite intere. **G5 world model completo NON superato**: è soltanto una piccola testa muscolare di risposta, non il modello del mondo unificato.
+
+**Prossima attività:** stress test di condizioni iniziali deformate e velocità preesistente prima di usare il predittore per scegliere muscoli nel gioco, quindi modulo riutilizzabile e integrazione graduale con vincoli di energia/rollback e UI V3 da vera diagnostica.
