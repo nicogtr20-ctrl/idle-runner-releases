@@ -1,6 +1,6 @@
 ## OVERMIND ZERO — verifica piano ZERO 3.0
 
-> Per cambiamenti relativi a ZERO, leggere prima **[Master Blueprint](../docs/ZERO30_MASTER_BLUEPRINT.md)**, **[Implementation Contract](../docs/ZERO30_IMPLEMENTATION_CONTRACT.md)** e **[UI/UX Spec](../docs/ZERO30_UI_UX_SPEC.md)** dalla branch **main**. Specificare quali requisiti e test sono soddisfatti.
+> Per cambiamenti relativi a ZERO, leggere prima **[Master Blueprint](https://github.com/nicogtr20-ctrl/idle-runner-releases/blob/main/docs/ZERO30_MASTER_BLUEPRINT.md)**, **[Implementation Contract](https://github.com/nicogtr20-ctrl/idle-runner-releases/blob/main/docs/ZERO30_IMPLEMENTATION_CONTRACT.md)** e **[UI/UX Spec](https://github.com/nicogtr20-ctrl/idle-runner-releases/blob/main/docs/ZERO30_UI_UX_SPEC.md)** dalla branch **main**. Specificare quali requisiti e test sono soddisfatti.
 
 **Fase/gate:** G__ — ...
 
