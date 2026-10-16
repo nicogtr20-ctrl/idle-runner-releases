@@ -1,3 +1,14 @@
+<!-- Current authoritative release status; older sections below are historical. -->
+# Verified release — OTA170 / Android1170, runtime ZERO171 — 16 October 2026
+
+The user explicitly authorized source and signed APK OTA publication. **Published and downloaded from BOTH Vercel and GitHub: `0.11.6-ota.170`, versionCode `1170`, package `com.overmind.zero.ota`.** The runtime correction revision **171** is not the OTA number. Install through **AGGIORNA**, over the existing app; do not uninstall or reset saved brains/slots.
+
+APK: 497912 bytes, SHA256 `5fd2bb087e55fe7eae4d5b74e5ce7b7c31106bf71eb2077f6c1ee4ed915ba02e`. Original stable certificate SHA256 `45010684b4fd74de00f87fb81ca89e1e79b58409cf9fefc497b445b0fe19f583` matched; APK v2 signature AND signed content digest independently verified on both public downloads. Both manifests and exact bytes match, HTTP200. Main Idle Runner app/build/settings remain unchanged.
+
+[Release](https://github.com/nicogtr20-ctrl/idle-runner-releases/releases/tag/overmind-zero-v0.11.6-ota.170) · [successful signed publisher](https://github.com/nicogtr20-ctrl/idle-runner-releases/actions/runs/38926908265) · [integrated source review #83](https://github.com/nicogtr20-ctrl/idle-runner-releases/pull/83).
+
+Read [ZERO171 integrated correction and release evidence](docs/ZERO_171_INTEGRATED_SENSORIMOTOR_CORRECTIONS.md) for all audit findings, integrated fixes, optional persistence keys, verification and behavioral limits. 96 JVM entrypoints, seven staging integration gates, 34 publisher source gates, Gradle debug/release builds and original signing identity passed. One living recurrent cortex and 724 motor weights; no authored gait, food coordinate, forced confidence or brain reset. **Improved autonomous locomotion/food seeking on the Galaxy S21 is still unproven.** Preserve that distinction in future work. Earlier publication holds and version/status claims below are superseded by this verified release.
+
 ## ZERO OTA163 FIRMATA, PUBBLICATA E VERIFICATA — 15 ottobre 2026
 
 **Verificato oggi:** `0.11.6-ota.163`, versionCode **1163**, applicationId `com.overmind.zero.ota`, [APK HTTPS](https://overmind-zero-updates.vercel.app/apk/overmind-zero-1163-ebbcc49dc1ee.apk), SHA-256 `ebbcc49dc1eeaa00e881f00c31343daa590cb12bfa5087b0aa287c5ab4f5a405`, **458636 bytes**. Publisher signed [38813242015](https://github.com/nicogtr20-ctrl/idle-runner-releases/actions/runs/38813242015) **SUCCESS**; independent live manifest/APK HTTP200 + exact bytes, SHA256, applicationId [38813593199](https://github.com/nicogtr20-ctrl/idle-runner-releases/actions/runs/38813593199) **SUCCESS**. Vercel production deployment READY. Source in merged [PR #73](https://github.com/nicogtr20-ctrl/idle-runner-releases/pull/73), `feature/zero22-active-recurrent-ota117`.
