@@ -212,7 +212,8 @@ public final class GameActivity extends Activity {
             if(symMotor!=null)
                 {symMotor.restore(prefs.getString(SymbioteMotorHeadV1.KEY,""));
                  symMotor.restoreLocal(prefs.getString(SymbioteMotorHeadV1.LOCAL_KEY,""));
-                 symMotor.restoreCoordination(prefs.getString(SymbioteCoordinationV162.KEY,""));}
+                 symMotor.restoreCoordination(prefs.getString(SymbioteCoordinationV162.KEY,""));
+                 symMotor.restoreFast(prefs.getString(FastSomaticCircuitV167.KEY,""));}
             contactGeometry=new ContactGeometryForensics();
             if(!wasReset)
                 contactGeometry.restore(prefs.getString(ContactGeometryForensics.KEY,""));
@@ -605,6 +606,8 @@ public final class GameActivity extends Activity {
                   symMotor==null?"":symMotor.encodeLocal())
               .putString(SymbioteCoordinationV162.KEY,
                   symMotor==null?"":symMotor.encodeCoordination())
+              .putString(FastSomaticCircuitV167.KEY,
+                  symMotor==null?"":symMotor.encodeFast())
               .putString(SpatialPerception.KEY,spatialMap.encode())
               .putString(CausalExperiments.KEY,causalExperiments.encode())
               .putString(InstrumentalNavigation.KEY,navigation.encode())
@@ -1036,8 +1039,13 @@ public final class GameActivity extends Activity {
                         liveBody.abortTrial();
                     }
                     }
-                    if(useSymbiote&&symMatter!=null&&symMotor!=null)
+                    // OTA167: the same neural intent now drives fast
+                    // proprioceptive recurrent refinement every real dt.
+                    // Record efference from EXACTLY what physics receives.
+                    if(useSymbiote&&symMatter!=null&&symMotor!=null){
+                        symMotor.fastTick(creature,surface,slice);
                         sensorMind.appliedSymbioteControls(symMotor.commands(),creature,surface);
+                    }
                     else sensorMind.appliedControls(lastAppliedMotor,lastAppliedHand,lastAppliedMembrane);
                     // Prevent fast material masses from skipping through a
                     // square between consecutive frames. Snapshot before any
