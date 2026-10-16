@@ -4,6 +4,9 @@ on:
     branches: [feature/zero30-foundation-g0-g3-20261016]
     paths:
       - 'app/src/main/java/com/overmind/zero/Zero3*.java'
+      # Pulse-model-only updates use the dedicated fast model QA; keep expensive
+      # 2000-decision/Android checks for wider integration changes or manual runs.
+      - '!app/src/main/java/com/overmind/zero/Zero3MotorImpulseResponseRegression.java'
       - '.github/workflows/zero30-foundation-qa.yml'
   workflow_dispatch:
 permissions:
