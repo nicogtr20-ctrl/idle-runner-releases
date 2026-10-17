@@ -212,7 +212,11 @@ public final class Zero3TemporalLocalMotorV332Regression {
                     if(box!=null&&box.bilateralHeldNow)result.bilateral++;
                     check(p.gel.invalid==0&&
                           MaterialGeometry.selfCrossings(p.skin)==0,
-                          "invalid material solver after chosen motor action");
+                          "invalid material solver family="+family+
+                          " ordinal="+ordinal+" arm="+ARMS[model.arm]+
+                          " blind="+blind+" decision="+n+" sub="+frame+
+                          " gelInvalid="+p.gel.invalid+
+                          " selfCrossings="+MaterialGeometry.selfCrossings(p.skin));
                     acted=act;
                 }
                 adhesion.end();
