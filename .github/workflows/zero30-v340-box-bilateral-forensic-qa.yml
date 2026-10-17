@@ -1,0 +1,58 @@
+name: ZERO3 V3.40 consumed BOX bilateral true contact ownership forensic
+on:
+  push:
+    branches: [feature/zero30-foundation-g0-g3-20261016]
+    paths:
+      - 'app/src/main/java/com/overmind/zero/Zero3BilateralForensicV340Regression.java'
+      - 'app/src/main/java/com/overmind/zero/Zero3BilateralFaceAuditV340.java'
+      - 'app/src/main/java/com/overmind/zero/Zero3JointBoxConstraintV338.java'
+      - 'app/src/main/java/com/overmind/zero/Zero3JointWorldV339.java'
+      - 'app/src/main/java/com/overmind/zero/Zero3BilateralForensicV340Regression.java'
+      - 'app/src/main/java/com/overmind/zero/Zero3ExactFaceTrialV336Regression.java'
+      - 'app/src/main/java/com/overmind/zero/Zero3ContactTopologyExperimentV336.java'
+      - 'app/src/main/java/com/overmind/zero/Zero3ExactFaceTrialV336Regression.java'
+      - '.github/workflows/zero30-v340-box-bilateral-forensic-qa.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  physical-actuated:
+    runs-on: ubuntu-latest
+    timeout-minutes: 85
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+      - name: Compile production gel and real neural sensorimotor pipeline
+        run: |
+          set -euo pipefail
+          mkdir -p /tmp/overmind
+          python3 - <<'PY'
+          import pathlib,re,shlex,subprocess
+          w=pathlib.Path('.github/workflows/overmind-ota-publish.yml').read_text()
+          m=re.search(r'^\s*(javac -d /tmp/overmind [^\n]+)',w,re.M)
+          if not m: raise RuntimeError("original production Java physical compile list absent")
+          r='app/src/main/java/com/overmind/zero/'
+          names='Zero3LearningFoundation Zero3MotorResponseKernel Zero3MotorRetentionRegression Zero3MotorPromotionGate Zero3MotorImpulseResponseRegression Zero3MotorLocalFrameV310Regression Zero3SensoryFrameV315 Zero3CausalRecorderV315 Zero3SensoryContractV315Regression Zero3MotorIntentV316 Zero3AutonomousLoopV317 Zero3LearnedAdhesionV318 Zero3LearnedAdhesionV318Regression Zero3ContextAdhesionV319 Zero3ContextAdhesionV319Regression Zero3MotorHeadStoreV320 Zero3NeuralBundleStoreV321 Zero3OrganismStoreV322 Zero3FullCausalExperienceV322B Zero3FullArchiveStoreV322B Zero3MultiSceneRestartV322BRegression Zero3FiveArmAblationV333Regression Zero3BoxCrossingForensicV334Regression Zero3BoxSubstageForensicV335Regression Zero3ContactTopologyExperimentV336 Zero3JointBoxConstraintV338 Zero3JointWorldV339 Zero3ExactFaceTrialV336Regression Zero3ActuatedContactStressV336Regression Zero3BilateralFaceAuditV340 Zero3BilateralForensicV340Regression'
+          subprocess.run(shlex.split(m.group(1))+[r+n+'.java' for n in names.split()],check=True)
+          PY
+      - name: Read-only true BOX face grip and 64-muscle forensic on consumed V339 BLIND
+        run: |
+          set -euo pipefail
+          java -Xmx1900m -cp /tmp/overmind com.overmind.zero.Zero3BilateralForensicV340Regression | tee /tmp/v340-face.log
+          test "$(grep -c 'V340 BOX_LIFE arm=' /tmp/v340-face.log)" -eq 18
+          test "$(grep -c 'V340 BOX_TOTAL arm=' /tmp/v340-face.log)" -eq 3
+          grep -q 'V340 ORIGINAL_REPLICATION 1546,0,1384 true BOX bilateral match=true' /tmp/v340-face.log
+          grep -q 'V340 DIAGNOSTIC_ONLY noMotorPhysicsLearningChanges=true' /tmp/v340-face.log
+      - name: Original physical grip / three object isolation after research
+        run: |
+          set -euo pipefail
+          java -cp /tmp/overmind com.overmind.zero.MultiObjectGripRegression
+          java -cp /tmp/overmind com.overmind.zero.SquareCollisionSolver
+          java -cp /tmp/overmind com.overmind.zero.SquareGripPuzzle
+      - name: Build Android Debug but never publish OTA
+        run: gradle --no-daemon assembleDebug
+      - name: Keep candidate and learning gates blocked
+        run: echo 'V340_CAUSAL_FORENSIC_CONSUMED_ONLY_NO_G3_PROMOTION G3_BLOCKED G5_BLOCKED NO_OTA NO_MERGE'
