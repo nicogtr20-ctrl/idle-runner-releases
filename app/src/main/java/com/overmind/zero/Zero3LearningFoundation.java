@@ -68,7 +68,7 @@ public final class Zero3LearningFoundation {
         private final float[] output=new float[OUTPUTS];
         private final float[] features=new float[INPUTS];
         private int samples;
-        private boolean probing;
+        private boolean probing,pendingDecision;
         private long randomState=0x61C8864680B583EBL,revision,updates;
         private final float[] contextBaseline=new float[8];
         private final long[] contextSamples=new long[8];
@@ -165,14 +165,14 @@ public final class Zero3LearningFoundation {
                                  features,contextBaseline};
         }
         public State checkpoint(){
-            if(probing||samples!=0||activeChannel!=-1)
+            if(pendingDecision||probing||samples!=0||activeChannel!=-1)
                 throw new IllegalStateException("cortex decision not finished");
             return new State(checkpointArrays(),contextSamples,randomState,
                 revision,updates,perturbationEpisodes,contextBucket,
                 lastAcceptedGradientNorm,lastAdvantage,learningRate);
         }
         public void restore(State s){
-            if(s==null||probing||samples!=0||revision!=0||updates!=0||
+            if(s==null||pendingDecision||probing||samples!=0||revision!=0||updates!=0||
                Float.floatToIntBits(s.learningRate)!=Float.floatToIntBits(learningRate))
                 throw new IllegalStateException("cortex restore requires fresh matching instance");
             float[][] own=checkpointArrays();
@@ -218,6 +218,8 @@ public final class Zero3LearningFoundation {
         public float[] lastCommands(){return output.clone();}
         public void begin(boolean explore){begin(explore,null);}
         public void begin(boolean explore,MotorIntent intent){
+            if(pendingDecision)throw new IllegalStateException("unfinished cortex decision");
+            pendingDecision=true;
             Arrays.fill(noise,0f);Arrays.fill(accumulated,0f);samples=0;
             probing=explore;activeChannel=-1;lastAcceptedGradientNorm=0f;
             if(intent!=null){
@@ -227,6 +229,7 @@ public final class Zero3LearningFoundation {
             if(explore)sampleProbe();
         }
         void discard(){
+            pendingDecision=false;
             Arrays.fill(noise,0);Arrays.fill(accumulated,0);samples=0;probing=false;
             activeChannel=-1;
         }
