@@ -296,7 +296,7 @@ public final class Zero3SensoryContractV315Regression {
             "interiorParticles=%d interiorChannels=%d "+
             "globalProprioception=%d executedMuscles=64 "+
             "preActionVisibleFrames=%d trueSolidTouchFrames=%d "+
-            "trueDiskPulseFrames=%d trueHoldFrames=%d contactOnset=%d "+
+            "touchImpulseFramesAllScenes=%d trueHoldFrames=%d contactOnset=%d "+
             "energyUnavailable=%d damageUnavailable=%d "+
             "checksum=%016x%n",
             sums.episodes,episodeCounts[0],episodeCounts[1],episodeCounts[2],
