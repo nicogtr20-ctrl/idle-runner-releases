@@ -43,8 +43,8 @@ public final class Zero3MotorHeadRestartV320Regression {
         return stats.report();
     }
     static void writeText(Path path,String text)throws Exception{
-        Files.writeString(path,text,StandardOpenOption.CREATE,
-            StandardOpenOption.TRUNCATE_EXISTING);
+        Files.write(path,text.getBytes(java.nio.charset.StandardCharsets.UTF_8),
+            StandardOpenOption.CREATE,StandardOpenOption.TRUNCATE_EXISTING);
     }
     static String evidence(Zero3ContextAdhesionV319 m)throws Exception{
         return "fingerprint="+Zero3MotorHeadStoreV320.fingerprint(
@@ -143,13 +143,13 @@ public final class Zero3MotorHeadRestartV320Regression {
     }
     public static void main(String[] args)throws Exception{
         require(args.length>=2,"mode and isolated path required");
-        String mode=args[0];Path root=Path.of(args[1]);
+        String mode=args[0];Path root=Paths.get(args[1]);
         switch(mode){
             case "prefix":prefix(root);break;
             case "resume":require(args.length==3,"output required");
-                          resume(root,Path.of(args[2]));break;
+                          resume(root,Paths.get(args[2]));break;
             case "reference":require(args.length==3,"output required");
-                             reference(Path.of(args[2]));break;
+                             reference(Paths.get(args[2]));break;
             case "fault":fault(root);break;
             default:throw new IllegalArgumentException("unknown V320 mode");
         }
