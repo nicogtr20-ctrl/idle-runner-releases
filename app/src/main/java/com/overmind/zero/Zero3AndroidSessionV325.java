@@ -67,6 +67,9 @@ public final class Zero3AndroidSessionV325 implements AutoCloseable {
         return session.display();
     }
     public synchronized boolean ended(){return session!=null&&session.ended();}
+    public synchronized boolean atArchiveCapacity(){
+        return session!=null&&session.atArchiveCapacity();
+    }
     public synchronized Path researchPath(){return directory;}
     public synchronized boolean active(){return session!=null;}
     public synchronized int decisions(){return session==null?0:session.decisions();}
