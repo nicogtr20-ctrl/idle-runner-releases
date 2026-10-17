@@ -114,7 +114,7 @@ public final class Zero3OrganismStoreV322 {
                        Float.floatToIntBits(c.learningRate())||
                    freshH.training!=h.training||
                    e.updates!=nextDecision||h.decisions!=nextDecision||
-                   c.updates!=nextDecision)
+                   c.updates<0||c.updates>nextDecision)
                     throw new IOException("neural counters/config mismatch at joint decision");
                 // Only brand-new modules are legal restore targets.
                 encoder.restore(e);cortex.restore(c);head.restoreAtDecisionBoundary(h);
@@ -276,8 +276,8 @@ public final class Zero3OrganismStoreV322 {
                     List<UnknownWorld.Entity> world,float[] last,List<Trace> trace)
                     throws IOException {
         if(encoder==null||cortex==null||head==null||b==null||s==null||gel==null||
-           trace==null||last==null||next!=trace.size()||
-           encoder.updates()!=next||cortex.updates()!=next||head.updates()!=next||
+           trace==null||last==null||next<=0||next!=trace.size()||
+           encoder.updates()!=next||cortex.updates()>next||head.updates()!=next||
            gel.invalid!=0||trace.get(next-1).endTick!=gel.ticks)
             throw new IOException("non-boundary, missing or inconsistent V322 snapshot");
         // These methods reject any pending PRE/action/POST transaction.
@@ -379,8 +379,8 @@ public final class Zero3OrganismStoreV322 {
     }
     private Recovery inspect(Path manifest)throws IOException{
         byte[] m=Files.readAllBytes(manifest);
-        if(m.length!=84||!Arrays.equals(sha(Arrays.copyOf(m,52)),
-                                       Arrays.copyOfRange(m,52,84)))
+        if(m.length!=88||!Arrays.equals(sha(Arrays.copyOf(m,56)),
+                                       Arrays.copyOfRange(m,56,88)))
             throw new IOException("manifest SHA256 fail");
         DataInputStream d=new DataInputStream(new ByteArrayInputStream(m));
         if(d.readInt()!=MAGIC||d.readInt()!=VERSION)throw new IOException("manifest version");
