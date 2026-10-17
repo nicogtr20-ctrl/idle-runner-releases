@@ -1,6 +1,8 @@
 package com.overmind.zero;
 
 import java.util.Arrays;
+import java.io.*;
+import java.util.zip.CRC32;
 
 /**
  * ZERO3 experimental trainable 64-GRU actor/dual-critic/world-prediction core.
@@ -237,5 +239,140 @@ public final class Zero3RecurrentBrain {
         }
         if(changed>0f)recurrentUpdates++;
         trainCount++;
+    }
+
+    // V345 G4 prerequisite: complete true recurrent actor/critic/GRU
+    // checkpoint at decision boundaries only, separate from old V321/V328.
+    // This does NOT claim that the brain is now plugged into V325 runtime.
+    private static final int CHECK_MAGIC_V345=0x5A333435,
+                             CHECK_VERSION_V345=345,
+                             CHECK_MAX_BYTES_V345=1024*1024;
+    private boolean restoredV345;
+    private float[][] fullCheckpointArraysV345(){
+        return new float[][]{
+            wz,wr,wn,actor,critic[0],critic[1],world,state,prior,
+            gatedZ,gatedR,candidate,decisionState,before,lastNoise,
+            action,worldInput,proposal
+        };
+    }
+    public byte[] checkpointAtBoundaryV345(){
+        if(pending)throw new IllegalStateException(
+            "V345 cannot snapshot an unresolved real decision");
+        try{
+            ByteArrayOutputStream buffer=new ByteArrayOutputStream(128*1024);
+            DataOutputStream out=new DataOutputStream(buffer);
+            out.writeInt(CHECK_MAGIC_V345);
+            out.writeInt(CHECK_VERSION_V345);
+            out.writeInt(SENSOR);
+            out.writeInt(HIDDEN);
+            out.writeInt(MOTOR);
+            out.writeInt(ACTION);
+            out.writeLong(rng);
+            out.writeLong(trainCount);
+            out.writeLong(validationCount);
+            out.writeLong(recurrentUpdates);
+            out.writeFloat(heldoutModelError);
+            out.writeFloat(heldoutBaselineError);
+            out.writeFloat(storedValue);
+            float[][] values=fullCheckpointArraysV345();
+            out.writeInt(values.length);
+            for(float[] array:values){
+                out.writeInt(array.length);
+                for(float x:array){
+                    if(!Float.isFinite(x))throw new IllegalStateException(
+                        "V345 cannot persist nonfinite learned parameter");
+                    out.writeFloat(x);
+                }
+            }
+            out.flush();
+            byte[] payload=buffer.toByteArray();
+            CRC32 crc=new CRC32();
+            crc.update(payload);
+            out.writeInt((int)crc.getValue());
+            out.flush();
+            byte[] result=buffer.toByteArray();
+            if(result.length>CHECK_MAX_BYTES_V345)
+                throw new IllegalStateException("V345 oversized GRU checkpoint");
+            return result;
+        }catch(IOException unexpected){
+            throw new IllegalStateException("V345 encoder failed",unexpected);
+        }
+    }
+    /**
+     * Decode and check the WHOLE blob before mutating even one weight.
+     * Only a fresh instance may be restored, once. No hidden retraining,
+     * no silent reset, and no incomplete pending-decision credit.
+     */
+    public void restoreAtBoundaryV345(byte[] raw){
+        if(pending||restoredV345||trainCount!=0||
+           validationCount!=0||recurrentUpdates!=0)
+            throw new IllegalStateException("V345 restoration only on virgin core");
+        if(raw==null||raw.length<100||raw.length>CHECK_MAX_BYTES_V345)
+            throw new IllegalArgumentException("V345 invalid checkpoint length");
+        CRC32 crc=new CRC32();
+        crc.update(raw,0,raw.length-4);
+        int tail=raw.length-4;
+        int stored=((raw[tail]&255)<<24)|((raw[tail+1]&255)<<16)|
+                   ((raw[tail+2]&255)<<8)|(raw[tail+3]&255);
+        if((int)crc.getValue()!=stored)
+            throw new IllegalArgumentException("V345 corrupted checksum");
+        try{
+            DataInputStream in=new DataInputStream(
+                new ByteArrayInputStream(raw,0,tail));
+            if(in.readInt()!=CHECK_MAGIC_V345||
+               in.readInt()!=CHECK_VERSION_V345||
+               in.readInt()!=SENSOR||in.readInt()!=HIDDEN||
+               in.readInt()!=MOTOR||in.readInt()!=ACTION)
+                throw new IllegalArgumentException(
+                    "V345 unknown version / incompatible neuron dimensions");
+            long nextRng=in.readLong(),
+                 updates=in.readLong(),validations=in.readLong(),
+                 recurrent=in.readLong();
+            float modelErr=in.readFloat(),baselineErr=in.readFloat(),
+                  value=in.readFloat();
+            if(nextRng==0||updates<0||validations<0||recurrent<0||
+               recurrent>updates||!Float.isFinite(value)||
+               (validations==0&&
+                 (!Float.isNaN(modelErr)||!Float.isNaN(baselineErr)))||
+               (validations>0&&
+                 (!Float.isFinite(modelErr)||!Float.isFinite(baselineErr)||
+                  modelErr<0||baselineErr<0)))
+                throw new IllegalArgumentException(
+                    "V345 invalid RNG/counters/validation statistics");
+            float[][] dest=fullCheckpointArraysV345();
+            if(in.readInt()!=dest.length)
+                throw new IllegalArgumentException(
+                    "V345 incorrect neural topology");
+            float[][] decoded=new float[dest.length][];
+            for(int j=0;j<dest.length;j++){
+                int width=in.readInt();
+                if(width!=dest[j].length)
+                    throw new IllegalArgumentException(
+                        "V345 different array width "+j);
+                decoded[j]=new float[width];
+                for(int k=0;k<width;k++){
+                    decoded[j][k]=in.readFloat();
+                    if(!Float.isFinite(decoded[j][k]))
+                        throw new IllegalArgumentException(
+                            "V345 invalid learned weight "+j+"/"+k);
+                }
+            }
+            if(in.available()!=0)
+                throw new IllegalArgumentException(
+                    "V345 unexpected trailing checkpoint data");
+            // All checks completed: only now commit the new state.
+            for(int j=0;j<dest.length;j++)
+                System.arraycopy(decoded[j],0,dest[j],0,dest[j].length);
+            rng=nextRng;
+            trainCount=updates;validationCount=validations;
+            recurrentUpdates=recurrent;
+            heldoutModelError=modelErr;
+            heldoutBaselineError=baselineErr;
+            storedValue=value;
+            restoredV345=true;
+        }catch(IOException truncated){
+            throw new IllegalArgumentException(
+                "V345 incomplete neural checkpoint",truncated);
+        }
     }
 }
