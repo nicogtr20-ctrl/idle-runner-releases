@@ -26,6 +26,10 @@ Conservare **identici** V317 actor, pretrained frozen V319 grip head, 16×4 effe
 5. **Persistenza**: checkpoint cortex a boundary test byte/bitwise, ma non dichiarare whole body save/restart testato se actor/gel/BOX/RNG non serializzati. Per full G3 serve un altro test di 2000 decisioni nello stesso organismo, con checkpoint reale dell'intero mondo e confronto restart. Le 2304 BLIND sono sparse su 24 vite, non equivalgono a 2000 nella stessa.
 6. Anche con screening positivo, **non** abilitare subito G3 o Android: servono completezza full organism/continuous life, mondo indipendente e V3 UI del master; G5 world model separato.
 
+### Erratum di implementazione del gate, rilevato da code review PRIMA di leggere qualunque risultato BLIND
+
+La prima build V341 aveva nella valutazione finale il requisito `directionalPlusRAWwins>=3` ma ometteva di verificare **esplicitamente** `rawFamilies==4`, già stabilito sopra come gate RAW separato per tutte le quattro famiglie. Prima di leggere log BLIND o modificare l'algoritmo è stata corretta **soltanto l'espressione booleana del gate** e la stampa `RAW_WORK_FAMILIES`; nessun peso, dato, penalità 0.12, scena o controllo fisico è stato modificato. Versione corretta commit `5dcc3e1750e8884746c188adce4249d7c2335bc2` e relativo nuovo workflow. La prima CI precedente è da intendersi test tecnico pre-erratum e non scioglimento di alcun gate.
+
 ## Controlli e falsificazione
 
 La CI deve stampare quattro serie di metriche per famiglia, `RAW_WORK`, `NORMALIZED_COST`, `direction`, `bilateral`, `geometry`, `censor`, `jointAttempt/Repair/Unresolved`, `learnedUpdates`; deve dichiarare `G3=BLOCKED_FAIL` se un veto non è soddisfatto. Le vecchie regressioni di 3 BOX/gate, V319 original learned grip e `gradle assembleDebug` devono restare verdi; workflow SUCCESS tecnico non è promozione scientifica. **Mantenere OTA172 e i 12 slot del 2.2.**
