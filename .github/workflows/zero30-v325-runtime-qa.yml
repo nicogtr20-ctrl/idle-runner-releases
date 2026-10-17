@@ -6,6 +6,7 @@ on:
       - 'app/src/main/java/com/overmind/zero/Zero3RuntimeV325.java'
       - 'app/src/main/java/com/overmind/zero/Zero3RuntimeV325Regression.java'
       - 'app/src/main/java/com/overmind/zero/Zero3AndroidSessionV325.java'
+      - 'app/src/main/java/com/overmind/zero/Zero3RuntimeV325TerminalRegression.java'
       - '.github/workflows/zero30-v325-runtime-qa.yml'
   workflow_dispatch:
 permissions:
@@ -30,7 +31,7 @@ jobs:
           m=re.search(r'^\s*(javac -d /tmp/overmind [^\n]+)',source,re.M)
           if not m:raise RuntimeError('production material javac compiler list missing')
           root='app/src/main/java/com/overmind/zero/'
-          names='Zero3LearningFoundation Zero3MotorResponseKernel Zero3MotorRetentionRegression Zero3MotorPromotionGate Zero3MotorImpulseResponseRegression Zero3MotorLocalFrameV310Regression Zero3SensoryFrameV315 Zero3CausalRecorderV315 Zero3SensoryContractV315Regression Zero3MotorIntentV316 Zero3AutonomousLoopV317 Zero3LearnedAdhesionV318 Zero3LearnedAdhesionV318Regression Zero3ContextAdhesionV319 Zero3ContextAdhesionV319Regression Zero3MotorHeadStoreV320 Zero3NeuralBundleStoreV321 Zero3OrganismStoreV322 Zero3FullCausalExperienceV322B Zero3FullArchiveStoreV322B Zero3MultiSceneRestartV322BRegression Zero3SurvivalLedgerV323 Zero3SurvivalArchiveV323 Zero3SurvivalRestartV323Regression Zero3RoomStateV324 Zero3RoomArchiveV324 Zero3RuntimeV325 Zero3RuntimeV325Regression'
+          names='Zero3LearningFoundation Zero3MotorResponseKernel Zero3MotorRetentionRegression Zero3MotorPromotionGate Zero3MotorImpulseResponseRegression Zero3MotorLocalFrameV310Regression Zero3SensoryFrameV315 Zero3CausalRecorderV315 Zero3SensoryContractV315Regression Zero3MotorIntentV316 Zero3AutonomousLoopV317 Zero3LearnedAdhesionV318 Zero3LearnedAdhesionV318Regression Zero3ContextAdhesionV319 Zero3ContextAdhesionV319Regression Zero3MotorHeadStoreV320 Zero3NeuralBundleStoreV321 Zero3OrganismStoreV322 Zero3FullCausalExperienceV322B Zero3FullArchiveStoreV322B Zero3MultiSceneRestartV322BRegression Zero3SurvivalLedgerV323 Zero3SurvivalArchiveV323 Zero3SurvivalRestartV323Regression Zero3RoomStateV324 Zero3RoomArchiveV324 Zero3RuntimeV325 Zero3RuntimeV325Regression Zero3RuntimeV325TerminalRegression'
           subprocess.run(shlex.split(m.group(1))+[root+n+'.java' for n in names.split()],check=True)
           PY
       - name: Independent runtime-owner process A, B, C, D on 25 matched lives
@@ -59,7 +60,12 @@ jobs:
             done
           done
           echo 'ZERO3 V325 TWENTY_FIVE_RUNTIME_OWNED_SAME_LIFE_PASS'
+      - name: Terminal energy depletion persists across cold restart
+        run: |
+          set -euo pipefail
+          java -cp /tmp/overmind com.overmind.zero.Zero3RuntimeV325TerminalRegression /tmp/z325-terminal | tee /tmp/z325-terminal.log
+          grep -q 'V325 TERMINAL_FUEL_EXHAUSTION=PASS STOP_EXACTLY_ONE_DECISION=PASS PERSISTENT_DEATH=PASS' /tmp/z325-terminal.log
       - name: Android Debug build, never sign or publish
         run: gradle --no-daemon assembleDebug
       - name: Experimental integrity gates, not motor or integration gate
-        run: echo 'V325_RUNTIME_LAB=PASS GAMEACTIVITY_NOT_CONNECTED G3_BLOCKED G5_BLOCKED G9_DEVICE_BLOCKED NO_OTA'
+        run: echo 'V325_RUNTIME_LAB=PASS TERMINAL=PASS GAMEACTIVITY_NOT_CONNECTED G3_BLOCKED G5_BLOCKED G9_DEVICE_BLOCKED NO_OTA'
