@@ -337,8 +337,10 @@ public final class Zero3BilateralForensicV340Regression {
             eval[k].cortex.setWeightsV332ForEvaluation(
                 trained[k].cortex.weights());
         }
-        int[] known={961,965,969,973,977,981};
-        for(int birth:known)
+        // Reproduce V339 FULL 24-life ordering because the Cortex slow
+        // context evolves across episode boundaries even in frozen BLIND.
+        // The V340 face observer still reads only the 6 consumed BOX lives.
+        for(int birth=960;birth<984;birth++)
             for(Model m:eval){
                 EpisodeStats e=life(m,birth,true);
                 check(e.decisions==96&&e.realSteps==1152&&
