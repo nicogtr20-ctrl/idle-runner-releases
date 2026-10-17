@@ -27,7 +27,7 @@
 | Primi 1.000, distanza dalla BOX | 38.043547 | 39.676398 |
 | **2.000**, distanza dalla BOX | **92.932789** (fuori zona) | **41.737338** |
 | **3.000**, distanza dalla BOX | **451.802845** | 40.141470 |
-| **5.000**, distanza dalla BOX | **1.426.879404** | 41.111001 |
+| **5.000**, distanza dalla BOX | **1426.879404** | 41.111001 |
 | **8.000**, distanza dalla BOX | **3.704.920367** | 37.989407 |
 | **10.000**, distanza dalla BOX | **5.744.799070** | **38.905236** |
 | Minimo COM↔BOX lungo 120.000 frame | 37.843734 | 37.395702 |
