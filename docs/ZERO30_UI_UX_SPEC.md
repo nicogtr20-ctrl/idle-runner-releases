@@ -1,5 +1,8 @@
 # ZERO 3.0 — NUOVA INTERFACCIA GIOCO, IMPOSTAZIONI, CERVELLO, NEURONI, ABILITÀ ED EVOLUZIONE
 
+> **Dati progettuali V3.24 (17/10/2026):** [rapporto tecnico](ZERO30_V324_ROOM_WORLD_CHECKPOINT.md), [CI 39026713027 SUCCESS](https://github.com/nicogtr20-ctrl/idle-runner-releases/actions/runs/39026713027). La futura UI V3 potrà presentare salvataggio della stanza (porta, stato contatti, ownership della risorsa), ma solo dal provider vivo e verificato; i 25 test/2.400 decisioni distribuiti su vite di LAB non sono progressi del cervello o di abilità dell'utente. **La nuova UI non è stata implementata** e G3/G5 sono ancora aperti. Nessun APK 3.0 pubblicato.
+
+
 > **V3.23 LAB (17/10/2026):** [checkpoint metabolico sperimentale](ZERO30_V323_SURVIVAL_CONTINUITY.md) consente lettura di riserva e lavoro misurati e serializzati per decisione, ma V315.energyAvailable resta false e GameActivity non invia quei dati al cervello V3. Non mostrare nella UI V3 valori di questa fixture come progressi reali dell'utente; nuova UI ancora da creare.
 
 > **V3.23 PER FUTURA UI (17/10/2026):** [CI e prove metabolic checkpoint](ZERO30_V323_SURVIVAL_CONTINUITY.md). In 20 fixture lab si ripristina riserva e storia energetica PRE/POST insieme al cervello e corpo, con contatti materiali misurati (+22/−28) e costo del vero `gel.work`. Questi valori sono **di LAB**, non stato della partita sul telefono: la futura UI deve distinguere `LAB_SURVIVAL_REPLAY_VALIDATED` e `LIVE_ENERGY_UNCONNECTED`. V315.energyAvailable=false, nessun grafico energetico V3 fittizio. UI 3.0 non implementata.
