@@ -190,7 +190,7 @@ public final class Zero3BoxSubstageForensicV335Regression {
                 Zero3MultiSceneRestartV322BRegression.actualWorldStep(
                     ref.p,sx,sy,bx,by,cx,cy);
                 observedWorld(trace,sx,sy,bx,by,cx,cy,observer);
-                check(observer.stageCount==10,
+                check(observer.stageCount==11,
                     "missing observed substage count="+observer.stageCount);
                 check(physicalSignature(ref).equals(physicalSignature(trace)),
                     "read-only instrumentation changed original physical output");
