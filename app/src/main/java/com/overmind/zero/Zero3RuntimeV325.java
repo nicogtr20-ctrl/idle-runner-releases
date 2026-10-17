@@ -319,7 +319,15 @@ public final class Zero3RuntimeV325 implements AutoCloseable {
     public void save(Path privateV3Folder)throws IOException {
         Zero3RoomArchiveV324 disk=new Zero3RoomArchiveV324(privateV3Folder);
         Zero3RoomArchiveV324.Bundle previous=disk.load();
-        if(previous!=null){
+        if(previous==null){
+            // No valid generation must NOT be mistaken for a virgin folder
+            // when old checkpoint files still exist but both are corrupt.
+            if(Files.exists(privateV3Folder.resolve("v324-current.mf"))||
+               Files.exists(privateV3Folder.resolve("v324-backup.mf"))||
+               Files.exists(privateV3Folder.resolve("v324-room-0.bin"))||
+               Files.exists(privateV3Folder.resolve("v324-room-1.bin")))
+                throw new IOException("V325 existing checkpoint invalid; refusing destructive new generation");
+        }else{
             Zero3OrganismStoreV322.State prev=previous.life.joint.organism;
             if(prev.episodeId!=episode||prev.nextDecision>next)
                 throw new IOException("V325 refusing foreign or future generation");
