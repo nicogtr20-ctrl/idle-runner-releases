@@ -27,7 +27,12 @@ Il workflow `.github/workflows/zero30-v326-android-entry-qa.yml` compila via JVM
 
 ## Stato e blocchi
 
-- **Da verificare negli ultimi log:** ID run definitiva CI, risultato di compilazione Android e del nuovo Activities manifest. La prima run 39030554126 ha superato il test reale JVM e i controlli route, ma la build Android si è fermata alla risoluzione Gradle con HTTP 403 da Maven Central, prima della compilazione Java. È stato aggiunto un retry su errore di repository; non dichiarare pass prima dell'ultima CI.
+- **ESITO FINALE VERIFICATO — [CI 39030669596 SUCCESS](https://github.com/nicogtr20-ctrl/idle-runner-releases/actions/runs/39030669596)**, commit `8a4fb7969ee179978dfada85573ae92b31094083`, job 117390303717. Dal log:
+  - `V326 FRESH_BIRTH_SAVED_12=PASS`, `FRESH_BIRTH_RESUMED_24=PASS`, `FRESH_BIRTH_CONTINUOUS_24=PASS`. Il fingerprint congiunto del nuovo organismo nato da un factory reale è stato confrontato byte-per-byte fra **12+riavvio JVM+12** e **24 senza interruzione**; dati della vista di sola lettura non possono alterare i 96 punti fisici.
+  - `V326 NEWBORN_FAULT_ROLLBACK_12=PASS NO_LEGACY_REWRITE=PASS` dopo corruzione dell'ultima generazione, con identità episodio straniero bloccata.
+  - `ZERO3 V326 OPT_IN_ROUTE_LEGACY_PRESERVED=PASS`: manifest Activity non esportata, link esplicito dalle impostazioni, opzione del confronto 2.2 ancora presente, sandbox `getNoBackupFilesDir`.
+  - `BUILD SUCCESSFUL in 55s`, `V326_ANDROID_DEBUG_COMPILED=PASS`. La build Android Debug include `Zero3LabActivityV326`, factory V3 e bridge. **Nessuna build release firmata o OTA è stata avviata.**
+- **Prima CI non riuscita [39030554126](https://github.com/nicogtr20-ctrl/idle-runner-releases/actions/runs/39030554126):** JVM e checks UI PASS, ma Gradle non ha superato il download plugin da Maven Central per HTTP 403 prima della compilazione Android. Il retry è stato aggiunto senza indebolire l'asserzione `assembleDebug`; la run 39030669596 ha compilato al primo tentativo dopo tale modifica.
 - **Non ancora testato sul Galaxy S21:** apertura Activity, pause/resume Android, protezione process-death, performance x1/x5, stato termico, visualizzazione reale e latenza di salvataggio.
 - **Sensori energia nel cervello ancora assenti:** V315 `energyAvailable=false`; la UI può leggere una riserva reale, ma l'actor non riceve automaticamente un valore energetico. Il metabolismo V323 è un osservatore delle leggi reali dei contatti, non un critic/reward di sopravvivenza validato.
 - **Mancano:** ambiente completo `GameActivity` V3 con tempeste/shelter/spawn multipli, memoria abilità ed esperienze generalizzate, neurogenesi, G3 locomozione validata, G4 critic, G5 world-model, UI finale 3D neurale, G9 device e G10 release OTA.
@@ -36,3 +41,7 @@ Il workflow `.github/workflows/zero30-v326-android-entry-qa.yml` compila via JVM
 ## Prossimo sottogate
 
 Verificare build Android Debug (in CI) e una sessione Android Galaxy S21 vera che nasca, accumuli almeno 2.000 decisioni, salvi, venga terminata brutalmente, torni nella **stessa vita**, recuperi il journal sensoriale, e confronti conteggi/energia/contatti senza trucchi. Poi estendere l'habitat agli elementi mancanti tramite un adapter V3 e costruire la UI 3.0 da provider reali. Dopo serve G3 locomozione matched contro frozen, non premio movimento.
+
+## Verdetto aggiornato
+
+**Promossi solo i sottogate `V326_OPT_IN_ANDROID_ENTRY_COMPILES=PASS` e `V326_PHYSICAL_BIRTH_RESTART_JVM=PASS`.** Il percorso della schermata è aggiunto e raggiungibile nel codice ma NON ancora pubblicato su OTA172; è quindi improprio dire all'utente che appare già nell'APK attualmente installato. `G9_REAL_ANDROID_LIFECYCLE`, `G3_MOTOR_LEARNING`, `G5_WORLD_MODEL` e la UI finale 3D restano BLOCCATI. Nessun salvataggio 2.2 è stato modificato.
