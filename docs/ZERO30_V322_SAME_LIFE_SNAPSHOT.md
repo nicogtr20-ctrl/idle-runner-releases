@@ -1,5 +1,7 @@
 # ZERO 3.0 — V3.22/A | Snapshot congiunto neuroni + materia + oggetto + traccia causale, ripresa nella STESSA vita
 
+> **ZERO 3.22/B (17 ottobre 2026):** [Rapporto verificato](ZERO30_V322B_FULL_CAUSAL_REPLAY.md), [CI 39023478559 SUCCESS](https://github.com/nicogtr20-ctrl/idle-runner-releases/actions/runs/39023478559). Superate 20/20 verifiche di ripresa della stessa vita in cinque scene di laboratorio, con archivio unico del cervello, corpo, RNG degli eventi fisici del test e esperienze complete PRE/12×64 comandi/POST. Corruzione e rollback superati; Android Debug compila. È un sottogate di persistenza in laboratorio, non la soluzione finale G3/G5, né il salvataggio completo dell'app Android o la nuova UI. Non modificare OTA172 o i 12 slot 2.2.
+
 > **CI DEFINITIVA DOPO HARDENING — 17/10/2026:** [39022300684 SUCCESS](https://github.com/nicogtr20-ctrl/idle-runner-releases/actions/runs/39022300684), commit `c122be6493ec6008771169fc05a10918d9371a9d`. Tutte le 4 JVM, comparazione `cmp` bitwise, 48→96 decisioni nella stessa vita, rollback e Android Debug (`BUILD SUCCESSFUL`) di nuovo PASS dopo immutabilità della traccia e rigetto di dati incompatibili. Fingerprint e risultati fisici invariati. Gate **SOLO V322/A LAB**, non `BrainSnapshotV3` di produzione, G3/G5 bloccati, no OTA.
 
 
