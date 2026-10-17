@@ -41,4 +41,29 @@ Bracci: `BASE` solver non toccato, `FACE_ONLY`, `FACE_PLUS_LINK`, `LINK_ONLY`, `
 - **[CI 39050310657 SUCCESS](https://github.com/nicogtr20-ctrl/idle-runner-releases/actions/runs/39050310657)**: eseguito davvero `Zero3SelectiveMultiObjectV337Regression`, derivato dal benchmark real-world `MultiObjectGripRegression` ma con l'**overload SELECTIVE** abilitato su ciascuna delle tre scatole; tutte **7 maschere** di comando presa, inversione dell'ordine, rilascio selettivo, isolamento dei timer per box e cancello indipendente **PASS**, senza riattribuzioni illecite. Si tratta di una fixture motoria controllata, non prova di una politica neurale multi-oggetto.
 - Test meccanico indipendente con 12 BOX ordinal nuovi [665..709] e test diretto multi-BOX col **nuovo** overload sono stati predisposti dopo preregistrazione; non promuovere prima dei loro log. La CI positiva non autorizza OTA né modifica dei 12 cervelli 2.2.
 
-**Fino a nuova CI verificata: V3.37 è soltanto protocollo, `G3/G5=BLOCKED`, nessun OTA/merge.**
+## V3.37-C — HOLDOUT BLOCCATO, RISULTATO **FAIL SCIENTIFICO**, FISICA NON PROMOSSA
+
+**[GitHub Actions 39050224395 SUCCESS tecnica](https://github.com/nicogtr20-ctrl/idle-runner-releases/actions/runs/39050224395)**, classe `Zero3BoxHoldoutV337Regression`, 12 ordinals pre-registrati [665..709] (tutti BOX family1, non generalizzazione multi-famiglia), 168 veri intent V317 con 12 comandi muscolari/step per vita, efferenze V319 congelate e condivise su BASE/FACE_ONLY/FACE_PLUS_LINK/LINK_ONLY/SELECTIVE. **2.016 decisioni sensory-driven per arm, 24.192 passi fisici per arm**; sono prove di controfattuale di fisica meccanica con nastro di comandi generato dal BASE, **non** brain closed-loop autonomi separati, non ripartenze di 2.000 esperienze nella stessa vita e non neural training/frozen comparato. Compilazione Android Debug **BUILD SUCCESSFUL in 1m**, ma nessun deploy e nessun test S21.
+
+| Nascita **nuova** | Crossing BASE → SELECTIVE | Frame bilaterali BASE → SELECTIVE | Link/patch nel BOX candidata | Gate fisico |
+|---|---:|---:|---:|---|
+| 665 | 0 → 0 | 0 → 0 (NOT_TESTED) | 0 / 0 | Nessuna violazione rilevata |
+| 669 | 0 → 0 | **151 → 151** | 0 / 0 | PASS nelle metriche osservabili |
+| **673** | **2 → 1** | 0 → 0 (NOT_TESTED) | 0 / 0 | **FAIL autointersezione** |
+| 677 | 0 → 0 | 0 → 0 (NOT_TESTED) | 0 / 0 | Nessuna violazione rilevata |
+| 681 | 0 → 0 | 0 → 0 (NOT_TESTED) | 0 / 0 | Nessuna violazione rilevata |
+| 685 | 0 → 0 | 0 → 0 (NOT_TESTED) | 0 / 0 | Nessuna violazione rilevata |
+| 689 | 0 → 0 | 0 → 0 (NOT_TESTED) | 0 / 0 | Nessuna violazione rilevata |
+| 693 | 0 → 0 | 0 → 0 (NOT_TESTED) | 0 / 0 | Nessuna violazione rilevata |
+| 697 | 0 → 0 | 0 → 0 (NOT_TESTED) | 0 / 0 | Nessuna violazione rilevata |
+| 701 | 0 → 0 | 0 → 0 (NOT_TESTED) | 0 / 0 | Nessuna violazione rilevata |
+| 705 | 0 → 0 | 0 → 0 (NOT_TESTED) | 0 / 0 | Nessuna violazione rilevata |
+| **709** | **3 → 2** | 0 → 0 (NOT_TESTED) | **1 / 1** | **FAIL crossing e solidità** |
+
+Tutte le dodici pose hanno lavoro gel **bitwise numericamente uguale al baseline nella cifra riportata**, range osservato BASE/SELECTIVE `0.048316088…0.063370362`; `invalid=0` e grip generico pari a 2013–2014 frame per vita. **10/12 scenari privi di violazioni topologiche candidate, 2/12 falliscono.** L'aggregazione `safeCases=1/12` nel log rappresenta i casi con **tutti** i criteri inclusa evidenza bilaterale positiva: per undici scene `bilateralGate=NOT_TESTED`, non conta come certificazione (né come regressione bilaterale). L'ordinal669 conserva integralmente 151 frame bilaterali, ma **non salva il fallimento 673/709**.
+
+**DECISIONE:** `V337_CANDIDATE_PROMOTION=REJECTED` anche se il workflow è SUCCESS tecnico e anche se la V337 ha riparato i due incidenti V333 già noti senza perdere 1.192 grip bilaterali. Le scene 665..709 sono da ora **CONSUMATE**, vietato fare tuning parametrico sul loro esito presentandole di nuovo come BLIND. La versione SELECTIVE vive soltanto nel LAB con default false. Non attivarla nel runtime Android, non fare merge/OTA, non dichiarare locomozione apprendimento G3 o world model G5.
+
+**PROSSIMO PASSO PROGETTUALE V3.38, non implementato da questo audit:** introdurre un risolutore unitario **a vincoli simultanei** con proiezioni conservative delle particelle e degli archi della membrana contro tutte le superfici reali, continuità topologica globale, vincoli di presa volontaria *per oggetto/lato* e gestione di fallimenti senza collocare patch all'interno del solido. Diagnosticare prima gli eventi 673/709 per isolare se derivino da CCD/link/pushOut, senza convertire queste pose consumate in target di tuning. Test su geometrie procedurali nuove preregistrate, 2.000 decisioni motorie valide, lavoro/energia, body+gel, rescue/rollback della stessa vita, manipolazione bilaterale ed eventualmente test S21. Nessun nuovo gate scientifico può essere dedotto dai benchmark V337 verdi in isolamento.
+
+**Stato definitivo V3.37: protocollo e QA conclusi; HOLDOUT fisico FAIL (673/709), guard laboratorio NON promossa, `G3/G5=BLOCKED`, nessun OTA/merge.**
