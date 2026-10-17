@@ -62,12 +62,12 @@ public final class Zero3BoxSubstageForensicV335Regression {
     private static final class Trace implements SquareGripPuzzle.DetailObserver {
         final int ordinal,frame;
         final String mode;
-        int previousCross,firstCross=-1,stageCount;
+        int previousCross,previousStageCross,firstCross=-1,stageCount;
         String firstStage="NONE";
         String firstIndividualOp="NONE";
         int firstIndividualPass=-1,firstIndividualIndex=-1,firstIndividualNext=-1;
         Trace(int id,int step,String m,int initial){
-            ordinal=id;frame=step;mode=m;previousCross=initial;
+            ordinal=id;frame=step;mode=m;previousCross=initial;previousStageCross=initial;
         }
         @Override public void detail(String operation,int pass,int index,
                                      int neighbor,MotorBrain.Body body,
@@ -98,7 +98,7 @@ public final class Zero3BoxSubstageForensicV335Regression {
             int cross=MaterialGeometry.selfCrossings(skin);
             int links=SquareCollisionSolver.intersections(skin,box);
             int[] pair=Zero3BoxCrossingForensicV334Regression.firstPair(skin);
-            if(previousCross==0&&cross>0&&firstCross<0){
+            if(previousStageCross==0&&cross>0&&firstCross<0){
                 firstCross=stageCount;
                 firstStage=name;
             }
@@ -113,6 +113,7 @@ public final class Zero3BoxSubstageForensicV335Regression {
                 pair[0],pair[1],links,holds,held(box),
                 box.bilateralHeldNow,body.cx,body.cy));
             previousCross=cross;
+            previousStageCross=cross;
         }
     }
     /**
