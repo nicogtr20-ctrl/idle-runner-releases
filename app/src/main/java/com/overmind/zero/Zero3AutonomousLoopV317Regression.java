@@ -22,7 +22,8 @@ public final class Zero3AutonomousLoopV317Regression {
         if(!ok)throw new AssertionError("ZERO3 V317 "+problem);
     }
     static final class Group {
-        int lives,decisions,gelFrames,contacts,grips,nonFinite,
+        int lives,decisions,gelFrames,contacts,grips,
+            adhesiveSectors,adhesiveAndContact,nonFinite,
             directionIntents,unintendedMutation,physicalFailures;
         double sumAgreement,sumWork,sumUseful,sumGross,sumNet,
                predictionMse,persistenceMse;
@@ -34,6 +35,8 @@ public final class Zero3AutonomousLoopV317Regression {
             decisions++;
             gelFrames+=d.realPhysicsSteps;
             contacts+=d.realContacts;grips+=d.realGrip;
+            adhesiveSectors+=d.adhesiveCommandSectors;
+            adhesiveAndContact+=d.adhesiveCommandAtContactSites;
             if(d.intent.desiredEffort>.01f&&
                Math.hypot(d.intent.directionX,d.intent.directionY)>.9)
                 directionIntents++;
@@ -65,12 +68,14 @@ public final class Zero3AutonomousLoopV317Regression {
             return String.format(Locale.US,
                 "episodes=%d autonomousDecisions=%d realGelSteps=%d "+
                 "directionIntents=%d touchPatchEvents=%d gripPatchEvents=%d "+
+                "adhesiveMotorSectorFrames=%d adhesionAndContactPatchFrames=%d "+
                 "meanIntentAlignment=%.8f netDistanceSum=%.5f "+
                 "grossDistanceSum=%.5f workSum=%.8f usefulSum=%.5f "+
                 "workPerUseful=%.8f recurrentPredictionMSE=%.9f "+
                 "persistenceMSE=%.9f",
                 lives,decisions,gelFrames,directionIntents,
-                contacts,grips,sumAgreement/Math.max(1,decisions),
+                contacts,grips,adhesiveSectors,adhesiveAndContact,
+                sumAgreement/Math.max(1,decisions),
                 sumNet,sumGross,sumWork,sumUseful,
                 sumWork/(1.+sumUseful),
                 predictionMse/Math.max(1,decisions),
