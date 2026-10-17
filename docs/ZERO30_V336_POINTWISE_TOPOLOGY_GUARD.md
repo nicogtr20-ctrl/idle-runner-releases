@@ -54,6 +54,19 @@ Totale **5.024 frame reali** per braccio, due corpi storici con 2.000 integrazio
 
 Nella stessa CI: `SquareCollisionSolver`, `SquareGripPuzzle`, tre oggetti + gate, prova V319 originale (`scientificGripGate=PASS`, 6.900 grip autentici, 6/6 vite BOX, lavoro originale 0.200176236 vs 0.255425971 incumbent) e Android Debug `BUILD SUCCESSFUL in 1m 4s`. La V319 usa il solver originale: la candidata è ancora da verificare **SOTTO CARICO NEURALE**. Nessuna APK firmata, nessuna OTA.
 
+## PRIMO TEST MUSCOLARE ATTIVO: SCIENTIFIC FAIL, NON ATTIVARE
+
+**[CI 39048377502 — SUCCESS tecnico, FALLIMENTO salvaguardia presa bilaterale](https://github.com/nicogtr20-ctrl/idle-runner-releases/actions/runs/39048377502)**. I veri moduli V317/V319 hanno emesso 64 comandi per frame su 168 decisioni ×12 passi ×2 casi (2.016 frame per caso e braccio), senza aggiornare i pesi: attuatore reale, stesso identico nastro di comandi su baseline e candidato sperimentale.
+
+| Caso già noto V333 | Azione L1 vera | Crossing BASE→CAND | Work reale BASE→CAND | Grip generico BASE→CAND | Frame BILATERALI BASE→CAND |
+|---|---:|---:|---:|---:|---:|
+| ordinal 337 | 11.327,8444 | 1 → 0 | 0,054355998 → 0,054355998 | 2.014 → 2.014 | 0 → 0 (non testato) |
+| ordinal 645 | 12.593,9508 | 2 → 0 | 0,058657911 → 0,058657911 | 2.014 → 2.014 | **1.192 → 0** |
+
+Quindi `topology=PASS`, `workGate=PASS`, **`bilateralGate=FAIL`** sul caso 645. È gravissimo: **nessuna correzione topologica può essere promossa sacrificando completamente la manipolazione bilaterale**, anche se conserva tutti i frame di adesione generica. La parità del lavoro del gel riflette efferenze identiche ed è insufficiente a certificare assenza di effetti su trazione/BOX; la locomozione G3 NON è stata validata. **La combinazione di face+alternative links è REJECTED per attivazione**, indipendentemente dal positivo zero-motor. Non ritoccare retroattivamente V333 come holdout e non ignorare la regressione.
+
+La V3.36 esegue un'ulteriore *ablazione diagnostica meccanica* per separare BASE, solo contatto faccia e faccia+alternative links, alle medesime decisioni già note. Questo non crea nuova evidenza BLIND: serve soltanto a capire quale interazione modifica le prese.
+
 ## Blocchi e prossimi passi
 
 1. Leggere il risultato finale dello stress, riportando tutti gli errori senza rimuovere semi/pose fallite.
