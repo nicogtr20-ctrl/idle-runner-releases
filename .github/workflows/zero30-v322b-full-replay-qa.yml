@@ -1,0 +1,65 @@
+name: ZERO3 V3.22B full causal replay and multiscene same-life QA
+on:
+  push:
+    branches: [feature/zero30-foundation-g0-g3-20261016]
+    paths:
+      - 'app/src/main/java/com/overmind/zero/Zero3FullCausalExperienceV322B.java'
+      - 'app/src/main/java/com/overmind/zero/Zero3FullArchiveStoreV322B.java'
+      - 'app/src/main/java/com/overmind/zero/Zero3MultiSceneRestartV322BRegression.java'
+      - 'app/src/main/java/com/overmind/zero/Zero3OrganismStoreV322.java'
+      - '.github/workflows/zero30-v322b-full-replay-qa.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  full-replay-multiscene:
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+      - name: Compile real production solver, neural circuits, causal full replay and joint store
+        run: |
+          set -euo pipefail
+          mkdir -p /tmp/overmind
+          python3 - <<'PY'
+          import pathlib,re,shlex,subprocess
+          source=pathlib.Path('.github/workflows/overmind-ota-publish.yml').read_text()
+          m=re.search(r'^\s*(javac -d /tmp/overmind [^\n]+)',source,re.M)
+          if not m:raise RuntimeError('production material compiler list unavailable')
+          root='app/src/main/java/com/overmind/zero/'
+          names='Zero3LearningFoundation Zero3MotorResponseKernel Zero3MotorRetentionRegression Zero3MotorPromotionGate Zero3MotorImpulseResponseRegression Zero3MotorLocalFrameV310Regression Zero3SensoryFrameV315 Zero3CausalRecorderV315 Zero3SensoryContractV315Regression Zero3MotorIntentV316 Zero3AutonomousLoopV317 Zero3LearnedAdhesionV318 Zero3LearnedAdhesionV318Regression Zero3ContextAdhesionV319 Zero3ContextAdhesionV319Regression Zero3MotorHeadStoreV320 Zero3NeuralBundleStoreV321 Zero3OrganismStoreV322 Zero3FullCausalExperienceV322B Zero3FullArchiveStoreV322B Zero3MultiSceneRestartV322BRegression'
+          subprocess.run(shlex.split(m.group(1))+[root+n+'.java' for n in names.split()],check=True)
+          PY
+      - name: Four independent JVMs per matched multiscene life, full replay vs uninterrupted
+        run: |
+          set -euo pipefail
+          for mode in 0 1 2 3 4; do
+            for rep in 0 1; do
+              ordinal=$((8 + rep*5 + mode))
+              base="/tmp/zero322b-${mode}-${rep}"
+              args="-Dzero3.mode=${mode} -Dzero3.ordinal=${ordinal}"
+              java -Xmx1536m $args -cp /tmp/overmind com.overmind.zero.Zero3MultiSceneRestartV322BRegression prefix "$base" | tee "$base-prefix.log"
+              grep -q 'V322B PREFIX SAME_LIFE cursor=48 gen=2' "$base-prefix.log"
+              java -Xmx1536m $args -cp /tmp/overmind com.overmind.zero.Zero3MultiSceneRestartV322BRegression resume "$base" "$base-resumed.txt" | tee "$base-resume.log"
+              grep -q 'V322B RESUME SAME_LIFE cursor=96 gen=3' "$base-resume.log"
+              java -Xmx1536m $args -cp /tmp/overmind com.overmind.zero.Zero3MultiSceneRestartV322BRegression reference "$base-reference.txt" | tee "$base-reference.log"
+              cmp "$base-resumed.txt" "$base-reference.txt"
+              grep -q 'fullSensoryActionRecords=96' "$base-resumed.txt"
+              grep -q 'autonomousDecisions=96' "$base-resumed.txt"
+              grep -q 'encoderUpdates=96' "$base-resumed.txt"
+              grep -q 'adhesionUpdates=96' "$base-resumed.txt"
+              cat "$base-resumed.txt"
+              java -Xmx1536m $args -cp /tmp/overmind com.overmind.zero.Zero3MultiSceneRestartV322BRegression corrupt "$base" | tee "$base-corrupt.log"
+              grep -q 'V322B FAULT rollbackCursor=48 noDuplicateCredit=true bothGenerationsBadFailClosed=true' "$base-corrupt.log"
+              echo "V322B SCENE=${mode} SEED_CASE=${ordinal} FULL_JOINT_REPLAY=PASS"
+            done
+          done
+          echo 'ZERO3 V322B TEN_MATCHED_LIVES_JOINT_NEURAL_PHYSICS_REPLAY=PASS'
+      - name: Android Debug compilation only, not OTA publication
+        run: gradle --no-daemon assembleDebug
+      - name: Strict scientific status after integrity tests
+        run: echo 'ZERO3 V322B_LAB_GATE=PASS NOT_GAMEPLAY_BRAIN_SNAPSHOT G3_BLOCKED G5_BLOCKED NO_OTA'
