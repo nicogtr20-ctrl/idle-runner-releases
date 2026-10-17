@@ -287,6 +287,47 @@ public final class Zero3LearningFoundation {
             lastAcceptedGradientNorm=(float)Math.sqrt(total);
             if(total>1e-16f){updates++;revision++;}
         }
+        /**
+         * V333 ablation, STRICTLY LAB ONLY. Mode 0: V332 local+delay,
+         * 1: local without delay, 2: 0.82-delay with global average of the
+         * *same measured sector responses*. Excludes V319-owned grip channel.
+         * All probes originated from executed live-solver muscle commands;
+         * this routine cannot query an unseen world or simulate the future.
+         */
+        void learnV333(LocalProbeV332 probe,float[] now,float[] later,int mode){
+            if(mode<0||mode>2||pendingDecision||probe==null||
+               now==null||later==null||
+               now.length!=SECTORS||later.length!=SECTORS)
+                throw new IllegalStateException("V333 ablation input invalid");
+            if(learningRate<=0f||probe.selectedChannel==2)return;
+            int channel=probe.selectedChannel;
+            if(channel<0||channel>=CHANNELS)
+                throw new IllegalArgumentException("V333 cortex channel");
+            float[] measured=new float[SECTORS];
+            float average=0f;
+            for(int s=0;s<SECTORS;s++){
+                finite(now[s],"V333 actual local response");
+                finite(later[s],"V333 actual next response");
+                measured[s]=limit(now[s]+(mode==1?0f:.82f)*later[s],-1f,1f);
+                average+=measured[s]/SECTORS;
+            }
+            float sq=0f;
+            for(int s=0;s<SECTORS;s++){
+                final float credit=mode==2?average:measured[s];
+                final int output=s*CHANNELS+channel;
+                for(int j=0;j<INPUTS;j++){
+                    final int index=output*INPUTS+j;
+                    final float change=limit(learningRate*credit*
+                      probe.noise[output]*probe.meanFeatures[index],-.002f,.002f);
+                    float before=weights[index];
+                    weights[index]=limit(before+change,-1.5f,1.5f);
+                    float delta=weights[index]-before;
+                    sq+=delta*delta;
+                }
+            }
+            lastAcceptedGradientNorm=(float)Math.sqrt(sq);
+            if(sq>1e-16f){updates++;revision++;}
+        }
         public float[] lastCommands(){return output.clone();}
         public void begin(boolean explore){begin(explore,null);}
         public void begin(boolean explore,MotorIntent intent){
