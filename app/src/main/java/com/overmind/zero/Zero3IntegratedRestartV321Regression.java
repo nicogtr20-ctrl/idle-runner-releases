@@ -210,6 +210,24 @@ public final class Zero3IntegratedRestartV321Regression {
         boolean rejected=false;
         try{m.capture(8);}catch(IllegalStateException expected){rejected=true;}
         require(rejected,"saved head while its decision was pending");
+        Modules live=new Modules();
+        live.cortex.begin(false);
+        boolean cortexRejected=false;
+        try{live.cortex.checkpoint();}
+        catch(IllegalStateException expected){cortexRejected=true;}
+        require(cortexRejected,
+                "non-exploratory in-flight cortex checkpoint incorrectly accepted");
+        live.cortex.discard();
+        Zero3MotorImpulseResponseRegression.Scenario testBody=
+            new Zero3MotorImpulseResponseRegression.Scenario(0,0f,0);
+        Zero3SensoryFrameV315 testPre=Zero3SensoryFrameV315.capture(
+            991991,0,0.,true,testBody.body,testBody.skin,testBody.gel,
+            new ArrayList<UnknownWorld.Entity>(),null);
+        live.encoder.before(testPre);
+        boolean recurrentRejected=false;
+        try{live.encoder.checkpoint();}
+        catch(IllegalStateException expected){recurrentRejected=true;}
+        require(recurrentRejected,"PRE without POST was saved as a completed decision");
         System.out.println("ZERO3 V321 PREFIX trainingEpisodes=8 actorChoices=768 "+
             "physicalGelSteps=9216 encoderUpdates=768 cortexUpdates="+
             m.cortex.updates()+" motorUpdates=768 gen=2");
