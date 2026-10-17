@@ -1,5 +1,7 @@
 # ZERO 3.0 — V3.21 | Checkpoint congiunto del circuito neurale sperimentale
 
+> **CI DEFINITIVA DOPO HARDENING / 17-10-2026:** [run 39020524099 — SUCCESS](https://github.com/nicogtr20-ctrl/idle-runner-releases/actions/runs/39020524099). Aggiunta pre-verifica atomica dell'ammissibilità di TUTTI i moduli prima di mutarne anche uno: se learning-rate/revision/decoder o modulo non-fresco non corrisponde, il ripristino rifiuta senza avere caricato parzialmente l'encoder. Nuovo test di `wrong learningRate` verifica i contatori dell'encoder e del motor-head rimasti a zero dopo il rifiuto. Sono confermati identici SHA256 congiunto `9e31ae75d12cd32904cc42db265f0da5ad50fe19dc035f51963fecb5252fa4de`, 1.536 update per ogni modulo, 1.532 grip frame EVAL/zero bilaterali, recovery 768 e fail-closed. Il full Android Gradle smoke del ramo prima di questo hardening ha già passato la [run 39020104719](https://github.com/nicogtr20-ctrl/idle-runner-releases/actions/runs/39020104719); aggiornamento più recente del bundle non introduce nuove API Android. Resta comunque un checkpoint neurale SPERIMENTALE, non ripresa della vita fisica.
+
 **Protocollo preregistrato il 17/10/2026, prima del codice e dei test.** Leggere [Master](ZERO30_MASTER_BLUEPRINT.md), [Contratto](ZERO30_IMPLEMENTATION_CONTRACT.md), [V3.20](ZERO30_V320_MOTOR_HEAD_RESTART_RETENTION.md), [UI](ZERO30_UI_UX_SPEC.md).
 
 ## Ipotesi falsificabile
