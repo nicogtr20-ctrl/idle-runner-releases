@@ -1,0 +1,42 @@
+name: ZERO3 V3.8 real-physics recurrent motor state QA
+on:
+  push:
+    branches: [feature/zero30-foundation-g0-g3-20261016]
+    paths:
+      - 'app/src/main/java/com/overmind/zero/Zero3MotorDynamicStateV38Regression.java'
+      - '.github/workflows/zero30-motor-dynamic-v38-qa.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  state-space:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+      - name: Compile REAL material solver and motor causal state transitions
+        run: |
+          set -euo pipefail
+          mkdir -p /tmp/overmind
+          python3 - <<'PY'
+          import pathlib,re,shlex,subprocess
+          s=pathlib.Path('.github/workflows/overmind-ota-publish.yml').read_text()
+          m=re.search(r'^\s*(javac -d /tmp/overmind [^\n]+)',s,re.M)
+          if m is None: raise RuntimeError('production body JVM source list missing')
+          cmd=shlex.split(m.group(1))+[
+            'app/src/main/java/com/overmind/zero/Zero3LearningFoundation.java',
+            'app/src/main/java/com/overmind/zero/Zero3MotorResponseKernel.java',
+            'app/src/main/java/com/overmind/zero/Zero3MotorRetentionRegression.java',
+            'app/src/main/java/com/overmind/zero/Zero3MotorPromotionGate.java',
+            'app/src/main/java/com/overmind/zero/Zero3MotorImpulseResponseRegression.java',
+            'app/src/main/java/com/overmind/zero/Zero3MotorLongHorizonRegression.java',
+            'app/src/main/java/com/overmind/zero/Zero3MotorTemporalHistoryRegression.java',
+            'app/src/main/java/com/overmind/zero/Zero3MotorDynamicStateV38Regression.java']
+          subprocess.run(cmd,check=True)
+          PY
+      - name: Validate learned 32-step motor state rollout vs static and zero on new real-body conditions
+        run: java -cp /tmp/overmind com.overmind.zero.Zero3MotorDynamicStateV38Regression
