@@ -96,7 +96,7 @@ public final class Zero3SameLifeRestartV322Regression {
                 b.c.updates()<=state.nextDecision&&
                 b.h.updates()==state.nextDecision,
                 "neural checkpoint not consistent with recovered authority");
-        return new Session(b,p,state.nextDecision,state.records,state.last64());
+        return new Session(b,p,state.nextDecision,state.trace(),state.last64());
     }
     static void run(Session s,int until) {
         require(until>=s.next&&until<=END,"bad upper bound");
@@ -262,14 +262,14 @@ public final class Zero3SameLifeRestartV322Regression {
         Zero3OrganismStoreV322 second=new Zero3OrganismStoreV322(dir);
         Zero3OrganismStoreV322.State rollback=second.load();
         require(rollback!=null&&second.generation()==2&&
-                rollback.nextDecision==48&&rollback.records.length==48,
+                rollback.nextDecision==48&&rollback.trace().length==48,
                 "rollback merged torn replay or invented decisions");
         Session fresh=recovered(rollback);
         require(fresh.next==48,"wrong authority after rollback");
         second.save(fresh.save()); // writes ONLY genuine recovered experiences
         Zero3OrganismStoreV322 current=new Zero3OrganismStoreV322(dir);
         require(current.load()!=null&&current.generation()==3&&
-                current.load().records.length==48,
+                current.load().trace().length==48,
                 "recommit after rollback invented experiences");
         Files.write(current.manifestForTest(),new byte[]{1,2,3});
         Zero3OrganismStoreV322 fallback=new Zero3OrganismStoreV322(dir);
