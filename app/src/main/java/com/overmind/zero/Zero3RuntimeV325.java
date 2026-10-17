@@ -155,7 +155,7 @@ public final class Zero3RuntimeV325 implements AutoCloseable {
      */
     public static final class Display {
         public final long episode,solverTicks;
-        public final int decisions,neurons,objects;
+        public final int decisions,neurons,objects,residentReplay,unsavedReplay;
         public final float reserve,priorDamage,cx,cy,doorX,doorY;
         public final boolean dead;
         public final float[] membraneX,membraneY,objectX,objectY;
@@ -164,6 +164,8 @@ public final class Zero3RuntimeV325 implements AutoCloseable {
             episode=r.episode;solverTicks=r.gel.ticks;
             decisions=r.next;neurons=Zero3AutonomousLoopV317.HIDDEN;
             objects=r.world.size();reserve=r.metabolism.reserve();
+            residentReplay=r.residentFullExperiences();
+            unsavedReplay=r.unsavedFullExperiences();
             priorDamage=r.metabolism.previousDecisionDamage();
             dead=r.ended;cx=r.body.cx;cy=r.body.cy;
             doorX=r.room.gateX();doorY=r.room.gateCenterY();
