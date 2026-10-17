@@ -18,6 +18,14 @@ import java.util.*;
  */
 public final class Zero3RuntimeV325 implements AutoCloseable {
     public static final int SUBSTEPS=12;
+    /**
+     * Transitional V3.27 safeguard, NOT the 2000+ experiences goal.
+     * V322B decoder rejects >256 full sensory/action records, and the
+     * nested V324 archive is currently restricted to 8MiB. Stop at a
+     * *verified completed decision* before attempting undurable growth.
+     * V3.28 must implement chunked replay with atomic generation linkage.
+     */
+    public static final int MAX_DURABLE_DECISIONS=240;
     public static final float DT=.025f;
     private static final String OWNER=Zero3AutonomousLoopV317.OWNER;
     private static final long ENCODER_SEED=0x31720261017L;
@@ -167,6 +175,7 @@ public final class Zero3RuntimeV325 implements AutoCloseable {
         return new Display(this);
     }
     public int decisions(){return next;}
+    public boolean atArchiveCapacity(){return next>=MAX_DURABLE_DECISIONS;}
     public long episode(){return episode;}
     public long gelTicks(){return gel.ticks;}
     public float energy(){return metabolism.reserve();}
@@ -235,6 +244,8 @@ public final class Zero3RuntimeV325 implements AutoCloseable {
      */
     public void advanceOneDecision()throws IOException {
         require(!closed&&!inDecision&&!ended,"runtime not ready for a decision");
+        require(next<MAX_DURABLE_DECISIONS,
+                "V3 RESEARCH REPLAY CAPACITY REACHED: SAVE / CHUNKED ARCHIVE NEEDED");
         require(authority.nextDecision()==next&&
                 metabolism.decisions()==next&&
                 replay.size()==next&&trace.size()==next,
