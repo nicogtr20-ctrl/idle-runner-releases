@@ -50,6 +50,9 @@ public final class Zero3RuntimeV325 implements AutoCloseable {
     private boolean inDecision,closed,ended;
     // V330 read-only outcome; never part of neural learning or durable checkpoint.
     private Zero3MotorEvidenceV330.Measure lastMotorEvidence;
+    // V344 immutable REAL metabolic outcome, view-only. Not a second actor,
+    // not reward shaping, and not a new checkpoint field.
+    private Zero3CausalVitalBoundaryV344.After lastVitalOutcome;
     // Opt-in only. Old V324 runtime and its research validation remain
     // restricted to 240; V328 owns separate manifests, not legacy slots.
     private boolean segmented;
@@ -175,7 +178,10 @@ public final class Zero3RuntimeV325 implements AutoCloseable {
         public final long episode,solverTicks;
         public final int decisions,neurons,objects,residentReplay,unsavedReplay;
         public final float reserve,priorDamage,cx,cy,doorX,doorY;
-        public final boolean dead,hasMotorOutcome;
+        public final boolean dead,hasMotorOutcome,hasVitalOutcome;
+        public final float lastEnergyNet,lastEnergyGained,lastEnergyBasal,
+                           lastEnergyMotor,lastEnergyDamage;
+        public final int lastEnergySources;
         public final float lastIntentX,lastIntentY,actualMotorDX,actualMotorDY;
         public final float lastSignedProgress,lastInertiaProjection,lastMuscleCancellation;
         public final float[] membraneX,membraneY,objectX,objectY;
@@ -190,6 +196,17 @@ public final class Zero3RuntimeV325 implements AutoCloseable {
             dead=r.ended;cx=r.body.cx;cy=r.body.cy;
             Zero3MotorEvidenceV330.Measure m=r.lastMotorEvidence;
             hasMotorOutcome=m!=null;
+            Zero3CausalVitalBoundaryV344.After vital=r.lastVitalOutcome;
+            hasVitalOutcome=vital!=null;
+            // Numerical zeros are only valid with hasVitalOutcome=true.
+            // After restoring a V328 snapshot the report remains unavailable
+            // until an actual new physical decision is committed.
+            lastEnergyNet=vital==null?0f:vital.netEnergy;
+            lastEnergyGained=vital==null?0f:vital.actualGained;
+            lastEnergyBasal=vital==null?0f:vital.actualBasal;
+            lastEnergyMotor=vital==null?0f:vital.actualMotor;
+            lastEnergyDamage=vital==null?0f:vital.actualDamage;
+            lastEnergySources=vital==null?0:vital.consumedSources;
             lastIntentX=m==null?0f:m.directionX;
             lastIntentY=m==null?0f:m.directionY;
             actualMotorDX=m==null?0f:m.dx;
@@ -333,10 +350,13 @@ public final class Zero3RuntimeV325 implements AutoCloseable {
             int n=next;
             Zero3SensoryFrameV315 before=Zero3SensoryFrameV315.capture(
                 episode,n,gel.ticks*(double)DT,true,body,skin,gel,world,last64);
-            // V3.27 active somatic interoception: sampled strictly BEFORE
-            // choice, never the energy gain/damage of the pending action.
-            encoder.before(before,metabolism.reserve()/100f,
-                           metabolism.previousDecisionDamage());
+            // V344: same measured PRE vital features as V327, but their
+            // decision/frame/hash lineage is now validated against the one
+            // true V323 ledger. This does not alter a single neural input.
+            Zero3CausalVitalBoundaryV344.Before vitalBefore=
+                Zero3CausalVitalBoundaryV344.before(n,before,metabolism);
+            encoder.before(before,vitalBefore.fuelRatio,
+                           vitalBefore.previousDamage);
             float[] choice=encoder.choose();
             Zero3MotorIntentV316 intent=authority.issue(OWNER,n,
                 (int)cortex.revision(),325,choice[0],choice[1],
@@ -414,6 +434,10 @@ public final class Zero3RuntimeV325 implements AutoCloseable {
                 Zero3FullCausalExperienceV322B.capture(
                     event,before,after,efferences,costs,gripFrames,bilateral);
             metabolism.finish(n,gel.ticks);
+            // Only after the complete actual 12-step physics / metabolism
+            // can a POST outcome be exposed. It cannot affect this choice.
+            lastVitalOutcome=Zero3CausalVitalBoundaryV344.after(
+                vitalBefore,after,metabolism);
             trace.add(event);
             replay.add(record);
             last64=last.clone();
