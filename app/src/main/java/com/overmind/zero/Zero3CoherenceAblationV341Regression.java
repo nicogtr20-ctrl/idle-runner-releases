@@ -409,7 +409,7 @@ public final class Zero3CoherenceAblationV341Regression {
                         ordinal+" arm="+ARMS[eval[i].arm]+" "+
                         episode.summary());
             }
-        int physicalFamilies=0,effWins=0,validWins=0;
+        int physicalFamilies=0,effWins=0,validWins=0,rawFamilies=0;
         for(int f=0;f<4;f++){
             EpisodeStats c=scores[3].family[f],full=scores[1].family[f],
                          old=scores[0].family[f],frozen=scores[2].family[f];
@@ -432,6 +432,7 @@ public final class Zero3CoherenceAblationV341Regression {
                     " arm="+ARMS[selected[i]]+" "+e.summary());
             }
             if(physics)physicalFamilies++;
+            if(raw&&physics)rawFamilies++;
             if(gait&&physics)effWins++;
             if(gait&&raw&&physics)validWins++;
             System.out.printf(Locale.US,
@@ -474,12 +475,13 @@ public final class Zero3CoherenceAblationV341Regression {
                   scores[i].family[3].realSteps)+
                 " cortexUpdates=0");
         }
-        boolean gate=physicalFamilies==4&&validWins>=3&&
+        boolean gate=physicalFamilies==4&&rawFamilies==4&&validWins>=3&&
             boxDirection&&realBilateral&&gripTrue&&blindCounts&&
             Zero3JointWorldV339.unresolved==0&&trainDecisions>=4*2000;
         System.out.printf(Locale.US,
             "V341 SCIENCE_FINAL G3=%s physicalFamilies=%d/4 "+
-            "directionalWins=%d/4 directionalPlusRAWwins=%d/4 "+
+            "directionalWins=%d/4 RAW_WORK_FAMILIES=%d/4 "+
+            "directionalPlusRAWwins=%d/4 "+
             "BOX_positiveBetter=%s BOX_trueBilateral=%s "+
             "BOX_geometry=%d COHERENT_bilateral=%d "+
             "FULL_bilateral=%d OLD_bilateral=%d FROZEN_bilateral=%d "+
@@ -489,7 +491,7 @@ public final class Zero3CoherenceAblationV341Regression {
             "jointAttempts=%d jointRepaired=%d jointUnresolved=%d "+
             "G5_BLOCKED NO_OTA NO_MERGE%n",
             gate?"SCREEN_PASS_NOT_RELEASE":"BLOCKED_FAIL",
-            physicalFamilies,effWins,validWins,boxDirection,realBilateral,
+            physicalFamilies,effWins,rawFamilies,validWins,boxDirection,realBilateral,
             c.geometricOpp,c.bilateral,full.bilateral,old.bilateral,
             frozen.bilateral,gripTrue,blindCounts,trainDecisions,
             trained[3].observedCoherencePenalty,
