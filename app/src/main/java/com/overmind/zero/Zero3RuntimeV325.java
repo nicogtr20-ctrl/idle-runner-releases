@@ -48,6 +48,10 @@ public final class Zero3RuntimeV325 implements AutoCloseable {
     private int next;
     private float[] last64;
     private boolean inDecision,closed,ended;
+    // Opt-in only. Old V324 runtime and its research validation remain
+    // restricted to 240; V328 owns separate manifests, not legacy slots.
+    private boolean segmented;
+    private Zero3SegmentedArchiveV328 segmentedStore;
 
     private Zero3RuntimeV325(long episode,long seed,MotorBrain.Body body,
           Morphology.Surface skin,SymbioteMatterV1 gel,
@@ -175,7 +179,21 @@ public final class Zero3RuntimeV325 implements AutoCloseable {
         return new Display(this);
     }
     public int decisions(){return next;}
-    public boolean atArchiveCapacity(){return next>=MAX_DURABLE_DECISIONS;}
+    public boolean atArchiveCapacity(){
+        return next>=(segmented?Zero3SegmentedArchiveV328.MAX_DECISIONS:
+                       MAX_DURABLE_DECISIONS);
+    }
+    public int durableDecisionLimit(){
+        return segmented?Zero3SegmentedArchiveV328.MAX_DECISIONS:
+                         MAX_DURABLE_DECISIONS;
+    }
+    /** Enable ONLY for an isolated V3 research folder; no V324 migration
+     * is performed until the first valid V328 generation is durably written.
+     */
+    public void enableSegmented(){
+        require(!closed&&!inDecision,"segmented mode only at decision boundary");
+        segmented=true;
+    }
     public long episode(){return episode;}
     public long gelTicks(){return gel.ticks;}
     public float energy(){return metabolism.reserve();}
@@ -244,8 +262,8 @@ public final class Zero3RuntimeV325 implements AutoCloseable {
      */
     public void advanceOneDecision()throws IOException {
         require(!closed&&!inDecision&&!ended,"runtime not ready for a decision");
-        require(next<MAX_DURABLE_DECISIONS,
-                "V3 RESEARCH REPLAY CAPACITY REACHED: SAVE / CHUNKED ARCHIVE NEEDED");
+        require(!atArchiveCapacity(),
+                "V3 RESEARCH ARCHIVE CAPACITY REACHED: SAVE BEFORE NEXT DECISION");
         require(authority.nextDecision()==next&&
                 metabolism.decisions()==next&&
                 replay.size()==next&&trace.size()==next,
@@ -360,6 +378,73 @@ public final class Zero3RuntimeV325 implements AutoCloseable {
             new Zero3SurvivalArchiveV323.Bundle(causal,metabolism.checkpoint());
         return new Zero3RoomArchiveV324.Bundle(
             survival,Zero3RoomStateV324.capture(room,world));
+    }
+    /**
+     * V3.28 compact active life + content-addressed FULL historical journal.
+     * The old snapshot()/save() path remains V324 for scientific regressions;
+     * all new V3 Android sessions use this path, preserving legacy V3 data.
+     */
+    public Zero3SegmentedArchiveV328.Bundle segmentedSnapshot()throws IOException{
+        require(segmented&&!closed&&!inDecision&&next>0&&
+                next==metabolism.decisions()&&next==replay.size()&&
+                next==trace.size()&&authority.nextDecision()==next,
+                "V328 requires complete matching actor/physics/energy replay");
+        Zero3OrganismStoreV322.State organ=Zero3OrganismStoreV322.capture(
+                episode,next,rngState,encoder,cortex,grip,
+                body,skin,gel,world,last64,trace);
+        return new Zero3SegmentedArchiveV328.Bundle(
+                organ,metabolism.checkpoint(),
+                Zero3RoomStateV324.capture(room,world),replay);
+    }
+    public void saveSegmented(Path privateV3Folder)throws IOException{
+        require(segmented,"V328 save not enabled");
+        if(segmentedStore==null){
+            segmentedStore=new Zero3SegmentedArchiveV328(privateV3Folder);
+            Zero3SegmentedArchiveV328.Bundle prev=segmentedStore.load();
+            if(prev!=null)
+                require(prev.organism.episodeId==episode&&
+                        prev.decisions()<=next,
+                        "V328 refuses overwriting different or future V3 brain");
+            else if(Zero3SegmentedArchiveV328.hasAny(privateV3Folder))
+                throw new IOException("V328 corrupted existing history: fail closed");
+        }
+        segmentedStore.save(segmentedSnapshot());
+        segmentedStore.pruneOrphans();
+    }
+    public static Zero3RuntimeV325 loadSegmented(Path privateV3Folder)
+            throws IOException{
+        Zero3SegmentedArchiveV328 disk=
+            new Zero3SegmentedArchiveV328(privateV3Folder);
+        Zero3SegmentedArchiveV328.Bundle b=disk.load();
+        if(b==null){
+            if(Zero3SegmentedArchiveV328.hasAny(privateV3Folder))
+                throw new IOException("both V328 generations invalid; no reset");
+            // Explicit V324 research migration only; no legacy 2.2 slot.
+            Zero3RuntimeV325 earlier=load(privateV3Folder);
+            if(earlier!=null)earlier.enableSegmented();
+            return earlier;
+        }
+        Zero3OrganismStoreV322.State s=b.organism;
+        Zero3OrganismStoreV322.Physical physical=s.physical();
+        Zero3RoomStateV324.Restored restored=b.room.restore(physical.world);
+        Zero3SurvivalLedgerV323 fuel=
+            new Zero3SurvivalLedgerV323(100f,0f,0f,false);
+        fuel.restore(b.survival);
+        Zero3RuntimeV325 result=new Zero3RuntimeV325(s.episodeId,s.lastRngState,
+            physical.body,physical.skin,physical.gel,restored.objects,
+            restored.room,fuel,s.nextDecision,Arrays.asList(s.trace()),
+            b.experiences(),s.last64(),true);
+        try{
+            s.restoreModules(result.encoder,result.cortex,result.grip);
+            require(result.encoder.updates()==s.nextDecision&&
+                    result.grip.updates()==s.nextDecision,
+                    "V328 neural replay and restored authority disagree");
+            result.segmented=true;result.segmentedStore=disk;
+            return result;
+        }catch(IOException|RuntimeException bad){
+            result.close();
+            throw new IOException("V328 segmented cold restore rejected",bad);
+        }
     }
     /** Isolated caller-provided app-private V3 path. Never save 2.2 prefs. */
     public void save(Path privateV3Folder)throws IOException {
