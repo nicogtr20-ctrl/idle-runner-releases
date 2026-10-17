@@ -17,7 +17,7 @@ I gate di V322/B hanno dimostrato ripresa di 20 vite per neuroni, memoria PRE/PO
 
 ## Protocollo e verifiche
 
-**Gate preregistrato prima della lettura conclusiva dei risultati**: 5 tipologie fisiche × 2 vite ciascuna; ciascuna vita contiene 96 decisioni e 12 passi del gel per decisione. Passare solo se per tutte le vite:
+**Gate iniziale verificato sulla CI 39026578485**: 5 tipologie fisiche × 2 vite ciascuna (10/10 PASS; Android Debug BUILD SUCCESSFUL). **Estensione successiva, non blind originale**, a 5 tipologie × 5 vite ciascuna (25 casi, 2.400 decisioni per gruppo) nella CI del commit `a9e41f7c3e7b22d73cb8a83f8cd2e08e9ddd671d`;  ciascuna vita contiene 96 decisioni e 12 passi del gel per decisione. Passare solo se per tutte le vite:
 1. Due generazioni 24+24 decisioni, riavvio JVM alla 48, stessa vita fino a 96, test di riferimento 96 ininterrotte.
 2. Identità dello snapshot V324 completa, hash corpo e stanza, replay integrale e variabili metaboliche identici; `cmp` sui file prova.
 3. NESSUN oggetto `room.food` duplicato/orfano, checkpoint rifiutato quando il food non appartiene alla lista degli oggetti.
@@ -32,3 +32,7 @@ I gate di V322/B hanno dimostrato ripresa di 20 vite per neuroni, memoria PRE/PO
 **Non è integrazione V3 live in `GameActivity`**, né aggiornamento di `GameSceneSnapshot` versione legacy. I 12 slot 2.2 sono protetti e OTA172 non si tocca. La camera nello screening multi-vita è **deliberatamente posizionata lontano dal corpo**, così si testa la persistenza con mondo multi-oggetto e senza introdurre una manipolazione artificiale del gate mentre si addestra il cervello. La meccanica dei contatti bilaterali viene verificata separatamente con due patch controllate, che non possono essere contate come abilità autonoma di ZERO.
 
 Per il futuro: adapter esplicito sul runtime GameActivity 3.0 e il suo ciclo fisico completo (room/shelter/world/metabolism/risorse), provenienza di ogni decisione ed energia/danno reali negli input neurali quando disponibili, crash/restart su Galaxy S21, più seed e scene, benchmark G3 su locomozione e presa **acquisite** contro policy vergine/frozen. G3 locomozione, G5 world model, crescita neurale e UI 3.0 rimangono aperti. Nessun merge verso main OTA e nessuna pubblicazione APK.
+
+## Evidenza intermedia 10 casi
+
+[CI 39026578485 SUCCESS](https://github.com/nicogtr20-ctrl/idle-runner-releases/actions/runs/39026578485): il test separato `REAL_GATE_PHYSICS_BILATERAL_MEMORY=PASS` ha misurato **1 evento di presa bilaterale fisica con comandi fissati dal banco**, conservando lo stesso stato dopo 8 frame; la sequenza di controllo per dieci vite (FREE/BOX/DISK/FAR/BOX+DISK × 2) ha riportato **10/10 PASS** sul confronto bytewise di snapshot neurale/gel/risorsa/stanza/metabolismo/replay, con tutti i rollback validi e Android `BUILD SUCCESSFUL`. La prima CI aveva trovato un errore reale di interazione gate+box: `room.solveGate` sovrascriveva il campo condiviso `skin.gripHold`; corretta nel banco chiamando il compositore dei proprietari `GripSurfaceComposition.compose(skin,room,world)` dopo il solver. La CI successiva è verde. **La serie da 25 è stata avviata dopo questi primi 10 risultati:** non spacciarla per holdout originario e non dichiararla PASS fino al log definitivo.
