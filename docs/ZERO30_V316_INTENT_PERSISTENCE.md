@@ -25,4 +25,48 @@ Checkpoint dopo 4, 8, 12, 16 episodi (intero replay e SHA256); verificare che gl
 
 ## Risultati verificati
 
-*Solo dopo verifica GitHub Actions effettiva.*
+Risultati della CI registrati a seguire, dopo verifica dei log.
+
+
+## RISULTATI VERIFICATI — CI definitiva 39015142772 (17/10/2026)
+
+**[GitHub Actions 39015142772](https://github.com/nicogtr20-ctrl/idle-runner-releases/actions/runs/39015142772): SUCCESS TECNICO E GATE INFRASTRUTTURA V3.16 PASS.** Risultato definitivo letto dai log della job `117345602962`. Le classi Java nuove `Zero3MotorIntentV316`, `Zero3ExperienceJournalV316`, `Zero3IntentPersistenceV316Regression` sono state compilate contro le reali sorgenti del solver e della percezione V3.15, senza stub e senza modificare la fisica produttiva.
+
+### Evidenza fisica e persistente
+
+| Proprietà | Risultato |
+|---|---|
+| Episodi | **16**, split per episodio FIT=8 / CAL=4 / BLIND=4 |
+| Decisioni/azioni effettivamente eseguite nel solver | **2.048**; *generate dal controller di laboratorio, NON apprese* |
+| Integrazioni fisiche comprese le 96 warm-up per episodio | **3.584** |
+| Checkpoint completi | **4**, ogni 512 esperienze |
+| Replay ricaricato in byte integrali, non sommari | **2.048/2.048**; ogni payload di esperienza confrontato bit per bit con la versione RAM |
+| Sottosistemi serializzati per frame | 96×12 membrana, 16 raggi, 48 propriocezioni, 74×7 fluido, 64 efferenze precedenti, corpo fisico/time/ticks/provenance/availability flags; PRE e POST entrambi |
+| Comando corrente e intenzione | 64 richiesti + 64 applicati, id episodio/decisione/revisione, vettore di intenzione, adesione, durata e confidenza esplicitamente stimata |
+| Proprietario unico delle intenzioni | Seconda istanza autorità e doppia emissione decisionId rifiutate **nel processo corrente**; owner post-chiusura non può emettere |
+| Scatole: frame con vero contatto | **512** |
+| Scatole: frame con presa fisica valida | **252** |
+| Dischi: frame con `touchPulse` | **314**; valore specifico di questa V3.16, non confondere con 229 della V3.15 |
+| SHA-256 e generation switch | File intero e manifest verificati; un checkpoint usa lo slot opposto, scrittura+fsync e `ATOMIC_MOVE` obbligatorio, manifest aggiornato dopo il blob |
+| Ultima generazione troncata/corrotta | Recuperate **1.536** esperienze precedenti verificabili, NON le 2.048 danneggiate |
+| Manifest principale corrotto | Recuperati **1.536** record verificati tramite manifest di backup |
+| Nuovo checkpoint dopo rollback | Conservate esattamente **1.536** esperienze, senza reinserire la coda persa; backup ricostruito dalla generazione verificata |
+| Entrambe le generazioni non valide / nessun manifest verificabile | **Fail closed**, non inventa esperienze o sceglie un file candidato non confermato |
+
+**Checksum diagnostico V3.16:** post-hash dell'ultima esperienza `67256990ad945ffc`, che NON è una firma crittografica. I file e il manifest usano invece **SHA-256** per integrità accidentale (non prova di autenticità contro chi controlla il filesystem). **CI definitiva: `ZERO3 V316 GATE=PASS`; `G3_BLOCKED G5_BLOCKED NO_OTA`.**
+
+### Revisione critica prima della decisione
+
+Una prima CI [39014965037](https://github.com/nicogtr20-ctrl/idle-runner-releases/actions/runs/39014965037) era tecnicamente verde già con 2.048 record. Nell'audit successivo ho corretto **due debolezze reali**: (a) il contratto owner allora vietava duplicati per istanza, ma consentiva due diverse istanze di Authority per lo stesso episodio; ora la registrazione di ownership è univoca **nel processo** e il test ne prova il rigetto; (b) dopo ripresa da backup con `active.mf` corrotta, la creazione della nuova generazione non deve copiare un manifest non valido sopra quello di rollback: il precedente viene ricostruito **solo dal blob verificato**. La CI finale 39015142772 ha superato una prova aggiuntiva di *recommit dopo rollback*; la versione precedente è superata. Il formato ora conserva anche `sourceRevision` dell'intenzione. Non effettuare patch posteriori al corpo o ricontare le scelte come neuro-apprendimento.
+
+### Limiti precisi e prossimo gate
+
+- Questo è un **journal di esperienze E2**, **NON un `BrainSnapshotV3`**. Non contiene pesi/optimizer/gru/neuroni/skills, né può far ripartire una vita fisica dal medesimo corpo: per ciò serviranno snapshot veri di corpo, RNG, world e policy.
+- L'atomicità provata è su GitHub Actions Linux con `ATOMIC_MOVE` e `fsync`; **non** è validazione Android/Galaxy S21, battery-loss o filesystem di produzione. Un evento in RAM successivo al checkpoint non è durabile. Le proprietà di sync della directory sono best effort dove supportate: non promettere recupero garantito da power loss su ogni dispositivo.
+- `IntentAuthority` impedisce un secondo proprietario **nello stesso processo**; dopo morte/restart le autorizzazioni devono derivare da recovery di episodeId/controllerRevision e da un vero coordinatore centrale, non da una static map. Il nome del controller del laboratorio resta una fonte *test-only*, non un actor neurale.
+- Energia/danno restano assenti (flag non disponibili); la serializzazione rifiuta falsi flag di disponibilità nel lab, non inventa uno stato di sopravvivenza. Da integrare gli input reali prima del rilascio.
+- La nuova UI 3.0, memoria di abilità, GRU, encoder neurale, plasticità, neurogenesi, decisioni autonome e G3/G5 rimangono **NON completati**. I 2.048 eventi NON provano miglioramento di ZERO nel camminare.
+
+**Prossimo deliverable secondo il Master:** prototipo di coordinatore `MotorIntentV3` → cortex con provenienza univoca e vero encoder temporale su questi frame, train/holdout disgiunti e confronto con baselines, poi E3 **closed-loop** su minimo 2.000 decisioni **scelte dal nuovo actor**, con retained skill/memoria e mondi mai usati per fitting. Prima dell'APK servono anche checkpoint completi/resume del brain e QA salvataggi 12 slot, CPU/RAM Galaxy S21 e UI 3.0 con dati read-only.
+
+**Stato release:** PR #87 resta DRAFT, nessun merge su produzione; OTA stabile **0.11.6-ota.172**; i 12 slot 2.2 non sono stati modificati.
