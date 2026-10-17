@@ -5,6 +5,7 @@ on:
     paths:
       - 'app/src/main/java/com/overmind/zero/Zero3BoxSubstageForensicV335Regression.java'
       - 'app/src/main/java/com/overmind/zero/Zero3ExactFaceTrialV336Regression.java'
+      - 'app/src/main/java/com/overmind/zero/Zero3ContactTopologyExperimentV336.java'
       - 'app/src/main/java/com/overmind/zero/SquareGripPuzzle.java'
       - 'app/src/main/java/com/overmind/zero/SquareCollisionSolver.java'
       - '.github/workflows/zero30-v336-exact-index-qa.yml'
@@ -31,7 +32,7 @@ jobs:
           match=re.search(r'^\s*(javac -d /tmp/overmind [^\n]+)',s,re.M)
           if not match: raise RuntimeError("baseline physical source compiler unavailable")
           r='app/src/main/java/com/overmind/zero/'
-          names='Zero3LearningFoundation Zero3MotorResponseKernel Zero3MotorRetentionRegression Zero3MotorPromotionGate Zero3MotorImpulseResponseRegression Zero3MotorLocalFrameV310Regression Zero3SensoryFrameV315 Zero3CausalRecorderV315 Zero3SensoryContractV315Regression Zero3MotorIntentV316 Zero3AutonomousLoopV317 Zero3LearnedAdhesionV318 Zero3LearnedAdhesionV318Regression Zero3ContextAdhesionV319 Zero3ContextAdhesionV319Regression Zero3MotorHeadStoreV320 Zero3NeuralBundleStoreV321 Zero3OrganismStoreV322 Zero3FullCausalExperienceV322B Zero3FullArchiveStoreV322B Zero3MultiSceneRestartV322BRegression Zero3FiveArmAblationV333Regression Zero3BoxCrossingForensicV334Regression Zero3BoxSubstageForensicV335Regression Zero3ExactFaceTrialV336Regression'
+          names='Zero3LearningFoundation Zero3MotorResponseKernel Zero3MotorRetentionRegression Zero3MotorPromotionGate Zero3MotorImpulseResponseRegression Zero3MotorLocalFrameV310Regression Zero3SensoryFrameV315 Zero3CausalRecorderV315 Zero3SensoryContractV315Regression Zero3MotorIntentV316 Zero3AutonomousLoopV317 Zero3LearnedAdhesionV318 Zero3LearnedAdhesionV318Regression Zero3ContextAdhesionV319 Zero3ContextAdhesionV319Regression Zero3MotorHeadStoreV320 Zero3NeuralBundleStoreV321 Zero3OrganismStoreV322 Zero3FullCausalExperienceV322B Zero3FullArchiveStoreV322B Zero3MultiSceneRestartV322BRegression Zero3FiveArmAblationV333Regression Zero3BoxCrossingForensicV334Regression Zero3BoxSubstageForensicV335Regression Zero3ContactTopologyExperimentV336 Zero3ExactFaceTrialV336Regression'
           subprocess.run(shlex.split(match.group(1))+[r+n+'.java' for n in names.split()],check=True)
           PY
       - name: Replicate exact V333 censors and record first point/link per operation
@@ -48,6 +49,7 @@ jobs:
           set -euo pipefail
           java -Xmx1900m -cp /tmp/overmind com.overmind.zero.Zero3ExactFaceTrialV336Regression | tee /tmp/v336-face.log
           grep -q 'V336 FACE_TRIAL totalMatchedBirths=6' /tmp/v336-face.log
+          grep -q 'V336 COMBINED_TRIAL matchedBirths=6' /tmp/v336-face.log
           grep -q 'G3_BLOCKED G5_BLOCKED NO_OTA' /tmp/v336-face.log
       - name: Always deny G3 promotion without independent long-run proof
         run: echo 'V336_PER_INDEX_DIAGNOSTIC_ONLY G3_BLOCKED G5_BLOCKED NO_OTA'
