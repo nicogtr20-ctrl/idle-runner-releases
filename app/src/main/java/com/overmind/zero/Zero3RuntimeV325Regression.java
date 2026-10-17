@@ -19,7 +19,8 @@ public final class Zero3RuntimeV325Regression {
     private static void check(boolean ok,String message){
         if(!ok)throw new AssertionError("ZERO3 V325 "+message);
     }
-    private static Zero3RuntimeV325 virgin()throws Exception{
+    private static Zero3RuntimeV325 virgin()throws Exception{return virgin(EPISODE);}
+    private static Zero3RuntimeV325 virgin(long identity)throws Exception{
         int pose=(ORDINAL+3)%4;
         float angle=(float)(-.73+ORDINAL*.219);
         Zero3MotorImpulseResponseRegression.Scenario s=
@@ -44,7 +45,7 @@ public final class Zero3RuntimeV325Regression {
         }
         ScarcityLab room=new ScarcityLab(s.body.cx+125,s.body.cy);
         world.add(room.food);
-        return Zero3RuntimeV325.newborn(EPISODE,WORLD_SEED,
+        return Zero3RuntimeV325.newborn(identity,WORLD_SEED,
             s.body,s.skin,s.gel,world,room,75f+(ORDINAL%6)*2f,68.7f);
     }
     private static void advance(Zero3RuntimeV325 runtime,int target)throws Exception{
@@ -125,6 +126,14 @@ public final class Zero3RuntimeV325Regression {
         Zero3RoomArchiveV324.Bundle latest=store.load();
         check(latest!=null&&store.generation()==3,
               "no 3-generation V325 same-life state");
+        // A separate V3 organism cannot replace the verified archive,
+        // even if it has already lived one genuine physics decision.
+        try(Zero3RuntimeV325 foreign=virgin(EPISODE+100000L)){
+            foreign.advanceOneDecision();
+            boolean blocked=false;
+            try{foreign.save(dir);}catch(IOException expected){blocked=true;}
+            check(blocked,"foreign episode wrote another organism's archive");
+        }
         damage(store.latestFile());
         try(Zero3RuntimeV325 recovered=Zero3RuntimeV325.load(dir)){
             check(recovered!=null&&recovered.decisions()==48&&
@@ -143,7 +152,15 @@ public final class Zero3RuntimeV325Regression {
         damage(previous.latestFile());damage(previous.oldFile());
         check(Zero3RuntimeV325.load(dir)==null,
               "two corrupted generations recovered invalid data");
-        System.out.println("ZERO3 V325 FAULT=PASS ROLLBACK_EXACT=48 DOUBLE_BAD_FAIL_CLOSED");
+        // A missing VERIFIED generation with old files on disk is corruption,
+        // not permission to overwrite somebody's memories.
+        try(Zero3RuntimeV325 fresh=virgin()){
+            fresh.advanceOneDecision();
+            boolean blocked=false;
+            try{fresh.save(dir);}catch(IOException expected){blocked=true;}
+            check(blocked,"damaged archive silently overwritten by virgin life");
+        }
+        System.out.println("ZERO3 V325 FAULT=PASS ROLLBACK_EXACT=48 DOUBLE_BAD_FAIL_CLOSED FOREIGN_REJECTED NO_SILENT_RESET");
     }
     private static void damage(Path file)throws Exception{
         try(RandomAccessFile f=new RandomAccessFile(file.toFile(),"rw")){
