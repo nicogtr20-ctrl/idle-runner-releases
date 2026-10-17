@@ -1,5 +1,8 @@
 # ZERO 3.0 — CONTRATTO DI IMPLEMENTAZIONE, TEST E HANDOFF TRA CHAT
 
+> **V3.39 — NUOVO PREREG SCIENTIFICO MOTORE IN CORSO:** [protocollo prereg autonomo](ZERO30_V339_AUTONOMOUS_GAIT_ABLATION.md), codice sperimentale `Zero3AutonomousGaitV339Regression` (3 learning policies independent closed-loop V317, V319 frozen, real gel, V338 joint after final WORLD). TRAIN ordinal 900..931 32×96, BLIND 960..983 24×96 =2304 decisioni/arm e 27648 frame/arm, 4 famiglie. Bilaterale autentico, credito locale temporale FULL vs OLD vs FROZEN, no own-arm efference copying. Cortex snapshot proof a boundary, full world restart ancora requisito distinto; quality gate G3 richiede 0 fisica invalida/censor, 3/4 directional+work, signed BOX positivo, bilaterale e presa, 2000+ decisions realmente completate e learned updates. CI ancora da verificare; G3/G5 BLOCKED, PR #87 DRAFT, NO OTA/merge, 12 slot V2.2 intatti.
+
+
 > **V3.38D MECHANICAL INDEPENDENT SCREEN PASS MA NON G3:** [rapporto V338](ZERO30_V338_JOINT_CONSTRAINT_PROTOCOL.md), [CI indipendente 39052563493](https://github.com/nicogtr20-ctrl/idle-runner-releases/actions/runs/39052563493). 12 nuove BOX scene, 2.016 vere scelte V317/arm con nastro stesso BASE e 24.192 world frames/arm, risultato candidate 0 cross/throughBox/embedded/invalid, 1 joint tentato/riparato, costo gel identico; bilaterale 817=340→340, 821=718→718, 825=8→8, altre 9 NON_TESTED; campo `safeCases=3/12` richiede grip positivo e non indica 9 difetti. V338 mode6 laboratory-only postWORLD, snapshot post-gel, non in app. V339 nuovo blind multi-famiglia e confronto autonomia trained/frozen/old, persistenza/restart e >2k decisioni, prima sblocco G3 o G5. PR #87 DRAFT, NO APK OTA, legacy unchanged.
 
 
