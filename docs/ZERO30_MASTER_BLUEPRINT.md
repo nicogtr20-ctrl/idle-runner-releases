@@ -1,5 +1,8 @@
 # OVERMIND ZERO 3.0 — MASTER BLUEPRINT (DOCUMENTO CANONICO)
 
+> **Checkpoint V3.26 (17/10/2026):** [rapporto](ZERO30_V326_ANDROID_ENTRY.md) · [CI SUCCESS 39030669596](https://github.com/nicogtr20-ctrl/idle-runner-releases/actions/runs/39030669596). Un Activity V3 sperimentale non esportato è accessibile con conferma dal menu LABORATORI di GameActivity, senza usare i 12 slot legacy. Una nuova nascita di gel reale 96 patch/74 particelle non usa più le classi Regression; runtime decide e salva su cartella privata V3, mostra al Canvas solo misure reali del corpo e del mondo e offre creazione/ripresa/x1/x5/pausa e salvataggio. In JVM indipendenti, 12+restart+12 decisioni = 24 ininterrotte bitwise, rollback e rifiuto episodio estraneo PASS, build Android Debug PASS. **Non è ancora sull'APK installato**, no test su Galaxy S21, energia ancora non percepita dal cervello, G3/G5/G9/UI finale aperti. PR #87 Draft, no merge/OTA172, 12 cervelli 2.2 intatti.
+
+
 > **Checkpoint V3.25 (17 ottobre 2026):** [rapporto tecnico](ZERO30_V325_RUNTIME_BOUNDARY.md) · [CI definitiva 39029780647 PASS](https://github.com/nicogtr20-ctrl/idle-runner-releases/actions/runs/39029780647). Primo `Zero3RuntimeV325` indipendente dal runner di regressione: unico owner di scelte/rete/cortex/adesione/gel fisico/stanza/riserva e journaling causale+snapshot, con `Zero3AndroidSessionV325` compilata per un percorso Android privato V3 non collegato a GameActivity. 25/25 vite, 96 decisioni ciascuna con riavvio a 48, confronto bytewise, terminale da energia zero e rifiuto episodi estranei/doppia corruzione, Android Debug SUCCESS. **Solo gate LAB JVM; G3 locomozione, G5 world model, G9 device e UI 3.0 NON chiusi.** OTA172 e 12 slot 2.2 non toccati.
 
 
