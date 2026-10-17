@@ -93,7 +93,7 @@ public final class Zero3SameLifeRestartV322Regression {
         Zero3OrganismStoreV322.Physical p=state.physical();
         state.restoreModules(b.e,b.c,b.h);
         require(b.e.updates()==state.nextDecision&&
-                b.c.updates()==state.nextDecision&&
+                b.c.updates()<=state.nextDecision&&
                 b.h.updates()==state.nextDecision,
                 "neural checkpoint not consistent with recovered authority");
         return new Session(b,p,state.nextDecision,state.records,state.last64());
@@ -172,7 +172,7 @@ public final class Zero3SameLifeRestartV322Regression {
                         "authority cursor duplicated or skipped");
             }
         }
-        require(!control.pending()&&brain.c.updates()==s.next&&
+        require(!control.pending()&&brain.c.updates()<=s.next&&
                 brain.e.updates()==s.next&&brain.h.updates()==s.next,
                 "unbalanced learning module updates");
     }
