@@ -119,6 +119,16 @@ public final class Zero3SurvivalLedgerV323 {
     }
     public int decisions(){return next;}
     public float reserve(){return reserve;}
+    /** Only the PRIOR completed physical event may enter PRE sensing. */
+    public float previousDecisionDamage(){
+        good(!active,"cannot observe unfinished current metabolic decision");
+        return history.isEmpty()?0f:history.get(history.size()-1).damage;
+    }
+    /** Real energy spent on adverse material contacts across this life. */
+    public float observedDamageTotal(){
+        good(!active,"unfinished energy observation");
+        return negativeContactEnergy;
+    }
     public boolean scarcity(){return scarcity;}
     public float basalSpent(){return basalSpent;}
     public float motorSpent(){return motorSpent;}
