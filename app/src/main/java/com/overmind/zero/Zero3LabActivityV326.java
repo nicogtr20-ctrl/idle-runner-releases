@@ -61,9 +61,9 @@ public final class Zero3LabActivityV326 extends Activity {
         row(root,"AVVIA x1","AVVIA x5",()->start(1),()->start(5));
         row(root,"PAUSA E SALVA","TORNA ALLA 2.2",
              ()->stopAndSave(false),()->{stopAndSave(true);});
-        addText(root,"LIMITE V3 SPERIMENTALE: massimo 240 decisioni "+
-            "salvabili per vita, finché il journal non sarà suddiviso in "+
-            "segmenti. Al limite, il test si interrompe e conserva il checkpoint.",
+        addText(root,"V3 SPERIMENTALE: replay a segmenti immutabili (V3.28), "+
+            "limite provvisorio di 3.500 decisioni per vita. "+
+            "Le prestazioni vanno ancora verificate sul Galaxy S21.",
             12,0xffffc98c);
         addText(root,"Ogni decisione = 12 passi fisici. Salvataggio automatico "+
             "ogni 8 decisioni completate; nessun salvataggio a metà di un'azione. "+
@@ -137,8 +137,8 @@ public final class Zero3LabActivityV326 extends Activity {
                     if(session.ended()){show("ZERO ha esaurito l'energia.");break;}
                     if(session.atArchiveCapacity()){
                         show("Limite del replay V3: "+
-                            Zero3RuntimeV325.MAX_DURABLE_DECISIONS+
-                            " decisioni. Salvataggio protetto; serve archivio scalabile.");
+                            session.durableDecisionLimit()+
+                            " decisioni. Salvataggio protetto per questo test.");
                         break;
                     }
                     session.step();
