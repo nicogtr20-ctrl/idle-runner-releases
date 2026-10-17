@@ -237,6 +237,15 @@ public final class Zero3IntegratedRestartV321Regression {
         Zero3NeuralBundleStoreV321.Bundle saved=disk.load();
         require(saved!=null&&disk.generation()==2&&saved.nextEpisode==8,
                 "cross JVM bundle not found");
+        Modules mismatch=new Modules();
+        Zero3LearningFoundation.AdaptiveCortex wrongRate=
+            new Zero3LearningFoundation.AdaptiveCortex(0f);
+        boolean refused=false;
+        try{saved.restore(mismatch.encoder,wrongRate,mismatch.head);}
+        catch(IllegalStateException expected){refused=true;}
+        require(refused&&mismatch.encoder.updates()==0&&
+                mismatch.head.updates()==0,
+                "mismatched cortex rate caused a partially restored brain");
         Modules m=new Modules();m.restore(saved);
         require(m.encoder.updates()==768&&m.head.updates()==768,
                 "neural update counters not restored");
