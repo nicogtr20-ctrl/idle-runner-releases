@@ -195,6 +195,14 @@ public final class Zero3IntentPersistenceV316Regression {
         for(int i=0;i<1536;i++)
             check(fallback.records().get(i).sameData(all.get(i)),
                   "corruption changed previously confirmed real sensory data");
+        // Re-commit only the VERIFIED recovered 1536 events. This also
+        // exercises the critical case where the previous primary manifest
+        // still references the now-corrupt old generation: never copy it
+        // over the only valid rollback pointer.
+        fallback.checkpoint();
+        Zero3ExperienceJournalV316 repaired=new Zero3ExperienceJournalV316(folder);
+        check(repaired.load()&&repaired.size()==1536&&repaired.generation()==4,
+              "checkpoint after rollback retained speculative lost events");
         // Corrupt the primary pointer as well: the fully-verified previous
         // generation is the only safe fallback, NEVER a raw uncommitted slot.
         Files.write(journal.activeManifestForTest(),new byte[]{0,1,2,3,4});
@@ -213,7 +221,7 @@ public final class Zero3IntentPersistenceV316Regression {
             "fullSensoryRoundtrips=2048 typedSoleOwner=true "+
             "boxContactFrames=%d genuineGripFrames=%d diskPulseFrames=%d "+
             "finalTailHash=%016x rollbackAfterCorruptNewest=1536 "+
-            "rollbackAfterCorruptManifest=1536 bothGenerationsDamagedFailClosed=true%n",
+            "rollbackAfterCorruptManifest=1536 recommitRecoveredOnly=1536 bothGenerationsDamagedFailClosed=true%n",
             e.live,e.gelSteps,e.checkpoints,e.solidTouch,e.holdFrames,
             e.diskPulse,tailBefore);
         System.out.println("ZERO3 V316 GATE=PASS durableTwoGenerations=true "+
