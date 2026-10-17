@@ -198,9 +198,11 @@ public final class Zero3LabActivityV326 extends Activity {
                 "VITA %d   •   DECISIONI %d   •   ENERGIA %.1f/100\n"+
                 "DANNO FISICO PRECEDENTE %.1f  •  INPUT VITALE FUSO\n"+
                 "MATERIA 96 patch + 74 particelle interne   •   %d oggetti\n"+
-                "GEL %d passi   •   CERVELLO ricorrente: %d stati%s",
+                "GEL %d passi   •   CERVELLO ricorrente: %d stati\n"+
+                "REPLAY COMPLETO IN RAM: %d record  •  NON SALVATI: %d%s",
                 s.episode,s.decisions,s.reserve,s.priorDamage,s.objects,
-                s.solverTicks,s.neurons,s.dead?"   •   VITA TERMINATA":""));
+                s.solverTicks,s.neurons,s.residentReplay,s.unsavedReplay,
+                s.dead?"   •   VITA TERMINATA":""));
             status.setText(message);body.invalidate();
         });
     }
