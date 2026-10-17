@@ -1,5 +1,7 @@
 # ZERO 3.0 — NUOVA INTERFACCIA GIOCO, IMPOSTAZIONI, CERVELLO, NEURONI, ABILITÀ ED EVOLUZIONE
 
+> **V3.34 RILEVAMENTO ANOMALIA SOLO QA (17/10/2026):** [audit](ZERO30_V334_BIRTH_TO_CONTACT_CROSSING_AUDIT.md). `gel.invalid=0` non basta a considerare buona la topologia membrana dopo la collisione BOX; QA osserva `selfCrossings=1` su specifiche pose e non attribuisce l'errore all'apprendimento V3. Nessuna UI/neurone/abilità è stata aggiunta; eventuale metrica future HUD dovrà leggere il segnale reale post-world, non una ricompensa stimata. G3 resta bloccato.
+
 > **V3.33 LAB (17/10/2026), NESSUNA NUOVA ABILITÀ CONVALIDATA:** [report](ZERO30_V333_LOCAL_DELAY_BILATERAL_ABLATION.md). 5-arm ablation FULL/local+delay mostra 586 frame bilaterali su 5 vite BOX valide ma NON 6/6; BOX signed ancora -2,13765, una vita censurata per self-intersection morfologica condivisa, scienza FAIL. Non mostrare skill camminata/manipolazione acquisita, né falsi status PASS nella UI reale. V333 non entra nel runtime live/OTA.
 
 > **V3.32 METRICHE DI LAB (17/10/2026):** [rapporto](ZERO30_V332_TEMPORAL_LOCAL_CREDIT.md). Il prototipo del credito locale/delayed ottiene un gate preliminare 4/4 su 24 vite BLIND, ma BOX_NEAR signed continua NEGATIVO e `bilateralFrames=1` vs OLD55/FROZEN588; NON visualizzare una skill locomozione o manipolazione conquistata. `weightUpdates=2258` sono veri, `creditCalls=3021` non sono pesi aggiunti né neuroni nati. V332 non entra in live/UI; l'unica UI V3 sperimentale mostra osservazioni authentic V330.
