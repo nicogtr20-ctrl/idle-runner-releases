@@ -46,8 +46,14 @@ public final class Zero3LongLifeV328Regression {
             r.advanceOneDecision();
             // Checkpoints at established decision boundaries. Reuse immutable
             // sealed segments: no need to rewrite history inside neural blob.
-            if(directory!=null&&r.decisions()%128==0)
+            if(directory!=null&&r.decisions()%128==0){
                 r.saveSegmented(directory);
+                yes(r.residentFullExperiences()<=32&&
+                    r.unsavedFullExperiences()==0,
+                    "V329 full past experiences still resident after durable checkpoint");
+            }
+            if(directory!=null&&r.residentFullExperiences()>160)
+                throw new AssertionError("V329 decoded replay memory exceeded bounded cache");
         }
         yes(r.decisions()==target&&r.completeExperiences()==target&&
             r.encoderUpdates()==target&&r.gripUpdates()==target,
@@ -87,7 +93,8 @@ public final class Zero3LongLifeV328Regression {
     }
     static void resume(Path dir,Path out)throws Exception {
         try(Zero3RuntimeV325 r=Zero3RuntimeV325.loadSegmented(dir)){
-            yes(r!=null&&r.episode()==EPISODE&&r.decisions()==STOP,
+            yes(r!=null&&r.episode()==EPISODE&&r.decisions()==STOP&&
+                r.residentFullExperiences()<=32,
                 "cold load did not restore exact authority");
             advance(r,TARGET,dir);r.saveSegmented(dir);
             evidence(out,r);
@@ -105,6 +112,7 @@ public final class Zero3LongLifeV328Regression {
         // Each live manifest remains a compact brain/physical/energy snapshot.
         yes(Files.size(archive.currentManifest())<2*1024*1024,
             "unbounded neural/physics manifest");
+        System.out.println("V328 V329_BOUNDED_FULL_REPLAY_RESIDENCY=PASS");
         System.out.println("V328 RESUMED_2000_PLUS_EXPERIENCES=PASS decisions="+
             TARGET+" segmentsOnDisk="+files);
     }
