@@ -133,6 +133,41 @@ public final class Zero3BoxCrossingForensicV334Regression {
             state.p,sx,sy,bx,by,cx,cy);
         state.stage(label+"_AFTER_WORLD",frame);
     }
+    /**
+     * Observational decomposition of the EXACT real V322B world solver
+     * sequence (same operations, same order, no algorithm changes).
+     * Compare final bitwise result against uninstrumented original step.
+     */
+    private static void splitWorldStep(State s,
+        float[] skinX,float[] skinY,float[] bodyX,float[] bodyY,
+        float cx,float cy,int sub){
+        boolean boxes=false;
+        for(UnknownWorld.Entity entity:s.p.world)
+            if(entity.isBilateralBox()){
+                SquareGripPuzzle.constrain(s.p.body,s.p.skin,entity,DT,
+                    skinX,skinY,bodyX,bodyY,cx,cy);
+                boxes=true;
+            }
+        s.stage("SPLIT_AFTER_BOX_CONSTRAIN",sub);
+        if(boxes)
+            MaterialContactConstraints.reconcile(s.p.body,s.p.skin,
+                                                 s.p.world,DT);
+        s.stage("SPLIT_AFTER_MATERIAL_RECONCILE",sub);
+        SymbioteWorldStepV171.interior(s.p.gel,s.p.body,s.p.skin,
+                                      null,s.p.world,DT);
+        s.stage("SPLIT_AFTER_WORLD_INTERIOR",sub);
+        GripSurfaceComposition.compose(s.p.skin,null,s.p.world);
+        s.stage("SPLIT_AFTER_GRIP_COMPOSE",sub);
+        for(UnknownWorld.Entity entity:s.p.world){
+            if(entity.isMovable()){
+                Morphology.collide(s.p.skin,entity,DT);
+                ContactLearning.collide(s.p.body,entity,DT);
+                s.p.gel.observeBody(s.p.body,s.p.skin);
+            }
+            entity.tick(DT);
+        }
+        s.stage("SPLIT_AFTER_OBJECT_TICK",sub);
+    }
     private static String signature(State state){
         StringBuilder out=new StringBuilder();
         for(int i=0;i<Morphology.POINTS;i++){
@@ -150,12 +185,12 @@ public final class Zero3BoxCrossingForensicV334Regression {
         // at the identical birth, not a clone after a collision has occurred.
         State a=new State(ordinal,blind),b=new State(ordinal,blind),
               c=new State(ordinal,blind),d=new State(ordinal,blind),
-              verify=new State(ordinal,blind);
+              e=new State(ordinal,blind),verify=new State(ordinal,blind);
         check(MaterialGeometry.selfCrossings(a.p.skin)==
               MaterialGeometry.selfCrossings(verify.p.skin),
               "initial membrane unexpectedly nondeterministic");
         a.stage("AFTER_SCENARIO", -1);
-        State[] arms={a,b,c,d,verify};
+        State[] arms={a,b,c,d,e,verify};
         for(State s:arms)s.warmup();
         a.stage("AFTER_WARMUP", -1);
         check(signature(a).equals(signature(verify)),
@@ -210,6 +245,21 @@ public final class Zero3BoxCrossingForensicV334Regression {
                 integrate(b,actual,false,sub,"SAME_MOTORS_NO_WORLD_COLLISION");
                 integrate(c,zero,true,sub,"ZERO_MOTOR_REAL_BOX");
                 integrate(d,actual,true,sub,"SAME_MOTOR_BOX_CONTROL");
+                // E runs exactly the same physics as A, but with a staged
+                // observation after each original world solver component.
+                float[] esx=e.p.skin.x.clone(),esy=e.p.skin.y.clone();
+                float[] ebx=e.p.body.x.clone(),eby=e.p.body.y.clone();
+                float ecx=e.p.body.cx,ecy=e.p.body.cy;
+                e.p.gel.step(e.p.body,e.p.skin,actual,DT);
+                if(ordinal==337||ordinal==645){
+                    e.stage("SPLIT_AFTER_GEL",sub);
+                    splitWorldStep(e,esx,esy,ebx,eby,ecx,ecy,sub);
+                }else{
+                    Zero3MultiSceneRestartV322BRegression.actualWorldStep(
+                        e.p,esx,esy,ebx,eby,ecx,ecy);
+                }
+                check(signature(a).equals(signature(e)),
+                      "instrumenting material pipeline changed full physical output");
                 // D is a duplicate of A's physics trajectory on purpose
                 // except it does not carry controller side effects.
                 check(signature(a).equals(signature(d)),
