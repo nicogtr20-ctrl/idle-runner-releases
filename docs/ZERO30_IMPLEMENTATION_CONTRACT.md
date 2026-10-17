@@ -1,5 +1,8 @@
 # ZERO 3.0 — CONTRATTO DI IMPLEMENTAZIONE, TEST E HANDOFF TRA CHAT
 
+> **V3.8-B APPRENDIMENTO DINAMICO VERIFICATO (17/10/2026):** [Rapporto e test su 983.040 passi fisici](ZERO30_MOTOR_V38B_STATE_TRANSITIONS.md). Il modello autoregressivo a 32 transizioni **FALLISCE** il gate: errore finale su nuovi stati **0,16007** vs **0,02906** del modello statico. ZERO 3.0 NON ATTIVO, G3/G5 non superati, nessuna nuova OTA.
+
+
 > **V3.8 VERIFICATA, GATE FALLITO:** [modello ricorrente delle traiettorie, test 983.040 frame fisici](ZERO30_MOTOR_V38_RECURRENT_TRAJECTORY.md). La ricorrenza ha MSE ritardata blind **0,033926** contro baseline zero **0,029724** e time-only **0,029652**; previsione meno affidabile. Nessuna locomozione appresa né OTA 3.0: **G3 BLOCCATO**. [GitHub Actions verificata](https://github.com/nicogtr20-ctrl/idle-runner-releases/actions/runs/38983664233).
 
 
