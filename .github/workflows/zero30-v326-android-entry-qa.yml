@@ -59,6 +59,23 @@ jobs:
           grep -q 'roomFoodCanonical' app/src/main/java/com/overmind/zero/Zero3RuntimeV325.java
           echo 'ZERO3 V326 OPT_IN_ROUTE_LEGACY_PRESERVED=PASS'
       - name: Compile Android application incl. V3 Activity and birth factory, no APK publication
-        run: gradle --no-daemon assembleDebug
+        run: |
+          set -euo pipefail
+          # Maven Central sometimes returns HTTP 403 to the CI runner during
+          # Gradle plugin resolution. Reattempt without changing source/test.
+          for attempt in 1 2 3; do
+            echo "Android debug compile attempt $attempt"
+            if gradle --no-daemon assembleDebug; then
+              echo "V326_ANDROID_DEBUG_COMPILED=PASS"
+              exit 0
+            fi
+            if gradle --offline --no-daemon assembleDebug; then
+              echo "V326_ANDROID_DEBUG_OFFLINE_CACHE_COMPILED=PASS"
+              exit 0
+            fi
+            sleep 12
+          done
+          echo "V326_ANDROID_DEBUG_NOT_VERIFIED=FAIL"
+          exit 1
       - name: Research-only gate label
         run: echo 'V326_ANDROID_ENTRY_COMPILES=PASS DEVICE_INSTRUMENTATION_NOT_DONE G3_BLOCKED G5_BLOCKED NO_OTA'
