@@ -48,6 +48,8 @@ public final class Zero3RuntimeV325 implements AutoCloseable {
     private int next;
     private float[] last64;
     private boolean inDecision,closed,ended;
+    // V330 read-only outcome; never part of neural learning or durable checkpoint.
+    private Zero3MotorEvidenceV330.Measure lastMotorEvidence;
     // Opt-in only. Old V324 runtime and its research validation remain
     // restricted to 240; V328 owns separate manifests, not legacy slots.
     private boolean segmented;
@@ -59,7 +61,7 @@ public final class Zero3RuntimeV325 implements AutoCloseable {
           Zero3SurvivalLedgerV323 metabolism,int cursor,
           List<Zero3OrganismStoreV322.Trace> traces,
           List<Zero3FullCausalExperienceV322B> experiences,
-          float[] previous,boolean restore)throws IOException {
+          float[] previous,boolean restore,float motorLearningRate)throws IOException {
         if(episode<=0||seed==0||body==null||skin==null||gel==null||
            world==null||room==null||metabolism==null||cursor<0||
            traces==null||experiences==null||
@@ -77,7 +79,7 @@ public final class Zero3RuntimeV325 implements AutoCloseable {
         this.next=cursor;
         this.last64=previous==null?null:previous.clone();
         encoder=new Zero3AutonomousLoopV317.Encoder(ENCODER_SEED);
-        cortex=new Zero3LearningFoundation.AdaptiveCortex(.013f);
+        cortex=new Zero3LearningFoundation.AdaptiveCortex(motorLearningRate);
         grip=new Zero3ContextAdhesionV319(GRIP_SEED,true);
         coordinator=new Zero3LearningFoundation.Coordinator(cortex);
         encoder.resetEpisode();
@@ -109,7 +111,23 @@ public final class Zero3RuntimeV325 implements AutoCloseable {
             new ArrayList<>(entities),room,
             new Zero3SurvivalLedgerV323(initialEnergy,elapsedLife,elapsedLife,
                                         elapsedLife>=70f),
-            0,Collections.emptyList(),Collections.emptyList(),null,false);
+            0,Collections.emptyList(),Collections.emptyList(),null,false,.013f);
+    }
+    /** SCIENTIFIC A/B ONLY: zero plasticity freezes cortical weights while
+     * preserving initial weights, exploration, actor and trained V319 grip.
+     * Never invoked by the Android Activity or regular checkpoint restore.
+     */
+    public static Zero3RuntimeV325 newbornMotorBench(long episode,long rng,
+            MotorBrain.Body b,Morphology.Surface s,SymbioteMatterV1 gel,
+            List<UnknownWorld.Entity> entities,ScarcityLab room,
+            float initialEnergy,float motorLearningRate)throws IOException{
+        if(room==null||entities==null||!entities.contains(room.food)||
+           (motorLearningRate!=0f&&motorLearningRate!=.013f)||
+           initialEnergy<=0||initialEnergy>100)
+            throw new IOException("V330 requires paired real motor experiment");
+        return new Zero3RuntimeV325(episode,rng,b,s,gel,new ArrayList<>(entities),
+            room,new Zero3SurvivalLedgerV323(initialEnergy,0f,0f,false),
+            0,Collections.emptyList(),Collections.emptyList(),null,false,motorLearningRate);
     }
     /** Validate a WHOLE checkpoint before allocating a fresh neural owner. */
     public static Zero3RuntimeV325 recovered(Zero3RoomArchiveV324.Bundle bundle)
@@ -129,7 +147,7 @@ public final class Zero3RuntimeV325 implements AutoCloseable {
             state.lastRngState,physical.body,physical.skin,physical.gel,
             restored.objects,restored.room,fuel,state.nextDecision,
             Arrays.asList(state.trace()),bundle.life.joint.experiences(),
-            state.last64(),true);
+            state.last64(),true,.013f);
         try {
             state.restoreModules(runtime.encoder,runtime.cortex,runtime.grip);
             require(runtime.encoder.updates()==runtime.next&&
@@ -210,6 +228,10 @@ public final class Zero3RuntimeV325 implements AutoCloseable {
     public long gripUpdates(){return grip.updates();}
     public int encoderUpdates(){return encoder.updates();}
     public int completeExperiences(){return replay.size();}
+    public Zero3MotorEvidenceV330.Measure lastMotorEvidence(){
+        require(!closed&&!inDecision,"V330 outcome only at completed decision");
+        return lastMotorEvidence;
+    }
     public int residentFullExperiences(){
         return replay instanceof Zero3ReplayJournalV329
             ? ((Zero3ReplayJournalV329)replay).residentRecords():replay.size();
@@ -312,7 +334,12 @@ public final class Zero3RuntimeV325 implements AutoCloseable {
                 new Zero3LearningFoundation.MotorIntent(
                     episode,n,cortex.revision(),choice[0],choice[1],
                     choice[2],choice[3],SUBSTEPS*DT);
+            // PRE momentum is observed from material, never a target direction.
+            final float initialVX=body.cvx,initialVY=body.cvy;
             coordinator.begin(motor,body,true,false,true);
+            Zero3MotorEvidenceV330.Accumulator audit=
+                new Zero3MotorEvidenceV330.Accumulator(episode,n,
+                    motor.x,motor.y,initialVX,initialVY);
             grip.begin();
             metabolism.begin(n,gel.ticks);
             long actions=0xcbf29ce484222325L;
@@ -324,6 +351,7 @@ public final class Zero3RuntimeV325 implements AutoCloseable {
             for(int i=0;i<SUBSTEPS;i++){
                 float[] command=coordinator.actuate(body,skin,DT);
                 grip.actuate(command,intent,body,skin,world);
+                audit.motorSubstep(command,skin,body);
                 float[] executed=command.clone();
                 efferences.add(executed);
                 for(float a:executed){
@@ -378,6 +406,7 @@ public final class Zero3RuntimeV325 implements AutoCloseable {
             trace.add(event);
             replay.add(record);
             last64=last.clone();
+            lastMotorEvidence=audit.complete(result,gripFrames,bilateral);
             next++;
             ended=metabolism.reserve()<=0;
             require(authority.nextDecision()==next&&
@@ -465,7 +494,7 @@ public final class Zero3RuntimeV325 implements AutoCloseable {
         Zero3RuntimeV325 result=new Zero3RuntimeV325(s.episodeId,s.lastRngState,
             physical.body,physical.skin,physical.gel,restored.objects,
             restored.room,fuel,s.nextDecision,Arrays.asList(s.trace()),
-            disk.openReplay(),s.last64(),true);
+            disk.openReplay(),s.last64(),true,.013f);
         try{
             s.restoreModules(result.encoder,result.cortex,result.grip);
             require(result.encoder.updates()==s.nextDecision&&
