@@ -44,7 +44,7 @@ final class Zero3JointBoxConstraintV338 {
         }
     }
     private Zero3JointBoxConstraintV338(){}
-    private static final class Defect {
+    static final class Defect {
         final int cross,wall,embedded;
         final int[] indices;
         Defect(int c,int w,int e,int[] ids){
