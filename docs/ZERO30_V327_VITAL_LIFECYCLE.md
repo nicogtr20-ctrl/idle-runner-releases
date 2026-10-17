@@ -21,7 +21,13 @@ In V3.26 energia e danni erano calcolati da `Zero3SurvivalLedgerV323` ma non ali
 
 **Primo controllo VERIFICATO:** [GitHub Actions 39031227971 SUCCESS](https://github.com/nicogtr20-ctrl/idle-runner-releases/actions/runs/39031227971). Log: `V327 VITAL_FROM_ACTUAL_METABOLISM=PASS RECURRING_ACTION_CHANGED=PASS NO_FUTURE_LEAK=PASS`, **danno fisico precedente 7.0**, riserva misurata **92.97299**, 12 veri passi; **10/10 riprese complete** in cinque scenari (2 per scena), ripresa dopo 48 decisioni esattamente uguale a 96 ininterrotte; `BUILD SUCCESSFUL` Android Debug. I risultati dimostrano continuità e che i canali influenzano `choose`; **non** miglioramento motorio o homeostasi appresa.
 
-**Gate finale dell'estensione a 240:** da compilare DOPO la lettura della CI con il nuovo test `Zero3CapacityV327Regression`. Non dichiarare pass se il salvataggio a 240 non supera verifica SHA256 e cold restore o se l'Android Debug fallisce. La prima CI 39031227971 precede l'introduzione della soglia.
+**GATE FINALE VERIFICATO:** [GitHub Actions 39031488412 — SUCCESS](https://github.com/nicogtr20-ctrl/idle-runner-releases/actions/runs/39031488412), job `117392660190` (commit applicativo `04e358feb9d6c96473990706c2ed3a64798a422f`). Nel log:
+- `V327 VITAL_FROM_ACTUAL_METABOLISM=PASS RECURRING_ACTION_CHANGED=PASS NO_FUTURE_LEAK=PASS PREVIOUS_REAL_HARM=7.0 RESERVE=92.97299 PHYSICAL_STEPS=12`. Il valore 7.0 proviene dall'effettivo incontro del gel con un oggetto a danno negativo, non è scritto nel ledger dal test.
+- `V327 MATCHED_FULL_VITAL_RESTART ... PASS` **10 volte** (scene 0–4, due casi a scena), `V327 TEN_REAL_VITAL_NEURAL_RESTARTS_PASS`. Ogni vita: 48 scelte, uscita JVM, nuova JVM con cervello+corpo+ledger+stanza+full replay, poi fino a 96; fingerprint bytewise uguale al controllo mai interrotto, rollback e rifiuto di sessioni estranee.
+- `V327 ACTUAL_240_EXPERIENCES_PERSIST=PASS OVER_CAPACITY_REJECTED=PASS COLD_RESTART_NO_CREDIT=PASS NO_SILENT_BRAIN_RESET=PASS`. Un organismo fisico nato tramite V326 compie **240 decisioni vere** (2.880 sottopassi gel di decisione, oltre al warmup), salva a 120 e 240, si riprende con tutti i pesi, fisica, energia e 240 record sensoriali; la 241ª scelta è rifiutata prima di eseguire e prima di attribuirle esperienza.
+- `BUILD SUCCESSFUL in 47s` con Android Debug dopo modifica della UI V326; nessun APK firmato/pubblicato; `V327_PARTIAL_VITAL_INTEROCEPTION=PASS REPLAY_CAP_240_SAFE_STOP=PASS NOT_A_HOMEOSTATIC_ACTOR_CRITIC G3_BLOCKED G5_BLOCKED G9_DEVICE_BLOCKED NO_OTA`.
+
+**Verdetto circoscritto:** `V327_CAUSAL_VITAL_INPUT_LAB=PASS`, `V327_SAFE_ARCHIVE_STOP_AT_240=PASS`, `V327_SAME_LIFE_JVM_RESTART=PASS`, `V327_ANDROID_DEBUG_BUILDS=PASS`. **Non** `V3_ANDROID_DEVICE_VALIDATED` né `2000_EXPERIENCES_RETENTION`, G3/G5/G9.
 
 ## Ciò che V3.27 NON realizza ancora
 
