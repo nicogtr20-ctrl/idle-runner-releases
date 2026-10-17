@@ -117,6 +117,13 @@ final class SquareCollisionSolver {
     static int repairLinks(float[] x,float[] y,float[] vx,float[] vy,
                            int n,UnknownWorld.Entity square,float clearance,
                            Morphology.Surface skin){
+        return repairLinks(x,y,vx,vy,n,square,clearance,skin,null,null);
+    }
+    static int repairLinks(float[] x,float[] y,float[] vx,float[] vy,
+                           int n,UnknownWorld.Entity square,float clearance,
+                           Morphology.Surface skin,
+                           MotorBrain.Body body,
+                           SquareGripPuzzle.StageObserver observer){
         int count=0;
         float left=square.x-SquareGripPuzzle.HALF,
               right=square.x+SquareGripPuzzle.HALF,
@@ -127,7 +134,12 @@ final class SquareCollisionSolver {
             for(int i=0;i<n;i++){
                 int j=(i+1)%n;
                 if(correctLink(x,y,vx,vy,i,j,left,top,right,bottom,
-                               clearance,skin))fixed++;
+                               clearance,skin)){
+                    fixed++;
+                    if(observer instanceof SquareGripPuzzle.DetailObserver)
+                        ((SquareGripPuzzle.DetailObserver)observer).detail(
+                            "CCD_SHELL_LINK",pass,i,j,body,skin,square);
+                }
             }
             count+=fixed;
             if(fixed==0)break;
@@ -196,7 +208,7 @@ final class SquareCollisionSolver {
         if(observer!=null)observer.stage("CCD_AFTER_BODY_PROJECT",body,skin,box);
         MaterialGeometry.observe(body);
         repairLinks(skin.x,skin.y,skin.vx,skin.vy,Morphology.POINTS,box,
-                    LINK_CLEARANCE,skin);
+                    LINK_CLEARANCE,skin,body,observer);
         if(observer!=null)observer.stage("CCD_AFTER_SHELL_LINKS",body,skin,box);
         repairLinks(body.x,body.y,body.vx,body.vy,MotorBrain.N,box,
                     BODY_CLEARANCE,null);
