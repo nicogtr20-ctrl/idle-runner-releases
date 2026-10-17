@@ -19,14 +19,14 @@ public final class Zero3ExactFaceTrialV336Regression {
     private static void candidateWorld(
          Zero3BoxCrossingForensicV334Regression.State s,
          float[] sx,float[] sy,float[] bx,float[] by,
-         float oldCX,float oldCY,boolean linksAware){
+         float oldCX,float oldCY,int mode){
         boolean boxes=false;
         for(UnknownWorld.Entity e:s.p.world){
             if(e.isBilateralBox()){
                 // The ONLY candidate difference: skip ejection of legal
                 // exact face contacts already at the solid boundary.
                 SquareGripPuzzle.constrain(s.p.body,s.p.skin,e,DT,
-                     sx,sy,bx,by,oldCX,oldCY,null,true,linksAware);
+                     sx,sy,bx,by,oldCX,oldCY,null,mode!=3,mode>=2);
                 boxes=true;
             }
         }
@@ -52,7 +52,7 @@ public final class Zero3ExactFaceTrialV336Regression {
                 bx=s.p.body.x.clone(),by=s.p.body.y.clone();
         float cx=s.p.body.cx,cy=s.p.body.cy;
         s.p.gel.step(s.p.body,s.p.skin,muscle,DT);
-        if(mode!=0)candidateWorld(s,sx,sy,bx,by,cx,cy,mode==2);
+        if(mode!=0)candidateWorld(s,sx,sy,bx,by,cx,cy,mode);
         else Zero3MultiSceneRestartV322BRegression.actualWorldStep(
                    s.p,sx,sy,bx,by,cx,cy);
     }
