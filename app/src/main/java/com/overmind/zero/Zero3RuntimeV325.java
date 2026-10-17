@@ -175,7 +175,9 @@ public final class Zero3RuntimeV325 implements AutoCloseable {
         public final long episode,solverTicks;
         public final int decisions,neurons,objects,residentReplay,unsavedReplay;
         public final float reserve,priorDamage,cx,cy,doorX,doorY;
-        public final boolean dead;
+        public final boolean dead,hasMotorOutcome;
+        public final float lastIntentX,lastIntentY,actualMotorDX,actualMotorDY;
+        public final float lastSignedProgress,lastInertiaProjection,lastMuscleCancellation;
         public final float[] membraneX,membraneY,objectX,objectY;
         public final int[] objectLaw;
         private Display(Zero3RuntimeV325 r){
@@ -186,6 +188,15 @@ public final class Zero3RuntimeV325 implements AutoCloseable {
             unsavedReplay=r.unsavedFullExperiences();
             priorDamage=r.metabolism.previousDecisionDamage();
             dead=r.ended;cx=r.body.cx;cy=r.body.cy;
+            Zero3MotorEvidenceV330.Measure m=r.lastMotorEvidence;
+            hasMotorOutcome=m!=null;
+            lastIntentX=m==null?0f:m.directionX;
+            lastIntentY=m==null?0f:m.directionY;
+            actualMotorDX=m==null?0f:m.dx;
+            actualMotorDY=m==null?0f:m.dy;
+            lastSignedProgress=m==null?0f:m.signedAlongIntent;
+            lastInertiaProjection=m==null?0f:m.inertiaProxyAlongIntent;
+            lastMuscleCancellation=m==null?0f:m.cancellationProxy;
             doorX=r.room.gateX();doorY=r.room.gateCenterY();
             membraneX=r.skin.x.clone();membraneY=r.skin.y.clone();
             objectX=new float[objects];objectY=new float[objects];
