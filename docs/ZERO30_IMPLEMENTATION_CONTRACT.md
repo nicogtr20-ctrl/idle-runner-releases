@@ -1,5 +1,8 @@
 # ZERO 3.0 — CONTRATTO DI IMPLEMENTAZIONE, TEST E HANDOFF TRA CHAT
 
+> **Checkpoint V3.25 (17 ottobre 2026):** [rapporto tecnico](ZERO30_V325_RUNTIME_BOUNDARY.md) · [CI definitiva 39029780647 PASS](https://github.com/nicogtr20-ctrl/idle-runner-releases/actions/runs/39029780647). Primo `Zero3RuntimeV325` indipendente dal runner di regressione: unico owner di scelte/rete/cortex/adesione/gel fisico/stanza/riserva e journaling causale+snapshot, con `Zero3AndroidSessionV325` compilata per un percorso Android privato V3 non collegato a GameActivity. 25/25 vite, 96 decisioni ciascuna con riavvio a 48, confronto bytewise, terminale da energia zero e rifiuto episodi estranei/doppia corruzione, Android Debug SUCCESS. **Solo gate LAB JVM; G3 locomozione, G5 world model, G9 device e UI 3.0 NON chiusi.** OTA172 e 12 slot 2.2 non toccati.
+
+
 > **Sottogate V3.24/LAB verificato 17/10/2026:** [rapporto](ZERO30_V324_ROOM_WORLD_CHECKPOINT.md) · [CI 39026713027 SUCCESS](https://github.com/nicogtr20-ctrl/idle-runner-releases/actions/runs/39026713027). Commit unico corpo+neuroni+survival+stanza ScarcityLab/door hysteresis+room.food, 25/25 vite a 96 decisioni con interruzione a 48 vs riferimento continuo, confronto bytewise, doppi guasti e Android Debug PASS. Nessuna migrazione o merge produzione; Gate G3 locomozione e G5 world model NON promossi. Niente G9 Android/device reale, OTA172 e 12 salvataggi 2.2 invariati.
 
 
