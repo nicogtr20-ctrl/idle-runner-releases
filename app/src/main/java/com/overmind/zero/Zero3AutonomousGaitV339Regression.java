@@ -402,7 +402,7 @@ public final class Zero3AutonomousGaitV339Regression {
         }
         boolean gate=trainEnough&&blindEnough&&
               completeFamilies==4&&improvementFamilies>=3&&
-              boxPositive&&boxBetter&&bilateral&&grip&&
+              boxPositive&&boxBetter&&bilateral&&gripGate&&
               Zero3JointWorldV339.unresolved==0;
         System.out.println("V339 SCIENCE_FINAL G3="+(gate?
                    "CANDIDATE_SCREEN_PASS_NOT_DEVICE":"BLOCKED_FAIL")+
