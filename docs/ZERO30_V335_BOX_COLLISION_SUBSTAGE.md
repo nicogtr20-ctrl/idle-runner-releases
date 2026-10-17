@@ -35,8 +35,36 @@ Ogni foto registra `selfCrossings`, prima coppia di edge, link che attraversano 
 - La CI tecnica positiva **non** basta a dimostrare il meccanismo causale geometrico, né una correzione. Annotare esattamente quale callback introduce per prima l'incrocio, le eventuali successive riparazioni e la reintroduzione. Non applicare una riparazione al solver prima di accertare il meccanismo e verificare solidità, adesione bilaterale, mondo multi-oggetto, costo e 2.000+ veri step.
 - Le BLIND V332 e V333 restano consumate e sono usate qui esclusivamente per forensics, **mai** per ottimizzare politica/reward o vantare generalizzazione G3.
 
-## Stato risultati
+## Risultati V3.35 — **CI VERIFICATA** il 17 ottobre 2026
 
-Prove avviate tramite [workflow V3.35](https://github.com/nicogtr20-ctrl/idle-runner-releases/actions/workflows/zero30-v335-box-substage-qa.yml), nel solo branch DRAFT. Si devono aggiungere qui i numeri **verificati** dai log conclusivi, distinguendo `ROOT_SUBSTAGE_IDENTIFIED` e `CONSERVATIVE_PHYSICS_FIX`, senza trasformare la compilazione in un gate scientifico superato.
+**[CI 39046324164 SUCCESS](https://github.com/nicogtr20-ctrl/idle-runner-releases/actions/runs/39046324164)**, job `117435664950`, head SHA `aa22a87572d2b9367254dc4ff9b20490cf29a1df`. Tutte le 12 traiettorie a due sottopassi sono completate; **compilazione Java, stage observer contro solver originale con parità bitwise, controlli multi-oggetto, CCD, presa adesiva V319 e Android Debug BUILD SUCCESSFUL**. Non è stato prodotto né pubblicato un APK firmato.
 
-**G3 locomozione generale BLOCCATO; G5 world-model BLOCCATO; nessun test Galaxy S21, nessun OTA, UI finale non attestata.**
+### Primo cambio topologico osservato — due meccanismi differenti
+
+| Scenario V333 riprodotto | Substep della prima decisione | Prima operazione che cambia crossing 0→1 | Coppia di edge | Attraversamenti solidi `SquareCollisionSolver.intersections` |
+|---|---:|---|---|---:|
+| TRAIN `ordinal 337` | **1** | **`SquareCollisionSolver.repairLinks` sulla membrana**, callback `CCD_AFTER_SHELL_LINKS` | 45↔47 | **0** |
+| BLIND `ordinal 645` | **0** | **`SquareGripPuzzle` rilevamento contatto + `pushOut` membrana**, callback `AFTER_FACE_CONTACT_AND_PUSHOUT` | 41↔43 | **0** |
+
+Nei due casi il risultato è **identico come classificazione anche con i comandi reali del recurrent actor V317/head V319**, e con tutti i 64 muscoli a zero. Nessun nodo ottiene presa durante i primi passi in esame: `skinHeld=0`, `boxHeld=0`, `boxBilateral=false`. L'operazione CCD di proiezione delle singole particelle non produce da sola il crossing del primo frame nel 337; qui è la successiva correzione dei **link**. Nel 645, al primo frame, né CCD particle, né link repair, né `resolveCrossingLinks`, né tether introducono l'intersezione: compare soltanto dopo il contatto/`pushOut` delle masse del contorno.
+
+**Dettaglio temporale importante per 645:** al substep seguente, `gel.step` rimuove la topologia incrociata, ma la fase WORLD genera nuovamente la coppia 41↔43, stavolta nel `CCD_AFTER_SHELL_LINKS`. È quindi sbagliato attribuire l'intera storia di 645 a una singola routine o al cervello.
+
+I quattro ordinal controllo `333/341/641/649` non introducono crossing nei due frame esaminati. Nel controllo senza WORLD, con gli stessi comandi, crossing=0; dopo la WORLD strumentata ogni stato osservato coincide **bit per bit** col solver originale, incluse coordinate e velocità del contorno, corpo, gel, contatti, box, timer e contatori fisici. Pertanto l'observer non ha corretto né provocato artificialmente il problema.
+
+`throughWallLinks=0` nei frame incrociati è un fatto diagnostico cruciale: i metodi che impediscono alle corde di attraversare l'interno della BOX **non garantiscono affatto che due segmenti non adiacenti della membrana non si incrocino fra loro**. Sono due vincoli geometrici diversi. Nessuna prova indica che basti disattivare la collisione con la BOX: ciò violerebbe il requisito di solidità.
+
+### Regres​sioni conservate con numeri verificati
+
+- `SquareCollisionSolver.main`, `SquareGripPuzzle.main`, `MultiObjectGripRegression`: tutti PASS senza modificare soglie, comandi o vincoli, compresi isolamento delle tre casse e delle prese del cancello.
+- V319 head adesiva originale, **eseguita per intero**: train 3.072 decisioni e 36.864 frame gel; blind 2.304 scelte e 27.648 frame gel per braccio, `scientificGripGate=PASS`, `boxGripNew=6900`, `boxLivesNew=6`, `outsideDutyNew=0.03085214`, lavoro BOX `0.200176236` vs vecchio `0.255425971`. L'instrumentation della V3.35 **non modifica il risultato già dimostrato della V3.19**.
+- Android Debug: **BUILD SUCCESSFUL in 1m 2s**. Questo NON è un test sul Galaxy S21, né una prova di persistenza in processo Android reale.
+
+### Decisione tecnica e prossimo gate
+
+- `ROOT_SUBSTAGE_IDENTIFIED=PASS`: localizzati due differenti punti fisici dell'introduzione della self-intersection, non solo il metodo genitore `SquareGripPuzzle.constrain`.
+- `ROOT_INNER_INDEX_AND_SAFE_FIX=OPEN`: non è ancora determinato l'esatto link corretto all'interno dei pass/indici di `repairLinks` e l'esatto punto/face `pushOut` che genera il crossing; una correzione del solver senza queste verifiche e senza limiti di energia, assenza di attraversamento solido, prese bilaterali e 2.000+ sottopassi è **non giustificata**. V3.35 **non applica fix né cambia il solver attivo**: gli overload strumentati passano `null` in ogni chiamata ordinaria.
+- **Prossima fase V3.36:** audit per indice, prima/dopo ogni correzione vera dei link della membrana e prima/dopo il `pushOut` di ogni patch; poi proporre la minima correzione topologica conservativa usando soltanto stati fisici già noti, con test su forme indipendenti, prevenzione della compenetrazione, costo, 2.000 frame continuativi, V319/multi-oggetto e nuovi holdout preregistrati. Se la fisica o il grip peggiorano, non promuovere la correzione.
+- **Nessun nuovo risultato G3** deducibile dalla sola risoluzione di un bug: restano locomozione positiva BOX, esperienza long-run trained/frozen, confidenza multi-seed, G5 world model, sensor integration, neurogenesi, UI e Android S21.
+
+**PR #87 ancora DRAFT, G3/G5 BLOCCATI, NO MERGE e NO OTA; stabile OTA172 e i 12 salvataggi 2.2 restano intatti.**
