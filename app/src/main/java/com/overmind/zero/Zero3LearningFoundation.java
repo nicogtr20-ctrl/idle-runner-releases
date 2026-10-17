@@ -105,6 +105,86 @@ public final class Zero3LearningFoundation {
             randomState^=randomState<<17;
             return (randomState>>>40)/16777216f;
         }
+        /** Complete adaptive motor cortex state at a FINISHED decision. */
+        public static final class State {
+            private static final int[] SHAPES={512,64,64,512,64,8,8};
+            private final float[][] arrays;
+            private final long[] contextSamples;
+            final long randomState,revision,updates,perturbationEpisodes;
+            final int contextBucket;
+            final float lastAcceptedGradientNorm,lastAdvantage,learningRate;
+            private State(float[][] input,long[] counts,long rng,long rev,long updates,
+                    long probes,int bucket,float norm,float advantage,float lr){
+                if(input==null||input.length!=SHAPES.length||counts==null||
+                    counts.length!=8||rng==0||rev<0||updates<0||updates>rev||
+                    probes<0||bucket<0||bucket>=8||
+                    !Float.isFinite(norm)||!Float.isFinite(advantage)||
+                    !Float.isFinite(lr)||lr<0||lr>.3f)
+                    throw new IllegalArgumentException("invalid cortex checkpoint metadata");
+                arrays=new float[input.length][];
+                for(int j=0;j<input.length;j++){
+                    if(input[j]==null||input[j].length!=SHAPES[j])
+                        throw new IllegalArgumentException("cortex checkpoint topology");
+                    arrays[j]=input[j].clone();
+                    for(float v:arrays[j])if(!Float.isFinite(v))
+                        throw new IllegalArgumentException("nonfinite cortex value");
+                }
+                contextSamples=counts.clone();
+                for(long n:contextSamples)if(n<0)
+                    throw new IllegalArgumentException("invalid context sample");
+                randomState=rng;revision=rev;this.updates=updates;
+                perturbationEpisodes=probes;contextBucket=bucket;
+                lastAcceptedGradientNorm=norm;lastAdvantage=advantage;learningRate=lr;
+            }
+            void write(java.io.DataOutputStream d)throws java.io.IOException{
+                d.writeLong(randomState);d.writeLong(revision);d.writeLong(updates);
+                d.writeLong(perturbationEpisodes);d.writeInt(contextBucket);
+                d.writeFloat(lastAcceptedGradientNorm);
+                d.writeFloat(lastAdvantage);d.writeFloat(learningRate);
+                for(long v:contextSamples)d.writeLong(v);
+                for(float[] arr:arrays)for(float v:arr)d.writeFloat(v);
+            }
+            static State read(java.io.DataInputStream d)throws java.io.IOException{
+                long rng=d.readLong(),rev=d.readLong(),updates=d.readLong(),perturb=d.readLong();
+                int bucket=d.readInt();
+                float norm=d.readFloat(),adv=d.readFloat(),lr=d.readFloat();
+                long[] counts=new long[8];
+                for(int i=0;i<8;i++)counts[i]=d.readLong();
+                float[][] arrays=new float[SHAPES.length][];
+                for(int j=0;j<SHAPES.length;j++){
+                    arrays[j]=new float[SHAPES[j]];
+                    for(int i=0;i<arrays[j].length;i++)arrays[j][i]=d.readFloat();
+                }
+                return new State(arrays,counts,rng,rev,updates,perturb,
+                                 bucket,norm,adv,lr);
+            }
+            public float learningRate(){return learningRate;}
+        }
+        private float[][] checkpointArrays(){
+            return new float[][]{weights,state,noise,accumulated,output,
+                                 features,contextBaseline};
+        }
+        public State checkpoint(){
+            if(probing||samples!=0||activeChannel!=-1)
+                throw new IllegalStateException("cortex decision not finished");
+            return new State(checkpointArrays(),contextSamples,randomState,
+                revision,updates,perturbationEpisodes,contextBucket,
+                lastAcceptedGradientNorm,lastAdvantage,learningRate);
+        }
+        public void restore(State s){
+            if(s==null||probing||samples!=0||revision!=0||updates!=0||
+               Float.floatToIntBits(s.learningRate)!=Float.floatToIntBits(learningRate))
+                throw new IllegalStateException("cortex restore requires fresh matching instance");
+            float[][] own=checkpointArrays();
+            for(int i=0;i<own.length;i++)
+                System.arraycopy(s.arrays[i],0,own[i],0,own[i].length);
+            System.arraycopy(s.contextSamples,0,contextSamples,0,8);
+            randomState=s.randomState;revision=s.revision;updates=s.updates;
+            perturbationEpisodes=s.perturbationEpisodes;
+            contextBucket=s.contextBucket;
+            lastAcceptedGradientNorm=s.lastAcceptedGradientNorm;
+            lastAdvantage=s.lastAdvantage;
+        }
         public long revision(){return revision;}
         public long updates(){return updates;}
         public float[] weights(){return weights.clone();}
