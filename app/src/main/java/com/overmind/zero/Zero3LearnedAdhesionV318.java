@@ -81,7 +81,8 @@ public final class Zero3LearnedAdhesionV318 {
      */
     public void actuate(float[] executed64,
                         Zero3MotorIntentV316 chosen,
-                        MotorBrain.Body body,Morphology.Surface skin){
+                        MotorBrain.Body body,Morphology.Surface skin,
+                        java.util.ArrayList<UnknownWorld.Entity> objects){
         if(!pending||executed64==null||executed64.length!=64||chosen==null)
             throw new IllegalStateException("missing active motor intention");
         for(int sector=0;sector<SECTORS;sector++){
@@ -92,13 +93,22 @@ public final class Zero3LearnedAdhesionV318 {
                 touch+=bound(skin.touchSense[i],0,1);
                 pulse+=bound(skin.touchPulse[i],0,1);
                 if(skin.gripHold[i]>=Morphology.GRIP_HOLD)held++;
-                // Local retina from authentic skin geometry. Read contact
-                // and pressure *before* this motor command only.
-                optical+=bound(skin.optical[i],0,1);
+                // Optical input is measured below from the REAL membrane
+                // and obstacle ray tracer, before physical actuation.
             }
+            int eyeSite=first+3;
+            float nx=skin.x[eyeSite]-body.cx,ny=skin.y[eyeSite]-body.cy;
+            float radius=(float)Math.hypot(nx,ny);
+            if(radius>.00001f){nx/=radius;ny/=radius;}
+            else{nx=1;ny=0;}
+            float distance=SensorimotorMind.Senses.firstSolidDistance(
+                null,objects,skin.x[eyeSite],skin.y[eyeSite],
+                nx,ny,132f);
+            optical=Float.isFinite(distance)?
+                bound(1f-distance/132f,0f,1f):0f;
             float[] f={
                 1f,chosen.adhesionPreference,
-                touch/6f,pulse/6f,held/6f,optical/6f
+                touch/6f,pulse/6f,held/6f,optical
             };
             for(int j=0;j<FEATURES;j++){
                 if(!Float.isFinite(f[j]))throw new IllegalArgumentException("invalid motor feature");
