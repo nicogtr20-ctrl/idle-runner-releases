@@ -59,13 +59,37 @@ public final class Zero3BoxSubstageForensicV335Regression {
         for(float t:box.boxGripHold)if(t>=Morphology.GRIP_HOLD)n++;
         return n;
     }
-    private static final class Trace implements SquareGripPuzzle.StageObserver {
+    private static final class Trace implements SquareGripPuzzle.DetailObserver {
         final int ordinal,frame;
         final String mode;
         int previousCross,firstCross=-1,stageCount;
         String firstStage="NONE";
+        String firstIndividualOp="NONE";
+        int firstIndividualPass=-1,firstIndividualIndex=-1,firstIndividualNext=-1;
         Trace(int id,int step,String m,int initial){
             ordinal=id;frame=step;mode=m;previousCross=initial;
+        }
+        @Override public void detail(String operation,int pass,int index,
+                                     int neighbor,MotorBrain.Body body,
+                                     Morphology.Surface skin,
+                                     UnknownWorld.Entity box){
+            int cross=MaterialGeometry.selfCrossings(skin);
+            if(previousCross==0&&cross>0&&firstIndividualIndex<0){
+                firstIndividualOp=operation;
+                firstIndividualPass=pass;
+                firstIndividualIndex=index;
+                firstIndividualNext=neighbor;
+                int[] pair=Zero3BoxCrossingForensicV334Regression.firstPair(skin);
+                System.out.println("V336 FIRST_INDEX id="+ordinal+
+                    " mode="+mode+" sub="+frame+
+                    " operation="+operation+" pass="+pass+
+                    " index="+index+" neighbor="+neighbor+
+                    " crossingEdges="+pair[0]+","+pair[1]+
+                    " throughWallLinks="+
+                      SquareCollisionSolver.intersections(skin,box)+
+                    " noAutomaticFix=true");
+            }
+            previousCross=cross;
         }
         @Override public void stage(String name,MotorBrain.Body body,
                                     Morphology.Surface skin,
@@ -206,6 +230,9 @@ public final class Zero3BoxSubstageForensicV335Regression {
                 System.out.println("V335 MATCHED id="+id+
                     " mode="+mode+" sub="+sub+" before="+before+
                     " after="+after+" firstSubstage="+observer.firstStage+
+                    " firstOperation="+observer.firstIndividualOp+
+                    " firstPass="+observer.firstIndividualPass+
+                    " firstIndex="+observer.firstIndividualIndex+
                     " exactState=true noWorldCross=0"+
                     " held="+held(box(ref)));
                 if(actualMotor){
