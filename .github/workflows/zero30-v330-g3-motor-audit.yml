@@ -1,0 +1,64 @@
+name: ZERO3 V3.30 measured motor intent outcome — 20 matched cortex A/B
+on:
+  push:
+    branches: [feature/zero30-foundation-g0-g3-20261016]
+    paths:
+      - 'app/src/main/java/com/overmind/zero/Zero3MotorEvidenceV330.java'
+      - 'app/src/main/java/com/overmind/zero/Zero3MotorLabBirthV330.java'
+      - 'app/src/main/java/com/overmind/zero/Zero3MotorAuditV330Regression.java'
+      - 'app/src/main/java/com/overmind/zero/Zero3RuntimeV325.java'
+      - '.github/workflows/zero30-v330-g3-motor-audit.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  causal-motor-scoping:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+      - name: Compile real physical runtime without any gait or world target helper
+        run: |
+          set -euo pipefail
+          mkdir -p /tmp/overmind
+          python3 - <<'PY'
+          import pathlib,re,shlex,subprocess
+          src=pathlib.Path('.github/workflows/overmind-ota-publish.yml').read_text()
+          p=re.search(r'^\s*(javac -d /tmp/overmind [^\n]+)',src,re.M)
+          if not p:raise RuntimeError('real physics Java compiler contract missing')
+          root='app/src/main/java/com/overmind/zero/'
+          names='Zero3LearningFoundation Zero3MotorResponseKernel Zero3MotorRetentionRegression Zero3MotorPromotionGate Zero3MotorImpulseResponseRegression Zero3MotorLocalFrameV310Regression Zero3SensoryFrameV315 Zero3CausalRecorderV315 Zero3SensoryContractV315Regression Zero3MotorIntentV316 Zero3AutonomousLoopV317 Zero3LearnedAdhesionV318 Zero3LearnedAdhesionV318Regression Zero3ContextAdhesionV319 Zero3ContextAdhesionV319Regression Zero3MotorHeadStoreV320 Zero3NeuralBundleStoreV321 Zero3OrganismStoreV322 Zero3FullCausalExperienceV322B Zero3FullArchiveStoreV322B Zero3MultiSceneRestartV322BRegression Zero3SurvivalLedgerV323 Zero3SurvivalArchiveV323 Zero3RoomStateV324 Zero3RoomArchiveV324 Zero3RuntimeV325 Zero3MotorEvidenceV330 Zero3WorldBirthV326 Zero3SegmentedArchiveV328 Zero3ReplayJournalV329 Zero3MotorLabBirthV330 Zero3MotorAuditV330Regression'
+          subprocess.run(shlex.split(p.group(1))+[root+n+'.java' for n in names.split()],check=True)
+          PY
+      - name: Matched A/B blind-scoping 4 world families x 5 fresh poses
+        run: |
+          set -euo pipefail
+          java -Xmx2048m -cp /tmp/overmind com.overmind.zero.Zero3MotorAuditV330Regression | tee /tmp/v330-audit.log
+          grep -q '20_SCENE_PAIRED_EVIDENCE=PASS' /tmp/v330-audit.log
+          test "$(grep -c 'V330 MATCHED_SCENE=' /tmp/v330-audit.log)" = 20
+          test "$(grep -c 'V330 FAMILY=' /tmp/v330-audit.log)" = 4
+          grep -q 'MOTOR_GATE=' /tmp/v330-audit.log
+          # The research gate can be scientifically FAIL while implementation
+          # correctness passes; display every scene, including negatives.
+          grep 'V330 FAMILY=\|V330 G3_DIAGNOSTIC_LAB' /tmp/v330-audit.log
+      - name: Compile full Android application Debug without publishing OTA
+        run: |
+          set -euo pipefail
+          for attempt in 1 2 3; do
+            if gradle --no-daemon assembleDebug; then
+              echo 'V330_ANDROID_DEBUG=PASS'
+              exit 0
+            fi
+            if gradle --offline --no-daemon assembleDebug; then
+              echo 'V330_ANDROID_DEBUG=PASS'
+              exit 0
+            fi
+            sleep 10
+          done
+          exit 1
+      - name: Strict scientific verdict — no auto-promotion of G3
+        run: echo 'V330_MOTOR_INSTRUMENTATION=LAB_VERIFIED G3_NOT_YET_PROMOTED G5_BLOCKED NO_OTA'
