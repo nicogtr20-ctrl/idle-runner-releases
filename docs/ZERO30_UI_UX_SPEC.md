@@ -1,5 +1,7 @@
 # ZERO 3.0 — NUOVA INTERFACCIA GIOCO, IMPOSTAZIONI, CERVELLO, NEURONI, ABILITÀ ED EVOLUZIONE
 
+> **CONTRATTO SENSORIALE VERIFICATO V3.12 (17/10/2026):** la pagina Corpo/Percezione del futuro ZERO 3.0 dovrà visualizzare separatamente `touchSense` (contatto fisico con facce solide), `touchPulse` (pressione meccanica dei dischi) e `gripHold` (presa valida posseduta da un solido, distinta dal comando volontario `gripCommand`). Non sommare i valori fingendo siano eventi equivalenti, non dichiarare adesione a partire dal semplice contatto. [Prova su mondo vero](ZERO30_MOTOR_V312_REAL_CONTACT_FIXTURE.md). **La UI è ancora una specifica: non implementata.**
+
 > **DOCUMENTO VINCOLANTE** per le modifiche della GUI di OVERMIND ZERO 3.0. Leggere insieme al [MASTER BLUEPRINT](ZERO30_MASTER_BLUEPRINT.md) e al [CONTRATTO TECNICO](ZERO30_IMPLEMENTATION_CONTRACT.md).
 >
 > **Richiesta esplicita dell'utente (16/10/2026):** le nuove architetture di apprendimento richiedono **una nuova interfaccia delle impostazioni, abilità, neuroni, evoluzione e tutte le relative schermate, realmente collegate al 3.0, che sostituirà quella corrente 2.2.**
