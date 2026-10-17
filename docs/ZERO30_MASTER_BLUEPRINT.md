@@ -412,3 +412,6 @@ Le fasi possono avere PR minori, ma **nessuna fase superata senza il suo gate og
 **Al 16/10/2026 la presente è una SPECIFICA, non una implementazione.** La prima attività tecnica consentita, dopo la revisione del progetto, sarà il **Gate 0: snapshot/benchmark baseline e Gate 1: controllabilità fisica**. Non creare subito un APK 3.0 spacciandolo per completo.
 
 **Risultato desiderato:** un ZERO vergine impara a governare autonomamente la massa gelatinosa, migliora dopo esperienza reale, ricorda e riusa capacità, apprende le conseguenze delle sue scelte e generalizza su nuovi contesti; solo benchmark indipendenti possono confermare che il traguardo è raggiunto.
+
+
+V3.20: [head-only neural restart verified](ZERO30_V320_MOTOR_HEAD_RESTART_RETENTION.md). Not the full brain, not G3/G5, no OTA.
