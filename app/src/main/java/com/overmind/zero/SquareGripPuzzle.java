@@ -160,6 +160,22 @@ public final class SquareGripPuzzle {
                                     float[] previousBodyX,float[] previousBodyY,
                                     float previousCoreX,float previousCoreY,
                                     StageObserver observer){
+        return constrain(body,skin,box,dt,previousSkinX,previousSkinY,
+                         previousBodyX,previousBodyY,previousCoreX,
+                         previousCoreY,observer,false);
+    }
+    /**
+     * V3.36 EXPERIMENTAL LAB ONLY. This boolean is never true in the
+     * real world pipeline. Isolate whether the redundant post-CCD ejection
+     * of a surface sample ALREADY ON a legal face causes a topology issue.
+     */
+    static Outcome constrain(MotorBrain.Body body,Morphology.Surface skin,
+                                    UnknownWorld.Entity box,float dt,
+                                    float[] previousSkinX,float[] previousSkinY,
+                                    float[] previousBodyX,float[] previousBodyY,
+                                    float previousCoreX,float previousCoreY,
+                                    StageObserver observer,
+                                    boolean preserveExactFaceContact){
         if(body==null||skin==null||box==null||!box.isBilateralBox()||
            !Float.isFinite(dt)||dt<=0)return new Outcome(false,0,0);
         // The scratch surface is shared, but this timer belongs ONLY to box.
@@ -199,7 +215,16 @@ public final class SquareGripPuzzle {
                 skin.gripHold[i]=0f;
             }
             float oldX=skin.x[i],oldY=skin.y[i];
-            pushOut(skin.x,skin.y,skin.vx,skin.vy,i,box.x,box.y,1.15f);
+            // A membrane mass exactly touching the square's true surface
+            // is already outside solid material. The experimental branch
+            // tests only this inconsistency with POINT_CLEARANCE=0.
+            float signedX=oldX-box.x,signedY=oldY-box.y;
+            boolean legalX=Math.abs(Math.abs(signedX)-HALF)<1e-5f&&
+                           Math.abs(signedY)<=HALF;
+            boolean legalY=Math.abs(Math.abs(signedY)-HALF)<1e-5f&&
+                           Math.abs(signedX)<=HALF;
+            if(!preserveExactFaceContact||(!legalX&&!legalY))
+                pushOut(skin.x,skin.y,skin.vx,skin.vy,i,box.x,box.y,1.15f);
             if(oldX!=skin.x[i]||oldY!=skin.y[i])
                 detail(observer,"FACE_PUSHOUT old="+
                     Float.toString(oldX)+","+Float.toString(oldY),0,i,-1,
