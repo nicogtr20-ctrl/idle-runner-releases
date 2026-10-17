@@ -37,4 +37,48 @@ Misurare MSE XY one-step e MSE stato, separando:
 
 ## Risultati effettivi
 
-*Da compilare soltanto dopo lettura log della CI.*
+Risultato verificato a seguire, dopo conclusione della pipeline.
+
+## RISULTATI VERIFICATI — CI 38988290751 (17/10/2026)
+
+[GitHub Actions 38988290751 — SUCCESS tecnico](https://github.com/nicogtr20-ctrl/idle-runner-releases/actions/runs/38988290751). Codice laboratorio `Zero3MotorContactWorldV313Regression.java` solo sul ramo di PR #87. Compilazione Java e **76.800 step reali** di `SymbioteMatterV1`, con veri `SquareGripPuzzle.constrain`, `MaterialContactConstraints.reconcile`, `SymbioteWorldStepV171.interior`, `GripSurfaceComposition.compose` e collisione disco `Morphology.collide` eseguiti. 320 traiettorie indipendenti come unità intere: FIT=120, CAL=120, BLIND=80, 46.080 transizioni osservate, ciascuna con **64 comandi reali per frame**; nessun accesso allo stato futuro nella previsione. Osservazione 25D: corpo-frame della V3.11 (22D) + `touchPulse` reale medio e due armoniche anatomiche. Il nastro di azioni future usato nel rollout è **registrato**, non predetto.
+
+**Copertura reale:** CAL 81/120 traiettorie con segnali di contatto (`touchSense`/`touchPulse`), 24/120 con grip; BLIND 63/80 contatti, 16/80 grip. `pulseTraces` 81/120 CAL e 63/80 BLIND include impulsi tattili prodotti anche dal solver delle scatole, **non** solo dai dischi. Split CAL 7.349 frame pre-step già in contatto, BLIND 5.692 frame; il test dispone di vere esperienze di contatto per valutare la relazione causale. Contare solo un contatto **già osservato prima dell'azione**, non classificare il frame di una nuova collisione futura come input noto.
+
+### Previsione a un passo: MSE, più basso è meglio
+
+| Gruppo e metrica | FULL (corpo+azioni+tatto) | NO_ACTION | NO_TOUCH | Baseline |
+|---|---:|---:|---:|---:|
+| CAL XY globale | 0,000038929 | 0,000039056 | 0,000038534 | **0,000038254** ballistica |
+| CAL XY pre-contatto osservato | 0,000008538 | 0,000009052 | 0,000007721 | **0,000007299** ballistica |
+| CAL stato completo | **0,000319024** | 0,000623451 | 0,000293508 | 0,000870136 persistenza |
+| BLIND XY globale | 0,000126998 | 0,000127160 | 0,000126227 | **0,000125836** ballistica |
+| BLIND XY pre-contatto osservato | 0,000009129 | 0,000009520 | 0,000007761 | **0,000006829** ballistica |
+| BLIND stato completo | 0,000667154 | 0,000959907 | **0,000614220** | 0,001468678 persistenza |
+
+**Interpretazione rigorosa:** il modello FULL migliora la previsione delle 25 variabili di stato rispetto alla persistenza (BLIND 0,000667 vs 0,001469), ma **non migliora il movimento XY** rispetto alla ballistica: sul BLIND l'errore XY FULL è circa 0,9% peggiore, e nel sottoinsieme di contatto osservato circa **33,7% peggiore**. I comandi hanno un effetto predittivo rispetto al modello senza efferenza, ma il vantaggio XY è troppo debole globalmente. L'ablation senza tatto supera FULL sulla previsione XY sia overall sia sui frame tattili: `NO_TOUCH` BLIND 0,000007761 vs FULL 0,000009129 sui contatti. Questo dimostra il fallimento della **rappresentazione lineare attuale**, non l'inutilità del tatto biologico o software.
+
+### Predizione autoregressiva con action tape noto: MSE di posizione
+
+| Gruppo / orizzonte | FULL | NO_ACTION | NO_TOUCH | Baseline migliore |
+|---|---:|---:|---:|---:|
+| CAL 16 frame | 0,009614102 | 0,009748025 | **0,009533620** | 0,009751161 ballistica |
+| CAL 48 frame | 0,024650304 | 0,033523380 | **0,024482867** | 0,034820816 ballistica |
+| CAL 144 frame (diagnosi) | 0,149383274 | 0,234662262 | **0,143595513** | 0,201959564 immobile |
+| BLIND 16 frame | 0,039718961 | 0,040813428 | **0,039652052** | 0,040168105 ballistica |
+| BLIND 48 frame | 0,083430441 | 0,116379118 | **0,081871675** | 0,094900309 ballistica |
+| BLIND 144 frame (diagnosi) | 0,345754773 | 0,717641393 | **0,318125279** | 0,378847245 ballistica |
+
+V3.13 FULL ha miglioramenti sul rollout 48 frame su scene nuove (BLIND ≈12,1% rispetto a ballistica) e sullo stato, ma il rollout 16 frame migliora solo ≈1,1% e NON raggiunge il preregistrato 10%. La linea `NO_TOUCH` supera FULL anche nei tre rollout BLIND. Confronti post hoc sono **diagnostici**, non autorizzano promozione della variante selezionata dopo aver visto BLIND.
+
+### Gate e causa da ricercare
+
+**CAL = FAIL; BLIND = FAIL. Gate E2 di predizione delle collisioni NON superato.** I minimi dati tattili e le prese veri **ci sono** in entrambe le partizioni, ma il modello FULL manca almeno la condizione di qualità XY su contatto, di vantaggio sui sensori tattili, XY globale e rollout a 16 frame. **La CI verde dimostra esecuzione corretta, non gate scientifico verde.**
+
+**Fatto strutturale confermato dal codice:** il modello riceve soltanto stato corporeo+efferenza corrente; **non percepisce il relativo oggetto esterno prima che venga toccato**, non sa se l'oggetto si muove, se è davanti o dietro, e nel rollout non viene interrogato il solver delle collisioni del mondo. Nuove collisioni possono quindi essere incalcolabili da queste feature sole. **Ipotesi, non causa singola dimostrata:** mancanza di osservazione visiva/spaziale legittima, modello lineare troppo povero per le discontinuità dei contatti, istanti di impatto/onset e scarso effetto marginale del tatto rispetto a inerzia e azione, geometria fisica non osservata. Il modello non deve mai ricevere il `physicalLaw`, il tipo segreto di oggetto né coordinate future dell'oggetto.
+
+### Prossimo passo obbligato dal Master Blueprint
+
+**Prima di altro fitting** auditare i sensori di vista/prossimità di ZERO nel vero gioco e definire un `SensoryFrameV3` in cui lo stato corporeo, `touchSense`, `touchPulse`, `gripHold`, propriocezione e **oggetti visibili fisicamente** (posizione relativa osservata, direzione, distanza, stima di movimento/occlusione) siano sincronizzati *prima* dei comandi. Un futuro laboratorio V3.14 deve distinguere previsione di contatto *onset* da prevedere la risposta a contatto già esistente e includere un'ablation della **vista**. Richiedere nuovi seed e scene HOLDOUT non esaminate. Non collegare ancora un nuovo brain all'app, non fare tuning sul BLIND consumato V3.13. Successivamente soltanto un E3 in ciclo chiuso potrà mostrare scelta volontaria, locomozione, retenzione e generalizzazione.
+
+**Stato finale: modello E2 rifiutato per controllo live; G3 e G5 BLOCKED; PR #87 DRAFT; OTA172 e tutti gli slot 2.2 invariati.**
