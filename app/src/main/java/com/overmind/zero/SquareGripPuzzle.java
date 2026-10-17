@@ -176,6 +176,18 @@ public final class SquareGripPuzzle {
                                     float previousCoreX,float previousCoreY,
                                     StageObserver observer,
                                     boolean preserveExactFaceContact){
+        return constrain(body,skin,box,dt,previousSkinX,previousSkinY,
+                         previousBodyX,previousBodyY,previousCoreX,
+                         previousCoreY,observer,preserveExactFaceContact,false);
+    }
+    static Outcome constrain(MotorBrain.Body body,Morphology.Surface skin,
+                                    UnknownWorld.Entity box,float dt,
+                                    float[] previousSkinX,float[] previousSkinY,
+                                    float[] previousBodyX,float[] previousBodyY,
+                                    float previousCoreX,float previousCoreY,
+                                    StageObserver observer,
+                                    boolean preserveExactFaceContact,
+                                    boolean labTopologyAware){
         if(body==null||skin==null||box==null||!box.isBilateralBox()||
            !Float.isFinite(dt)||dt<=0)return new Outcome(false,0,0);
         // The scratch surface is shared, but this timer belongs ONLY to box.
@@ -183,7 +195,7 @@ public final class SquareGripPuzzle {
         stage(observer,"AFTER_TIMER_IMPORT",body,skin,box);
         SquareCollisionSolver.constrain(body,skin,box,previousSkinX,
             previousSkinY,previousBodyX,previousBodyY,
-            previousCoreX,previousCoreY,observer);
+            previousCoreX,previousCoreY,observer,labTopologyAware);
         stage(observer,"AFTER_SQUARE_CCD",body,skin,box);
         resolveCrossingLinks(skin,box);
         stage(observer,"AFTER_CROSSING_LINKS",body,skin,box);
