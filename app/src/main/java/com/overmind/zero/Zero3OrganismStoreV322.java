@@ -126,7 +126,7 @@ public final class Zero3OrganismStoreV322 {
         }
     }
 
-    private static final class FieldCodec {
+    static final class FieldCodec {
         private static Field[] sorted(Class<?> type)throws IOException {
             Field[] f=type.getDeclaredFields();
             ArrayList<Field> usable=new ArrayList<>();
