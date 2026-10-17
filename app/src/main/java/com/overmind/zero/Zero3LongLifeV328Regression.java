@@ -38,6 +38,11 @@ public final class Zero3LongLifeV328Regression {
             // World's real state-changing RNG, with no prescribed motor goal.
             if(n==64||n==512||n==1024||n==1536)
                 r.spawnDisk(n%1024==0?130f:165f);
+            // A controlled test habitat provides physically collectible blue
+            // resources; true contact is needed for fuel (not a fake +22).
+            // This evaluates STORAGE only, not survival-seeking policy.
+            if(n%64==0&&r.energy()<65f)
+                r.spawnBenchEnergyAtMembrane();
             r.advanceOneDecision();
             // Checkpoints at established decision boundaries. Reuse immutable
             // sealed segments: no need to rewrite history inside neural blob.
