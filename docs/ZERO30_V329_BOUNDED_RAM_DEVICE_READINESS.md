@@ -22,7 +22,9 @@ La V3.28 aveva dimostrato due vite da 2.000 decisioni neurofisiche in laboratori
 - Rollback dopo manifest corrotto alla decisione **1.920** per entrambi i casi; manomissione di un segmento reale, segmento orfano, doppia corruzione → tutti rilevati, nessun credito falso.
 - `BUILD SUCCESSFUL in 1m 2s` Android Debug, senza firma release e senza OTA.
 
-La batteria aggiornata con indicatore RAM nell'Activity V326 e i vecchi workflows V325–V327 deve continuare a essere verificata all'ultimo SHA prima di chiamare la modifica finale totalmente promossa. **L'assenza di un test installato su Galaxy S21 NON è sostituita da una CI verde.**
+**VERIFICA FINALE SUL CODICE DELLA UI CONTEGGI RAM:** [CI 39033772568 — SUCCESS](https://github.com/nicogtr20-ctrl/idle-runner-releases/actions/runs/39033772568), SHA `a354c54cc0e0746a149e6f66c9dfdce0f8aab202`: 2 vite × 2.000 decisioni fisiche con assert sul massimo di 32 record completi in RAM dopo checkpoint e 160 durante le decisioni non ancora salvate, confronto bitwise a 1.000+restart+1.000, rollback a 1.920, alterazione segmento e manifest, doppia corruzione, Android Debug tutti PASS. La [CI V3.26 39033772570](https://github.com/nicogtr20-ctrl/idle-runner-releases/actions/runs/39033772570) e la [CI V3.27 39033772617](https://github.com/nicogtr20-ctrl/idle-runner-releases/actions/runs/39033772617) sono entrambe SUCCESS sullo **stesso commit di UI**; anche la precedente V3.25 [39033745520](https://github.com/nicogtr20-ctrl/idle-runner-releases/actions/runs/39033745520) è SUCCESS dopo la modifica del journal.
+
+**Il gate `V329_BOUNDED_FULL_REPLAY_RESIDENCY_LAB` è SUPERATO con le regressioni V3.25–V3.28 verificate.** La UI Android è compilata ma **non è stata installata o collaudata sul Galaxy S21**; process death, storage pieno, risparmio heap/PSS dell'intero processo e latenza IO su dispositivo rimangono aperti.
 
 ## Preparazione della prima prova reale su Galaxy S21 (G9 — NON eseguita)
 
