@@ -178,13 +178,15 @@ public final class Zero3AutonomousLoopV317 {
         public final int realPhysicsSteps;
         public final float displacementX,displacementY,gross,work,alignment;
         public final float[] predicted,actual;
-        public final int realContacts,realGrip;
+        public final int realContacts,realGrip,adhesiveCommandSectors,
+                         adhesiveCommandAtContactSites;
         public final long actionEvidenceHash;
         public final boolean trained;
         Decision(Zero3MotorIntentV316 intent,Zero3SensoryFrameV315 pre,
                  Zero3SensoryFrameV315 post,int steps,float dx,float dy,
                  float gross,float work,float alignment,float[] predicted,
-                 int contacts,int grip,long actionEvidenceHash,boolean trained){
+                 int contacts,int grip,int commandedAdhesive,
+                 int adhesiveAndTouch,long actionEvidenceHash,boolean trained){
             this.intent=intent;before=pre;after=post;realPhysicsSteps=steps;
             displacementX=dx;displacementY=dy;this.gross=gross;this.work=work;
             this.alignment=alignment;this.predicted=predicted.clone();
@@ -192,6 +194,8 @@ public final class Zero3AutonomousLoopV317 {
                 clamp(post.bodyVelY/120f,-1,1),
                 clamp((post.touchedSites()+post.pulsedSites())/96f,0,1)};
             realContacts=contacts;realGrip=grip;
+            adhesiveCommandSectors=commandedAdhesive;
+            adhesiveCommandAtContactSites=adhesiveAndTouch;
             this.actionEvidenceHash=actionEvidenceHash;this.trained=trained;
         }
         public double predictionMse(){
@@ -245,7 +249,7 @@ public final class Zero3AutonomousLoopV317 {
             coordinator.begin(legacy,sc.body,training,!training,training);
             float startX=sc.body.cx,startY=sc.body.cy;
             float prevX=startX,prevY=startY,gross=0,work=0;
-            int contact=0,grip=0;
+            int contact=0,grip=0,adhesiveSectors=0,adhesiveAndTouch=0;
             long tapeHash=0xcbf29ce484222325L;
             float[] applied=null;
             for(int step=0;step<STEPS;step++){
@@ -255,6 +259,9 @@ public final class Zero3AutonomousLoopV317 {
                     ensure(Float.isFinite(cmd)&&Math.abs(cmd)<=1.001f,"invalid 64D actuation");
                     tapeHash=(tapeHash^Float.floatToIntBits(cmd))*1099511628211L;
                 }
+                for(int sector=0;sector<16;sector++)
+                    if(applied[sector*4+2]>Morphology.GRIP_THRESHOLD)
+                        adhesiveSectors++;
                 float[] oldSX=sc.skin.x.clone(),oldSY=sc.skin.y.clone(),
                         oldBX=sc.body.x.clone(),oldBY=sc.body.y.clone();
                 float oldCX=sc.body.cx,oldCY=sc.body.cy;
@@ -273,6 +280,9 @@ public final class Zero3AutonomousLoopV317 {
                 for(int i=0;i<Morphology.POINTS;i++){
                     if(sc.skin.touchSense[i]>.01f||sc.skin.touchPulse[i]>.001f)contact++;
                     if(sc.skin.gripHold[i]>=Morphology.GRIP_HOLD)grip++;
+                    if(sc.skin.gripCommand[i]>Morphology.GRIP_THRESHOLD&&
+                      (sc.skin.touchSense[i]>.01f||sc.skin.touchPulse[i]>.001f))
+                        adhesiveAndTouch++;
                 }
                 physicalSteps++;
             }
@@ -294,7 +304,8 @@ public final class Zero3AutonomousLoopV317 {
             encoder.after(post,training);
             selected++;
             return new Decision(intent,pre,post,STEPS,dx,dy,gross,work,alignment,
-                                guess,contact,grip,tapeHash,training);
+                                guess,contact,grip,adhesiveSectors,
+                                adhesiveAndTouch,tapeHash,training);
         }
     }
 }
