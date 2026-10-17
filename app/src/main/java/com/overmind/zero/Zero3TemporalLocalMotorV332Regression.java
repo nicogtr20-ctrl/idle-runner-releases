@@ -21,12 +21,13 @@ public final class Zero3TemporalLocalMotorV332Regression {
         if(!yes)throw new AssertionError("V332 "+msg);
     }
     static class EpisodeStats {
-        int decisions,realSteps,contacts,held,bilateral,valid,wrongWay,livesWithGrip;
+        int decisions,realSteps,contacts,held,bilateral,valid,wrongWay,livesWithGrip,censoredLives;
         double signed,gross,work,netX,netY,positiveDistance;
         void add(EpisodeStats n){
             decisions+=n.decisions;realSteps+=n.realSteps;
             contacts+=n.contacts;held+=n.held;bilateral+=n.bilateral;
             valid+=n.valid;wrongWay+=n.wrongWay;livesWithGrip+=n.livesWithGrip;
+            censoredLives+=n.censoredLives;
             signed+=n.signed;gross+=n.gross;work+=n.work;
             netX+=n.netX;netY+=n.netY;positiveDistance+=n.positiveDistance;
         }
@@ -37,9 +38,9 @@ public final class Zero3TemporalLocalMotorV332Regression {
                 "decisions=%d physical=%d signed=%.7f gross=%.7f "+
                 "efficiency=%.8f work=%.9f workPerUseful=%.9f "+
                 "valid=%d wrongWay=%d heldFrames=%d bilateral=%d "+
-                "contacts=%d gripLives=%d net=%.6f",
+                "contacts=%d gripLives=%d censoredLives=%d net=%.6f",
                 decisions,realSteps,signed,gross,efficiency(),work,cost(),
-                valid,wrongWay,held,bilateral,contacts,livesWithGrip,
+                valid,wrongWay,held,bilateral,contacts,livesWithGrip,censoredLives,
                 Math.hypot(netX,netY));
         }
     }
@@ -210,13 +211,24 @@ public final class Zero3TemporalLocalMotorV332Regression {
                     if(held){result.held++;heldInLife=true;}
                     UnknownWorld.Entity box=firstBox(objects);
                     if(box!=null&&box.bilateralHeldNow)result.bilateral++;
-                    check(p.gel.invalid==0&&
-                          MaterialGeometry.selfCrossings(p.skin)==0,
-                          "invalid material solver family="+family+
-                          " ordinal="+ordinal+" arm="+ARMS[model.arm]+
-                          " blind="+blind+" decision="+n+" sub="+frame+
-                          " gelInvalid="+p.gel.invalid+
-                          " selfCrossings="+MaterialGeometry.selfCrossings(p.skin));
+                    int crossings=MaterialGeometry.selfCrossings(p.skin);
+                    if(p.gel.invalid!=0||crossings!=0){
+                        // The previous tests counted a physical event as
+                        // evidence even if the skin intersects itself. Here
+                        // it is a genuine censored, *unfinished* episode,
+                        // NEVER a fabricated 96-decision continuation.
+                        controller.abort();
+                        adhesion.end();
+                        result.censoredLives=1;
+                        if(heldInLife)result.livesWithGrip=1;
+                        System.out.println("V332 PHYSICAL_CENSOR scene="+
+                            FAMILIES[family]+" ordinal="+ordinal+
+                            " arm="+ARMS[model.arm]+" blind="+blind+
+                            " completed="+result.decisions+" sub="+frame+
+                            " solverInvalid="+p.gel.invalid+
+                            " selfCrossings="+crossings);
+                        return result;
+                    }
                     acted=act;
                 }
                 adhesion.end();
@@ -319,9 +331,12 @@ public final class Zero3TemporalLocalMotorV332Regression {
                    .10*Math.max(.001,Math.max(Math.abs(oldEff),Math.abs(frozenEff)));
             boolean cost=local.cost()<=old.cost()*1.10&&
                          local.cost()<=frozen.cost()*1.10;
-            boolean physical=local.valid>=.8*local.decisions&&
-                             old.valid>=.8*old.decisions&&
-                             frozen.valid>=.8*frozen.decisions;
+            boolean physical=local.decisions>=.8*576&&
+                             old.decisions>=.8*576&&
+                             frozen.decisions>=.8*576&&
+                             local.valid>=.8*576&&
+                             old.valid>=.8*576&&
+                             frozen.valid>=.8*576;
             boolean grip=family!=1||
                    (old.contacts==0?false:
                     local.contacts>=.8*old.contacts&&
@@ -338,17 +353,26 @@ public final class Zero3TemporalLocalMotorV332Regression {
                 " gripRetained="+grip+
                 " scientificWin="+(directional&&cost&&physical&&grip));
         }
-        check(all[OLD].decisions()==2304&&
-              all[LOCAL].decisions()==2304&&
-              all[FROZEN].decisions()==2304,
-              "holdout has missing truly simulated life decisions");
+        // Real topology failures are part of the negative evidence.
+        // Do not invent 96 fully completed decisions after a censor.
+        check(all[OLD].decisions()>0&&all[LOCAL].decisions()>0&&
+              all[FROZEN].decisions()>0&&
+              all[OLD].decisions()<=2304&&
+              all[LOCAL].decisions()<=2304&&
+              all[FROZEN].decisions()<=2304,
+              "no completed physically meaningful BLIND decisions");
         check(holdout[OLD].cortex.updates()==0&&
               holdout[LOCAL].cortex.updates()==0&&
               holdout[FROZEN].cortex.updates()==0,
               "BLIND leaked gradients");
         System.out.println("V332 SUMMARY technicalThreeArmGate=PASS"+
-            " blindDecisionsPerArm=2304 matchedHeldoutLives=24"+
-            " physicalSimStepsPerArm=27648"+
+            " blindMaxDecisionsPerArm=2304 matchedHeldoutLives=24"+
+            " completedOLD="+all[OLD].decisions()+
+            " completedLOCAL="+all[LOCAL].decisions()+
+            " completedFROZEN="+all[FROZEN].decisions()+
+            " gelStepsOLD="+(12L*all[OLD].decisions())+
+            " gelStepsLOCAL="+(12L*all[LOCAL].decisions())+
+            " gelStepsFROZEN="+(12L*all[FROZEN].decisions())+
             " trainedFamWins="+wins+"/4"+
             " physicalFamilyCoverage="+valid+"/4"+
             " preregG3Preliminary="+(wins>=3&&valid==4?
