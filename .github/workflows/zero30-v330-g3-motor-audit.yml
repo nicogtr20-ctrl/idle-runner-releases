@@ -7,6 +7,7 @@ on:
       - 'app/src/main/java/com/overmind/zero/Zero3MotorLabBirthV330.java'
       - 'app/src/main/java/com/overmind/zero/Zero3MotorAuditV330Regression.java'
       - 'app/src/main/java/com/overmind/zero/Zero3RuntimeV325.java'
+      - 'app/src/main/java/com/overmind/zero/Zero3LabActivityV326.java'
       - '.github/workflows/zero30-v330-g3-motor-audit.yml'
   workflow_dispatch:
 permissions:
