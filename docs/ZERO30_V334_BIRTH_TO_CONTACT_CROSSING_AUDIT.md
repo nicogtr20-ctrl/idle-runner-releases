@@ -24,7 +24,7 @@ Tutto in PR #87 Draft, nessun merge/OTA, 12 salvataggi 2.2 e produzione OTA172 i
 
 ## Risultati verificati — 17 ottobre 2026
 
-**[CI definitiva V3.34 39042522334 — SUCCESS](https://github.com/nicogtr20-ctrl/idle-runner-releases/actions/runs/39042522334)**, job 117424699833: test fisico originale, stage-by-stage solver **e confronto finale bitwise identico** rispetto alla pipeline non strumentata, compilazione Android Debug **BUILD SUCCESSFUL in 1m 3s**. La prima [CI 39042284332](https://github.com/nicogtr20-ctrl/idle-runner-releases/actions/runs/39042284332) aveva già isolato BOX-vs-no-BOX, e l'aggiunta finale ha risolto lo stadio specifico senza cambiare \`SquareGripPuzzle\`/gel/sensori/neuroni.
+**[CI definitiva V3.34 39042522334 — SUCCESS](https://github.com/nicogtr20-ctrl/idle-runner-releases/actions/runs/39042522334)**, job 117424699833: test fisico originale, stage-by-stage solver **e confronto bitwise della firma di coordinate shell, tick e contatori di riparazione** rispetto alla pipeline non strumentata, compilazione Android Debug **BUILD SUCCESSFUL in 1m 3s**. La prima [CI 39042284332](https://github.com/nicogtr20-ctrl/idle-runner-releases/actions/runs/39042284332) aveva già isolato BOX-vs-no-BOX, e l'aggiunta finale ha risolto lo stadio specifico senza cambiare \`SquareGripPuzzle\`/gel/sensori/neuroni.
 
 ### Esito meccanico accertato
 
@@ -39,7 +39,7 @@ Tutto in PR #87 Draft, nessun merge/OTA, 12 salvataggi 2.2 e produzione OTA172 i
 - BOX vero, comando scelto dal recurrent actor V317 e head V319 addestrata ma congelata → crossing 1 al frame incriminato in entrambi i casi.
 - **Gli stessi 64 comandi fisici realmente emessi**, ma senza chiamare la collisione WORLD → **0 incroci** ai due frame.
 - **Tutti i 64 comandi muscolari pari a ZERO**, collisione BOX originale → **1 incrocio** agli stessi frame e **stesse coppie di edge 45,47 / 41,43**.
-- Ricalcolo della WORLD a stadi \`constrain\` → \`reconcile\` → \`interior\` → \`compose\` → \`tick\` produce **stesso stato fisico finale byte-per-byte** dell'implementazione originale e non perturba l'esito per effetto della strumentazione.
+- Ricalcolo della WORLD a stadi \`constrain\` → \`reconcile\` → \`interior\` → \`compose\` → \`tick\` produce **identiche coordinate dei 96 punti della membrana, tick e contatori delle riparazioni bit per bit** rispetto all'implementazione originale e non perturba l'esito per effetto della strumentazione.
 
 Le 4 pose BOX di controllo \`333,341,641,649\` rimangono senza incroci per i primi due substep, con autentica pressione BOX. Quindi non ogni collisione è problematica: dipende dalla geometria specifica di quelle due nascite.
 
