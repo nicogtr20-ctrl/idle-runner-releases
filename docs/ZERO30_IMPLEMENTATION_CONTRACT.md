@@ -1,6 +1,6 @@
 # ZERO 3.0 — CONTRATTO DI IMPLEMENTAZIONE, TEST E HANDOFF TRA CHAT
 
-> **V3.9 — STATO TRANSITORIO (17/10/2026):** [Protocollo preregistrato state(t)+64 comandi eseguiti→state(t+1)](ZERO30_MOTOR_V39_OBSERVED_STATE_ACTION.md). Modello e CI isolati nel ramo PR #87, prima compilazione Java riuscita, prova di qualità della previsione in corso: non attribuire PASS ai gate finché non si leggono i risultati finali. G3/G5 bloccati, nessun OTA.
+> **V3.9 — STATO TRANSITORIO (17/10/2026):** [Protocollo preregistrato state(t)+64 comandi eseguiti→state(t+1)](ZERO30_MOTOR_V39_OBSERVED_STATE_ACTION.md). Modello e CI isolati nel ramo PR #87, [CI 38985522666](https://github.com/nicogtr20-ctrl/idle-runner-releases/actions/runs/38985522666) SUCCESS tecnico su 491.520 step fisici, ma **gate scientifico CAL=FAIL, BLIND=FAIL**: one-step XY BLIND 0,002513731 vs ballistic 0,002582060, rollout 32 blocchi 3,116409 vs zero 0,837473. Dettagli nel rapporto V3.9; modello rifiutato per controllo. G3/G5 bloccati, nessun OTA.
 
 > **V3.8-B APPRENDIMENTO DINAMICO VERIFICATO (17/10/2026):** [Rapporto e test su 983.040 passi fisici](ZERO30_MOTOR_V38B_STATE_TRANSITIONS.md). Il modello autoregressivo a 32 transizioni **FALLISCE** il gate: errore finale su nuovi stati **0,16007** vs **0,02906** del modello statico. ZERO 3.0 NON ATTIVO, G3/G5 non superati, nessuna nuova OTA.
 
