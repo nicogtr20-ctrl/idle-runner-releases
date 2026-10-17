@@ -1,0 +1,67 @@
+name: ZERO3 V3.24 real chamber and room-food alias same-life QA
+on:
+  push:
+    branches: [feature/zero30-foundation-g0-g3-20261016]
+    paths:
+      - 'app/src/main/java/com/overmind/zero/Zero3RoomStateV324.java'
+      - 'app/src/main/java/com/overmind/zero/Zero3RoomArchiveV324.java'
+      - 'app/src/main/java/com/overmind/zero/Zero3RoomMechanicsV324Regression.java'
+      - 'app/src/main/java/com/overmind/zero/Zero3RoomRestartV324Regression.java'
+      - '.github/workflows/zero30-v324-room-qa.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  chamber-continuity:
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+      - name: Compile real material neural metabolic and room physics
+        run: |
+          set -euo pipefail
+          mkdir -p /tmp/overmind
+          python3 - <<'PY'
+          import pathlib,re,shlex,subprocess
+          src=pathlib.Path('.github/workflows/overmind-ota-publish.yml').read_text()
+          cmd=re.search(r'^\s*(javac -d /tmp/overmind [^\n]+)',src,re.M)
+          if not cmd:raise RuntimeError('production physics compiler command not found')
+          path='app/src/main/java/com/overmind/zero/'
+          names='Zero3LearningFoundation Zero3MotorResponseKernel Zero3MotorRetentionRegression Zero3MotorPromotionGate Zero3MotorImpulseResponseRegression Zero3MotorLocalFrameV310Regression Zero3SensoryFrameV315 Zero3CausalRecorderV315 Zero3SensoryContractV315Regression Zero3MotorIntentV316 Zero3AutonomousLoopV317 Zero3LearnedAdhesionV318 Zero3LearnedAdhesionV318Regression Zero3ContextAdhesionV319 Zero3ContextAdhesionV319Regression Zero3MotorHeadStoreV320 Zero3NeuralBundleStoreV321 Zero3OrganismStoreV322 Zero3FullCausalExperienceV322B Zero3FullArchiveStoreV322B Zero3MultiSceneRestartV322BRegression Zero3SurvivalLedgerV323 Zero3SurvivalArchiveV323 Zero3SurvivalRestartV323Regression Zero3RoomStateV324 Zero3RoomArchiveV324 Zero3RoomRestartV324Regression Zero3RoomMechanicsV324Regression'
+          subprocess.run(shlex.split(cmd.group(1))+[path+n+'.java' for n in names.split()],check=True)
+          PY
+      - name: Actual bilateral gate contacts and hysteresis survive resuming
+        run: |
+          set -euo pipefail
+          java -cp /tmp/overmind com.overmind.zero.Zero3RoomMechanicsV324Regression | tee /tmp/v324-room-phys.log
+          grep -q 'V324 REAL_GATE_PHYSICS_BILATERAL_MEMORY=PASS' /tmp/v324-room-phys.log
+      - name: Twenty-five independently restarted neural world metabolic room lives
+        run: |
+          set -euo pipefail
+          for mode in 0 1 2 3 4; do
+            for rep in 0 1 2 3 4; do
+              ordinal=$((61 + rep*5 + mode))
+              prefix="/tmp/zero324-${mode}-${rep}"
+              flags="-Dzero3.mode=${mode} -Dzero3.ordinal=${ordinal}"
+              java -Xmx1536m $flags -cp /tmp/overmind com.overmind.zero.Zero3RoomRestartV324Regression prefix "$prefix" | tee "$prefix-prefix.log"
+              grep -q 'V324 PREFIX cursor=48 gen=2' "$prefix-prefix.log"
+              java -Xmx1536m $flags -cp /tmp/overmind com.overmind.zero.Zero3RoomRestartV324Regression resume "$prefix" "$prefix-resume.txt" | tee "$prefix-resume.log"
+              grep -q 'V324 RESUME cursor=96 gen=3' "$prefix-resume.log"
+              java -Xmx1536m $flags -cp /tmp/overmind com.overmind.zero.Zero3RoomRestartV324Regression reference "$prefix-reference.txt" | tee "$prefix-reference.log"
+              cmp "$prefix-resume.txt" "$prefix-reference.txt"
+              grep -q 'fullRecords=96' "$prefix-resume.txt"
+              grep -q 'roomFoodAlias=true' "$prefix-resume.txt"
+              java -Xmx1536m $flags -cp /tmp/overmind com.overmind.zero.Zero3RoomRestartV324Regression fault "$prefix" | tee "$prefix-fault.log"
+              grep -q 'V324 FAULT rollbackCursor=48' "$prefix-fault.log"
+              echo "V324 ROOM_AND_WHOLE_ORGANISM SCENE=${mode} ORDINAL=${ordinal} PASS"
+            done
+          done
+          echo 'ZERO3 V324 TWENTY_FIVE_ROOM_LIVES_BITWISE_RESTART=PASS'
+      - name: Android Debug build only, NEVER OTA
+        run: gradle --no-daemon assembleDebug
+      - name: Research gate status
+        run: echo 'V324_GATE_ROOM_LAB=PASS GAMEACTIVITY_RUNTIME_NOT_CONNECTED G3_BLOCKED G5_BLOCKED NO_OTA'

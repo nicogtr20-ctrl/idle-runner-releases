@@ -1,0 +1,50 @@
+name: ZERO3 V3.37 four-arm first grip divergence and LINK_ONLY
+on:
+  push:
+    branches: [feature/zero30-foundation-g0-g3-20261016]
+    paths:
+      - 'app/src/main/java/com/overmind/zero/Zero3GripFirstDivergenceV337Regression.java'
+      - 'app/src/main/java/com/overmind/zero/Zero3ContactTopologyExperimentV336.java'
+      - 'app/src/main/java/com/overmind/zero/Zero3ExactFaceTrialV336Regression.java'
+      - '.github/workflows/zero30-v337-grip-divergence-qa.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  physical-actuated:
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+      - name: Compile production gel and real neural sensorimotor pipeline
+        run: |
+          set -euo pipefail
+          mkdir -p /tmp/overmind
+          python3 - <<'PY'
+          import pathlib,re,shlex,subprocess
+          w=pathlib.Path('.github/workflows/overmind-ota-publish.yml').read_text()
+          m=re.search(r'^\s*(javac -d /tmp/overmind [^\n]+)',w,re.M)
+          if not m: raise RuntimeError("original production Java physical compile list absent")
+          r='app/src/main/java/com/overmind/zero/'
+          names='Zero3LearningFoundation Zero3MotorResponseKernel Zero3MotorRetentionRegression Zero3MotorPromotionGate Zero3MotorImpulseResponseRegression Zero3MotorLocalFrameV310Regression Zero3SensoryFrameV315 Zero3CausalRecorderV315 Zero3SensoryContractV315Regression Zero3MotorIntentV316 Zero3AutonomousLoopV317 Zero3LearnedAdhesionV318 Zero3LearnedAdhesionV318Regression Zero3ContextAdhesionV319 Zero3ContextAdhesionV319Regression Zero3MotorHeadStoreV320 Zero3NeuralBundleStoreV321 Zero3OrganismStoreV322 Zero3FullCausalExperienceV322B Zero3FullArchiveStoreV322B Zero3MultiSceneRestartV322BRegression Zero3FiveArmAblationV333Regression Zero3BoxCrossingForensicV334Regression Zero3BoxSubstageForensicV335Regression Zero3ContactTopologyExperimentV336 Zero3ExactFaceTrialV336Regression Zero3ActuatedContactStressV336Regression Zero3GripFirstDivergenceV337Regression'
+          subprocess.run(shlex.split(m.group(1))+[r+n+'.java' for n in names.split()],check=True)
+          PY
+      - name: Actually run 168 sensor-driven cortex decisions per historical case
+        run: |
+          set -euo pipefail
+          java -Xmx1900m -cp /tmp/overmind com.overmind.zero.Zero3GripFirstDivergenceV337Regression | tee /tmp/v336active.log
+          grep -q 'V337 ACTUATED_FINAL cases=2 decisionsPerCase=168 framesPerCase=2016' /tmp/v336active.log
+          test "$(grep -c 'V336 ACTUATED_RESULT id=' /tmp/v336active.log)" -eq 2
+          grep -q 'realV317AndV319Actuator=true matchedTape=true' /tmp/v336active.log
+          # A green workflow is NOT permission to deploy: scientific grip fails.
+          grep -q 'V337 PHYSICS_GUARD safeCases=' /tmp/v336active.log
+          grep -q 'V337 FOUR_ARM id=645 ' /tmp/v336active.log
+          grep -q 'V337 FIRST_' /tmp/v336active.log
+      - name: Build Android Debug but never publish OTA
+        run: gradle --no-daemon assembleDebug
+      - name: Keep candidate and learning gates blocked
+        run: echo 'V336_PHYSICAL_BENCH_ONLY G3_BLOCKED G5_BLOCKED NO_OTA NO_MERGE'

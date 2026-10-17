@@ -1,0 +1,82 @@
+name: ZERO3 V3.28 segmented 2000-decision real life and Android QA
+on:
+  push:
+    branches: [feature/zero30-foundation-g0-g3-20261016]
+    paths:
+      - 'app/src/main/java/com/overmind/zero/Zero3SegmentedArchiveV328.java'
+      - 'app/src/main/java/com/overmind/zero/Zero3ReplayJournalV329.java'
+      - 'app/src/main/java/com/overmind/zero/Zero3LongLifeV328Regression.java'
+      - 'app/src/main/java/com/overmind/zero/Zero3RuntimeV325.java'
+      - 'app/src/main/java/com/overmind/zero/Zero3AndroidSessionV325.java'
+      - 'app/src/main/java/com/overmind/zero/Zero3LabActivityV326.java'
+      - '.github/workflows/zero30-v328-segmented-longlife-qa.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  segmented-real-world:
+    runs-on: ubuntu-latest
+    timeout-minutes: 55
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+      - name: Compile unchanged real 96x74 body/physics and V328 segmented store
+        run: |
+          set -euo pipefail
+          mkdir -p /tmp/overmind
+          python3 - <<'PY'
+          import pathlib,re,shlex,subprocess
+          src=pathlib.Path('.github/workflows/overmind-ota-publish.yml').read_text()
+          p=re.search(r'^\s*(javac -d /tmp/overmind [^\n]+)',src,re.M)
+          if not p:raise RuntimeError('real Java physics compilation missing')
+          root='app/src/main/java/com/overmind/zero/'
+          names='Zero3LearningFoundation Zero3MotorResponseKernel Zero3MotorRetentionRegression Zero3MotorPromotionGate Zero3MotorImpulseResponseRegression Zero3MotorLocalFrameV310Regression Zero3SensoryFrameV315 Zero3CausalRecorderV315 Zero3SensoryContractV315Regression Zero3MotorIntentV316 Zero3AutonomousLoopV317 Zero3LearnedAdhesionV318 Zero3LearnedAdhesionV318Regression Zero3ContextAdhesionV319 Zero3ContextAdhesionV319Regression Zero3MotorHeadStoreV320 Zero3NeuralBundleStoreV321 Zero3OrganismStoreV322 Zero3FullCausalExperienceV322B Zero3FullArchiveStoreV322B Zero3MultiSceneRestartV322BRegression Zero3SurvivalLedgerV323 Zero3SurvivalArchiveV323 Zero3RoomStateV324 Zero3RoomArchiveV324 Zero3RuntimeV325 Zero3MotorEvidenceV330 Zero3WorldBirthV326 Zero3SegmentedArchiveV328 Zero3ReplayJournalV329 Zero3LongLifeV328Regression'
+          subprocess.run(shlex.split(p.group(1))+[root+n+'.java' for n in names.split()],check=True)
+          PY
+      - name: Three independent JVM phases per each of two 2000-decision lives
+        run: |
+          set -euo pipefail
+          cls=com.overmind.zero.Zero3LongLifeV328Regression
+          for ordinal in 1 2; do
+            opts="-Xmx3072m -Dv328.target=2000 -Dv328.ordinal=$ordinal"
+            folder="/tmp/v328-organism-$ordinal"
+            java $opts -cp /tmp/overmind "$cls" prefix "$folder" | tee "$folder-prefix.log"
+            grep -q 'V328 PREFIX organism=' "$folder-prefix.log"
+            java $opts -cp /tmp/overmind "$cls" resume "$folder" "$folder-restored.txt" | tee "$folder-resume.log"
+            grep -q 'V328 RESUMED_2000_PLUS_EXPERIENCES=PASS decisions=2000' "$folder-resume.log"
+            java $opts -cp /tmp/overmind "$cls" reference "$folder-control.txt" | tee "$folder-control.log"
+            cmp "$folder-restored.txt" "$folder-control.txt"
+            grep -q 'experiences=2000' "$folder-restored.txt"
+            grep -q 'V329_BOUNDED_FULL_REPLAY_RESIDENCY=PASS' "$folder-resume.log"
+            grep -q 'decision=2000' "$folder-restored.txt"
+            echo "V328 REAL_2000_DECISIONS_STORED_AND_BITWISE_RESUMED=PASS ORDINAL=$ordinal"
+          done
+      - name: 'Tamper manifest and orphan chunk: rollback and double fault'
+        run: |
+          set -euo pipefail
+          for ordinal in 1 2; do
+            folder="/tmp/v328-organism-$ordinal"
+            java -Xmx3072m -Dv328.target=2000 -Dv328.ordinal=$ordinal \
+              -cp /tmp/overmind com.overmind.zero.Zero3LongLifeV328Regression fault "$folder" | tee "$folder-fault.log"
+            grep -q 'V328 FAULT_ROLLBACK=PASS SEGMENT_TAMPER=PASS' "$folder-fault.log"
+          done
+      - name: Android Debug compiles with opt-in segmented V3 slot (no release)
+        run: |
+          set -euo pipefail
+          for try in 1 2 3; do
+            if gradle --no-daemon assembleDebug; then
+              echo 'V328_ANDROID_DEBUG_COMPILES=PASS'
+              exit 0
+            fi
+            if gradle --offline --no-daemon assembleDebug; then
+              echo 'V328_ANDROID_DEBUG_COMPILES=PASS'
+              exit 0
+            fi
+            sleep 12
+          done
+          exit 1
+      - name: Research status, DO NOT merge or publish
+        run: echo 'V328_SEGMENTED_REPLAY_JVM_LAB=PASS ANDROID_DEVICE_G9_NOT_TESTED G3_BLOCKED G5_BLOCKED NO_OTA'

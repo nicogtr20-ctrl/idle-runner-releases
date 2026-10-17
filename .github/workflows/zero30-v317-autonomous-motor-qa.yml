@@ -1,0 +1,49 @@
+name: ZERO3 V3.17 real autonomous motor-intention learning gate
+on:
+  push:
+    branches: [feature/zero30-foundation-g0-g3-20261016]
+    paths:
+      - 'app/src/main/java/com/overmind/zero/Zero3AutonomousLoopV317.java'
+      - 'app/src/main/java/com/overmind/zero/Zero3AutonomousLoopV317Regression.java'
+      - '.github/workflows/zero30-v317-autonomous-motor-qa.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  autonomous-embodied-motor:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+      - name: Compile unchanged production gel and real sensory-action ownership
+        run: |
+          set -euo pipefail
+          mkdir -p /tmp/overmind
+          python3 - <<'PY'
+          import pathlib,re,shlex,subprocess
+          source=pathlib.Path('.github/workflows/overmind-ota-publish.yml').read_text()
+          m=re.search(r'^\s*(javac -d /tmp/overmind [^\n]+)',source,re.M)
+          if not m:raise RuntimeError('production Java physical source list missing')
+          root='app/src/main/java/com/overmind/zero/'
+          required=['Zero3LearningFoundation.java','Zero3MotorResponseKernel.java',
+            'Zero3MotorRetentionRegression.java','Zero3MotorPromotionGate.java',
+            'Zero3MotorImpulseResponseRegression.java',
+            'Zero3MotorLocalFrameV310Regression.java',
+            'Zero3SensoryFrameV315.java','Zero3CausalRecorderV315.java',
+            'Zero3SensoryContractV315Regression.java',
+            'Zero3MotorIntentV316.java',
+            'Zero3AutonomousLoopV317.java','Zero3AutonomousLoopV317Regression.java']
+          subprocess.run(shlex.split(m.group(1))+[root+n for n in required],check=True)
+          PY
+      - name: Measure 2048 actor-chosen intentions with real physics vs frozen holdout
+        run: |
+          set -euo pipefail
+          java -Xmx1536m -cp /tmp/overmind com.overmind.zero.Zero3AutonomousLoopV317Regression | tee /tmp/v317.txt
+          grep -q 'realActorChosenTrainDecisions=2048' /tmp/v317.txt
+          grep -q 'autonomyChooseIntent=true' /tmp/v317.txt
+          grep -q 'scientificMotorGate=' /tmp/v317.txt
+          grep -q 'NO_GAIT G3_BLOCKED G5_BLOCKED NO_OTA' /tmp/v317.txt

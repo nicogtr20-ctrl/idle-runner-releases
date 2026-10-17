@@ -1,0 +1,86 @@
+package com.overmind.zero;
+
+import android.content.Context;
+import java.io.IOException;
+import java.nio.file.*;
+
+/**
+ * Explicit opt-in Android lifecycle adapter for the V3.25 research runtime.
+ * No Activity registers this by default, and no 2.2 preference, named slot,
+ * GameSceneSnapshot, backup or OTA file is read or written.
+ *
+ * This is a separate V3 seam for a FUTURE debug/research screen and has not
+ * yet passed an on-device crash/power-loss instrumented test.
+ */
+public final class Zero3AndroidSessionV325 implements AutoCloseable {
+    private static final String ROOT="zero3-research-v325";
+    private final Path directory;
+    private Zero3RuntimeV325 session;
+    private Zero3AndroidSessionV325(Path location){directory=location;}
+    public static Zero3AndroidSessionV325 create(Context context,String slot)
+            throws IOException {
+        if(context==null||slot==null||!slot.matches("[a-zA-Z0-9_-]{1,24}"))
+            throw new IOException("invalid V3 research slot");
+        // getNoBackupFilesDir prevents automatic Android/cloud backup of
+        // unvalidated V3 research state and isolates all 12 legacy slots.
+        Path dir=context.getApplicationContext().getNoBackupFilesDir().toPath()
+                .resolve(ROOT).resolve("v3-"+slot);
+        return new Zero3AndroidSessionV325(dir);
+    }
+    /** Reject a new life if any existing V3 checkpoint may contain history. */
+    public synchronized void startNew(Zero3RuntimeV325 organism)throws IOException {
+        if(session!=null||organism==null||organism.decisions()!=0)
+            throw new IOException("new research life must be fresh");
+        if(Files.exists(directory.resolve("v324-current.mf"))||
+           Files.exists(directory.resolve("v324-backup.mf"))||
+           Files.exists(directory.resolve("v324-room-0.bin"))||
+           Files.exists(directory.resolve("v324-room-1.bin"))||
+           Zero3SegmentedArchiveV328.hasAny(directory))
+            throw new IOException("existing V3 research history requires explicit resume");
+        organism.enableSegmented();
+        session=organism;
+    }
+    /** App lifecycle onResume, never silently generate a replacement brain. */
+    public synchronized void resume()throws IOException {
+        if(session!=null)throw new IOException("V3 organism already active");
+        session=Zero3RuntimeV325.loadSegmented(directory);
+        if(session==null)
+            throw new IOException("no valid complete V3 checkpoint; no reset performed");
+    }
+    /** Advances exactly one genuine neural-and-physics decision. */
+    public synchronized void step()throws IOException {
+        if(session==null)throw new IOException("V3 session is suspended");
+        session.advanceOneDecision();
+    }
+    /**
+     * App onPause/onStop at a completed decision only:
+     * persist verified physical+neural+metabolic+room+replay generation.
+     * On I/O failure keep session alive; never mark it saved by assumption.
+     */
+    public synchronized void suspend()throws IOException {
+        if(session==null)return;
+        session.saveSegmented(directory);
+        session.close();
+        session=null;
+    }
+    /** Real physics + neural counters captured only by the session owner. */
+    public synchronized Zero3RuntimeV325.Display display()throws IOException {
+        if(session==null)throw new IOException("V3 runtime not active");
+        return session.display();
+    }
+    public synchronized boolean ended(){return session!=null&&session.ended();}
+    public synchronized boolean atArchiveCapacity(){
+        return session!=null&&session.atArchiveCapacity();
+    }
+    public synchronized int durableDecisionLimit(){
+        return session==null?0:session.durableDecisionLimit();
+    }
+    public synchronized Path researchPath(){return directory;}
+    public synchronized boolean active(){return session!=null;}
+    public synchronized int decisions(){return session==null?0:session.decisions();}
+    public synchronized float energy(){return session==null?Float.NaN:session.energy();}
+    /** Any unsaved incomplete life is never claimed as durably persisted. */
+    @Override public synchronized void close(){
+        if(session!=null){session.close();session=null;}
+    }
+}

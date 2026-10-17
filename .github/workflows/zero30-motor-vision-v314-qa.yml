@@ -1,0 +1,46 @@
+name: ZERO3 V3.14 preregistered pre-action physical vision QA
+on:
+  push:
+    branches: [feature/zero30-foundation-g0-g3-20261016]
+    paths:
+      - 'app/src/main/java/com/overmind/zero/Zero3MotorVisionV314Regression.java'
+      - '.github/workflows/zero30-motor-vision-v314-qa.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  real-vision-and-contact:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+      - name: Compile unchanged real membrane rays, gel, collisions and V3.14 model
+        run: |
+          set -euo pipefail
+          mkdir -p /tmp/overmind
+          python3 - <<'PY'
+          import pathlib,re,shlex,subprocess
+          s=pathlib.Path('.github/workflows/overmind-ota-publish.yml').read_text()
+          m=re.search(r'^\s*(javac -d /tmp/overmind [^\n]+)',s,re.M)
+          if m is None:raise RuntimeError('Official production gel compilation reference unavailable')
+          root='app/src/main/java/com/overmind/zero/'
+          models=['Zero3LearningFoundation.java','Zero3MotorResponseKernel.java',
+            'Zero3MotorRetentionRegression.java','Zero3MotorPromotionGate.java',
+            'Zero3MotorImpulseResponseRegression.java',
+            'Zero3MotorLongHorizonRegression.java',
+            'Zero3MotorTemporalHistoryRegression.java',
+            'Zero3MotorLocalFrameV310Regression.java',
+            'Zero3MotorVisionV314Regression.java']
+          subprocess.run(shlex.split(m.group(1))+[root+n for n in models],check=True)
+          PY
+      - name: Fit causal state/action/ray model, run calibrated and blind physical tests
+        run: |
+          set -euo pipefail
+          java -Xmx1536m -cp /tmp/overmind com.overmind.zero.Zero3MotorVisionV314Regression | tee /tmp/zero314.txt
+          grep -q 'ZERO3 V314 SUMMARY' /tmp/zero314.txt
+          grep -q 'futureVisionLeak=false futureStateLeak=false' /tmp/zero314.txt
+          grep -q 'G3_BLOCKED G5_BLOCKED NO_OTA' /tmp/zero314.txt

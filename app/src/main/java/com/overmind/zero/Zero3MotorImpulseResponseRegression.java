@@ -1,0 +1,300 @@
+package com.overmind.zero;
+
+import java.util.ArrayList;
+import java.util.Locale;
+
+/**
+ * ZERO3 G3 motor impulse-response laboratory: measures *actual physical*
+ * response to a localized actuator pulse against a matched unperturbed world.
+ * The pulse is injected into the 64 commands consumed by the REAL gel solver,
+ * NEVER by moving body coordinates, inventing energy, or looking at gems.
+ *
+ * Learns a small action-/pose-conditioned causal RESPONSE PREDICTOR by ridge
+ * regression on actual paired transitions. Prediction is not acted on in the
+ * shipped game. Validation uses +45/-45 degree poses that are not trained on.
+ * No walking gait is hardcoded; this is an isolated controllability test.
+ */
+public final class Zero3MotorImpulseResponseRegression {
+    private static final int F=42, OUTPUTS=3;
+    private static final int WARMUP=12, PULSE=12, SETTLE=48;
+    private static final float DT=.025f,AMP=.20f;
+    private static final float[][] DIRS={{1,0},{0,1},{-1,0},{0,-1}};
+    private static final int[] SECTORS={0,4,8,12};
+    private static final float[] TRAIN_POSES={0f,(float)(Math.PI/2)};
+    private static final float[] TEST_POSES={
+        (float)(Math.PI/8),(float)(-Math.PI/8),
+        (float)(Math.PI/4),(float)(-Math.PI/4),
+        (float)(3*Math.PI/8),(float)(-3*Math.PI/8)};
+
+    private static void assertTrue(boolean b,String msg){
+        if(!b)throw new AssertionError("ZERO3 PHYSICAL RESPONSE "+msg);
+    }
+    static class Scenario {
+        final MotorBrain.Body body=new MotorBrain.Body();
+        final Morphology.Surface skin=new Morphology.Surface(body);
+        final SymbioteMatterV1 gel=new SymbioteMatterV1();
+        final Zero3LearningFoundation.AdaptiveCortex cortex=
+            new Zero3LearningFoundation.AdaptiveCortex(0f);
+        final Zero3LearningFoundation.MotorIntent intent;
+        final float observedPose;
+        double work,gross,impulse;
+        float prevX,prevY;
+        Scenario(int direction,float rotation){this(direction,rotation,0);}
+        Scenario(int direction,float rotation,int condition){
+            gel.reset(body,skin);
+            // Proprioceptive anatomical frame, measured from the actual skin.
+            // Never pass the laboratory's hidden rotation to the predictor.
+            float baseAngle=skinAxisAngle();
+            if(rotation!=0){
+                float cs=(float)Math.cos(rotation),sn=(float)Math.sin(rotation);
+                Zero3MotorRetentionRegression.rotate(skin.x,skin.y,body.cx,body.cy,cs,sn);
+                Zero3MotorRetentionRegression.rotate(body.x,body.y,body.cx,body.cy,cs,sn);
+                Zero3MotorRetentionRegression.rotate(gel.x,gel.y,body.cx,body.cy,cs,sn);
+                gel.observeBody(body,skin);
+            }
+            if(condition!=0)precondition(condition);
+            float angle=(float)(skinAxisAngle()-baseAngle);
+            while(angle>Math.PI)angle-=(float)(2*Math.PI);
+            while(angle<-Math.PI)angle+=(float)(2*Math.PI);
+            observedPose=angle;
+            intent=new Zero3LearningFoundation.MotorIntent(
+                300,0,0,DIRS[direction][0],DIRS[direction][1],1f,.3f,.5f);
+            prevX=body.cx;prevY=body.cy;
+        }
+        /**
+         * Physics-generated initial deformation/momentum fixture ONLY:
+         * real 64-actuator commands and ordinary solver dynamics, never
+         * manual centroid displacement or made-up passive velocities.
+         */
+        private void precondition(int condition){
+            if(condition<1||condition>3)throw new IllegalArgumentException("fixture condition");
+            int frames=condition==1?16:condition==2?40:64;
+            for(int t=0;t<frames;t++){
+                float[] m=cortex.command(new Zero3LearningFoundation.MotorIntent(
+                    301,1,0,1,0,1,.3f,.5f),body,skin,DT);
+                int sector=condition==1?3:condition==2?11:6;
+                int channel=condition==3?1:0;
+                float strength=condition==1?.17f:condition==2?.23f:.28f;
+                for(int d=-1;d<=1;d++){
+                    int idx=((sector+d+16)%16)*4+channel;
+                    m[idx]=Math.max(-1f,Math.min(1f,m[idx]+strength*(2-Math.abs(d))/2f));
+                }
+                gel.step(body,skin,m,DT);
+                assertTrue(gel.invalid==0&&
+                    MaterialGeometry.selfCrossings(skin)==0,"preconditioning invalid body");
+            }
+        }
+        /** Measured orientation from the true shell, not a world/oracle angle. */
+        private float skinAxisAngle(){
+            double x=0,y=0;
+            for(int k=0;k<Morphology.POINTS/16;k++){
+                x+=skin.x[k]-body.cx;
+                y+=skin.y[k]-body.cy;
+            }
+            return (float)Math.atan2(y,x);
+        }
+        void tick(int frame,int sector,int channel,float sign){
+            float[] muscles=cortex.command(intent,body,skin,DT);
+            if(sector>=0&&frame>=WARMUP&&frame<WARMUP+PULSE){
+                for(int offset=-2;offset<=2;offset++){
+                    int idx=((sector+offset+16)%16)*4+channel;
+                    float strength=AMP*(3-Math.abs(offset))/3f*sign;
+                    muscles[idx]=Math.max(-1f,Math.min(1f,muscles[idx]+strength));
+                }
+            }
+            float before=gel.work;
+            gel.step(body,skin,muscles,DT);
+            assertTrue(gel.invalid==0&&Float.isFinite(body.cx)&&Float.isFinite(body.cy),
+                "nonfinite/collapsed physical matter");
+            gross+=Math.hypot(body.cx-prevX,body.cy-prevY);
+            prevX=body.cx;prevY=body.cy;
+            work+=Math.max(0,gel.work-before);
+            impulse+=gel.lastMuscleReactionImpulse;
+        }
+    }
+    static class Trial {
+        final int dir,channel,sector,polarity;
+        final float pose;
+        final double early,late,extraWork,grossDelta,delayedFraction;
+        final double[] features;
+        Trial(int dir,float pose,int sector,int channel,int sign,
+              double early,double late,double cost,double gross){
+            this.dir=dir;this.pose=pose;this.sector=sector;
+            this.channel=channel;polarity=sign;
+            this.early=early;this.late=late;extraWork=cost;grossDelta=gross;
+            delayedFraction=Math.abs(late)/(1e-9+Math.abs(early)+Math.abs(late));
+            features=Zero3MotorResponseKernel.encode(DIRS[dir][0],DIRS[dir][1],
+                pose,sector,channel,sign);
+        }
+        double signedResponse(){return early+late;}
+        double usefulScore(){return signedResponse()-45*Math.max(0,extraWork);}
+    }
+    static Trial physical(int dir,float pose,int sector,int channel,int sign){
+        return physical(dir,pose,sector,channel,sign,0);
+    }
+    static Trial physical(int dir,float pose,int sector,int channel,int sign,int condition){
+        Scenario base=new Scenario(dir,pose,condition);
+        Scenario probe=new Scenario(dir,pose,condition);
+        assertTrue(Math.abs(base.observedPose-probe.observedPose)<.0001f,
+            "paired bodies have different proprioceptive orientation");
+        if(condition==0)
+            assertTrue(Math.abs(probe.observedPose-pose)<.001f,
+                "skin orientation reconstruction failed");
+        assertTrue(Math.abs(base.body.cx-probe.body.cx)<1e-6 &&
+            Math.abs(base.body.cvx-probe.body.cvx)<1e-6,
+            "paired preconditioned starts diverged");
+        double early=0;
+        final int total=WARMUP+PULSE+SETTLE;
+        for(int frame=0;frame<total;frame++){
+            base.tick(frame,-1,channel,sign);
+            probe.tick(frame,sector,channel,sign);
+            if(frame==WARMUP+PULSE-1){
+                early=(probe.body.cx-base.body.cx)*DIRS[dir][0]+
+                    (probe.body.cy-base.body.cy)*DIRS[dir][1];
+            }
+        }
+        double finalDifference=(probe.body.cx-base.body.cx)*DIRS[dir][0]+
+                               (probe.body.cy-base.body.cy)*DIRS[dir][1];
+        return new Trial(dir,probe.observedPose,sector,channel,sign,early,
+                         finalDifference-early,probe.work-base.work,
+                         probe.gross-base.gross);
+    }
+    /** Fixed-size ridge least squares; only physically observed training pairs. */
+    /** Adapter used by historical regressions. Fit and inference now go
+     * through the SAME reusable V3 response module; not a duplicate solver. */
+    static final class ResponseModel {
+        final Zero3MotorResponseKernel.Predictor kernel;
+        ResponseModel(ArrayList<Trial> training){
+            ArrayList<Zero3MotorResponseKernel.PhysicalSample> rows=new ArrayList<>();
+            for(int i=0;i<training.size();i++){
+                Trial t=training.get(i);
+                rows.add(new Zero3MotorResponseKernel.PhysicalSample(
+                    t.features,t.early,t.late,t.extraWork,300,i,72,false));
+            }
+            kernel=new Zero3MotorResponseKernel.Predictor(rows,.5);
+        }
+        boolean calibrate(ArrayList<Trial> samples){
+            ArrayList<Zero3MotorResponseKernel.PhysicalSample> rows=new ArrayList<>();
+            for(int i=0;i<samples.size();i++){
+                Trial t=samples.get(i);
+                rows.add(new Zero3MotorResponseKernel.PhysicalSample(
+                    t.features,t.early,t.late,t.extraWork,301,i,72,false));
+            }
+            return kernel.calibrate(rows);
+        }
+        double[] infer(Trial trial){
+            Zero3MotorResponseKernel.Consequence c=kernel.predictRaw(trial.features);
+            return new double[]{c.immediate,c.delayed,c.extraWork};
+        }
+    }
+    private static boolean printError(ResponseModel m,ArrayList<Trial> holdout,String label){
+        double[] mse=new double[OUTPUTS],zero=new double[OUTPUTS],delayAbs=new double[2];
+        for(Trial t:holdout){
+            double[] p=m.infer(t);
+            double[] actual={t.early,t.late,t.extraWork};
+            for(int o=0;o<OUTPUTS;o++){
+                mse[o]+=Math.pow(p[o]-actual[o],2);
+                zero[o]+=Math.pow(actual[o],2);
+            }
+            delayAbs[0]+=Math.abs(t.early);
+            delayAbs[1]+=Math.abs(t.late);
+        }
+        for(int o=0;o<OUTPUTS;o++){
+            mse[o]/=holdout.size();zero[o]/=holdout.size();
+            assertTrue(Double.isFinite(mse[o]),"nonfinite prediction");
+        }
+        System.out.printf(Locale.US,
+            "ZERO3 IMPULSE MODEL split=%s heldout=%d earlyMSE=%.9f zeroEarlyMSE=%.9f"+
+            " lateMSE=%.9f zeroLateMSE=%.9f costMSE=%.12f zeroCostMSE=%.12f"+
+            " totalEarlyAbs=%.3f totalDelayedAbs=%.3f%n",
+            label,holdout.size(),mse[0],zero[0],mse[1],zero[1],
+            mse[2],zero[2],delayAbs[0],delayAbs[1]);
+        return mse[0]<zero[0]*.9 && mse[1]<zero[1]*.9 &&
+               mse[2]<zero[2]*.9;
+    }
+    public static void main(String[] args){
+        ArrayList<Trial> training=new ArrayList<>();
+        ArrayList<Trial> calibration=new ArrayList<>();
+        ArrayList<Trial> holdout=new ArrayList<>();
+        // Experimental interventions are not 2,000 consecutive life decisions:
+        // they are REPEATED matched real-physics counterfactual pair trials.
+        for(int dir=0;dir<DIRS.length;dir++){
+            for(float pose:TRAIN_POSES)
+                for(int channel=0;channel<4;channel++)
+                    for(int sector:SECTORS)
+                        for(int sign:new int[]{-1,1})
+                            training.add(physical(dir,pose,sector,channel,sign));
+            for(float pose:TEST_POSES)
+                for(int channel=0;channel<4;channel++)
+                    for(int sector:SECTORS)
+                        for(int sign:new int[]{-1,1}){
+                            Trial sample=physical(dir,pose,sector,channel,sign);
+                            if(Math.abs(Math.abs(pose)-(float)(Math.PI/8))<.001f)
+                                calibration.add(sample);
+                            else holdout.add(sample);
+                        }
+        }
+        assertTrue(training.size()==256&&calibration.size()==256&&
+            holdout.size()==512,"train/calibration/blind test contamination");
+        ResponseModel model=new ResponseModel(training);
+        // Only the dedicated calibration poses are allowed to accept the model
+        // as usable. The final 45/67.5-degree poses do NOT select the gate.
+        boolean calibrated=model.calibrate(calibration);
+        boolean probePass=printError(model,calibration,"CALIBRATION_22_5");
+        assertTrue(probePass==calibrated,"calibration and inference mismatch");
+        printError(model,holdout,"BLIND_45_67_5");
+        System.out.println("ZERO3 IMPULSE CALIBRATION GATE="+
+            (calibrated?"ACCEPTED_FOR_LAB_ONLY":"REJECTED")+
+            " (requires 10% advantage vs zero on all 3 outputs)");
+        double fullGain=0,totalCost=0,selectedSigned=0,randomSigned=0;
+        int better=0,costControlled=0,positive=0;
+        // Choose ONLY on untouched final evaluation poses: neither ridge
+        // training nor the calibration gate has ever used these outcomes.
+        for(int dir=0;dir<4;dir++)for(float pose:TEST_POSES){
+            if(Math.abs(Math.abs(pose)-(float)(Math.PI/8))<.001f)continue;
+            Trial selected=null,random=null;
+            double bestPred=0; // do nothing is allowed
+            for(Trial t:holdout){
+                if(t.dir!=dir||Math.abs(t.pose-pose)>.001f)continue;
+                if(random==null)random=t;
+                double[] p=model.infer(t);
+                double projected=p[0]+p[1]-45*Math.max(0,p[2]);
+                if(calibrated&&Double.isFinite(projected)&&projected>bestPred){
+                    bestPred=projected;selected=t;
+                }
+            }
+            assertTrue(random!=null,"missing untouched test pose");
+            double realised=selected==null?0:selected.usefulScore();
+            double signed=selected==null?0:selected.signedResponse();
+            double cost=selected==null?0:selected.extraWork;
+            if(realised>0)better++;
+            if(signed>0)positive++;
+            if(cost<.005)costControlled++;
+            totalCost+=cost;fullGain+=realised;selectedSigned+=signed;
+            randomSigned+=random.signedResponse();
+            System.out.printf(Locale.US,
+                "ZERO3 IMPULSE HELDOUT intent=[%.0f %.0f] poseDeg=%.1f"+
+                " selected=%s predictedUtility=%.5f observedUtility=%.5f"+
+                " signedDisplacementGain=%.5f extraWork=%.7f"+
+                " matchedRandomSignedGain=%.5f%n",
+                DIRS[dir][0],DIRS[dir][1],pose*180/Math.PI,
+                selected==null?"none":("sector"+selected.sector+"/channel"+
+                    selected.channel+"/sign"+selected.polarity),
+                bestPred,realised,signed,cost,random.signedResponse());
+        }
+        int scenarios=DIRS.length*(TEST_POSES.length-2);
+        System.out.printf(Locale.US,
+            "ZERO3 IMPULSE RESPONSE SUMMARY trainPhysicalPairs=%d calibrationPhysicalPairs=%d"+
+            " heldoutPhysicalPairs=%d calibrated=%s"+
+            " totalPhysicalFrames=%d blindPoseCases=%d usefulPositive=%d/%d"+
+            " positiveDirectional=%d/%d costBelow0.005=%d/%d"+
+            " totalObservedUtility=%.5f totalSignedGain=%.5f"+
+            " totalAddedWork=%.8f randomBaselineSignedGain=%.5f"+
+            " (NO AUTOMATIC MOTOR PROMOTION; no independent worlds/seeds)%n",
+            training.size(),calibration.size(),holdout.size(),Boolean.toString(calibrated),
+            (training.size()+calibration.size()+holdout.size())*
+                2*(WARMUP+PULSE+SETTLE),
+            scenarios,better,scenarios,positive,scenarios,costControlled,scenarios,
+            fullGain,selectedSigned,totalCost,randomSigned);
+    }
+}

@@ -1,0 +1,46 @@
+name: ZERO3 V3.34 membrane crossing forensic stage audit
+on:
+  push:
+    branches: [feature/zero30-foundation-g0-g3-20261016]
+    paths:
+      - 'app/src/main/java/com/overmind/zero/Zero3BoxCrossingForensicV334Regression.java'
+      - '.github/workflows/zero30-v334-crossing-forensics-qa.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  physical-crossing-audit:
+    runs-on: ubuntu-latest
+    timeout-minutes: 35
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+      - name: Compile original real gel, true box contact and forensic audit
+        run: |
+          set -euo pipefail
+          mkdir -p /tmp/overmind
+          python3 - <<'PY'
+          import pathlib,re,shlex,subprocess
+          s=pathlib.Path('.github/workflows/overmind-ota-publish.yml').read_text()
+          match=re.search(r'^\s*(javac -d /tmp/overmind [^\n]+)',s,re.M)
+          if not match: raise RuntimeError('production unchanged Java physical source list missing')
+          r='app/src/main/java/com/overmind/zero/'
+          names='Zero3LearningFoundation Zero3MotorResponseKernel Zero3MotorRetentionRegression Zero3MotorPromotionGate Zero3MotorImpulseResponseRegression Zero3MotorLocalFrameV310Regression Zero3SensoryFrameV315 Zero3CausalRecorderV315 Zero3SensoryContractV315Regression Zero3MotorIntentV316 Zero3AutonomousLoopV317 Zero3LearnedAdhesionV318 Zero3LearnedAdhesionV318Regression Zero3ContextAdhesionV319 Zero3ContextAdhesionV319Regression Zero3MotorHeadStoreV320 Zero3NeuralBundleStoreV321 Zero3OrganismStoreV322 Zero3FullCausalExperienceV322B Zero3FullArchiveStoreV322B Zero3MultiSceneRestartV322BRegression Zero3FiveArmAblationV333Regression Zero3BoxCrossingForensicV334Regression'
+          subprocess.run(shlex.split(match.group(1))+[r+n+'.java' for n in names.split()],check=True)
+          PY
+      - name: Isolate first membrane crossing stage on exact V333 censored and control cases
+        run: |
+          set -euo pipefail
+          java -Xmx1900m -cp /tmp/overmind com.overmind.zero.Zero3BoxCrossingForensicV334Regression | tee /tmp/v334.log
+          grep -q 'V334 FINAL measuredCases=6 suspectCensorsAudited=337,645' /tmp/v334.log
+          test "$(grep -c 'V334 CASE ordinal=' /tmp/v334.log)" -eq 6
+          grep -q 'V334 CASE ordinal=337' /tmp/v334.log
+          grep -q 'V334 CASE ordinal=645' /tmp/v334.log
+          echo 'V334 SCIENTIFIC_MECHANISM_ONLY_FROM_RECORDED_STAGE_LOGS'
+      - name: Full Android Debug compilation, no production promotion
+        run: gradle --no-daemon assembleDebug
+      - name: Guarantee no automatically granted G3
+        run: echo 'V334_FORENSIC_ONLY G3_BLOCKED G5_BLOCKED NO_OTA NO_MERGE'
