@@ -102,9 +102,15 @@ public final class Zero3LabActivityV326 extends Activity {
                 long episode=Math.max(1L,System.currentTimeMillis());
                 Zero3RuntimeV325 organism=
                     Zero3WorldBirthV326.create(episode,0x33226017L^episode);
-                try{session.startNew(organism);}
-                catch(Exception rejected){organism.close();throw rejected;}
-                publish("ZERO vergine creato. Salva prima di uscire.");
+                try{
+                    session.startNew(organism);
+                    // V324 transaction format requires one COMPLETED physics
+                    // decision; don't leave a newborn with no durable history.
+                    session.step();
+                    session.suspend();
+                    session.resume();
+                }catch(Exception rejected){organism.close();throw rejected;}
+                publish("Nuova vita V3: prima decisione fisica salvata.");
             })).show();
     }
     private void resume()throws Exception{
@@ -114,6 +120,10 @@ public final class Zero3LabActivityV326 extends Activity {
     }
     private void start(int factor){
         if(leaving||running)return;
+        if(session==null||!session.active()){
+            show("Prima crea o riprendi un organismo V3.");
+            return;
+        }
         running=true;
         enqueue(()->{
             try{
