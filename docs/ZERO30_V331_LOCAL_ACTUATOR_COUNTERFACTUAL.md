@@ -1,0 +1,22 @@
+# ZERO 3.0 — V3.31 | Prova fisica controfattuale del credito motorio locale
+
+**Protocollo fissato prima del codice e prima della CI il 17/10/2026.** Leggere [Master](ZERO30_MASTER_BLUEPRINT.md), [Contratto](ZERO30_IMPLEMENTATION_CONTRACT.md), [V3.30](ZERO30_V330_MOTOR_CAUSAL_AUDIT.md), [V3.19](ZERO30_V319_CONTEXTUAL_GRIP_ENERGY.md).
+
+## Diagnosi motivante
+V3.30 ha rilevato un fallimento **scientifico** della corteccia motor-learning (0/4 ambienti migliorati, TRAIN signed +2,281474 vs FROZEN +5,478730). La regola attuale di `AdaptiveCortex.learn` moltiplica la perturbazione del canale per un vantaggio **globale** della decisione. Non identifica quale muscolo abbia spostato il corpo, quanto ritardo abbia avuto né quanto lavoro addizionale abbia richiesto. L'indice di comandi opposti è soltanto un proxy; non giustifica correzioni arbitrarie di locomozione.
+
+## Intervento V331 registrato prima dell'esito
+Costruire una fixture **puramente diagnostica, fuori dal runtime mobile** a partire da tre corpi veri fisicamente identici, tutti creati con il medesimo solver gel e stessa condizione iniziale, stesso mondo (FREE, BOX_NEAR, DISK_NEAR, BOX_FAR) e medesima intenzione *autonomamente scelta* dal recurrent actor V317 usando soltanto la propria osservazione sensoriale PRE. Usare la stessa corteccia non-plastica e lo stesso motoneurone adesivo V319 congelato in ogni braccio. In 12 substep fisici, applicare a UN solo comando muscolare non-adesivo di un settore anatomico una perturbazione rispettivamente **+0,20** e **−0,20**, oppure nessuna (CONTROL); per 24 ulteriori substep nessuna perturbazione. Il motore calcola davvero l'uscita a ogni sottopasso usando la propria propriocezione, poi il vero solver gel+contatto, **mai** spostamento manuale del COM, modifiche degli attriti, reward artificiale o override dell'intenzione.
+
+Design deterministico: **4 mondi × 6 condizioni pose × 8 settori × 3 canali non adesivi (0/1/3) = 576 triplette indipendenti**, ciascuna 3 × 36 = 108 integrazioni fisiche del solver; 62.208 substep in totale. Almeno un braccio CONTROL duplicato per controllare determinismo. Le scene sono nuove rispetto ai 20 ordinal V330, ma provengono dalle stesse quattro famiglie: non chiamarle validazione di generalizzazione a nuove topologie.
+
+Misurare direttamente per braccio: posizioni corpo pre/dopo impulso t12 e dopo inerzia/relax t36; vera energia lavoro `gel.work`, presa BOX fisica e tocco; intensità effettivamente **consumata dal gel**; confronto differenziale `plus-minus` a tempi t12 e t36, `responseAlongActorIntent`, costo differenziale, non-linearità `plus+minus-2*control`, eventuale invertibilità del segno. Contrasto triplo sul medesimo identico stato isola la perturbazione del motore da qualunque velocità iniziale, ma può anche misurare la successiva retroazione della propriocezione — NON chiamarlo gradiente esatto o predittore validato. Tutti gli outcome guardano il POST fisico; il cervello non legge differenze controfattuali come se fossero proprie esperienze.
+
+**Invarianti tecniche PASS**: tutte le 576 triplette finite, stesso stato iniziale, nessun contatto/grip fittizio, almeno una perturbazione nonzero *effettivamente applicata* in ogni tripletta non saturata, CONTROL deterministico, modello/solver/fit V3.19 rimangono invariati. Report per ognuna delle quattro famiglie: risposta immediata e ritardata, costi, casi in cui l'impulso peggiora l'esito, dipendenza settore/canale e sensibilità di contatto; NON ripulire le misure negative.
+
+**Gate scientifico separato e preregistrato**: un impulso locale è solo *causalmente rilevabile* se almeno 50% delle triplette ha differenza fisica t36 maggiore di 1e-5 unità; fallire altrimenti. Questo non misura abilità appresa e **non può promuovere G3**, qualunque sia il risultato. Una successiva V332 può usare soltanto i dati TRAIN di V331 per progettare un credito locale con controfattuali durante l'addestramento, dovrà fissare prima test BLIND matched non consumati e superare trained-v-frozen con costi non peggiori.
+
+No nuove GUI finte. Nessun merge, build APK pubblicata o OTA; PRODUCTION v0.11.6-ota.172 e 12 salvataggi 2.2 immutati.
+
+## Risultati
+*Da inserire unicamente dopo log reali GitHub Actions.*
