@@ -45,7 +45,7 @@ public final class Zero3ExactFaceTrialV336Regression {
             e.tick(DT);
         }
     }
-    private static void cycle(
+    static void cycle(
        Zero3BoxCrossingForensicV334Regression.State s,
        int mode,float[] muscle){
         float[] sx=s.p.skin.x.clone(),sy=s.p.skin.y.clone(),
@@ -56,7 +56,7 @@ public final class Zero3ExactFaceTrialV336Regression {
         else Zero3MultiSceneRestartV322BRegression.actualWorldStep(
                    s.p,sx,sy,bx,by,cx,cy);
     }
-    private static boolean embedded(
+    static boolean embedded(
               Zero3BoxCrossingForensicV334Regression.State s){
         for(UnknownWorld.Entity e:s.p.world)if(e.isBilateralBox())
             for(int i=0;i<Morphology.POINTS;i++)
