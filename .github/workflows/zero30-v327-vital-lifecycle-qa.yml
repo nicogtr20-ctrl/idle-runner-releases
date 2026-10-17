@@ -1,0 +1,80 @@
+name: ZERO3 V3.27 measured vital input and Android research lifecycle QA
+on:
+  push:
+    branches: [feature/zero30-foundation-g0-g3-20261016]
+    paths:
+      - 'app/src/main/java/com/overmind/zero/Zero3AutonomousLoopV317.java'
+      - 'app/src/main/java/com/overmind/zero/Zero3SurvivalLedgerV323.java'
+      - 'app/src/main/java/com/overmind/zero/Zero3RuntimeV325.java'
+      - 'app/src/main/java/com/overmind/zero/Zero3VitalV327Regression.java'
+      - 'app/src/main/java/com/overmind/zero/Zero3LabActivityV326.java'
+      - '.github/workflows/zero30-v327-vital-lifecycle-qa.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  actual-vital-continuity:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+      - name: Compile actual recurrent actor, gel, metabolism, archives and V3.27 gate
+        run: |
+          set -euo pipefail
+          mkdir -p /tmp/overmind
+          python3 - <<'PY'
+          import pathlib,re,shlex,subprocess
+          source=pathlib.Path('.github/workflows/overmind-ota-publish.yml').read_text()
+          m=re.search(r'^\s*(javac -d /tmp/overmind [^\n]+)',source,re.M)
+          if not m:raise RuntimeError('production Java material compile list unavailable')
+          root='app/src/main/java/com/overmind/zero/'
+          names='Zero3LearningFoundation Zero3MotorResponseKernel Zero3MotorRetentionRegression Zero3MotorPromotionGate Zero3MotorImpulseResponseRegression Zero3MotorLocalFrameV310Regression Zero3SensoryFrameV315 Zero3CausalRecorderV315 Zero3SensoryContractV315Regression Zero3MotorIntentV316 Zero3AutonomousLoopV317 Zero3LearnedAdhesionV318 Zero3LearnedAdhesionV318Regression Zero3ContextAdhesionV319 Zero3ContextAdhesionV319Regression Zero3MotorHeadStoreV320 Zero3NeuralBundleStoreV321 Zero3OrganismStoreV322 Zero3FullCausalExperienceV322B Zero3FullArchiveStoreV322B Zero3MultiSceneRestartV322BRegression Zero3SurvivalLedgerV323 Zero3SurvivalArchiveV323 Zero3SurvivalRestartV323Regression Zero3RoomStateV324 Zero3RoomArchiveV324 Zero3RuntimeV325 Zero3RuntimeV325Regression Zero3WorldBirthV326 Zero3VitalV327Regression'
+          subprocess.run(shlex.split(m.group(1))+[root+n+'.java' for n in names.split()],check=True)
+          PY
+      - name: Vital causality, brain CHOICES and real material cost
+        run: |
+          set -euo pipefail
+          java -Xmx1536m -cp /tmp/overmind com.overmind.zero.Zero3VitalV327Regression | tee /tmp/v327-vitals.log
+          grep -q 'V327 VITAL_FROM_ACTUAL_METABOLISM=PASS RECURRING_ACTION_CHANGED=PASS NO_FUTURE_LEAK=PASS' /tmp/v327-vitals.log
+      - name: Ten independent full V3 vitality + neural + world cold restart controls
+        run: |
+          set -euo pipefail
+          for mode in 0 1 2 3 4; do
+            for rep in 0 1; do
+              ordinal=$((153+mode+rep*5))
+              dir="/tmp/z327-${mode}-${rep}"
+              flags="-Dzero3.mode=${mode} -Dzero3.ordinal=${ordinal}"
+              cls=com.overmind.zero.Zero3RuntimeV325Regression
+              java -Xmx1536m $flags -cp /tmp/overmind "$cls" prefix "$dir"
+              java -Xmx1536m $flags -cp /tmp/overmind "$cls" resume "$dir" "$dir-resume.txt"
+              java -Xmx1536m $flags -cp /tmp/overmind "$cls" reference "$dir-reference.txt"
+              cmp "$dir-resume.txt" "$dir-reference.txt"
+              grep -q 'fullReplayRecords=96' "$dir-resume.txt"
+              grep -q 'authorityNext=96' "$dir-resume.txt"
+              java -Xmx1536m $flags -cp /tmp/overmind "$cls" fault "$dir" | tee "$dir-fault.log"
+              grep -q 'FOREIGN_REJECTED NO_SILENT_RESET' "$dir-fault.log"
+              echo "V327 MATCHED_FULL_VITAL_RESTART SCENE=$mode ORDINAL=$ordinal PASS"
+            done
+          done
+          echo 'V327 TEN_REAL_VITAL_NEURAL_RESTARTS_PASS'
+      - name: Android debug build, never OTA
+        run: |
+          set -euo pipefail
+          for attempt in 1 2 3; do
+            if gradle --no-daemon assembleDebug; then
+              echo 'V327_ANDROID_DEBUG=PASS'
+              exit 0
+            fi
+            if gradle --offline --no-daemon assembleDebug; then
+              echo 'V327_ANDROID_DEBUG=PASS'
+              exit 0
+            fi
+            sleep 10
+          done
+          exit 1
+      - name: Report research-only boundaries
+        run: echo 'V327_PARTIAL_VITAL_INTEROCEPTION=PASS NOT_A_HOMEOSTATIC_ACTOR_CRITIC G3_BLOCKED G5_BLOCKED G9_DEVICE_BLOCKED NO_OTA'
