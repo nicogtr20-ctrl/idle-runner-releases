@@ -310,7 +310,14 @@ public final class Zero3RuntimeV325 implements AutoCloseable {
     }
     /** Isolated caller-provided app-private V3 path. Never save 2.2 prefs. */
     public void save(Path privateV3Folder)throws IOException {
-        new Zero3RoomArchiveV324(privateV3Folder).save(snapshot());
+        Zero3RoomArchiveV324 disk=new Zero3RoomArchiveV324(privateV3Folder);
+        Zero3RoomArchiveV324.Bundle previous=disk.load();
+        if(previous!=null){
+            Zero3OrganismStoreV322.State prev=previous.life.joint.organism;
+            if(prev.episodeId!=episode||prev.nextDecision>next)
+                throw new IOException("V325 refusing foreign or future generation");
+        }
+        disk.save(snapshot());
     }
     public String fingerprint()throws IOException{
         return Zero3RoomArchiveV324.fingerprint(snapshot());
