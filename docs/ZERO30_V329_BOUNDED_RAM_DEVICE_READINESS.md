@@ -1,5 +1,8 @@
 # ZERO 3.0 — V3.29 | RAM bounded historical replay + Galaxy S21 research readiness
 
+> **Checkpoint V3.30 (17/10/2026):** [rapporto motorio e preregistrazione](ZERO30_V330_MOTOR_CAUSAL_AUDIT.md) · [CI 39036094748 SUCCESS](https://github.com/nicogtr20-ctrl/idle-runner-releases/actions/runs/39036094748). Nuovo audit motorio NON INTERVENTISTA legge vera intenzione della rete V317, 64 efferenze del solver e outcome fisico COM, scostamento rispetto alla velocità iniziale, lavoro, presa e indice di contrasto comandi; LAB HUD mostra intenzione↔spostamento dopo ogni decisione senza inventare misure al restore. Cortex matched train .013 e frozen 0 a pari world/init/attore/head V319 ed esplorazione, 20 scenari (5 pose per FREE/BOX/DISK/FAR), 96 decisioni per caso e braccio. **0/4 famiglie con miglioramento preregistrato; signedIntent TRAIN +2.281474 vs frozen +5.478730; SCIENTIFIC MOTOR G3 FAIL**. Il gate positivo V319 grip contestuale non viene annullato. Nessuna nuova andatura, no modifica reward/solver, G3 resta BLOCCATO; prossimo tentativo sul credito motorio differenziale temporale e settoriale, mai tuning sul BLIND ora consumato. G5/Android-device/G9/UI3D ancora aperti, NO OTA172/12 cervelli intatti.
+
+
 **17 ottobre 2026 — SOLO PR #87, branch `feature/zero30-foundation-g0-g3-20261016`, DRAFT.** Prima leggere [Master Blueprint](ZERO30_MASTER_BLUEPRINT.md), [contratto tecnico](ZERO30_IMPLEMENTATION_CONTRACT.md), [specifiche UI](ZERO30_UI_UX_SPEC.md), [V328 segmented long life](ZERO30_V328_SEGMENTED_LONG_LIFE.md). Non alterare i 12 cervelli 2.2, `GameActivity` stabile o la release OTA172; niente merge/pubblicazione.
 
 ## Problema reale
