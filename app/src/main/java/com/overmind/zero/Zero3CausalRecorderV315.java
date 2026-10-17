@@ -116,6 +116,7 @@ public final class Zero3CausalRecorderV315 {
         // No extra unrecorded tick, output, sensor refresh or data edit.
         return a.episodeId==b.episodeId&&a.frameId==b.frameId&&
             Double.compare(a.simulationTime,b.simulationTime)==0 &&
+            a.solverTicks==b.solverTicks &&
             Float.compare(a.bodyCenterX,b.bodyCenterX)==0 &&
             Float.compare(a.bodyCenterY,b.bodyCenterY)==0 &&
             Float.compare(a.bodyVelX,b.bodyVelX)==0 &&
@@ -152,6 +153,8 @@ public final class Zero3CausalRecorderV315 {
                 "episode/frame/decision mismatch");
         require(Math.abs((post.simulationTime-pending.simulationTime)-DT)<1e-7,
                 "not one real 0.025-second physics step");
+        require(post.solverTicks==pending.solverTicks+1,
+                "post snapshot was not produced by exactly one real gel step");
         require(post.lastExecutedAvailable&&action.intact() &&
                 Arrays.equals(action.executed64(),post.lastExecuted64()),
                 "post snapshot efference differs from actually applied action");
