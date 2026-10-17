@@ -1,0 +1,64 @@
+name: ZERO3 V3.26 opt-in Android research entrypoint and actual newborn QA
+on:
+  push:
+    branches: [feature/zero30-foundation-g0-g3-20261016]
+    paths:
+      - 'app/src/main/java/com/overmind/zero/Zero3LabActivityV326.java'
+      - 'app/src/main/java/com/overmind/zero/Zero3WorldBirthV326.java'
+      - 'app/src/main/java/com/overmind/zero/Zero3BirthV326Regression.java'
+      - 'app/src/main/java/com/overmind/zero/Zero3RuntimeV325.java'
+      - 'app/src/main/java/com/overmind/zero/Zero3AndroidSessionV325.java'
+      - 'app/src/main/java/com/overmind/zero/GameActivity.java'
+      - 'app/src/main/AndroidManifest.xml'
+      - '.github/workflows/zero30-v326-android-entry-qa.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  opt-in-android-research:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+      - name: Compile real production V3 material and independent newborn laboratory
+        run: |
+          set -euo pipefail
+          mkdir -p /tmp/overmind
+          python3 - <<'PY'
+          import pathlib,re,shlex,subprocess
+          source=pathlib.Path('.github/workflows/overmind-ota-publish.yml').read_text()
+          m=re.search(r'^\s*(javac -d /tmp/overmind [^\n]+)',source,re.M)
+          if not m:raise RuntimeError('source physics compiler missing')
+          root='app/src/main/java/com/overmind/zero/'
+          names='Zero3LearningFoundation Zero3MotorResponseKernel Zero3MotorRetentionRegression Zero3MotorPromotionGate Zero3MotorImpulseResponseRegression Zero3MotorLocalFrameV310Regression Zero3SensoryFrameV315 Zero3CausalRecorderV315 Zero3SensoryContractV315Regression Zero3MotorIntentV316 Zero3AutonomousLoopV317 Zero3LearnedAdhesionV318 Zero3LearnedAdhesionV318Regression Zero3ContextAdhesionV319 Zero3ContextAdhesionV319Regression Zero3MotorHeadStoreV320 Zero3NeuralBundleStoreV321 Zero3OrganismStoreV322 Zero3FullCausalExperienceV322B Zero3FullArchiveStoreV322B Zero3MultiSceneRestartV322BRegression Zero3SurvivalLedgerV323 Zero3SurvivalArchiveV323 Zero3SurvivalRestartV323Regression Zero3RoomStateV324 Zero3RoomArchiveV324 Zero3RuntimeV325 Zero3WorldBirthV326 Zero3BirthV326Regression'
+          subprocess.run(shlex.split(m.group(1))+[root+n+'.java' for n in names.split()],check=True)
+          PY
+      - name: Brand-new physical V3 birth cold resume exact and corrupted state
+        run: |
+          set -euo pipefail
+          cls=com.overmind.zero.Zero3BirthV326Regression
+          java -Xmx1536m -cp /tmp/overmind "$cls" prefix /tmp/v326-birth | tee /tmp/v326-prefix.log
+          java -Xmx1536m -cp /tmp/overmind "$cls" resume /tmp/v326-birth /tmp/v326-resumed.txt | tee /tmp/v326-resume.log
+          java -Xmx1536m -cp /tmp/overmind "$cls" reference /tmp/v326-reference.txt | tee /tmp/v326-reference.log
+          cmp /tmp/v326-resumed.txt /tmp/v326-reference.txt
+          java -Xmx1536m -cp /tmp/overmind "$cls" fault /tmp/v326-birth | tee /tmp/v326-fault.log
+          grep -q 'V326 NEWBORN_FAULT_ROLLBACK_12=PASS NO_LEGACY_REWRITE=PASS' /tmp/v326-fault.log
+          echo 'ZERO3 V326 NEWBORN_96_MEMBRANE_74_INNER_SAME_LIFE_RESTART=PASS'
+      - name: Strict Android manifest and opt-in legacy navigation checks
+        run: |
+          set -euo pipefail
+          grep -q 'Zero3LabActivityV326' app/src/main/AndroidManifest.xml
+          grep -q 'android:exported="false" android:screenOrientation="portrait"' app/src/main/AndroidManifest.xml
+          grep -q 'GameActivity.this,Zero3LabActivityV326.class' app/src/main/java/com/overmind/zero/GameActivity.java
+          grep -q 'CONFRONTO ZERO 2.2' app/src/main/java/com/overmind/zero/GameActivity.java
+          grep -q 'getNoBackupFilesDir' app/src/main/java/com/overmind/zero/Zero3AndroidSessionV325.java
+          grep -q 'roomFoodCanonical' app/src/main/java/com/overmind/zero/Zero3RuntimeV325.java
+          echo 'ZERO3 V326 OPT_IN_ROUTE_LEGACY_PRESERVED=PASS'
+      - name: Compile Android application incl. V3 Activity and birth factory, no APK publication
+        run: gradle --no-daemon assembleDebug
+      - name: Research-only gate label
+        run: echo 'V326_ANDROID_ENTRY_COMPILES=PASS DEVICE_INSTRUMENTATION_NOT_DONE G3_BLOCKED G5_BLOCKED NO_OTA'
