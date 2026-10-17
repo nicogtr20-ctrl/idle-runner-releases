@@ -210,12 +210,12 @@ public final class Zero3LabActivityV326 extends Activity {
             // after a restart. No legacy 2.2 data or training on render.
             String vitalOutcome=s.hasVitalOutcome
                 ? String.format(Locale.ITALY,
-                    "\\nULTIMO BILANCIO REALE %.3f  •  ENERGIA RACCOLTA %.3f"+
+                    "\nULTIMO BILANCIO REALE %.3f  •  ENERGIA RACCOLTA %.3f"+
                     "  •  COSTO BASALE %.3f  •  COSTO MOTORIO %.3f"+
                     "  •  DANNO %.3f  •  FONTI CONSUMATE %d",
                     s.lastEnergyNet,s.lastEnergyGained,s.lastEnergyBasal,
                     s.lastEnergyMotor,s.lastEnergyDamage,s.lastEnergySources)
-                : "\\nULTIMO BILANCIO ENERGETICO NON OSSERVATO DOPO IL RIPRISTINO";
+                : "\nULTIMO BILANCIO ENERGETICO NON OSSERVATO DOPO IL RIPRISTINO";
             info.setText(String.format(Locale.ITALY,
                 "VITA %d   •   DECISIONI %d   •   ENERGIA %.1f/100\n"+
                 "DANNO FISICO PRECEDENTE %.1f  •  INPUT VITALE FUSO\n"+
