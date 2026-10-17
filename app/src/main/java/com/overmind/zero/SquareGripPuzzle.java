@@ -201,7 +201,9 @@ public final class SquareGripPuzzle {
             float oldX=skin.x[i],oldY=skin.y[i];
             pushOut(skin.x,skin.y,skin.vx,skin.vy,i,box.x,box.y,1.15f);
             if(oldX!=skin.x[i]||oldY!=skin.y[i])
-                detail(observer,"FACE_PUSHOUT",0,i,-1,body,skin,box);
+                detail(observer,"FACE_PUSHOUT old="+
+                    Float.toString(oldX)+","+Float.toString(oldY),0,i,-1,
+                    body,skin,box);
         }
         stage(observer,"AFTER_FACE_CONTACT_AND_PUSHOUT",body,skin,box);
         boolean opposing=sufficientlySeparate(sides[0],sides[1])||
