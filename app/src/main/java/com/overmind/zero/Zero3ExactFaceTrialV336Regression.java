@@ -11,6 +11,7 @@ import java.util.Locale;
 public final class Zero3ExactFaceTrialV336Regression {
     private static final int[] CASES={333,337,341,641,645,649};
     private static final float DT=.025f;
+    static long jointAttempts,jointRepairs,jointUnresolved;
     private Zero3ExactFaceTrialV336Regression(){}
 
     private static void check(boolean yes,String why){
@@ -26,7 +27,17 @@ public final class Zero3ExactFaceTrialV336Regression {
                 // The ONLY candidate difference: skip ejection of legal
                 // exact face contacts already at the solid boundary.
                 SquareGripPuzzle.constrain(s.p.body,s.p.skin,e,DT,
-                     sx,sy,bx,by,oldCX,oldCY,null,mode!=3&&mode!=4,mode>=2,mode==4);
+                     sx,sy,bx,by,oldCX,oldCY,null,
+                     mode!=3&&mode!=4&&mode!=5,mode>=2,mode>=4);
+                if(mode==5){
+                    Zero3JointBoxConstraintV338.Result joint=
+                        Zero3JointBoxConstraintV338.solve(s.p.skin,e,sx,sy);
+                    if(joint.attempted){
+                        jointAttempts++;
+                        if(joint.repaired)jointRepairs++;
+                        if(joint.unresolved)jointUnresolved++;
+                    }
+                }
                 boxes=true;
             }
         }
