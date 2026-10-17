@@ -38,7 +38,26 @@ V3.22/B deve mostrare che in uno **stesso file transazionale** sono recuperabili
 
 ## Esito e limiti
 
-**Esito conclusivo da inserire dopo lettura della CI** con ID run, SHA commit, matrici/scene e valori reali. La compilazione sola NON è un pass di V322/B.
+**ESITO VERIFICATO — [GitHub Actions 39023478559: SUCCESS](https://github.com/nicogtr20-ctrl/idle-runner-releases/actions/runs/39023478559)**, commit `76ab74a7a4c722608618bf62cc6c0d8424ecd860` (17 ottobre 2026). Log della job `117369758064`: 20 righe `V322B SCENE=... FULL_JOINT_REPLAY=PASS`, confronto `cmp` riuscito in tutti i casi, 20 prove rollback/corruzione riuscite, `ZERO3 V322B TWENTY_MATCHED_LIVES_JOINT_NEURAL_PHYSICS_REPLAY=PASS`, `BUILD SUCCESSFUL in 53s` per Android Debug, `V322B_LAB_GATE=PASS NOT_GAMEPLAY_BRAIN_SNAPSHOT G3_BLOCKED G5_BLOCKED NO_OTA`.
+
+### Scala reale, e significato dell'esito
+
+| Gruppo fisico | 4 casi con identificativi `ordinal` | Continuità verificata | Frame con presa vera / bilaterale per ciascun caso |
+|---|---|---|---|
+| FREE, nessun oggetto | 8, 13, 18, 23 | **4/4 PASS** | **0 / 0** in ogni caso |
+| BOX_NEAR, scatola autentica + eventi di mondo successivi | 9, 14, 19, 24 | **4/4 PASS** | 1118/51, 1092/0, 1084/418, 1110/123 |
+| DISK_NEAR, disco mobile | 10, 15, 20, 25 | **4/4 PASS** | **0 / 0** in ogni caso |
+| BOX_FAR, contatto distante | 11, 16, 21, 26 | **4/4 PASS** | **0 / 0** in ogni caso |
+| BOX+DISK, mondo multi-oggetto | 12, 17, 22, 27 | **4/4 PASS** | 1102/35, 1102/172, 1084/92, 1120/411 |
+
+- **20 vite**, 96 decisioni reali ciascuna, **1.920 record causali COMPLETI per ramo** (PRE 96×12 + vista 16 + propriocezione 48 + interocezione 74×7 + POST omologo + 12×64 efferenze reali e 12 costi fisici per decisione). **23.040 passi gel per ramo** nelle intenzioni, **46.080** nei due bracci abbinati, più warmup. Non sono 1.920 nuove decisioni vissute autonomamente da un unico organismo: sono 20 vite e 20 controlli ininterrotti indipendenti.
+- In ogni vita: 24 decisioni + commit gen1, 24 ulteriori + commit gen2, **processo terminato alla decisione 48**; nuovo processo riprende l'organismo e il replay fino alla decisione 96. Un terzo processo esegue le stesse 96 senza interruzione. Un quarto corrompe payload e manifest: rollback con 48 record completi e **doppia generazione guasta → fail closed**.
+- `cmp` **identico byte-per-byte** del file di evidenze, che include l'impronta SHA-256 **dell'intero payload congiunto** (tutte le reti + corpo + mondo + seed RNG mutato + replay integrale). Conta decisioni, lavoro, vera presa, meccanica del corpo e componenti neurali. La nascita fisica di dischi alle decisioni 24 e 60 usa un generatore di mondo **mutabile e ripristinato** in ciascuna fixture con oggetti: non è soltanto un seed dichiarato a posteriori.
+- I frame bilaterali sono stati osservati, ma **non** dimostrano un'abilità autonoma generalizzabile di manipolare: BOX non è una policy addestrata per obiettivi ecologici; la posizione iniziale favorisce contatto. Nei DISK/FREE/FAR non sono apparse false prese bilaterali. Nessuna variazione del solver materiale o dei sensori `gripHold` introdotta da questo esperimento.
+- **Il primo screening di 10 vite** era già passato con CI [39023338018](https://github.com/nicogtr20-ctrl/idle-runner-releases/actions/runs/39023338018); altri 10 casi con ordinal differenti sono stati aggiunti e superati nella CI definitiva. Non attribuire al primo gruppo lo status di holdout mai consultato dopo quello screening.
+- Android `assembleDebug` è compilato correttamente nella CI; il test non apre davvero la partita sul Galaxy S21 né crea/pubblica APK firmato o OTA.
+
+**Verdetto:** `V322B_FULL_SENSORY_ACTION_REPLAY_LAB=PASS` e `V322B_MULTISCENE_SAME_LIFE_RESTART=PASS` per questa batteria di fixture. **Non equivalgono a `FULL_GAMEPLAY_BRAIN_SNAPSHOT`, G3 locomozione, G5 world model o G9 Android.**
 
 Non sono integrati: energia/danno REALI di `GameActivity`, completo `BrainSnapshotV3`, checkpoint ogni tick fisico, esperienze in database Android, spawn/eventi dell'intera partita, release OTA, migrazione 2.2/slot, UI V3, neurogenesi, skill consolidation, 20+ seed se non verificati da CI, vero G3/G5. Questo è un passo circoscritto verso la continuità del corpo/cervello/esperienza, non una prova di miglioramento motorio.
 
