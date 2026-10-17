@@ -5,6 +5,7 @@ on:
     paths:
       - 'app/src/main/java/com/overmind/zero/Zero3RuntimeV325.java'
       - 'app/src/main/java/com/overmind/zero/Zero3RuntimeV325Regression.java'
+      - 'app/src/main/java/com/overmind/zero/Zero3AndroidSessionV325.java'
       - '.github/workflows/zero30-v325-runtime-qa.yml'
   workflow_dispatch:
 permissions:
@@ -32,11 +33,11 @@ jobs:
           names='Zero3LearningFoundation Zero3MotorResponseKernel Zero3MotorRetentionRegression Zero3MotorPromotionGate Zero3MotorImpulseResponseRegression Zero3MotorLocalFrameV310Regression Zero3SensoryFrameV315 Zero3CausalRecorderV315 Zero3SensoryContractV315Regression Zero3MotorIntentV316 Zero3AutonomousLoopV317 Zero3LearnedAdhesionV318 Zero3LearnedAdhesionV318Regression Zero3ContextAdhesionV319 Zero3ContextAdhesionV319Regression Zero3MotorHeadStoreV320 Zero3NeuralBundleStoreV321 Zero3OrganismStoreV322 Zero3FullCausalExperienceV322B Zero3FullArchiveStoreV322B Zero3MultiSceneRestartV322BRegression Zero3SurvivalLedgerV323 Zero3SurvivalArchiveV323 Zero3SurvivalRestartV323Regression Zero3RoomStateV324 Zero3RoomArchiveV324 Zero3RuntimeV325 Zero3RuntimeV325Regression'
           subprocess.run(shlex.split(m.group(1))+[root+n+'.java' for n in names.split()],check=True)
           PY
-      - name: Independent runtime-owner process A, B, C, D on ten matched lives
+      - name: Independent runtime-owner process A, B, C, D on 25 matched lives
         run: |
           set -euo pipefail
           for mode in 0 1 2 3 4; do
-            for rep in 0 1; do
+            for rep in 0 1 2 3 4; do
               ordinal=$((83+mode+rep*5))
               folder="/tmp/z325-${mode}-${rep}"
               opts="-Dzero3.mode=${mode} -Dzero3.ordinal=${ordinal}"
@@ -57,7 +58,7 @@ jobs:
               cat "$folder-resumed.txt"
             done
           done
-          echo 'ZERO3 V325 TEN_RUNTIME_OWNED_SAME_LIFE_PASS'
+          echo 'ZERO3 V325 TWENTY_FIVE_RUNTIME_OWNED_SAME_LIFE_PASS'
       - name: Android Debug build, never sign or publish
         run: gradle --no-daemon assembleDebug
       - name: Experimental integrity gates, not motor or integration gate
