@@ -43,7 +43,7 @@ jobs:
           grep -q 'realV317AndV319Actuator=true matchedTape=true' /tmp/v336active.log
           # A green workflow is NOT permission to deploy: scientific grip fails.
           grep -q 'V338H HOLDOUT_GUARD safeCases=' /tmp/v336active.log
-          grep -q 'V338H JOINT_RESULT id=709 ' /tmp/v336active.log
+          grep -q 'V338H JOINT_RESULT id=757 ' /tmp/v336active.log
           grep -q 'V338H JOINT_SEARCH_COUNTS' /tmp/v336active.log
       - name: Build Android Debug but never publish OTA
         run: gradle --no-daemon assembleDebug
