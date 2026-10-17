@@ -223,6 +223,21 @@ public final class Zero3RuntimeV325 implements AutoCloseable {
             body.cx+distance*(float)Math.cos(angle),
             body.cy+distance*(float)Math.sin(angle),2,2));
     }
+    /**
+     * Controlled WORLD TEST FIXTURE only: materializes a finite real blue
+     * resource at one true membrane site, randomly selected by world RNG.
+     * Does NOT increase energy directly or inject any preferred motor vector.
+     * Physical MaterialGeometry contact and Entity.touch must deliver the
+     * actual 22 units on the next solver substep. This artificial abundance
+     * invalidates claims of an independently learned survival strategy.
+     */
+    public void spawnBenchEnergyAtMembrane(){
+        require(!closed&&!inDecision&&!ended&&world.size()<120,
+                "bench material only at a live physical boundary");
+        rngState=nextRng(rngState);
+        int patch=(int)((rngState>>>1)%Morphology.POINTS);
+        world.add(new UnknownWorld.Entity(skin.x[patch],skin.y[patch],0,0));
+    }
     private static long nextRng(long state){
         state^=state<<13;state^=state>>>7;state^=state<<17;
         return state==0?0x3322BBEEFEDL:state;
