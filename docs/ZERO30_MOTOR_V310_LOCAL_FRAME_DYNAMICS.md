@@ -26,4 +26,45 @@ Anche un eventuale PASS di questo laboratorio non equivale a camminata autonoma:
 
 ## Risultati CI
 
-*Da compilare solo dopo che la CI è terminata e sono stati letti i log numerici.*
+Risultati numerici disponibili qui sotto, trascritti dai log della CI completata.
+
+
+## RISULTATI VERIFICATI — CI 38986306415, 17 ottobre 2026
+
+[GitHub Actions 38986306415 — SUCCESS tecnico, gate di qualità FALLITO](https://github.com/nicogtr20-ctrl/idle-runner-releases/actions/runs/38986306415). Codice: `Zero3MotorLocalFrameV310Regression.java` sul ramo `feature/zero30-foundation-g0-g3-20261016`, PR #87. La prima esecuzione [38986223583](https://github.com/nicogtr20-ctrl/idle-runner-releases/actions/runs/38986223583) era stata **interrotta da un assertion di conteggio sbagliato (192 anziché 384)**, prima di calcolare qualsiasi MSE. Corretto unicamente l'assert dei campioni e il resoconto (4×2×3×4×2×2=384), senza cambiare modello, soglie, pose o regolarizzazione. La run conclusiva ha compilato tutto e completato il test numerico.
+
+**Test realmente concluso:** 384 FIT + 384 CAL + 256 BLIND = **1.024 traiettorie da un corpo fisico** e **491.520 step del solver**, 72D stato (8 globali + 16 settori × 4 valori), 64 comandi applicati al frame, 384 frame predetti per traiettoria. Regressioni `FULL` (stato locale+globali+azioni), `NO_ACTION` (stato locale+globali) e `NO_LOCAL` (globali+azioni). Nessuna modifica al corpo o ai dati legacy. Il BLIND ha pose 13°, -29°, 53°, -77° e precondizione 3, con seed di eccitazione separati; **non sono nuovi mondi**.
+
+| MSE, split CAL | FULL | NO_ACTION | NO_LOCAL | Riferimento |
+|---|---:|---:|---:|---:|
+| XY prossimo frame | 0,000000551 | 0,000000566 | **0,000000458** | ballistica 0,000000554 |
+| Stato corporeo prossimo frame | 0,000101816 | 0,000117854 | **0,000086478** | persistenza 0,000099891 |
+| Posizione rollout 16 frame | 0,001405880 | 0,001773422 | **0,000665166** | migliore baseline ballistica 0,001040230 |
+| Posizione rollout 96 frame | 0,466468330 | 0,585176449 | **0,081123431** | migliore baseline immobile 0,123388358 |
+| Posizione rollout 384 frame | 0,950722664 | 2,944320989 | 0,955712034 | migliore baseline immobile 0,769405879 |
+
+**Calibrazione: FAIL.** La FULL migliora la ballistica one-frame soltanto di circa 0,54%, non del 10% richiesto, peggiora la persistenza sulle feature corporee, e peggiora le previsioni a 16 e 96 frame. `NO_LOCAL` migliora significativamente molti confronti, ma il gate del **modello predesignato FULL** non può essere cambiato dopo aver letto i risultati.
+
+| MSE, split BLIND | FULL | NO_ACTION | NO_LOCAL | Riferimento |
+|---|---:|---:|---:|---:|
+| XY prossimo frame | **0,000001303** | 0,000001234 | **0,000000490** | ballistica 0,000000519 |
+| Stato corporeo prossimo frame | 0,000263959 | 0,000239035 | **0,000098983** | persistenza 0,000100804 |
+| Posizione rollout 16 frame | 0,006535769 | 0,007084495 | **0,000716411** | migliore baseline ballistica 0,000851196 |
+| Posizione rollout 96 frame | 2,813636208 | 3,222549192 | **0,095153510** | migliore baseline immobile 0,085788830 |
+| Posizione rollout 384 frame | 4,207230556 | 13,782333849 | 1,052036940 | migliore baseline immobile 0,571044539 |
+
+**BLIND: FAIL.** Il modello FULL sbaglia lo spostamento del frame **circa 2,51 volte più della ballistica**, e il proprio rollout 96 frame è **circa 32,8 volte più impreciso della previsione immobile**. Il modello più piccolo `NO_LOCAL` ottiene MSE one-frame 0,000000490 (meglio della ballistica 0,000000519), ma **non raggiunge la soglia primaria del 10%**, e a 96 frame non batte la baseline migliore (immobile). Il vantaggio di `NO_LOCAL` emerge soltanto come **risultato diagnostico**: nessun modello è stato autorizzato nel gioco. Anche in calibrazione l'ablation `NO_LOCAL` batteva FULL; il test blind conferma un'indicazione, non autorizza il riuso dello stesso blind come nuova selezione.
+
+### Diagnosi verificata vs ipotesi
+
+1. **Verificato:** la registrazione di stato anatomico settoriale, 64 efferenze *pre-solver* e stato *post-solver* a ogni frame funziona su centinaia di migliaia di veri step fisici; non è un semplice contatore di tentativi.
+2. **Verificato:** 16×4 dati locali aggiunti alla regressione lineare RIDGE peggiorano la generalizzazione rispetto alla variante global-only. Non equivale a dimostrare che i sensori locali non siano utili per una rete nonlinear o ricorrente.
+3. **Verificato:** il drift long-horizon persiste: perfino il global-only che migliora alcuni errori brevi non batte la baseline zero sui 96 frame blind.
+4. **Ipotesi NON provate individualmente:** multicollinearità delle feature settoriali, simmetria/rotazione non trattata, dinamica non lineare, saturazioni e contatti, variabili latenti fluide non osservate, errore del modello integrato e overfitting a pose FIT/CAL.
+5. **Limite decisivo:** valutazione con nastro delle azioni **realmente registrate**, noto in anticipo all'esperimento; il modello non sa generare i futuri comandi volontari né risolvere il problema della locomozione autonoma in loop chiuso.
+
+### Decisione di progetto
+
+**V3.10 = IMPLEMENTAZIONE E2 VERIFICATA, VALIDAZIONE QUALITÀ RESPINTA (CAL FAIL / BLIND FAIL). G3 e G5 rimangono BLOCCATI. NO MERGE della PR #87 verso publisher, NO APK/OTA V3.** Nessun valore fittizio di neuron/skill, nessun reset del 2.2.
+
+Prima di una V3.11 è necessario progettare una rappresentazione morfologica **equivariante alle rotazioni**, un modello più compatto / induttivo dei settori condivisi e un predittore di movimento condizionato su velocità e contatti, separando regime di adesione/no-grip e fenomeni meccanici. Valutare su **nuovi seed e ambienti** con vera dinamica di contatto, e non riciclare le pose blind V3.10 per tuning; progettare un test breve autonomo E3 soltanto dopo un buon gate E2. L'architettura V3 unificata e la UI restano obiettivi contrattuali **non implementati**.
