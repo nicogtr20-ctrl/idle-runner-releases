@@ -18,6 +18,7 @@ import java.util.*;
  */
 public final class Zero3OrganismStoreV322 {
     private static final int MAGIC=0x5A333232, VERSION=322, MAX=2*1024*1024;
+    static final int MAX_STATE_BYTES=MAX;
     public static final class Trace {
         public final int decision;
         public final long startTick,endTick,preHash,postHash,actuatorHash;
