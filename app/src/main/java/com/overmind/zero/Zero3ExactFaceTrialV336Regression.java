@@ -26,7 +26,7 @@ public final class Zero3ExactFaceTrialV336Regression {
                 // The ONLY candidate difference: skip ejection of legal
                 // exact face contacts already at the solid boundary.
                 SquareGripPuzzle.constrain(s.p.body,s.p.skin,e,DT,
-                     sx,sy,bx,by,oldCX,oldCY,null,mode!=3,mode>=2);
+                     sx,sy,bx,by,oldCX,oldCY,null,mode!=3&&mode!=4,mode>=2,mode==4);
                 boxes=true;
             }
         }
