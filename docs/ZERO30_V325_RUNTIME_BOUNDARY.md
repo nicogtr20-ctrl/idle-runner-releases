@@ -42,7 +42,19 @@ L'applicazione futura potrà chiamare `create(Context,slot)`, `startNew`, `resum
 - Compilazione JVM con solver e moduli reali; compilazione Android Debug comprensiva del bridge isolato, senza APK firmato o OTA.
 - Primo screening di 10 vite, **poi** ampliamento a 25 casi sulla base dell'esito: non presentare il secondo blocco come holdout completamente non consultato.
 
-**Esito finale:** da compilare solo dopo lettura dei risultati GitHub Actions della versione consolidata, controllando anche la compilazione dell'Android bridge e l'esito del test terminale. Non confondere il numero totale delle decisioni sui 25 casi con un unico organismo allenato così a lungo.
+## Esito definitivo verificato — 17/10/2026
+
+**[GitHub Actions 39029780647 — SUCCESS](https://github.com/nicogtr20-ctrl/idle-runner-releases/actions/runs/39029780647)**, commit del codice V325 `4256a038c58beb88bb879bc4071da9d9a9b7cbb7`. Il job completo ha compilato i componenti reali, eseguito **25/25 matched same-life restarts PASS** in cinque scene (cinque casi ciascuna), verificato integrità del replay/cervello/corpo/energia/room/RNG bitwise contro le rispettive 96 decisioni mai interrotte e confermato la costruzione Android Debug **`BUILD SUCCESSFUL in 1m 2s`**. Le 25 vite equivalgono a **2.400 decisioni** e **28.800 sottopassi fisici** per braccio matched, non un unico agente addestrato per 2.400 scelte. Ogni caso salva 24+24 decisioni in 2 generazioni, riavvia la JVM, continua a 96 e confronta con il processo senza stop.
+
+**Protezione reale da falsi ripristini:** per ciascuna delle 25 vite la CI riporta esattamente `V325 FAULT=PASS ROLLBACK_EXACT=48 DOUBLE_BAD_FAIL_CLOSED FOREIGN_REJECTED NO_SILENT_RESET`. Ciò dimostra che un episodio V3 diverso non riesce a sovrascrivere la generazione corrente, la versione corrotta ricade alla generazione esattamente completa 48, le due generazioni contaminate producono rifiuto senza inventare la nascita di una nuova vita e il salvataggio su file doppiamente corrotti viene bloccato.
+
+**Vita terminale:** `V325 TERMINAL_FUEL_EXHAUSTION=PASS STOP_EXACTLY_ONE_DECISION=PASS PERSISTENT_DEATH=PASS`: un organismo che perde davvero l'energia durante una decisione termina la vita al confine dell'azione, salva la condizione di riserva zero e non può ripartire con decisioni fittizie dopo il riavvio.
+
+**Android:** `Zero3AndroidSessionV325` compila nella build Debug e usa `getNoBackupFilesDir` con namespace separato dalla 2.2. **NON** è stata ancora richiamata da una Activity o verificata su Galaxy S21: compilazione ≠ device instrumentation. La CI stessa etichetta `V325_RUNTIME_LAB=PASS TERMINAL=PASS GAMEACTIVITY_NOT_CONNECTED G3_BLOCKED G5_BLOCKED G9_DEVICE_BLOCKED NO_OTA`.
+
+**Screening antecedente:** [39029389296, SUCCESS sui primi 10 casi](https://github.com/nicogtr20-ctrl/idle-runner-releases/actions/runs/39029389296). [39029656826](https://github.com/nicogtr20-ctrl/idle-runner-releases/actions/runs/39029656826) ha verificato 25 casi con test terminale. La run finale 39029780647 include anche i controlli aggiuntivi di rifiuto di archivi estranei e rigetto del reset silenzioso. Le estensioni sono state decise dopo il primo screening: non descriverle come holdout originario.
+
+**Gate promosso: `V325_DEDICATED_RUNTIME_JVM_LIFECYCLE=PASS` solamente in laboratorio.** NON promuovere `ANDROID_REAL_GAMEPLAY`, G3, G5, G9, G10 o V3 pronta per OTA.
 
 ## Ancora indispensabile prima di dire «ZERO 3.0 pronto»
 
