@@ -40,6 +40,9 @@ jobs:
           grep -q 'V336 ACTUATED_FINAL cases=2 decisionsPerCase=168 framesPerCase=2016' /tmp/v336active.log
           test "$(grep -c 'V336 ACTUATED_RESULT id=' /tmp/v336active.log)" -eq 2
           grep -q 'realV317AndV319Actuator=true matchedTape=true' /tmp/v336active.log
+          # A green workflow is NOT permission to deploy: scientific grip fails.
+          grep -q 'V336 SCIENCE_GUARD robustValidCases=0/2 candidatePromotion=REJECTED' /tmp/v336active.log
+          grep -q 'baselineBilateral=1192 trialBilateral=0' /tmp/v336active.log
       - name: Build Android Debug but never publish OTA
         run: gradle --no-daemon assembleDebug
       - name: Keep candidate and learning gates blocked
