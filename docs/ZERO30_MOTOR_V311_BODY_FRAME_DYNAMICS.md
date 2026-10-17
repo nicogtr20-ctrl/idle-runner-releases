@@ -33,4 +33,41 @@ Modello lineare ridotto, non una rete neurale GRU, non una locomozione appresa, 
 
 ## Esiti verificati
 
-*Da aggiornare esclusivamente dopo CI e lettura log, con evidenza numerica e difetti.*
+Risultati osservati e verificati qui sotto, senza promozione automatica.
+
+
+## RISULTATI VERIFICATI — GitHub Actions 38986991649 (17/10/2026)
+
+**[CI V3.11 38986991649 — SUCCESS tecnico](https://github.com/nicogtr20-ctrl/idle-runner-releases/actions/runs/38986991649): compilazione e 491.520 passi fisici completati.** FIT 384, CAL 384, BLIND 256 traiettorie, state 22D in coordinate del corpo, 64 comandi eseguiti ogni frame ridotti a 24 caratteristiche, regolarizzazione train-only. Test BLIND su pose +17°, −39°, +71°, −86°, precondizione 3, seed di eccitazione distinti. Anche rotazione geometrica di 90° dei vettori body→world verificata come proprietà di coordinate: **non è un test di locomozione sotto mondo ruotato**.
+
+**ATTENZIONE CRITICA: contactFrames=0, gripFrames=0 sia in calibrazione sia nel BLIND per tutti i modelli.** `NO_GRIP_TOUCH` ha risultati **esattamente identici** a FULL. Il laboratorio usa il solver del gel ma NON esegue la parte di collisione con oggetti che, nel gameplay, popola i sensori di contatto e presa. Di conseguenza la capacità *contact-aware* NON può essere rivendicata o promossa, qualunque sia il successo sugli altri valori. In particolare, `touchSense` e `gripHold` rimangono nulli nell'arena libera; questo non implica che tali sensori siano rotti in produzione.
+
+| CAL 384 traiettorie, MSE | FULL | NO_ACTION | NO_GRIP_TOUCH | Baseline pertinente |
+|---|---:|---:|---:|---:|
+| XY one-step | **0,000000350** | 0,000000418 | 0,000000350 | ballistica 0,000000545 |
+| Stato one-step | **0,000059524** | 0,000444842 | 0,000059524 | persistenza 0,000466326 |
+| Percorso 16 frame | **0,000285231** | 0,000708747 | 0,000285231 | ballistica 0,001020557 |
+| Percorso 96 frame | **0,022706656** | 0,071493327 | 0,022706656 | immobile 0,135333921 |
+| Percorso 384 frame | **0,235001864** | 0,311522015 | 0,235001864 | immobile 0,759308610 |
+
+| BLIND 256 traiettorie, MSE | FULL | NO_ACTION | NO_GRIP_TOUCH | Baseline pertinente |
+|---|---:|---:|---:|---:|
+| XY one-step | **0,000000335** | 0,000000397 | 0,000000335 | ballistica 0,000000511 |
+| Stato one-step | **0,000055284** | 0,000447383 | 0,000055284 | persistenza 0,000469229 |
+| Percorso 16 frame | **0,000294541** | 0,000743767 | 0,000294541 | ballistica 0,000925721 |
+| Percorso 96 frame | **0,023664288** | 0,064856512 | 0,023664288 | immobile 0,082884093 |
+| Percorso 384 frame | **0,227423314** | 0,366619503 | 0,227423314 | immobile 0,539894823 |
+
+**Risultato oggettivo positivo, circoscritto:** il modello FULL supera ballistica/persistenza e NO_ACTION con ampio margine in queste prove **senza contatti**, anche su pose nuove: nel BLIND migliora MSE XY a un frame del **34,4%** rispetto alla ballistica, stato one-step dell'**88,2%** rispetto alla persistenza, percorso a 96 frame del **71,4%** rispetto al controllo immobile. L'azione osservata è predittivamente utile rispetto all'ablation NO_ACTION. Su 384 frame migliora il riferimento immobile (0,2274 vs 0,5399), ma non è una vita con obiettivi o un cervello che sceglie nuove azioni.
+
+**Gate FULL preregistrato = FAIL in CAL e BLIND** nonostante il miglioramento delle altre metriche, perché il requisito FULL ≥3% migliore di `NO_GRIP_TOUCH` è impossibile nel campione (zero eventi reali). La CI non inserisce automaticamente questo risultato nel gameplay. **G3 locomozione autonoma NON superato, G5 world model generale NON superato; ZERO 3.0 ancora sperimentale; NO OTA.**
+
+### Diagnosi di integrazione del laboratorio (verificata sul sorgente del gioco)
+
+Il vero solver `SymbioteMatterV1.step` comanda materia e muscoli, ma non sintetizza un falso tocco di scatola: il contatto oggetto viene elaborato dal mondo/collisioni dopo la fisica. In `GameActivity` il ramo delle scatole passa da `SquareGripPuzzle.constrain`, `GripSurfaceComposition.compose` e `SymbioteWorldStepV171.interior`; i dischi mobili passano da `Morphology.collide`. Senza quel mondo, i segnali specifici non possono apparire. L'assenza è **un difetto di copertura del test**, non prova che il modello non sappia usare il tatto. L'aderenza di presa vera deve essere causata da contatto e comando, mai scritta nel sensore dal benchmark.
+
+### Decisione e passo successivo
+
+Non ripetere le medesime pose ormai usate come BLIND, né ritoccare ridge o soglie a posteriori. Mantenere V3.11 come **primo modello libero/azione-condizionato con vantaggio predittivo E2 indipendente entro la stessa arena**; non promuovere il claim più grande. **Prima di sviluppare V3.12:** isolare una fixture di oggetti/box che richiami ESATTAMENTE i solver di collisione usati dal gioco e produca eventi fisici autentici; misurare la distribuzione contact/grip prima dell'apprendimento, poi validare la risposta a nuovi contatti con nuovi seed/pose e senza futuro nascosto. Separare generalizzazione alle pose, ai mondi e alla dinamica del contatto. Un esito E2 positivo non basta ancora per G3: servono vita autonoma, controllo in ciclo chiuso, skill appresa con retention e nuovi ambienti.
+
+**GitHub: PR #87 Draft, OTA172 invariata.**
