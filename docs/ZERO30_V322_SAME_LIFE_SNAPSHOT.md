@@ -1,5 +1,8 @@
 # ZERO 3.0 — V3.22/A | Snapshot congiunto neuroni + materia + oggetto + traccia causale, ripresa nella STESSA vita
 
+> **CI DEFINITIVA DOPO HARDENING — 17/10/2026:** [39022300684 SUCCESS](https://github.com/nicogtr20-ctrl/idle-runner-releases/actions/runs/39022300684), commit `c122be6493ec6008771169fc05a10918d9371a9d`. Tutte le 4 JVM, comparazione `cmp` bitwise, 48→96 decisioni nella stessa vita, rollback e Android Debug (`BUILD SUCCESSFUL`) di nuovo PASS dopo immutabilità della traccia e rigetto di dati incompatibili. Fingerprint e risultati fisici invariati. Gate **SOLO V322/A LAB**, non `BrainSnapshotV3` di produzione, G3/G5 bloccati, no OTA.
+
+
 **Data:** 17 ottobre 2026. **Ambito:** laboratorio E2/E3-prototipo nella PR #87 **DRAFT**, branch `feature/zero30-foundation-g0-g3-20261016`; produzione ZERO 2.2/OTA172 immutata.
 
 ## Contratti vincolanti letti prima dell'intervento
