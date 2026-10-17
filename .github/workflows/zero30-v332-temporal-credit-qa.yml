@@ -37,7 +37,7 @@ jobs:
           java -Xmx1792m -cp /tmp/overmind com.overmind.zero.Zero3TemporalLocalMotorV332Regression | tee /tmp/v332-qa.log
           grep -q 'V332 TRAIN oldUpdates=' /tmp/v332-qa.log
           grep -q 'V332 SUMMARY technicalThreeArmGate=PASS' /tmp/v332-qa.log
-          grep -q 'blindDecisionsPerArm=2304' /tmp/v332-qa.log
+          grep -q 'blindMaxDecisionsPerArm=2304' /tmp/v332-qa.log
           test "$(grep -c 'V332 BLIND FAMILY=' /tmp/v332-qa.log)" -eq 4
           echo 'ZERO3 V332 SCIENTIFIC_RESULT_IN_LOG_NOT_AUTOPROMOTED'
       - name: Compile Android Debug with LEGACY motor behavior unchanged
