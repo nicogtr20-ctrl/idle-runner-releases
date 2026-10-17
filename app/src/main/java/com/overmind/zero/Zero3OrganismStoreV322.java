@@ -63,7 +63,7 @@ public final class Zero3OrganismStoreV322 {
         public final long episodeId;
         public final int nextDecision;
         public final long lastRngState; // fixture/environment RNG supplied by owner
-        public final Trace[] records;
+        private final Trace[] records;
         private final byte[] material;
         private final byte[] neural;
         private final float[] lastActuators;
@@ -84,6 +84,7 @@ public final class Zero3OrganismStoreV322 {
             records=tape.clone();material=phys.clone();neural=brain.clone();
             lastActuators=last.clone();
         }
+        public Trace[] trace(){return records.clone();}
         public float[] last64(){return lastActuators.clone();}
         public Physical physical()throws IOException {return decodePhysical(material);}
         public String materialHash(){return hex(sha(material));}
@@ -334,7 +335,9 @@ public final class Zero3OrganismStoreV322 {
                 new Zero3LearningFoundation.AdaptiveCortex(.013f),
                 new Zero3ContextAdhesionV319(0x319L,true));
             return state;
-        }catch(IllegalArgumentException error){throw new IOException("V322 state invalid",error);}
+        }catch(IllegalArgumentException|IllegalStateException error){
+            throw new IOException("V322 state invalid",error);
+        }
     }
     private static byte[] sha(byte[] data) {
         try{return MessageDigest.getInstance("SHA-256").digest(data);}
