@@ -1,5 +1,8 @@
 # ZERO 3.0 — V3.27 | Interocezione energetica attiva, danno causale e limite di persistenza V3 protetto
 
+> **Checkpoint ZERO V3.28 (17 ottobre 2026):** [rapporto completo](ZERO30_V328_SEGMENTED_LONG_LIFE.md) · [CI 39032930838 SUCCESS](https://github.com/nicogtr20-ctrl/idle-runner-releases/actions/runs/39032930838). Il nuovo `Zero3SegmentedArchiveV328` separa il journal motorio autentico in 32 record per segmento immutabile SHA-256 dal manifest neuronale/fisico/energetico/room, con doppia generazione e hash verificati. **2 vite autonome distinte da 2.000 decisioni vere ciascuna** passano cold JVM restart a 1.000 contro controllo 2.000 senza interruzioni, confronto integrale bytewise e 63 segmenti per vita; corruzione segmento o manifest, orfani e fail closed PASS; Android Debug compile PASS. Vita di test sostenuta da vere fonti blu collocate nell'ambiente dal banco, non prova di sopravvivenza appresa. Runtime mantiene ancora esperienze in RAM, Android S21/G9 NON testato, G3 locomozione e G5 non validati, UI 3D finale mancante, nessuna OTA.
+
+
 **17 ottobre 2026 • SOLO RAMO DI RICERCA `feature/zero30-foundation-g0-g3-20261016` / PR #87 DRAFT • NESSUNA OTA.** Leggere prima [Master Blueprint](ZERO30_MASTER_BLUEPRINT.md), [Implementation Contract](ZERO30_IMPLEMENTATION_CONTRACT.md), [UI/UX spec](ZERO30_UI_UX_SPEC.md) e [V3.26 Android entrypoint](ZERO30_V326_ANDROID_ENTRY.md). Restano fermi 12 slot della versione 2.2, OTA172, signature e publisher.
 
 ## Problema
