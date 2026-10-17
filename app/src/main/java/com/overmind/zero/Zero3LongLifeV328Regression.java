@@ -137,10 +137,11 @@ public final class Zero3LongLifeV328Regression {
         try(RandomAccessFile f=new RandomAccessFile(fallback.currentManifest().toFile(),"rw")){
             f.setLength(9);
         }
-        yes(Zero3SegmentedArchiveV328.hasAny(dir)&&
-            Zero3RuntimeV325.loadSegmented(dir)==null
-                ?false:true,
-            "placeholder");
+        boolean failedClosed=false;
+        try(Zero3RuntimeV325 invalid=Zero3RuntimeV325.loadSegmented(dir)){
+            if(invalid!=null)throw new AssertionError("two invalid generations resurrected ZERO");
+        }catch(IOException expected){failedClosed=true;}
+        yes(failedClosed,"two invalid manifests silently erased V3 identity");
         System.out.println("V328 FAULT_ROLLBACK=PASS backedUpDecision="+rollback);
     }
     public static void main(String[] args)throws Exception{
