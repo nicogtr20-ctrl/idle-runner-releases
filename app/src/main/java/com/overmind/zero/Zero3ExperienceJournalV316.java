@@ -29,14 +29,14 @@ public final class Zero3ExperienceJournalV316 {
     }
     public static final class Record {
         public final long episodeId,decisionId,preHash,postHash,preTicks,postTicks;
-        public final int split,revision;
+        public final int split,revision,sourceRevision;
         public final String owner;
         private final byte[] bytes;
         private Record(long episode,long id,long pre,long post,long beforeTicks,long afterTicks,
-                       int split,int rev,String owner,byte[] encoded) {
+                       int split,int rev,int source,String owner,byte[] encoded) {
             episodeId=episode;decisionId=id;preHash=pre;postHash=post;
             preTicks=beforeTicks;postTicks=afterTicks;this.split=split;
-            revision=rev;this.owner=owner;bytes=encoded.clone();
+            revision=rev;sourceRevision=source;this.owner=owner;bytes=encoded.clone();
         }
         public byte[] encoded(){return bytes.clone();}
         public boolean sameData(Record other){return Arrays.equals(bytes,other.bytes);}
@@ -109,10 +109,11 @@ public final class Zero3ExperienceJournalV316 {
         DataInputStream in=new DataInputStream(new ByteArrayInputStream(raw));
         check(in.readInt()==MAGIC&&in.readInt()==VERSION,"schema mismatch");
         long episode=in.readLong(),decision=in.readLong();
-        int split=in.readUnsignedByte(),revision=in.readInt();
+        int split=in.readUnsignedByte(),revision=in.readInt(),sourceRevision=in.readInt();
         String owner=in.readUTF();
         check(episode>0&&decision>=0&&split<=2&&revision>=0&&
-              !owner.isEmpty()&&owner.length()<=64,"invalid intention owner");
+              !owner.isEmpty()&&owner.length()<=64&&sourceRevision>=0,
+              "invalid intention owner");
         float dirX=in.readFloat(),dirY=in.readFloat(),effort=in.readFloat(),
             adhesion=in.readFloat(),duration=in.readFloat(),confidence=in.readFloat();
         double direction=Math.hypot(dirX,dirY);
@@ -142,7 +143,7 @@ public final class Zero3ExperienceJournalV316 {
         for(float x:requested)check(Math.abs(x)<=1.0001f,"requested action out of bounds");
         check(in.available()==0,"unrecognized trailing record bytes");
         return new Record(episode,decision,pre.hash,post.hash,pre.ticks,post.ticks,
-                          split,revision,owner,raw);
+                          split,revision,sourceRevision,owner,raw);
     }
     public void add(Zero3MotorIntentV316 intent,Zero3CausalRecorderV315.Experience e){
         check(intent!=null&&intent.intact()&&e!=null&&e.intact(),
@@ -157,6 +158,7 @@ public final class Zero3ExperienceJournalV316 {
             out.writeInt(MAGIC);out.writeInt(VERSION);
             out.writeLong(e.episodeId);out.writeLong(e.decisionId);
             out.writeByte(e.split.ordinal());out.writeInt(intent.controllerRevision);
+            out.writeInt(intent.sourceRevision);
             out.writeUTF(intent.actorOwner);
             f(out,intent.directionX);f(out,intent.directionY);
             f(out,intent.desiredEffort);f(out,intent.adhesionPreference);
@@ -241,10 +243,15 @@ public final class Zero3ExperienceJournalV316 {
         int target=activeSlot==0?1:0;
         Meta meta=new Meta(target,generation+1,payload.length,sha(payload));
         atomicWrite(slot(target),payload);flushDirectoryBestEffort(root);
-        // Publish old pointer as fallback BEFORE committing new generation.
-        if(generation>0&&Files.isRegularFile(pointer())){
-            byte[] former=Files.readAllBytes(pointer());
-            atomicWrite(previous(),former);
+        // Protect the last VERIFIED payload, even when the current primary
+        // pointer is corrupt and we resumed from previous.mf. Never copy an
+        // unverified pointer over the only recovery manifest.
+        if(generation>0){
+            byte[] lastCommitted=Files.readAllBytes(slot(activeSlot));
+            check(!unpack(lastCommitted).isEmpty(),
+                  "cannot back up an invalid previous payload");
+            atomicWrite(previous(),manifest(new Meta(activeSlot,generation,
+                lastCommitted.length,sha(lastCommitted))));
         }
         atomicWrite(pointer(),manifest(meta));flushDirectoryBestEffort(root);
         generation=meta.generation;activeSlot=target;
