@@ -299,10 +299,12 @@ public final class Zero3TemporalLocalMotorV332Regression {
         }
         check(model[OLD].cortex.updates()>0&&
               model[LOCAL].causalUpdates>0&&
+              model[LOCAL].cortex.updates()>0&&
               model[FROZEN].cortex.updates()==0,
-              "no actual difference in training updates");
+              "no physically applied credit changes in the V332 cortex");
         System.out.println("V332 TRAIN oldUpdates="+model[OLD].cortex.updates()+
-            " localDelayedUpdates="+model[LOCAL].causalUpdates+
+            " localCreditCalls="+model[LOCAL].causalUpdates+
+            " localWeightUpdates="+model[LOCAL].cortex.updates()+
             " frozenUpdates="+model[FROZEN].cortex.updates()+
             " episodesPerArm=32 decisionsPerArm=3072");
         // Evaluate only FROZEN weights. No training, no perturbation.
