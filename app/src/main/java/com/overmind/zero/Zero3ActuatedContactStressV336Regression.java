@@ -57,15 +57,19 @@ public final class Zero3ActuatedContactStressV336Regression {
         m.gross+=Math.hypot(s.p.body.cx-oldX,s.p.body.cy-oldY);
         m.work=s.p.gel.work;
     }
-    private static void life(int ordinal,
+    private static boolean life(int ordinal,
               Zero3ContextAdhesionV319 frozenPretrained){
         boolean blind=ordinal>=600;
         Zero3BoxCrossingForensicV334Regression.State base=
             new Zero3BoxCrossingForensicV334Regression.State(ordinal,blind);
         Zero3BoxCrossingForensicV334Regression.State trial=
             new Zero3BoxCrossingForensicV334Regression.State(ordinal,blind);
-        base.warmup();trial.warmup();base.spawn();trial.spawn();
-        Metric original=new Metric(),candidate=new Metric();
+        Zero3BoxCrossingForensicV334Regression.State faceOnly=
+            new Zero3BoxCrossingForensicV334Regression.State(ordinal,blind);
+        base.warmup();trial.warmup();faceOnly.warmup();
+        base.spawn();trial.spawn();faceOnly.spawn();
+        Metric original=new Metric(),candidate=new Metric(),
+               face=new Metric();
         long ep=(blind?3367000L:3361000L)+ordinal;
         Zero3AutonomousLoopV317.Encoder actor=
             new Zero3AutonomousLoopV317.Encoder(0x31720261017L);
@@ -105,12 +109,15 @@ public final class Zero3ActuatedContactStressV336Regression {
                         realActionMagnitude+=Math.abs(command);
                     }
                     float oldX=base.p.body.cx,oldY=base.p.body.cy,
-                          cx=trial.p.body.cx,cy=trial.p.body.cy;
+                          cx=trial.p.body.cx,cy=trial.p.body.cy,
+                          fx=faceOnly.p.body.cx,fy=faceOnly.p.body.cy;
                     float beforeWork=base.p.gel.work;
                     Zero3ExactFaceTrialV336Regression.cycle(base,0,actual);
                     Zero3ExactFaceTrialV336Regression.cycle(trial,2,actual);
+                    Zero3ExactFaceTrialV336Regression.cycle(faceOnly,1,actual);
                     record(base,original,oldX,oldY);
                     record(trial,candidate,cx,cy);
+                    record(faceOnly,face,fx,fy);
                     float measured=Math.max(0f,base.p.gel.work-beforeWork);
                     coordinator.observe(base.p.body,DT,measured,
                         Math.max(0,base.p.gel.lastMuscleReactionImpulse),
@@ -131,7 +138,8 @@ public final class Zero3ActuatedContactStressV336Regression {
             }
         }
         check(original.steps==DECISIONS*SUBSTEPS&&
-              candidate.steps==DECISIONS*SUBSTEPS,
+              candidate.steps==DECISIONS*SUBSTEPS&&
+              face.steps==DECISIONS*SUBSTEPS,
               "incomplete required physics");
         check(realActionMagnitude>0.1,
               "no truly actuated cortex output observed");
@@ -151,18 +159,28 @@ public final class Zero3ActuatedContactStressV336Regression {
             "baselineGrip=%d trialGrip=%d "+
             "baselineBilateral=%d trialBilateral=%d "+
             "topology=%s workGate=%s bilateralGate=%s "+
+            "faceOnlyCross=%d faceOnlyWork=%.9f faceOnlyGrip=%d "+
+            "faceOnlyBilateral=%d faceOnlyWall=%d "+
             "candidateAutonomousPolicy=false G3_BLOCKED G5_BLOCKED NO_OTA%n",
             ordinal,DECISIONS,candidate.steps,realActionMagnitude,
             original.cross,candidate.cross,original.wall,candidate.wall,
             candidate.embedded,candidate.invalid,original.work,candidate.work,
             original.grip,candidate.grip,original.bilateral,
             candidate.bilateral,topology?"PASS":"FAIL",
-            cost?"PASS":"FAIL",bilateralStatus);
+            cost?"PASS":"FAIL",bilateralStatus,
+            face.cross,face.work,face.grip,face.bilateral,face.wall);
+        return topology&&cost&&gripGuard&&bilateralEvidence;
     }
     public static void main(String[] args){
         Zero3ContextAdhesionV319 frozen=
             Zero3FiveArmAblationV333Regression.gripPretraining();
-        for(int id:CASES)life(id,frozen);
+        int robustValid=0;
+        for(int id:CASES)if(life(id,frozen))robustValid++;
+        System.out.println("V336 SCIENCE_GUARD robustValidCases="+
+            robustValid+"/"+CASES.length+
+            " candidatePromotion="+(robustValid==CASES.length?
+              "NOT_AUTHORIZED_NEEDS_INDEPENDENT_BLIND":"REJECTED")+
+            " 80_PERCENT_BILATERAL_REQUIRED=true");
         System.out.println("V336 ACTUATED_FINAL cases=2 "+
             "decisionsPerCase=168 framesPerCase=2016 "+
             "realV317AndV319Actuator=true matchedTape=true "+
