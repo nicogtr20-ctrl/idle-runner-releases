@@ -16,9 +16,34 @@
 - `Zero3SurvivalLedgerV323.physicalStep` su una membrana realmente a contatto raccoglie +**40** unità di energia autentica **una volta** da `UnknownWorld.Entity.touch`, aggiornando contatori, riserva e `consumed`; nessun premio per il solo spostamento della BOX, nessuna raccolta prima dell'uncover. Un'altra cassa identica **senza fonte** resta senza premio anche dopo il movimento. `OpticalCues` conserva debole rim reale e occlusione, la fonte non viene mostrata come premio anticipato.
 - MultiObjectGripRegression con 3 casse/gate e tutte 7 combinazioni PASS, OpticalCues, UnknownWorld e Android `assembleDebug BUILD SUCCESSFUL in 1m 5s`; **NO signed APK/OTA**. Questa fixture dimostra coerenza fisica e metabolica locale, NON che l'attore abbia scoperto o scelto di muovere la BOX, perché la prova usa flag sintetiche per simulare un evento che nel mondo vero proverrà dal solver.
 
-## V3.43-B — disimpegno spaziale su vita V342 già consumata
+## V3.43-B — disimpegno spaziale reale: identica riproduzione 10.000 ×2, PASS diagnostico
 
-`Zero3DisengagementV343Regression` è un'osservazione **read-only** della stessa singola vita LONG ordinal1601 per FULL e FROZEN, 10k decisioni/arm con esattamente stessi policy/gel/work/BOX del V342, senza hidden reward né modify actor. Ad ogni 1000 decisioni misura distanza COM↔BOX, frame entro `HALF+64`, uscita/ritorno dalla zona e spostamento BOX, e richiede come gate repliche esatte in tolleranza di BOX gross FULL13.190067/FROZEN58.221730, bilateral FULL1931/FROZEN7934 e RAW work FULL5.786657810/FROZEN4.032796383. **[GitHub Actions 39076406020](https://github.com/nicogtr20-ctrl/idle-runner-releases/actions/runs/39076406020)** — da riportare dal vero log dopo conclusione, senza affermare ancora intenzioni.
+**[CI 39076406020 — SUCCESS tecnica, replica scientifica V342 PASS](https://github.com/nicogtr20-ctrl/idle-runner-releases/actions/runs/39076406020)**, classe laboratorio `Zero3DisengagementV343Regression`. È la stessa vita **1601 già consumata** del V342, con cervello/attore/64 motori/96-patch gel/BOX/fisica V338/pesi e reward identici; l'unica differenza è un osservatore READ-ONLY del rapporto fisico fra COM del corpo e posizione aggiornata della cassa. FULL e FROZEN: **10.000 decisioni autentiche consecutive ciascuno, 120.000 substep reali ciascuno, zero censura, test Android Debug BUILD SUCCESSFUL in 1m 3s, NO APK OTA**.
+
+**Replicati esattamente, senza tuning né modifica del circuito**: FULL true bilateral **1.931**, BOX gross **13.190067**, RAW work **5.786657810**; FROZEN true bilateral **7.934**, BOX gross **58.221730**, RAW work **4.032796383**. Se fossero divergenti, il test avrebbe fallito. Definizione *zona vicina* pre-registrata = distanza COM↔centro BOX `<= SquareGripPuzzle.HALF+64`; questo è una metrica spaziale grossolana e NON un criterio di volontà.
+
+| VERO indicatore spaziale post-WORLD | FULL_LOCAL_DELAY | FROZEN |
+|---|---:|---:|
+| Primi 1.000, distanza dalla BOX | 38.043547 | 39.676398 |
+| **2.000**, distanza dalla BOX | **92.932789** (fuori zona) | **41.737338** |
+| **3.000**, distanza dalla BOX | **451.802845** | 40.141470 |
+| **5.000**, distanza dalla BOX | **1.426.879404** | 41.111001 |
+| **8.000**, distanza dalla BOX | **3.704.920367** | 37.989407 |
+| **10.000**, distanza dalla BOX | **5.744.799070** | **38.905236** |
+| Minimo COM↔BOX lungo 120.000 frame | 37.843734 | 37.395702 |
+| Massimo COM↔BOX lungo 120.000 frame | 5.744.799070 | 50.952128 |
+| Frame nelle vicinanze della BOX, su 120.000 | **23.637** | **120.000** |
+| Uscite dalla zona | **1** | **0** |
+| Ritorni dopo uscita | **0** | 0 (non è mai uscito) |
+| Primo frame fisico di uscita | **23.637** (~decisione 1.970) | nessuno |
+| Presa bilaterale autenticata | **1.931** | **7.934** |
+| BOX gross movement nel periodo 2.000→10.000 | **0** | **42.733024** |
+
+Per FULL, nel 1º blocco di mille decisioni vi sono 12.000/12.000 frame vicini e 499 bilaterali, nel 2º 11.637/12.000 frame vicini e 1.432 bilaterali; **dalla decisione 2.000 alla 10.000: 0 frame vicini, 0 frame owner BOX, 0 bilaterali, 0 BOX displacement per ogni blocco da mille**. Il cervello rimane fisicamente lontano perché il COM prosegue per molte migliaia di unità. Per FROZEN, **tutti i 120.000 frame** restano nella fascia vicina, ed è possibile osservare nuove prese autentiche anche molto tardi, per esempio +2471 bilaterali fra 8.000 e 9.000 decisioni.
+
+**CORREZIONE INTERPRETATIVA OBBLIGATORIA DEL V342:** non dire «il FULL ha dimenticato come muovere una cassa» sulla base dei 0 movimenti dopo 2.000: **si è allontanato dalla BOX e non vi è più tornato**, quindi la successiva assenza di manipolazione è prima di tutto un'assenza di opportunità fisica, non dimostrazione di perdita della capacità. Nemmeno la vicinanza costante del FROZEN prova motivazione o preferenza: è una proprietà della traiettoria osservata, non una sua dichiarazione d'intenzione. La V342 **dimostra** che FULL sa afferrare e muovere una BOX quando ne ha contatto e che le traiettorie di FULL e FROZEN divergono nettamente nel lungo periodo, ma **non discrimina** esplorazione, scelta basata su valore o errore di navigazione. In V342 non esistono fame/premio sotto quella BOX accessibili alla policy, dunque nessun test della convenienza di tornarvi è ancora valido.
+
+V343-B è **diagnostica su scena consumata** e **NON** nuovo holdout, non prova G3 né G5; la causalità fra valori energetici, sensori e azioni richiede la futura V344.
 
 ## Prossimo requisito prima del confronto utile/vuota
 
