@@ -61,6 +61,13 @@ public final class Zero3AndroidSessionV325 implements AutoCloseable {
         session.close();
         session=null;
     }
+    /** Real physics + neural counters captured only by the session owner. */
+    public synchronized Zero3RuntimeV325.Display display()throws IOException {
+        if(session==null)throw new IOException("V3 runtime not active");
+        return session.display();
+    }
+    public synchronized boolean ended(){return session!=null&&session.ended();}
+    public synchronized Path researchPath(){return directory;}
     public synchronized boolean active(){return session!=null;}
     public synchronized int decisions(){return session==null?0:session.decisions();}
     public synchronized float energy(){return session==null?Float.NaN:session.energy();}
