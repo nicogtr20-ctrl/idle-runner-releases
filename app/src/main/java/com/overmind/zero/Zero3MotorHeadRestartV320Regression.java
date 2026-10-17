@@ -60,7 +60,7 @@ public final class Zero3MotorHeadRestartV320Regression {
         require(disk.generation()==1,"first checkpoint lost");
         trainRange(model,8,16);disk.save(model);
         require(disk.generation()==2&&model.updates()==1536,"second generation wrong");
-        byte[] exported=model.captureAtDecisionBoundary().weights();
+        float[] exported=model.captureAtDecisionBoundary().weights();
         exported[0]=42f;
         require(model.captureAtDecisionBoundary().weights()[0]!=42f,
                 "live weights escaped through checkpoint getter");
