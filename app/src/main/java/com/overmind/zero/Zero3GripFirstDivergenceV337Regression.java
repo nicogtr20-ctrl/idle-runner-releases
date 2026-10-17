@@ -71,11 +71,15 @@ public final class Zero3GripFirstDivergenceV337Regression {
         Zero3BoxCrossingForensicV334Regression.State linkOnly=
             new Zero3BoxCrossingForensicV334Regression.State(ordinal,blind);
         linkOnly.warmup();linkOnly.spawn();
+        Zero3BoxCrossingForensicV334Regression.State guarded=
+            new Zero3BoxCrossingForensicV334Regression.State(ordinal,blind);
+        guarded.warmup();guarded.spawn();
         Metric original=new Metric(),candidate=new Metric(),
-               face=new Metric(),link=new Metric();
-        int[] firstGeometry={-1,-1,-1},firstOwners={-1,-1,-1},
-              firstSides={-1,-1,-1},firstBilateral={-1,-1,-1};
-        String[] modes={"FACE_ONLY","FACE_PLUS_LINK","LINK_ONLY"};
+               face=new Metric(),link=new Metric(),selective=new Metric();
+        int[] firstGeometry={-1,-1,-1,-1},firstOwners={-1,-1,-1,-1},
+              firstSides={-1,-1,-1,-1},firstBilateral={-1,-1,-1,-1};
+        String[] modes={"FACE_ONLY","FACE_PLUS_LINK","LINK_ONLY",
+                        "SELECTIVE_PUSHOUT_PLUS_LINK"};
         long ep=(blind?3367000L:3361000L)+ordinal;
         Zero3AutonomousLoopV317.Encoder actor=
             new Zero3AutonomousLoopV317.Encoder(0x31720261017L);
@@ -117,20 +121,23 @@ public final class Zero3GripFirstDivergenceV337Regression {
                     float oldX=base.p.body.cx,oldY=base.p.body.cy,
                           cx=trial.p.body.cx,cy=trial.p.body.cy,
                           fx=faceOnly.p.body.cx,fy=faceOnly.p.body.cy,
-                          lx=linkOnly.p.body.cx,ly=linkOnly.p.body.cy;
+                          lx=linkOnly.p.body.cx,ly=linkOnly.p.body.cy,
+                          gx=guarded.p.body.cx,gy=guarded.p.body.cy;
                     float beforeWork=base.p.gel.work;
                     Zero3ExactFaceTrialV336Regression.cycle(base,0,actual);
                     Zero3ExactFaceTrialV336Regression.cycle(trial,2,actual);
                     Zero3ExactFaceTrialV336Regression.cycle(faceOnly,1,actual);
                     Zero3ExactFaceTrialV336Regression.cycle(linkOnly,3,actual);
+                    Zero3ExactFaceTrialV336Regression.cycle(guarded,4,actual);
                     record(base,original,oldX,oldY);
                     record(trial,candidate,cx,cy);
                     record(faceOnly,face,fx,fy);
                     record(linkOnly,link,lx,ly);
+                    record(guarded,selective,gx,gy);
                     Zero3BoxCrossingForensicV334Regression.State[] arms=
-                        {faceOnly,trial,linkOnly};
+                        {faceOnly,trial,linkOnly,guarded};
                     int globalFrame=decision*SUBSTEPS+sub;
-                    for(int m=0;m<3;m++){
+                    for(int m=0;m<4;m++){
                         Zero3BoxCrossingForensicV334Regression.State alt=arms[m];
                         if(firstGeometry[m]<0&&geometryDiffer(base,alt)){
                             firstGeometry[m]=globalFrame;
@@ -194,7 +201,8 @@ public final class Zero3GripFirstDivergenceV337Regression {
         check(original.steps==DECISIONS*SUBSTEPS&&
               candidate.steps==DECISIONS*SUBSTEPS&&
               face.steps==DECISIONS*SUBSTEPS&&
-              link.steps==DECISIONS*SUBSTEPS,
+              link.steps==DECISIONS*SUBSTEPS&&
+              selective.steps==DECISIONS*SUBSTEPS,
               "incomplete required physics");
         check(realActionMagnitude>0.1,
               "no truly actuated cortex output observed");
@@ -245,7 +253,29 @@ public final class Zero3GripFirstDivergenceV337Regression {
             link.wall,link.embedded,link.invalid,linkTopology?"PASS":"FAIL",
             linkWork?"PASS":"FAIL",
             !bilateralEvidence?"NOT_TESTED":linkGrip?"PASS":"FAIL");
-        return linkTopology&&linkWork&&linkGrip;
+        boolean selectiveTopology=selective.cross==0&&
+             selective.wall==0&&selective.embedded==0&&
+             selective.invalid==0;
+        boolean selectiveWork=selective.work<=original.work*1.10+1e-6;
+        boolean selectiveBilateral=bilateralEvidence&&
+             selective.bilateral>=.80*original.bilateral;
+        System.out.printf(Locale.US,
+            "V337 SELECTIVE_RESULT id=%d frames=%d "+
+            "baselineCross=%d linkCross=%d selectiveCross=%d "+
+            "baselineBilateral=%d linkBilateral=%d "+
+            "selectiveBilateral=%d baselineGenericGrip=%d "+
+            "selectiveGenericGrip=%d workBaseline=%.9f "+
+            "workSelective=%.9f throughWall=%d embedded=%d invalid=%d "+
+            "topology=%s workGate=%s bilateralGate=%s "+
+            "G3_BLOCKED G5_BLOCKED NO_OTA%n",
+            ordinal,selective.steps,original.cross,link.cross,selective.cross,
+            original.bilateral,link.bilateral,selective.bilateral,
+            original.grip,selective.grip,original.work,selective.work,
+            selective.wall,selective.embedded,selective.invalid,
+            selectiveTopology?"PASS":"FAIL",selectiveWork?"PASS":"FAIL",
+            !bilateralEvidence?"NOT_TESTED":
+               selectiveBilateral?"PASS":"FAIL");
+        return selectiveTopology&&selectiveWork&&selectiveBilateral;
     }
     private static boolean geometryDiffer(
        Zero3BoxCrossingForensicV334Regression.State a,
@@ -298,7 +328,7 @@ public final class Zero3GripFirstDivergenceV337Regression {
         int robustValid=0;
         for(int id:CASES)if(life(id,frozen))robustValid++;
         System.out.println("V337 PHYSICS_GUARD safeCases="+robustValid+
-            "/"+CASES.length+" LINK_ONLY_PROMOTION="+
+            "/"+CASES.length+" SELECTIVE_CANDIDATE_PROMOTION="+
             (robustValid==CASES.length?
              "NOT_AUTHORIZED_NEEDS_NEW_HOLDOUT":"REJECTED")+
             " G3_BLOCKED G5_BLOCKED NO_OTA");
