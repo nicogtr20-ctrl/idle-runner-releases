@@ -1,5 +1,8 @@
 # ZERO 3.0 — NUOVA INTERFACCIA GIOCO, IMPOSTAZIONI, CERVELLO, NEURONI, ABILITÀ ED EVOLUZIONE
 
+> **Checkpoint V3.25 (17 ottobre 2026):** [rapporto tecnico](ZERO30_V325_RUNTIME_BOUNDARY.md) · [CI definitiva 39029780647 PASS](https://github.com/nicogtr20-ctrl/idle-runner-releases/actions/runs/39029780647). Primo `Zero3RuntimeV325` indipendente dal runner di regressione: unico owner di scelte/rete/cortex/adesione/gel fisico/stanza/riserva e journaling causale+snapshot, con `Zero3AndroidSessionV325` compilata per un percorso Android privato V3 non collegato a GameActivity. 25/25 vite, 96 decisioni ciascuna con riavvio a 48, confronto bytewise, terminale da energia zero e rifiuto episodi estranei/doppia corruzione, Android Debug SUCCESS. **Solo gate LAB JVM; G3 locomozione, G5 world model, G9 device e UI 3.0 NON chiusi.** OTA172 e 12 slot 2.2 non toccati.
+
+
 > **Dati progettuali V3.24 (17/10/2026):** [rapporto tecnico](ZERO30_V324_ROOM_WORLD_CHECKPOINT.md), [CI 39026713027 SUCCESS](https://github.com/nicogtr20-ctrl/idle-runner-releases/actions/runs/39026713027). La futura UI V3 potrà presentare salvataggio della stanza (porta, stato contatti, ownership della risorsa), ma solo dal provider vivo e verificato; i 25 test/2.400 decisioni distribuiti su vite di LAB non sono progressi del cervello o di abilità dell'utente. **La nuova UI non è stata implementata** e G3/G5 sono ancora aperti. Nessun APK 3.0 pubblicato.
 
 
