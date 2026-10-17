@@ -6,6 +6,10 @@ on:
       # Expensive 2000-decision and Android checks belong to core engine
       # changes; isolated motor laboratories each have their own dedicated QA.
       - 'app/src/main/java/com/overmind/zero/Zero3LearningFoundation.java'
+      # Full Android Java source compile catches Java-only test API mismatches.
+      - 'app/src/main/java/com/overmind/zero/Zero3MotorHeadRestartV320Regression.java'
+      - 'app/src/main/java/com/overmind/zero/Zero3NeuralBundleStoreV321.java'
+      - 'app/src/main/java/com/overmind/zero/Zero3IntegratedRestartV321Regression.java'
       - 'app/src/main/java/com/overmind/zero/Zero3FoundationRegression.java'
       - 'app/src/main/java/com/overmind/zero/Zero3RecurrentBrain.java'
       - 'app/src/main/java/com/overmind/zero/Zero3RecurrentBrainRegression.java'
