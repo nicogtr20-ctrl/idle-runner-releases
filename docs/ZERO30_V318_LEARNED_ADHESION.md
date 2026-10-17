@@ -21,4 +21,55 @@ V3.17: 2.048 decisioni dell'actor e 2.048 updates cortex; in tutto TRAIN **0** d
 - **Non-G3:** anche se questa prova passasse, non prova camminata controllabile (V3.17 FAIL), capacità di utilizzare la presa per vivere, retention dopo riavvio, skill memoria o world model; nessun merge, APK o OTA.
 
 ## Esito
-*Da aggiungere dopo la CI e i suoi log verificati.*
+Risultati reali della CI indicati nella sezione seguente.
+
+
+## RISULTATI REALI — CI definitiva 39016675337 (17/10/2026)
+
+**[GitHub Actions 39016675337 — SUCCESS tecnico, `scientificGripGate=FAIL`](https://github.com/nicogtr20-ctrl/idle-runner-releases/actions/runs/39016675337)**. Prima CI 39016521985 già eseguita con la stessa policy e gli stessi semi/split; la seconda ha soltanto corretto la **metrica preregistrata del lavoro** per confrontare i bracci nelle scene BOX, anziché sull'insieme completo delle scene. Nessuna modifica a pesi iniziali, perturbazioni, learning rate, dati, geometria, soglie, sensori o corpo. Considerare il BLIND **consumato**, mai ottimizzare iperparametri su questi episodi.
+
+I due file Java sperimentali `Zero3LearnedAdhesionV318.java` e `Zero3LearnedAdhesionV318Regression.java` e la CI `zero30-v318-adhesion-learning-qa.yml` sono nel ramo Draft PR #87. Il motoneurone effettua il comando **realmente eseguito** nel solo canale muscolare adesione `[sector*4+2]`; `SymbioteMatterV1.step` e tutti i solver di collisione/presa sono quelli di produzione non alterati. I valori `touchSense`, `touchPulse`, `gripCommand`, `gripHold` sono **soltanto letti dal solver**, non iniettati dal test. La comparazione esegue la stessa architettura sensoriale/actor e gli stessi restanti 48 attuatori su entrambi i bracci.
+
+### Numeri verificati
+
+| Misura | TRAIN motoneurone esplorativo | BLIND appreso (senza esplorazione) | BLIND originale congelato |
+|---|---:|---:|---:|
+| Decisioni scelte dal controller sensorimotor | **3.072** | **1.536** | **1.536** |
+| Passi del gel nelle decisioni | **36.864** | **18.432** | **18.432** |
+| Frame BOX con tocco fisico | **9.216** | **4.608** | **3.308** |
+| Frame BOX con vera presa mantenuta `gripHold` | **8.930** | **4.600** | **0** |
+| Episodi BOX con almeno una presa | **8/8** | **4/4** | **0/4** |
+| Frame con vera presa bilaterale | **815** | **2.021** | **0** |
+| Attivazioni motoneurali settori oltre soglia | **277.704** | **143.602** | **0** |
+| Comandi oltre soglia su patch realmente in contatto | **201.446** | **116.829** | **0** |
+| Duty-cycle oltre soglia in FREE+DISK+FAR (senza BOX) | **45,21%** | **45,58%** | **0%** |
+| Lavoro meccanico vero, su TUTTE le scene | **1,158176408** | **0,574889422** | **0,436685137** |
+| Lavoro meccanico vero, SOLO su BOX | — | **0,171031921** | **0,108989737** |
+| Primi aggiornamenti del motor head | **3.072 decisioni TRAIN** | **0** | **0** |
+| Aggiornamenti con credito positivo da una patch tenuta realmente | **3.165 contributi settoriali** | **0** | **0** |
+
+I veri comandi motori sopra `Morphology.GRIP_THRESHOLD=0,28` esistono ora, e la soglia è rimasta quella di produzione. Dal punto di vista **della possibilità fisica di afferrare e attivare un'uscita motoria trainabile**, il blocco V3.17 (comando sempre sotto soglia, zero grip) è stato superato. Le 2.021 misure bilaterali sono frame, non 2.021 abilità indipendenti e nemmeno 2.021 oggetti spostati.
+
+### Perché la promozione scientifica è stata rifiutata
+
+- **Training coverage PASS**: più di 100 frame BOX in contatto, grip autentico, pesi effettivamente aggiornati.
+- **Grip BLIND PASS**: tutte le 4 vite con BOX ottengono prese, per 4.600 frame contro 0 frozen, superando il floor di 25 e il +25% preregistrato.
+- **Selettività BLIND FAIL**: con scatola assente (FREE/FAR) o disco mobile che non consente questa presa, il nuovo head **tiene adesione oltre soglia nel 45,582411% dei settori×frame**, molto oltre il massimo preregistrato 30%. FREE: 32.256 settori×frame sopra soglia; DISK: 36.309; FAR: 32.256. In queste scene `gripHold` rimane giustamente **zero**, ma l'organismo spreca l'attuazione.
+- **Costo su BOX BLIND FAIL**: lavoro `0,171031921` contro `0,108989737` della baseline, cioè **circa +56,9%**, contro limite +20%. L'aumento complessivo di lavoro nelle 4 famiglie è **circa +31,6%** (0,574889 vs 0,436685). Anche se prende più spesso, questo non prova una presa utile, economica o orientata alla sopravvivenza.
+- **Autocontrollo fisico**: zero grip immaginario su FREE/DISK/FAR; eventi `gripHold` consentiti soltanto se comandi neurali sopra soglia e veri owner `box.boxGripHold`. La variazione della traiettoria e del lavoro è una conseguenza **del corpo fisico realmente simulato**, non un aggiustamento nascosto del centro massa.
+
+**Decisione: `trainingCoverage=true`, `blindGripImproved=true`, `blindWorkNotWorse=false`, `blindSelective=false`, `scientificGripGate=FAIL`.** Nessun nuovo modello promosso nel cervello live. **G3 / G5 BLOCKED**.
+
+### Interpretazione tecnica e limiti di validità
+
+Il nuovo head risolve una **lacuna del dominio d'uscita**: la V3.17 non poteva richiedere alcuna adesione, mentre V3.18 può farlo e il mondo conferma le prese. Ma il tipo di apprendimento è un **policy gradient locale di esplorazione/feedback**, con una grossa componente di bias verso adesione quasi universale: non impara ancora un *quando aderire* utile e in funzione della situazione. La ricompensa positiva usa solo `gripHold` reale; la penalità negativa implementata per inattività di presa si basa sulla **somma dei comandi adesivi quando non si avverte contatto** (proxy di costo dell'attuazione), **non è ancora una stima esatta del lavoro muscolare per settore**. Il valore `gel.work` autentico è comunque misurato come metrica indipendente e ha fatto fallire il gate. Questa differenza rispetto alla formulazione «penalità proporzionale al costo motorio reale» del protocollo viene dichiarata, senza modificarne le condizioni di approvazione a posteriori.
+
+Il test separa il motoneurone adesivo dall'actor e dai 48 altri attuatori, che sono congelati: non dimostra ancora che ZERO abbia imparato a camminare, selezionare obiettivi, manipolare intenzionalmente scatole o mantenere una competenza su restart. Anche le geometrie cieche, pur con pose e semi diversi, appartengono alle stesse categorie di oggetti del TRAIN e non sono un mondo completamente inedito.
+
+Il contatore `learnedHeadDeltaL2=8,8871154763` è **radice della somma dei quadrati di tutti gli aggiornamenti successivi**, non distanza finale delle weights dall'inizializzazione; non usarlo come tale. Il segnale motorio selezionato dall'actor rimane una policy sensorimotor con lettura fissa, non un pieno actor-critic goal/survival.
+
+### Prossimo passo motivato — V3.19
+
+Progettare e validare **controllo contestuale dell'adesione**: accoppiare meglio retina locale/tatto/propriocezione con attribuzione settoriale, penalità sul **lavoro fisico effettivo** e costo delle attivazioni in assenza di superfici fisicamente afferrabili; separare grasping temporaneo utile dal tenere semplicemente acceso il collante. Benchmark rigoroso su scene con/ senza superfici grippabili e costo normalizzato per utilizzo effettivo, con **nuovo BLIND** (nessun tuning sulla V3.18). Nessuna scorciatoia al solver, nessuna attivazione automatica di presa o hardcoded `gripCommand`. In seguito tornare al problema G3 originario: locomozione/allineamento e retention reale, critica energia/danno autentici, memoria e UI 3D.
+
+**Stato:** PR #87 ancora Draft, esperimento solo in branch, nessun merge/OTA, ZERO3 non attivo nell'APK, tutti i 12 profili 2.2 intatti.
