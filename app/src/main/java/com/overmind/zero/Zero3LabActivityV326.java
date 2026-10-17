@@ -194,21 +194,27 @@ public final class Zero3LabActivityV326 extends Activity {
         latest=s;
         runOnUiThread(()->{
             if(isFinishing()||isDestroyed())return;
+            // V330 outcome is deliberately NOT restored from an old
+            // checkpoint: do not show zero vectors as fake measurements.
+            String movement=s.hasMotorOutcome
+                ? String.format(Locale.ITALY,
+                    "INTENZIONE (%.2f, %.2f)  →  CORPO (%.2f, %.2f)\n"+
+                    "PROGRESSO FIRMATO %.3f  •  INERZIA STIMATA %.3f\n"+
+                    "CONTRASTO MUSCOLARE %.1f%%  •  NON È UNA FORZA COM",
+                    s.lastIntentX,s.lastIntentY,s.actualMotorDX,s.actualMotorDY,
+                    s.lastSignedProgress,s.lastInertiaProjection,
+                    100f*s.lastMuscleCancellation)
+                : "ULTIMA AZIONE NON OSSERVATA DOPO IL RIPRISTINO";
             info.setText(String.format(Locale.ITALY,
                 "VITA %d   •   DECISIONI %d   •   ENERGIA %.1f/100\n"+
                 "DANNO FISICO PRECEDENTE %.1f  •  INPUT VITALE FUSO\n"+
                 "MATERIA 96 patch + 74 particelle interne   •   %d oggetti\n"+
                 "GEL %d passi   •   CERVELLO ricorrente: %d stati\n"+
                 "REPLAY COMPLETO IN RAM: %d record  •  NON SALVATI: %d\n"+
-                "INTENZIONE (%.2f, %.2f)  →  CORPO (%.2f, %.2f)\n"+
-                "PROGRESSO FIRMATO %.3f  •  INERZIA STIMATA %.3f\n"+
-                "CONTRASTO MUSCOLARE %.1f%%  •  NON È UNA FORZA COM%s",
+                "%s%s",
                 s.episode,s.decisions,s.reserve,s.priorDamage,s.objects,
                 s.solverTicks,s.neurons,s.residentReplay,s.unsavedReplay,
-                s.lastIntentX,s.lastIntentY,s.actualMotorDX,s.actualMotorDY,
-                s.lastSignedProgress,s.lastInertiaProjection,
-                100f*s.lastMuscleCancellation,
-                s.dead?"   •   VITA TERMINATA":""));
+                movement,s.dead?"   •   VITA TERMINATA":""));
             status.setText(message);body.invalidate();
         });
     }
