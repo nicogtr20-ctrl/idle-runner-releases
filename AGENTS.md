@@ -1,5 +1,7 @@
 # ⛔ ZERO 3.0 — ISTRUZIONE OPERATIVA PRIORITARIA PER CHATGPT / AGENTI — 16/10/2026
 
+> **HANDOFF PIÙ RECENTE — 17/10/2026 / V3.9:** Il prossimo esperimento è [stato osservato + 64 comandi reali → stato successivo](docs/ZERO30_MOTOR_V39_OBSERVED_STATE_ACTION.md), codice e CI sul ramo sperimentale di PR #87. Compilazione Java riuscita; non dichiarare riuscita la qualità finché non si controllano i log. ZERO 3.0 NON attivo, G3/G5 non superati, no OTA. Non unire nella branch publisher.
+
 **PRIMA DI QUALSIASI MODIFICA A OVERMIND ZERO, LEGGERE INTEGRAMENTE (DA \`main\`):**
 
 1. **[PROGETTO MASTER ZERO 3.0](docs/ZERO30_MASTER_BLUEPRINT.md)** — specifica completa, architettura, sensori, cortex, world model, memorie, neurogenesi, vincoli.
