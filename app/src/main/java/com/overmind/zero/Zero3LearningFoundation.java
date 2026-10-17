@@ -215,6 +215,65 @@ public final class Zero3LearningFoundation {
             fresh.revision++;
             return fresh;
         }
+        /**
+         * V3.32 isolated laboratory-only eligibility after physically EXECUTED
+         * exploratory action, captured BEFORE Coordinator.finish clears it.
+         * NOT an additional brain sense, not a counterfactual, never in live.
+         */
+        static final class LocalProbeV332 {
+            final int selectedChannel;
+            final float[] noise,meanFeatures;
+            final int context;
+            LocalProbeV332(int channel,int context,float[] n,float[] f){
+                selectedChannel=channel;this.context=context;
+                noise=n.clone();meanFeatures=f.clone();
+            }
+        }
+        LocalProbeV332 captureProbeV332(){
+            if(!pendingDecision||!probing||samples<1)
+                throw new IllegalStateException("V332 probe requires executed motor steps");
+            float[] averaged=new float[accumulated.length];
+            for(int j=0;j<averaged.length;j++)
+                averaged[j]=limit(accumulated[j]/samples,-2f,2f);
+            return new LocalProbeV332(activeChannel,contextBucket,noise,averaged);
+        }
+        /**
+         * Delayed measured local eligibility update. Each response is from
+         * true post-solver skin and COM, NOT fixture coordinates or hidden
+         * future world. This is an estimated learning signal, not the exact
+         * counterfactual derivative from the V331 three-body probe.
+         *
+         * The previous action trace receives localNow plus 0.82 times the
+         * next decision's actual localized response. CH2 is V319-owned.
+         */
+        void learnV332(LocalProbeV332 probe,float[] localNow,
+                       float[] localNext){
+            if(pendingDecision||probe==null||localNow==null||localNext==null||
+               localNow.length!=SECTORS||localNext.length!=SECTORS)
+                throw new IllegalStateException("V332 delayed eligibility invalid");
+            if(learningRate<=0f||probe.selectedChannel==2)return;
+            int ch=probe.selectedChannel;
+            if(ch<0||ch>=CHANNELS)
+                throw new IllegalArgumentException("V332 invalid active motor channel");
+            float total=0f;
+            for(int sector=0;sector<SECTORS;sector++){
+                float measured=localNow[sector]+.82f*localNext[sector];
+                finite(measured,"measured delayed local credit");
+                float localAdv=limit(measured,-1f,1f);
+                int out=sector*CHANNELS+ch;
+                for(int feature=0;feature<INPUTS;feature++){
+                    int idx=out*INPUTS+feature;
+                    float delta=limit(learningRate*localAdv*probe.noise[out]*
+                                      probe.meanFeatures[idx],-.002f,.002f);
+                    float original=weights[idx];
+                    weights[idx]=limit(original+delta,-1.5f,1.5f);
+                    float applied=weights[idx]-original;
+                    total+=applied*applied;
+                }
+            }
+            lastAcceptedGradientNorm=(float)Math.sqrt(total);
+            if(total>1e-16f){updates++;revision++;}
+        }
         public float[] lastCommands(){return output.clone();}
         public void begin(boolean explore){begin(explore,null);}
         public void begin(boolean explore,MotorIntent intent){
