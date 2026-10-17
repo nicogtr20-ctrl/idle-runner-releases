@@ -1,5 +1,7 @@
 # ZERO 3.0 — NUOVA INTERFACCIA GIOCO, IMPOSTAZIONI, CERVELLO, NEURONI, ABILITÀ ED EVOLUZIONE
 
+> **V3.33 LAB (17/10/2026), NESSUNA NUOVA ABILITÀ CONVALIDATA:** [report](ZERO30_V333_LOCAL_DELAY_BILATERAL_ABLATION.md). 5-arm ablation FULL/local+delay mostra 586 frame bilaterali su 5 vite BOX valide ma NON 6/6; BOX signed ancora -2,13765, una vita censurata per self-intersection morfologica condivisa, scienza FAIL. Non mostrare skill camminata/manipolazione acquisita, né falsi status PASS nella UI reale. V333 non entra nel runtime live/OTA.
+
 > **V3.32 METRICHE DI LAB (17/10/2026):** [rapporto](ZERO30_V332_TEMPORAL_LOCAL_CREDIT.md). Il prototipo del credito locale/delayed ottiene un gate preliminare 4/4 su 24 vite BLIND, ma BOX_NEAR signed continua NEGATIVO e `bilateralFrames=1` vs OLD55/FROZEN588; NON visualizzare una skill locomozione o manipolazione conquistata. `weightUpdates=2258` sono veri, `creditCalls=3021` non sono pesi aggiunti né neuroni nati. V332 non entra in live/UI; l'unica UI V3 sperimentale mostra osservazioni authentic V330.
 
 > **V3.31 METRICHE DI LAB SOLO, NON SKILL REALI (17/10/2026):** [report](ZERO30_V331_LOCAL_ACTUATOR_COUNTERFACTUAL.md). 576 triplette causali mostrano effetto muscolare autentico, ritardo e inversione del segno per settori diversi; non convertire in neuroni acquisiti, abilità di locomozione o miglioramento automatico. HUD V3.30 continua a mostrare solo intenzioni e conseguenze misurate LIVE. Nessuna nuova UI 3D o OTA V3.
