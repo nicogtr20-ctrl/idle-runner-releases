@@ -25,6 +25,10 @@ public final class Zero3IntentPersistenceV316Regression {
     static void authorityAttacks(){
         Zero3MotorIntentV316.Authority authority=
             new Zero3MotorIntentV316.Authority(22,OWNER);
+        check(refused(()->new Zero3MotorIntentV316.Authority(22,
+            "competing-controller")),"second owner authority created");
+        check(refused(()->new Zero3MotorIntentV316.Authority(22,OWNER)),
+            "duplicate authority created");
         check(refused(()->authority.issue("competing-controller",0,1,3,
             1,0,.5f,.8f,.025f,.4f)),
             "competing owner accepted");
@@ -44,6 +48,10 @@ public final class Zero3IntentPersistenceV316Regression {
         check(refused(()->authority.issue(OWNER,0,1,3,
             1,0,.5f,.8f,.025f,.4f)),
             "duplicate intent accepted");
+        authority.close();
+        check(refused(()->authority.issue(OWNER,1,1,3,
+            1,0,.5f,.8f,.025f,.4f)),
+            "closed authority issued a new intention");
     }
     static final class Evidence {
         int live,gelSteps,checkpoints,holdFrames,diskPulse,solidTouch;
@@ -148,6 +156,7 @@ public final class Zero3IntentPersistenceV316Regression {
                 check(owner.nextDecision()==FRAME_COUNT &&
                       causal.size()==FRAME_COUNT,
                       "lost intention or physics decision within episode");
+                owner.close();
                 int count=id+1;
                 if(count%4==0){
                     journal.checkpoint();
