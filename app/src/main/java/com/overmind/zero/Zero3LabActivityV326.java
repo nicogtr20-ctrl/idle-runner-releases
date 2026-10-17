@@ -61,6 +61,10 @@ public final class Zero3LabActivityV326 extends Activity {
         row(root,"AVVIA x1","AVVIA x5",()->start(1),()->start(5));
         row(root,"PAUSA E SALVA","TORNA ALLA 2.2",
              ()->stopAndSave(false),()->{stopAndSave(true);});
+        addText(root,"LIMITE V3 SPERIMENTALE: massimo 240 decisioni "+
+            "salvabili per vita, finché il journal non sarà suddiviso in "+
+            "segmenti. Al limite, il test si interrompe e conserva il checkpoint.",
+            12,0xffffc98c);
         addText(root,"Ogni decisione = 12 passi fisici. Salvataggio automatico "+
             "ogni 8 decisioni completate; nessun salvataggio a metà di un'azione. "+
             "Una chiusura forzata può perdere fino alle ultime decisioni non salvate.",
@@ -109,7 +113,7 @@ public final class Zero3LabActivityV326 extends Activity {
                     session.step();
                     session.suspend();
                     session.resume();
-                }catch(Exception rejected){organism.close();throw rejected;}
+                }catch(Exception rejected){session.close();organism.close();throw rejected;}
                 publish("Nuova vita V3: prima decisione fisica salvata.");
             })).show();
     }
@@ -131,6 +135,12 @@ public final class Zero3LabActivityV326 extends Activity {
                 int sinceSaved=0;
                 while(running&&!leaving&&session.active()){
                     if(session.ended()){show("ZERO ha esaurito l'energia.");break;}
+                    if(session.atArchiveCapacity()){
+                        show("Limite del replay V3: "+
+                            Zero3RuntimeV325.MAX_DURABLE_DECISIONS+
+                            " decisioni. Salvataggio protetto; serve archivio scalabile.");
+                        break;
+                    }
                     session.step();
                     sinceSaved++;
                     if(sinceSaved>=8){session.suspend();session.resume();sinceSaved=0;}
@@ -149,7 +159,9 @@ public final class Zero3LabActivityV326 extends Activity {
                 running=false;
                 try{
                     if(session.active()){session.suspend();session.resume();}
-                    if(session.active())publish("In pausa; checkpoint verificato.");
+                    if(session.active()&&session.atArchiveCapacity())
+                        publish("Limite archivio V3 raggiunto. Ultima vita salvata.");
+                    else if(session.active())publish("In pausa; checkpoint verificato.");
                 }catch(Exception error){
                     show("ATTENZIONE: salvataggio fallito: "+error.getMessage());
                 }
