@@ -41,4 +41,44 @@ Nota critica: le **2.048 sono decisioni/azioni fisiche reale in laboratorio**, N
 
 ## Risultati verificati
 
-*Da aggiungere soltanto dopo GitHub Actions e lettura dei log.*
+Risultati verificati sul run finale riportati sotto.
+
+## RISULTATI VERIFICATI — RUN DEFINITIVO 38989788378 (17/10/2026)
+
+**[GitHub Actions run 38989788378 — CI SUCCESS e gate infrastrutturale V3.15 PASS](https://github.com/nicogtr20-ctrl/idle-runner-releases/actions/runs/38989788378)**. Compilazione reale dei sorgenti di produzione e delle classi nuove `Zero3SensoryFrameV315.java`, `Zero3CausalRecorderV315.java` e `Zero3SensoryContractV315Regression.java`, sul branch sperimentale di PR #87. **Nessun file della fisica produttiva è stato modificato.**
+
+Il primo run `38989685989` non ha completato l'esperimento: il test si aspettava `IllegalArgumentException` dalla lista `Collections.unmodifiableList`, mentre Java genera correttamente `UnsupportedOperationException`; correzione unicamente del gestore di eccezione del test, senza cambiare codice fisico/soglie del protocollo. Il run successivo `38989721423` aveva già passato tutta la prova; il run definitivo `38989788378` ha soltanto corretto il nome di un contatore: il `touchPulse` può essere prodotto sia da **scatole** sia da **dischi**, non soltanto dai dischi.
+
+### Copertura concreta
+
+| Invariante/prova | Esito misurato |
+|---|---|
+| Esperienze fisiche complete (PRE→azione→POST) | **2.048/2.048**, su 16 episodi |
+| Partizione irrevocabile per episodio | **FIT 8 / CAL 4 / BLIND 4**, ognuna con tutte e quattro le scene |
+| Step effettivi del gel di produzione | **3.584** (96 warm-up+128 decisioni per episodio) |
+| Snapshot sensoriale locale | **96 siti × 12 canali** non aggregati |
+| Vista ottica reale (origini membrana) | **16 raggi**; **1.024** frame pre-azione con un ostacolo rilevato |
+| Propriocezione globale | **48 canali** da `BodyProprioception` |
+| Interocezione fisica | **74 particelle × 7 canali** da `FluidInteroceptionV1` |
+| Efferenza | **64 comandi realmente inviati al solver per decisione**, precedente efferenza distinta dall'attuale |
+| Frame con `touchSense` scatola reale | **512** (solo BOX_NEAR) |
+| Frame con `touchPulse` in tutte le scene | **741**, di cui **229** nel gruppo DISK e **512** nel gruppo BOX_NEAR |
+| Frame con `gripHold` legale | **252**, esclusivamente BOX_NEAR; ogni patch held ha un comando di adesione sopra soglia e proprietario scatola reale |
+| Onset di contatto distinti | **7** (diagnosi, troppo pochi per una prova rigorosa di predizione onset) |
+| Contatti falsi in FREE e BOX_FAR | **0**; nessun ostacolo ottico in FREE |
+| Energia e danno non forniti dal laboratorio | **2.048/2.048 dichiarati NON DISPONIBILI**, senza valori inventati |
+| Mutazione copie e aliasing | **PASS**, valori ritornati come copie difensive, originale integro |
+| Rejection duplicati/out-of-order/mismatch | **PASS**: double begin, double commit, frame saltato, episodio errato, tempo falsificato, comando NaN o diverso da efferenza dichiarata, post senza incremento reale `gel.ticks` |
+| Checksum diagnostico aggregato | `761c0f0ff3746651` (non è una firma crittografica) |
+
+**Confermata continuità post→pre:** lo stato fisico di `POST(t)` deve coincidere con quello di `PRE(t+1)` (senza tick nascosti) per coordinate/velocità, tutti i 96×12 valori, 16 raggi, 48 dati di propriocezione, 74×7 segnali interni e ultimo output 64D. Un frame non può essere registrato due volte né saltato. `gel.ticks` cresce di **un solo tick autentico** tra PRE e POST, quindi non basta falsificare `frameId` o `simulationTime` per inventare una esperienza.
+
+**Confine scientifico esatto:** la misura è una registrazione in RAM e il controllo dei comandi forniti allo stesso solver nel *lab*. Non è ancora un archivio persistente su disco resistente a crash, un sistema crittografico anti-manomissione, un certificato indipendente delle azioni sul dispositivo, né un cervello che apprende autonomamente. E2 usa un controller di eccitazione predefinito e controlli grip ON/OFF per produrre esperienze verificabili. L'indicazione `energyAvailable=false`, `damageAvailable=false` rappresenta dati assenti nel laboratorio, non un'energia fisiologica falsamente zero.
+
+### Decisione GATE e ordine di sviluppo
+
+**V3.15 INFRASTRUCTURE GATE = PASS**: esiste una prima implementazione Java reale e verificata del confine `SensoryFrameV3` / `ActuatorFrameV3` / `PhysicsOutcomeV3` / `ExperienceV3` per E2. **Non è l'implementazione completa** del contratto Master: `MotorIntentV3` e il suo single decision owner, validità/maschere per tutti i sensori in gameplay, energia/danno reali, identità temporale di decisione su più subframe, replay persistente atomico, `BrainSnapshotV3`, memoria procedurale, encoder ricorrente, corteccia motoria che sceglie, neurogenesi e UI 3D restano da implementare e testare. La futura vista ufficiale va alimentata da snapshot veri, non contatori dimostrativi.
+
+**Passaggio successivo:** rendere persistenti e recuperabili atomicamente le esperienze, definire il vero `MotorIntentV3` e la proprietà dell'intenzione, poi integrare l'encoder ricorrente e costruire E3 a ciclo chiuso con una politica che genera *le proprie* 2.000+ decisioni, retention su nuovi seed e reali differenze contro una baseline congelata. Non chiamare mai i 2.048 replay V3.15 una locomozione imparata.
+
+**Stato produzione: ZERO 3.0 NON ATTIVO; G3/G5 BLOCCATI; PR #87 Draft; nessun merge, OTA172 invariata, 12 slot 2.2 intatti.**
