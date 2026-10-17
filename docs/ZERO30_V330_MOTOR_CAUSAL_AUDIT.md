@@ -21,3 +21,22 @@ Rendere **misurabile sul vero runtime unificato** la divergenza fra intenzione s
 - Ancora necessario dopo V3.30: prova longitudinale TRAIN/FROZEN + test BLIND senza esplorazione su corpi freschi e mondi mai visti per promuovere abilità, seguito da G3 più ampio. Il presente benchmark tra due bracci online con esplorazione non prova retention di una skill autonoma. V3.19 scientificGripGate=PASS rimane un risultato indipendente.
 
 **Sicurezza:** non mutare OTA172, 12 slot della 2.2, né modificare solver gel/fisica per far passare le metriche. Solo PR #87 DRAFT. I risultati reali si aggiungono dopo CI, numeri e casi negativi inclusi.
+
+## Risultati effettivi della prima batteria — 17 ottobre 2026
+
+**[GitHub Actions 39035949311 — SUCCESS](https://github.com/nicogtr20-ctrl/idle-runner-releases/actions/runs/39035949311)**, primo commit dei tre moduli motor V330 e `Zero3RuntimeV325` modificato con sola telemetria. Il bench ha eseguito 20 coppie matched da 96 decisioni fisiche per ciascun braccio: **1.920 decisioni TRAIN e 1.920 FROZEN, 23.040 reali integrazioni gel per braccio** (+warmup), training V319 adesione presente in entrambi. Sono stati verificati efferences 64D reali, PRE inerzia, centro di massa ottenuto, lavoro misurato, proprietà della presa. Il codice **non** prescrive una direzione di marcia, né modifica il solver fisico.
+
+| Famiglia (5 casi/480 decisioni per braccio) | Somma spostamento FIRMATO lungo le intenzioni TRAIN | FROZEN | Efficienza TRAIN (signed/(4+gross)) | FROZEN | Miglioramento preregistrato |
+|---|---:|---:|---:|---:|---|
+| FREE | −2,3942 | −1,4995 | −0,03720 | −0,02307 | **NO** |
+| BOX vicino | +3,7220 | +3,4179 | +0,04365 | +0,04057 | **NO**, vantaggio inferiore alla soglia preregistrata |
+| DISK | +3,7908 | +5,1577 | +0,05124 | +0,07073 | **NO** |
+| BOX lontano | −2,8371 | −1,5974 | −0,04322 | −0,02469 | **NO** |
+
+**Sintesi fisica:** `cortexUpdatesTrain=1920`, `cortexUpdatesFrozen=0`; tutte le 1.920 decisioni per braccio hanno `physical=true`. Allineamento sommato TRAIN `+2,281474` contro FROZEN `+5,478730`. In tutte e quattro le scene le soglie scientifiche non sono raggiunte; **`trainedSceneWins=0/4, MOTOR_GATE=FAIL`**. Il confronto TRAIN/FROZEN è un ablation del *learning rate della cortex*, non della V319, che rimane addestrabile in entrambi e conserva il proprio risultato di apprendimento sull'adesione.
+
+Il nuovo indice descrittivo `cancellationProxy` dei comandi radiali e tangenziali osservati è circa **0,58–0,64** nei quattro mondi. Non è una misura diretta delle forze sul centro di massa (reazioni del fluido e contatti sono più complessi), quindi **non dimostra da solo che «parti del corpo vadano in direzioni opposte» come causa della scarsa locomozione**. Analogamente `residualBeyondInertiaProxy` sottrae una stima di traslazione inerziale e **non è un controfattuale fisico del corpo passivo**. Il report completo per i 20 matched episodi è nel log della CI, senza selezionare i mondi favorevoli.
+
+**Verdetto:** l'implementazione dell'audit è verificata, ma il `scientificMotorGate` resta **FAIL/G3 BLOCCATO**. Si conserva la testa adesiva V319, i checkpoint V328/V329, i sensori V327, e si evita di aumentare genericamente il learning rate. Il prossimo intervento deve usare il risultato per una **attribuzione del credito locomotorio temporalmente e spazialmente locale**, comparata a un vero matched non-intervention fisico, prima di proporre promozioni di pesi o skill.
+
+La compilazione Android per il primo SHA è `BUILD SUCCESSFUL`; la versione consolidata con HUD `intenzione vs spostamento` e regressioni V325–V329 è verificata solo dopo conclusione delle CI finali. Nessuna OTA.
