@@ -205,6 +205,17 @@ public final class Zero3LabActivityV326 extends Activity {
                     s.lastSignedProgress,s.lastInertiaProjection,
                     100f*s.lastMuscleCancellation)
                 : "ULTIMA AZIONE NON OSSERVATA DOPO IL RIPRISTINO";
+            // G8 dependency: laboratory readout MUST use a real V344
+            // completed-physics provider and never invent 'last reward'
+            // after a restart. No legacy 2.2 data or training on render.
+            String vitalOutcome=s.hasVitalOutcome
+                ? String.format(Locale.ITALY,
+                    "\\nULTIMO BILANCIO REALE %.3f  •  ENERGIA RACCOLTA %.3f"+
+                    "  •  COSTO BASALE %.3f  •  COSTO MOTORIO %.3f"+
+                    "  •  DANNO %.3f  •  FONTI CONSUMATE %d",
+                    s.lastEnergyNet,s.lastEnergyGained,s.lastEnergyBasal,
+                    s.lastEnergyMotor,s.lastEnergyDamage,s.lastEnergySources)
+                : "\\nULTIMO BILANCIO ENERGETICO NON OSSERVATO DOPO IL RIPRISTINO";
             info.setText(String.format(Locale.ITALY,
                 "VITA %d   •   DECISIONI %d   •   ENERGIA %.1f/100\n"+
                 "DANNO FISICO PRECEDENTE %.1f  •  INPUT VITALE FUSO\n"+
@@ -214,7 +225,7 @@ public final class Zero3LabActivityV326 extends Activity {
                 "%s%s",
                 s.episode,s.decisions,s.reserve,s.priorDamage,s.objects,
                 s.solverTicks,s.neurons,s.residentReplay,s.unsavedReplay,
-                movement,s.dead?"   •   VITA TERMINATA":""));
+                movement+vitalOutcome,s.dead?"   •   VITA TERMINATA":""));
             status.setText(message);body.invalidate();
         });
     }
