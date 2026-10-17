@@ -37,6 +37,23 @@ Aggiunta `Zero3ContactLongStressV336Regression.java`, [workflow dedicato](https:
 
 La CI esegue anche il vero test di presa V3.19, `MultiObjectGripRegression`, CCD e Android `assembleDebug` senza firma/OTA. La V319 esegue il solver normale (non l'overload sperimentale), perciò conferma la **non regressione dei default**, **non** l'adeguatezza delle prese dopo l'eventuale attivazione del candidato. Questo rimane un blocco necessario prima del merge.
 
+## Risultato stress fisico — CI conclusiva verificata
+
+**[GitHub Actions 39048002311 — SUCCESS tecnico e SCREEN fisico](https://github.com/nicogtr20-ctrl/idle-runner-releases/actions/runs/39048002311)** (commit `87469dc4c558c1af728510e1d2719f36a5325963`).
+
+| Ordinal | Frame fisici del candidato | Crossing baseline | Crossing candidato | Corde nel solido / patch incorporate / gel invalid |
+|---|---:|---:|---:|---:|
+| 333 | 256 | 0 | 0 | 0 / 0 / 0 |
+| 337 | **2.000** | **1** | **0** | 0 / 0 / 0 |
+| 341 | 256 | 0 | 0 | 0 / 0 / 0 |
+| 641 | 256 | 0 | 0 | 0 / 0 / 0 |
+| 645 | **2.000** | **2** | **0** | 0 / 0 / 0 |
+| 649 | 256 | 0 | 0 | 0 / 0 / 0 |
+
+Totale **5.024 frame reali** per braccio, due corpi storici con 2.000 integrazioni continue ciascuno, candidati `failingCases=0`, `totalViolations=0`; controllo originale 3 frame con self-crossing. Tutti i frame avevano **64 efferenze ZERO**, dunque lavoro muscolare totale `0.000000000`, `gripFrames=0` e `bilateralFrames=0`: il risultato è un **gate di consistenza fisica statica prolungata**, NON una prova di lavoro attivo, adesione, apprendimento o generalizzazione.
+
+Nella stessa CI: `SquareCollisionSolver`, `SquareGripPuzzle`, tre oggetti + gate, prova V319 originale (`scientificGripGate=PASS`, 6.900 grip autentici, 6/6 vite BOX, lavoro originale 0.200176236 vs 0.255425971 incumbent) e Android Debug `BUILD SUCCESSFUL in 1m 4s`. La V319 usa il solver originale: la candidata è ancora da verificare **SOTTO CARICO NEURALE**. Nessuna APK firmata, nessuna OTA.
+
 ## Blocchi e prossimi passi
 
 1. Leggere il risultato finale dello stress, riportando tutti gli errori senza rimuovere semi/pose fallite.
