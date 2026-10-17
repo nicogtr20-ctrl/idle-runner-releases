@@ -74,9 +74,9 @@ public final class Zero3JointRuntimeV346Regression {
                         count++;
                         // A vetoed mid-step is NEVER a real completed
                         // observation; do not read V323 PRE/display after it.
-                        Zero3RuntimeV325.Display complete=r.display();
-                        lastCompleteX=complete.cx;
-                        lastCompleteY=complete.cy;
+                        Zero3RuntimeV325.Display completedFrame=r.display();
+                        lastCompleteX=completedFrame.cx;
+                        lastCompleteY=completedFrame.cy;
                     }
                     fixes=r.jointPhysicsCountersV346();
                     netDistance=Math.hypot(lastCompleteX-x0,
