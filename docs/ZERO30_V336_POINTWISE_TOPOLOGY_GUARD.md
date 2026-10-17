@@ -67,6 +67,21 @@ Quindi `topology=PASS`, `workGate=PASS`, **`bilateralGate=FAIL`** sul caso 645. 
 
 La V3.36 esegue un'ulteriore *ablazione diagnostica meccanica* per separare BASE, solo contatto faccia e faccia+alternative links, alle medesime decisioni già note. Questo non crea nuova evidenza BLIND: serve soltanto a capire quale interazione modifica le prese.
 
+## Ablazione ACTUATED definitiva — identificato il compromesso meccanico, candidato RIFIUTATO
+
+**[CI definitiva 39048576753 — SUCCESS tecnica, FAIL del gate scientifico](https://github.com/nicogtr20-ctrl/idle-runner-releases/actions/runs/39048576753)**, commit `d0e931a2ac754386652502e91dcb9caf916fee9a`, Android Debug `BUILD SUCCESSFUL in 56s`. Tre bracci accoppiati per i due casi V333 già consumati (no new blind): **ORIGINAL**, **FACE_ONLY** (conserva superficie a contatto esatto) e **FACE_PLUS_LINK** (aggiunge alternativa topologia/BOX), per 168 vere scelte V317×12 step, stessi 64 output cortex+head V319 preaddestrata e congelata su tutti e tre i solver. Il cervello osserva il baseline e il candidato replica gli effettori: test meccanico matched, non policy autonoma alternativa.
+
+| Ordinal | Self-cross ORIGINAL / FACE_ONLY / FACE+LINK | Frame bilaterali ORIGINAL / FACE_ONLY / FACE+LINK | Grip generic original / face / combinato |
+|---|---|---|---|
+| 337 | **1 / 1 / 0** | 0 / 0 / 0 (**non misurabile protezione bilaterale**) | 2.014 / 2.014 / 2.014 |
+| 645 | **2 / 1 / 0** | **1.192 / 0 / 0** | 2.014 / 2.014 / 2.014 |
+
+Entrambi i modi sperimentali lasciano `work` identico per azione matched (0,054355998 per 337, 0,058657911 per 645); nessun attraversamento solido o valore invalido nel candidato. **La sola FACE_ONLY elimina già tutti i frame bilaterali del 645**: dunque il blocco di presa non è introdotto esclusivamente dall'alternativa link. Questa è una correlazione causale da *ablazione di meccanismi* nell'intera traiettoria, **non** l'identificazione puntuale della ragione per cui una posa futura perde le prese. Non basta scegliere un'altra faccia in `repairLinks`; bisogna mantenere continuità di trazione e dei contatti attivi oltre alla topologia.
+
+Registro scientifico immutabile: `V336 SCIENCE_GUARD robustValidCases=0/2 candidatePromotion=REJECTED 80_PERCENT_BILATERAL_REQUIRED=true`. La CI tecnica positiva NON autorizza un merge, NON prova che ZERO sappia usare casse e NON promuove G3/G5. **Non avviare ETA o OTA per V3.36, non cambiare il solver normale né i salvataggi 2.2.**
+
+**Prossima V3.37 proposta dal risultato:** diagnostica temporale per *prima divergenza* di contatto/grip/forma/BOX, verifica dei due lati reali della cassa e degli owner di adesione; progettazione di un risolutore di contatto **con vincoli simultanei** (anti-autointersezione, non-penetrazione, continuità di bordo e presa legale), senza saltare le collisioni e senza target hardcoded; test indipendente e preregistrato sulle prese bilaterali + work e motor matched, poi locomozione trained vs frozen su nuove scene. Il guard sperimentale attuale resta test di laboratorio e NON deve essere attivato.
+
 ## Blocchi e prossimi passi
 
 1. Leggere il risultato finale dello stress, riportando tutti gli errori senza rimuovere semi/pose fallite.
