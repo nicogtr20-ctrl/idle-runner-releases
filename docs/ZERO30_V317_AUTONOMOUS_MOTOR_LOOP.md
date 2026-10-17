@@ -1,0 +1,27 @@
+# ZERO 3.0 — V3.17 | Primo loop sensori → intenzione scelta → muscoli → fisica → apprendimento
+
+**Protocollo fissato il 17/10/2026 prima del test.** Leggere [MASTER](ZERO30_MASTER_BLUEPRINT.md), [CONTRATTO](ZERO30_IMPLEMENTATION_CONTRACT.md), [UI](ZERO30_UI_UX_SPEC.md), [V3.16](ZERO30_V316_INTENT_PERSISTENCE.md). Esperimento **E3 preliminare** su PR #87: non sostituisce G3, G4, G5, nessuna integrazione Android o OTA.
+
+## Ipotesi falsificabile
+
+La V3.16 ha registrato 2.048 esperienze reali **pilotando** le intenzioni. Qui per la prima volta si vuole misurare un circuito con **intenzione decisa dal proprio stato sensoriale/ricorrente** e una corteccia che possa aggiornare i pesi solo sulla base di conseguenze vere. Il risultato sperato è una migliore realizzazione delle intenzioni **scelte dal controller**, non una andatura prescritta. Nessuna gemma, reward sintetico, direzione verso oggetto né spinta al COM. Gli input tattili derivano dai solver autentici; le azioni applicate solo dal gel.
+
+## Architettura e limiti definiti prima dei risultati
+
+- Un nuovo `Zero3AutonomousLoopV317` su Java puro. `Zero3SensoryFrameV315` (96×12+16+48+74×7; già testato), `Zero3MotorIntentV316.Authority` unica (una decisione per frame alto). Campionamento propriocezione **una volta per decisione**, non ogni sottopasso; reale `SymbioteMatterV1.step` a 0,025 s e `SquareGripPuzzle/MaterialContact/GripComposition/Morphology.collide` in ciascuno dei 12 sottopassi della decisione. 12×0,025 = **0,30 s**. Cortical outputs 16×4 continui senza sine/oscillatore/gait hardcoded.
+- Encoder ricorrente leggero a **16 unità tanh** con 20 input fisici normalizzati (dalla membrana/propriocezione; senza segreti), con readout predittivo su velocità/touch del **prossimo** frame. Allenamento con gradiente locale troncato a un passo, clipping, **solo sulle esperienze completate TRAIN**; non leggere mai `post` durante il decision. Il successo di questa testa si misura con MSE su ambienti indipendenti rispetto alla persistenza.
+- Actor singolo seleziona un vettore continuo (o intenzione zero se ritiene opportuno) come funzione del proprio stato ricorrente + osservazioni correnti, con esplorazione temporale filtrata da seed proprio; **niente direzione target e niente fase ritmica**. L'actor in V3.17 è una *politica sensoriale iniziale fissa* con memoria ricorrente che cambia tramite training dell'encoder: **non è ancora un actor–critic con target networks, survival reward o obiettivi appresi**. La corteccia `AdaptiveCortex` 16×4 del progetto, trainabile con il suo `MotorIntent`, riceve feedback fisico una volta per decisione e aggiorna soltanto TRAIN. Baseline congelata: stessi seed/scenari ed esplorazione senza updates del cervello/corteccia.
+- NO_HELPER_GAIT: nessuna sinusoide, 8 heading forzati, centraggio artificiale, impulso COM o `target.x/y`. `MotorIntent` deve risultare da una sola `Authority`. Output ausiliari/esperienze sempre tracciabili `episodeId, decisionId, revision, begin→action→physics→observe→train`.
+- Conservare il modello dopo più episodi TRAIN (test memoria **tra vite**); valutare su **episodi nuovi** con parametri congelati usando copie del cervello/corteccia. Nessun valore di validation entra nei pesi o nella scelta iperparametri; holdout usato una volta.
+
+## Split, scala e metriche
+
+- TRAIN: **16 episodi × 128 decisioni autonome = 2.048 intenzioni realmente scelte** dall'actor sensorimotor, ognuna dura **12 integrazioni fisiche** (24.576 passi del gel) dopo 96 warmup gel/episodio (1.536 passi): **26.112 passi** totale TRAIN. Quattro famiglie FREE, BOX vicino, DISK vicino, BOX lontano, ripetute con pose/seed vari. Bloccare invalid/NaN.
+- EVAL (BLIND): **8 episodi × 96 decisioni = 768 decisioni** per sistema, modello TRAIN congelato e baseline congelata con stessa init, seed, scenario, posa e durata. Totale ~9.216 passi gel per braccio, warmup aggiuntivo. EVAL **senza gradienti, senza replay in training**.
+- Misurare `trainedCortexUpdates`, norma differenza pesi, `encoderUpdates`, previsione prossimo stato (velocity+contact), `motorIntentAgreement` condizionato solo sulle vere direzioni con sforzo, `net/gross`, somma lavoro, grip veri, `censored/invalid`, tentativi con controlli equivalenti, raw dx/dy fisici, primo/ultimo segmenti training; riportare ogni famiglia di mondo. NESSUNA energia/danno inventata: in E2 risultano mancanti.
+- **Gate scientifico preliminare per dichiarare un vantaggio motorio**: almeno 2.048 decisioni TRAIN senza duplicazioni, `encoderUpdates>0`, `cortexUpdates>0` e parametri cambiati realmente; BLIND migliora almeno **10%** score di allineamento/intenzione rispetto alla baseline, non peggiora MSE predittiva rispetto alla persistenza, lavoro per unità di avanzamento utile non peggiore, e supera almeno **3 su 4** famiglie di scene. Se qualsiasi condizione manca = **FAIL**, anche con CI verde. Il credito motorio non è survival reward. `G3` resta comunque bloccato finché non si dimostrano apprendimento/retention robuste 20+ seed, nuova topologia e costi energetici, vera gestione di pause/death e abilità.
+- **Invarianti**: no leakage futuro, zero training in BLIND, outcome dal solver reale, zero robot steering/com-tricks, no stato 2.2 mutato, prove su immutabilità/autorità e equivalenza per più velocità ancora pending. La V3.17 NON è una prova di coscienza, di goal learning, di memory procedurale o di neurogenesi.
+
+## RISULTATI VERIFICATI
+
+*Da compilare esclusivamente dopo log reali della CI.*
