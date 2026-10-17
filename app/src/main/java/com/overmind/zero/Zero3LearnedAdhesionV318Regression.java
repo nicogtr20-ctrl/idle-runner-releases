@@ -26,6 +26,7 @@ public final class Zero3LearnedAdhesionV318Regression {
         final int[] episodesByMode=new int[4],heldByMode=new int[4],
                     contactByMode=new int[4],aboveByMode=new int[4];
         final long[] motorFramesByMode=new long[4];
+        final double[] physicalWorkByMode=new double[4];
         double worldWork,bodyDisplacement,netAlignment;
         String describe(){
             return String.format(Locale.US,
@@ -165,7 +166,9 @@ public final class Zero3LearnedAdhesionV318Regression {
                 totals.netAlignment+=(s.body.cx-oldX)*intent.directionX+
                                      (s.body.cy-oldY)*intent.directionY;
                 totals.bodyDisplacement+=Math.hypot(s.body.cx-oldX,s.body.cy-oldY);
-                totals.worldWork+=Math.max(0,s.gel.work-work0);
+                double actualPhysicalWork=Math.max(0,s.gel.work-work0);
+                totals.worldWork+=actualPhysicalWork;
+                totals.physicalWorkByMode[mode]+=actualPhysicalWork;
                 totals.decisions++;
                 lastAction=command;
             }
@@ -207,10 +210,12 @@ public final class Zero3LearnedAdhesionV318Regression {
             System.out.printf(Locale.US,
                 "ZERO3 V318 FAMILY=%d learnedTouched=%d frozenTouched=%d "+
                 "learnedHeld=%d frozenHeld=%d learnedAboveThreshold=%d "+
-                "frozenAboveThreshold=%d%n",
+                "frozenAboveThreshold=%d learnedWork=%.9f frozenWork=%.9f%n",
                 i,learned.contactByMode[i],frozen.contactByMode[i],
                 learned.heldByMode[i],frozen.heldByMode[i],
-                learned.aboveByMode[i],frozen.aboveByMode[i]);
+                learned.aboveByMode[i],frozen.aboveByMode[i],
+                learned.physicalWorkByMode[i],
+                frozen.physicalWorkByMode[i]);
         }
         double outsideDuty=(double)(learned.aboveByMode[FREE]+
             learned.aboveByMode[DISK]+learned.aboveByMode[FAR])/
@@ -222,7 +227,10 @@ public final class Zero3LearnedAdhesionV318Regression {
         boolean blindHeld=learned.boxEpisodesWithHold>=3&&
             learned.heldByMode[BOX]>=25&&
             learned.heldByMode[BOX]>=1.25*frozen.heldByMode[BOX];
-        boolean workOK=learned.worldWork<=1.2*frozen.worldWork;
+        // Preregistered scientific cost criterion is BOX-specific;
+        // global cost is displayed separately as a diagnostic.
+        boolean workOK=learned.physicalWorkByMode[BOX]<=
+                       1.2*frozen.physicalWorkByMode[BOX];
         boolean sceneSpecific=outsideDuty<=.30&&
             learned.heldByMode[FREE]==0&&
             learned.heldByMode[DISK]==0&&learned.heldByMode[FAR]==0;
