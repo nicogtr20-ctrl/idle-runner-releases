@@ -1,5 +1,7 @@
 # ⛔ ZERO 3.0 — ISTRUZIONE OPERATIVA PRIORITARIA PER CHATGPT / AGENTI — 16/10/2026
 
+> **ZERO 3.22/B — 17 ottobre 2026:** [Rapporto e 20 prove verificate](docs/ZERO30_V322B_FULL_CAUSAL_REPLAY.md) · [CI SUCCESS 39023478559](https://github.com/nicogtr20-ctrl/idle-runner-releases/actions/runs/39023478559). Il ramo Draft PR #87 ha dimostrato ripresa della stessa vita con stato neurale, materia, ambiente di prova, RNG della fixture e replay sensoriale completo: 20/20 prove in cinque scenari, confronto bitwise, fault recovery e build Android Debug. Mancano ancora mondo/metabolismo/RNG del gameplay, Android reale, UI 3.0 e locomozione G3. Nessun merge o OTA; OTA172 e 12 slot legacy invariati.
+
 > **ZERO 3.22/A, ULTIMO PUNTO VERIFICATO (17-10-2026):** prima di ogni codice leggere [Rapporto snapshot stessa vita V3.22](docs/ZERO30_V322_SAME_LIFE_SNAPSHOT.md) e [CI 39022300684 SUCCESS](https://github.com/nicogtr20-ctrl/idle-runner-releases/actions/runs/39022300684). Draft PR #87 ha ora testato continuità neuronale+corpo+BOX+traccia+authority con reboot JVM a decisione 48/96, `cmp` bytewise e Android Debug PASS. **Non è** checkpoint di tutto il gameplay, non salva il vero world RNG, energia/danno o replay V316 integrale; G3/G5/UI/neurogenesi e APK V3 restano BLOCCATI, no OTA. Master+Contratto+UI restano autorevoli.
 
 
