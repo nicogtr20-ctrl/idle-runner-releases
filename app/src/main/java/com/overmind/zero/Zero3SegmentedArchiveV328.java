@@ -38,7 +38,7 @@ public final class Zero3SegmentedArchiveV328 {
         public final Zero3OrganismStoreV322.State organism;
         public final Zero3SurvivalLedgerV323.State survival;
         public final Zero3RoomStateV324 room;
-        private final ArrayList<Zero3FullCausalExperienceV322B> journal;
+        private final List<Zero3FullCausalExperienceV322B> journal;
         public Bundle(Zero3OrganismStoreV322.State organism,
                Zero3SurvivalLedgerV323.State survival,
                Zero3RoomStateV324 room,
@@ -62,7 +62,17 @@ public final class Zero3SegmentedArchiveV328 {
                         "mixed physical/energy experience timeline");
             }
             this.organism=organism;this.survival=survival;this.room=room;
-            journal=new ArrayList<>(experiences);
+            // Fixed-length immutable VIEW avoids copying 2000+ full 9 KiB records.
+            // The only mutable source is owned by the single V3 runtime thread.
+            final List<Zero3FullCausalExperienceV322B> source=experiences;
+            final int frozen=experiences.size();
+            journal=Collections.unmodifiableList(new AbstractList<Zero3FullCausalExperienceV322B>(){
+                @Override public int size(){return frozen;}
+                @Override public Zero3FullCausalExperienceV322B get(int i){
+                    if(i<0||i>=frozen)throw new IndexOutOfBoundsException();
+                    return source.get(i);
+                }
+            });
         }
         public int decisions(){return organism.nextDecision;}
         public int records(){return journal.size();}
@@ -70,7 +80,7 @@ public final class Zero3SegmentedArchiveV328 {
             return Collections.unmodifiableList(journal);
         }
     }
-    private static final class Segment{
+    static final class Segment{
         final int start,count,size;
         final byte[] sha;
         Segment(int from,int n,int size,byte[] hash){
@@ -107,7 +117,7 @@ public final class Zero3SegmentedArchiveV328 {
     }
     private static void verifySegment(Segment s,byte[] bytes,
            Zero3OrganismStoreV322.State organism,
-           ArrayList<Zero3FullCausalExperienceV322B> result)throws IOException{
+           boolean decodeAll)throws IOException{
         require(bytes.length==s.size&&Arrays.equals(digest(bytes),s.sha),
                 "corrupt referenced immutable segment");
         DataInputStream d=new DataInputStream(new ByteArrayInputStream(bytes));
@@ -124,7 +134,7 @@ public final class Zero3SegmentedArchiveV328 {
                 Zero3FullCausalExperienceV322B.decode(raw);
             require(e.decision==s.start+k,"out of order segmented record");
             e.validate(trace[e.decision],organism.episodeId);
-            result.add(e);
+            // Validate content in streaming fashion, never retain all records.
         }
         require(d.available()==0,"trailing segment data");
     }
@@ -206,18 +216,19 @@ public final class Zero3SegmentedArchiveV328 {
         int n=d.readInt();
         require(n==(cursor+CHUNK-1)/CHUNK,"wrong number of immutable chunks");
         ArrayList<Segment> chunks=new ArrayList<>();
-        ArrayList<Zero3FullCausalExperienceV322B> experiences=new ArrayList<>();
+        ArrayList<Zero3FullCausalExperienceV322B> experiences=null;
         for(int i=0;i<n;i++){
             Segment chunk=Segment.read(d);
             require(chunk.start==i*CHUNK&&chunk.count==Math.min(CHUNK,cursor-i*CHUNK),
                     "segment gap, overlap or wrong tail");
             verifySegment(chunk,Files.readAllBytes(file(chunk)),
-                          organism,experiences);
+                          organism,false);
             chunks.add(chunk);
         }
         require(d.available()==0,"trailing manifest bytes");
         return new Generation(generation,
-            new Bundle(organism,survival,room,experiences),chunks);
+            new Bundle(organism,survival,room,
+                new Zero3ReplayJournalV329(dir,chunks,cursor)),chunks);
     }
     public Bundle load()throws IOException{
         Generation best=null;int index=-1;
@@ -231,6 +242,12 @@ public final class Zero3SegmentedArchiveV328 {
         return best==null?null:best.data;
     }
     public long generation(){return committed==null?0:committed.number;}
+    /** V329: references committed disk blocks without retaining decoded history. */
+    public Zero3ReplayJournalV329 openReplay()throws IOException{
+        require(committed!=null,"V329 no verified committed generation");
+        return new Zero3ReplayJournalV329(dir,committed.segments,
+                                          committed.data.decisions());
+    }
     public Path currentManifest(){return active<0?null:pointer(active);}
     public Path oldManifest(){return active<0?null:pointer(1-active);}
     public Path currentTail(){
