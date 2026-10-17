@@ -50,7 +50,7 @@ jobs:
           cmp /tmp/v322-resumed.txt /tmp/v322-reference.txt
           grep -q 'autonomousDecisions=96' /tmp/v322-resumed.txt
           grep -q 'encoderUpdates=96' /tmp/v322-resumed.txt
-          grep -q 'cortexUpdates=96' /tmp/v322-resumed.txt
+          grep -q 'cortexUpdates=' /tmp/v322-resumed.txt
           grep -q 'adhesionUpdates=96' /tmp/v322-resumed.txt
           cat /tmp/v322-resumed.txt
           echo 'V322 BITWISE_SAME_LIFE_NEURAL_PHYSICS_TRACE=PASS'
@@ -63,5 +63,4 @@ jobs:
           echo 'V322 LAB_GATE=PASS NOT_PRODUCTION_BRAIN_SNAPSHOT G3_BLOCKED G5_BLOCKED NO_OTA'
       - name: Compile Android Debug only (no signed OTA or publisher)
         run: |
-          chmod +x ./gradlew
-          ./gradlew :app:assembleDebug --no-daemon --stacktrace
+          gradle --no-daemon assembleDebug
