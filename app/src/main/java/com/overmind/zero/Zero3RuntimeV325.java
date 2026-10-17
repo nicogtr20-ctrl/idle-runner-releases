@@ -69,8 +69,15 @@ public final class Zero3RuntimeV325 implements AutoCloseable {
         encoder.resetEpisode();
         // Unique active issuer is in-process; checkpoint stores the cursor,
         // which a NEW issuer resumes without replaying credited decisions.
-        authority=new Zero3MotorIntentV316.Authority(episode,OWNER);
-        if(restore)authority.restoreCompletedDecisions(next);
+        Zero3MotorIntentV316.Authority oneIssuer=
+            new Zero3MotorIntentV316.Authority(episode,OWNER);
+        try{
+            if(restore)oneIssuer.restoreCompletedDecisions(next);
+        }catch(RuntimeException invalidResume){
+            oneIssuer.close();
+            throw new IOException("V325 invalid authority cursor",invalidResume);
+        }
+        authority=oneIssuer;
         ended=metabolism.reserve()<=0;
     }
     private static void require(boolean ok,String reason){
@@ -81,7 +88,7 @@ public final class Zero3RuntimeV325 implements AutoCloseable {
             MotorBrain.Body b,Morphology.Surface skin,SymbioteMatterV1 gel,
             List<UnknownWorld.Entity> entities,ScarcityLab room,
             float initialEnergy,float elapsedLife)throws IOException {
-        if(entities==null||!entities.contains(room.food)||initialEnergy<=0||
+        if(room==null||entities==null||!entities.contains(room.food)||initialEnergy<=0||
            initialEnergy>100||elapsedLife<0)
             throw new IOException("V325 newborn needs physical room food and positive fuel");
         return new Zero3RuntimeV325(episode,rng,b,skin,gel,
