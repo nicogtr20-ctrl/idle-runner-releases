@@ -49,7 +49,7 @@ jobs:
           grep -q 'experiences=2000' /tmp/v328-restored.txt
           grep -q 'decision=2000' /tmp/v328-restored.txt
           echo 'V328 REAL_2000_DECISIONS_STORED_AND_BITWISE_RESUMED=PASS'
-      - name: Tamper last manifest and orphan chunk: fallback, no reset on dual fault
+      - name: 'Tamper manifest and orphan chunk: rollback and double fault'
         run: |
           set -euo pipefail
           java -Xmx3072m -Dv328.target=2000 -Dv328.ordinal=1 \
