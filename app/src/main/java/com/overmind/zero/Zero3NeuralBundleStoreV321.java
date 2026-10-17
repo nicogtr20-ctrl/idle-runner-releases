@@ -71,7 +71,7 @@ public final class Zero3NeuralBundleStoreV321 {
             Zero3LearningFoundation.AdaptiveCortex.State c=
                 Zero3LearningFoundation.AdaptiveCortex.State.read(d);
             int length=d.readInt();
-            if(length!=573)throw new IOException("unexpected motor-head shape");
+            if(length!=569)throw new IOException("unexpected motor-head shape");
             byte[] h=new byte[length];d.readFully(h);
             if(d.available()!=0)throw new IOException("trailing brain bytes");
             return new Bundle(next,e,c,Zero3MotorHeadStoreV320.decode(h));
