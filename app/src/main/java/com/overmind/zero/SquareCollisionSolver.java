@@ -142,6 +142,14 @@ final class SquareCollisionSolver {
                           UnknownWorld.Entity box,float[] oldSkinX,float[] oldSkinY,
                           float[] oldBodyX,float[] oldBodyY,
                           float oldCoreX,float oldCoreY){
+        constrain(body,skin,box,oldSkinX,oldSkinY,oldBodyX,oldBodyY,
+                  oldCoreX,oldCoreY,null);
+    }
+    static void constrain(MotorBrain.Body body,Morphology.Surface skin,
+                          UnknownWorld.Entity box,float[] oldSkinX,float[] oldSkinY,
+                          float[] oldBodyX,float[] oldBodyY,
+                          float oldCoreX,float oldCoreY,
+                          SquareGripPuzzle.StageObserver observer){
         float l=box.x-SquareGripPuzzle.HALF,r=box.x+SquareGripPuzzle.HALF;
         float t=box.y-SquareGripPuzzle.HALF,b=box.y+SquareGripPuzzle.HALF;
         for(int i=0;i<Morphology.POINTS;i++){
@@ -177,6 +185,7 @@ final class SquareCollisionSolver {
                 // 0.075s continuous hold remain strictly necessary.
             }
         }
+        if(observer!=null)observer.stage("CCD_AFTER_SHELL_PROJECT",body,skin,box);
         for(int i=0;i<MotorBrain.N;i++)
             project(body.x,body.y,body.vx,body.vy,i,
                     oldBodyX==null?body.x[i]:oldBodyX[i],
@@ -184,11 +193,14 @@ final class SquareCollisionSolver {
                     l,t,r,b,BODY_CLEARANCE);
         // The geometric centroid has no mass, cannot collide with a box,
         // and must never push the distributed organism through a solid.
+        if(observer!=null)observer.stage("CCD_AFTER_BODY_PROJECT",body,skin,box);
         MaterialGeometry.observe(body);
         repairLinks(skin.x,skin.y,skin.vx,skin.vy,Morphology.POINTS,box,
                     LINK_CLEARANCE,skin);
+        if(observer!=null)observer.stage("CCD_AFTER_SHELL_LINKS",body,skin,box);
         repairLinks(body.x,body.y,body.vx,body.vy,MotorBrain.N,box,
                     BODY_CLEARANCE,null);
+        if(observer!=null)observer.stage("CCD_AFTER_BODY_LINKS",body,skin,box);
     }
     /** OTA163: a box blocks every living interior fluid parcel as well
      * as the ten legacy parcels. Pure contact projection, no motor credit.
