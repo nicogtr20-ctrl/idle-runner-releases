@@ -45,6 +45,9 @@ public final class Zero3JointRuntimeV346Regression {
             catch(IllegalStateException expected){rejected=true;}
             check(rejected,"nonversioned lab mode persisted silently");
         }
+        // Raises ONLY in-memory research duration to existing V328 3500 cap;
+        // candidate snapshots still hard-rejected by its mode guard.
+        r.enableSegmented();
         return r;
     }
     public static void main(String[] args)throws Exception{
@@ -73,7 +76,7 @@ public final class Zero3JointRuntimeV346Regression {
                     netDistance=Math.hypot(r.display().cx-x0,
                                            r.display().cy-y0);
                     if(!candidate&&count>0){
-                        check(r.snapshot()!=null,
+                        check(r.segmentedSnapshot()!=null,
                             "default actual V325 snapshot incompatible");
                     }
                 }
