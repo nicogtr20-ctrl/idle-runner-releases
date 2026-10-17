@@ -35,6 +35,7 @@ public final class Zero3SensoryFrameV315 {
     public final boolean preAction;
     public final float bodyCenterX,bodyCenterY,bodyVelX,bodyVelY,bodyAngle;
     public final float gelAreaError,gelWork;
+    public final long solverTicks;
     public final boolean energyAvailable=false,damageAvailable=false;
     public final boolean lastExecutedAvailable;
     private final float[] patches;
@@ -51,7 +52,7 @@ public final class Zero3SensoryFrameV315 {
                 "invalid episode/frame/time");
         episodeId=episode;frameId=frame;simulationTime=seconds;preAction=before;
         bodyCenterX=b.cx;bodyCenterY=b.cy;bodyVelX=b.cvx;bodyVelY=b.cvy;
-        gelAreaError=gel.areaError;gelWork=gel.work;
+        gelAreaError=gel.areaError;gelWork=gel.work;solverTicks=gel.ticks;
         require(local.length==PATCHES*PATCH_CHANNELS &&
                 scan.length==RAYS &&
                 bodyFeatures.length==PROPRIO &&
@@ -181,7 +182,7 @@ public final class Zero3SensoryFrameV315 {
         h=fold(h,Float.floatToIntBits(bodyVelY));
         h=fold(h,Float.floatToIntBits(bodyAngle));
         h=fold(h,Float.floatToIntBits(gelAreaError));
-        h=fold(h,Float.floatToIntBits(gelWork));
+        h=fold(h,Float.floatToIntBits(gelWork));h=fold(h,solverTicks);
         h=fold(h,energyAvailable?1:0);h=fold(h,damageAvailable?1:0);
         h=fold(h,lastExecutedAvailable?1:0);
         h=foldArray(h,patches);h=foldArray(h,rays);
