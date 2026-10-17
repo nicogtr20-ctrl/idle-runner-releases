@@ -409,7 +409,9 @@ public final class Zero3RuntimeV325 implements AutoCloseable {
                 throw new IOException("V328 corrupted existing history: fail closed");
         }
         segmentedStore.save(segmentedSnapshot());
-        segmentedStore.pruneOrphans();
+        // Orphan files are never reachable by a manifest; prune periodically
+        // after both generations have been fully committed and verified.
+        if(next%128==0)segmentedStore.pruneOrphans();
     }
     public static Zero3RuntimeV325 loadSegmented(Path privateV3Folder)
             throws IOException{
