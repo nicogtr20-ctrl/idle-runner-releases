@@ -1,5 +1,8 @@
 # ZERO 3.0 — NUOVA INTERFACCIA GIOCO, IMPOSTAZIONI, CERVELLO, NEURONI, ABILITÀ ED EVOLUZIONE
 
+> **NUOVO DATO AUTENTICO PER FUTURA UI V3.22/A (17-10-2026):** [CI 39022300684 PASS e report](ZERO30_V322_SAME_LIFE_SNAPSHOT.md). In laboratorio ora un checkpoint riunisce veri pesi encoder/cortex/adesione, corpo e oggetto BOX, contatore ID e traccia causale: 48+48 decisioni con resume stessa vita bitwise uguale a 96 continue; 1.108 veri frame presa e 8 bilaterali. L'interfaccia V3 potrà in futuro distinguere `SAME_LIFE_LAB_RESTART_VERIFIED` da `FULL_GAMEPLAY_SAVE_UNAVAILABLE`. **Nessuna UI o provider V3 LIVE è stata implementata**; non trasferire misure LAB come progressi/abilità del cervello sul telefono. G3/G5 e UI bloccati, no OTA.
+
+
 > **V3.21 DATI REALI PER FUTURA UI (17-10-2026):** [report di persistenza congiunta](ZERO30_V321_FULL_NEURAL_BUNDLE.md). Stato verificato di encoder/recurrent actor, corteccia 64D e head adesione, snapshot atomico a 2 generazioni e replay deterministico dopo restart, con 512 decisioni di valutazione e 1532 frame di grip BOX, **zero bilaterali**. Le schermate neuroni/abilità devono distinguere `NEURAL_BUNDLE_CHECKPOINT_VERIFIED` da `FULL_ORGANISM_SNAPSHOT_UNAVAILABLE`, locomozione/non validata, modelli predittivi/goal/memoria non conclusi. **UI ZERO3 non implementata.**
 
 > **V3.20 DATI FUTURA UI (17/10/2026):** [evidenza restart head motorio](ZERO30_V320_MOTOR_HEAD_RESTART_RETENTION.md). Stato persistente verificato SOLO dei 128 pesi adesivi/RNG/crediti e costo, 1536+1536 decisioni con fingerprint identica a 3072 senza restart e grip conservato su nuove pose. NON mostrare come salvataggio dell'intero brain/personaggio. UI 3D V3 resta non implementata; g3/g5 bloccati.
