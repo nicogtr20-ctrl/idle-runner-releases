@@ -30,4 +30,30 @@ Questa fase è un **gate di copertura fisica E2**, non ancora test predittivo CA
 
 ## Esito
 
-*In attesa della prima esecuzione CI e della lettura dei log. Il successo tecnico della pipeline non basta a superare il gate.*
+Esito effettivo e registrato in seguito, dopo esecuzione GitHub Actions completa.
+
+
+## RISULTATI VERIFICATI — CI 38987814698 (17/10/2026)
+
+**[GitHub Actions 38987814698 — SUCCESS](https://github.com/nicogtr20-ctrl/idle-runner-releases/actions/runs/38987814698)**. Codice E2 di laboratorio: `Zero3MotorRealContactV312Regression.java` nel branch sperimentale di PR #87, con reale solver `SymbioteMatterV1` non modificato, `SquareGripPuzzle.constrain`, `MaterialContactConstraints.reconcile`, `SymbioteWorldStepV171.interior`, `GripSurfaceComposition.compose`, `Morphology.collide` per il disco e `ContactLearning.collide`. Passati 96 casi, **23.040 integrazioni del gel reale** di cui 13.824 frame osservabili dopo warm-up, frame dt=0,025 s.
+
+| Gruppo | Prove | Con tocco reale | Con adesione vera | Presa bilaterale | Altri risultati |
+|---|---:|---:|---:|---:|---|
+| Scatola vicina | 48 | **44** | **21** | **15** | 5.873 frame con `touchSense`; 2.764 frame con hold; 1.208 con presa bilaterale; somma delle distanze nette di tutte le scatole 5,513 unità |
+| Scatola lontana | 16 | **0** | **0** | **0** | Nessuna falsa collisione; distanza scatole 0 |
+| Disco mobile | 16 | 0 sul canale *box* `touchSense` | **0** | **0** | **13** prove con pressione meccanica `touchPulse`, 1.196 frame; somma distanze oggetto 67,867 |
+| Nessun ostacolo | 16 | **0** | **0** | **0** | Nessun contatto o presa esterni |
+
+**Verifica critica dell'assenza del comando adesione:** nelle 24 prove di scatola vicina `adhesion=OFF`, **23** hanno un tocco reale, **zero** hanno presa `gripHold`, **zero** prese bilaterali, **zero movimento della scatola**. L'intenzione di aderire e la collisione semplice da sole non diventano falsamente una presa. Nelle 16 prove con ostacolo lontano, 8 avevano intenzione adesiva positiva: nessuna presa. La verifica di proprietà del contatto dopo collisione passa soltanto se il comando fisico supera la soglia reale, la patch tocca la faccia di quella scatola e il suo timer è posseduto dall'oggetto. Nessun hold o touch viene iniettato dal test. Nessuna anomalia `invalidBoxMove`.
+
+**Esito protocollato: `coverage=PASS`, `completeContactGate=PASS`.** Qui il gate è esplicitamente la **copertura E2** di contatto/tatto/presa; NON un pass di G3/G5, di locomozione autonoma o di generalizzazione neurocognitiva. In ON il laboratorio imposta deliberatamente una pressione adesiva muscolare di prova che ZERO dovrà invece imparare a decidere da sé nel vero gioco. Sommare le distanze nette di scatole diverse non misura movimento di una singola scatola; la quantità viene riportata come somma diagnostica, non come prestazione.
+
+### Problema sensoriale concreto identificato
+
+I due canali **NON** sono sinonimi:
+- `skin.touchSense`: contatto con una faccia solida (scatola/gate/pannello) composto dal mondo fisico; valori positivi osservati nella prova di scatola.
+- `skin.touchPulse`: pressione fisica dei dischi mobili, generata nel vero solver `Morphology.collide`, anche **senza** `touchSense` e senza adesione. V3.11 `observe` usa `touchSense`, ma **non** `touchPulse`: una quota di conseguenze fisiche con dischi è quindi invisibile a quel predittore.
+
+**L'implicazione per l'architettura ZERO3 è misurabile:** un unico segnale tattile da scatola sarebbe incompleto. Il contratto `PhysicsOutcome / sensory` deve includere entrambe le modalità fisiche con provenienza e tempistica, senza far credere al brain che pressione = presa. La prossima V3.13 deve raccogliere stati/azioni/esiti di V3.11 con i due sensori distinti e solver oggetti, usare training e holdout indipendenti su diverse scene+seed e confrontare ablation su contatto/presa, scegliendo il modello **prima di leggere i risultati**. Non riutilizzare questi 96 casi come una prova blind incontaminata.
+
+**Limitazioni:** alcuni casi NEAR non toccano la scatola; gli oggetti vengono generati in fixture vicine e non raggiunti da una policy esplorativa autonoma; la copertura della presa bilaterale è verificata ma non mostra abilità appresa. Soltanto le fixture di box/disk, non l'intera ecologia del gioco. Non eseguire un passaggio diretto da questi risultati alla UI/OTA. **PR #87 Draft, G3/G5 bloccati, nessun aggiornamento di produzione.**
