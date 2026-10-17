@@ -134,6 +134,37 @@ public final class Zero3RuntimeV325 implements AutoCloseable {
         Zero3RoomArchiveV324.Bundle bundle=disk.load();
         return bundle==null?null:recovered(bundle);
     }
+    /**
+     * Read-only defensive rendering data. No privileged world knowledge is
+     * delivered to the neural actor; UI never alters the physical body.
+     * Obtained on the runtime owner thread at a completed decision boundary.
+     */
+    public static final class Display {
+        public final long episode,solverTicks;
+        public final int decisions,neurons,objects;
+        public final float reserve,cx,cy,doorX,doorY;
+        public final boolean dead;
+        public final float[] membraneX,membraneY,objectX,objectY;
+        public final int[] objectLaw;
+        private Display(Zero3RuntimeV325 r){
+            episode=r.episode;solverTicks=r.gel.ticks;
+            decisions=r.next;neurons=Zero3AutonomousLoopV317.HIDDEN;
+            objects=r.world.size();reserve=r.metabolism.reserve();
+            dead=r.ended;cx=r.body.cx;cy=r.body.cy;
+            doorX=r.room.gateX();doorY=r.room.gateCenterY();
+            membraneX=r.skin.x.clone();membraneY=r.skin.y.clone();
+            objectX=new float[objects];objectY=new float[objects];
+            objectLaw=new int[objects];
+            for(int i=0;i<objects;i++){
+                UnknownWorld.Entity e=r.world.get(i);
+                objectX[i]=e.x;objectY[i]=e.y;objectLaw[i]=e.physicalLaw();
+            }
+        }
+    }
+    public Display display(){
+        require(!closed&&!inDecision,"render only finished physical states");
+        return new Display(this);
+    }
     public int decisions(){return next;}
     public long episode(){return episode;}
     public long gelTicks(){return gel.ticks;}
