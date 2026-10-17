@@ -1,0 +1,84 @@
+name: ZERO3 V3.44 unified runtime causal vital boundary and cold restart
+on:
+  push:
+    branches: [feature/zero30-foundation-g0-g3-20261016]
+    paths:
+      - 'app/src/main/java/com/overmind/zero/Zero3AutonomousLoopV317.java'
+      - 'app/src/main/java/com/overmind/zero/Zero3SurvivalLedgerV323.java'
+      - 'app/src/main/java/com/overmind/zero/Zero3RuntimeV325.java'
+      - 'app/src/main/java/com/overmind/zero/Zero3VitalV327Regression.java'
+      - 'app/src/main/java/com/overmind/zero/Zero3CausalVitalBoundaryV344.java'
+      - 'app/src/main/java/com/overmind/zero/Zero3CausalVitalBoundaryV344Regression.java'
+      - 'app/src/main/java/com/overmind/zero/Zero3CapacityV327Regression.java'
+      - 'app/src/main/java/com/overmind/zero/Zero3AndroidSessionV325.java'
+      - 'app/src/main/java/com/overmind/zero/Zero3LabActivityV326.java'
+      - '.github/workflows/zero30-v344-runtime-vital-integration-qa.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  actual-vital-continuity:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+      - name: Compile actual recurrent actor, gel, metabolism, archives and V3.27 gate
+        run: |
+          set -euo pipefail
+          mkdir -p /tmp/overmind
+          python3 - <<'PY'
+          import pathlib,re,shlex,subprocess
+          source=pathlib.Path('.github/workflows/overmind-ota-publish.yml').read_text()
+          m=re.search(r'^\s*(javac -d /tmp/overmind [^\n]+)',source,re.M)
+          if not m:raise RuntimeError('production Java material compile list unavailable')
+          root='app/src/main/java/com/overmind/zero/'
+          names='Zero3LearningFoundation Zero3MotorResponseKernel Zero3MotorRetentionRegression Zero3MotorPromotionGate Zero3MotorImpulseResponseRegression Zero3MotorLocalFrameV310Regression Zero3SensoryFrameV315 Zero3CausalRecorderV315 Zero3SensoryContractV315Regression Zero3MotorIntentV316 Zero3AutonomousLoopV317 Zero3LearnedAdhesionV318 Zero3LearnedAdhesionV318Regression Zero3ContextAdhesionV319 Zero3ContextAdhesionV319Regression Zero3MotorHeadStoreV320 Zero3NeuralBundleStoreV321 Zero3OrganismStoreV322 Zero3FullCausalExperienceV322B Zero3FullArchiveStoreV322B Zero3MultiSceneRestartV322BRegression Zero3SurvivalLedgerV323 Zero3SurvivalArchiveV323 Zero3SurvivalRestartV323Regression Zero3RoomStateV324 Zero3RoomArchiveV324 Zero3RuntimeV325 Zero3MotorEvidenceV330 Zero3SegmentedArchiveV328 Zero3ReplayJournalV329 Zero3RuntimeV325Regression Zero3WorldBirthV326 Zero3VitalV327Regression Zero3CapacityV327Regression Zero3CausalVitalBoundaryV344 Zero3CausalVitalBoundaryV344Regression'
+          subprocess.run(shlex.split(m.group(1))+[root+n+'.java' for n in names.split()],check=True)
+          PY
+      - name: Vital causality, brain CHOICES and real material cost
+        run: |
+          set -euo pipefail
+          java -Xmx1536m -cp /tmp/overmind com.overmind.zero.Zero3VitalV327Regression | tee /tmp/v327-vitals.log
+          grep -q 'V327 VITAL_FROM_ACTUAL_METABOLISM=PASS RECURRING_ACTION_CHANGED=PASS NO_FUTURE_LEAK=PASS' /tmp/v327-vitals.log
+      - name: V344 LIVE runtime single-owner causal PRE POST and bytewise V328 restart
+        run: |
+          set -euo pipefail
+          java -Xmx1600m -cp /tmp/overmind com.overmind.zero.Zero3CausalVitalBoundaryV344Regression | tee /tmp/v344-live.log
+          grep -q 'V344 CAUSAL_PRE_POST_NO_FUTURE=PASS' /tmp/v344-live.log
+          grep -q 'V344 COLD_RESTART_BITWISE_IDENTICAL=PASS' /tmp/v344-live.log
+          grep -q 'V344 LIVE_RUNTIME_INTEGRATION_PASS' /tmp/v344-live.log
+      - name: Original real V325 full-life restoration and physics invariance
+        run: |
+          set -euo pipefail
+          for mode in 0 1; do
+            ordinal=$((344+mode))
+            dir="/tmp/v344-verified-${mode}"
+            flags="-Dzero3.mode=${mode} -Dzero3.ordinal=${ordinal}"
+            cls=com.overmind.zero.Zero3RuntimeV325Regression
+            java -Xmx1536m $flags -cp /tmp/overmind "$cls" prefix "$dir"
+            java -Xmx1536m $flags -cp /tmp/overmind "$cls" resume "$dir" "$dir-resume.txt"
+            java -Xmx1536m $flags -cp /tmp/overmind "$cls" reference "$dir-reference.txt"
+            cmp "$dir-resume.txt" "$dir-reference.txt"
+            echo "V344 ORIGINAL_REAL_PHYSICS_AND_RESTART mode=$mode PASS"
+          done
+      - name: Android debug build, never OTA
+        run: |
+          set -euo pipefail
+          for attempt in 1 2 3; do
+            if gradle --no-daemon assembleDebug; then
+              echo 'V344_ANDROID_DEBUG=PASS'
+              exit 0
+            fi
+            if gradle --offline --no-daemon assembleDebug; then
+              echo 'V327_ANDROID_DEBUG=PASS'
+              exit 0
+            fi
+            sleep 10
+          done
+          exit 1
+      - name: Report gate status (CI green never closes G4 or G10)
+        run: echo 'V344_G2_TYPED_REAL_CAUSAL_VITAL_INTEGRATION=PASS G3_G4_G5_G6_G7_G8_G9_G10_NOT_COMPLETE NO_OTA NO_MERGE'
