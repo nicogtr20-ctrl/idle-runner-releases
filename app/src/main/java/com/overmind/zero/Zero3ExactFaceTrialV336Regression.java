@@ -20,7 +20,8 @@ public final class Zero3ExactFaceTrialV336Regression {
     private static void candidateWorld(
          Zero3BoxCrossingForensicV334Regression.State s,
          float[] sx,float[] sy,float[] bx,float[] by,
-         float oldCX,float oldCY,int mode){
+         float oldCX,float oldCY,int mode,
+         float[] postGelX,float[] postGelY){
         boolean boxes=false;
         for(UnknownWorld.Entity e:s.p.world){
             if(e.isBilateralBox()){
@@ -31,7 +32,7 @@ public final class Zero3ExactFaceTrialV336Regression {
                      mode!=3&&mode!=4&&mode!=5,mode>=2,mode>=4);
                 if(mode==5){
                     Zero3JointBoxConstraintV338.Result joint=
-                        Zero3JointBoxConstraintV338.solve(s.p.skin,e,sx,sy);
+                        Zero3JointBoxConstraintV338.solve(s.p.skin,e,postGelX,postGelY);
                     if(joint.attempted){
                         jointAttempts++;
                         if(joint.repaired)jointRepairs++;
@@ -63,7 +64,13 @@ public final class Zero3ExactFaceTrialV336Regression {
                 bx=s.p.body.x.clone(),by=s.p.body.y.clone();
         float cx=s.p.body.cx,cy=s.p.body.cy;
         s.p.gel.step(s.p.body,s.p.skin,muscle,DT);
-        if(mode!=0)candidateWorld(s,sx,sy,bx,by,cx,cy,mode);
+        // V338 B: two distinct causal snapshots. CCD still requires the
+        // original PRE-gel x/y, while feasibility rollback must use the
+        // actual POST-gel, PRE-BOX physical contour.
+        float[] postGelX=mode==5?s.p.skin.x.clone():null;
+        float[] postGelY=mode==5?s.p.skin.y.clone():null;
+        if(mode!=0)candidateWorld(s,sx,sy,bx,by,cx,cy,
+                                  mode,postGelX,postGelY);
         else Zero3MultiSceneRestartV322BRegression.actualWorldStep(
                    s.p,sx,sy,bx,by,cx,cy);
     }
