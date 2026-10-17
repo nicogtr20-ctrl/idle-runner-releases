@@ -13,13 +13,17 @@ public final class Zero3FullCausalExperienceV322B {
     static final int MAGIC=0x5A334542,VERSION=3222,STEPS=12,OUTPUTS=64;
     static final int MAX_RECORD=32768;
     public final int decision;
-    public final long episode,preHash,postHash,preTick,postTick,actuatorHash;
+    public final long episode,preHash,postHash,preTick,postTick,actuatorHash,workBits;
+    public final int gripFrames,bilateralFrames;
     private final byte[] bytes;
 
     private Zero3FullCausalExperienceV322B(int n,long ep,long pre,long post,
-              long beforeTick,long afterTick,long commands,byte[] immutable) {
+              long beforeTick,long afterTick,long commands,long workBits,
+              int gripFrames,int bilateralFrames,byte[] immutable) {
         decision=n;episode=ep;preHash=pre;postHash=post;
         preTick=beforeTick;postTick=afterTick;actuatorHash=commands;
+        this.workBits=workBits;this.gripFrames=gripFrames;
+        this.bilateralFrames=bilateralFrames;
         bytes=immutable.clone();
     }
     public byte[] encoded(){return bytes.clone();}
@@ -172,14 +176,17 @@ public final class Zero3FullCausalExperienceV322B {
               bilateral>=0&&bilateral<=grip,
               "invalid or noncanonical full experience");
         return new Zero3FullCausalExperienceV322B(decision,before.episode,
-                  before.hash,after.hash,before.ticks,after.ticks,hash,b);
+                  before.hash,after.hash,before.ticks,after.ticks,hash,
+                  Double.doubleToLongBits(work),grip,bilateral,b);
     }
     public void validate(Zero3OrganismStoreV322.Trace trace,long expectedEpisode)
               throws IOException {
         check(trace!=null&&decision==trace.decision&&episode==expectedEpisode&&
               preHash==trace.preHash&&postHash==trace.postHash&&
               preTick==trace.startTick&&postTick==trace.endTick&&
-              actuatorHash==trace.actuatorHash,
+              actuatorHash==trace.actuatorHash&&
+              workBits==trace.workBits&&gripFrames==trace.gripFrames&&
+              bilateralFrames==trace.bilateralFrames,
               "archive trace doesn't correspond to physical journal");
     }
 }
