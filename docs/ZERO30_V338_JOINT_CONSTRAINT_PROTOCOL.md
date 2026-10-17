@@ -8,6 +8,33 @@
 
 La stessa prima V338A [CI 39051569943](https://github.com/nicogtr20-ctrl/idle-runner-releases/actions/runs/39051569943) usava snapshot pre-gel non conforme a protocollo: 12/12 eseguite, crossing candidato su 729 (1) e 757 (3) con prevalenza di 3 cross baseline vs 3 candidate nel 757, `attempted=0`; non usare questi dati come valida nuova evidence. Entrambi i campioni A e B costituiscono esclusivamente diagnosi della fase fisica e non prova di una soluzione completa.
 
+## V338D — HOLDOUT indipendente concluso: screening meccanico **12/12 PASS**, G3 scientifico **BLOCKED**
+
+**[CI GitHub 39052563493 SUCCESS tecnica](https://github.com/nicogtr20-ctrl/idle-runner-releases/actions/runs/39052563493)**, commit sperimentale `4244142026a58cd21bff064b4fb553b6bcfa9a5d`, `Zero3JointHoldoutV338DRegression`. Protocollo e nuove 12 scene congelati **prima dell'esecuzione**, ordinals BOX [809,813,817,821,825,829,833,837,841,845,849,853], 168 decisioni reali V317 per scenario ×12 substep = **2.016 scelte sensory-driven e 24.192 passi fisici per braccio**, 64 comandi V317+cortex+V319 congelati generati dal SOLO baseline, duplicati sulle varianti. Tutti i 12 scenari e i 12×168 sottopassi sono presenti nei log, nessuna esclusione.
+
+| Nuovo BOX ordinal | CROSS BASE → JOINT-POSTWORLD | Bilateral BASE → JOINT | Throughwall / embedded / invalid |
+|---|---|---|---|
+| 809 | 0 → 0 | 0 → 0, NON TESTATO | 0/0/0 |
+| **813** | **2 → 0** | 0 → 0, NON TESTATO | 0/0/0 |
+| **817** | 0 → 0 | **340 → 340** | 0/0/0 |
+| **821** | 0 → 0 | **718 → 718** | 0/0/0 |
+| **825** | 0 → 0 | **8 → 8** | 0/0/0 |
+| 829 | 0 → 0 | 0 → 0, NON TESTATO | 0/0/0 |
+| 833 | 0 → 0 | 0 → 0, NON TESTATO | 0/0/0 |
+| 837 | 0 → 0 | 0 → 0, NON TESTATO | 0/0/0 |
+| **841** | **2 → 0** | 0 → 0, NON TESTATO | 0/0/0 |
+| 845 | 0 → 0 | 0 → 0, NON TESTATO | 0/0/0 |
+| 849 | 0 → 0 | 0 → 0, NON TESTATO | 0/0/0 |
+| 853 | 0 → 0 | 0 → 0, NON TESTATO | 0/0/0 |
+
+`V338D JOINT_SEARCH_COUNTS attempted=1 repaired=1 unresolved=0`, senza occultare errori. **12/12** scene hanno zero incroci postWORLD della membrana nella candidata, zero corde solidi attraversate, zero particelle incorporate, `gel.invalid=0` e lavoro muscolare gel numericamente uguale al baseline. In **3/3** scene con presa bilaterale nel baseline, le conte reali riportate da BOX sono **conservate integralmente**; le altre **9/12** non producono presa bilaterale baseline, dunque il gate è `NOT_TESTED`, non automaticamente PASS. La stampa `safeCases=3/12 DIAGNOSTIC_NOT_PROMOTION=REJECTED` è il **gate combinato di prova di bilaterale presente E geometria**: NON vuol dire che la fisica fallisca in 9 scene, né autorizza a promuovere automaticamente un solver.
+
+Android Debug `BUILD SUCCESSFUL in 1m 9s`, ma solo build; **non** APK installata su Galaxy S21 e non OTA. Il tracciamento `gel.work` misura il lavoro dell'attuatore esistente e non contabilizza separatamente eventuali energie introdotte dal nuovo proiettore geometrico; la validazione energetica completa resta aperta. Bilateral è lo stato confermato dal solver BOX al momento del contatto, ma manca un audit addizionale di permanenza della faccia dopo l'ultima correzione tardiva, soprattutto in scene di moto forte. Non ha dimostrato il comportamento simultaneo su più BOX mobili nella fase post-world, né la continuità deterministica save/restart, né l'apprendimento V3.0 TRAINED contro FROZEN sotto controllo indipendente; **non promuovere G3/G5 né attivare in gameplay**.
+
+**DECISIONE DI V338:** il candidato late-world è **MECHANICAL_SCREEN_PASS sui dodici BOX testati**, mentre `SAFE_PHYSICS_PROMOTION=NOT_AUTHORIZED`, `G3=BLOCKED`, `G5=BLOCKED`. Le scene D 809..853 diventano CONSUMATE e non si riutilizzano come BLIND dopo alcuna modifica.
+
+**Prossimo passo V3.39:** test fisico su tutte le BOX+gate **con joint finale attivo sulla vera pipeline completa**, invariance all'ordine, retained bilateral post-correzione, collisioni fra più oggetti; contabilizzazione forze/correzione vincolata in gel work; test nuove vite di almeno 2.000 **decisioni autonome per corteccia** distinte TRAIN/FROZEN/OLD con vera azione generata dallo stato proprio, un unico world model, reward/energia basati su esiti fisici e restart reali. Solo dopo G3 scientifico potrà essere valutato G5; UI 3.0 definitiva e OTA ancora non disponibili.
+
 ## V338C forensics confermata e BLOCCO nuova prova V338D (PRIMA DEL CODICE/CI)
 
 La [CI V338C 39052216923 — SUCCESS tecnico e diagnosi sui soli vecchi casi](https://github.com/nicogtr20-ctrl/idle-runner-releases/actions/runs/39052216923) ha eseguito `mode6 POST_WORLD_JOINT` dopo **tutta** la fisica, incluso movimento BOX, su sei BOX già consumate [645,673,709,729,757,797], 168×12 frame ciascuna con output cortex V317 e V319. Risultato **16 tentativi, 16 risoluzioni, zero irrisolti**, 0 selfCross / 0 throughBox / 0 embedded / gel invalid nel candidato. In BASE cross per nascita: 645=2, 673=2, 709=3, 729=1, 757=3, 797=3; variante nuova sempre 0. Bilateral BASE→JOINT 645: 1192→1219, 797: 20→20; altre 4 scene BASE0=NOT_TESTED. Work identico in questo matched action tape. Android Debug BUILD SUCCESSFUL, nessun OTA. **NON è nuova evidence scientifica**: le sei pose erano già state osservate.
