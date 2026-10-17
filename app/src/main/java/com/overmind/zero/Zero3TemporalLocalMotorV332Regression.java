@@ -118,6 +118,7 @@ public final class Zero3TemporalLocalMotorV332Regression {
             new Zero3LearningFoundation.Coordinator(model.cortex);
         EpisodeStats result=new EpisodeStats();
         Pending pending=null;
+        boolean heldInLife=false;
         float[] previous=null;
         try(Zero3MotorIntentV316.Authority authority=
             new Zero3MotorIntentV316.Authority(
@@ -145,7 +146,6 @@ public final class Zero3TemporalLocalMotorV332Regression {
                 float[] evidence=new float[16];
                 float[] acted=null;
                 float episodeWork=0f,localTravel=0;
-                boolean heldInLife=false;
                 for(int frame=0;frame<STEPS;frame++){
                     float[] motor64=controller.actuate(p.body,p.skin,DT);
                     adhesion.actuate(motor64,motor,p.body,p.skin,objects);
