@@ -41,4 +41,63 @@ V3.14 usa la stessa base V3.13 di **25 feature anatomiche** con 3 sensori separa
 
 ## Risultati finali CI
 
-*Da aggiungere dopo un'esecuzione realmente verificata; nessun risultato presunto.*
+Risultati della CI completata riportati in seguito, con confronti preregistrati.
+
+
+## RISULTATI VERIFICATI — CI 38988832620 (17/10/2026)
+
+**[GitHub Actions 38988832620 — SUCCESS TECNICO](https://github.com/nicogtr20-ctrl/idle-runner-releases/actions/runs/38988832620)**. Compilati il vero gel, vista dalla membrana, `SensorimotorMind.Senses.firstSolidDistance` e solver di collisioni non modificati; completati **76.800 veri passi fisici** e **46.080 transizioni state/action/outcome**, 120 FIT + 120 CAL + 80 BLIND. Il modello usa 25 dimensioni di stato anatomico/tatto, 16 distanze ottiche reali della membrana, 64 muscoli eseguiti per frame compressi a 24 statistiche, split irreversibili e ridge normalizzato solo sui campioni FIT. La CI è verde perché il codice **ha completato la prova**, non perché abbia superato le soglie scientifiche.
+
+**Copertura:** CAL ha 86/120 traiettorie con veri contatti, 24/120 con vere prese, **86 nuovi onset** dopo uno stato pre-step senza contatto, 8.162 frame con contatto già presente, 13.824 frame con un ostacolo visibile *prima* dell'azione. BLIND ha 52/80 traiettorie con contatto, **16/80** con presa, **52** nuovi onset, 5.155 frame già in contatto e 9.216 frame con ostacolo visto. La base FIT ha prevalenza primo-impatto **0,0072254** tra i frame ancora liberi. Nessun comando sensoriale o outcome viene inventato.
+
+### Errore XY: one-step (MSE, minore è meglio)
+
+| Partizione/metrica | FULL con vista | NO_VISION | NO_ACTION | NO_TOUCH | Ballistica |
+|---|---:|---:|---:|---:|---:|
+| CAL tutti i frame | 0,000099519 | 0,000091067 | 0,000099453 | 0,000099745 | **0,000089716** |
+| CAL soli 86 onset | 0,011054272 | 0,011313556 | 0,011056069 | 0,011093020 | 0,011414981 |
+| CAL contatto già osservato | 0,000084754 | 0,000071647 | 0,000085002 | 0,000084227 | **0,000069069** |
+| BLIND tutti i frame | 0,000201097 | 0,000192722 | 0,000201075 | 0,000198028 | **0,000191035** |
+| BLIND soli 52 onset | 0,033392324 | 0,033773282 | 0,033391249 | 0,033419703 | 0,033897774 |
+| BLIND contatto già osservato | 0,000100472 | 0,000087031 | 0,000100517 | 0,000095575 | **0,000084383** |
+
+La vista porta un miglioramento modesto sullo spostamento **nei singoli primi urti** (BLIND 0,033392 vs 0,033773 senza vista; ≈1,1%, inferiore al 3% preregistrato; rispetto alla ballistica ≈1,49%, lontano dal 10%). Ma su **tutti i frame** FULL è ≈5,3% peggiore della ballistica; su contatto già in corso ≈19% peggiore. Per ora NO_VISION generalizza meglio di FULL sulle metriche complessive: aggiungere sensori non implica ancora modellarli correttamente.
+
+### Rollout libero con le future azioni *registrate*: posizione MSE
+
+| Partizione/orizzonte | FULL | NO_VISION | NO_ACTION | NO_TOUCH | Baseline migliore |
+|---|---:|---:|---:|---:|---:|
+| CAL 16 frame | 0,016698244 | 0,019085680 | 0,017206503 | 0,016705489 | 0,020470200 |
+| CAL 48 frame | 0,037584018 | 0,046380485 | 0,048384259 | 0,038315539 | 0,069178995 |
+| CAL 144 frame | 0,173073284 | 0,212960337 | 0,202408145 | 0,185243057 | 0,290728898 |
+| BLIND 16 frame | 0,068098691 | 0,072037743 | 0,068871054 | 0,068166027 | 0,072105080 |
+| BLIND 48 frame | **0,133197992** | 0,146320063 | 0,150042770 | 0,134776057 | 0,156992247 |
+| BLIND 144 frame | **0,373495177** | 0,421233855 | 0,528909936 | 0,401343196 | 0,533924827 |
+
+Il percorso BLIND a 48 frame migliora ≈15,2% vs migliore baseline e ≈9% vs NO_VISION, risultato **positivo ma circoscritto**. A 16 frame FULL migliora ≈5,6%, meno del minimo 10%. A 144 frame migliora ≈30,1% vs baseline immobile. Questi replay **conoscono a priori il nastro delle azioni future**; non provano la capacità di ZERO di pianificare autonomamente azioni future.
+
+### Predizione *primo contatto*: Brier (minore è meglio)
+
+| Partizione | FULL con vista | NO_VISION | NO_TOUCH | Prevalenza FIT |
+|---|---:|---:|---:|---:|
+| CAL (frame prima del contatto) | 0,011011355 | 0,009150306 | 0,010562673 | **0,009347801** |
+| BLIND (frame prima del contatto) | 0,009176898 | 0,008148665 | 0,008637200 | **0,008103826** |
+| CAL soli eventi positivi | **0,865549021** | 0,958845770 | 0,904071157 | N/D |
+| BLIND soli eventi positivi | **0,911415494** | 0,958247850 | 0,944011158 | N/D |
+
+Il segnale visivo risulta **associato a migliore probabilità assegnata agli onset effettivi** (Brier condizionato su positivi inferiore a NO_VISION), ma crea troppi errori probabilistici sui frame senza onset: Brier complessivo FULL peggiore sia di NO_VISION sia della prevalenza FIT. Non si può dichiarare un rilevatore di impatto affidabile. Un modello a frequenza evento così sbilanciata richiede calibrazione e verifica esplicita di falsi allarmi, senza ottimizzazione sulle pose BLIND già esaminate.
+
+### Diagnosi e decisione
+
+- **Fatti verificati:** 16 scansioni ottiche effettivamente ottenute dalla membrana fisica prima dell'efferenza; test vision sanity passato (nessun oggetto → nessun ostacolo fittizio, box visibile → segnale ottico); 52 onset veri BLIND; risultati XY e Brier separati; nessuna lettura della vista futura nel rollout.
+- **Fatto negativo:** il modello lineare residuo con 16 nuovi ingressi visivi, benché utili per alcuni rollouts e segnali onset, non raggiunge predizione fine robusta dello spostamento fisico e onsets calibrati.
+- **Ipotesi non ancora dimostrate:** la proiezione compressa di distanza su 16 raggi non rappresenta bene la superficie effettiva di collisione, la linearità non modella il salto impulsivo/solido o l'interazione con le 96 patch, manca la velocità di avvicinamento misurata su almeno due scansioni, la distribuzione di eventi rara penalizza un regressore lineare per classificazione onset, e il controllo motorio dovrebbe ragionare su orizzonti temporali anziché ottimizzare soltanto il delta immediato.
+- **Vincolo architetturale Master Blueprint:** queste sono *feature fisiche sperimentali*, **NON** l'intero `SensoryFrameV3` immutabile con 96 siti, provenance, timestamp, valid-mask ed esperienza causale exactly-once. Non sostituire la specifica con questo prototipo.
+
+**Gate scientifico V3.14 = CAL FAIL, BLIND FAIL.** Sono stati superati i requisiti di copertura (onset e vera visione), ma falliscono criteri XY one-step, effetto vista sui contatti già in corso, Brier calibrato e rollout 16 frame BLIND. **REJECTED for live motor control**.
+
+### Prossimo sviluppo coerente con il progetto, non altro fitting fine a sé stesso
+
+Realizzare finalmente il **contratto sensoriale unificato immutabile `SensoryFrameV3`** con campionamento `t` della membrana 96×N e vista 16 raggi, tatto distinta, efferenza 64D, stato fluido/energia e provenance, presenza/assenza reale degli input, frameId e orologio simulato. Aggiungere registrazione causale exactly-once `Perception(t) → MotorAction(t) → PostCollisionOutcome(t+1)` con invarianti e prove di simultaneità, senza ancora decidere automaticamente azioni o alterare l'app legacy. Successivamente usare i dati per il vero encoder ricorrente e la corteccia motoria e fare **E3 closed-loop autonomo** con 2.000+ decisioni reali e prova di retenzione su nuovi mondi. Non allenare su BLIND V3.14 consumato.
+
+**Stato:** solo ramo sperimentale PR #87 Draft, nessun merge, nessun cambio al motore di gameplay, nessuna nuova UI o abilità fittizia, nessuna OTA. G3 locomozione autonoma e G5 world model generale **bloccati**.
