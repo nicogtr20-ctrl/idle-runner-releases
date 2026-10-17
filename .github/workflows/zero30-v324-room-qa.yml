@@ -39,11 +39,11 @@ jobs:
           set -euo pipefail
           java -cp /tmp/overmind com.overmind.zero.Zero3RoomMechanicsV324Regression | tee /tmp/v324-room-phys.log
           grep -q 'V324 REAL_GATE_PHYSICS_BILATERAL_MEMORY=PASS' /tmp/v324-room-phys.log
-      - name: Ten independently restarted neural world metabolic room lives
+      - name: Twenty-five independently restarted neural world metabolic room lives
         run: |
           set -euo pipefail
           for mode in 0 1 2 3 4; do
-            for rep in 0 1; do
+            for rep in 0 1 2 3 4; do
               ordinal=$((61 + rep*5 + mode))
               prefix="/tmp/zero324-${mode}-${rep}"
               flags="-Dzero3.mode=${mode} -Dzero3.ordinal=${ordinal}"
@@ -60,7 +60,7 @@ jobs:
               echo "V324 ROOM_AND_WHOLE_ORGANISM SCENE=${mode} ORDINAL=${ordinal} PASS"
             done
           done
-          echo 'ZERO3 V324 TEN_ROOM_LIVES_BITWISE_RESTART=PASS'
+          echo 'ZERO3 V324 TWENTY_FIVE_ROOM_LIVES_BITWISE_RESTART=PASS'
       - name: Android Debug build only, NEVER OTA
         run: gradle --no-daemon assembleDebug
       - name: Research gate status
