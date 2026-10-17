@@ -16,7 +16,7 @@ public final class Zero3FiveArmAblationV333Regression {
     static final float DT=.025f;
     static final String[] FAMILIES={"FREE","BOX_NEAR","DISK_NEAR","BOX_FAR"};
     static final String[] ARMS={"OLD_GLOBAL","FULL_LOCAL_DELAY","FROZEN","NO_DELAY_LOCAL","NO_LOCAL_DELAY"};
-    private Zero3TemporalLocalMotorV332Regression(){}
+    private Zero3FiveArmAblationV333Regression(){}
     static void check(boolean yes,String msg){
         if(!yes)throw new AssertionError("V333 "+msg);
     }
@@ -344,7 +344,7 @@ public final class Zero3FiveArmAblationV333Regression {
                                     Math.max(noDelay.efficiency(),noLocal.efficiency()));
         boolean bilateral=box.bilateral>0&&
             box.bilateral>=.8*Math.max(old.bilateral,z.bilateral);
-        boolean grip=box.livesWithGrip==6&&
+        boolean gripGuard=box.livesWithGrip==6&&
             box.held>=.8*Math.max(old.held,z.held)&&
             box.contacts>=.8*Math.max(old.contacts,z.contacts);
         boolean valid=physicallyCompleteFamilies==4;
@@ -354,13 +354,13 @@ public final class Zero3FiveArmAblationV333Regression {
                  " observedDecisions="+results[a].decisions()+
                  " trueSolverSteps="+(12L*results[a].decisions()));
         }
-        boolean pass=valid&&familiesPassed>=3&&boxPositive&&boxBest&&bilateral&&grip;
+        boolean pass=valid&&familiesPassed>=3&&boxPositive&&boxBest&&bilateral&&gripGuard;
         System.out.println("V333 SUMMARY technicalFiveArmBenchmark=PASS"+
             " preregCandidateGate="+(pass?"PASS_NOT_DEVICE":"FAIL")+
             " fullyValidFamilies="+physicallyCompleteFamilies+"/4"+
             " directionalFamilyWins="+familiesPassed+"/4"+
             " BOXPositive="+boxPositive+" BOXBestOfFive="+boxBest+
-            " bilateralGuardrail="+bilateral+" genericGripGuardrail="+grip+
+            " bilateralGuardrail="+bilateral+" genericGripGuardrail="+gripGuard+
             " BOXBilateralFULL="+box.bilateral+
             " BOXBilateralOLD="+old.bilateral+
             " BOXBilateralFROZEN="+z.bilateral+
