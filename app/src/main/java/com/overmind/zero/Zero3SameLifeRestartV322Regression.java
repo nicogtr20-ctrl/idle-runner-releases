@@ -288,7 +288,7 @@ public final class Zero3SameLifeRestartV322Regression {
         switch(args[0]){
             case "prefix":prefix(dir);break;
             case "resume":resume(dir,Paths.get(args[2]));break;
-            case "reference":reference(Paths.get(args[2]));break;
+            case "reference":reference(Paths.get(args[1]));break;
             case "corrupt":corrupt(dir);break;
             default:throw new IllegalArgumentException("bad V322 phase");
         }
