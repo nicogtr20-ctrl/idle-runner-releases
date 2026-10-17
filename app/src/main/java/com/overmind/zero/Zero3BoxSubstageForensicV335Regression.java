@@ -87,6 +87,12 @@ public final class Zero3BoxSubstageForensicV335Regression {
                     " crossingEdges="+pair[0]+","+pair[1]+
                     " throughWallLinks="+
                       SquareCollisionSolver.intersections(skin,box)+
+                    " boxXY="+box.x+","+box.y+
+                    " pointXY="+skin.x[index]+","+skin.y[index]+
+                    " previousPointXY="+skin.x[(index+95)%96]+","+
+                        skin.y[(index+95)%96]+
+                    " nextPointXY="+skin.x[(index+1)%96]+","+
+                        skin.y[(index+1)%96]+
                     " noAutomaticFix=true");
             }
             previousCross=cross;
