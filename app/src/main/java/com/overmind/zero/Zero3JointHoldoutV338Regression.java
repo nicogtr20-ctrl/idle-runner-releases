@@ -11,7 +11,7 @@ import java.util.Locale;
  * physical counterfactual, NOT evidence of a learned G3 gait.
  */
 public final class Zero3JointHoldoutV338Regression {
-    private static final int[] CASES={665,669,673,677,681,685,689,693,697,701,705,709};
+    private static final int[] CASES={713,717,721,725,729,733,737,741,745,749,753,757};
     private static final float DT=.025f;
     private static final int DECISIONS=168, SUBSTEPS=12;
     private static final String OWNER=Zero3AutonomousLoopV317.OWNER;
