@@ -41,17 +41,31 @@ public final class Zero3MotorIntentV316 {
         return h;
     }
     public boolean intact(){return seal==signature();}
-    public static final class Authority {
+    public static final class Authority implements AutoCloseable {
+        // One in-process issuer per episode. Persistent identity is
+        // restored separately from replay, not an in-memory guarantee.
+        private static final java.util.HashMap<Long,Authority> LIVE=new java.util.HashMap<>();
         private final long episode;
         private final String owner;
         private long next=0;
+        private boolean closed;
         public Authority(long episode,String owner){
             check(episode>0&&owner!=null&&!owner.isEmpty(),"authority owner");
-            this.episode=episode;this.owner=owner;
+            synchronized(LIVE){
+                check(!LIVE.containsKey(episode),"second actor authority for episode");
+                this.episode=episode;this.owner=owner;
+                LIVE.put(episode,this);
+            }
+        }
+        public void close(){
+            synchronized(LIVE){
+                if(!closed){closed=true;LIVE.remove(episode,this);}
+            }
         }
         public Zero3MotorIntentV316 issue(String actor,long decision,int revision,
                   int source,float dirX,float dirY,float effort,float grip,
                   float duration,float confidence){
+            check(!closed,"motor authority closed");
             check(owner.equals(actor),"a competing actor cannot issue a motor intent");
             check(decision==next,"duplicate, out-of-order or missing intention");
             Zero3MotorIntentV316 v=new Zero3MotorIntentV316(episode,decision,
