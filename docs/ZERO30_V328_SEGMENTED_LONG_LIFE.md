@@ -32,7 +32,31 @@ Prove obbligatorie:
 4. Ricompilare **l'intero APK Android Debug**, senza firmare, pubblicare, unire i rami o modificare OTA.
 5. Ripetere e preservare la compatibilità degli smoke V3.25, V3.26 e V3.27, inclusa la separazione dei salvataggi legacy.
 
-**Risultati definitivi: in attesa dell'esecuzione completa della CI dedicata.** Non dichiarare PASS da una compilazione sola, né da un'esecuzione che si ferma prima delle 2.000 decisioni o ricarica un nuovo cervello.
+## RISULTATI DEFINITIVI VERIFICATI, 17 OTTOBRE 2026
+
+**[GitHub Actions 39032930838 — SUCCESS](https://github.com/nicogtr20-ctrl/idle-runner-releases/actions/runs/39032930838)**, commit sorgente `68cd8fa10c01c966bf7bba8d8b704641252e49c4`, job `117396880897`. La CI finale consolidata ha effettuato **due vite biologiche distinte, ordinal 1 e 2**, ognuna con **2.000 decisioni vere e 24.000 integrazioni fisiche del gel per braccio matched**. Tre JVM sequenziali per ciascuna: processo A nasce vergine e arriva a 1.000 con archivio a segmenti, processo B riprende effettivamente quella stessa vita da 1.000 a 2.000, processo C compie 2.000 decisioni senza riavvio. Il confronto `cmp` dei fingerprint dell'intero corpo/cervello/energia/mondo/stanza/replay PRE/12x64/POST in entrambi i casi è **identico byte per byte**.
+
+| Caso / osservazione reale | Esito |
+|---|---|
+| Vita ordinal 1: 1.000 + nuova JVM + 1.000 vs 2.000 continue | **PASS** |
+| Vita ordinal 2: 1.000 + nuova JVM + 1.000 vs 2.000 continue | **PASS** |
+| Decisioni REALI totalizzate per braccio, sommando due vite | **4.000** |
+| Integrazioni gel per braccio, oltre alla nascita | **48.000** |
+| Segmenti content-addressed presenti a 2.000 decisioni | **63 per vita** |
+| Ripristino dopo manomissione del manifest più recente | **Decisione 1.920, PASS**, entrambe le vite |
+| Segmento full PRE/12x64/POST alterato dopo il commit | **Rilevato + rollback, PASS** |
+| Segmento orfano creato prima di un commit | **Ignorato e raccolto, PASS** |
+| Entrambe le generazioni invalide | **Fail closed, PASS** |
+| Android Debug `assembleDebug` | **BUILD SUCCESSFUL in 58s** |
+| Pubblicazione OTA / installazione Galaxy S21 | **NON eseguite** |
+
+Estratti log: `V328 RESUMED_2000_PLUS_EXPERIENCES=PASS decisions=2000 segmentsOnDisk=63` (2 volte), `V328 REAL_2000_DECISIONS_STORED_AND_BITWISE_RESUMED=PASS ORDINAL=1`, stessa riga `ORDINAL=2`, `V328 FAULT_ROLLBACK=PASS SEGMENT_TAMPER=PASS ORPHAN_CHUNK_IGNORED=PASS DOUBLE_BAD_FAIL_CLOSED=PASS backedUpDecision=1920` (2 volte), `V328_ANDROID_DEBUG_COMPILES=PASS`, `V328_SEGMENTED_REPLAY_JVM_LAB=PASS ANDROID_DEVICE_G9_NOT_TESTED G3_BLOCKED G5_BLOCKED NO_OTA`.
+
+**Il gate di retention per almeno 2.000 esperienze fisiche è quindi SUPERATO in laboratorio**, non il gate di apprendimento motorio o di sopravvivenza appresa. Il caso ordinal 1 aveva già superato [CI 39032653871](https://github.com/nicogtr20-ctrl/idle-runner-releases/actions/runs/39032653871), poi è stato aggiunto il secondo caso e test di segmento manomesso: la seconda vita non è un holdout originariamente preregistrato, ma un controllo di robustezza successivo.
+
+**Correzione metodologica cruciale:** il primo tentativo lungo [39032513932](https://github.com/nicogtr20-ctrl/idle-runner-releases/actions/runs/39032513932) era fallito perché l'organismo aveva esaurito energia prima delle 2.000 decisioni, **non** per impossibilità di archiviare le esperienze. I due esperimenti PASS usano un mondo di test con risorse blu materializzate fisicamente su una patch se il carburante diminuisce: ZERO ottiene energia solo via normale collisione, senza alterare direttamente `reserve` o i pesi. Questo laboratorio agevolato è adatto a misurare persistenza, MA NON prova locomozione finalizzata alla ricerca di energia.
+
+**Vincoli ancora aperti:** i segmenti su disco sono immutabili, ma il runtime mantiene ancora una copia integrale delle esperienze in RAM; la fase Android deve misurare memoria, latenza, dimensione dei file e resistenza a interrompere/spegnere il Galaxy S21. Il protocollo di fsync directory e crash durante `ATOMIC_MOVE` non è stato stressato su telefono. Un passo successivo dovrà migliorare lo streaming della memoria a più di 3.500 decisioni.
 
 ## Limiti che devono rimanere visibili
 
