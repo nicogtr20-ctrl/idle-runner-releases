@@ -1,5 +1,8 @@
 # OVERMIND ZERO 3.0 — MASTER BLUEPRINT (DOCUMENTO CANONICO)
 
+> **Checkpoint V3.25 (17 ottobre 2026):** [rapporto tecnico](ZERO30_V325_RUNTIME_BOUNDARY.md) · [CI definitiva 39029780647 PASS](https://github.com/nicogtr20-ctrl/idle-runner-releases/actions/runs/39029780647). Primo `Zero3RuntimeV325` indipendente dal runner di regressione: unico owner di scelte/rete/cortex/adesione/gel fisico/stanza/riserva e journaling causale+snapshot, con `Zero3AndroidSessionV325` compilata per un percorso Android privato V3 non collegato a GameActivity. 25/25 vite, 96 decisioni ciascuna con riavvio a 48, confronto bytewise, terminale da energia zero e rifiuto episodi estranei/doppia corruzione, Android Debug SUCCESS. **Solo gate LAB JVM; G3 locomozione, G5 world model, G9 device e UI 3.0 NON chiusi.** OTA172 e 12 slot 2.2 non toccati.
+
+
 > **Stato tecnico V3.24, 17/10/2026:** [rapporto](ZERO30_V324_ROOM_WORLD_CHECKPOINT.md) · [CI 39026713027](https://github.com/nicogtr20-ctrl/idle-runner-releases/actions/runs/39026713027) PASS. Persistenza LAB neuronale+materiale+full replay+energia+stanza ScarcityLab (porta, latch, timer/isteresi, riferimento unico room.food): **25/25 vite matched** con reboot alla decisione 48 e comparazione bytewise a 96, 2.400 decisioni e 28.800 passi gel per gruppo, rollback e Android Debug PASS. La presa del gate testata separatamente con due patch forzate dalla fixture NON è apprendimento di ZERO. Ancora assenti GameActivity V3 runtime, integrazione vera energia/shelter, G3/G5, skill/neurogenesi/UI e test su Galaxy S21. NO OTA, 12 slot intatti.
 
 
