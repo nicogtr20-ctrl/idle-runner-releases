@@ -43,6 +43,60 @@ public final class Zero3ContextAdhesionV319 {
         System.arraycopy(weights,0,copy.weights,0,weights.length);
         return copy;
     }
+
+    /**
+     * Experimental head-only checkpoint. Never a full BrainSnapshotV3.
+     * Safe only after end(), before the next begin() and in the same
+     * training/evaluation mode. Does NOT snapshot the body or actor state.
+     */
+    public static final class State {
+        public static final int VERSION=320;
+        public final long rngState;
+        public final boolean training;
+        public final int decisions,realCreditEvents;
+        public final double weightChangeSq,accountedAdhesionWork,observedGelWork;
+        private final float[] weights;
+        State(float[] weights,long rng,boolean training,int decisions,
+              int credits,double changes,double adhesion,double total){
+            if(weights==null||weights.length!=SECTORS*FEATURES||
+               rng==0||decisions<0||credits<0||credits>decisions*SECTORS||
+               !Double.isFinite(changes)||changes<0||
+               !Double.isFinite(adhesion)||adhesion<0||
+               !Double.isFinite(total)||total<0)
+                throw new IllegalArgumentException("invalid V319 snapshot state");
+            for(float value:weights)
+                if(!Float.isFinite(value)||Math.abs(value)>4.00001f)
+                    throw new IllegalArgumentException("nonfinite/out of bounds neural weight");
+            this.weights=weights.clone();rngState=rng;this.training=training;
+            this.decisions=decisions;realCreditEvents=credits;
+            weightChangeSq=changes;accountedAdhesionWork=adhesion;
+            observedGelWork=total;
+        }
+        public float[] weights(){return weights.clone();}
+    }
+    public State captureAtDecisionBoundary(){
+        if(active||hasStep)throw new IllegalStateException(
+            "cannot checkpoint V319 in-flight physical decision");
+        return new State(weights,rng.state,training,decisions,realCreditEvents,
+            weightChangeSq,allMeasuredAdhesionWork,realGelWorkMeasured);
+    }
+    public void restoreAtDecisionBoundary(State s){
+        if(s==null||active||hasStep||decisions!=0||
+           realCreditEvents!=0||weightChangeSq!=0||
+           allMeasuredAdhesionWork!=0||realGelWorkMeasured!=0)
+            throw new IllegalStateException(
+                "restore requires a fresh, idle motor head; no double replay");
+        if(s.training!=training)
+            throw new IllegalArgumentException(
+                "checkpoint training flag mismatches requested motor head");
+        System.arraycopy(s.weights(),0,weights,0,weights.length);
+        rng.state=s.rngState;
+        decisions=s.decisions;realCreditEvents=s.realCreditEvents;
+        weightChangeSq=s.weightChangeSq;
+        allMeasuredAdhesionWork=s.accountedAdhesionWork;
+        realGelWorkMeasured=s.observedGelWork;
+    }
+
     public int updates(){return decisions;}
     public int positiveGripEvents(){return realCreditEvents;}
     public double weightChangesL2(){return Math.sqrt(weightChangeSq);}
