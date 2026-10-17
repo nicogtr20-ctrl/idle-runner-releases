@@ -32,6 +32,18 @@ public final class Zero3NeuralBundleStoreV321 {
                             Zero3ContextAdhesionV319 h){
             if(e==null||c==null||h==null)
                 throw new IllegalArgumentException("missing neural module");
+            // Preflight EVERY subsystem before mutating ANY weights. A
+            // mismatched rate or busy motor must not half-restore the brain.
+            Zero3AutonomousLoopV317.Encoder.State freshEncoder=e.checkpoint();
+            Zero3LearningFoundation.AdaptiveCortex.State freshCortex=c.checkpoint();
+            Zero3ContextAdhesionV319.State freshAdhesive=h.captureAtDecisionBoundary();
+            if(freshEncoder.steps!=0||freshEncoder.updates!=0||
+               freshCortex.revision!=0||freshCortex.updates!=0||
+               Float.floatToIntBits(freshCortex.learningRate())!=
+                  Float.floatToIntBits(cortex.learningRate())||
+               freshAdhesive.decisions!=0||freshAdhesive.realCreditEvents!=0||
+               freshAdhesive.training!=adhesive.training)
+                throw new IllegalStateException("neural restore cannot atomically preflight all modules");
             e.restore(encoder);c.restore(cortex);h.restoreAtDecisionBoundary(adhesive);
         }
     }
