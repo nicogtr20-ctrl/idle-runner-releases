@@ -326,13 +326,13 @@ public final class Zero3MotorLocalFrameV310Regression {
     }
     public static void main(String[] args){
         ArrayList<Trace> fit=make(101,FIT,new int[]{0,1,2});
-        require(fit.size()==192,"incorrect fit partition");
+        require(fit.size()==384,"incorrect fit partition");
         Model full=new Model(fit,true,true);
         Model noAction=new Model(fit,false,true);
         Model noLocal=new Model(fit,true,false);
         fit.clear();
         ArrayList<Trace> cal=make(202,CAL,new int[]{0,1,2});
-        require(cal.size()==192,"incorrect calibration partition");
+        require(cal.size()==384,"incorrect calibration partition");
         Scores a=new Scores(cal,full),b=new Scores(cal,noAction),
                c=new Scores(cal,noLocal);
         boolean eligible=a.passes(b,c);
@@ -351,8 +351,8 @@ public final class Zero3MotorLocalFrameV310Regression {
         System.out.println("ZERO3 V310 BLIND NO_ACTION "+v.report());
         System.out.println("ZERO3 V310 BLIND NO_LOCAL "+w.report());
         System.out.printf(Locale.US,
-            "ZERO3 V310 FINAL train=192 calibration=192 blind=256 "+
-            "solverSteps=307200 state=%d trueAction=%d "+
+            "ZERO3 V310 FINAL train=384 calibration=384 blind=256 "+
+            "solverSteps=491520 state=%d trueAction=%d "+
             "frameDt=%.3f actionTape=true futureStatesLeak=false "+
             "newWorldScenes=false calibration=%s blind=%s "+
             "promoteToGameplay=false G3_BLOCKED G5_BLOCKED NO_OTA%n",
