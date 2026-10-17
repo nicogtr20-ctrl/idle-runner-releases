@@ -42,3 +42,26 @@ Anche se la V3.8-B passasse, non si potrebbe ancora dire che ZERO sappia locomov
 **Da compilare solo leggendo i log CI terminati.** Successo compilazione non significa successo motorio.
 
 **Gate G3 locomozione autonoma: BLOCCATO. Gate G5 world model completo: BLOCCATO. ZERO 2.2 / OTA 172 invariati.**
+
+
+## 6. RISULTATI VERIFICATI — CI 38984305222, 17 ottobre 2026
+
+**[GitHub Actions run 38984305222 — SUCCESS di compilazione ed esecuzione](https://github.com/nicogtr20-ctrl/idle-runner-releases/actions/runs/38984305222).** Il benchmark comprende davvero **384 coppie FIT, 384 CAL, 256 BLIND su nuove pose ±10°/±55° con precondizione 3**, 32 intervalli di 12 frame e **983.040 integrazioni fisiche del solver** senza modificare il corpo con teletrasporti. Nel FIT la transizione è allenata su valori reali misurati (teacher forcing); in CAL e BLIND la rete deve ricostruire **tutti i 32 passaggi autonomamente**, senza leggere la traiettoria vera dei checkpoint futuri.
+
+| Partizione | MSE risultato finale, zero | MSE finale, statico 52D | MSE finale, dinamico V3.8-B | MSE traiettoria, zero | MSE traiettoria, dinamico |
+|---|---:|---:|---:|---:|---:|
+| CAL 384 coppie | 0,036640959 | **0,030029654** | **0,124206957** | 0,031608393 | 0,031721382 |
+| BLIND 256 coppie | 0,034327758 | **0,029057080** | **0,160072801** | 0,031625985 | **0,038481022** |
+
+**Esito:** gate calibrazione = **FAIL**; gate blind = **FAIL**. Modello dinamico sul finale del blind **~450,9% peggiore del statico 52D in errore quadratico**; sulla traiettoria complessiva peggiore di zero. Il segno dello spostamento finale è corretto in **122/256** prove blind. Nessun suggerimento viene autorizzato in gameplay: **i risultati di calibrazione non rispettano la soglia preregistrata**, ancora prima del blind.
+
+### Interpretazione tecnica, senza affermazioni eccessive
+
+- Il test separa davvero `teacher forcing` nel solo FIT da **rollout autoregressivo libero** nei dati non visti. È sufficiente a diagnosticare che **l'attuale modello lineare discreto di risposta differenziale non è un simulatore dinamico stabile e generalizzabile**.
+- Un errore piccolo sui singoli incrementi osservati **non garantisce** che l'integrazione di 32 incrementi predetti resti vicina alla fisica reale. Qui l'errore finale cresce molto e la conoscenza della sola intenzione iniziale non rappresenta le successive variazioni di comando.
+- Il modello rappresenta **differenze controfattuali fra due solver di laboratorio**, non direttamente lo stato di ZERO osservabile durante una vita. Non si può convertire ingenuamente quel delta in esperienza autonoma; nemmeno incrementare soltanto il numero di campioni o di neuroni risolve l'inadeguatezza delle variabili dinamiche.
+- La spiegazione `accumulo degli errori`, la dipendenza dalle azioni effettive future, elasticità/attrito/contatti e mancata modellazione 2D sono **ipotesi**, non cause provate individualmente dal test. Non ritoccare i pesi o il ridge sulle pose blind ormai consumate.
+
+**Decisione obbligatoria:** non integrare V3.8-B nella corteccia, non unire PR #87 sul ramo publisher, niente OTA o interfaccia 3.0 fittizia. Il prossimo prototipo va progettato intorno a **transizioni realmente osservabili state(t), action(t) → state(t+1)** con modello biomeccanico multi-canale e comandi fisici eseguiti al frame, misure separate di previsione a uno e più passi e rollout su nuove scene/seed. Solo dopo tornare a locomozione autonoma e memorie procedurali.
+
+**G3 locomozione appresa: BLOCCATO. G5 modello del mondo generale: BLOCCATO.** La versione stabile ZERO 2.2 rimane invariata.
