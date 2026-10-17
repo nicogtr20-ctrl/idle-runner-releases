@@ -58,6 +58,28 @@ public final class Zero3AutonomousLoopV317 {
         for(float v:x)ensure(Float.isFinite(v),"nonfinite actor input");
         return x;
     }
+    /**
+     * V3.27: physical interoception shares two bounded recurrent features
+     * without rewriting 20-input topology or modifying V3.21 checkpoints.
+     * Real fluid density/true grip keep 75% of each channel; at most 25%
+     * comes from current fuel and previously completed damage, respectively.
+     *
+     * IMPORTANT: this is a transitional fused representation, NOT 2
+     * independent new neurons, a learned homeostatic reward or world model.
+     */
+    public static float[] encodeVital(Zero3SensoryFrameV315 pre,
+                                     float fuelRatio,float previousDamage){
+        ensure(pre!=null&&pre.preAction&&
+               Float.isFinite(fuelRatio)&&fuelRatio>=0&&fuelRatio<=1&&
+               Float.isFinite(previousDamage)&&previousDamage>=0,
+               "vital PRE must be measured, not a future outcome");
+        float[] features=encode(pre);
+        features[18]=clamp(.75f*features[18]+
+                           .25f*(2f*fuelRatio-1f),-1f,1f);
+        features[19]=clamp(.75f*features[19]+
+                           .25f*clamp(previousDamage/20f,0f,1f),0f,1f);
+        return features;
+    }
     public static final class Encoder {
         private final float[] w=new float[HIDDEN*INPUTS],u=new float[HIDDEN*HIDDEN],
                               bias=new float[HIDDEN],read=new float[3*HIDDEN],
@@ -158,8 +180,19 @@ public final class Zero3AutonomousLoopV317 {
         }
         /** Only PRE is admitted. post information is *never* actor input. */
         public float[] before(Zero3SensoryFrameV315 pre){
+            return beforeEncoded(pre,encode(pre));
+        }
+        /**
+         * The actual episode owner passes ONLY measured fuel at this PRE
+         * and damage from an already completed previous physical decision.
+         */
+        public float[] before(Zero3SensoryFrameV315 pre,float fuelRatio,
+                              float previouslyObservedDamage){
+            return beforeEncoded(pre,encodeVital(pre,fuelRatio,
+                                                 previouslyObservedDamage));
+        }
+        private float[] beforeEncoded(Zero3SensoryFrameV315 pre,float[] x){
             ensure(pre.preAction&&!pending,"recurrent encoder requires one fresh PRE");
-            float[] x=encode(pre);
             System.arraycopy(state,0,lastPrev,0,HIDDEN);
             System.arraycopy(x,0,lastInput,0,INPUTS);
             for(int j=0;j<HIDDEN;j++){
