@@ -52,7 +52,7 @@ public final class Zero3MotorDynamicStateV38Regression {
         Zero3MotorTemporalHistoryRegression.Schedule sched=
             new Zero3MotorTemporalHistoryRegression.Schedule(
                 Zero3MotorTemporalHistoryRegression.seed(d,pose,state));
-        double[] sensed=null;
+        Trace t=null;
         int end=HISTORY+BLOCK*STEPS;
         for(int frame=0;frame<end;frame++){
             if(frame==HISTORY){
@@ -60,56 +60,35 @@ public final class Zero3MotorDynamicStateV38Regression {
                       Math.abs(control.body.cy-treated.body.cy)<1e-5&&
                       Math.abs(control.body.cvx-treated.body.cvx)<1e-5,
                       "matched physical motor history was not identical");
-                sensed=Zero3MotorLongHorizonRegression.context(
+                double[] sensed=Zero3MotorLongHorizonRegression.context(
                     d,treated.body,treated.skin,treated.gel,sector,channel,sign);
+                t=new Trace(d,pose,state,sector,channel,sign,sensed);
             }
             float[] a=control.cortex.command(control.intent,
                 control.body,control.skin,.025f);
-            float[] b=treated.cortex.command(treated.intent,
+            float[] z=treated.cortex.command(treated.intent,
                 treated.body,treated.skin,.025f);
             if(frame<HISTORY){
                 sched.apply(frame,a);
-                sched.apply(frame,b);
+                sched.apply(frame,z);
             }
             if(frame>=HISTORY&&frame<HISTORY+BLOCK)
-                Zero3MotorTemporalHistoryRegression.pulse(b,sector,channel,sign);
+                Zero3MotorTemporalHistoryRegression.pulse(z,sector,channel,sign);
             control.gel.step(control.body,control.skin,a,.025f);
-            treated.gel.step(treated.body,treated.skin,b,.025f);
+            treated.gel.step(treated.body,treated.skin,z,.025f);
             check(control.gel.invalid==0&&treated.gel.invalid==0&&
                   Float.isFinite(control.body.cx)&&Float.isFinite(treated.body.cx),
                   "nonfinite real body");
-            if(frame==HISTORY-1)
-                check(sensed==null,"cannot read future before action");
-        }
-        // Above produces physical states, but does not preserve checkpoint
-        // labels. Collect checkpoints via a second identical matched replay.
-        // Explicitly assert deterministic same-history trajectories in replay.
-        Zero3MotorImpulseResponseRegression.Scenario ctrl=
-            new Zero3MotorImpulseResponseRegression.Scenario(d,pose,state);
-        Zero3MotorImpulseResponseRegression.Scenario intervention=
-            new Zero3MotorImpulseResponseRegression.Scenario(d,pose,state);
-        Trace t=new Trace(d,pose,state,sector,channel,sign,sensed);
-        for(int frame=0;frame<end;frame++){
-            float[] a=ctrl.cortex.command(ctrl.intent,ctrl.body,ctrl.skin,.025f);
-            float[] b=intervention.cortex.command(
-                intervention.intent,intervention.body,intervention.skin,.025f);
-            if(frame<HISTORY){
-                sched.apply(frame,a);sched.apply(frame,b);
-            }
-            if(frame>=HISTORY&&frame<HISTORY+BLOCK)
-                Zero3MotorTemporalHistoryRegression.pulse(b,sector,channel,sign);
-            ctrl.gel.step(ctrl.body,ctrl.skin,a,.025f);
-            intervention.gel.step(intervention.body,intervention.skin,b,.025f);
             if(frame>=HISTORY&&(frame-HISTORY+1)%BLOCK==0){
                 int k=(frame-HISTORY+1)/BLOCK;
-                t.real[k]=(intervention.body.cx-ctrl.body.cx)*DIR[d][0]+
-                          (intervention.body.cy-ctrl.body.cy)*DIR[d][1];
-                t.cost[k]=intervention.gel.work-ctrl.gel.work;
+                t.real[k]=(treated.body.cx-control.body.cx)*DIR[d][0]+
+                          (treated.body.cy-control.body.cy)*DIR[d][1];
+                t.cost[k]=treated.gel.work-control.gel.work;
+                check(Double.isFinite(t.real[k])&&Double.isFinite(t.cost[k]),
+                    "invalid post-physics observation");
             }
         }
-        check(Math.abs(ctrl.body.cx-control.body.cx)<1e-5&&
-              Math.abs(intervention.body.cx-treated.body.cx)<1e-5,
-              "replayed true physics not deterministic");
+        check(t!=null,"missing pre-action physical context");
         return t;
     }
     static ArrayList<Trace> collect(float[] poses,int[] conditions){
@@ -205,7 +184,6 @@ public final class Zero3MotorDynamicStateV38Regression {
         }
     }
     static final class StaticFinal {
-        final Zero3MotorTemporalHistoryRegression.Ridge ridge;
         // Control: immediate, delayed outcome regression trained on the SAME
         // physical traces, with only current 52D body observations.
         final double[][] coefficients=new double[1][CONTEXT];
@@ -222,7 +200,6 @@ public final class Zero3MotorDynamicStateV38Regression {
             }
             for(int j=0;j<CONTEXT;j++)gram[j][j]+=.5;
             coefficients[0]=Zero3MotorResponseKernel.solve(gram,target);
-            ridge=null;
         }
         double predict(Trace t){
             double p=0;
@@ -286,7 +263,7 @@ public final class Zero3MotorDynamicStateV38Regression {
             " lateImprovementVsStaticPercent=%.3f"+
             " NO_ANDROID_ACTIVATION NO_GAIT NO_OTA%n",
             train.size(),calibration.size(),blind.size(),
-            (train.size()+calibration.size()+blind.size())*4*
+            (train.size()+calibration.size()+blind.size())*2*
                 (HISTORY+BLOCK*STEPS),
             Boolean.toString(calibrated),
             Boolean.toString(holdout.beatsZero()),
