@@ -1,5 +1,8 @@
 # ZERO 3.0 — V3.26 | Prima schermata Android V3 opt-in e nascita fisica autonoma
 
+> **Checkpoint ZERO 3.27 (17/10/2026):** [rapporto verificato](ZERO30_V327_VITAL_LIFECYCLE.md), [CI 39031488412 SUCCESS](https://github.com/nicogtr20-ctrl/idle-runner-releases/actions/runs/39031488412). I due segnali di interocezione aggiunti al percorso PRE del recurrent encoder sono fuel/100 e danno di contatto realmente misurato nella decisione precedente; fusione 25% in due feature 20D esistenti, senza cambiare topology/weights di V321, senza future leakage. Test dimostra scelta motoria diversa al cambiare del fuel, 7 energia danno da hazard reale, 10/10 vite matched restart e Android Debug compilato. **Scoperto limite di replay V322B**: oltre 256 record/8 MiB il checkpoint non è valido, perciò V3.27 protegge l'archivio con stop e salvataggio sicuro a **240 decisioni**; prova 240 fisiche+resume+no credito al 241 PASS. **V3.28 journal scalabile 2.000+ esperienze è ora il blocker prioritario**. Non è ancora prova Android Galaxy S21, né vero critic/homeostasi appresa, G3 locomozione/G5 world-model/UI3D/G9. Nessuna OTA, 12 slot 2.2 invariati.
+
+
 **Data 17 ottobre 2026 — IMPLEMENTAZIONE SPERIMENTALE PR #87 DRAFT. NON PUBBLICATA SU OTA.** Leggere prima [Master](ZERO30_MASTER_BLUEPRINT.md), [Contratto](ZERO30_IMPLEMENTATION_CONTRACT.md), [UI V3](ZERO30_UI_UX_SPEC.md), [V3.25](ZERO30_V325_RUNTIME_BOUNDARY.md) e i file sorgenti sul branch `feature/zero30-foundation-g0-g3-20261016`.
 
 ## Obiettivo e decisioni di sicurezza
