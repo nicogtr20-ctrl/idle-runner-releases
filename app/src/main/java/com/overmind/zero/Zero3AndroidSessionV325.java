@@ -34,14 +34,16 @@ public final class Zero3AndroidSessionV325 implements AutoCloseable {
         if(Files.exists(directory.resolve("v324-current.mf"))||
            Files.exists(directory.resolve("v324-backup.mf"))||
            Files.exists(directory.resolve("v324-room-0.bin"))||
-           Files.exists(directory.resolve("v324-room-1.bin")))
+           Files.exists(directory.resolve("v324-room-1.bin"))||
+           Zero3SegmentedArchiveV328.hasAny(directory))
             throw new IOException("existing V3 research history requires explicit resume");
+        organism.enableSegmented();
         session=organism;
     }
     /** App lifecycle onResume, never silently generate a replacement brain. */
     public synchronized void resume()throws IOException {
         if(session!=null)throw new IOException("V3 organism already active");
-        session=Zero3RuntimeV325.load(directory);
+        session=Zero3RuntimeV325.loadSegmented(directory);
         if(session==null)
             throw new IOException("no valid complete V3 checkpoint; no reset performed");
     }
@@ -57,7 +59,7 @@ public final class Zero3AndroidSessionV325 implements AutoCloseable {
      */
     public synchronized void suspend()throws IOException {
         if(session==null)return;
-        session.save(directory);
+        session.saveSegmented(directory);
         session.close();
         session=null;
     }
@@ -69,6 +71,9 @@ public final class Zero3AndroidSessionV325 implements AutoCloseable {
     public synchronized boolean ended(){return session!=null&&session.ended();}
     public synchronized boolean atArchiveCapacity(){
         return session!=null&&session.atArchiveCapacity();
+    }
+    public synchronized int durableDecisionLimit(){
+        return session==null?0:session.durableDecisionLimit();
     }
     public synchronized Path researchPath(){return directory;}
     public synchronized boolean active(){return session!=null;}
