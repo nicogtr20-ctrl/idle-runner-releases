@@ -1,5 +1,7 @@
 # ZERO 3.0 — NUOVA INTERFACCIA GIOCO, IMPOSTAZIONI, CERVELLO, NEURONI, ABILITÀ ED EVOLUZIONE
 
+> **ZERO 3.22/B (17 ottobre 2026):** [Rapporto verificato](ZERO30_V322B_FULL_CAUSAL_REPLAY.md), [CI 39023478559 SUCCESS](https://github.com/nicogtr20-ctrl/idle-runner-releases/actions/runs/39023478559). Superate 20/20 verifiche di ripresa della stessa vita in cinque scene di laboratorio, con archivio unico del cervello, corpo, RNG degli eventi fisici del test e esperienze complete PRE/12×64 comandi/POST. Corruzione e rollback superati; Android Debug compila. È un sottogate di persistenza in laboratorio, non la soluzione finale G3/G5, né il salvataggio completo dell'app Android o la nuova UI. Non modificare OTA172 o i 12 slot 2.2.
+
 > **NUOVO DATO AUTENTICO PER FUTURA UI V3.22/A (17-10-2026):** [CI 39022300684 PASS e report](ZERO30_V322_SAME_LIFE_SNAPSHOT.md). In laboratorio ora un checkpoint riunisce veri pesi encoder/cortex/adesione, corpo e oggetto BOX, contatore ID e traccia causale: 48+48 decisioni con resume stessa vita bitwise uguale a 96 continue; 1.108 veri frame presa e 8 bilaterali. L'interfaccia V3 potrà in futuro distinguere `SAME_LIFE_LAB_RESTART_VERIFIED` da `FULL_GAMEPLAY_SAVE_UNAVAILABLE`. **Nessuna UI o provider V3 LIVE è stata implementata**; non trasferire misure LAB come progressi/abilità del cervello sul telefono. G3/G5 e UI bloccati, no OTA.
 
 
