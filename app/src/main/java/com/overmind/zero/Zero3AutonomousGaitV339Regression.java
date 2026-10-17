@@ -385,7 +385,7 @@ public final class Zero3AutonomousGaitV339Regression {
                            old.efficiency(),z.efficiency());
         boolean bilateral=b.bilateral>0&&
                    b.bilateral>=.8*Math.max(old.bilateral,z.bilateral);
-        boolean grip=b.livesWithGrip>=5&&
+        boolean gripGate=b.livesWithGrip>=5&&
                    b.held>=.8*Math.max(old.held,z.held)&&
                    b.contacts>=.8*Math.max(old.contacts,z.contacts);
         boolean trainEnough=totalTrainDecisions>=3*2000;
@@ -414,7 +414,7 @@ public final class Zero3AutonomousGaitV339Regression {
              " BOX_positive="+boxPositive+
              " BOX_betterThanOLDandFROZEN="+boxBetter+
              " bilateralPreserved="+bilateral+
-             " gripPreserved="+grip+
+             " gripPreserved="+gripGate+
              " FULL_BOX_bilateral="+b.bilateral+
              " OLD_BOX_bilateral="+old.bilateral+
              " FROZEN_BOX_bilateral="+z.bilateral+
