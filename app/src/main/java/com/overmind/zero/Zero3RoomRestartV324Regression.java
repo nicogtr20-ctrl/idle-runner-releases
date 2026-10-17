@@ -53,6 +53,9 @@ public final class Zero3RoomRestartV324Regression {
                     public void afterPhysics(float dt,float actualWork,
                             Zero3OrganismStoreV322.Physical p){
                         room.solveGate(p.skin,dt);
+                        // Shared membrane holds are a composition of real owners;
+                        // gate solver alone must not erase BOX-owned timers.
+                        GripSurfaceComposition.compose(p.skin,room,p.world);
                         energy.physicalStep(dt,actualWork,p.body,p.skin,p.world);
                     }
                     public void afterDecision(int n,long tick){energy.finish(n,tick);}
