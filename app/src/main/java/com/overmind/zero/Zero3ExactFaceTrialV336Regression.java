@@ -29,7 +29,7 @@ public final class Zero3ExactFaceTrialV336Regression {
                 // exact face contacts already at the solid boundary.
                 SquareGripPuzzle.constrain(s.p.body,s.p.skin,e,DT,
                      sx,sy,bx,by,oldCX,oldCY,null,
-                     mode!=3&&mode!=4&&mode!=5,mode>=2,mode>=4);
+                     mode==1||mode==2,mode>=2,mode>=4);
                 if(mode==5){
                     Zero3JointBoxConstraintV338.Result joint=
                         Zero3JointBoxConstraintV338.solve(s.p.skin,e,postGelX,postGelY);
@@ -56,6 +56,19 @@ public final class Zero3ExactFaceTrialV336Regression {
             }
             e.tick(DT);
         }
+        // V338-C LAB ONLY: in the real step this is the FINAL physical
+        // world boundary, AFTER box motion, contacts and grip composition.
+        // Earlier mode5 projects too soon; it cannot see these violations.
+        if(mode==6)for(UnknownWorld.Entity e:s.p.world)
+            if(e.isBilateralBox()){
+                Zero3JointBoxConstraintV338.Result joint=
+                    Zero3JointBoxConstraintV338.solve(s.p.skin,e,postGelX,postGelY);
+                if(joint.attempted){
+                    jointAttempts++;
+                    if(joint.repaired)jointRepairs++;
+                    if(joint.unresolved)jointUnresolved++;
+                }
+            }
     }
     static void cycle(
        Zero3BoxCrossingForensicV334Regression.State s,
@@ -67,8 +80,8 @@ public final class Zero3ExactFaceTrialV336Regression {
         // V338 B: two distinct causal snapshots. CCD still requires the
         // original PRE-gel x/y, while feasibility rollback must use the
         // actual POST-gel, PRE-BOX physical contour.
-        float[] postGelX=mode==5?s.p.skin.x.clone():null;
-        float[] postGelY=mode==5?s.p.skin.y.clone():null;
+        float[] postGelX=mode>=5?s.p.skin.x.clone():null;
+        float[] postGelY=mode>=5?s.p.skin.y.clone():null;
         if(mode!=0)candidateWorld(s,sx,sy,bx,by,cx,cy,
                                   mode,postGelX,postGelY);
         else Zero3MultiSceneRestartV322BRegression.actualWorldStep(
