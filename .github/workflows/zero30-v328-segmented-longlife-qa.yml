@@ -35,26 +35,32 @@ jobs:
           names='Zero3LearningFoundation Zero3MotorResponseKernel Zero3MotorRetentionRegression Zero3MotorPromotionGate Zero3MotorImpulseResponseRegression Zero3MotorLocalFrameV310Regression Zero3SensoryFrameV315 Zero3CausalRecorderV315 Zero3SensoryContractV315Regression Zero3MotorIntentV316 Zero3AutonomousLoopV317 Zero3LearnedAdhesionV318 Zero3LearnedAdhesionV318Regression Zero3ContextAdhesionV319 Zero3ContextAdhesionV319Regression Zero3MotorHeadStoreV320 Zero3NeuralBundleStoreV321 Zero3OrganismStoreV322 Zero3FullCausalExperienceV322B Zero3FullArchiveStoreV322B Zero3MultiSceneRestartV322BRegression Zero3SurvivalLedgerV323 Zero3SurvivalArchiveV323 Zero3RoomStateV324 Zero3RoomArchiveV324 Zero3RuntimeV325 Zero3WorldBirthV326 Zero3SegmentedArchiveV328 Zero3LongLifeV328Regression'
           subprocess.run(shlex.split(p.group(1))+[root+n+'.java' for n in names.split()],check=True)
           PY
-      - name: Three separate JVMs — 2000 genuine decisions with process crash at 1000
+      - name: Three independent JVM phases per each of two 2000-decision lives
         run: |
           set -euo pipefail
           cls=com.overmind.zero.Zero3LongLifeV328Regression
-          opts="-Xmx3072m -Dv328.target=2000 -Dv328.ordinal=1"
-          java $opts -cp /tmp/overmind "$cls" prefix /tmp/v328-organism | tee /tmp/v328-prefix.log
-          grep -q 'V328 PREFIX organism=' /tmp/v328-prefix.log
-          java $opts -cp /tmp/overmind "$cls" resume /tmp/v328-organism /tmp/v328-restored.txt | tee /tmp/v328-resume.log
-          grep -q 'V328 RESUMED_2000_PLUS_EXPERIENCES=PASS decisions=2000' /tmp/v328-resume.log
-          java $opts -cp /tmp/overmind "$cls" reference /tmp/v328-control.txt | tee /tmp/v328-control.log
-          cmp /tmp/v328-restored.txt /tmp/v328-control.txt
-          grep -q 'experiences=2000' /tmp/v328-restored.txt
-          grep -q 'decision=2000' /tmp/v328-restored.txt
-          echo 'V328 REAL_2000_DECISIONS_STORED_AND_BITWISE_RESUMED=PASS'
+          for ordinal in 1 2; do
+            opts="-Xmx3072m -Dv328.target=2000 -Dv328.ordinal=$ordinal"
+            folder="/tmp/v328-organism-$ordinal"
+            java $opts -cp /tmp/overmind "$cls" prefix "$folder" | tee "$folder-prefix.log"
+            grep -q 'V328 PREFIX organism=' "$folder-prefix.log"
+            java $opts -cp /tmp/overmind "$cls" resume "$folder" "$folder-restored.txt" | tee "$folder-resume.log"
+            grep -q 'V328 RESUMED_2000_PLUS_EXPERIENCES=PASS decisions=2000' "$folder-resume.log"
+            java $opts -cp /tmp/overmind "$cls" reference "$folder-control.txt" | tee "$folder-control.log"
+            cmp "$folder-restored.txt" "$folder-control.txt"
+            grep -q 'experiences=2000' "$folder-restored.txt"
+            grep -q 'decision=2000' "$folder-restored.txt"
+            echo "V328 REAL_2000_DECISIONS_STORED_AND_BITWISE_RESUMED=PASS ORDINAL=$ordinal"
+          done
       - name: 'Tamper manifest and orphan chunk: rollback and double fault'
         run: |
           set -euo pipefail
-          java -Xmx3072m -Dv328.target=2000 -Dv328.ordinal=1 \
-            -cp /tmp/overmind com.overmind.zero.Zero3LongLifeV328Regression fault /tmp/v328-organism | tee /tmp/v328-fault.log
-          grep -q 'V328 FAULT_ROLLBACK=PASS' /tmp/v328-fault.log
+          for ordinal in 1 2; do
+            folder="/tmp/v328-organism-$ordinal"
+            java -Xmx3072m -Dv328.target=2000 -Dv328.ordinal=$ordinal \
+              -cp /tmp/overmind com.overmind.zero.Zero3LongLifeV328Regression fault "$folder" | tee "$folder-fault.log"
+            grep -q 'V328 FAULT_ROLLBACK=PASS SEGMENT_TAMPER=PASS' "$folder-fault.log"
+          done
       - name: Android Debug compiles with opt-in segmented V3 slot (no release)
         run: |
           set -euo pipefail
