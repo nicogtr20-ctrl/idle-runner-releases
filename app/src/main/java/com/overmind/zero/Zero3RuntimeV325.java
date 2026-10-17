@@ -28,6 +28,7 @@ public final class Zero3RuntimeV325 implements AutoCloseable {
     public static final int MAX_DURABLE_DECISIONS=240;
     public static final float DT=.025f;
     private static final String OWNER=Zero3AutonomousLoopV317.OWNER;
+    private static final String OWNER_GRU_V347="zero3-v347-gru64-actual";
     private static final long ENCODER_SEED=0x31720261017L;
     private static final long GRIP_SEED=0x31920261017L;
     private final long episode;
@@ -35,7 +36,7 @@ public final class Zero3RuntimeV325 implements AutoCloseable {
     private final Zero3LearningFoundation.AdaptiveCortex cortex;
     private final Zero3ContextAdhesionV319 grip;
     private final Zero3LearningFoundation.Coordinator coordinator;
-    private final Zero3MotorIntentV316.Authority authority;
+    private Zero3MotorIntentV316.Authority authority;
     private final MotorBrain.Body body;
     private final Morphology.Surface skin;
     private final SymbioteMatterV1 gel;
@@ -59,6 +60,7 @@ public final class Zero3RuntimeV325 implements AutoCloseable {
     private Zero3SegmentedArchiveV328 segmentedStore;
     // V346 explicit in-memory G1 lab only, NEVER an APK default.
     private boolean jointPhysicsResearchV346;
+    private Zero3RecurrentBrain gruResearchV347;
     private long jointAttemptsV346,jointRepairedV346,jointUnresolvedV346;
 
     private Zero3RuntimeV325(long episode,long seed,MotorBrain.Body body,
@@ -191,7 +193,8 @@ public final class Zero3RuntimeV325 implements AutoCloseable {
         public final int[] objectLaw;
         private Display(Zero3RuntimeV325 r){
             episode=r.episode;solverTicks=r.gel.ticks;
-            decisions=r.next;neurons=Zero3AutonomousLoopV317.HIDDEN;
+            decisions=r.next;neurons=r.gruResearchV347==null?
+                Zero3AutonomousLoopV317.HIDDEN:Zero3RecurrentBrain.HIDDEN;
             objects=r.world.size();reserve=r.metabolism.reserve();
             residentReplay=r.residentFullExperiences();
             unsavedReplay=r.unsavedFullExperiences();
@@ -318,9 +321,22 @@ public final class Zero3RuntimeV325 implements AutoCloseable {
      */
     public void enableJointPhysicsResearchV346(){
         require(!closed&&!inDecision&&!ended&&next==0&&
-                !segmented&&!jointPhysicsResearchV346,
+                !segmented&&!jointPhysicsResearchV346&&gruResearchV347==null,
                 "joint contact research only for a fresh isolated organism");
         jointPhysicsResearchV346=true;
+    }
+    /** Experimental G4 ONLY; sole true actor, not parallel shadow. */
+    public void enableGruResearchV347(){
+        require(!closed&&!inDecision&&!ended&&next==0&&
+                !segmented&&!jointPhysicsResearchV346&&gruResearchV347==null,
+                "GRU actor requires isolated virgin real V3 world");
+        Zero3RecurrentBrain newActor=new Zero3RecurrentBrain();
+        authority.close();
+        authority=new Zero3MotorIntentV316.Authority(episode,OWNER_GRU_V347);
+        gruResearchV347=newActor;
+    }
+    public long gruLearningUpdatesV347(){
+        return gruResearchV347==null?0:gruResearchV347.trainingUpdates();
     }
     public long[] jointPhysicsCountersV346(){
         return new long[]{jointAttemptsV346,jointRepairedV346,
@@ -400,10 +416,23 @@ public final class Zero3RuntimeV325 implements AutoCloseable {
             // true V323 ledger. This does not alter a single neural input.
             Zero3CausalVitalBoundaryV344.Before vitalBefore=
                 Zero3CausalVitalBoundaryV344.before(n,before,metabolism);
-            encoder.before(before,vitalBefore.fuelRatio,
-                           vitalBefore.previousDamage);
-            float[] choice=encoder.choose();
-            Zero3MotorIntentV316 intent=authority.issue(OWNER,n,
+            float[] choice;
+            if(gruResearchV347==null){
+                encoder.before(before,vitalBefore.fuelRatio,
+                               vitalBefore.previousDamage);
+                choice=encoder.choose();
+            }else{
+                Zero3LearningFoundation.MotorIntent proposal=
+                    gruResearchV347.choose(
+                        Zero3GruSensoryV347.before(before,vitalBefore),
+                        episode,n,cortex.revision());
+                // The true V325/V323 clock is fixed 12x0.025s;
+                // GRU duration learning remains UNSUPPORTED, G4 OPEN.
+                choice=new float[]{proposal.x,proposal.y,
+                                   proposal.effort,proposal.adhesion};
+            }
+            Zero3MotorIntentV316 intent=authority.issue(
+                gruResearchV347==null?OWNER:OWNER_GRU_V347,n,
                 (int)cortex.revision(),325,choice[0],choice[1],
                 choice[2],choice[3],SUBSTEPS*DT,.35f);
             Zero3LearningFoundation.MotorIntent motor=
@@ -471,7 +500,7 @@ public final class Zero3RuntimeV325 implements AutoCloseable {
             require(before.intact()&&after.intact()&&
                     after.solverTicks-before.solverTicks==SUBSTEPS,
                     "invalid PRE/POST timing");
-            encoder.after(after,true);
+            if(gruResearchV347==null)encoder.after(after,true);
             Zero3OrganismStoreV322.Trace event=new Zero3OrganismStoreV322.Trace(
                 n,before.solverTicks,after.solverTicks,before.hash,after.hash,
                 actions,gripFrames,bilateral,work);
@@ -483,6 +512,10 @@ public final class Zero3RuntimeV325 implements AutoCloseable {
             // can a POST outcome be exposed. It cannot affect this choice.
             lastVitalOutcome=Zero3CausalVitalBoundaryV344.after(
                 vitalBefore,after,metabolism);
+            if(gruResearchV347!=null)
+                gruResearchV347.consequence(
+                    Zero3GruSensoryV347.after(after,lastVitalOutcome),
+                    lastVitalOutcome.netEnergy,false);
             trace.add(event);
             replay.add(record);
             last64=last.clone();
@@ -491,8 +524,10 @@ public final class Zero3RuntimeV325 implements AutoCloseable {
             ended=metabolism.reserve()<=0;
             require(authority.nextDecision()==next&&
                     metabolism.decisions()==next&&
-                    encoder.updates()==next&&grip.updates()==next&&
-                    cortex.updates()<=next,
+                    (gruResearchV347==null?encoder.updates()==next:
+                         gruResearchV347.trainingUpdates()==next&&
+                         encoder.updates()==0)&&
+                    grip.updates()==next&&cortex.updates()<=next,
                     "physiology/actor/neural counters drifted after experience");
         }finally{
             inDecision=false;
@@ -500,8 +535,8 @@ public final class Zero3RuntimeV325 implements AutoCloseable {
     }
     /** Capture a single schema-consistent immutable joint V324 generation. */
     public Zero3RoomArchiveV324.Bundle snapshot()throws IOException{
-        require(!jointPhysicsResearchV346,
-                "V346 mode unsnapshottable until full V3 mode archive");
+        require(!jointPhysicsResearchV346&&gruResearchV347==null,
+                "V346/V347 research unsnapshottable without full archive");
         require(!closed&&!inDecision&&next>0&&
                 next==metabolism.decisions()&&next==replay.size()&&
                 next==trace.size()&&authority.nextDecision()==next,
@@ -523,8 +558,8 @@ public final class Zero3RuntimeV325 implements AutoCloseable {
      * all new V3 Android sessions use this path, preserving legacy V3 data.
      */
     public Zero3SegmentedArchiveV328.Bundle segmentedSnapshot()throws IOException{
-        require(!jointPhysicsResearchV346,
-                "V346 mode unsnapshottable until full V3 mode archive");
+        require(!jointPhysicsResearchV346&&gruResearchV347==null,
+                "V346/V347 research unsnapshottable without full archive");
         require(segmented&&!closed&&!inDecision&&next>0&&
                 next==metabolism.decisions()&&next==replay.size()&&
                 next==trace.size()&&authority.nextDecision()==next,
@@ -537,8 +572,8 @@ public final class Zero3RuntimeV325 implements AutoCloseable {
                 Zero3RoomStateV324.capture(room,world),replay);
     }
     public void saveSegmented(Path privateV3Folder)throws IOException{
-        require(!jointPhysicsResearchV346,
-                "cannot durably save a non-versioned V346 physics mode");
+        require(!jointPhysicsResearchV346&&gruResearchV347==null,
+                "cannot durably save V346/V347 unversioned research mode");
         require(segmented,"V328 save not enabled");
         if(segmentedStore==null){
             segmentedStore=new Zero3SegmentedArchiveV328(privateV3Folder);
@@ -595,8 +630,8 @@ public final class Zero3RuntimeV325 implements AutoCloseable {
     }
     /** Isolated caller-provided app-private V3 path. Never save 2.2 prefs. */
     public void save(Path privateV3Folder)throws IOException {
-        require(!jointPhysicsResearchV346,
-                "cannot save a non-versioned V346 physics mode");
+        require(!jointPhysicsResearchV346&&gruResearchV347==null,
+                "cannot save V346/V347 unversioned research mode");
         Zero3RoomArchiveV324 disk=new Zero3RoomArchiveV324(privateV3Folder);
         Zero3RoomArchiveV324.Bundle previous=disk.load();
         if(previous==null){
