@@ -38,7 +38,7 @@ jobs:
         run: |
           set -euo pipefail
           for mode in 0 1 2 3 4; do
-            for rep in 0 1; do
+            for rep in 0 1 2 3; do
               ordinal=$((8 + rep*5 + mode))
               base="/tmp/zero322b-${mode}-${rep}"
               args="-Dzero3.mode=${mode} -Dzero3.ordinal=${ordinal}"
@@ -58,7 +58,7 @@ jobs:
               echo "V322B SCENE=${mode} SEED_CASE=${ordinal} FULL_JOINT_REPLAY=PASS"
             done
           done
-          echo 'ZERO3 V322B TEN_MATCHED_LIVES_JOINT_NEURAL_PHYSICS_REPLAY=PASS'
+          echo 'ZERO3 V322B TWENTY_MATCHED_LIVES_JOINT_NEURAL_PHYSICS_REPLAY=PASS'
       - name: Android Debug compilation only, not OTA publication
         run: gradle --no-daemon assembleDebug
       - name: Strict scientific status after integrity tests
