@@ -356,3 +356,6 @@ Un test di rendering con JSON mock dimostra solo UI-structure; è necessario anc
 - [ ] Handoff della UI e mapping metriche aggiornato nel contratto.
 
 **Successo significa:** l'utente può aprire Cervello, Neuroni, Abilità, Corpo, Evoluzione, Memoria, Analisi e Impostazioni e osservare fedelmente l'apprendimento di ZERO 3.0. Tutto coerente fra pannelli, con visualizzazione attraente e reale, nessun menù fantasma 2.2.
+
+
+V3.20: [head-only neural restart verified](ZERO30_V320_MOTOR_HEAD_RESTART_RETENTION.md). Not the full brain, not G3/G5, no OTA.
