@@ -25,6 +25,7 @@ public final class Zero3FullArchiveStoreV322B {
                experiences.size()!=organism.nextDecision||
                actualWorldRng==0||organism.lastRngState!=actualWorldRng)
                 throw new IOException("V322B world RNG / replay generation mismatch");
+            this.organism=organism;
             rngState=actualWorldRng;
             replay=experiences.toArray(new Zero3FullCausalExperienceV322B[0]);
             Zero3OrganismStoreV322.Trace[] traces=organism.trace();
