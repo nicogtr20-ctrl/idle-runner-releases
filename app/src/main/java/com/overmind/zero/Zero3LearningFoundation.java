@@ -188,6 +188,19 @@ public final class Zero3LearningFoundation {
         public long revision(){return revision;}
         public long updates(){return updates;}
         public float[] weights(){return weights.clone();}
+        /**
+         * V332 LAB ONLY: evaluate learned synaptic weights on a newborn,
+         * identical slow-state cortex without modifying the live runtime.
+         * A fresh evaluator cannot have learned or executed a decision.
+         */
+        void setWeightsV332ForEvaluation(float[] incoming){
+            if(incoming==null||incoming.length!=weights.length||
+               revision!=0||updates!=0||pendingDecision)
+                throw new IllegalStateException("V332 evaluator must be virgin");
+            for(float v:incoming)finite(v,"learned V332 evaluation weight");
+            System.arraycopy(incoming,0,weights,0,weights.length);
+        }
+
         /** Cold-start a read-only evaluation clone; no weights are trained. */
         public AdaptiveCortex forkForEvaluation(){
             AdaptiveCortex fresh=new AdaptiveCortex(learningRate);
