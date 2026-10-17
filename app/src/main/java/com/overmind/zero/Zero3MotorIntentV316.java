@@ -73,6 +73,16 @@ public final class Zero3MotorIntentV316 {
             next++;
             return v;
         }
+        /**
+         * V3.22: resume only on a verified, completed decision boundary.
+         * The caller must first verify its joint neural/physics/replay generation.
+         * Never call on an Authority that has already issued an intention.
+         */
+        public void restoreCompletedDecisions(long count){
+            check(!closed&&next==0&&count>0&&count<=100000,
+                  "authority resume requires a fresh owner and verified count");
+            next=count;
+        }
         public long nextDecision(){return next;}
         public String owner(){return owner;}
     }
