@@ -62,6 +62,7 @@ public final class Zero3JointRuntimeV346Regression {
                 double netDistance=0;
                 try(Zero3RuntimeV325 r=birth(scene,candidate)){
                     float x0=r.display().cx,y0=r.display().cy;
+                    float lastCompleteX=x0,lastCompleteY=y0;
                     for(int n=0;n<400;n++){
                         if(r.ended()){reason="ENERGY_TERMINAL";break;}
                         try{r.advanceOneDecision();}
@@ -71,10 +72,15 @@ public final class Zero3JointRuntimeV346Regression {
                             break;
                         }
                         count++;
+                        // A vetoed mid-step is NEVER a real completed
+                        // observation; do not read V323 PRE/display after it.
+                        Zero3RuntimeV325.Display complete=r.display();
+                        lastCompleteX=complete.cx;
+                        lastCompleteY=complete.cy;
                     }
                     fixes=r.jointPhysicsCountersV346();
-                    netDistance=Math.hypot(r.display().cx-x0,
-                                           r.display().cy-y0);
+                    netDistance=Math.hypot(lastCompleteX-x0,
+                                           lastCompleteY-y0);
                     if(!candidate&&count>0){
                         check(r.segmentedSnapshot()!=null,
                             "default actual V325 snapshot incompatible");
