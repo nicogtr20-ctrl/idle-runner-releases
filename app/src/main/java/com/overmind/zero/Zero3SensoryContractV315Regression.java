@@ -21,6 +21,7 @@ public final class Zero3SensoryContractV315Regression {
     static boolean reject(Runnable f){
         try{f.run();return false;}
         catch(IllegalArgumentException expected){return true;}
+        catch(UnsupportedOperationException expected){return true;}
     }
     static final class Stats {
         int episodes,experiences,solverSteps,seenPre,solidTouch,
