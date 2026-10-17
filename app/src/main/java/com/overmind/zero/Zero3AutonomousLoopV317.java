@@ -82,6 +82,63 @@ public final class Zero3AutonomousLoopV317 {
                 actorGrip[i]=(rng.uniform()-.5f)*.5f;
             }
         }
+        /** Complete 16-state recurrent/actor checkpoint, at a finished decision. */
+        public static final class State {
+            private static final int[] SHAPES={320,256,16,48,16,20,16,16,3,16,16,16,16};
+            private final float[][] arrays;
+            final long rngState;
+            final int steps,updates;
+            final float learningL2;
+            private State(float[][] src,long rng,int steps,int updates,float norm){
+                if(src==null||src.length!=SHAPES.length||
+                   steps<0||updates<0||updates>steps||rng==0||
+                   !Float.isFinite(norm)||norm<0)
+                    throw new IllegalArgumentException("ZERO3 encoder checkpoint counters");
+                arrays=new float[SHAPES.length][];
+                for(int j=0;j<SHAPES.length;j++){
+                    if(src[j]==null||src[j].length!=SHAPES[j])
+                        throw new IllegalArgumentException("encoder checkpoint topology");
+                    arrays[j]=src[j].clone();
+                    for(float x:arrays[j])if(!Float.isFinite(x))
+                        throw new IllegalArgumentException("nonfinite encoder state");
+                }
+                rngState=rng;this.steps=steps;this.updates=updates;learningL2=norm;
+            }
+            void write(java.io.DataOutputStream out)throws java.io.IOException{
+                out.writeLong(rngState);out.writeInt(steps);out.writeInt(updates);
+                out.writeFloat(learningL2);
+                for(float[] a:arrays)for(float x:a)out.writeFloat(x);
+            }
+            static State read(java.io.DataInputStream in)throws java.io.IOException{
+                long rng=in.readLong();int steps=in.readInt(),updates=in.readInt();
+                float norm=in.readFloat();
+                float[][] arrays=new float[SHAPES.length][];
+                for(int j=0;j<arrays.length;j++){
+                    arrays[j]=new float[SHAPES[j]];
+                    for(int k=0;k<arrays[j].length;k++)arrays[j][k]=in.readFloat();
+                }
+                return new State(arrays,rng,steps,updates,norm);
+            }
+            float[] actorX(){return arrays[9].clone();}
+        }
+        private float[][] snapshotArrays(){
+            return new float[][]{w,u,bias,read,state,lastInput,lastPrev,
+                                 lastHidden,lastPrediction,actorX,actorY,
+                                 actorEffort,actorGrip};
+        }
+        public State checkpoint(){
+            if(pending)throw new IllegalStateException("encoder PRE still pending");
+            return new State(snapshotArrays(),rng.state,steps,updates,learningL2);
+        }
+        public void restore(State s){
+            if(s==null||pending||steps!=0||updates!=0)
+                throw new IllegalStateException("only fresh encoder can restore");
+            float[][] target=snapshotArrays();
+            for(int j=0;j<target.length;j++)
+                System.arraycopy(s.arrays[j],0,target[j],0,target[j].length);
+            rng.state=s.rngState;steps=s.steps;updates=s.updates;
+            learningL2=s.learningL2;
+        }
         public int updates(){return updates;}
         public float learningL2(){return learningL2;}
         public Encoder evaluationClone(){
