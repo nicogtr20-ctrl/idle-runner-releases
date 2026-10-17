@@ -142,7 +142,7 @@ public final class Zero3RuntimeV325 implements AutoCloseable {
     public static final class Display {
         public final long episode,solverTicks;
         public final int decisions,neurons,objects;
-        public final float reserve,cx,cy,doorX,doorY;
+        public final float reserve,priorDamage,cx,cy,doorX,doorY;
         public final boolean dead;
         public final float[] membraneX,membraneY,objectX,objectY;
         public final int[] objectLaw;
@@ -150,6 +150,7 @@ public final class Zero3RuntimeV325 implements AutoCloseable {
             episode=r.episode;solverTicks=r.gel.ticks;
             decisions=r.next;neurons=Zero3AutonomousLoopV317.HIDDEN;
             objects=r.world.size();reserve=r.metabolism.reserve();
+            priorDamage=r.metabolism.previousDecisionDamage();
             dead=r.ended;cx=r.body.cx;cy=r.body.cy;
             doorX=r.room.gateX();doorY=r.room.gateCenterY();
             membraneX=r.skin.x.clone();membraneY=r.skin.y.clone();
@@ -243,7 +244,10 @@ public final class Zero3RuntimeV325 implements AutoCloseable {
             int n=next;
             Zero3SensoryFrameV315 before=Zero3SensoryFrameV315.capture(
                 episode,n,gel.ticks*(double)DT,true,body,skin,gel,world,last64);
-            encoder.before(before);
+            // V3.27 active somatic interoception: sampled strictly BEFORE
+            // choice, never the energy gain/damage of the pending action.
+            encoder.before(before,metabolism.reserve()/100f,
+                           metabolism.previousDecisionDamage());
             float[] choice=encoder.choose();
             Zero3MotorIntentV316 intent=authority.issue(OWNER,n,
                 (int)cortex.revision(),325,choice[0],choice[1],
