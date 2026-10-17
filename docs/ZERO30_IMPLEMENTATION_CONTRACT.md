@@ -301,3 +301,6 @@ Outcome and follow-up:
 - **UI V3:** progettata in documento, non implementata.
 - **Ottimizzazioni decise:** nessuna fuori da ipotesi specificate.
 - **Bloccanti:** controllabilità fisica non ancora provata come percorso autonomo v3, valori ottimali non ancora misurati, salvataggio V3 non ancora implementato.
+
+
+V3.20: [verified head-only restart](ZERO30_V320_MOTOR_HEAD_RESTART_RETENTION.md); G3/G5 blocked.
