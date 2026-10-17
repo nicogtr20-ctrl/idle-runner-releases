@@ -51,7 +51,7 @@ Risultato verificato a seguire, dopo conclusione della pipeline.
 |---|---:|---:|---:|---:|
 | CAL XY globale | 0,000038929 | 0,000039056 | 0,000038534 | **0,000038254** ballistica |
 | CAL XY pre-contatto osservato | 0,000008538 | 0,000009052 | 0,000007721 | **0,000007299** ballistica |
-| CAL stato completo | **0,000319024** | 0,000623451 | 0,000293508 | 0,000870136 persistenza |
+| CAL stato completo | 0,000319024 | 0,000623451 | **0,000293508** | 0,000870136 persistenza |
 | BLIND XY globale | 0,000126998 | 0,000127160 | 0,000126227 | **0,000125836** ballistica |
 | BLIND XY pre-contatto osservato | 0,000009129 | 0,000009520 | 0,000007761 | **0,000006829** ballistica |
 | BLIND stato completo | 0,000667154 | 0,000959907 | **0,000614220** | 0,001468678 persistenza |
