@@ -166,7 +166,7 @@ public final class Zero3SurvivalRestartV323Regression {
         switch(args[0]){
             case "prefix":prefix(dir);break;
             case "resume":restore(dir,Paths.get(args[2]));break;
-            case "reference":uninterrupted(Paths.get(args[2]));break;
+            case "reference":uninterrupted(dir);break;
             case "fault":fault(dir);break;
             default:throw new IllegalArgumentException("invalid V323 mode");
         }
