@@ -1,6 +1,6 @@
 # ⛔ ZERO 3.0 — ISTRUZIONE OPERATIVA PRIORITARIA PER CHATGPT / AGENTI — 16/10/2026
 
-> **HANDOFF PIÙ RECENTE — 17/10/2026 / V3.9:** Il prossimo esperimento è [stato osservato + 64 comandi reali → stato successivo](docs/ZERO30_MOTOR_V39_OBSERVED_STATE_ACTION.md), codice e CI sul ramo sperimentale di PR #87. Compilazione Java riuscita; non dichiarare riuscita la qualità finché non si controllano i log. ZERO 3.0 NON attivo, G3/G5 non superati, no OTA. Non unire nella branch publisher.
+> **HANDOFF PIÙ RECENTE — 17/10/2026 / V3.9:** Il prossimo esperimento è [stato osservato + 64 comandi reali → stato successivo](docs/ZERO30_MOTOR_V39_OBSERVED_STATE_ACTION.md), codice e CI sul ramo sperimentale di PR #87. CI 38985522666 SUCCESS tecnico, **gate CAL e BLIND FAIL** su 491.520 passi; il modello con comandi a 32 blocchi è peggiore della baseline zero su pose nuove. Report V3.9 aggiornato; NON usare per il controllo. ZERO 3.0 NON attivo, G3/G5 non superati, no OTA. Non unire nella branch publisher.
 
 **PRIMA DI QUALSIASI MODIFICA A OVERMIND ZERO, LEGGERE INTEGRAMENTE (DA \`main\`):**
 
