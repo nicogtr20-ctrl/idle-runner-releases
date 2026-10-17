@@ -18,6 +18,16 @@ public final class SquareGripPuzzle {
     private static float clamp(float v,float lo,float hi){
         return Math.min(hi,Math.max(lo,v));
     }
+    // V3.35 laboratory observation ONLY: no non-null observer in production.
+    interface StageObserver {
+        void stage(String name,MotorBrain.Body body,Morphology.Surface skin,
+                   UnknownWorld.Entity box);
+    }
+    private static void stage(StageObserver observer,String name,
+                              MotorBrain.Body body,Morphology.Surface skin,
+                              UnknownWorld.Entity box){
+        if(observer!=null)observer.stage(name,body,skin,box);
+    }
     public static final class Outcome{
         public final boolean opposingGrip;
         public final int contacts,held;
@@ -126,17 +136,31 @@ public final class SquareGripPuzzle {
                                     float[] previousSkinX,float[] previousSkinY,
                                     float[] previousBodyX,float[] previousBodyY,
                                     float previousCoreX,float previousCoreY){
+        return constrain(body,skin,box,dt,previousSkinX,previousSkinY,
+                         previousBodyX,previousBodyY,previousCoreX,
+                         previousCoreY,null);
+    }
+    static Outcome constrain(MotorBrain.Body body,Morphology.Surface skin,
+                                    UnknownWorld.Entity box,float dt,
+                                    float[] previousSkinX,float[] previousSkinY,
+                                    float[] previousBodyX,float[] previousBodyY,
+                                    float previousCoreX,float previousCoreY,
+                                    StageObserver observer){
         if(body==null||skin==null||box==null||!box.isBilateralBox()||
            !Float.isFinite(dt)||dt<=0)return new Outcome(false,0,0);
         // The scratch surface is shared, but this timer belongs ONLY to box.
         System.arraycopy(box.boxGripHold,0,skin.gripHold,0,Morphology.POINTS);
+        stage(observer,"AFTER_TIMER_IMPORT",body,skin,box);
         SquareCollisionSolver.constrain(body,skin,box,previousSkinX,
             previousSkinY,previousBodyX,previousBodyY,
-            previousCoreX,previousCoreY);
+            previousCoreX,previousCoreY,observer);
+        stage(observer,"AFTER_SQUARE_CCD",body,skin,box);
         resolveCrossingLinks(skin,box);
+        stage(observer,"AFTER_CROSSING_LINKS",body,skin,box);
         if(previousSkinX!=null&&previousSkinY!=null)
             for(int i=0;i<Morphology.POINTS;i++)
                 stabilizeExistingGrip(skin,box,i,previousSkinX[i],previousSkinY[i]);
+        stage(observer,"AFTER_EXISTING_TETHERS",body,skin,box);
         int[] sides={-1,-1,-1,-1};
         float sumVx=0,sumVy=0;int held=0,contacts=0;
         for(int i=0;i<Morphology.POINTS;i++){
@@ -162,6 +186,7 @@ public final class SquareGripPuzzle {
             }
             pushOut(skin.x,skin.y,skin.vx,skin.vy,i,box.x,box.y,1.15f);
         }
+        stage(observer,"AFTER_FACE_CONTACT_AND_PUSHOUT",body,skin,box);
         boolean opposing=sufficientlySeparate(sides[0],sides[1])||
                          sufficientlySeparate(sides[2],sides[3]);
         // Collision solvers may reposition a cover ONLY when its own
@@ -181,9 +206,11 @@ public final class SquareGripPuzzle {
         for(int i=0;i<MotorBrain.N;i++)
             pushOut(body.x,body.y,body.vx,body.vy,i,box.x,box.y,1.5f);
         MaterialGeometry.observe(body);
+        stage(observer,"AFTER_BODY_PUSHOUT",body,skin,box);
         // Revalidate the perimeter AFTER ordinary contact/pressure/traction.
         // Those corrections can otherwise introduce new through-wall chords.
         SquareCollisionSolver.finish(body,skin,box);
+        stage(observer,"AFTER_SQUARE_FINISH",body,skin,box);
         System.arraycopy(skin.gripHold,0,box.boxGripHold,0,Morphology.POINTS);
         return new Outcome(opposing,contacts,held);
     }
