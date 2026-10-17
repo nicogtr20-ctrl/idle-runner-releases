@@ -127,6 +127,35 @@ public final class Zero3LongLifeV328Regression {
             "orphan segment influenced the committed organism");
         archive.pruneOrphans();
         yes(!Files.exists(orphan),"uncommitted physical data still referenced");
+
+        // Clone the two valid generations as an independent fault fixture.
+        // Corrupt the *latest replay segment* without altering its manifest.
+        // The loader must reject that manifest and recover the older life.
+        Path chunkFault=Files.createTempDirectory("v328-segment-tamper-");
+        try(DirectoryStream<Path> stream=Files.newDirectoryStream(dir,"v328-*")){
+            for(Path p:stream)if(Files.isRegularFile(p))
+                Files.copy(p,chunkFault.resolve(p.getFileName()));
+        }
+        Zero3SegmentedArchiveV328 isolated=
+            new Zero3SegmentedArchiveV328(chunkFault);
+        yes(isolated.load()!=null&&isolated.generation()==archive.generation(),
+            "copied long-life checkpoint differs");
+        try(RandomAccessFile f=new RandomAccessFile(isolated.currentTail().toFile(),"rw")){
+            f.seek(f.length()/3);f.writeByte(0x19);
+        }
+        Zero3SegmentedArchiveV328 verifiedFallback=
+            new Zero3SegmentedArchiveV328(chunkFault);
+        Zero3SegmentedArchiveV328.Bundle tailRecovery=verifiedFallback.load();
+        yes(tailRecovery!=null&&tailRecovery.records()<TARGET&&
+            tailRecovery.records()>STOP,
+            "tampered latest sensory/actuator segment was accepted");
+        try(RandomAccessFile f=new RandomAccessFile(
+                  verifiedFallback.currentManifest().toFile(),"rw")){
+            f.setLength(9);
+        }
+        yes(new Zero3SegmentedArchiveV328(chunkFault).load()==null,
+            "corrupting the only remaining generation resurrected replay");
+
         Path newest=archive.currentManifest();
         try(RandomAccessFile f=new RandomAccessFile(newest.toFile(),"rw")){
             f.seek(f.length()/2);f.writeByte(0x67);f.setLength(f.length()-3);
@@ -147,7 +176,9 @@ public final class Zero3LongLifeV328Regression {
             if(invalid!=null)throw new AssertionError("two invalid generations resurrected ZERO");
         }catch(IOException expected){failedClosed=true;}
         yes(failedClosed,"two invalid manifests silently erased V3 identity");
-        System.out.println("V328 FAULT_ROLLBACK=PASS backedUpDecision="+rollback);
+        System.out.println("V328 FAULT_ROLLBACK=PASS SEGMENT_TAMPER=PASS "+
+            "ORPHAN_CHUNK_IGNORED=PASS DOUBLE_BAD_FAIL_CLOSED=PASS "+
+            "backedUpDecision="+rollback);
     }
     public static void main(String[] args)throws Exception{
         yes(args.length>=2&&TARGET>=2000,"required long-life invocation");
