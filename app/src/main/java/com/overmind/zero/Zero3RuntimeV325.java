@@ -43,7 +43,7 @@ public final class Zero3RuntimeV325 implements AutoCloseable {
     private final ScarcityLab room;
     private final Zero3SurvivalLedgerV323 metabolism;
     private final ArrayList<Zero3OrganismStoreV322.Trace> trace;
-    private final ArrayList<Zero3FullCausalExperienceV322B> replay;
+    private List<Zero3FullCausalExperienceV322B> replay;
     private long rngState;
     private int next;
     private float[] last64;
@@ -71,7 +71,9 @@ public final class Zero3RuntimeV325 implements AutoCloseable {
         this.body=body;this.skin=skin;this.gel=gel;
         this.world=world;this.room=room;this.metabolism=metabolism;
         this.trace=new ArrayList<>(traces);
-        this.replay=new ArrayList<>(experiences);
+        // V329 disk-backed journals must never be copied into RAM on cold load.
+        this.replay=experiences instanceof Zero3ReplayJournalV329
+            ? experiences:new ArrayList<>(experiences);
         this.next=cursor;
         this.last64=previous==null?null:previous.clone();
         encoder=new Zero3AutonomousLoopV317.Encoder(ENCODER_SEED);
@@ -206,6 +208,14 @@ public final class Zero3RuntimeV325 implements AutoCloseable {
     public long gripUpdates(){return grip.updates();}
     public int encoderUpdates(){return encoder.updates();}
     public int completeExperiences(){return replay.size();}
+    public int residentFullExperiences(){
+        return replay instanceof Zero3ReplayJournalV329
+            ? ((Zero3ReplayJournalV329)replay).residentRecords():replay.size();
+    }
+    public int unsavedFullExperiences(){
+        return replay instanceof Zero3ReplayJournalV329
+            ? ((Zero3ReplayJournalV329)replay).unsavedCount():replay.size();
+    }
     public String currentRoomHash()throws IOException{
         return Zero3RoomStateV324.capture(room,world).fingerprint();
     }
@@ -424,6 +434,9 @@ public final class Zero3RuntimeV325 implements AutoCloseable {
                 throw new IOException("V328 corrupted existing history: fail closed");
         }
         segmentedStore.save(segmentedSnapshot());
+        // Flush all previously committed full PRE/12x64/POST objects and
+        // hold only an indexed view over the verified immutable chunk files.
+        replay=segmentedStore.openReplay();
         // Orphan files are never reachable by a manifest; prune periodically
         // after both generations have been fully committed and verified.
         if(next%128==0)segmentedStore.pruneOrphans();
@@ -450,7 +463,7 @@ public final class Zero3RuntimeV325 implements AutoCloseable {
         Zero3RuntimeV325 result=new Zero3RuntimeV325(s.episodeId,s.lastRngState,
             physical.body,physical.skin,physical.gel,restored.objects,
             restored.room,fuel,s.nextDecision,Arrays.asList(s.trace()),
-            b.experiences(),s.last64(),true);
+            disk.openReplay(),s.last64(),true);
         try{
             s.restoreModules(result.encoder,result.cortex,result.grip);
             require(result.encoder.updates()==s.nextDecision&&
