@@ -1,5 +1,8 @@
 # ZERO 3.0 — V3.25 | Unico proprietario runtime neurofisico e ciclo di vita Android isolato
 
+> **Checkpoint V3.26 (17/10/2026):** [rapporto](ZERO30_V326_ANDROID_ENTRY.md) · [CI SUCCESS 39030669596](https://github.com/nicogtr20-ctrl/idle-runner-releases/actions/runs/39030669596). Un Activity V3 sperimentale non esportato è accessibile con conferma dal menu LABORATORI di GameActivity, senza usare i 12 slot legacy. Una nuova nascita di gel reale 96 patch/74 particelle non usa più le classi Regression; runtime decide e salva su cartella privata V3, mostra al Canvas solo misure reali del corpo e del mondo e offre creazione/ripresa/x1/x5/pausa e salvataggio. In JVM indipendenti, 12+restart+12 decisioni = 24 ininterrotte bitwise, rollback e rifiuto episodio estraneo PASS, build Android Debug PASS. **Non è ancora sull'APK installato**, no test su Galaxy S21, energia ancora non percepita dal cervello, G3/G5/G9/UI finale aperti. PR #87 Draft, no merge/OTA172, 12 cervelli 2.2 intatti.
+
+
 **17 ottobre 2026 — ramo sperimentale `feature/zero30-foundation-g0-g3-20261016`, PR #87 DRAFT.** Questa tappa NON modifica `GameActivity`, `SaveSlotStore`, `updater/public/latest.json` o una OTA. I 12 slot di ZERO 2.2 rimangono separati. Il ramo contiene codice nuovo V3, non ancora collegato alla UI, e non è stato installato sul Galaxy S21.
 
 ## Documenti vincolanti in ordine
