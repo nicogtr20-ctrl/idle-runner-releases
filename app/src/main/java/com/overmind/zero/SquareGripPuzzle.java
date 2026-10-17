@@ -188,6 +188,21 @@ public final class SquareGripPuzzle {
                                     StageObserver observer,
                                     boolean preserveExactFaceContact,
                                     boolean labTopologyAware){
+        return constrain(body,skin,box,dt,previousSkinX,previousSkinY,
+                         previousBodyX,previousBodyY,previousCoreX,
+                         previousCoreY,observer,preserveExactFaceContact,
+                         labTopologyAware,false);
+    }
+    /** V337-B: LAB-ONLY single patch self-cross veto; no production callers. */
+    static Outcome constrain(MotorBrain.Body body,Morphology.Surface skin,
+                                    UnknownWorld.Entity box,float dt,
+                                    float[] previousSkinX,float[] previousSkinY,
+                                    float[] previousBodyX,float[] previousBodyY,
+                                    float previousCoreX,float previousCoreY,
+                                    StageObserver observer,
+                                    boolean preserveExactFaceContact,
+                                    boolean labTopologyAware,
+                                    boolean labSelectivePushoutGuard){
         if(body==null||skin==null||box==null||!box.isBilateralBox()||
            !Float.isFinite(dt)||dt<=0)return new Outcome(false,0,0);
         // The scratch surface is shared, but this timer belongs ONLY to box.
@@ -227,6 +242,10 @@ public final class SquareGripPuzzle {
                 skin.gripHold[i]=0f;
             }
             float oldX=skin.x[i],oldY=skin.y[i];
+            float oldVX=labSelectivePushoutGuard?skin.vx[i]:0f;
+            float oldVY=labSelectivePushoutGuard?skin.vy[i]:0f;
+            int beforeCross=labSelectivePushoutGuard?
+                MaterialGeometry.selfCrossings(skin):0;
             // A membrane mass exactly touching the square's true surface
             // is already outside solid material. The experimental branch
             // tests only this inconsistency with POINT_CLEARANCE=0.
@@ -237,6 +256,25 @@ public final class SquareGripPuzzle {
                            Math.abs(signedX)<=HALF;
             if(!preserveExactFaceContact||(!legalX&&!legalY))
                 pushOut(skin.x,skin.y,skin.vx,skin.vy,i,box.x,box.y,1.15f);
+            if(labSelectivePushoutGuard&&beforeCross==0&&
+               MaterialGeometry.selfCrossings(skin)>0&&
+               (legalX||legalY)){
+                float proposedX=skin.x[i],proposedY=skin.y[i];
+                float proposedVX=skin.vx[i],proposedVY=skin.vy[i];
+                skin.x[i]=oldX;skin.y[i]=oldY;
+                skin.vx[i]=oldVX;skin.vy[i]=oldVY;
+                boolean allowed=MaterialGeometry.selfCrossings(skin)==0&&
+                    SquareCollisionSolver.intersections(skin,box)==0&&
+                    !(Math.abs(skin.x[i]-box.x)<HALF-1e-4f&&
+                      Math.abs(skin.y[i]-box.y)<HALF-1e-4f);
+                if(!allowed){
+                    skin.x[i]=proposedX;skin.y[i]=proposedY;
+                    skin.vx[i]=proposedVX;skin.vy[i]=proposedVY;
+                }else{
+                    detail(observer,"V337_SELECTIVE_PATCH_VETO",0,i,-1,
+                           body,skin,box);
+                }
+            }
             if(oldX!=skin.x[i]||oldY!=skin.y[i])
                 detail(observer,"FACE_PUSHOUT old="+
                     Float.toString(oldX)+","+Float.toString(oldY),0,i,-1,
