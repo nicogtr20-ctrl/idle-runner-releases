@@ -1,5 +1,7 @@
 # OVERMIND ZERO 3.0 — MASTER BLUEPRINT (DOCUMENTO CANONICO)
 
+> **NOTA DI EVIDENZA SENSORIALE (17/10/2026, non modifica l'architettura canonica):** [V3.12 copertura fisica degli oggetti](ZERO30_MOTOR_V312_REAL_CONTACT_FIXTURE.md) conferma che l'organismo può esercitare prese reali (21/48 prove vicine) e bilaterali (15/48), mentre il contatto coi dischi attiva `touchPulse` senza attivare `touchSense`. I futuri input tattili neurali e i diagnostici della UI devono preservare **i tre segnali distinti**: contatto solido composto `touchSense`, impulso meccanico `touchPulse`, adesione legalmente mantenuta `gripHold`. Questi risultati riguardano fisica e sensori E2, **non il cervello 3.0 autonomo, G3, G5 o la nuova UI**. La progettazione originaria e i vincoli restano invariati.
+
 > **STATO: PROGETTAZIONE APPROVATA COME DIREZIONE, NON IMPLEMENTATO.**
 > **Priorità: P0 — LEGGERE PRIMA DI QUALSIASI MODIFICA A OVERMIND ZERO.**
 > **Versione documento:** ZERO3-BLUEPRINT-v1.0 — 16 ottobre 2026.
