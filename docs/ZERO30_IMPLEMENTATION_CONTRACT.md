@@ -1,5 +1,8 @@
 # ZERO 3.0 — CONTRATTO DI IMPLEMENTAZIONE, TEST E HANDOFF TRA CHAT
 
+> **V3.37 — PROTOCOLLO E PROVE MECCANICHE, GUARD NON ATTIVO:** [report](ZERO30_V337_GRIP_FIRST_DIVERGENCE.md). Variante selettiva single-patch + link-only sulla PR sperimentale, ultimo risultato storico 645 0 crossing e 1219 vs 1192 bilateral, 0 through-wall e lavoro invariato; 337 baseline 0 bilaterale quindi quel gate NON_TESTED. 5024 frame zero-motor [CI 39049946527](https://github.com/nicogtr20-ctrl/idle-runner-releases/actions/runs/39049946527) PASS; 3 BOX + gate e 7 combinazioni con **variant attiva solo LAB** [CI 39050310657](https://github.com/nicogtr20-ctrl/idle-runner-releases/actions/runs/39050310657) PASS. 12 nuove BOX 2016 decisioni preregistrate nel [CI holdout 39050224395](https://github.com/nicogtr20-ctrl/idle-runner-releases/actions/runs/39050224395) da valutare prima di claims ulteriori. G3/G5, Android S21, MERGE/OTA ancora bloccati.
+
+
 > **V3.36 SCIENTIFIC GRIP GATE FAIL — NON PROMUOVERE:** [rapporto per indici, 5.024 frame zero-motor, prove attuate e fallimento bilaterale](ZERO30_V336_POINTWISE_TOPOLOGY_GUARD.md). **Originale 1192 frame bilaterali, FACE_ONLY 0, FACE+LINK 0** nel caso 645 con V317+V319 effettivi (168 decisioni×12 step); condizione 337 baseline 0, bilaterale non testabile. Combinata 0 autoincroci e 0 attraversamenti, MA perde l'abilità fondamentale. `robustValidCases=0/2`, `candidatePromotion=REJECTED`. Overload di correzione solo LAB, false default; no merge/deploy/OTA, 2.2 slot intatti, G3/G5 restano bloccati. Next V3.37: vincoli giunti e difesa del grip bilaterale, nuovi holdout, 2k+ decisioni e device.
 
 
