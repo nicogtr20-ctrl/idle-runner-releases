@@ -1,5 +1,8 @@
 # ZERO 3.0 — V3.28 | Journal causale segmentato e lunga continuità dell'organismo
 
+> **Checkpoint V3.29 (17/10/2026):** [rapporto tecnico e protocolli Galaxy S21](ZERO30_V329_BOUNDED_RAM_DEVICE_READINESS.md), [CI 39033772568 SUCCESS](https://github.com/nicogtr20-ctrl/idle-runner-releases/actions/runs/39033772568). `Zero3ReplayJournalV329` mantiene max 32 full esperienze sensoriali PRE/12×64/POST già salvate in RAM, mentre le altre vengono lette pigramente da segmenti V328 immutabili SHA-256; il tail prima del commit rimane in memoria. `Zero3RuntimeV325` e `Zero3SegmentedArchiveV328` evitano le vecchie copie integrali e dopo ogni checkpoint passano al journal lazy senza cambiare il formato su disco. 2 vite da 2.000 esperienze vere con 1.000+restart+1.000 identiche a 2.000 continue, max 32 record dopo commit, max 160 fra checkpoint ogni128; corruzioni/fail closed PASS, Android Debug compilato. V325–V327 regressioni PASS. UI V3 mostra resident/unsaved reali. Non riduce a 32 l'intero heap: rimanenti trace, ledger e modello; Galaxy S21 G9 mai testato, G3 locomozione e G5 world model non validati, UI finale aperta; no merge/OTA172 o slot 2.2.
+
+
 **17 ottobre 2026.** Sviluppo ESCLUSIVAMENTE sul ramo sperimentale `feature/zero30-foundation-g0-g3-20261016`, PR #87 Draft, nessuna OTA. Leggere prima [Master Blueprint](ZERO30_MASTER_BLUEPRINT.md), [contratto](ZERO30_IMPLEMENTATION_CONTRACT.md), [specifiche UI](ZERO30_UI_UX_SPEC.md) e [report V3.27](ZERO30_V327_VITAL_LIFECYCLE.md). Non toccare i 12 slot cerebrali 2.2 né il publisher OTA 172.
 
 ## Problema materiale individuato
