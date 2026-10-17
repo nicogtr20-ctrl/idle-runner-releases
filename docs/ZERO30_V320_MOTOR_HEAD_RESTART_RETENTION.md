@@ -27,4 +27,38 @@ In `resume` e `reference`, valutare ciascun head **congelato**, senza nuove pert
 
 ## Esiti
 
-*Da inserire solo dopo esecuzione e lettura GitHub Actions.*
+Dati CI effettivamente verificati nel rapporto seguente.
+
+## RISULTATO VERIFICATO — CI 39018773241 (17/10/2026)
+
+**[GitHub Actions 39018773241](https://github.com/nicogtr20-ctrl/idle-runner-releases/actions/runs/39018773241) — SUCCESS; gate V3.20 motor-head-only restart PASS.** Job 117356200863, tutti i quattro processi Java completati. Codice `Zero3MotorHeadStoreV320.java` e `Zero3MotorHeadRestartV320Regression.java`, workflow `.github/workflows/zero30-v320-neural-restart-qa.yml`, sul ramo sperimentale Draft PR #87. Riuso della vera `Zero3ContextAdhesionV319` e dei solver `SymbioteMatterV1`, `SquareGripPuzzle` e `Morphology` non modificati.
+
+### Prove effettivamente superate
+
+| Fase | Evidenza osservata |
+|---|---|
+| Process 1 PREFIX | 16 vite vere, **1.536 decisioni**, **18.432 passi gel nelle decisioni**. Due checkpoint integri con generazione 1 dopo 768 decisioni e gen 2 dopo 1.536; test di difesa copia pesi e snapshot proibito durante decisione |
+| Process 2 RESUME | Nuovo processo e nuovo oggetto motoneurone, recupero **gen 2, 1.536 update**, poi altre **1.536 decisioni e 18.432 passi gel** reali; salvataggio **gen 3, 3.072 updates** |
+| Process 3 REFERENCE | Processo indipendente allena per **3.072 decisioni consecutive**; fingerprint SHA-256 dello stato completo **identico** al ramo ripreso |
+| Prova fisica EVAL congelata | Entrambi i rami eseguono **24 episodi nuovi, 2.304 decisioni e 27.648 passi gel per ramo**, e producono un file di evidenza **identico byte per byte**, includendo i risultati di presa/lavoro |
+| Test di corruzione | Danneggiando il checkpoint gen 3 si recupera la **gen 2 con 1.536 update**, mai uno stato parzialmente inventato. Nuovo checkpoint dopo rollback conserva esattamente 1.536 update; manifest primario corrotto ricade su backup verificato; entrambe le generazioni invalide ⇒ **fail closed** |
+| Codice e compatibilità | Due slot alternativi su directory temporanea di CI, **SHA-256 del payload e del manifest**, `FileDescriptor.sync` e rename `ATOMIC_MOVE`; nessuna scrittura dei 12 profili legacy/OTA |
+| Training continuity | Stato persistito include 128 pesi (16×8), modalità training, stato PRNG 64 bit, numero decisioni/crediti, accumulatore updates e contributi lavoro fisico reale; resuming at decision boundary, non nel mezzo |
+
+**Fingerprint finale condiviso** (SHA-256 del solo payload motor-head V320): `45a07e5f6f3a1c50d989c3a50892bb27206a5645e591d0012442981cb0be4f34`. Il confronto file `cmp` ha verificato effettivamente l'identità di tutta l'evidenza tra RESUME e REFERENCE, non solo una stampa che dichiara parità.
+
+**Retenuta effettiva su ulteriori nuove pose/geometrie di laboratorio**: 24 episodi eval con **2.304 scelte motorie**, **27.648 veri passi gel**, **4.987 frame BOX con tocco**, **4.778 frame BOX con vera presa**, **5/6 episodi BOX con grip legale**, **90 frame bilaterali**, **2,828716% di comandi adesivi oltre soglia fuori BOX**, lavoro BOX **0,176780806** e totale **0,523866168**. Le metriche coincidono esattamente con il modello addestrato senza interrompersi. Gli ordinali 24..47 con flag valutazione creano nuove pose/gap rispetto ai train, **ma usano le stesse famiglie FREE/BOX/DISK/FAR**: non è generalizzazione a nuove topologie.
+
+### Limiti da preservare per ogni futuro sviluppatore
+
+**PASS significa solo V3.20 neural motor-head recovery e prova di comportamento invariato dopo riavvio.** Non è ancora `BrainSnapshotV3` dell'organismo intero. NON sono salvati o restaurati il controller actor ricorrente V3.17, corteccia degli altri 48 canali, stato completo fluid body, ambiente/oggetti/contatti, timer di presa, contatori dell'Authority, stato semantico/skills o stato RNG del mondo. Il test riprende **fra episodi** con nuove vite simulate, non un frame interrompibile nel corso di una decisione o nel mezzo di una vita. La state immutabile è un primo sottocomponente da incorporare in un completo snapshot atomico multi-modulo.
+
+Il recupero è verificato nel runner CI Linux con rename atomico richiesto; **non** provato su Android/Galaxy S21 o contro perdita improvvisa di alimentazione. Nessun modello 3.0 è ancora collegato al gameplay o alla nuova UI. Il vero G3 locomozione e il world model G5 restano **BLOCKED**; il degrado V3.19 su prese bilaterali (382 vs 1.617 frame V3.18 nel precedente BLIND) non è risolto semplicemente salvando meglio la testa motoria.
+
+### Prossimi passi suggeriti in ordine
+
+1. Contratto unico di `BrainSnapshotV3` che includa actor recurrent, motoneuroni, cortex, plasticità, RNG e aggiornamenti, e recovery coordinato con world-body/episodio/authority a limite di decisione.
+2. Verifica di retention su nuove morfologie/oggetti e **presa bilaterale, rilascio volontario, vera manipolazione** mantenendo selettività/costo fisico.
+3. Ripresa di G3 locomozione coordinata dei 64 muscoli, confronto reale con brain frozen e 2.000+ esperienze, poi valutazione su dispositivo, migrazione/UI e successivo OTA solo dopo i gate.
+
+**Release immutata:** PR #87 Draft, zero merge, OTA **0.11.6-ota.172**, tutti i 12 cervelli 2.2 intatti.
