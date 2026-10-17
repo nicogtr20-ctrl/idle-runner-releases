@@ -1,5 +1,7 @@
 # ⛔ ZERO 3.0 — ISTRUZIONE OPERATIVA PRIORITARIA PER CHATGPT / AGENTI — 16/10/2026
 
+> **HANDOFF V3.10 (17/10/2026):** [ADR e requisiti V3.10](docs/ZERO30_MOTOR_V310_LOCAL_FRAME_DYNAMICS.md), codice `Zero3MotorLocalFrameV310Regression.java` e CI isolata su PR #87. Registra stato 16 settori e comandi muscolari ogni 0,025s; confronta full vs no-action/no-local e baseline. È un laboratorio, non un cervello integrato. Controllare gate numerici della [run](https://github.com/nicogtr20-ctrl/idle-runner-releases/actions/runs/38986223583). Non fare merge sulla branch OTA, G3/G5 bloccati.
+
 > **HANDOFF PIÙ RECENTE — 17/10/2026 / V3.9:** Il prossimo esperimento è [stato osservato + 64 comandi reali → stato successivo](docs/ZERO30_MOTOR_V39_OBSERVED_STATE_ACTION.md), codice e CI sul ramo sperimentale di PR #87. CI 38985522666 SUCCESS tecnico, **gate CAL e BLIND FAIL** su 491.520 passi; il modello con comandi a 32 blocchi è peggiore della baseline zero su pose nuove. Report V3.9 aggiornato; NON usare per il controllo. ZERO 3.0 NON attivo, G3/G5 non superati, no OTA. Non unire nella branch publisher.
 
 **PRIMA DI QUALSIASI MODIFICA A OVERMIND ZERO, LEGGERE INTEGRAMENTE (DA \`main\`):**
