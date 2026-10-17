@@ -191,8 +191,8 @@ public final class Zero3IntegratedRestartV321Regression {
             "\nretention="+test.report()+"\n";
     }
     static void write(Path target,String text)throws Exception{
-        Files.writeString(target,text,StandardOpenOption.CREATE,
-            StandardOpenOption.TRUNCATE_EXISTING);
+        Files.write(target,text.getBytes(java.nio.charset.StandardCharsets.UTF_8),
+            StandardOpenOption.CREATE,StandardOpenOption.TRUNCATE_EXISTING);
     }
     static void prefix(Path dir)throws Exception{
         Zero3NeuralBundleStoreV321 disk=new Zero3NeuralBundleStoreV321(dir);
@@ -294,11 +294,11 @@ public final class Zero3IntegratedRestartV321Regression {
     }
     public static void main(String[] args)throws Exception{
         require(args.length>=2,"mode/path missing");
-        Path dir=Path.of(args[1]);
+        Path dir=Paths.get(args[1]);
         switch(args[0]){
             case "prefix":prefix(dir);break;
-            case "resume":resume(dir,Path.of(args[2]));break;
-            case "reference":reference(Path.of(args[2]));break;
+            case "resume":resume(dir,Paths.get(args[2]));break;
+            case "reference":reference(Paths.get(args[2]));break;
             case "corrupt":corrupt(dir);break;
             default:throw new IllegalArgumentException("unknown V321 step");
         }
