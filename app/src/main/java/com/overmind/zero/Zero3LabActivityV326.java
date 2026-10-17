@@ -196,9 +196,10 @@ public final class Zero3LabActivityV326 extends Activity {
             if(isFinishing()||isDestroyed())return;
             info.setText(String.format(Locale.ITALY,
                 "VITA %d   •   DECISIONI %d   •   ENERGIA %.1f/100\n"+
+                "DANNO FISICO PRECEDENTE %.1f  •  INPUT VITALE FUSO\n"+
                 "MATERIA 96 patch + 74 particelle interne   •   %d oggetti\n"+
                 "GEL %d passi   •   CERVELLO ricorrente: %d stati%s",
-                s.episode,s.decisions,s.reserve,s.objects,
+                s.episode,s.decisions,s.reserve,s.priorDamage,s.objects,
                 s.solverTicks,s.neurons,s.dead?"   •   VITA TERMINATA":""));
             status.setText(message);body.invalidate();
         });
