@@ -151,7 +151,14 @@ public final class Zero3MultiSceneRestartV322BRegression {
             joint.actualWorldRngState());
     }
 
-    static void run(Session s,int until) {
+    interface PhysicsObserver {
+        void beforeDecision(int n,long tick);
+        void afterPhysics(float actualDt,float realMechanicalWork,
+                          Zero3OrganismStoreV322.Physical physical);
+        void afterDecision(int n,long gelTicks);
+    }
+    static void run(Session s,int until){run(s,until,null);}
+    static void run(Session s,int until,PhysicsObserver observer) {
         require(until>=s.next&&until<=END,"bad upper bound");
         Brain brain=s.brain;Zero3OrganismStoreV322.Physical p=s.p;
         Zero3LearningFoundation.Coordinator control=
@@ -161,6 +168,7 @@ public final class Zero3MultiSceneRestartV322BRegression {
             if(s.next>0)authority.restoreCompletedDecisions(s.next);
             for(int n=s.next;n<until;n++){
                 s.worldEventAtDecision(n);
+                if(observer!=null)observer.beforeDecision(n,p.gel.ticks);
                 Zero3SensoryFrameV315 pre=Zero3SensoryFrameV315.capture(
                     EPISODE,n,p.gel.ticks*(double)DT,true,
                     p.body,p.skin,p.gel,p.world,s.last);
@@ -196,6 +204,7 @@ public final class Zero3MultiSceneRestartV322BRegression {
                     p.gel.step(p.body,p.skin,motors,DT);
                     actualWorldStep(p,sx,sy,bx,by,cx,cy);
                     float trueWork=Math.max(0f,p.gel.work-prevWork);
+                    if(observer!=null)observer.afterPhysics(DT,trueWork,p);
                     control.observe(p.body,DT,trueWork,
                         Math.max(0f,p.gel.lastMuscleReactionImpulse),false,false);
                     brain.h.observe(p.skin,firstBox(p.world),trueWork);
@@ -236,6 +245,7 @@ public final class Zero3MultiSceneRestartV322BRegression {
                 }
                 s.tape.add(trace);
                 s.last=motors.clone();s.next++;
+                if(observer!=null)observer.afterDecision(n,p.gel.ticks);
                 require(s.next==authority.nextDecision(),
                         "authority cursor duplicated or skipped");
             }
