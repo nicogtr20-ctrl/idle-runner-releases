@@ -23,6 +23,20 @@ public final class SquareGripPuzzle {
         void stage(String name,MotorBrain.Body body,Morphology.Surface skin,
                    UnknownWorld.Entity box);
     }
+    /** Per-index tracing is opt-in; normal V3.35 callbacks remain 11. */
+    interface DetailObserver extends StageObserver {
+        void detail(String operation,int pass,int index,int neighbor,
+                    MotorBrain.Body body,Morphology.Surface skin,
+                    UnknownWorld.Entity box);
+    }
+    private static void detail(StageObserver observer,String operation,
+                               int pass,int index,int neighbor,
+                               MotorBrain.Body body,Morphology.Surface skin,
+                               UnknownWorld.Entity box){
+        if(observer instanceof DetailObserver)
+            ((DetailObserver)observer).detail(operation,pass,index,neighbor,
+                                              body,skin,box);
+    }
     private static void stage(StageObserver observer,String name,
                               MotorBrain.Body body,Morphology.Surface skin,
                               UnknownWorld.Entity box){
@@ -184,7 +198,10 @@ public final class SquareGripPuzzle {
                 // timer when its own face contact is no longer present.
                 skin.gripHold[i]=0f;
             }
+            float oldX=skin.x[i],oldY=skin.y[i];
             pushOut(skin.x,skin.y,skin.vx,skin.vy,i,box.x,box.y,1.15f);
+            if(oldX!=skin.x[i]||oldY!=skin.y[i])
+                detail(observer,"FACE_PUSHOUT",0,i,-1,body,skin,box);
         }
         stage(observer,"AFTER_FACE_CONTACT_AND_PUSHOUT",body,skin,box);
         boolean opposing=sufficientlySeparate(sides[0],sides[1])||
