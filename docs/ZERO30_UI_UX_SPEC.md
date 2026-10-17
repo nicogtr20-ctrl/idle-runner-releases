@@ -1,5 +1,7 @@
 # ZERO 3.0 — NUOVA INTERFACCIA GIOCO, IMPOSTAZIONI, CERVELLO, NEURONI, ABILITÀ ED EVOLUZIONE
 
+> **STATO DATI UI V3.15 (17/10/2026):** esiste un primo schema Java **sperimentale**, testato in [V3.15](ZERO30_V315_SENSORY_CAUSAL_CONTRACT.md), per alimentare in futuro le pagine Corpo/Percezione/Esperienze con 96×12 siti cutanei, 16 raggi, 48 propriocezioni, 74×7 particelle interne e 64 efferenze, con `touchSense`, `touchPulse`, `gripHold` e `gripCommand` **separati**. 2.048 esperienze reali di laboratorio registrate in RAM, energia/danno **NON DISPONIBILI** in questi test. **NESSUNA schermata UI V3 è ancora stata implementata né è collegata al gameplay**: non creare numeri di neuroni, grafici o abilità falsi. La UI resta deliverable successivo obbligatorio con provider read-only e true status.
+
 > **CONTRATTO SENSORIALE VERIFICATO V3.12 (17/10/2026):** la pagina Corpo/Percezione del futuro ZERO 3.0 dovrà visualizzare separatamente `touchSense` (contatto fisico con facce solide), `touchPulse` (pressione meccanica dei dischi) e `gripHold` (presa valida posseduta da un solido, distinta dal comando volontario `gripCommand`). Non sommare i valori fingendo siano eventi equivalenti, non dichiarare adesione a partire dal semplice contatto. [Prova su mondo vero](ZERO30_MOTOR_V312_REAL_CONTACT_FIXTURE.md). **La UI è ancora una specifica: non implementata.**
 
 > **DOCUMENTO VINCOLANTE** per le modifiche della GUI di OVERMIND ZERO 3.0. Leggere insieme al [MASTER BLUEPRINT](ZERO30_MASTER_BLUEPRINT.md) e al [CONTRATTO TECNICO](ZERO30_IMPLEMENTATION_CONTRACT.md).
