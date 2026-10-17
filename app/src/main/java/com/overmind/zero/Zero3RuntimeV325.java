@@ -57,6 +57,9 @@ public final class Zero3RuntimeV325 implements AutoCloseable {
     // restricted to 240; V328 owns separate manifests, not legacy slots.
     private boolean segmented;
     private Zero3SegmentedArchiveV328 segmentedStore;
+    // V346 explicit in-memory G1 lab only, NEVER an APK default.
+    private boolean jointPhysicsResearchV346;
+    private long jointAttemptsV346,jointRepairedV346,jointUnresolvedV346;
 
     private Zero3RuntimeV325(long episode,long seed,MotorBrain.Body body,
           Morphology.Surface skin,SymbioteMatterV1 gel,
@@ -308,15 +311,35 @@ public final class Zero3RuntimeV325 implements AutoCloseable {
         for(UnknownWorld.Entity e:world)if(e.isBilateralBox())return e;
         return null;
     }
+    /**
+     * Research-only physics A/B. The default runtime/legacy saves remain
+     * unchanged. A V346 physics world cannot be serialized into V324/V328:
+     * the mode must first be versioned into a whole-organism checkpoint.
+     */
+    public void enableJointPhysicsResearchV346(){
+        require(!closed&&!inDecision&&!ended&&next==0&&
+                !segmented&&!jointPhysicsResearchV346,
+                "joint contact research only for a fresh isolated organism");
+        jointPhysicsResearchV346=true;
+    }
+    public long[] jointPhysicsCountersV346(){
+        return new long[]{jointAttemptsV346,jointRepairedV346,
+                          jointUnresolvedV346};
+    }
     private void physics(float[] motors){
         float[] sx=skin.x.clone(),sy=skin.y.clone();
         float[] bx=body.x.clone(),by=body.y.clone();
         float cx=body.cx,cy=body.cy;
         gel.step(body,skin,motors,DT);
+        float[] afterGelX=jointPhysicsResearchV346?skin.x.clone():null;
+        float[] afterGelY=jointPhysicsResearchV346?skin.y.clone():null;
         boolean hasBoxes=false;
         for(UnknownWorld.Entity object:world)if(object.isBilateralBox()){
-            SquareGripPuzzle.constrain(body,skin,object,DT,
-                                       sx,sy,bx,by,cx,cy);
+            if(jointPhysicsResearchV346)
+                SquareGripPuzzle.constrain(body,skin,object,DT,
+                    sx,sy,bx,by,cx,cy,null,false,true,true);
+            else SquareGripPuzzle.constrain(body,skin,object,DT,
+                                            sx,sy,bx,by,cx,cy);
             hasBoxes=true;
         }
         if(hasBoxes)MaterialContactConstraints.reconcile(body,skin,world,DT);
@@ -331,6 +354,28 @@ public final class Zero3RuntimeV325 implements AutoCloseable {
         room.solveGate(skin,DT);
         GripSurfaceComposition.compose(skin,room,world);
         for(UnknownWorld.Entity object:world)object.tick(DT);
+        if(jointPhysicsResearchV346){
+            // MUST be last (including gate + grip composition + box tick).
+            for(UnknownWorld.Entity object:world)
+                if(object.isBilateralBox()){
+                    Zero3JointBoxConstraintV338.Result fix=
+                        Zero3JointBoxConstraintV338.solve(
+                            skin,object,afterGelX,afterGelY);
+                    if(fix.attempted){
+                        jointAttemptsV346++;
+                        if(fix.repaired)jointRepairedV346++;
+                        if(fix.unresolved)jointUnresolvedV346++;
+                    }
+                }
+            require(jointUnresolvedV346==0&&
+                    MaterialGeometry.selfCrossings(skin)==0,
+                    "V346 real final-WORLD membrane topology unresolved");
+            for(UnknownWorld.Entity object:world)
+                if(object.isBilateralBox())
+                    require(Zero3JointBoxConstraintV338.measure(
+                            skin,object).total()==0,
+                            "V346 real final-WORLD BOX interior defect");
+        }
         require(gel.invalid==0,"invalid physical gel after solver");
     }
     /**
@@ -455,6 +500,8 @@ public final class Zero3RuntimeV325 implements AutoCloseable {
     }
     /** Capture a single schema-consistent immutable joint V324 generation. */
     public Zero3RoomArchiveV324.Bundle snapshot()throws IOException{
+        require(!jointPhysicsResearchV346,
+                "V346 mode unsnapshottable until full V3 mode archive");
         require(!closed&&!inDecision&&next>0&&
                 next==metabolism.decisions()&&next==replay.size()&&
                 next==trace.size()&&authority.nextDecision()==next,
@@ -476,6 +523,8 @@ public final class Zero3RuntimeV325 implements AutoCloseable {
      * all new V3 Android sessions use this path, preserving legacy V3 data.
      */
     public Zero3SegmentedArchiveV328.Bundle segmentedSnapshot()throws IOException{
+        require(!jointPhysicsResearchV346,
+                "V346 mode unsnapshottable until full V3 mode archive");
         require(segmented&&!closed&&!inDecision&&next>0&&
                 next==metabolism.decisions()&&next==replay.size()&&
                 next==trace.size()&&authority.nextDecision()==next,
@@ -488,6 +537,8 @@ public final class Zero3RuntimeV325 implements AutoCloseable {
                 Zero3RoomStateV324.capture(room,world),replay);
     }
     public void saveSegmented(Path privateV3Folder)throws IOException{
+        require(!jointPhysicsResearchV346,
+                "cannot durably save a non-versioned V346 physics mode");
         require(segmented,"V328 save not enabled");
         if(segmentedStore==null){
             segmentedStore=new Zero3SegmentedArchiveV328(privateV3Folder);
@@ -544,6 +595,8 @@ public final class Zero3RuntimeV325 implements AutoCloseable {
     }
     /** Isolated caller-provided app-private V3 path. Never save 2.2 prefs. */
     public void save(Path privateV3Folder)throws IOException {
+        require(!jointPhysicsResearchV346,
+                "cannot save a non-versioned V346 physics mode");
         Zero3RoomArchiveV324 disk=new Zero3RoomArchiveV324(privateV3Folder);
         Zero3RoomArchiveV324.Bundle previous=disk.load();
         if(previous==null){
