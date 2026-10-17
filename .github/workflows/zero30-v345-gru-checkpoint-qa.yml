@@ -39,7 +39,7 @@ jobs:
           m=re.search(r'^\s*(javac -d /tmp/overmind [^\n]+)',source,re.M)
           if not m:raise RuntimeError('production Java material compile list unavailable')
           root='app/src/main/java/com/overmind/zero/'
-          names='Zero3LearningFoundation Zero3MotorResponseKernel Zero3MotorRetentionRegression Zero3MotorPromotionGate Zero3MotorImpulseResponseRegression Zero3MotorLocalFrameV310Regression Zero3SensoryFrameV315 Zero3CausalRecorderV315 Zero3SensoryContractV315Regression Zero3MotorIntentV316 Zero3AutonomousLoopV317 Zero3LearnedAdhesionV318 Zero3LearnedAdhesionV318Regression Zero3ContextAdhesionV319 Zero3ContextAdhesionV319Regression Zero3MotorHeadStoreV320 Zero3NeuralBundleStoreV321 Zero3OrganismStoreV322 Zero3FullCausalExperienceV322B Zero3FullArchiveStoreV322B Zero3MultiSceneRestartV322BRegression Zero3SurvivalLedgerV323 Zero3SurvivalArchiveV323 Zero3SurvivalRestartV323Regression Zero3RoomStateV324 Zero3RoomArchiveV324 Zero3RuntimeV325 Zero3MotorEvidenceV330 Zero3ContactTopologyExperimentV336 Zero3SegmentedArchiveV328 Zero3ReplayJournalV329 Zero3RuntimeV325Regression Zero3WorldBirthV326 Zero3VitalV327Regression Zero3CapacityV327Regression Zero3CausalVitalBoundaryV344 Zero3CausalVitalBoundaryV344Regression Zero3RecurrentBrain Zero3GruSensoryV347 Zero3JointBoxConstraintV338 Zero3RecurrentBrainRegression Zero3RecurrentBrainCheckpointV345Regression'
+          names='Zero3LearningFoundation Zero3MotorResponseKernel Zero3MotorRetentionRegression Zero3MotorPromotionGate Zero3MotorImpulseResponseRegression Zero3MotorLocalFrameV310Regression Zero3SensoryFrameV315 Zero3CausalRecorderV315 Zero3SensoryContractV315Regression Zero3MotorIntentV316 Zero3AutonomousLoopV317 Zero3LearnedAdhesionV318 Zero3LearnedAdhesionV318Regression Zero3ContextAdhesionV319 Zero3ContextAdhesionV319Regression Zero3MotorHeadStoreV320 Zero3NeuralBundleStoreV321 Zero3OrganismStoreV322 Zero3FullCausalExperienceV322B Zero3FullArchiveStoreV322B Zero3MultiSceneRestartV322BRegression Zero3SurvivalLedgerV323 Zero3SurvivalArchiveV323 Zero3SurvivalRestartV323Regression Zero3RoomStateV324 Zero3RoomArchiveV324 Zero3RuntimeV325 Zero3MotorEvidenceV330 Zero3ContactTopologyExperimentV336 Zero3SegmentedArchiveV328 Zero3ReplayJournalV329 Zero3RuntimeV325Regression Zero3WorldBirthV326 Zero3VitalV327Regression Zero3CapacityV327Regression Zero3CausalVitalBoundaryV344 Zero3CausalVitalBoundaryV344Regression Zero3RecurrentBrain Zero3GruSensoryV347 Zero3JointBoxConstraintV338 Zero3RecurrentBrainRegression Zero3RecurrentBrainCheckpointV345Regression Zero3GruRuntimeV347Regression'
           subprocess.run(shlex.split(m.group(1))+[root+n+'.java' for n in names.split()],check=True)
           PY
       - name: Vital causality, brain CHOICES and real material cost
@@ -57,6 +57,13 @@ jobs:
           set -euo pipefail
           java -Xmx1536m -cp /tmp/overmind com.overmind.zero.Zero3RecurrentBrainCheckpointV345Regression | tee /tmp/v345-checkpoint.log
           grep -q 'V345 GRU64_ACTOR_DUAL_CRITIC_CHECKPOINT=PASS' /tmp/v345-checkpoint.log
+      - name: V347 true sole GRU64 runtime owner physical and energy proof
+        run: |
+          set -euo pipefail
+          java -Xmx1900m -cp /tmp/overmind com.overmind.zero.Zero3GruRuntimeV347Regression | tee /tmp/v347-owner.log
+          test "$(grep -c 'V347 REAL_ACTOR scene=' /tmp/v347-owner.log)" -eq 4
+          grep -q 'V347 G4_LIVE_GRU_RESULT fullLives=' /tmp/v347-owner.log
+          grep -q 'G4_AND_G7_NOT_PROMOTED NO_OTA NO_MERGE' /tmp/v347-owner.log
       - name: V344 real V3 runtime energy/cold restart unaffected
         run: |
           set -euo pipefail
