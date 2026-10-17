@@ -1,5 +1,7 @@
 # OVERMIND ZERO — MASTER PROJECT ZERO 3.0
 
+> **V3.9 — PROTOTIPO DI TRANSIZIONI REALI (17/10/2026):** [ADR e protocollo preregistrato](docs/ZERO30_MOTOR_V39_OBSERVED_STATE_ACTION.md) · [CI esperimento](https://github.com/nicogtr20-ctrl/idle-runner-releases/actions/runs/38985522666). Il codice sperimentale registra lo stato del singolo corpo, 64 comandi effettivi e outcome ogni 12 frame; confronta previsione a un passo e rollout libero su stati con nastro di azioni future note. **Compilazione Java PASS; prestazioni e gate in verifica.** NON è apprendimento autonomo, non attivo in gameplay; G3/G5 bloccati, PR #87 DRAFT, **nessun OTA**.
+
 > **V3.8-B APPRENDIMENTO DINAMICO VERIFICATO (17/10/2026):** [Rapporto e test su 983.040 passi fisici](docs/ZERO30_MOTOR_V38B_STATE_TRANSITIONS.md). Il modello autoregressivo a 32 transizioni **FALLISCE** il gate: errore finale su nuovi stati **0,16007** vs **0,02906** del modello statico. ZERO 3.0 NON ATTIVO, G3/G5 non superati, nessuna nuova OTA.
 
 
