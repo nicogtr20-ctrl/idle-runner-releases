@@ -40,6 +40,18 @@ public final class Zero3AndroidSessionV325 implements AutoCloseable {
         organism.enableSegmented();
         session=organism;
     }
+    /** Experimental GRU newborn; same isolated V3 folder, no legacy writes. */
+    public synchronized void startNewGruResearch(Zero3RuntimeV325 organism)
+            throws IOException {
+        if(session!=null||organism==null||organism.decisions()!=0)
+            throw new IOException("V348 requires a virgin organism");
+        if(Files.exists(directory.resolve("v324-current.mf"))||
+           Files.exists(directory.resolve("v324-backup.mf"))||
+           Zero3SegmentedArchiveV328.hasAny(directory))
+            throw new IOException("V348 existing history must be resumed");
+        organism.enableGruResearchV347();
+        startNew(organism);
+    }
     /** App lifecycle onResume, never silently generate a replacement brain. */
     public synchronized void resume()throws IOException {
         if(session!=null)throw new IOException("V3 organism already active");

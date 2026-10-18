@@ -328,7 +328,7 @@ public final class Zero3RuntimeV325 implements AutoCloseable {
     /** Experimental G4 ONLY; sole true actor, not parallel shadow. */
     public void enableGruResearchV347(){
         require(!closed&&!inDecision&&!ended&&next==0&&
-                !segmented&&!jointPhysicsResearchV346&&gruResearchV347==null,
+                !jointPhysicsResearchV346&&gruResearchV347==null,
                 "GRU actor requires isolated virgin real V3 world");
         Zero3RecurrentBrain newActor=new Zero3RecurrentBrain();
         authority.close();
@@ -558,22 +558,26 @@ public final class Zero3RuntimeV325 implements AutoCloseable {
      * all new V3 Android sessions use this path, preserving legacy V3 data.
      */
     public Zero3SegmentedArchiveV328.Bundle segmentedSnapshot()throws IOException{
-        require(!jointPhysicsResearchV346&&gruResearchV347==null,
-                "V346/V347 research unsnapshottable without full archive");
+        require(!jointPhysicsResearchV346,
+                "V346 physics is not approved for persistent archives");
         require(segmented&&!closed&&!inDecision&&next>0&&
                 next==metabolism.decisions()&&next==replay.size()&&
                 next==trace.size()&&authority.nextDecision()==next,
                 "V328 requires complete matching actor/physics/energy replay");
-        Zero3OrganismStoreV322.State organ=Zero3OrganismStoreV322.capture(
+        Zero3OrganismStoreV322.State organ=gruResearchV347==null?
+            Zero3OrganismStoreV322.capture(
                 episode,next,rngState,encoder,cortex,grip,
+                body,skin,gel,world,last64,trace):
+            Zero3OrganismStoreV322.captureGru(
+                episode,next,rngState,encoder,cortex,grip,gruResearchV347,
                 body,skin,gel,world,last64,trace);
         return new Zero3SegmentedArchiveV328.Bundle(
                 organ,metabolism.checkpoint(),
                 Zero3RoomStateV324.capture(room,world),replay);
     }
     public void saveSegmented(Path privateV3Folder)throws IOException{
-        require(!jointPhysicsResearchV346&&gruResearchV347==null,
-                "cannot durably save V346/V347 unversioned research mode");
+        require(!jointPhysicsResearchV346,
+                "cannot persist rejected V346 research physics");
         require(segmented,"V328 save not enabled");
         if(segmentedStore==null){
             segmentedStore=new Zero3SegmentedArchiveV328(privateV3Folder);
@@ -617,8 +621,20 @@ public final class Zero3RuntimeV325 implements AutoCloseable {
             restored.room,fuel,s.nextDecision,Arrays.asList(s.trace()),
             disk.openReplay(),s.last64(),true,.013f);
         try{
-            s.restoreModules(result.encoder,result.cortex,result.grip);
-            require(result.encoder.updates()==s.nextDecision&&
+            if(s.hasGru()){
+                Zero3RecurrentBrain restoredGru=new Zero3RecurrentBrain();
+                s.restoreGruModules(result.encoder,result.cortex,
+                                    result.grip,restoredGru);
+                Zero3MotorIntentV316.Authority nextAuthority=
+                    new Zero3MotorIntentV316.Authority(s.episodeId,OWNER_GRU_V347);
+                nextAuthority.restoreCompletedDecisions(s.nextDecision);
+                result.authority.close();
+                result.authority=nextAuthority;
+                result.gruResearchV347=restoredGru;
+            }else s.restoreModules(result.encoder,result.cortex,result.grip);
+            require((s.hasGru()?result.encoder.updates()==0&&
+                    result.gruResearchV347.trainingUpdates()==s.nextDecision:
+                    result.encoder.updates()==s.nextDecision)&&
                     result.grip.updates()==s.nextDecision,
                     "V328 neural replay and restored authority disagree");
             result.segmented=true;result.segmentedStore=disk;

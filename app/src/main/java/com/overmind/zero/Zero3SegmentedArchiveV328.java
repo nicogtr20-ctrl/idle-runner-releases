@@ -180,7 +180,8 @@ public final class Zero3SegmentedArchiveV328 {
                    List<Segment> segments)throws IOException{
         ByteArrayOutputStream m=new ByteArrayOutputStream();
         DataOutputStream d=new DataOutputStream(m);
-        d.writeInt(MAGIC);d.writeInt(VERSION);d.writeLong(generation);
+        d.writeInt(MAGIC);d.writeInt(b.organism.hasGru()?348:VERSION);
+        d.writeLong(generation);
         d.writeLong(b.organism.episodeId);d.writeInt(b.decisions());
         put(d,Zero3OrganismStoreV322.encode(b.organism));
         put(d,b.survival.encoded());put(d,b.room.encoded());
@@ -200,7 +201,9 @@ public final class Zero3SegmentedArchiveV328 {
                 manifest,manifest.length-32,manifest.length)),
                 "manifest SHA mismatch");
         DataInputStream d=new DataInputStream(new ByteArrayInputStream(source));
-        require(d.readInt()==MAGIC&&d.readInt()==VERSION,
+        require(d.readInt()==MAGIC,"manifest magic mismatch");
+        int schema=d.readInt();
+        require(schema==VERSION||schema==348,
                 "manifest schema mismatch");
         long generation=d.readLong(),episode=d.readLong();
         int cursor=d.readInt();
@@ -212,7 +215,8 @@ public final class Zero3SegmentedArchiveV328 {
             Zero3SurvivalLedgerV323.State.decoded(get(d,262144));
         Zero3RoomStateV324 room=Zero3RoomStateV324.decode(get(d,16384));
         require(organism.episodeId==episode&&organism.nextDecision==cursor&&
-                survival.next==cursor,"torn manifest life");
+                survival.next==cursor&&
+                (schema==348)==organism.hasGru(),"torn manifest life/GRU schema");
         int n=d.readInt();
         require(n==(cursor+CHUNK-1)/CHUNK,"wrong number of immutable chunks");
         ArrayList<Segment> chunks=new ArrayList<>();
