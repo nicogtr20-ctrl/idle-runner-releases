@@ -36,6 +36,8 @@
 | **G4/G7 prereq** `Zero3RecurrentBrain` GRU64/actor/due critic e checkpoint integrale | [originale G4](https://github.com/nicogtr20-ctrl/idle-runner-releases/pull/87), [V345 CI 39079675581](https://github.com/nicogtr20-ctrl/idle-runner-releases/actions/runs/39079675581) **PASS** 56 future decisioni identiche, weights/hidden/RNG | **GRU GIÀ IMPLEMENTATA E TESTATA PRIMA DI V345**. V345 aggiunge solo snapshot autonomo, non inventa nuovo cervello. |
 | **G4 parziale integration** GRU sole actual intent owner nel V325 V347 | [CI 39081333062](https://github.com/nicogtr20-ctrl/idle-runner-releases/actions/runs/39081333062) **EXPERIMENTAL INTEGRATION PASS**, **4×128=512** decisioni e cortex/GRU updates, 6.144 passi fisici, 22 vere unità di energia ottenute, 0 update V317 | MODALITÀ opt-in **NON persistibile**, durations GRU non ancora integrate; G4 NON chiuso. **NON ricreare la GRU**. |
 
+| **G4/G7 integrazione V348** GRU64+corpo+mondo+energia+replay nel medesimo archivio versionato | [CI 39084739084](https://github.com/nicogtr20-ctrl/idle-runner-releases/actions/runs/39084739084) **LAB INTEGRATED PASS**, 48 decisioni continue == 24+restart+24 bitwise, GRU64, 64 cortex, presa V319, gel, mondo, energy, 48 replay, rollback/fail-closed | **CONSERVARE**. Nuovo manifest 348 nello stesso V328; i manifest 328 e formato organismo 322 storici rimangono invariati. **NON** è G4/G7 finale: clock GRU variabile non eseguito, neurogenesi e 10k persistente assenti, S21 non testato. |
+
 ## 2. ESPERIMENTI RESPINTI O CON LIMITI ESPLICITI — NON RIPROMUOVERLI
 
 | Serie | Evidenza originale | Decisione vincolante |
