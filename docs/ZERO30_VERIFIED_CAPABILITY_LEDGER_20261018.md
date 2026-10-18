@@ -1,3 +1,5 @@
+> **18/10/2026 — V351/V352: integrazione sensoriale e clock reale VALIDATI IN CI.** Leggere il [rapporto attuale](ZERO30_V351_V352_INTEGRATION_RESULTS_20261018.md): GRU64 riutilizzata con 194 ingressi fisici e replay PRE/POST; nuove vite LAB eseguono durata 0,25–0,65s e interrompono per danno/morte, critic con target/replay e bootstrap terminale corretto. 1000+JVM restart+1000 identici al controllo 2000, fault/rollback e [Android Debug PASS](https://github.com/nicogtr20-ctrl/idle-runner-releases/actions/runs/39119103894). GRU26 e archivi storici compatibili. **Non ricreare questi componenti. G4 scientifico, G1/G3/G5/G6/crescita G7/UI G8/device G9/OTA G10 restano aperti. Progetto NON completo; nessun merge/OTA.**
+
 # ZERO 3.0 — REGISTRO VINCOLANTE DELLE CAPACITÀ GIÀ REALIZZATE, DEI TEST APPROVATI E DELLE SOLE LACUNE REALI
 **Data:** 18 ottobre 2026. **Ambito:** repository `nicogtr20-ctrl/idle-runner-releases`, ricerca `feature/zero30-foundation-g0-g3-20261016`, [PR #87 DRAFT](https://github.com/nicogtr20-ctrl/idle-runner-releases/pull/87), confrontata con stable OTA172. **QUESTO È UN INVENTARIO, NON UNA NUOVA ARCHITETTURA. NESSUNA MODIFICA FUNZIONALE/OTA.**
 
