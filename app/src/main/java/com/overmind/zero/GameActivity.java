@@ -164,6 +164,10 @@ public final class GameActivity extends Activity {
 
         // V355: never swap the original game UI for a replacement dashboard.
         final boolean zero3Mode=getResources().getBoolean(R.bool.zero3_candidate);
+        // Android instrumentation only: render a single completed V3 state,
+        // with no endless Choreographer invalidations during test idling.
+        final boolean zero3QaPaused=zero3Mode&&
+            GameActivity.this.getIntent().getBooleanExtra("zero3_qa_pause_v355",false);
         Zero3AndroidSessionV325 zero3;
         String zero3Failure="";
         int zero3Slot=1;
@@ -175,7 +179,10 @@ public final class GameActivity extends Activity {
             super(c);setLayerType(View.LAYER_TYPE_HARDWARE,null);setFocusable(true);
             prefs=c.getSharedPreferences("zero_motorbrain_001",Context.MODE_PRIVATE);
             gripPrefs=c.getSharedPreferences(GripContactObserver.PREFS,Context.MODE_PRIVATE);
-            if(zero3Mode)startZero3();else load();
+            if(zero3Mode){
+                if(zero3QaPaused)simulationRunning=false;
+                startZero3();
+            }else load();
             try {
                 installedVersion=GameActivity.this.getPackageManager().getPackageInfo(
                     GameActivity.this.getPackageName(),0).versionName;
@@ -287,7 +294,7 @@ public final class GameActivity extends Activity {
             }
             c.save();float scale=getWidth()/W;c.scale(scale,scale);
             renderWorld(c);renderBody(c);renderHud(c);c.restore();
-            postInvalidateOnAnimation();
+            if(!zero3QaPaused)postInvalidateOnAnimation();
         }
         void zero3Panel(int page){
             try{
