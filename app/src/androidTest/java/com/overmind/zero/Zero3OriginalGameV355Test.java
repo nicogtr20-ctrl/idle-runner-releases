@@ -32,6 +32,7 @@ public final class Zero3OriginalGameV355Test {
         assertTrue(chosen.edit().putInt("slot",12).commit());
         try{
             Intent intent=new Intent(context,GameActivity.class);
+            intent.putExtra("zero3_qa_pause_v355",true);
             try(ActivityScenario<GameActivity> scenario=ActivityScenario.launch(intent)){
                 AtomicBoolean real=new AtomicBoolean();
                 AtomicInteger count=new AtomicInteger();
