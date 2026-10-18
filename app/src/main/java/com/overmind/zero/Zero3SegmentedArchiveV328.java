@@ -184,7 +184,7 @@ public final class Zero3SegmentedArchiveV328 {
                    List<Segment> segments)throws IOException{
         ByteArrayOutputStream m=new ByteArrayOutputStream();
         DataOutputStream d=new DataOutputStream(m);
-        d.writeInt(MAGIC);d.writeInt(b.organism.hasGru()?348:VERSION);
+        d.writeInt(MAGIC);d.writeInt(b.organism.variableClock()?352:(b.organism.hasGru()?348:VERSION));
         d.writeLong(generation);
         d.writeLong(b.organism.episodeId);d.writeInt(b.decisions());
         put(d,Zero3OrganismStoreV322.encode(b.organism));
@@ -207,22 +207,23 @@ public final class Zero3SegmentedArchiveV328 {
         DataInputStream d=new DataInputStream(new ByteArrayInputStream(source));
         require(d.readInt()==MAGIC,"manifest magic mismatch");
         int schema=d.readInt();
-        require(schema==VERSION||schema==348,
+        require(schema==VERSION||schema==348||schema==352,
                 "manifest schema mismatch");
         long generation=d.readLong(),episode=d.readLong();
         int cursor=d.readInt();
         require(generation>0&&episode>0&&cursor>0&&
-                cursor<=maxFor(schema==348),
+                cursor<=maxFor(schema==348||schema==352),
                 "generation/cursor invalid");
         Zero3OrganismStoreV322.State organism=Zero3OrganismStoreV322.decode(
             get(d,Zero3OrganismStoreV322.MAX_STATE_BYTES));
         Zero3SurvivalLedgerV323.State survival=
             Zero3SurvivalLedgerV323.State.decoded(
-                get(d,schema==348?600053:262144));
+                get(d,(schema==348||schema==352)?600053:262144));
         Zero3RoomStateV324 room=Zero3RoomStateV324.decode(get(d,16384));
         require(organism.episodeId==episode&&organism.nextDecision==cursor&&
                 survival.next==cursor&&
-                (schema==348)==organism.hasGru(),"torn manifest life/GRU schema");
+                (schema==348||schema==352)==organism.hasGru()&&
+                organism.variableClock()==survival.variableClock&&organism.variableClock()==(schema==352),"torn manifest life/GRU schema");
         int n=d.readInt();
         require(n==(cursor+CHUNK-1)/CHUNK,"wrong number of immutable chunks");
         ArrayList<Segment> chunks=new ArrayList<>();

@@ -71,13 +71,16 @@ final class Zero3CausalVitalBoundaryV344 {
         return new Before(pre,v,n);
     }
     static After after(Before b,Zero3SensoryFrameV315 post,
-                       Zero3SurvivalLedgerV323 v){
+                       Zero3SurvivalLedgerV323 v){return afterExpected(b,post,v,Zero3RuntimeV325.SUBSTEPS);}
+    static After afterVariableV352(Before b,Zero3SensoryFrameV315 post,Zero3SurvivalLedgerV323 v,int steps){
+        need(steps>=1&&steps<=26,"V352 actual steps");return afterExpected(b,post,v,steps);
+    }
+    private static After afterExpected(Before b,Zero3SensoryFrameV315 post,Zero3SurvivalLedgerV323 v,int steps){
         need(b!=null&&post!=null&&v!=null&&post.intact()&&
              !post.preAction&&post.episodeId==b.episode&&
              post.frameId==(long)b.decision+1&&
              v.decisions()==b.decision+1&&
-             post.solverTicks-b.firstPhysicalTick==
-                 Zero3RuntimeV325.SUBSTEPS,
+             post.solverTicks-b.firstPhysicalTick==steps,
              "POST cannot be future data / incomplete or foreign decision");
         float gain=v.energyGained()-b.earnedEver,
               basal=v.basalSpent()-b.basalEver,

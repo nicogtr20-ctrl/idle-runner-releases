@@ -1,4 +1,4 @@
-name: ZERO3 V351 unified real sensory GRU194 full-life checkpoint QA
+name: ZERO3 unified GRU194 real sensory variable clock full-life QA
 on:
   push:
     branches: [feature/zero30-foundation-g0-g3-20261016]
@@ -20,6 +20,6 @@ jobs:
           distribution: temurin
           java-version: '17'
       - name: Actual physical sensors, legacy compatibility and 2000-decision cold restart
-        run: python3 tools/zero3_core_qa.py --long-life 2000
+        run: python3 tools/zero3_core_qa.py --variable-clock --long-life 2000
       - name: Android Debug (no signed publisher)
         run: gradle --no-daemon assembleDebug

@@ -344,6 +344,12 @@ public final class Zero3RuntimeV325 implements AutoCloseable {
         authority=new Zero3MotorIntentV316.Authority(episode,OWNER_GRU_V347);
         gruResearchV347=nextBrain;
     }
+    public void enableVariableResearchV352(){
+        enableUnifiedResearchV351();
+        gruResearchV347=new Zero3RecurrentBrain(194,true);
+        metabolism.enableVariableClockV352();
+    }
+    public float lastDecisionSeconds(){return next==0?0f:(trace.get(next-1).endTick-trace.get(next-1).startTick)*DT;}
     public int neuralInputWidth(){return gruResearchV347==null?20:gruResearchV347.sensorWidth();}
     public long gruLearningUpdatesV347(){
         return gruResearchV347==null?0:gruResearchV347.trainingUpdates();
@@ -429,6 +435,8 @@ public final class Zero3RuntimeV325 implements AutoCloseable {
             boolean unified=gruResearchV347!=null&&gruResearchV347.sensorWidth()==194;
             Zero3GruSensoryV347.Unified unifiedBefore=unified?
                 Zero3GruSensoryV347.unifiedBefore(before,vitalBefore,body,skin,room,world):null;
+            boolean variable=gruResearchV347!=null&&gruResearchV347.variableClock();
+            int plannedSteps=SUBSTEPS;
             float[] choice;
             if(gruResearchV347==null){
                 encoder.before(before,vitalBefore.fuelRatio,
@@ -441,32 +449,33 @@ public final class Zero3RuntimeV325 implements AutoCloseable {
                         episode,n,cortex.revision());
                 // The true V325/V323 clock is fixed 12x0.025s;
                 // GRU duration learning remains UNSUPPORTED, G4 OPEN.
+                if(variable)plannedSteps=Math.max(10,Math.min(26,Math.round(proposal.duration/DT)));
                 choice=new float[]{proposal.x,proposal.y,
                                    proposal.effort,proposal.adhesion};
             }
             Zero3MotorIntentV316 intent=authority.issue(
                 gruResearchV347==null?OWNER:OWNER_GRU_V347,n,
                 (int)cortex.revision(),325,choice[0],choice[1],
-                choice[2],choice[3],SUBSTEPS*DT,.35f);
+                choice[2],choice[3],plannedSteps*DT,.35f);
             Zero3LearningFoundation.MotorIntent motor=
                 new Zero3LearningFoundation.MotorIntent(
                     episode,n,cortex.revision(),choice[0],choice[1],
-                    choice[2],choice[3],SUBSTEPS*DT);
+                    choice[2],choice[3],plannedSteps*DT);
             // PRE momentum is observed from material, never a target direction.
             final float initialVX=body.cvx,initialVY=body.cvy;
             coordinator.begin(motor,body,true,false,true);
             Zero3MotorEvidenceV330.Accumulator audit=
                 new Zero3MotorEvidenceV330.Accumulator(episode,n,
-                    motor.x,motor.y,initialVX,initialVY);
+                    motor.x,motor.y,initialVX,initialVY,variable);
             grip.begin();
             metabolism.begin(n,gel.ticks);
             long actions=0xcbf29ce484222325L;
             ArrayList<float[]> efferences=new ArrayList<>();
             ArrayList<Float> costs=new ArrayList<>();
             double work=0d;
-            int gripFrames=0,bilateral=0;
+            int gripFrames=0,bilateral=0,actualSteps=0,interruption=0;
             float[] last=null;
-            for(int i=0;i<SUBSTEPS;i++){
+            for(int i=0;i<plannedSteps;i++){
                 float[] command=coordinator.actuate(body,skin,DT);
                 grip.actuate(command,intent,body,skin,world);
                 audit.motorSubstep(command,skin,body);
@@ -481,7 +490,9 @@ public final class Zero3RuntimeV325 implements AutoCloseable {
                 physics(command);
                 float actualCost=Math.max(0f,gel.work-priorWork);
                 costs.add(actualCost);work+=actualCost;
+                float damageBefore=metabolism.damagedEnergy();
                 metabolism.physicalStep(DT,actualCost,body,skin,world);
+                boolean newlyHarmed=metabolism.damagedEnergy()>damageBefore;
                 coordinator.observe(body,DT,actualCost,
                     Math.max(0f,gel.lastMuscleReactionImpulse),false,false);
                 UnknownWorld.Entity box=firstBox();
@@ -501,34 +512,43 @@ public final class Zero3RuntimeV325 implements AutoCloseable {
                 }
                 if(held)gripFrames++;
                 if(box!=null&&box.bilateralHeldNow)bilateral++;
-                last=executed;
+                last=executed;actualSteps++;
+                if(variable&&(metabolism.reserve()<=0f||newlyHarmed)){
+                    interruption=metabolism.reserve()<=0f?2:1;
+                    break;
+                }
             }
             grip.end();
-            Zero3LearningFoundation.Experience result=coordinator.finish();
-            require(result.frames==SUBSTEPS&&result.intent.decisionId==n,
+            Zero3LearningFoundation.Experience result=coordinator.finish(interruption!=0);
+            require(result.frames==actualSteps&&result.intent.decisionId==n,
                     "cortex credited incomplete/foreign physical decision");
             Zero3SensoryFrameV315 after=Zero3SensoryFrameV315.capture(
                 episode,n+1,gel.ticks*(double)DT,false,
                 body,skin,gel,world,last);
             require(before.intact()&&after.intact()&&
-                    after.solverTicks-before.solverTicks==SUBSTEPS,
+                    after.solverTicks-before.solverTicks==actualSteps,
                     "invalid PRE/POST timing");
             if(gruResearchV347==null)encoder.after(after,true);
             Zero3OrganismStoreV322.Trace event=new Zero3OrganismStoreV322.Trace(
                 n,before.solverTicks,after.solverTicks,before.hash,after.hash,
-                actions,gripFrames,bilateral,work);
-            Zero3FullCausalExperienceV322B record=
-                Zero3FullCausalExperienceV322B.capture(
-                    event,before,after,efferences,costs,gripFrames,bilateral);
+                actions,gripFrames,bilateral,work,variable);
+            Zero3FullCausalExperienceV322B record=null;
             metabolism.finish(n,gel.ticks);
             // Only after the complete actual 12-step physics / metabolism
             // can a POST outcome be exposed. It cannot affect this choice.
-            lastVitalOutcome=Zero3CausalVitalBoundaryV344.after(
-                vitalBefore,after,metabolism);
+            lastVitalOutcome=variable?Zero3CausalVitalBoundaryV344.afterVariableV352(vitalBefore,after,metabolism,actualSteps):
+                Zero3CausalVitalBoundaryV344.after(vitalBefore,after,metabolism);
             Zero3GruSensoryV347.Unified unifiedAfter=unified?
                 Zero3GruSensoryV347.unifiedAfter(after,lastVitalOutcome,body,skin,room,world):null;
-            if(unified)record=Zero3FullCausalExperienceV322B.withUnified(record,unifiedBefore,unifiedAfter);
-            if(gruResearchV347!=null)
+            if(variable)record=Zero3FullCausalExperienceV322B.captureVariableV352(
+                event,before,after,efferences,costs,gripFrames,bilateral,plannedSteps,interruption,unifiedBefore,unifiedAfter);
+            else{
+                record=Zero3FullCausalExperienceV322B.capture(event,before,after,efferences,costs,gripFrames,bilateral);
+                if(unified)record=Zero3FullCausalExperienceV322B.withUnified(record,unifiedBefore,unifiedAfter);
+            }
+            if(variable)gruResearchV347.consequenceObservedV352(
+                unifiedAfter.neural(),lastVitalOutcome.netEnergy,false,actualSteps*DT,metabolism.reserve()<=0f,interruption!=0);
+            else if(gruResearchV347!=null)
                 gruResearchV347.consequenceFixedClockV350(
                     unified?unifiedAfter.neural():Zero3GruSensoryV347.after(after,lastVitalOutcome),
                     lastVitalOutcome.netEnergy,false);

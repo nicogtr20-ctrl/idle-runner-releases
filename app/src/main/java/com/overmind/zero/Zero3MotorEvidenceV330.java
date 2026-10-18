@@ -55,9 +55,12 @@ public final class Zero3MotorEvidenceV330 {
         final long episode,decision;
         final float x,y,vx,vy;
         int count;
+        final boolean variable;
         double sumTotal,sumCoherent;
         public Accumulator(long episode,long decision,float intentX,float intentY,
-                           float initialVX,float initialVY){
+                           float initialVX,float initialVY){this(episode,decision,intentX,intentY,initialVX,initialVY,false);}
+        public Accumulator(long episode,long decision,float intentX,float intentY,float initialVX,float initialVY,boolean variable){
+            this.variable=variable;
             if(episode<=0||decision<0||
                !Float.isFinite(intentX)||!Float.isFinite(intentY)||
                !Float.isFinite(initialVX)||!Float.isFinite(initialVY)||
@@ -70,7 +73,7 @@ public final class Zero3MotorEvidenceV330 {
         public void motorSubstep(float[] command,Morphology.Surface skin,
                                  MotorBrain.Body body){
             if(command==null||command.length!=64||skin==null||body==null||
-               count>=Zero3RuntimeV325.SUBSTEPS)
+               count>=(variable?26:Zero3RuntimeV325.SUBSTEPS))
                 throw new IllegalArgumentException("V330 wrong actuator step");
             double vectorX=0,vectorY=0,magnitude=0;
             for(int sector=0;sector<16;sector++){
@@ -98,7 +101,7 @@ public final class Zero3MotorEvidenceV330 {
                                 int gripFrames,int bilateralFrames){
             if(result==null||result.intent.episodeId!=episode||
                result.intent.decisionId!=decision||
-               count!=Zero3RuntimeV325.SUBSTEPS||
+               (variable?(count<1||count>26):count!=Zero3RuntimeV325.SUBSTEPS)||
                result.frames!=count||gripFrames<0||bilateralFrames<0||
                gripFrames>count||bilateralFrames>gripFrames||
                Float.floatToRawIntBits(result.intent.x)!=Float.floatToRawIntBits(x)||

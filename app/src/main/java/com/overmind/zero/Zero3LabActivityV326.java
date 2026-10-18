@@ -59,13 +59,18 @@ public final class Zero3LabActivityV326 extends Activity {
         row(root,"CREA GRU64 SENSORI V3","RIPRENDI SOLO V3",
              ()->confirmBirth(),()->enqueue(this::resume));
         row(root,"AVVIA x1","AVVIA x5",()->start(1),()->start(5));
+        row(root,"AVVIA x20","PAUSA",()->start(20),()->stopAndSave(false));
+        Button maximum=new Button(this);maximum.setText("TEST MAX — SIMULAZIONE LAB");
+        LinearLayout.LayoutParams maximumLayout=new LinearLayout.LayoutParams(-1,-2);
+        maximumLayout.topMargin=28;root.addView(maximum,maximumLayout);
+        maximum.setOnClickListener(v->start(0));
         row(root,"PAUSA E SALVA","TORNA ALLA 2.2",
              ()->stopAndSave(false),()->{stopAndSave(true);});
         addText(root,"V3 GRU64 SPERIMENTALE: percezione unificata a 194 ingressi, replay a segmenti (V3.48), "+
             "limite di 10.000 decisioni per nuove vite GRU64 (3.500 V317). "+
             "Le prestazioni vanno ancora verificate sul Galaxy S21.",
             12,0xffffc98c);
-        addText(root,"Ogni decisione = 12 passi fisici. Salvataggio automatico "+
+        addText(root,"Nuove vite: durata scelta 0,25–0,65 s, interrotta da danno o morte. Salvataggio automatico "+
             "ogni 8 decisioni completate; nessun salvataggio a metà di un'azione. "+
             "Una chiusura forzata può perdere fino alle ultime decisioni non salvate.",
             11,MUTED);
@@ -107,9 +112,10 @@ public final class Zero3LabActivityV326 extends Activity {
                 Zero3RuntimeV325 organism=
                     Zero3WorldBirthV326.create(episode,0x33226017L^episode);
                 try{
-                    session.startNewUnifiedResearch(organism);
+                    session.startNewVariableResearch(organism);
                     // V348 atomic journal requires one COMPLETED physics
                     // decision; don't leave a newborn with no durable history.
+                    long decisionStarted=System.nanoTime();
                     session.step();
                     session.suspend();
                     session.resume();
@@ -131,7 +137,7 @@ public final class Zero3LabActivityV326 extends Activity {
         running=true;
         enqueue(()->{
             try{
-                show("Simulazione reale x"+factor+" attiva");
+                show(factor==0?"Simulazione LAB alla massima velocità": "Simulazione reale x"+factor+" attiva");
                 int sinceSaved=0;
                 while(running&&!leaving&&session.active()){
                     if(session.ended()){show("ZERO ha esaurito l'energia.");break;}
@@ -141,6 +147,7 @@ public final class Zero3LabActivityV326 extends Activity {
                             " decisioni. Salvataggio protetto per questo test.");
                         break;
                     }
+                    long decisionStarted=System.nanoTime();
                     session.step();
                     sinceSaved++;
                     if(sinceSaved>=8){session.suspend();session.resume();sinceSaved=0;}
@@ -148,9 +155,13 @@ public final class Zero3LabActivityV326 extends Activity {
                     if(now-lastDraw>130000000L||session.ended()){
                         lastDraw=now;publish("Decisione fisica completata");
                     }
-                    // 0.3 s of physical simulation per choice; do not
-                    // claim actual x1 accuracy until measured on device.
-                    Thread.sleep(factor==1?260L:18L);
+                    // Pace wall time from the ACTUALLY executed simulation interval.
+                    // Acceleration never changes dt, motor updates or experience order.
+                    if(factor>0){
+                        long budget=(long)(session.lastDecisionSeconds()*1000000000d/factor);
+                        long remaining=budget-(System.nanoTime()-decisionStarted);
+                        if(remaining>0)Thread.sleep(remaining/1000000L,(int)(remaining%1000000L));
+                    }
                 }
             }catch(InterruptedException interrupted){
                 Thread.currentThread().interrupt();
@@ -218,12 +229,12 @@ public final class Zero3LabActivityV326 extends Activity {
                 : "\nULTIMO BILANCIO ENERGETICO NON OSSERVATO DOPO IL RIPRISTINO";
             info.setText(String.format(Locale.ITALY,
                 "VITA %d   •   DECISIONI %d   •   ENERGIA %.1f/100\n"+
-                "DANNO FISICO PRECEDENTE %.1f  •  INPUT VITALE FUSO\n"+
+                "DANNO FISICO PRECEDENTE %.1f  •  %d INGRESSI SENSORIALI REALI\n"+
                 "MATERIA 96 patch + 74 particelle interne   •   %d oggetti\n"+
                 "GEL %d passi   •   NUCLEO NEURALE: %d unità ricorrenti\n"+
                 "REPLAY COMPLETO IN RAM: %d record  •  NON SALVATI: %d\n"+
                 "%s%s",
-                s.episode,s.decisions,s.reserve,s.priorDamage,s.objects,
+                s.episode,s.decisions,s.reserve,s.priorDamage,s.neuralInputs,s.objects,
                 s.solverTicks,s.neurons,s.residentReplay,s.unsavedReplay,
                 movement+vitalOutcome,s.dead?"   •   VITA TERMINATA":""));
             status.setText(message);body.invalidate();

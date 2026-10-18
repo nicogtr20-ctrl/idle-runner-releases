@@ -14,14 +14,14 @@ public final class Zero3FullCausalExperienceV322B {
     static final int MAX_RECORD=32768;
     public final int decision;
     public final long episode,preHash,postHash,preTick,postTick,actuatorHash,workBits;
-    public final int gripFrames,bilateralFrames;
+    public final int gripFrames,bilateralFrames,plannedSteps,interruptionReason;
     private final byte[] bytes;
     private final float[] unifiedPre,unifiedPost;
 
     private Zero3FullCausalExperienceV322B(int n,long ep,long pre,long post,
               long beforeTick,long afterTick,long commands,long workBits,
-              int gripFrames,int bilateralFrames,byte[] immutable,float[] upre,float[] upost) {
-        decision=n;episode=ep;preHash=pre;postHash=post;
+              int gripFrames,int bilateralFrames,byte[] immutable,float[] upre,float[] upost,int planned,int reason) {
+        plannedSteps=planned;interruptionReason=reason;decision=n;episode=ep;preHash=pre;postHash=post;
         preTick=beforeTick;postTick=afterTick;actuatorHash=commands;
         this.workBits=workBits;this.gripFrames=gripFrames;
         this.bilateralFrames=bilateralFrames;
@@ -121,12 +121,12 @@ public final class Zero3FullCausalExperienceV322B {
     }
     private static void verify(Zero3OrganismStoreV322.Trace trace,
                   Metadata pre,Metadata post,long episode,long hash,
-                  double actualWork,int grips,int bilateral)throws IOException {
+                  double actualWork,int grips,int bilateral,int steps)throws IOException {
         check(trace!=null&&trace.decision>=0&&pre.episode==episode&&
               post.episode==episode&&pre.pre&&!post.pre&&
               pre.frame==trace.decision&&post.frame==trace.decision+1&&
               pre.ticks==trace.startTick&&post.ticks==trace.endTick&&
-              post.ticks-pre.ticks==STEPS&&pre.hash==trace.preHash&&
+              post.ticks-pre.ticks==steps&&pre.hash==trace.preHash&&
               post.hash==trace.postHash&&
               pre.time<post.time&&hash==trace.actuatorHash&&
               trace.gripFrames==grips&&trace.bilateralFrames==bilateral,
@@ -140,17 +140,35 @@ public final class Zero3FullCausalExperienceV322B {
                   Zero3SensoryFrameV315 before,Zero3SensoryFrameV315 after,
                   List<float[]> executed,List<Float> measuredWork,
                   int grips,int bilateral)throws IOException {
+        return captureRecord(trace,before,after,executed,measuredWork,grips,bilateral,VERSION,12,0,null,null);
+    }
+    static Zero3FullCausalExperienceV322B captureVariableV352(
+            Zero3OrganismStoreV322.Trace trace,Zero3SensoryFrameV315 before,Zero3SensoryFrameV315 after,
+            List<float[]> executed,List<Float> work,int grips,int bilateral,int planned,int reason,
+            Zero3GruSensoryV347.Unified pre,Zero3GruSensoryV347.Unified post)throws IOException {
+        check(pre!=null&&post!=null&&pre.intact()&&post.intact()&&pre.preAction&&!post.preAction&&
+              pre.mechanicalHash==before.hash&&post.mechanicalHash==after.hash&&
+              pre.episode==before.episodeId&&post.episode==after.episodeId&&
+              pre.decision==before.frameId&&post.decision==after.frameId,"V352 wrong unified lineage");
+        return captureRecord(trace,before,after,executed,work,grips,bilateral,352,planned,reason,pre.neural(),post.neural());
+    }
+    private static Zero3FullCausalExperienceV322B captureRecord(
+            Zero3OrganismStoreV322.Trace trace,Zero3SensoryFrameV315 before,Zero3SensoryFrameV315 after,
+            List<float[]> executed,List<Float> measuredWork,int grips,int bilateral,
+            int version,int planned,int reason,float[] upre,float[] upost)throws IOException {
+        int steps=version==352?(int)(trace.endTick-trace.startTick):STEPS;
         check(trace!=null&&before!=null&&after!=null&&
               executed!=null&&measuredWork!=null&&
-              executed.size()==STEPS&&measuredWork.size()==STEPS,
+              executed.size()==steps&&measuredWork.size()==steps,
               "incomplete PRE-action-physics-POST transaction");
         ByteArrayOutputStream stream=new ByteArrayOutputStream();
         DataOutputStream d=new DataOutputStream(stream);
-        d.writeInt(MAGIC);d.writeInt(VERSION);d.writeInt(trace.decision);
+        d.writeInt(MAGIC);d.writeInt(version);d.writeInt(trace.decision);
+        if(version==352){d.writeInt(steps);d.writeInt(planned);d.writeInt(reason);}
         writeFrame(d,before);
         long hash=0xcbf29ce484222325L;
         double work=0;
-        for(int i=0;i<STEPS;i++){
+        for(int i=0;i<steps;i++){
             float[] values=executed.get(i);
             writeArray(d,values,OUTPUTS);
             hash=fold(hash,values);
@@ -166,7 +184,8 @@ public final class Zero3FullCausalExperienceV322B {
                      new Metadata(after.episodeId,after.frameId,after.solverTicks,
                                   after.hash,after.preAction,after.lastExecutedAvailable,
                                   after.simulationTime),
-                     before.episodeId,hash,work,grips,bilateral);
+                     before.episodeId,hash,work,grips,bilateral,steps);
+        if(version==352){writeArray(d,upre,194);writeArray(d,upost,194);}
         d.flush();byte[] b=stream.toByteArray();
         check(b.length<=MAX_RECORD,"record too large");
         return decode(b);
@@ -177,12 +196,19 @@ public final class Zero3FullCausalExperienceV322B {
         ByteArrayOutputStream stream=new ByteArrayOutputStream();
         DataOutputStream copy=new DataOutputStream(stream);
         int magic=d.readInt(),version=d.readInt(),decision=d.readInt();
-        check(magic==MAGIC&&(version==VERSION||version==351)&&decision>=0,"record schema");
+        check(magic==MAGIC&&(version==VERSION||version==351||version==352)&&decision>=0,"record schema");
         copy.writeInt(magic);copy.writeInt(version);copy.writeInt(decision);
+        int steps=STEPS,planned=STEPS,reason=0;
+        if(version==352){
+            steps=d.readInt();planned=d.readInt();reason=d.readInt();
+            copy.writeInt(steps);copy.writeInt(planned);copy.writeInt(reason);
+            check(steps>=1&&steps<=26&&planned>=10&&planned<=26&&steps<=planned&&
+                  reason>=0&&reason<=2&&(reason!=0||steps==planned),"V352 false duration/interruption");
+        }
         Metadata before=readFrame(d,copy);
         long hash=0xcbf29ce484222325L;
         double work=0;
-        for(int i=0;i<STEPS;i++){
+        for(int i=0;i<steps;i++){
             float[] action=readArray(d,copy,OUTPUTS);
             hash=fold(hash,action);
             int bits=d.readInt();float delta=Float.intBitsToFloat(bits);
@@ -193,24 +219,26 @@ public final class Zero3FullCausalExperienceV322B {
         int grip=d.readInt(),bilateral=d.readInt();
         copy.writeInt(grip);copy.writeInt(bilateral);
         float[] unifiedPre=null,unifiedPost=null;
-        if(version==351){
+        if(version==351||version==352){
             unifiedPre=readArray(d,copy,194);unifiedPost=readArray(d,copy,194);
             for(float[] sense:new float[][]{unifiedPre,unifiedPost})for(float v:sense)
                 check(v>=-1f&&v<=1f,"V351 neural input out of range");
             check((unifiedPre[193]==1f)==before.lastAvailable&&
                   (unifiedPost[193]==1f)==after.lastAvailable,
                   "V351 efference availability mismatch");
+            if(version==352)check((reason!=2||unifiedPost[188]==-1f)&&
+                (reason!=1||unifiedPost[189]>0f),"V352 interruption lacks real vital evidence");
         }
         copy.flush();
         check(d.available()==0&&Arrays.equals(b,stream.toByteArray())&&
               before.frame==decision&&after.frame==decision+1&&
               before.episode==after.episode&&before.pre&&!after.pre&&
-              after.ticks-before.ticks==STEPS&&grip>=0&&grip<=STEPS&&
+              after.ticks-before.ticks==steps&&grip>=0&&grip<=steps&&
               bilateral>=0&&bilateral<=grip,
               "invalid or noncanonical full experience");
         return new Zero3FullCausalExperienceV322B(decision,before.episode,
                   before.hash,after.hash,before.ticks,after.ticks,hash,
-                  Double.doubleToLongBits(work),grip,bilateral,b,unifiedPre,unifiedPost);
+                  Double.doubleToLongBits(work),grip,bilateral,b,unifiedPre,unifiedPost,planned,reason);
     }
     public void validate(Zero3OrganismStoreV322.Trace trace,long expectedEpisode)
               throws IOException {

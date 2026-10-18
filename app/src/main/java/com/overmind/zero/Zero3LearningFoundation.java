@@ -477,7 +477,9 @@ public final class Zero3LearningFoundation {
             work+=physicalWork;impulse+=muscleImpulse;seconds+=dt;frames++;
             external|=solverCorrection;censored|=teleport;
         }
-        public Experience finish(){
+        public Experience finish(){return finish(false);}
+        public Experience finish(boolean interrupted){
+            censored|=interrupted;
             if(active==null)throw new IllegalStateException("no decision to finish");
             if(cortex.revision()!=startedRevision)throw new IllegalStateException("weights changed during outcome");
             float dx=endX-startX,dy=endY-startY;

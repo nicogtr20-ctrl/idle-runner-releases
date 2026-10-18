@@ -19,6 +19,7 @@ def run(*args):
 
 def main():
     parser = argparse.ArgumentParser()
+    parser.add_argument('--variable-clock', action='store_true')
     parser.add_argument('--long-life', type=int, default=2000)
     args = parser.parse_args()
     if args.long_life < 256 or args.long_life > 10000:
@@ -40,9 +41,10 @@ def main():
                      'Zero3RecurrentBrainCheckpointV345Regression',
                      'Zero3DurationCreditV350Regression',
                      'Zero3GruWholeLifeV348Regression',
-                     'Zero3UnifiedSensoryV351Regression'):
+                     'Zero3UnifiedSensoryV351Regression', 'Zero3VariableClockV352Regression'):
             run('java', '-Xmx1536m', '-cp', classes, 'com.overmind.zero.' + name)
         options = ['java', '-Xmx1536m', '-Dv328.gru=true', '-Dv351.unified=true',
+                   '-Dv352.variable=' + str(args.variable_clock).lower(),
                    f'-Dv328.target={args.long_life}', '-Dv328.ordinal=61',
                    '-cp', classes, 'com.overmind.zero.Zero3LongLifeV328Regression']
         archive = directory / 'life'
@@ -53,7 +55,8 @@ def main():
         if resumed.read_bytes() != reference.read_bytes():
             raise AssertionError('full organism/replay changed after cold JVM restart')
         run(*options, 'fault', archive)
-        print(f'V351 REAL_GRU194_{args.long_life}_SAME_LIFE_COLD_RESTART=PASS', flush=True)
+        label = 'V352' if args.variable_clock else 'V351'
+        print(f'{label} REAL_GRU194_{args.long_life}_SAME_LIFE_COLD_RESTART=PASS', flush=True)
 
 
 if __name__ == '__main__':

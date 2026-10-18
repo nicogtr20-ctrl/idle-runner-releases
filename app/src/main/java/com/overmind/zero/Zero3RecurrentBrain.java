@@ -11,17 +11,20 @@ import java.util.zip.CRC32;
  *
  * One-step truncated recurrent backprop is deliberately explicit: gradients
  * update all GRU gate matrices from real next-observation prediction error;
- * no fixed reservoir. Off-policy replay/target networks and long BPTT remain
- * subsequent engineering gates before production adoption.
+ * no fixed reservoir. V352 adds bounded actual-transition value replay and target critics.
+ * Long BPTT and independent cognitive/behavioral validation remain open.
  */
 public final class Zero3RecurrentBrain {
     public static final int SENSOR=SensorimotorMind.S, HIDDEN=64, MOTOR=5, ACTION=4;
     private static final float MODEL_LR=.008f, CRITIC_LR=.009f, ACTOR_LR=.003f;
     private final int inputs;
+    private final boolean variableClock;
     private final float[] wz,wr,wn,world,before;
 
     private final float[] actor=new float[MOTOR*(HIDDEN+1)];
     private final float[][] critic={new float[HIDDEN+1],new float[HIDDEN+1]};
+    private final float[][] targetCritic;
+    private final float[] valueReplay;
 
     private final float[] state=new float[HIDDEN],prior=new float[HIDDEN];
     private final float[] gatedZ=new float[HIDDEN],gatedR=new float[HIDDEN],
@@ -34,9 +37,13 @@ public final class Zero3RecurrentBrain {
     private final float[] proposal=new float[MOTOR];
     private float storedValue;
     public Zero3RecurrentBrain(){this(SENSOR);}
-    public Zero3RecurrentBrain(int width){
+    public Zero3RecurrentBrain(int width){this(width,false);}
+    public Zero3RecurrentBrain(int width,boolean variable){
         if(width!=SENSOR&&width!=194)throw new IllegalArgumentException("unknown sensory schema");
-        inputs=width;
+        if(variable&&width!=194)throw new IllegalArgumentException("variable clock requires unified senses");
+        inputs=width;variableClock=variable;
+        targetCritic=variable?new float[2][HIDDEN+1]:new float[0][];
+        valueReplay=new float[variable?128*(2*HIDDEN+2):0];
         wz=new float[HIDDEN*(inputs+HIDDEN+1)];
         wr=new float[wz.length];wn=new float[wz.length];
         world=new float[inputs*(HIDDEN+ACTION+1)];before=new float[inputs];
@@ -46,6 +53,10 @@ public final class Zero3RecurrentBrain {
             wn[i]=(random()-.5f)*.035f;
         }
         for(int i=0;i<actor.length;i++)actor[i]=(random()-.5f)*.025f;
+        if(variableClock)for(int head=0;head<2;head++)for(int j=0;j<=HIDDEN;j++){
+            critic[head][j]=(head==0?1f:-1f)*.0001f*(j%7-3);
+            targetCritic[head][j]=critic[head][j];
+        }
     }
     private float random(){
         rng^=rng<<13;rng^=rng>>>7;rng^=rng<<17;
@@ -95,6 +106,7 @@ public final class Zero3RecurrentBrain {
         for(int i=0;i<size;i++)a+=w[at+i]*h[i];
         return a;
     }
+    public boolean variableClock(){return variableClock;}
     public int sensorWidth(){return inputs;}
     public static Zero3RecurrentBrain fromCheckpoint(byte[] raw){
         if(raw==null||raw.length<100||raw.length>CHECK_MAX_BYTES_V345)
@@ -103,9 +115,9 @@ public final class Zero3RecurrentBrain {
             DataInputStream in=new DataInputStream(new ByteArrayInputStream(raw));
             if(in.readInt()!=CHECK_MAGIC_V345)throw new IllegalArgumentException("GRU magic");
             int version=in.readInt(),width=in.readInt();
-            if(!((version==345&&width==SENSOR)||(version==351&&width==194)))
+            if(!((version==345&&width==SENSOR)||((version==351||version==352)&&width==194)))
                 throw new IllegalArgumentException("unknown GRU sensory configuration");
-            Zero3RecurrentBrain restored=new Zero3RecurrentBrain(width);
+            Zero3RecurrentBrain restored=new Zero3RecurrentBrain(width,version==352);
             restored.restoreAtBoundaryV345(raw);return restored;
         }catch(IOException bad){throw new IllegalArgumentException("truncated GRU",bad);}
     }
@@ -173,7 +185,7 @@ public final class Zero3RecurrentBrain {
      * Currently TD actor/dual critics and one-step recurrent world model.
      */
     public void consequence(float[] rawNext,float realSurvivalReward,boolean heldout){
-        completeConsequence(rawNext,realSurvivalReward,heldout,true);
+        completeConsequence(rawNext,realSurvivalReward,heldout,true,false,.3f);
     }
     /**
      * V350 actual V325 runs exactly 12 physical substeps (=0.30s).
@@ -186,10 +198,16 @@ public final class Zero3RecurrentBrain {
      */
     public void consequenceFixedClockV350(float[] rawNext,float realSurvivalReward,
                                          boolean heldout){
-        completeConsequence(rawNext,realSurvivalReward,heldout,false);
+        completeConsequence(rawNext,realSurvivalReward,heldout,false,false,.3f);
+    }
+    public void consequenceObservedV352(float[] next,float reward,boolean heldout,
+            float elapsed,boolean terminal,boolean interrupted){
+        if(!variableClock||!Float.isFinite(elapsed)||elapsed<.0249f||elapsed>.6501f)
+            throw new IllegalArgumentException("V352 requires real physical elapsed time");
+        completeConsequence(next,reward,heldout,!interrupted,terminal,elapsed);
     }
     private void completeConsequence(float[] rawNext,float realSurvivalReward,
-                                    boolean heldout,boolean durationExecuted){
+                                    boolean heldout,boolean durationExecuted,boolean terminal,float elapsed){
         if(!pending)throw new IllegalStateException("missing decision");
         if(!Float.isFinite(realSurvivalReward))throw new IllegalArgumentException("nonfinite reward");
         float[] next=sense(rawNext);
@@ -225,8 +243,11 @@ public final class Zero3RecurrentBrain {
         float[] preview=new float[HIDDEN];
         forward(next,state,preview,new float[HIDDEN],new float[HIDDEN],
                 new float[HIDDEN],wz,wr,wn);
-        float nextValue=.5f*(read(critic[0],preview)+read(critic[1],preview));
-        float target=clip(realSurvivalReward+.98f*nextValue,-3,3);
+        float nextValue=variableClock?
+            Math.min(read(targetCritic[0],preview),read(targetCritic[1],preview)):
+            .5f*(read(critic[0],preview)+read(critic[1],preview));
+        float discount=terminal?0f:(elapsed==.3f?.98f:(float)Math.pow(.98f,elapsed/.3f));
+        float target=clip(realSurvivalReward+discount*nextValue,-3,3);
         float advantage=clip(target-storedValue,-2,2);
         for(int which=0;which<2;which++){
             float value=read(critic[which],decisionState);
@@ -234,6 +255,31 @@ public final class Zero3RecurrentBrain {
             for(int j=0;j<HIDDEN;j++)
                 critic[which][j]=clip(critic[which][j]+CRITIC_LR*err*decisionState[j],-2,2);
             critic[which][HIDDEN]=clip(critic[which][HIDDEN]+CRITIC_LR*err,-2,2);
+        }
+        if(variableClock){
+            final int strideValue=2*HIDDEN+2;
+            int at=(int)(trainCount%128)*strideValue;
+            System.arraycopy(decisionState,0,valueReplay,at,HIDDEN);
+            System.arraycopy(preview,0,valueReplay,at+HIDDEN,HIDDEN);
+            valueReplay[at+2*HIDDEN]=realSurvivalReward;
+            valueReplay[at+2*HIDDEN+1]=discount;
+            int count=(int)Math.min(128,trainCount+1);
+            for(int sample=0;sample<4;sample++){
+                int slot=(int)Math.floorMod(trainCount*8191L+sample*31L,count);
+                int offset=slot*strideValue;
+                float[] oldState=new float[HIDDEN],newState=new float[HIDDEN];
+                System.arraycopy(valueReplay,offset,oldState,0,HIDDEN);
+                System.arraycopy(valueReplay,offset+HIDDEN,newState,0,HIDDEN);
+                float replayTarget=clip(valueReplay[offset+2*HIDDEN]+
+                    valueReplay[offset+2*HIDDEN+1]*Math.min(read(targetCritic[0],newState),read(targetCritic[1],newState)),-3,3);
+                for(int head=0;head<2;head++){
+                    float error=clip(replayTarget-read(critic[head],oldState),-2,2);
+                    for(int j=0;j<HIDDEN;j++)critic[head][j]=clip(critic[head][j]+.25f*CRITIC_LR*error*oldState[j],-2,2);
+                    critic[head][HIDDEN]=clip(critic[head][HIDDEN]+.25f*CRITIC_LR*error,-2,2);
+                }
+            }
+            for(int head=0;head<2;head++)for(int j=0;j<=HIDDEN;j++)
+                targetCritic[head][j]+=.02f*(critic[head][j]-targetCritic[head][j]);
         }
         for(int k=0;k<MOTOR;k++){
             if(k==MOTOR-1&&!durationExecuted)continue; // V350 no fictitious duration credit
@@ -288,11 +334,12 @@ public final class Zero3RecurrentBrain {
                              CHECK_MAX_BYTES_V345=1024*1024;
     private boolean restoredV345;
     private float[][] fullCheckpointArraysV345(){
-        return new float[][]{
-            wz,wr,wn,actor,critic[0],critic[1],world,state,prior,
-            gatedZ,gatedR,candidate,decisionState,before,lastNoise,
-            action,worldInput,proposal
-        };
+        float[][] base={wz,wr,wn,actor,critic[0],critic[1],world,state,prior,
+            gatedZ,gatedR,candidate,decisionState,before,lastNoise,action,worldInput,proposal};
+        if(!variableClock)return base;
+        float[][] complete=Arrays.copyOf(base,base.length+3);
+        complete[base.length]=targetCritic[0];complete[base.length+1]=targetCritic[1];
+        complete[base.length+2]=valueReplay;return complete;
     }
     public byte[] checkpointAtBoundaryV345(){
         if(pending)throw new IllegalStateException(
@@ -301,7 +348,7 @@ public final class Zero3RecurrentBrain {
             ByteArrayOutputStream buffer=new ByteArrayOutputStream(128*1024);
             DataOutputStream out=new DataOutputStream(buffer);
             out.writeInt(CHECK_MAGIC_V345);
-            out.writeInt(inputs==SENSOR?CHECK_VERSION_V345:351);
+            out.writeInt(variableClock?352:(inputs==SENSOR?CHECK_VERSION_V345:351));
             out.writeInt(inputs);
             out.writeInt(HIDDEN);
             out.writeInt(MOTOR);
@@ -359,7 +406,7 @@ public final class Zero3RecurrentBrain {
             DataInputStream in=new DataInputStream(
                 new ByteArrayInputStream(raw,0,tail));
             if(in.readInt()!=CHECK_MAGIC_V345||
-               in.readInt()!=(inputs==SENSOR?CHECK_VERSION_V345:351)||
+               in.readInt()!=(variableClock?352:(inputs==SENSOR?CHECK_VERSION_V345:351))||
                in.readInt()!=inputs||in.readInt()!=HIDDEN||
                in.readInt()!=MOTOR||in.readInt()!=ACTION)
                 throw new IllegalArgumentException(

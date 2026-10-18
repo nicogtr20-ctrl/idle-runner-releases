@@ -11,7 +11,8 @@ import java.util.*;
 public final class Zero3SurvivalLedgerV323 {
     static final int MAGIC=0x5A333233,VERSION=323,RECORD_SIZE=4+8*2+4*6+4*3;
     private float reserve,elapsed,worldTime;
-    private boolean scarcity,active;
+    private boolean scarcity,active,variableClock;
+    public void enableVariableClockV352(){good(!active&&next==0,"clock must be chosen at birth");variableClock=true;}
     private int next,positiveTouches,negativeTouches,consumedSources;
     private float basalSpent,motorSpent,energyGained,negativeContactEnergy;
     private float decisionBefore,decisionBasal,decisionMotor,decisionGain,decisionDamage;
@@ -29,8 +30,9 @@ public final class Zero3SurvivalLedgerV323 {
         final float before,after,basal,motor,gained,damage;
         Trace(int n,long from,long to,float pre,float post,float basal,
               float motor,float gained,float damage,int positive,int negative,
-              int consumed){
-            if(n<0||to-from!=12||!Float.isFinite(pre)||!Float.isFinite(post)||
+              int consumed){this(n,from,to,pre,post,basal,motor,gained,damage,positive,negative,consumed,false);}
+        Trace(int n,long from,long to,float pre,float post,float basal,float motor,float gained,float damage,int positive,int negative,int consumed,boolean variable){
+            if(n<0||(variable?(to-from<1||to-from>26):to-from!=12)||!Float.isFinite(pre)||!Float.isFinite(post)||
                pre<0||pre>100||post<0||post>100)
                 throw new IllegalArgumentException("bad energy trace");
             decision=n;startTick=from;endTick=to;before=pre;after=post;
@@ -44,10 +46,11 @@ public final class Zero3SurvivalLedgerV323 {
             d.writeFloat(motor);d.writeFloat(gained);d.writeFloat(damage);
             d.writeInt(positive);d.writeInt(negative);d.writeInt(consumed);
         }
-        static Trace read(DataInputStream d)throws IOException{
+        static Trace read(DataInputStream d)throws IOException{return read(d,false);}
+        static Trace read(DataInputStream d,boolean variable)throws IOException{
             return new Trace(d.readInt(),d.readLong(),d.readLong(),d.readFloat(),
                  d.readFloat(),d.readFloat(),d.readFloat(),d.readFloat(),
-                 d.readFloat(),d.readInt(),d.readInt(),d.readInt());
+                 d.readFloat(),d.readInt(),d.readInt(),d.readInt(),variable);
         }
     }
     private static void good(boolean ok,String why) {
@@ -70,7 +73,7 @@ public final class Zero3SurvivalLedgerV323 {
                              List<UnknownWorld.Entity> objects){
         good(active&&dt>0&&dt<=.04f&&Float.isFinite(dt)&&
              actualWork>=0&&Float.isFinite(actualWork)&&
-             partialSteps<12&&b!=null&&skin!=null&&objects!=null,
+             partialSteps<(variableClock?26:12)&&b!=null&&skin!=null&&objects!=null,
              "invalid real physics step");
         worldTime+=dt;elapsed+=dt;
         if(!scarcity&&elapsed>=70f)scarcity=true;
@@ -85,6 +88,7 @@ public final class Zero3SurvivalLedgerV323 {
         // Reuse the same collision/consumption code as GameActivity:
         // MaterialGeometry.touches, entity.ready, entity.touch and clamp.
         for(UnknownWorld.Entity item:objects){
+            if(variableClock&&reserve<=0f)break; // death is terminal even within this physical frame
             if(item.concealed||item.isBox()||item.isMovable()||!item.ready())
                 continue;
             if(!MaterialGeometry.touches(b,skin,item.x,item.y,item.radius+2f))
@@ -110,11 +114,11 @@ public final class Zero3SurvivalLedgerV323 {
              "metabolic value nonfinite/overflow");
     }
     public void finish(int decision,long gelTicks){
-        good(active&&decision==next&&gelTicks-decisionStartTick==12&&
-             partialSteps==12,"incomplete decision cannot commit energy");
+        good(active&&decision==next&&gelTicks-decisionStartTick==partialSteps&&
+             (variableClock?partialSteps>=1&&partialSteps<=26:partialSteps==12),"incomplete decision cannot commit energy");
         history.add(new Trace(decision,decisionStartTick,gelTicks,decisionBefore,
                  reserve,decisionBasal,decisionMotor,decisionGain,decisionDamage,
-                 thisDecisionPositive,thisDecisionNegative,thisDecisionConsumed));
+                 thisDecisionPositive,thisDecisionNegative,thisDecisionConsumed,variableClock));
         active=false;next++;
     }
     public int decisions(){return next;}
@@ -141,12 +145,12 @@ public final class Zero3SurvivalLedgerV323 {
         good(!active&&next==history.size(),"cannot snapshot unfinished metabolism");
         return new State(reserve,elapsed,worldTime,scarcity,next,positiveTouches,
                          negativeTouches,consumedSources,basalSpent,motorSpent,
-                         energyGained,negativeContactEnergy,history);
+                         energyGained,negativeContactEnergy,history,variableClock);
     }
     public void restore(State s){
         good(s!=null&&!active&&next==0&&history.isEmpty(),
              "metabolic restore requires virgin observer");
-        reserve=s.reserve;elapsed=s.elapsed;worldTime=s.worldTime;scarcity=s.scarcity;
+        variableClock=s.variableClock;reserve=s.reserve;elapsed=s.elapsed;worldTime=s.worldTime;scarcity=s.scarcity;
         next=s.next;positiveTouches=s.positive;negativeTouches=s.negative;
         consumedSources=s.consumed;basalSpent=s.basal;motorSpent=s.motor;
         energyGained=s.gained;negativeContactEnergy=s.damage;
@@ -154,12 +158,16 @@ public final class Zero3SurvivalLedgerV323 {
     }
     public static final class State{
         final float reserve,elapsed,worldTime,basal,motor,gained,damage;
-        final boolean scarcity;
+        final boolean scarcity,variableClock;
         final int next,positive,negative,consumed;
         final ArrayList<Trace> history;
         State(float reserve,float elapsed,float worldTime,boolean scarcity,
               int n,int p,int neg,int consumed,float basal,float motor,
               float gained,float damage,List<Trace> history){
+            this(reserve,elapsed,worldTime,scarcity,n,p,neg,consumed,basal,motor,gained,damage,history,false);
+        }
+        State(float reserve,float elapsed,float worldTime,boolean scarcity,int n,int p,int neg,int consumed,float basal,float motor,float gained,float damage,List<Trace> history,boolean variable){
+            variableClock=variable;
             if(!Float.isFinite(reserve)||reserve<0||reserve>100||
                !Float.isFinite(elapsed)||elapsed<0||
                !Float.isFinite(worldTime)||worldTime<0||
@@ -182,7 +190,7 @@ public final class Zero3SurvivalLedgerV323 {
         }
         byte[] encoded()throws IOException{
             ByteArrayOutputStream b=new ByteArrayOutputStream();DataOutputStream d=new DataOutputStream(b);
-            d.writeInt(MAGIC);d.writeInt(VERSION);
+            d.writeInt(MAGIC);d.writeInt(variableClock?352:VERSION);
             d.writeFloat(reserve);d.writeFloat(elapsed);d.writeFloat(worldTime);
             d.writeBoolean(scarcity);d.writeInt(next);d.writeInt(positive);
             d.writeInt(negative);d.writeInt(consumed);
@@ -193,8 +201,9 @@ public final class Zero3SurvivalLedgerV323 {
             if(bytes==null||bytes.length<53||bytes.length>600053)
                 throw new IOException("invalid V323 state payload length");
             DataInputStream d=new DataInputStream(new ByteArrayInputStream(bytes));
-            if(d.readInt()!=MAGIC||d.readInt()!=VERSION)
-                throw new IOException("incompatible metabolic schema");
+            if(d.readInt()!=MAGIC)throw new IOException("metabolic magic");
+            int schema=d.readInt();
+            if(schema!=VERSION&&schema!=352)throw new IOException("incompatible metabolic schema");
             float r=d.readFloat(),elapsed=d.readFloat(),world=d.readFloat();
             boolean scarcity=d.readBoolean();int n=d.readInt(),p=d.readInt(),
                 neg=d.readInt(),consumed=d.readInt();
@@ -203,9 +212,9 @@ public final class Zero3SurvivalLedgerV323 {
                 throw new IOException("metabolic count/length mismatch");
             ArrayList<Trace> trace=new ArrayList<>();
             try{
-                for(int i=0;i<n;i++)trace.add(Trace.read(d));
+                for(int i=0;i<n;i++)trace.add(Trace.read(d,schema==352));
                 return new State(r,elapsed,world,scarcity,n,p,neg,consumed,
-                                 basal,motor,gain,loss,trace);
+                                 basal,motor,gain,loss,trace,schema==352);
             }catch(IllegalArgumentException x){throw new IOException("invalid metabolic trace",x);}
         }
     }
