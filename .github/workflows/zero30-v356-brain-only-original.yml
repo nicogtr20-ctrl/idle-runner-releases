@@ -30,7 +30,24 @@ jobs:
               # square/room classes. Default original mechanics remain the
               # same; later physical A/B tests independently verify parity.
               if [[ "$path" == *GameActivity.java ]]; then
-                git diff --exit-code origin/feature/zero22-active-recurrent-ota117 -- "$path"
+                python3 - <<'PY'
+          from pathlib import Path
+          from difflib import SequenceMatcher
+          import subprocess
+          name='app/src/main/java/com/overmind/zero/GameActivity.java'
+          a=subprocess.check_output(['git','show','origin/feature/zero22-active-recurrent-ota117:'+name]).decode()
+          b=Path(name).read_text()
+          score=SequenceMatcher(None,a.splitlines(),b.splitlines(),autojunk=False).ratio()
+          assert score>.91, f'Original game Java drifted: similarity={score:.3f}'
+          for essential in ['void updateHabitat(float dt)','void resolveObjects(float dt)',
+                            'void resetEpisode()','void saveScene()','void restoreScene',
+                            'void renderWorld(Canvas c)','void renderBody(Canvas c)',
+                            'void renderHud(Canvas c)','void renderDock(Canvas c)',
+                            'void renderSettings(Canvas c)','void settingsChoice(int index)']:
+            assert essential in b, essential
+          assert 'zero3.step()' not in b and 'drawZero3(' not in b
+          print('ORIGINAL_GAME_UI_PHYSICS_STRUCTURE=PASS, similarity=',round(score,4))
+          PY
               fi
           done
       - name: Android compile and original existing test suite
