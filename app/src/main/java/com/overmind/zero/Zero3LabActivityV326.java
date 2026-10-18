@@ -56,12 +56,12 @@ public final class Zero3LabActivityV326 extends Activity {
         info=addText(root,"Nessun organismo V3 caricato.",13,WHITE);
         status=addText(root,"Crea una vita vergine o riprendi un checkpoint V3.",
                        12,MUTED);
-        row(root,"CREA ZERO 3.0 VERGINE","RIPRENDI SOLO V3",
+        row(root,"CREA GRU64 3.0 VERGINE","RIPRENDI SOLO V3",
              ()->confirmBirth(),()->enqueue(this::resume));
         row(root,"AVVIA x1","AVVIA x5",()->start(1),()->start(5));
         row(root,"PAUSA E SALVA","TORNA ALLA 2.2",
              ()->stopAndSave(false),()->{stopAndSave(true);});
-        addText(root,"V3 SPERIMENTALE: replay a segmenti immutabili (V3.28), "+
+        addText(root,"V3 GRU64 SPERIMENTALE: replay a segmenti (V3.48), "+
             "limite provvisorio di 3.500 decisioni per vita. "+
             "Le prestazioni vanno ancora verificate sul Galaxy S21.",
             12,0xffffc98c);
@@ -96,25 +96,25 @@ public final class Zero3LabActivityV326 extends Activity {
     private interface Action {void run()throws Exception;}
     private void confirmBirth(){
         if(running){show("Prima interrompi la simulazione.");return;}
-        new AlertDialog.Builder(this).setTitle("Nuovo organismo ZERO 3.0")
+        new AlertDialog.Builder(this).setTitle("Nuovo organismo GRU64 ZERO 3.0")
             .setMessage("Crea un cervello vergine in un ambiente fisico V3. "+
                 "Nessun profilo 2.2 verrà letto o modificato. "+
                 "Un archivio V3 esistente NON verrà sovrascritto.")
             .setNegativeButton("ANNULLA",null)
-            .setPositiveButton("CREA V3",(dialog,which)->enqueue(()->{
+            .setPositiveButton("CREA GRU64",(dialog,which)->enqueue(()->{
                 // A fresh episode ID avoids sharing the static motor authority.
                 long episode=Math.max(1L,System.currentTimeMillis());
                 Zero3RuntimeV325 organism=
                     Zero3WorldBirthV326.create(episode,0x33226017L^episode);
                 try{
-                    session.startNew(organism);
-                    // V324 transaction format requires one COMPLETED physics
+                    session.startNewGruResearch(organism);
+                    // V348 atomic journal requires one COMPLETED physics
                     // decision; don't leave a newborn with no durable history.
                     session.step();
                     session.suspend();
                     session.resume();
                 }catch(Exception rejected){session.close();organism.close();throw rejected;}
-                publish("Nuova vita V3: prima decisione fisica salvata.");
+                publish("Nuova vita GRU64: prima decisione fisica salvata e ripristinata.");
             })).show();
     }
     private void resume()throws Exception{
@@ -220,7 +220,7 @@ public final class Zero3LabActivityV326 extends Activity {
                 "VITA %d   •   DECISIONI %d   •   ENERGIA %.1f/100\n"+
                 "DANNO FISICO PRECEDENTE %.1f  •  INPUT VITALE FUSO\n"+
                 "MATERIA 96 patch + 74 particelle interne   •   %d oggetti\n"+
-                "GEL %d passi   •   CERVELLO ricorrente: %d stati\n"+
+                "GEL %d passi   •   NUCLEO NEURALE: %d unità ricorrenti\n"+
                 "REPLAY COMPLETO IN RAM: %d record  •  NON SALVATI: %d\n"+
                 "%s%s",
                 s.episode,s.decisions,s.reserve,s.priorDamage,s.objects,
