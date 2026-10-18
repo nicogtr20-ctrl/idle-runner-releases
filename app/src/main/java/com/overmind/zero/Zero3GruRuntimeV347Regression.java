@@ -1,12 +1,44 @@
 package com.overmind.zero;
 
 import java.util.Locale;
+import java.util.ArrayList;
 
 /** Actual V325 owner research with GRU64 as ONE intention source. */
 public final class Zero3GruRuntimeV347Regression {
     private Zero3GruRuntimeV347Regression(){}
     private static void check(boolean state,String reason){
         if(!state)throw new AssertionError("V347 "+reason);
+    }
+    /** Four mechanically distinct births; energy always comes from genuine
+     * physical contact. Scenario 3 has real blue food touching the membrane,
+     * scenario 2 true harmful red, never a granted actor reward. */
+    private static Zero3RuntimeV325 born(int scene,long episode,long seed)
+            throws Exception{
+        Zero3MotorImpulseResponseRegression.Scenario pose=
+            new Zero3MotorImpulseResponseRegression.Scenario(
+                scene,(float)(-.65+scene*.34),scene);
+        float[] zero=new float[64];
+        for(int i=0;i<96;i++)
+            pose.gel.step(pose.body,pose.skin,zero,.025f);
+        check(pose.gel.invalid==0,"prebirth warmup corrupted material");
+        ArrayList<UnknownWorld.Entity> objects=new ArrayList<>();
+        objects.add(new UnknownWorld.Entity(
+            pose.body.cx+(scene%2==0?47f:-47f),
+            pose.body.cy+(scene-2)*5f,2,5));
+        if(scene>=1)objects.add(new UnknownWorld.Entity(
+            pose.body.cx-61f,pose.body.cy+30f,2,2));
+        if(scene==2)
+            objects.add(new UnknownWorld.Entity(
+                pose.skin.x[32],pose.skin.y[32],1,1));
+        if(scene==3)
+            objects.add(new UnknownWorld.Entity(
+                pose.skin.x[24],pose.skin.y[24],0,0));
+        ScarcityLab room=new ScarcityLab(pose.body.cx+150f,
+                                         pose.body.cy+scene*4f);
+        objects.add(room.food);
+        return Zero3RuntimeV325.newborn(
+            episode,seed,pose.body,pose.skin,pose.gel,
+            objects,room,scene==3?50f:100f,0f);
     }
     public static void main(String[] args)throws Exception{
         int completed=0,full=0,faults=0;
@@ -16,7 +48,7 @@ public final class Zero3GruRuntimeV347Regression {
             long episode=347001L+scenario,worldSeed=0x3470ABCDEF0L+scenario*1171L;
             int n=0;String reason="NONE";
             try(Zero3RuntimeV325 organism=
-                    Zero3WorldBirthV326.create(episode,worldSeed)){
+                    born(scenario,episode,worldSeed)){
                 organism.enableGruResearchV347();
                 check(organism.display().neurons==Zero3RecurrentBrain.HIDDEN,
                     "GRU64 neuron count is actually shown");
@@ -71,6 +103,8 @@ public final class Zero3GruRuntimeV347Regression {
                      organism.gelTicks()-96,organism.energy(),reason);
             }
         }
+        check(actualGained>0d,
+              "none of the actual V323 blue physical contact outcomes reached GRU");
         check(completed==allGru&&allPhysics==12L*completed,
               "GRU decisions not coupled to exactly 12 true physical substeps");
         System.out.printf(Locale.US,
