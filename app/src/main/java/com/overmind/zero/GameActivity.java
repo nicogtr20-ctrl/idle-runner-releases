@@ -283,7 +283,7 @@ public final class GameActivity extends Activity {
             }
             if(testMax&&testMaxStartedNs>0){
                 float seconds=(System.nanoTime()-testMaxStartedNs)*1e-9f;
-                if(seconds>.1f)testMaxActualRate=testMaxSimSeconds/seconds;
+                if(seconds>.1f)testMaxActualRate=(float)(testMaxSimSeconds/seconds);
             }
             c.save();float scale=getWidth()/W;c.scale(scale,scale);
             renderWorld(c);renderBody(c);renderHud(c);c.restore();
