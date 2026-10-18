@@ -1,0 +1,23 @@
+name: ZERO3 V358 fast physical A-B qualification
+on:
+  push:
+    branches: [feature/zero358-cortex-gain-ota]
+  pull_request:
+    branches: [feature/zero30-brain-only-original-game]
+permissions:
+  contents: read
+jobs:
+  cortex-physics:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with: {distribution: temurin, java-version: '17'}
+      - name: Matched V357 vs V358 neural cortex, same 64 muscle solver
+        run: python3 tools/zero358_motor_audit.py
+      - name: Require ZERO changes to the original physics
+        run: |
+          git fetch origin feature/zero30-brain-only-original-game:refs/remotes/origin/feature/zero30-brain-only-original-game
+          test -z "$(git diff --name-only origin/feature/zero30-brain-only-original-game -- app/src/main/java/com/overmind/zero/SymbioteMatterV1.java app/src/main/java/com/overmind/zero/GameActivity.java)"
+          echo "V358_ONLY_NEURAL_CORTEX_CHANGED=PASS"
