@@ -629,10 +629,12 @@ public final class Zero3RuntimeV325 implements AutoCloseable {
                 restoredGru.restoreAtBoundaryV345(s.gruBytes());
                 require(restoredGru.trainingUpdates()==s.nextDecision,
                         "V348 GRU updates disagree with real experiences");
+                // Close the temporary V317 owner BEFORE claiming the episode
+                // as GRU; the single-owner guard rejects two live issuers.
+                result.authority.close();
                 Zero3MotorIntentV316.Authority nextAuthority=
                     new Zero3MotorIntentV316.Authority(s.episodeId,OWNER_GRU_V347);
                 nextAuthority.restoreCompletedDecisions(s.nextDecision);
-                result.authority.close();
                 result.authority=nextAuthority;
                 result.gruResearchV347=restoredGru;
             }else s.restoreModules(result.encoder,result.cortex,result.grip);
