@@ -38,6 +38,8 @@
 
 | **G4/G7 integrazione V348** GRU64+corpo+mondo+energia+replay nel medesimo archivio versionato | [CI 39084739084](https://github.com/nicogtr20-ctrl/idle-runner-releases/actions/runs/39084739084) **LAB INTEGRATED PASS**, 48 decisioni continue == 24+restart+24 bitwise, GRU64, 64 cortex, presa V319, gel, mondo, energy, 48 replay, rollback/fail-closed | **CONSERVARE**. Nuovo manifest 348 nello stesso V328; i manifest 328 e formato organismo 322 storici rimangono invariati. **NON** è G4/G7 finale: clock GRU variabile non eseguito, neurogenesi e 10k persistente assenti, S21 non testato. |
 
+| **G7 V349** archive GRU 10k **capienza strutturale**, 4100 vita lunga con resume autentico | [CI 39085854910 PASS](https://github.com/nicogtr20-ctrl/idle-runner-releases/actions/runs/39085854910) codec 10000 record; [CI 39085910650 PASS](https://github.com/nicogtr20-ctrl/idle-runner-releases/actions/runs/39085910650) 4100 vera GRU64, 2050+restart+2050 = reference bitwise, rollback 4096 e fail closed | **CONSERVARE**. Solo schema 348 alzato a 10000; V317 archivio 3500 invariato. [10k fisiche V349B](https://github.com/nicogtr20-ctrl/idle-runner-releases/actions/runs/39086138588) IN TEST, non approvate. G7 resta PARZIALE: neurogenesi e 10k durata fisica da verificare. |
+
 ## 2. ESPERIMENTI RESPINTI O CON LIMITI ESPLICITI — NON RIPROMUOVERLI
 
 | Serie | Evidenza originale | Decisione vincolante |
