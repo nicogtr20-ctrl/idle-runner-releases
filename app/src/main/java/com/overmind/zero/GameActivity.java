@@ -150,6 +150,7 @@ public final class GameActivity extends Activity {
         // Measured ONLY from the original world's red contact and weather.
         // Reset each real simulation substep, not once per GRU decision.
         float brain3HarmThisPhysicalFrameV359=0f;
+        float brain3MotorSpentThisPhysicalFrameV359=0f;
         // Frame-start physical positions for continuous collision detection.
         // These scratch arrays are NEVER part of ZERO's neural state/save.
         final float[] squarePrevSkinX=new float[Morphology.POINTS];
@@ -1088,6 +1089,7 @@ public final class GameActivity extends Activity {
                     if(!Float.isFinite(slice)||slice<=0f)continue;
                     if(fullSpeed)testMaxSimSeconds+=slice;
                     brain3HarmThisPhysicalFrameV359=0f;
+                    brain3MotorSpentThisPhysicalFrameV359=0f;
                     float energyBeforeFrame=reserve;
                     float gateStart=chamber==null?0f:chamber.doorY;
                     long previousFrameGateHolds=chamber==null?0:chamber.gateHeldFrames;
@@ -1189,6 +1191,7 @@ public final class GameActivity extends Activity {
                             float actualFuel=Math.min(reserve,freshWork*8f);
                             if(actualFuel>0f){
                                 reserve-=actualFuel;
+                                brain3MotorSpentThisPhysicalFrameV359+=actualFuel;
                                 if(brain3==null)sensorMind.motorMetabolicCost(actualFuel);
                                 mortality.energyFlows(0f,actualFuel,0f,0f);
                             }
@@ -1511,6 +1514,7 @@ public final class GameActivity extends Activity {
                                 chamber,reserve,worldTime,slice,
                                 Math.max(0f,symMatter.work-brain3WorkBefore),
                                 witnessedMuscleImpulse,
+                                brain3MotorSpentThisPhysicalFrameV359,
                                 brain3HarmThisPhysicalFrameV359,external);
                             // Keep original HUD visual sensors refreshed but
                             // never enter the 2.2 decision/training loop.
