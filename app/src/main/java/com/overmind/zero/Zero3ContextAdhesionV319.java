@@ -31,6 +31,10 @@ public final class Zero3ContextAdhesionV319 {
     private final Rng rng;
     private final boolean training;
     private boolean active,hasStep,heldoutDecision;
+    // Original GameActivity runs at 1/60s, unlike the V3 lab's fixed .025s.
+    // Only physical cost bookkeeping adapts: the learned grip and world physics
+    // retain their exact functions. Default 1.0 keeps V319 research unchanged.
+    private float originalStepScaleV356=1f,originalTotalStepScaleV356;
     private int decisions,realCreditEvents;
     private int steps;
     private double weightChangeSq,allMeasuredAdhesionWork,
@@ -132,6 +136,7 @@ public final class Zero3ContextAdhesionV319 {
         heldoutDecision=heldout;
         if(active)throw new IllegalStateException("two active adhesions");
         active=true;steps=0;hasStep=false;
+        originalStepScaleV356=1f;originalTotalStepScaleV356=0f;
         for(int s=0;s<SECTORS;s++){
             Arrays.fill(sumF[s],0f);Arrays.fill(heldF[s],0f);
             heldCount[s]=sumCommand[s]=sumTrueCost[s]=lastCmd[s]=0f;
@@ -140,6 +145,17 @@ public final class Zero3ContextAdhesionV319 {
         float coarse=training?(rng.u()*2f-1f)*1.35f:0f;
         for(int s=0;s<SECTORS;s++)
             perturb[s]=training?coarse+(rng.u()*2f-1f)*1.45f:0f;
+    }
+    /** Physical timestep of the ORIGINAL game, set before each neural grip actuation. */
+    void originalTimestepV356(float dt){
+        if(!active||hasStep||!Float.isFinite(dt)||dt<=0f||dt>.04f)
+            throw new IllegalStateException("V356 timestep outside real physics");
+        originalStepScaleV356=dt/DT;
+    }
+    /** Discard a partial action on Android pause/death; no fictitious credit. */
+    void abortOriginalV356(){
+        active=false;hasStep=false;steps=0;
+        originalStepScaleV356=1f;originalTotalStepScaleV356=0f;
     }
     public void actuate(float[] cmd,Zero3MotorIntentV316 intent,
                         MotorBrain.Body body,Morphology.Surface skin,
@@ -184,7 +200,7 @@ public final class Zero3ContextAdhesionV319 {
             cmd[4*s+2]=drive;
             lastCmd[s]=drive;
             sumCommand[s]+=drive;
-            sumTrueCost[s]+=drive*ADHESION_WORK_AT_FULL_PER_SECTOR;
+            sumTrueCost[s]+=drive*ADHESION_WORK_AT_FULL_PER_SECTOR*originalStepScaleV356;
         }
         steps++;
         hasStep=true;
@@ -201,7 +217,7 @@ public final class Zero3ContextAdhesionV319 {
         // Read outcome strictly AFTER original gel and box/disk solver.
         float totalAdhesion=0;
         for(int s=0;s<SECTORS;s++){
-            totalAdhesion+=lastCmd[s]*ADHESION_WORK_AT_FULL_PER_SECTOR;
+            totalAdhesion+=lastCmd[s]*ADHESION_WORK_AT_FULL_PER_SECTOR*originalStepScaleV356;
             int first=s*SITES_PER;
             boolean trueHeld=false;
             for(int j=0;j<SITES_PER;j++){
@@ -229,6 +245,8 @@ public final class Zero3ContextAdhesionV319 {
         // radial and tangential work. Check with small float tolerance.
         if(totalAdhesion>actualGelWorkDelta+0.000002f)
             throw new IllegalStateException("adhesion work not present in real gel work");
+        originalTotalStepScaleV356+=originalStepScaleV356;
+        originalStepScaleV356=1f;
         allMeasuredAdhesionWork+=totalAdhesion;
         realGelWorkMeasured+=actualGelWorkDelta;
         hasStep=false;
@@ -245,7 +263,7 @@ public final class Zero3ContextAdhesionV319 {
             // actually added by the solver, normalized to the same term
             // with full drive (no invented energy reading).
             float normalizedPhysicalCost=sumTrueCost[s]/
-                (steps*ADHESION_WORK_AT_FULL_PER_SECTOR);
+                (originalTotalStepScaleV356*ADHESION_WORK_AT_FULL_PER_SECTOR);
             if(!Float.isFinite(normalizedPhysicalCost)||
                Math.abs(normalizedPhysicalCost-meanDrive)>.0002f)
                 throw new IllegalStateException("motor cost accounting mismatch");
