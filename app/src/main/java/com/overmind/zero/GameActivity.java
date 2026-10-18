@@ -553,6 +553,7 @@ public final class GameActivity extends Activity {
         /** Physical checkpoint for a true saved game, not merely a brain
          * export. Named save slots copy this AFTER onPause has flushed it. */
         void saveScene(){
+            if(zero3Mode)return; // V3 atomic snapshot, never old SharedPreferences scene.
             if(creature==null||surface==null||environment==null)return;
             try{
                 JSONObject snapshot=new JSONObject();
@@ -680,6 +681,7 @@ public final class GameActivity extends Activity {
                 gripObserver.encode()).apply();
         }
         void save(){
+            if(zero3Mode)return; // Keep every historical 2.2 weight unchanged.
             if(trainer==null)return;
             prefs.edit().putString("virgin",encode(virgin))
               .putString("best",encode(trainer.best))
@@ -776,6 +778,25 @@ public final class GameActivity extends Activity {
               .apply();
         }
         void resume(){
+            if(zero3Mode){
+                try{
+                    int slot=getSharedPreferences("zero3-ui-v354",0).getInt("slot",1);
+                    slot=Math.max(1,Math.min(12,slot));
+                    if(zero3==null||slot!=zero3Slot){
+                        if(zero3!=null)zero3.close();
+                        zero3=null;zero3OriginX=Float.NaN;zero3OriginY=Float.NaN;
+                        zero3LastX=Float.NaN;zero3LastY=Float.NaN;
+                        zero3Budget=0f;lifeDistance=0f;trailCount=0;
+                        startZero3();
+                    }else if(!zero3.active()){
+                        zero3.resume();zero3Failure="";adoptZero3();
+                    }
+                }catch(Exception error){
+                    simulationRunning=false;
+                    zero3Failure="ZERO3 ripresa: "+error.getMessage();
+                }
+                lastFrame=0;postInvalidateOnAnimation();return;
+            }
             // A reset requested from CERVELLO/ANALISI must replace objects in
             // memory before the next frame can save old weights again.
             if(prefs.contains(ResetDomains.REQUEST)||
@@ -787,6 +808,15 @@ public final class GameActivity extends Activity {
             sensorMind.setLearning(true);
         }
         void suspend(){
+            if(zero3Mode){
+                testMax=false;lastFrame=0;
+                if(zero3!=null&&zero3.active())try{zero3.suspend();}
+                catch(Exception error){
+                    simulationRunning=false;
+                    zero3Failure="ZERO3 non salvato: "+error.getMessage();
+                }
+                return;
+            }
             // Test speed is deliberately NOT persisted or resumed blindly.
             testMax=false;
             // Pause and FLUSH BOTH cognition and physical state before the
@@ -1093,6 +1123,7 @@ public final class GameActivity extends Activity {
         }
         @Override protected void onDraw(Canvas c){
             super.onDraw(c);
+            if(zero3Mode){drawZero3(c);return;}
             if(getWidth()==0)return;
             long now=System.nanoTime();
             float dt=lastFrame==0?0:Math.min(.038f,(now-lastFrame)*.000000001f);
@@ -1910,7 +1941,7 @@ public final class GameActivity extends Activity {
                 float relativeSpeed=(float)Math.hypot(
                     surface.vx[i]-creature.cvx,surface.vy[i]-creature.cvy);
                 float pressure=Math.max(surface.touchSense[i],surface.touchPulse[i]);
-                float localEye=distributedSense.node(i,DistributedBodySense.OPTIC);
+                float localEye=zero3Mode?0f:distributedSense.node(i,DistributedBodySense.OPTIC);
                 float activation=Math.min(1f,
                     .37f*Math.min(1f,surface.extension[i]/Morphology.MAX_REACH)+
                     .44f*Math.min(1f,relativeSpeed/120f)+
