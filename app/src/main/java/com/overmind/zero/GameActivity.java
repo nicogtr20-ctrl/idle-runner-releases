@@ -17,11 +17,16 @@ import java.util.Locale;
  */
 public final class GameActivity extends Activity {
     private Lab lab;
+    /** UI instrumentation: actual GRU owns physics, not the dormant 2.2 state. */
+    boolean originalZero3OwnerForQA(){
+        return lab!=null&&lab.zero3Mode&&lab.zero3!=null&&lab.zero3.active()
+            &&lab.trainer==null&&lab.zero3DecisionCount>=1;
+    }
+    int originalZero3DecisionCountForQA(){
+        return lab==null?0:lab.zero3DecisionCount;
+    }
     @Override public void onCreate(Bundle b){
         super.onCreate(b);
-        if(getSharedPreferences("zero3-ui-v354",0).getBoolean("default",getResources().getBoolean(R.bool.zero3_candidate))){
-            startActivity(new android.content.Intent(this,Zero3DashboardActivityV354.class));finish();return;
-        }
         getWindow().setFlags(1024,1024);
         getWindow().getDecorView().setSystemUiVisibility(5894 | 1024 | 512);
         lab=new Lab(this);setContentView(lab);
@@ -157,11 +162,27 @@ public final class GameActivity extends Activity {
         float resetNotice=0,helpNotice=0;
         final int[] darks={0xff060a13,0xff0d1823,0xff14262e,0xff06121c};
 
+        // V355: never swap the original game UI for a replacement dashboard.
+        final boolean zero3Mode=getResources().getBoolean(R.bool.zero3_candidate);
+        // Android instrumentation only: render a single completed V3 state,
+        // with no endless Choreographer invalidations during test idling.
+        final boolean zero3QaPaused=zero3Mode&&
+            GameActivity.this.getIntent().getBooleanExtra("zero3_qa_pause_v355",false);
+        Zero3AndroidSessionV325 zero3;
+        String zero3Failure="";
+        int zero3Slot=1;
+        float zero3Budget,zero3OriginX=Float.NaN,zero3OriginY=Float.NaN;
+        float zero3LastX=Float.NaN,zero3LastY=Float.NaN;
+        int zero3DecisionCount,zero3Positive,zero3Negative,zero3Consumed;
+        long zero3Train,zero3Heldout,zero3Observed;
         Lab(Context c){
             super(c);setLayerType(View.LAYER_TYPE_HARDWARE,null);setFocusable(true);
             prefs=c.getSharedPreferences("zero_motorbrain_001",Context.MODE_PRIVATE);
             gripPrefs=c.getSharedPreferences(GripContactObserver.PREFS,Context.MODE_PRIVATE);
-            load();
+            if(zero3Mode){
+                if(zero3QaPaused)simulationRunning=false;
+                startZero3();
+            }else load();
             try {
                 installedVersion=GameActivity.this.getPackageManager().getPackageInfo(
                     GameActivity.this.getPackageName(),0).versionName;
@@ -171,6 +192,121 @@ public final class GameActivity extends Activity {
                 updaterStatusUntil=uiTime+8.0f;
                 invalidate();
             });
+        }
+        /** No 2.2 preferences are read or mutated in this V3 path. */
+        void startZero3(){
+            try{
+                int requested=getSharedPreferences("zero3-ui-v354",0).getInt("slot",1);
+                zero3Slot=Math.max(1,Math.min(12,requested));
+                Zero3ProfileStoreV354 profiles=Zero3AndroidSessionV325.profilesV354(GameActivity.this);
+                String status=profiles.status(zero3Slot);
+                zero3=Zero3AndroidSessionV325.profileV354(GameActivity.this,zero3Slot);
+                if("VUOTO".equals(status)){
+                    long episode=Math.max(1,System.currentTimeMillis());
+                    Zero3RuntimeV325 newborn=Zero3WorldBirthV355.create(episode,episode^0x355A55L);
+                    try{
+                        zero3.startNewCompletionV354(newborn);
+                        zero3.step(); // Real experience required by atomic V3 archive.
+                        zero3.suspend();zero3.resume();
+                    }catch(Exception failure){newborn.close();throw failure;}
+                }else if(status.startsWith("VITA ")){
+                    zero3.resume();
+                }else throw new java.io.IOException("Checkpoint V3 danneggiato, nessun reset eseguito");
+                zero3Failure="";adoptZero3();
+            }catch(Exception failure){
+                if(zero3!=null){zero3.close();zero3=null;}
+                zero3Failure="ZERO 3.0: "+failure.getMessage();
+                simulationRunning=false;
+            }
+        }
+        /** Only called on the UI thread AFTER a whole physical decision. */
+        void adoptZero3()throws java.io.IOException{
+            if(zero3==null||!zero3.active())return;
+            Zero3RuntimeV325.CanvasStateV355 s=zero3.canvasStateV355();
+            creature=s.body;surface=s.skin;symMatter=s.gel;environment=s.world;
+            chamber=s.room;shelter=s.shelter;reserve=s.reserve;worldTime=s.worldTime;
+            elapsedLife=s.worldTime;scarcity=elapsedLife>=70f;useSymbiote=true;
+            zero3DecisionCount=s.decisions;zero3Train=s.train;zero3Heldout=s.validation;
+            zero3Observed=s.observations;zero3Positive=s.positive;
+            zero3Negative=s.negative;zero3Consumed=s.consumed;
+            if(!Float.isFinite(zero3OriginX)){
+                zero3OriginX=creature.cx;zero3OriginY=creature.cy;
+                zero3LastX=creature.cx;zero3LastY=creature.cy;
+            }else{
+                lifeDistance+=(float)Math.hypot(creature.cx-zero3LastX,creature.cy-zero3LastY);
+                zero3LastX=creature.cx;zero3LastY=creature.cy;
+            }
+            journey.netDistance=(float)Math.hypot(creature.cx-zero3OriginX,creature.cy-zero3OriginY);
+            journey.recordNet=Math.max(journey.recordNet,journey.netDistance);
+            trailClock+=.025f;
+            if(trailClock>.25f){
+                trailClock=0f;
+                if(trailCount<trailX.length)trailCount++;
+                for(int i=trailCount-1;i>0;i--){trailX[i]=trailX[i-1];trailY[i]=trailY[i-1];}
+                trailX[0]=creature.cx;trailY[0]=creature.cy;
+            }
+        }
+        /** Original world/body/HUD renderers; ONLY V3 advances the physics. */
+        void drawZero3(Canvas c){
+            if(getWidth()==0)return;
+            long now=System.nanoTime();
+            float dt=lastFrame==0?0:Math.min(.038f,(now-lastFrame)*1e-9f);
+            lastFrame=now;uiTime+=dt;
+            if(simulationRunning&&zero3!=null&&zero3.active()){
+                if(zero3.ended()||zero3.atArchiveCapacity()){
+                    simulationRunning=false;
+                    zero3Failure=zero3.ended()?
+                        "Vita terminata: crea una nuova vita ereditata":
+                        "Archivio 10.000 decisioni completo: conserva il profilo";
+                }else{
+                    zero3Budget=Math.min(3f,zero3Budget+dt*speed);
+                    long budgetNs=System.nanoTime()+(testMax?40000000L:20000000L);
+                    for(int n=0;n<(testMax?12:8);n++){
+                        float duration=zero3.lastDecisionSeconds();
+                        if(!Float.isFinite(duration)||duration<=0)duration=.3f;
+                        if(!testMax&&zero3Budget<duration)break;
+                        if(n>0&&System.nanoTime()>budgetNs)break;
+                        if(testMax&&android.os.Build.VERSION.SDK_INT>=29){
+                            android.os.PowerManager thermal=(android.os.PowerManager)
+                                GameActivity.this.getSystemService(Context.POWER_SERVICE);
+                            if(thermal!=null&&thermal.getCurrentThermalStatus()>=
+                                android.os.PowerManager.THERMAL_STATUS_SEVERE){
+                                stopTestMax("TEST MAX fermato: temperatura alta");break;
+                            }
+                        }
+                        try{
+                            zero3.step();
+                            float actual=zero3.lastDecisionSeconds();
+                            if(!Float.isFinite(actual)||actual<=0)actual=duration;
+                            if(testMax)testMaxSimSeconds+=actual;
+                            else zero3Budget=Math.max(0f,zero3Budget-actual);
+                            adoptZero3();
+                        }catch(Exception failure){
+                            zero3Failure="ZERO 3.0 interrotto: "+failure.getMessage();
+                            simulationRunning=false;testMax=false;break;
+                        }
+                    }
+                }
+            }
+            if(testMax&&testMaxStartedNs>0){
+                float seconds=(System.nanoTime()-testMaxStartedNs)*1e-9f;
+                if(seconds>.1f)testMaxActualRate=(float)(testMaxSimSeconds/seconds);
+            }
+            c.save();float scale=getWidth()/W;c.scale(scale,scale);
+            renderWorld(c);renderBody(c);renderHud(c);c.restore();
+            if(!zero3QaPaused)postInvalidateOnAnimation();
+        }
+        void zero3Panel(int page){
+            try{
+                if(zero3!=null&&zero3.active())zero3.suspend();
+                android.content.Intent i=new android.content.Intent(
+                    GameActivity.this,Zero3DashboardActivityV354.class);
+                i.putExtra("zero3_page",page);
+                GameActivity.this.startActivity(i);
+            }catch(Exception failure){
+                zero3Failure="ZERO3 salvataggio: "+failure.getMessage();
+                simulationRunning=false;
+            }
         }
         /** Consume reset requests only after dashboard left the foreground.
             Scoped keys are removed before reloading live runtime objects. */
@@ -432,6 +568,7 @@ public final class GameActivity extends Activity {
         /** Physical checkpoint for a true saved game, not merely a brain
          * export. Named save slots copy this AFTER onPause has flushed it. */
         void saveScene(){
+            if(zero3Mode)return; // V3 atomic snapshot, never old SharedPreferences scene.
             if(creature==null||surface==null||environment==null)return;
             try{
                 JSONObject snapshot=new JSONObject();
@@ -559,6 +696,7 @@ public final class GameActivity extends Activity {
                 gripObserver.encode()).apply();
         }
         void save(){
+            if(zero3Mode)return; // Keep every historical 2.2 weight unchanged.
             if(trainer==null)return;
             prefs.edit().putString("virgin",encode(virgin))
               .putString("best",encode(trainer.best))
@@ -655,6 +793,25 @@ public final class GameActivity extends Activity {
               .apply();
         }
         void resume(){
+            if(zero3Mode){
+                try{
+                    int slot=getSharedPreferences("zero3-ui-v354",0).getInt("slot",1);
+                    slot=Math.max(1,Math.min(12,slot));
+                    if(zero3==null||slot!=zero3Slot){
+                        if(zero3!=null)zero3.close();
+                        zero3=null;zero3OriginX=Float.NaN;zero3OriginY=Float.NaN;
+                        zero3LastX=Float.NaN;zero3LastY=Float.NaN;
+                        zero3Budget=0f;lifeDistance=0f;trailCount=0;
+                        startZero3();
+                    }else if(!zero3.active()){
+                        zero3.resume();zero3Failure="";adoptZero3();
+                    }
+                }catch(Exception error){
+                    simulationRunning=false;
+                    zero3Failure="ZERO3 ripresa: "+error.getMessage();
+                }
+                lastFrame=0;postInvalidateOnAnimation();return;
+            }
             // A reset requested from CERVELLO/ANALISI must replace objects in
             // memory before the next frame can save old weights again.
             if(prefs.contains(ResetDomains.REQUEST)||
@@ -666,6 +823,15 @@ public final class GameActivity extends Activity {
             sensorMind.setLearning(true);
         }
         void suspend(){
+            if(zero3Mode){
+                testMax=false;lastFrame=0;
+                if(zero3!=null&&zero3.active())try{zero3.suspend();}
+                catch(Exception error){
+                    simulationRunning=false;
+                    zero3Failure="ZERO3 non salvato: "+error.getMessage();
+                }
+                return;
+            }
             // Test speed is deliberately NOT persisted or resumed blindly.
             testMax=false;
             // Pause and FLUSH BOTH cognition and physical state before the
@@ -972,6 +1138,7 @@ public final class GameActivity extends Activity {
         }
         @Override protected void onDraw(Canvas c){
             super.onDraw(c);
+            if(zero3Mode){drawZero3(c);return;}
             if(getWidth()==0)return;
             long now=System.nanoTime();
             float dt=lastFrame==0?0:Math.min(.038f,(now-lastFrame)*.000000001f);
@@ -1789,7 +1956,7 @@ public final class GameActivity extends Activity {
                 float relativeSpeed=(float)Math.hypot(
                     surface.vx[i]-creature.cvx,surface.vy[i]-creature.cvy);
                 float pressure=Math.max(surface.touchSense[i],surface.touchPulse[i]);
-                float localEye=distributedSense.node(i,DistributedBodySense.OPTIC);
+                float localEye=zero3Mode?0f:distributedSense.node(i,DistributedBodySense.OPTIC);
                 float activation=Math.min(1f,
                     .37f*Math.min(1f,surface.extension[i]/Morphology.MAX_REACH)+
                     .44f*Math.min(1f,relativeSpeed/120f)+
@@ -1843,10 +2010,13 @@ public final class GameActivity extends Activity {
          */
         void renderHud(Canvas c){
             // Energy dots are vertically stacked over the transparent world.
-            hudEnergy(c,37,46,"BLU",energyTotals.blue,0xff58d4ff);
-            hudEnergy(c,37,95,"ROSSA",energyTotals.red,0xffff5789);
-            hudEnergy(c,37,144,"VIOLA",energyTotals.violet,0xffbc8bff);
-            if(energyTotals.legacyPositive>0){
+            // V3 does not checkpoint by-colour lifetime counts. Preserve
+            // the original three graphics, but never fabricate blue/red/purple.
+            hudEnergy(c,37,46,"BLU",zero3Mode?-1:energyTotals.blue,0xff58d4ff);
+            hudEnergy(c,37,95,"ROSSA",zero3Mode?-1:energyTotals.red,0xffff5789);
+            hudEnergy(c,37,144,"VIOLA",zero3Mode?-1:energyTotals.violet,0xffbc8bff);
+            if(zero3Mode){text(c,"SENSORI 3.0",20,181,8,GOLD,false);
+            }else if(energyTotals.legacyPositive>0){
                 text(c,"PRECEDENTI +"+energyTotals.legacyPositive,20,181,8,GOLD,false);
             }else if(!energyTotals.complete){
                 text(c,"STORICO PARZIALE",20,181,8,GOLD,false);
@@ -1857,7 +2027,7 @@ public final class GameActivity extends Activity {
             text(c,"NETTO "+(int)journey.netDistance+" U",172,40,13,0xffefffff,false);
             text(c,"VIA "+(int)lifeDistance+" U",303,40,12,0xffe8fbff,false);
             text(c,"MAX "+(int)journey.recordNet+" U • VITA "+
-                LifeStatistics.duration(lifeStats.current().seconds),
+                LifeStatistics.duration(zero3Mode?elapsedLife:lifeStats.current().seconds),
                 172,62,10,GOLD,false);
             neonOrb(c,438,48,20,0xff83eaff,simulationRunning);
             text(c,simulationRunning?"Ⅱ":"▶",438,55,15,0xffe8fdff,true);
@@ -1870,16 +2040,24 @@ public final class GameActivity extends Activity {
             text(c,wind,450,128,9,0xff97a8c9,true);
             neonBar(c,173,137,456,149,shelter.integrity,0xffb4b9ff,0xff648fea);
             dividerHud(c,171,161,453);
-            text(c,"ESPERIENZE "+sensorMind.experiences+" • DECISIONI "+sensorMind.decisions,
-                173,179,10,0xffb3ced7,false);
-            text(c,"DISCHI "+pushes+" • BLOCCHI "+boxesUncovered+" • ZONE "+journey.lifeCells+
-                " • STANZE "+chambersCleared,173,195,9,GOLD,false);
-            text(c,useSymbiote?
+            if(zero3Mode){
+                text(c,"ESPERIENZE "+zero3DecisionCount+" • DECISIONI "+zero3DecisionCount,
+                    173,179,10,0xffb3ced7,false);
+                text(c,"CONTATTI +"+zero3Positive+" / -"+zero3Negative+
+                    " • RISORSE "+zero3Consumed,173,195,9,GOLD,false);
+                text(c,"CERVELLO 3.0 • GRU64 • TRAIN "+zero3Train+
+                    " • TEST "+zero3Heldout,173,210,9,TEAL,false);
+            }else{
+                text(c,"ESPERIENZE "+sensorMind.experiences+" • DECISIONI "+sensorMind.decisions,
+                    173,179,10,0xffb3ced7,false);
+                text(c,"DISCHI "+pushes+" • BLOCCHI "+boxesUncovered+" • ZONE "+journey.lifeCells+
+                    " • STANZE "+chambersCleared,173,195,9,GOLD,false);
+                text(c,useSymbiote?
                 "CERVELLO 2.2 • SKILL TEMPO "+temporalSkillBank.stored()+
                 " • MOTORIE "+(symMotor==null?0:symMotor.skillMemory().verifiedCount()):
                 "ABILITA "+skillBank.count()+" • RICORDI "+episodic.stored()+
                 " • TECNICHE "+gripBank.count(),173,210,9,TEAL,false);
-
+            }
             // TEST MAX stop is its own small hit target, away from TEMPO.
             if(testMax&&!settingsExpanded){
                 rounded(c,13,217,153,260,0xe6172534,9);
@@ -1901,6 +2079,12 @@ public final class GameActivity extends Activity {
                     240,ty-5,10,0xffdcfdf5,true);
             }
             if(showBenchmark)renderBenchmark(c);
+            if(zero3Mode&&!zero3Failure.isEmpty()){
+                float ty=H-172f;
+                rounded(c,22,ty-34,459,ty+13,0xf2361b2c,10);
+                text(c,zero3Failure.length()>57?zero3Failure.substring(0,57):
+                    zero3Failure,240,ty-8,10,0xffffcccc,true);
+            }
         }
 
         void hudEnergy(Canvas c,float x,float cy,String label,long total,int color){
@@ -1916,7 +2100,7 @@ public final class GameActivity extends Activity {
             paint.setStyle(Paint.Style.FILL);paint.setColor(color);
             c.drawCircle(x,cy,9.4f,paint);
             paint.setColor(0x99ffffff);c.drawCircle(x-3,cy-3,3.1f,paint);
-            text(c,String.valueOf(total),61,cy+4,17,0xfff4faff,false);
+            text(c,total<0?"—":String.valueOf(total),61,cy+4,17,0xfff4faff,false);
             text(c,label,61,cy+18,8,color,false);
         }
         void neonFrame(Canvas c,float l,float t,float r,float b,float radius){
@@ -2041,6 +2225,23 @@ public final class GameActivity extends Activity {
             }
         }
         void renderDetails(Canvas c){
+            if(zero3Mode){
+                float end=Math.min(H-155,648);
+                if(end<320)return;
+                neonFrame(c,158,278,471,end,16);
+                c.save();c.clipRect(164,283,465,end-8);
+                text(c,"DATI TECNICI • ZERO 3.0",174,303,12,TEAL,false);
+                text(c,"GRU64 UNICO DECISORE",174,326,10,0xffc3dee2,false);
+                text(c,"TRAIN "+zero3Train+" • HELDOUT "+zero3Heldout+
+                    " • OSS "+zero3Observed,174,349,9,MUTED,false);
+                text(c,"MEMBRANA 96 • INTERNO 74 • MOTORI 64",174,372,9,MUTED,false);
+                text(c,"RISERVA "+(int)reserve+" • PASSO 0.025s",174,403,10,GOLD,false);
+                text(c,"CONTATTI POSITIVI "+zero3Positive,174,428,10,MUTED,false);
+                text(c,"CONTATTI NEGATIVI "+zero3Negative,174,451,10,MUTED,false);
+                text(c,"FONTI CONSUMATE "+zero3Consumed,174,474,10,MUTED,false);
+                text(c,"GESTIONE NEL MENU ORIGINALE",174,517,9,TEAL,false);
+                c.restore();return;
+            }
             float bottom=Math.min(H-155,648);
             if(bottom<320)return;
             neonFrame(c,158,278,471,bottom,16);
@@ -2126,7 +2327,15 @@ public final class GameActivity extends Activity {
             text(c,"IMPOSTAZIONI",56,top+36,21,0xfff0fff9,false);
             text(c,"GESTIONE • ANALISI • APP",56,top+55,10,TEAL,false);
             smallChevron(c,419,top+32,true);
-            String[] names={
+            String[] names=zero3Mode?new String[]{
+                "PARTITE E SALVATAGGI",
+                "ANALISI CERVELLO 3.0",
+                "STATISTICHE VITE",
+                "PESI E PARAMETRI 3.0",
+                "ABILITA ED EVOLUZIONE",
+                "IMPOSTAZIONI CERVELLO",
+                "AGGIORNA APP"
+            }:new String[]{
                 "PARTITE E SALVATAGGI",
                 "ANALISI CERVELLO 2.2",
                 "STATISTICHE VITE",
@@ -2135,7 +2344,15 @@ public final class GameActivity extends Activity {
                 "ATTIVA STANZA",
                 "AGGIORNA APP"
             };
-            String[] hints={
+            String[] hints=zero3Mode?new String[]{
+                "12 profili ZERO 3.0",
+                "GRU reale, sensi e neuroni",
+                "Vite, riserva e risultati",
+                "Pesi della rete connessa",
+                "Competenze e crescita",
+                "Memoria, backup e modalita",
+                "Controlla la prossima OTA"
+            }:new String[]{
                 "Slot, carica, nuovo ZERO",
                 "Memoria, sensi, affidabilita",
                 "Durata, eventi, medie 25 vite",
@@ -2236,8 +2453,9 @@ public final class GameActivity extends Activity {
                     if(x<179){
                         settingsExpanded=false;
                         save();
-                        GameActivity.this.startActivity(new android.content.Intent(
-                            GameActivity.this,BrainStatsActivity.class));
+                        if(zero3Mode)zero3Panel(2);
+                    else GameActivity.this.startActivity(new android.content.Intent(
+                        GameActivity.this,BrainStatsActivity.class));
                     }else if(x<301){
                         speed=speed==1?5:speed==5?20:1;
                         settingsExpanded=false;
@@ -2261,7 +2479,8 @@ public final class GameActivity extends Activity {
             if(y>=H-147){
                 if(x<180){
                     save();
-                    GameActivity.this.startActivity(new android.content.Intent(
+                    if(zero3Mode)zero3Panel(2);
+                    else GameActivity.this.startActivity(new android.content.Intent(
                         GameActivity.this,BrainStatsActivity.class));
                 }else if(x<300){
                     speed=speed==1?5:speed==5?20:1;
@@ -2284,6 +2503,20 @@ public final class GameActivity extends Activity {
             return true;
         }
         void settingsChoice(int index){
+            if(zero3Mode){
+                settingsExpanded=false;
+                switch(index){
+                    case 0:zero3Panel(9);break;
+                    case 1:zero3Panel(2);break;
+                    case 2:zero3Panel(1);break;
+                    case 3:zero3Panel(2);break;
+                    case 4:zero3Panel(4);break;
+                    case 5:zero3Panel(9);break;
+                    case 6:updater.checkAndInstall();break;
+                    default:break;
+                }
+                return;
+            }
             switch(index){
                 case 0:
                     save();saveScene();

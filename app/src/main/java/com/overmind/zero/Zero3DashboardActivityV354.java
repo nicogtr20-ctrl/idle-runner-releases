@@ -21,6 +21,7 @@ public final class Zero3DashboardActivityV354 extends Activity {
     private final ExecutorService owner=SERIAL_OWNER;
     private Zero3AndroidSessionV325 session;private Zero3ProfileStoreV354 profiles;
     private volatile boolean running,destroyed;private volatile int page;
+    private boolean initialResume=true;
     private int slot=1,documentOperation;
     private TextView header,status,facts;private LinearLayout content;private BodyCanvas body;private Zero3AtlasViewV354 atlas;
     private volatile Zero3DashboardSnapshotV354 latest;
@@ -28,6 +29,9 @@ public final class Zero3DashboardActivityV354 extends Activity {
     private interface Work{void run()throws Exception;}
     private int dp(int n){return (int)(n*getResources().getDisplayMetrics().density+.5f);}
     @Override public void onCreate(Bundle state){super.onCreate(state);
+        // Same fullscreen/immersive presentation used by the original neural pages.
+        getWindow().setFlags(1024,1024);
+        getWindow().getDecorView().setSystemUiVisibility(5894|1024|512);
         slot=getSharedPreferences("zero3-ui-v354",0).getInt("slot",1);if(slot<1||slot>12)slot=1;
         LinearLayout root=new LinearLayout(this);root.setOrientation(1);root.setPadding(dp(12),dp(14),dp(12),dp(8));root.setBackgroundColor(BG);setContentView(root);
         root.setOnApplyWindowInsetsListener((view,insets)->{
@@ -36,19 +40,65 @@ public final class Zero3DashboardActivityV354 extends Activity {
             view.setPadding(dp(12),dp(14)+top,dp(12),dp(8)+bottom);return insets;
         });root.requestApplyInsets();
         header=text(root,"ZERO 3.0  /  PROFILO "+slot,22,WHITE);status=text(root,"Versione candidata · prove sul Galaxy S21 da eseguire",12,MUTED);
-        HorizontalScrollView horizontal=new HorizontalScrollView(this);LinearLayout nav=new LinearLayout(this);horizontal.addView(nav);root.addView(horizontal);
-        for(int i=0;i<PAGES.length;i++){final int destination=i;button(nav,PAGES[i],()->showPage(destination));}
-        ScrollView scroll=new ScrollView(this);content=new LinearLayout(this);content.setOrientation(1);scroll.addView(content);root.addView(scroll,new LinearLayout.LayoutParams(-1,0,1));showPage(0);
+        // All settings tabs are now visible, not hidden beyond a horizontal scroll.
+        // GAME in this panel is for existing QA; the normal entry is GameActivity.
+        LinearLayout nav=new LinearLayout(this);nav.setOrientation(1);root.addView(nav);
+        int[][] groups={{0,1,2,3},{4,5,6},{7,8,9}};
+        boolean originalGameOnly=getResources().getBoolean(R.bool.zero3_candidate);
+        if(originalGameOnly)button(nav,"← TORNA AL GIOCO ORIGINALE",()->{pause();finish();});
+        for(int[] indices:groups){
+            LinearLayout buttons=new LinearLayout(this);
+            nav.addView(buttons,new LinearLayout.LayoutParams(-1,-2));
+            for(int destination:indices){
+                if(originalGameOnly&&destination==0)continue; // No second / replacement game.
+                Button b=new Button(this);b.setText(PAGES[destination]);b.setAllCaps(false);
+                b.setTextSize(11);b.setTextColor(WHITE);b.setMinHeight(dp(46));
+                b.setBackground(neuralButton());final int choice=destination;
+                b.setOnClickListener(v->showPage(choice));
+                LinearLayout.LayoutParams lp=new LinearLayout.LayoutParams(0,-2,1);
+                lp.setMargins(dp(2),dp(3),dp(2),dp(3));buttons.addView(b,lp);
+            }
+        }
+        ScrollView scroll=new ScrollView(this);content=new LinearLayout(this);content.setOrientation(1);scroll.addView(content);root.addView(scroll,new LinearLayout.LayoutParams(-1,0,1));
+        int pageFromOriginal=getIntent().getIntExtra("zero3_page",2);
+        showPage(pageFromOriginal<1||pageFromOriginal>=PAGES.length?2:pageFromOriginal);
         work(()->{profiles=Zero3AndroidSessionV325.profilesV354(this);session=Zero3AndroidSessionV325.profileV354(this,slot);
             try{session.resume();remember();publish("Profilo ripristinato e verificato");}catch(IOException empty){say(empty.getMessage());}});
     }
     private TextView text(LinearLayout parent,String value,int size,int color){TextView t=new TextView(this);t.setText(value);t.setTextSize(size);t.setTextColor(color);t.setPadding(dp(10),dp(10),dp(10),dp(10));t.setTextIsSelectable(true);parent.addView(t);return t;}
-    private void button(LinearLayout parent,String label,Runnable action){Button b=new Button(this);b.setText(label);b.setTextSize(12);b.setMinHeight(dp(48));b.setContentDescription(label);b.setOnClickListener(v->action.run());parent.addView(b,new LinearLayout.LayoutParams(parent.getOrientation()==1?-1:-2,-2));}
-    private void row(String[] labels,Runnable[] actions){LinearLayout line=new LinearLayout(this);content.addView(line);for(int i=0;i<labels.length;i++){Button b=new Button(this);b.setText(labels[i]);b.setTextSize(12);b.setMinHeight(dp(48));final Runnable a=actions[i];b.setOnClickListener(v->a.run());line.addView(b,new LinearLayout.LayoutParams(0,-2,1));}}
+    private GradientDrawable neuralButton(){
+        GradientDrawable shape=new GradientDrawable(
+            GradientDrawable.Orientation.TL_BR,
+            new int[]{0xff142d40,0xff0b1728});
+        shape.setCornerRadius(dp(12));shape.setStroke(dp(1),0xff40758a);return shape;
+    }
+    private void button(LinearLayout parent,String label,Runnable action){
+        Button b=new Button(this);b.setText(label);b.setAllCaps(false);
+        b.setTextColor(WHITE);b.setBackground(neuralButton());
+        b.setTextSize(12);b.setMinHeight(dp(48));b.setContentDescription(label);
+        b.setOnClickListener(v->action.run());
+        LinearLayout.LayoutParams params=new LinearLayout.LayoutParams(parent.getOrientation()==1?-1:-2,-2);
+        params.setMargins(dp(2),dp(4),dp(2),dp(4));parent.addView(b,params);
+    }
+    private void row(String[] labels,Runnable[] actions){
+        LinearLayout line=new LinearLayout(this);content.addView(line);
+        for(int i=0;i<labels.length;i++){
+            Button b=new Button(this);b.setText(labels[i]);b.setAllCaps(false);
+            b.setTextColor(WHITE);b.setBackground(neuralButton());b.setTextSize(12);
+            b.setMinHeight(dp(48));final Runnable action=actions[i];
+            b.setOnClickListener(v->action.run());
+            LinearLayout.LayoutParams params=new LinearLayout.LayoutParams(0,-2,1);
+            params.setMargins(dp(2),dp(3),dp(2),dp(3));line.addView(b,params);
+        }
+    }
     public Zero3DashboardSnapshotV354 snapshotForQA(){return latest;}
     /** Read-only fence: queued pause/save operations complete before this snapshot. */
     public Future<Zero3DashboardSnapshotV354> snapshotAfterOwnerForQA(){return owner.submit(()->session.dashboardV354(page==2));}
-    private void showPage(int destination){page=destination;content.removeAllViews();body=null;atlas=null;
+    private void showPage(int destination){
+        if(getResources().getBoolean(R.bool.zero3_candidate)&&destination==0){
+            pause();finish();return;
+        }
+        page=destination;content.removeAllViews();body=null;atlas=null;
         text(content,PAGES[page].toUpperCase(Locale.ITALY),20,CYAN);
         if(page==0||page==1||page==3){body=new BodyCanvas(this);content.addView(body,new LinearLayout.LayoutParams(-1,dp(page==0?340:260)));}
         if(page==2){atlas=new Zero3AtlasViewV354(this);content.addView(atlas,new LinearLayout.LayoutParams(-1,dp(450)));
@@ -76,7 +126,7 @@ public final class Zero3DashboardActivityV354 extends Activity {
             button(content,"ESPORTA BACKUP VERIFICATO",()->document(1));button(content,"IMPORTA BACKUP IN SLOT VUOTO",()->document(2));
             button(content,"ESPORTA TELEMETRIA LOCALE",()->document(3));
             button(content,"AGGIORNA APP",()->new UpdateClient(this,this::say).checkAndInstall());
-            button(content,"APRI PROFILI STORICI 2.2",()->{pause();getSharedPreferences("zero3-ui-v354",0).edit().putBoolean("default",false).apply();startActivity(new Intent(this,GameActivity.class));finish();});
+            button(content,"TORNA AL GIOCO ORIGINALE",()->{pause();finish();});
             text(content,"I 12 slot ZERO3 sono separati dai 12 slot storici. Backup e importazione non sovrascrivono un profilo esistente. Versione configurazione354 · "+Zero3ConfigurationV354.HASH.substring(0,12)+". Salvataggio ogni32 decisioni: una chiusura forzata può perdere il tail non salvato.",12,MUTED);
         }
         if(page==8){button(content,"VERIFICA INTEGRITÀ SU CLONE DI LETTURA",()->{pause();work(()->{save();String result=profiles.status(slot);publish("Verifica archivio: "+result);});});button(content,"ESPORTA RAPPORTO DEL FRAME",()->document(3));}
@@ -194,14 +244,39 @@ public final class Zero3DashboardActivityV354 extends Activity {
     private void document(int operation){pause();documentOperation=operation;Intent i=new Intent(operation==2?Intent.ACTION_OPEN_DOCUMENT:Intent.ACTION_CREATE_DOCUMENT);i.setType(operation==3?"application/json":"application/zip");i.addCategory(Intent.CATEGORY_OPENABLE);
         if(operation!=2)i.putExtra(Intent.EXTRA_TITLE,"ZERO3-slot"+slot+(operation==3?"-telemetria.json":"-backup.zip"));startActivityForResult(i,354);}
     @Override protected void onActivityResult(int request,int result,Intent data){super.onActivityResult(request,result,data);if(request!=354||result!=RESULT_OK||data==null||data.getData()==null)return;Uri uri=data.getData();int operation=documentOperation;
-        work(()->{save();if(operation==2){try(InputStream in=getContentResolver().openInputStream(uri)){profiles.importArchive(slot,in);}session.resume();publish("Backup importato e verificato");}
+        work(()->{if(operation!=2&&session!=null&&!session.active())session.resume();
+            save();if(operation==2){try(InputStream in=getContentResolver().openInputStream(uri)){profiles.importArchive(slot,in);}session.resume();publish("Backup importato e verificato");}
             else if(operation==1){try(OutputStream out=getContentResolver().openOutputStream(uri,"wt")){profiles.exportArchive(slot,out);}say("Backup esportato; originale conservato");}
             else{Zero3DashboardSnapshotV354 s=session.dashboardV354(false);JSONObject j=new JSONObject();j.put("schema",354);j.put("configuration",Zero3ConfigurationV354.HASH);j.put("episode",s.body.episode);j.put("decision",s.body.decisions);j.put("ticks",s.body.solverTicks);j.put("reserve",s.body.reserve);j.put("train",s.trained);j.put("validation",s.heldout);j.put("observations",s.observations);j.put("neurons",s.neurons);
                 JSONArray inputs=new JSONArray();if(s.usedInput!=null)for(float x:s.usedInput)inputs.put(x);j.put("lastRealPRE",inputs);JSONArray motor=new JSONArray();if(s.executed!=null)for(float x:s.executed)motor.put(x);j.put("lastExecuted64",motor);
                 JSONArray predictions=new JSONArray();if(s.prediction!=null)for(int h=0;h<12;h++){JSONObject p=new JSONObject();p.put("head",Zero3CognitionV353.HEAD_NAMES[h]);p.put("samples",s.prediction.heldout);p.put("mse",Float.isFinite(s.prediction.mse[h])?s.prediction.mse[h]:JSONObject.NULL);p.put("baseline",Float.isFinite(s.prediction.baselineMse[h])?s.prediction.baselineMse[h]:JSONObject.NULL);p.put("usable",s.prediction.reliable[h]);predictions.put(p);}j.put("prediction",predictions);
                 try(OutputStream out=getContentResolver().openOutputStream(uri,"wt")){out.write(j.toString(2).getBytes(java.nio.charset.StandardCharsets.UTF_8));}say("Telemetria esportata localmente su tua richiesta");}
         });}
-    @Override protected void onPause(){super.onPause();pause();}
+    /**
+     * GameActivity is now the ONLY foreground simulation. Hand back a fully
+     * persisted, closed V3 owner BEFORE the original canvas can resume.
+     * This prevents two activities from independently writing the same brain.
+     */
+    @Override protected void onPause(){
+        running=false;
+        try{
+            java.util.concurrent.Future<?> fence=owner.submit(()->{
+                if(session!=null&&session.active())try{session.suspend();}
+                catch(IOException e){throw new java.util.concurrent.CompletionException(e);}
+            });
+            fence.get(18,java.util.concurrent.TimeUnit.SECONDS);
+        }catch(Exception failure){say("V3 non salvato: "+failure.getMessage());}
+        super.onPause();
+    }
+    @Override protected void onResume(){
+        super.onResume();
+        if(initialResume){initialResume=false;return;}
+        work(()->{
+            if(session!=null&&!session.active()){
+                session.resume();publish("Checkpoint ripristinato");
+            }
+        });
+    }
     @Override protected void onDestroy(){running=false;destroyed=true;owner.execute(()->{if(session!=null)session.close();});super.onDestroy();}
     private final class BodyCanvas extends View {
         Zero3DashboardSnapshotV354 snapshot;private final Paint p=new Paint(3);private final Path outline=new Path();private float zoom=1,panX,panY,lastX,lastY;private final ScaleGestureDetector scale;
