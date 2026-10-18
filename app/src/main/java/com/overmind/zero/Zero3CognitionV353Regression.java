@@ -41,6 +41,14 @@ public final class Zero3CognitionV353Regression {
         byte[] bad=bytes.clone();bad[0]^=1;boolean rejected=false;
         try{Zero3CognitionV353.decode(bad);}catch(java.io.IOException expected){rejected=true;}
         yes(rejected,"unknown cognition schema accepted");
+        Zero3RecurrentBrain guarded=new Zero3RecurrentBrain(194,true);guarded.enableCognitionV353();
+        guarded.choose(x,353899,0,0);boolean missing=false;
+        try{guarded.consequenceObservedV352(x,0,false,.45f,false,false);}catch(IllegalStateException correct){missing=true;}
+        yes(missing,"missing physical targets silently credited");guarded.physicalTargetsV353(target,false);
+        boolean wrongPartition=false;
+        try{guarded.consequenceObservedV352(x,0,true,.45f,false,false);}catch(IllegalStateException correct){wrongPartition=true;}
+        yes(wrongPartition,"changed heldout partition silently credited");
+        guarded.consequenceObservedV352(x,0,false,.45f,false,false);
         // Neural holdout includes target critics/value replay and recurrent parameters.
         Zero3RecurrentBrain brain=new Zero3RecurrentBrain(194,true);brain.enableCognitionV353();
         for(int n=0;n<10;n++){

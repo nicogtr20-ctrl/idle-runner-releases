@@ -21,6 +21,7 @@ public final class Zero3RecurrentBrain {
     private final int inputs;
     private final boolean variableClock;
     private Zero3CognitionV353 cognition;
+    private boolean physicalTargetsReadyV353,physicalHeldoutV353;
     private final float[] wz,wr,wn,world,before;
 
     private final float[] actor=new float[MOTOR*(HIDDEN+1)];
@@ -116,8 +117,9 @@ public final class Zero3RecurrentBrain {
         cognition=new Zero3CognitionV353();
     }
     void physicalTargetsV353(float[] targets,boolean heldout){
-        if(cognition==null)throw new IllegalStateException("V353 disabled");
-        cognition.complete(targets,heldout);
+        if(cognition==null||!pending||physicalTargetsReadyV353)throw new IllegalStateException("V353 missing/duplicate physical transition");
+        if(heldout!=Zero3CognitionV353.heldout(trainCount+validationCount))throw new IllegalArgumentException("V353 partition mismatch");
+        cognition.complete(targets,heldout);physicalHeldoutV353=heldout;physicalTargetsReadyV353=true;
     }
     public int sensorWidth(){return inputs;}
     public static Zero3RecurrentBrain fromCheckpoint(byte[] raw){
@@ -151,7 +153,7 @@ public final class Zero3RecurrentBrain {
         Arrays.fill(state,0f);
     }
     public void abort(){
-        pending=false;if(cognition!=null)cognition.abort();
+        pending=false;physicalTargetsReadyV353=false;if(cognition!=null)cognition.abort();
     }
     /**
      * The only source of high-level intentional directions in the experimental
@@ -160,6 +162,7 @@ public final class Zero3RecurrentBrain {
     public Zero3LearningFoundation.MotorIntent choose(float[] observation,
             long episode,long decision,long cortexRevision){
         if(pending)throw new IllegalStateException("unfinished decision");
+        if(cognition!=null&&decision!=trainCount+validationCount)throw new IllegalArgumentException("V353 causal decision cursor");
         float[] x=sense(observation);
         System.arraycopy(state,0,prior,0,HIDDEN);
         forward(x,prior,state,gatedZ,gatedR,candidate,wz,wr,wn);
@@ -236,9 +239,11 @@ public final class Zero3RecurrentBrain {
     private void completeConsequence(float[] rawNext,float realSurvivalReward,
                                     boolean heldout,boolean durationExecuted,boolean terminal,float elapsed){
         if(!pending)throw new IllegalStateException("missing decision");
+        if(cognition!=null&&(!physicalTargetsReadyV353||physicalHeldoutV353!=heldout))
+            throw new IllegalStateException("V353 outcome/learning partition mismatch");
         if(!Float.isFinite(realSurvivalReward))throw new IllegalArgumentException("nonfinite reward");
         float[] next=sense(rawNext);
-        pending=false;
+        pending=false;physicalTargetsReadyV353=false;
         float[] predictionError=new float[inputs];
         float modelMse=0,baselineMse=0;
         float[] dh=new float[HIDDEN];
