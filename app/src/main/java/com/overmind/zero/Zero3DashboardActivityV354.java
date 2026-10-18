@@ -44,10 +44,13 @@ public final class Zero3DashboardActivityV354 extends Activity {
         // GAME in this panel is for existing QA; the normal entry is GameActivity.
         LinearLayout nav=new LinearLayout(this);nav.setOrientation(1);root.addView(nav);
         int[][] groups={{0,1,2,3},{4,5,6},{7,8,9}};
+        boolean originalGameOnly=getResources().getBoolean(R.bool.zero3_candidate);
+        if(originalGameOnly)button(nav,"← TORNA AL GIOCO ORIGINALE",()->{pause();finish();});
         for(int[] indices:groups){
             LinearLayout buttons=new LinearLayout(this);
             nav.addView(buttons,new LinearLayout.LayoutParams(-1,-2));
             for(int destination:indices){
+                if(originalGameOnly&&destination==0)continue; // No second / replacement game.
                 Button b=new Button(this);b.setText(PAGES[destination]);b.setAllCaps(false);
                 b.setTextSize(11);b.setTextColor(WHITE);b.setMinHeight(dp(46));
                 b.setBackground(neuralButton());final int choice=destination;
@@ -91,7 +94,11 @@ public final class Zero3DashboardActivityV354 extends Activity {
     public Zero3DashboardSnapshotV354 snapshotForQA(){return latest;}
     /** Read-only fence: queued pause/save operations complete before this snapshot. */
     public Future<Zero3DashboardSnapshotV354> snapshotAfterOwnerForQA(){return owner.submit(()->session.dashboardV354(page==2));}
-    private void showPage(int destination){page=destination;content.removeAllViews();body=null;atlas=null;
+    private void showPage(int destination){
+        if(getResources().getBoolean(R.bool.zero3_candidate)&&destination==0){
+            pause();finish();return;
+        }
+        page=destination;content.removeAllViews();body=null;atlas=null;
         text(content,PAGES[page].toUpperCase(Locale.ITALY),20,CYAN);
         if(page==0||page==1||page==3){body=new BodyCanvas(this);content.addView(body,new LinearLayout.LayoutParams(-1,dp(page==0?340:260)));}
         if(page==2){atlas=new Zero3AtlasViewV354(this);content.addView(atlas,new LinearLayout.LayoutParams(-1,dp(450)));
