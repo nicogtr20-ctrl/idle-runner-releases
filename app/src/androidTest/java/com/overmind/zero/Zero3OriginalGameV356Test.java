@@ -8,6 +8,7 @@ import android.graphics.Bitmap;
 import android.graphics.Canvas;
 import android.os.SystemClock;
 import android.util.Log;
+import android.util.Base64;
 import android.view.View;
 import androidx.test.platform.app.InstrumentationRegistry;
 import androidx.test.ext.junit.runners.AndroidJUnit4;
@@ -219,7 +220,7 @@ public final class Zero3OriginalGameV356Test {
             // Reproduce an OTA358 checkpoint by removing the OPTIONAL V359
             // physical-damage float, recomputing its CRC, and confirming
             // older saves are accepted with neutral (zero) missing stimulus.
-            byte[] bytes=android.util.Base64.decode(saved,android.util.Base64.DEFAULT);
+            byte[] bytes=Base64.decode(saved,Base64.DEFAULT);
             assertTrue("V359 CRC payload includes 4 extra bytes",bytes.length>1000);
             byte[] old=new byte[bytes.length-4];
             System.arraycopy(bytes,0,old,0,old.length-4);
@@ -227,7 +228,7 @@ public final class Zero3OriginalGameV356Test {
             crc.update(old,0,old.length-4);
             int checksum=(int)crc.getValue();
             for(int i=0;i<4;i++)old[old.length-4+i]=(byte)(checksum>>>(24-8*i));
-            String legacy=android.util.Base64.encodeToString(old,android.util.Base64.NO_WRAP);
+            String legacy=Base64.encodeToString(old,Base64.NO_WRAP);
             Zero3OriginalBrainV356.Readout oldRead=Zero3OriginalBrainV356.inspectSaved(legacy);
             assertEquals(modern.decisions,oldRead.decisions);
             assertEquals("existing V358 saves lack old pain sensor; no reset",0f,
