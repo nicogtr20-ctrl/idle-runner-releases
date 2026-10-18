@@ -63,11 +63,11 @@ public final class TelemetryActivity extends Activity {
         root.setOrientation(LinearLayout.VERTICAL);
         root.setPadding(dp(18),dp(30),dp(18),dp(24));scroll.addView(root);
         root.addView(text("CONDIVIDI DATI CON GPT",23,WHITE,true));
-        body(root,"ZERO 2.2 • report del corpo attivo • GitHub privato");
+        body(root,"ZERO 3.0 • GRU64 e corpo originale • GitHub privato");
         LinearLayout description=group(root);
         description.addView(text("Che cosa viene condiviso",16,CYAN,true));
-        body(description,"Il cervello ricorrente ZERO 2.2 sceglie le azioni e la corteccia muscolare le traduce in contrazioni reali. L'esportazione legge una copia dell'ultimo salvataggio, non modifica l'apprendimento o la fisica.");
-        body(description,"Insieme al profilo di gioco inviamo un riassunto dedicato: errori di previsione, affidabilita\u0027 contro il modello invariato, contatti energetici verificati, movimenti fisici, prese simultanee e motivi per cui il pianificatore si astiene. I dati grezzi dei 96 punti non vengono duplicati a ogni fotogramma.");
+        body(description,"Il cervello ZERO 3.0 e' l'unico decisore attivo: GRU64, corteccia motoria e presa appresa controllano il simbionte originale. Il report legge l'ULTIMO SALVATAGGIO reale, senza modificare apprendimento, fisica o vita.");
+        body(description,"Il report contiene il checkpoint neurale 3.0 COMPLETO presente nell'ultimo salvataggio: GRU64, corteccia muscolare, prese, decisioni, memorie e moduli cognitivi. L'indice su GitHub mostra subito i conteggi V3 verificati; i modelli grandi sono suddivisi in parti senza tagliare i pesi.");
         body(description,"La copia del profilo di gioco ATTUALE: modelli neurali, "+
             "pesi motori, reti sensoriali, memorie, energie, vita e statistiche "+
             "storiche salvate. Include l'ultimo laboratorio A/B se disponibile "+
@@ -78,7 +78,7 @@ public final class TelemetryActivity extends Activity {
             "Include anche l'OSSERVATORE PRESA: confronto cancello/casse, "+
             "comandi dei punti, contatti, tenute e interruzioni fisiche, "+
             "senza cambiare i comportamenti di ZERO.");
-        body(description,"Gli eventuali campi etichettati 2.0/2.1 sono archivi storici o diagnostici, NON altri cervelli attivi. "+
+        body(description,"Gli eventuali campi etichettati 2.0/2.1/2.2 sono archivi storici o diagnostici, NON altri cervelli attivi. "+
             "Il rapporto potrebbe contenere dati storici rimasti nel profilo. "+
             "NON invia i 12 slot separati, nome/ID del telefono, "+
             "account personali o credenziali. Non modifica mai il personaggio, "+
