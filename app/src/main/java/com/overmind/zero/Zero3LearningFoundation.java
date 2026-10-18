@@ -76,6 +76,11 @@ public final class Zero3LearningFoundation {
         private int activeChannel=-1,contextBucket;
         private float lastAcceptedGradientNorm,lastAdvantage;
         private final float learningRate;
+        // Gain is on neural commands only, NOT the old SymbioteMatterV1
+        // solver's muscle forces. Bounded tanh keeps all 64 values [-1,1].
+        // A/B baselines can explicitly request 1.0 without changing the app.
+        static final float DEFAULT_ACTIVATION_GAIN_V358=2.4f;
+        private final float activationGain;
         /** No prescribed gait: a spatially correlated noise field in one muscle channel. */
         private void sampleProbe(){
             activeChannel=(int)(perturbationEpisodes++%CHANNELS);
@@ -91,12 +96,15 @@ public final class Zero3LearningFoundation {
         public float lastAcceptedGradientNorm(){return lastAcceptedGradientNorm;}
         public float lastAdvantage(){return lastAdvantage;}
         public int lastActiveProbeChannel(){return activeChannel;}
-        public AdaptiveCortex(){this(.013f);}
+        public AdaptiveCortex(){this(.013f,DEFAULT_ACTIVATION_GAIN_V358);}
         /** Research knob; not autonomously edited by UI and not an approved default. */
-        public AdaptiveCortex(float rate){
-            finite(rate,"motor learning rate");
-            if(rate<0f||rate>.3f)throw new IllegalArgumentException("motor learning rate");
-            learningRate=rate;
+        public AdaptiveCortex(float rate){this(rate,DEFAULT_ACTIVATION_GAIN_V358);}
+        /** Test-only comparator 1.0 vs the new V358 2.4 cortical activation. */
+        AdaptiveCortex(float rate,float gain){
+            finite(rate,"motor learning rate");finite(gain,"muscle activation gain");
+            if(rate<0f||rate>.3f||gain<1f||gain>3f)
+                throw new IllegalArgumentException("motor cortex configuration");
+            learningRate=rate;activationGain=gain;
             for(int i=0;i<weights.length;i++)
                 weights[i]=(random()-.5f)*.06f;
         }
@@ -396,7 +404,7 @@ public final class Zero3LearningFoundation {
                     float z=0f;
                     for(int f=0;f<INPUTS;f++)z+=weights[at*INPUTS+f]*features[f];
                     // Exploration is an intervention, not a scripted gait.
-                    output[at]=limit((float)Math.tanh(z+noise[at]),-1f,1f);
+                    output[at]=limit((float)Math.tanh(activationGain*(z+noise[at])),-1f,1f);
                     if(probing)for(int f=0;f<INPUTS;f++)
                         accumulated[at*INPUTS+f]+=features[f];
                     // Slow local state supports future recurrent evolution;
