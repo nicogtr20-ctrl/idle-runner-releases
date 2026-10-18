@@ -1938,11 +1938,14 @@ public final class GameActivity extends Activity {
             text(c,wind,450,128,9,0xff97a8c9,true);
             neonBar(c,173,137,456,149,shelter.integrity,0xffb4b9ff,0xff648fea);
             dividerHud(c,171,161,453);
-            text(c,"ESPERIENZE "+sensorMind.experiences+" • DECISIONI "+sensorMind.decisions,
+            text(c,"ESPERIENZE "+(brain3!=null?brain3.decisions():sensorMind.experiences)+
+                " • DECISIONI "+(brain3!=null?brain3.decisions():sensorMind.decisions),
                 173,179,10,0xffb3ced7,false);
             text(c,"DISCHI "+pushes+" • BLOCCHI "+boxesUncovered+" • ZONE "+journey.lifeCells+
                 " • STANZE "+chambersCleared,173,195,9,GOLD,false);
-            text(c,useSymbiote?
+            text(c,brain3!=null?
+                "CERVELLO 3.0 • GRU64 • TRAIN "+brain3.trained()+
+                    " • TEST "+brain3.validated():useSymbiote?
                 "CERVELLO 2.2 • SKILL TEMPO "+temporalSkillBank.stored()+
                 " • MOTORIE "+(symMotor==null?0:symMotor.skillMemory().verifiedCount()):
                 "ABILITA "+skillBank.count()+" • RICORDI "+episodic.stored()+
@@ -2199,7 +2202,7 @@ public final class GameActivity extends Activity {
                 "ANALISI CERVELLO 2.2",
                 "STATISTICHE VITE",
                 "PESI E PARAMETRI 2.2",
-                "LABORATORIO ISOLATO",
+                "NEURONI 3D",
                 "ATTIVA STANZA",
                 "AGGIORNA APP"
             };
@@ -2208,7 +2211,7 @@ public final class GameActivity extends Activity {
                 "Memoria, sensi, affidabilita",
                 "Durata, eventi, medie 25 vite",
                 "Pesi reali: nucleo e muscoli",
-                "Confronto storico, non il corpo vivo",
+                "Moduli e connessioni reali della rete 3.0",
                 "Ambiente e cancello fisico",
                 "Controlla la prossima OTA"
             };
@@ -2375,7 +2378,17 @@ public final class GameActivity extends Activity {
                     break;
                 case 4:
                     settingsExpanded=false;
-                    compare();
+                    if(brain3!=null){
+                        try{
+                            brain3.interrupt();
+                            Zero3NeuralGraphV354 real=brain3.graph();
+                            saveScene();
+                            Zero3OriginalAtlasActivityV356.open(GameActivity.this,real);
+                        }catch(Exception invalid){
+                            brain3Error="Vista 3D: "+invalid.getMessage();
+                            simulationRunning=false;
+                        }
+                    }
                     break;
                 case 5:
                     settingsExpanded=false;
