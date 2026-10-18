@@ -40,6 +40,8 @@
 
 | **G7 V349** archive GRU 10k **capienza strutturale**, 4100 vita lunga con resume autentico | [CI 39085854910 PASS](https://github.com/nicogtr20-ctrl/idle-runner-releases/actions/runs/39085854910) codec 10000 record; [CI 39085910650 PASS](https://github.com/nicogtr20-ctrl/idle-runner-releases/actions/runs/39085910650) 4100 vera GRU64, 2050+restart+2050 = reference bitwise, rollback 4096 e fail closed | **CONSERVARE**. Solo schema 348 alzato a 10000; V317 archivio 3500 invariato. [10k fisiche V349B](https://github.com/nicogtr20-ctrl/idle-runner-releases/actions/runs/39086138588) IN TEST, non approvate. G7 resta PARZIALE: neurogenesi e 10k durata fisica da verificare. |
 
+| **G4 V350** credito causale del quinto output durata **non eseguito** | [CI 39086546044 PASS](https://github.com/nicogtr20-ctrl/idle-runner-releases/actions/runs/39086546044) 40+24 ablation update: i 4 output fisici e GRU/critic/world invariati, la quinta riga non riceve reward inventato; stessa persistenza V345/V348 e Android build | **CONSERVARE** `consequenceFixedClockV350`. La durata scelta 0.25–0.65 s NON è stata ancora implementata fisicamente (V325 esegue 0.30 s). G4 finale non chiuso. |
+
 ## 2. ESPERIMENTI RESPINTI O CON LIMITI ESPLICITI — NON RIPROMUOVERLI
 
 | Serie | Evidenza originale | Decisione vincolante |
