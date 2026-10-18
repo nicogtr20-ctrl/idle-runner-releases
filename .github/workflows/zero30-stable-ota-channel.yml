@@ -77,7 +77,7 @@ jobs:
       - uses: actions/checkout@v4
       - uses: actions/setup-java@v4
         with: {distribution: temurin, java-version: '17'}
-      - name: V359 regression: same physics A/B motor (1.0 vs 2.4) + true red nociception in emulator
+      - name: 'V359 regression: same physics A/B motor (1.0 vs 2.4) + true red nociception in emulator'
         run: python3 tools/zero358_motor_audit.py
       - name: Enable emulator acceleration
         run: |
