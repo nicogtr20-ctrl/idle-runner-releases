@@ -24,6 +24,15 @@ if [[ "${OVERMIND_CANDIDATE_NAME:-}" == "3.0-candidate.355" ]]; then
     exit 1
   fi
 
+  # Emulator API35 occasionally retains an unfocused application window
+  # after the preceding instrumentation runner exits. Unlock and foreground
+  # a fresh target instance before the independent second runner starts.
+  adb shell am force-stop "$app_package" || true
+  adb shell input keyevent KEYCODE_WAKEUP || true
+  adb shell wm dismiss-keyguard || true
+  adb shell input keyevent 82 || true
+  adb shell settings put system screen_off_timeout 2147483647 || true
+  sleep 2
   adb logcat -c
   brain_log=/tmp/zero354-ui/cognition-v354-instrumentation.log
   printf "START true GRU3 cortex/brain/settings QA\n" | tee "$brain_log"
