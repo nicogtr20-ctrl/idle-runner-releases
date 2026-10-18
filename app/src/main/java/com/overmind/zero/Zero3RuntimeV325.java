@@ -512,7 +512,7 @@ public final class Zero3RuntimeV325 implements AutoCloseable {
             lastVitalOutcome=Zero3CausalVitalBoundaryV344.after(
                 vitalBefore,after,metabolism);
             if(gruResearchV347!=null)
-                gruResearchV347.consequence(
+                gruResearchV347.consequenceFixedClockV350(
                     Zero3GruSensoryV347.after(after,lastVitalOutcome),
                     lastVitalOutcome.netEnergy,false);
             trace.add(event);

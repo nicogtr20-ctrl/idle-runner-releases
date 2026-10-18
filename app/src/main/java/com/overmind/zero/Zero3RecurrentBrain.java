@@ -152,6 +152,23 @@ public final class Zero3RecurrentBrain {
      * Currently TD actor/dual critics and one-step recurrent world model.
      */
     public void consequence(float[] rawNext,float realSurvivalReward,boolean heldout){
+        completeConsequence(rawNext,realSurvivalReward,heldout,true);
+    }
+    /**
+     * V350 actual V325 runs exactly 12 physical substeps (=0.30s).
+     * Until the joint physical/causal schema is upgraded to variable durations,
+     * the sampled fifth actor logit has NO executed causal effect and MUST NOT
+     * receive REINFORCE credit from the other four physical choices.
+     *
+     * Historical V345 GRU test semantics remain available through consequence().
+     * GRU weights/topology/checkpoint encoding are unchanged.
+     */
+    public void consequenceFixedClockV350(float[] rawNext,float realSurvivalReward,
+                                         boolean heldout){
+        completeConsequence(rawNext,realSurvivalReward,heldout,false);
+    }
+    private void completeConsequence(float[] rawNext,float realSurvivalReward,
+                                    boolean heldout,boolean durationExecuted){
         if(!pending)throw new IllegalStateException("missing decision");
         if(!Float.isFinite(realSurvivalReward))throw new IllegalArgumentException("nonfinite reward");
         float[] next=sense(rawNext);
@@ -198,6 +215,7 @@ public final class Zero3RecurrentBrain {
             critic[which][HIDDEN]=clip(critic[which][HIDDEN]+CRITIC_LR*err,-2,2);
         }
         for(int k=0;k<MOTOR;k++){
+            if(k==MOTOR-1&&!durationExecuted)continue; // V350 no fictitious duration credit
             float explorationGradient=clip(lastNoise[k]/(.2f*.2f),-3f,3f);
             int at=k*(HIDDEN+1);
             for(int j=0;j<HIDDEN;j++)
