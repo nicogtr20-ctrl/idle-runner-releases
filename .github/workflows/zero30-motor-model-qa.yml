@@ -1,0 +1,67 @@
+name: ZERO3 motor impulse-response model — fast isolated verification
+on:
+  push:
+    branches: [feature/zero30-foundation-g0-g3-20261016]
+    paths:
+      - 'app/src/main/java/com/overmind/zero/Zero3MotorImpulseResponseRegression.java'
+      - 'app/src/main/java/com/overmind/zero/Zero3MotorDynamicResponseRegression.java'
+      - 'app/src/main/java/com/overmind/zero/Zero3MotorResponseKernel.java'
+      - 'app/src/main/java/com/overmind/zero/Zero3MotorKernelContractRegression.java'
+      - 'app/src/main/java/com/overmind/zero/Zero3MotorClosedLoopRegression.java'
+      - 'app/src/main/java/com/overmind/zero/Zero3MotorTailLatencyRegression.java'
+      - 'app/src/main/java/com/overmind/zero/Zero3MotorCreditWindow.java'
+      - 'app/src/main/java/com/overmind/zero/Zero3MotorCreditWindowRegression.java'
+      - 'app/src/main/java/com/overmind/zero/Zero3MotorAdaptiveGate.java'
+      - 'app/src/main/java/com/overmind/zero/Zero3MotorAdaptiveFeedbackRegression.java'
+      - '.github/workflows/zero30-motor-model-qa.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  causal-model:
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+      - name: Compile against true body physics and motor control with JVM
+        run: |
+          mkdir -p /tmp/overmind
+          python3 - <<'PY'
+          import pathlib,re,shlex,subprocess
+          text=pathlib.Path('.github/workflows/overmind-ota-publish.yml').read_text()
+          match=re.search(r'^\s*(javac -d /tmp/overmind [^\n]+)',text,re.M)
+          if not match:raise RuntimeError('Production JVM source list missing')
+          cmd=shlex.split(match.group(1))+[
+            'app/src/main/java/com/overmind/zero/Zero3LearningFoundation.java',
+            'app/src/main/java/com/overmind/zero/Zero3MotorPromotionGate.java',
+            'app/src/main/java/com/overmind/zero/Zero3MotorRetentionRegression.java',
+            'app/src/main/java/com/overmind/zero/Zero3MotorImpulseResponseRegression.java',
+            'app/src/main/java/com/overmind/zero/Zero3MotorDynamicResponseRegression.java',
+            'app/src/main/java/com/overmind/zero/Zero3MotorResponseKernel.java',
+            'app/src/main/java/com/overmind/zero/Zero3MotorKernelContractRegression.java',
+            'app/src/main/java/com/overmind/zero/Zero3MotorClosedLoopRegression.java',
+            'app/src/main/java/com/overmind/zero/Zero3MotorTailLatencyRegression.java',
+            'app/src/main/java/com/overmind/zero/Zero3MotorCreditWindow.java',
+            'app/src/main/java/com/overmind/zero/Zero3MotorCreditWindowRegression.java',
+            'app/src/main/java/com/overmind/zero/Zero3MotorAdaptiveGate.java',
+            'app/src/main/java/com/overmind/zero/Zero3MotorAdaptiveFeedbackRegression.java']
+          subprocess.run(cmd,check=True)
+          PY
+      - name: Heldout 45-degree counterfactual material pulse response
+        run: java -cp /tmp/overmind com.overmind.zero.Zero3MotorImpulseResponseRegression
+      - name: Stress test pretrained impulse model with deformed and moving body states
+        run: java -cp /tmp/overmind com.overmind.zero.Zero3MotorDynamicResponseRegression
+      - name: Verify independent model calibration and real-world 64-output bounded motor proposal
+        run: java -cp /tmp/overmind com.overmind.zero.Zero3MotorKernelContractRegression
+      - name: Pilot 80 consecutive physical decisions with model-guided muscles vs pristine baseline
+        run: java -cp /tmp/overmind com.overmind.zero.Zero3MotorClosedLoopRegression
+      - name: Long response-tail trace after 48/120/240/360 physical frames
+        run: java -cp /tmp/overmind com.overmind.zero.Zero3MotorTailLatencyRegression
+      - name: Verify 384-frame delayed credit ledger prevents overlapping pulses on continuous real bodies
+        run: java -cp /tmp/overmind com.overmind.zero.Zero3MotorCreditWindowRegression
+      - name: Test adaptive motor abstention vs frozen and fixed-delay controls on 32 continuous real-physics cases
+        run: java -cp /tmp/overmind com.overmind.zero.Zero3MotorAdaptiveFeedbackRegression

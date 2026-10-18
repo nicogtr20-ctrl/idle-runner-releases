@@ -376,6 +376,13 @@ public final class ScarcityLab {
             default:throw new IllegalArgumentException("Invalid wall");
         }
     }
+    /** Defensive actual collision rectangles for read-only joint constraint checks. */
+    float[][] collisionRectanglesV354(){
+        float[][] result=new float[6][4];
+        for(int i=0;i<5;i++)boundaries(i,result[i]);
+        fill(result[5],gateX()-DOOR_HALF_W,gateTop(),gateX()+DOOR_HALF_W,gateBottom());
+        return result;
+    }
     private static void fill(float[] r,float a,float b,float c,float d){
         r[0]=a;r[1]=b;r[2]=c;r[3]=d;
     }

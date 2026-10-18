@@ -1,0 +1,99 @@
+name: ZERO 3.0 foundation G0-G3 — isolated experimental QA
+on:
+  push:
+    branches: [feature/zero30-foundation-g0-g3-20261016]
+    paths:
+      # Expensive 2000-decision and Android checks belong to core engine
+      # changes; isolated motor laboratories each have their own dedicated QA.
+      - 'app/src/main/java/com/overmind/zero/Zero3LearningFoundation.java'
+      # Full Android Java source compile catches Java-only test API mismatches.
+      - 'app/src/main/java/com/overmind/zero/Zero3MotorHeadRestartV320Regression.java'
+      - 'app/src/main/java/com/overmind/zero/Zero3NeuralBundleStoreV321.java'
+      - 'app/src/main/java/com/overmind/zero/Zero3IntegratedRestartV321Regression.java'
+      - 'app/src/main/java/com/overmind/zero/Zero3FoundationRegression.java'
+      - 'app/src/main/java/com/overmind/zero/Zero3RecurrentBrain.java'
+      - 'app/src/main/java/com/overmind/zero/Zero3RecurrentBrainRegression.java'
+      - 'app/src/main/java/com/overmind/zero/Zero3LearningCurveRegression.java'
+      - '.github/workflows/zero30-foundation-qa.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  foundation:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+      - name: Compile with existing verified pure-Java production dependency set
+        run: |
+          set -euo pipefail
+          mkdir -p /tmp/overmind
+          python3 - <<'PY'
+          import pathlib,re,shlex,subprocess
+          p=pathlib.Path('.github/workflows/overmind-ota-publish.yml')
+          text=p.read_text()
+          m=re.search(r'^\s*(javac -d /tmp/overmind [^\n]+)',text,re.M)
+          if not m:raise RuntimeError('Production JVM source list unavailable; do not silently weaken test')
+          command=shlex.split(m.group(1))
+          command[1:1]=["-sourcepath","app/src/main/java"]
+          command+=['app/src/main/java/com/overmind/zero/Zero3LearningFoundation.java',
+                    'app/src/main/java/com/overmind/zero/Zero3FoundationRegression.java',
+                    'app/src/main/java/com/overmind/zero/Zero3RecurrentBrain.java',
+                    'app/src/main/java/com/overmind/zero/Zero3RecurrentBrainRegression.java',
+                    'app/src/main/java/com/overmind/zero/Zero3LearningCurveRegression.java',
+                    'app/src/main/java/com/overmind/zero/Zero3MotorSkillAB.java',
+                    'app/src/main/java/com/overmind/zero/Zero3MotorRetentionRegression.java',
+                    'app/src/main/java/com/overmind/zero/Zero3MotorRateSweepRegression.java',
+                    'app/src/main/java/com/overmind/zero/Zero3MotorPromotionGate.java',
+                    'app/src/main/java/com/overmind/zero/Zero3MotorEpisodicSearchRegression.java',
+                    'app/src/main/java/com/overmind/zero/Zero3Motor2000Regression.java',
+                    'app/src/main/java/com/overmind/zero/Zero3MotorEfficientSearchRegression.java',
+                    'app/src/main/java/com/overmind/zero/Zero3MotorImpulseResponseRegression.java',
+                    'app/src/main/java/com/overmind/zero/Zero3MotorDynamicResponseRegression.java',
+                    'app/src/main/java/com/overmind/zero/Zero3MotorResponseKernel.java',
+                    'app/src/main/java/com/overmind/zero/Zero3MotorKernelContractRegression.java',
+                    'app/src/main/java/com/overmind/zero/Zero3MotorClosedLoopRegression.java',
+                    'app/src/main/java/com/overmind/zero/Zero3MotorTailLatencyRegression.java',
+                    'app/src/main/java/com/overmind/zero/Zero3MotorCreditWindow.java',
+                    'app/src/main/java/com/overmind/zero/Zero3MotorCreditWindowRegression.java',
+                    'app/src/main/java/com/overmind/zero/Zero3MotorAdaptiveGate.java',
+                    'app/src/main/java/com/overmind/zero/Zero3MotorAdaptiveFeedbackRegression.java',
+                    'app/src/main/java/com/overmind/zero/Zero3MotorLongHorizonRegression.java',
+                    'app/src/main/java/com/overmind/zero/Zero3MotorTemporalHistoryRegression.java',
+                    'app/src/main/java/com/overmind/zero/Zero3MotorTemporalScalingRegression.java',
+                    'app/src/main/java/com/overmind/zero/Zero3MotorRecurrentTrajectoryRegression.java']
+          print('Compiling',len(command)-3,'real application Java sources')
+          subprocess.run(command,check=True)
+          PY
+      - name: Verify physics controllability (real material 96+74)
+        run: |
+          java -cp /tmp/overmind com.overmind.zero.Zero161PhysicalCapabilityRegression
+          java -cp /tmp/overmind com.overmind.zero.Zero168ControllabilityRegression
+      - name: Verify ZERO3 causal motor foundation without fake reward or hardcoded gait
+        run: java -cp /tmp/overmind com.overmind.zero.Zero3FoundationRegression
+      - name: Verify ZERO3 trainable GRU / actor-critic / world prediction through real material
+        run: java -cp /tmp/overmind com.overmind.zero.Zero3RecurrentBrainRegression
+      - name: Screen real physical 40 / 400 / 2000 autonomous experiences without fake success gate
+        run: java -cp /tmp/overmind com.overmind.zero.Zero3LearningCurveRegression
+      - name: Reveal 4-direction motor-only 400-step learning performance
+        run: java -cp /tmp/overmind com.overmind.zero.Zero3MotorSkillAB
+      - name: Test learned motor policy cold-start without exploration against untouched virgin
+        run: java -cp /tmp/overmind com.overmind.zero.Zero3MotorRetentionRegression
+      - name: Measure preregistered motor learning-rate grid (tuning only, not final proof)
+        run: java -cp /tmp/overmind com.overmind.zero.Zero3MotorRateSweepRegression
+      - name: Test unscripted local cortex candidate search with repeated real physics episodes
+        run: java -cp /tmp/overmind com.overmind.zero.Zero3MotorEpisodicSearchRegression
+      - name: Long-horizon 2000 experience x 4 headings with 400/1000/2000 cold-body validations
+        run: java -cp /tmp/overmind com.overmind.zero.Zero3Motor2000Regression
+      - name: Probe cost constrained skill discovery with unseen rotated poses (research only)
+        run: java -cp /tmp/overmind com.overmind.zero.Zero3MotorEfficientSearchRegression
+      - name: Measure causal pulse response at delay 12 plus 48 frames and heldout pose prediction
+        run: java -cp /tmp/overmind com.overmind.zero.Zero3MotorImpulseResponseRegression
+      - name: Android build smoke without publishing APK
+        run: |
+          gradle --version || true
+          gradle --no-daemon assembleDebug

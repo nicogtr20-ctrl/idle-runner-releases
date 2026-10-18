@@ -1,0 +1,40 @@
+name: ZERO3 384-frame proprioceptive motor long-horizon QA
+on:
+  push:
+    branches: [feature/zero30-foundation-g0-g3-20261016]
+    paths:
+      - 'app/src/main/java/com/overmind/zero/Zero3MotorLongHorizonRegression.java'
+      - '.github/workflows/zero30-motor-long-horizon-qa.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  long-response:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+      - name: Compile true body solver and causal learned response code
+        run: |
+          set -euo pipefail
+          mkdir -p /tmp/overmind
+          python3 - <<'PY'
+          import pathlib,re,shlex,subprocess
+          s=pathlib.Path('.github/workflows/overmind-ota-publish.yml').read_text()
+          m=re.search(r'^\s*(javac -d /tmp/overmind [^\n]+)',s,re.M)
+          if m is None: raise RuntimeError('Verified JVM production source list missing')
+          cmd=shlex.split(m.group(1))+[
+            'app/src/main/java/com/overmind/zero/Zero3LearningFoundation.java',
+            'app/src/main/java/com/overmind/zero/Zero3MotorResponseKernel.java',
+            'app/src/main/java/com/overmind/zero/Zero3MotorRetentionRegression.java',
+            'app/src/main/java/com/overmind/zero/Zero3MotorPromotionGate.java',
+            'app/src/main/java/com/overmind/zero/Zero3MotorImpulseResponseRegression.java',
+            'app/src/main/java/com/overmind/zero/Zero3MotorLongHorizonRegression.java']
+          subprocess.run(cmd,check=True)
+          PY
+      - name: Compare actual 384-frame muscle consequences with anatomical-only predictor
+        run: java -cp /tmp/overmind com.overmind.zero.Zero3MotorLongHorizonRegression

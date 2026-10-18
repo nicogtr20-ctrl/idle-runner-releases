@@ -1,0 +1,55 @@
+name: ZERO3 V3.35 original BOX collision substage audit
+on:
+  push:
+    branches: [feature/zero30-foundation-g0-g3-20261016]
+    paths:
+      - 'app/src/main/java/com/overmind/zero/SquareGripPuzzle.java'
+      - 'app/src/main/java/com/overmind/zero/SquareCollisionSolver.java'
+      - 'app/src/main/java/com/overmind/zero/Zero3BoxSubstageForensicV335Regression.java'
+      - '.github/workflows/zero30-v335-box-substage-qa.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  box-substage-real-physics:
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+      - name: Compile unmodified physical pipeline plus V335 instrumentation
+        run: |
+          set -euo pipefail
+          mkdir -p /tmp/overmind
+          python3 - <<'PY'
+          import pathlib,re,shlex,subprocess
+          s=pathlib.Path('.github/workflows/overmind-ota-publish.yml').read_text()
+          match=re.search(r'^\s*(javac -d /tmp/overmind [^\n]+)',s,re.M)
+          if not match: raise RuntimeError('original physical Java source list missing')
+          r='app/src/main/java/com/overmind/zero/'
+          names='Zero3LearningFoundation Zero3MotorResponseKernel Zero3MotorRetentionRegression Zero3MotorPromotionGate Zero3MotorImpulseResponseRegression Zero3MotorLocalFrameV310Regression Zero3SensoryFrameV315 Zero3CausalRecorderV315 Zero3SensoryContractV315Regression Zero3MotorIntentV316 Zero3AutonomousLoopV317 Zero3LearnedAdhesionV318 Zero3LearnedAdhesionV318Regression Zero3ContextAdhesionV319 Zero3ContextAdhesionV319Regression Zero3MotorHeadStoreV320 Zero3NeuralBundleStoreV321 Zero3OrganismStoreV322 Zero3FullCausalExperienceV322B Zero3FullArchiveStoreV322B Zero3MultiSceneRestartV322BRegression Zero3FiveArmAblationV333Regression Zero3BoxCrossingForensicV334Regression Zero3BoxSubstageForensicV335Regression MultiObjectGripRegression'
+          subprocess.run(["javac","-sourcepath","app/src/main/java"]+shlex.split(match.group(1))[1:]+[r+n+'.java' for n in names.split()],check=True)
+          PY
+      - name: Run V335 exact solver-vs-instrumented and zero-motor negative controls
+        run: |
+          set -euo pipefail
+          java -Xmx1900m -cp /tmp/overmind com.overmind.zero.Zero3BoxSubstageForensicV335Regression | tee /tmp/v335.log
+          grep -q 'V335 FINAL matchedCases=12' /tmp/v335.log
+          test "$(grep -c 'V335 CASE id=' /tmp/v335.log)" -eq 12
+          grep -q 'V335 MATCHED id=337 mode=ZERO_MOTOR sub=1 before=0 after=1' /tmp/v335.log
+          grep -q 'V335 MATCHED id=645 mode=ZERO_MOTOR sub=0 before=0 after=1' /tmp/v335.log
+      - name: Guard original material and grip behavior
+        run: |
+          set -euo pipefail
+          java -cp /tmp/overmind com.overmind.zero.SquareCollisionSolver
+          java -cp /tmp/overmind com.overmind.zero.SquareGripPuzzle
+          java -cp /tmp/overmind com.overmind.zero.MultiObjectGripRegression
+          java -Xmx1900m -cp /tmp/overmind com.overmind.zero.Zero3ContextAdhesionV319Regression | tee /tmp/v319.log
+          grep -q 'scientificGripGate=PASS' /tmp/v319.log
+      - name: Android Debug build without publishing
+        run: gradle --no-daemon assembleDebug
+      - name: Gate remains blocked
+        run: echo 'V335_DIAGNOSTIC_ONLY G3_BLOCKED G5_BLOCKED NO_OTA NO_MERGE'

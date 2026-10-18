@@ -1,0 +1,62 @@
+name: ZERO3 V3.23 full energy and physical same-life restore QA
+on:
+  push:
+    branches: [feature/zero30-foundation-g0-g3-20261016]
+    paths:
+      - 'app/src/main/java/com/overmind/zero/Zero3SurvivalLedgerV323.java'
+      - 'app/src/main/java/com/overmind/zero/Zero3SurvivalArchiveV323.java'
+      - 'app/src/main/java/com/overmind/zero/Zero3SurvivalRestartV323Regression.java'
+      - '.github/workflows/zero30-v323-survival-qa.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  real-contact-survival:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+      - name: Compile actual production gel and multiscene metabolic observer
+        run: |
+          set -euo pipefail
+          mkdir -p /tmp/overmind
+          python3 - <<'PY'
+          import pathlib,re,shlex,subprocess
+          config=pathlib.Path('.github/workflows/overmind-ota-publish.yml').read_text()
+          m=re.search(r'^\s*(javac -d /tmp/overmind [^\n]+)',config,re.M)
+          if not m:raise RuntimeError('missing unchanged production physical JVM build')
+          root='app/src/main/java/com/overmind/zero/'
+          names='Zero3LearningFoundation Zero3MotorResponseKernel Zero3MotorRetentionRegression Zero3MotorPromotionGate Zero3MotorImpulseResponseRegression Zero3MotorLocalFrameV310Regression Zero3SensoryFrameV315 Zero3CausalRecorderV315 Zero3SensoryContractV315Regression Zero3MotorIntentV316 Zero3AutonomousLoopV317 Zero3LearnedAdhesionV318 Zero3LearnedAdhesionV318Regression Zero3ContextAdhesionV319 Zero3ContextAdhesionV319Regression Zero3MotorHeadStoreV320 Zero3NeuralBundleStoreV321 Zero3OrganismStoreV322 Zero3FullCausalExperienceV322B Zero3FullArchiveStoreV322B Zero3MultiSceneRestartV322BRegression Zero3SurvivalLedgerV323 Zero3SurvivalArchiveV323 Zero3SurvivalRestartV323Regression Zero3ContactTopologyExperimentV336'
+          subprocess.run(["javac","-sourcepath","app/src/main/java"]+shlex.split(m.group(1))[1:]+[root+n+'.java' for n in names.split()],check=True)
+          PY
+      - name: Compare 20 cross-process true-physics brain+energy+world resumes
+        run: |
+          set -euo pipefail
+          for mode in 0 1 2 3 4; do
+            for rep in 0 1 2 3; do
+              ordinal=$((36 + rep*5 + mode))
+              base="/tmp/z323-${mode}-${rep}"
+              args="-Dzero3.mode=${mode} -Dzero3.ordinal=${ordinal}"
+              java -Xmx1536m $args -cp /tmp/overmind com.overmind.zero.Zero3SurvivalRestartV323Regression prefix "$base" | tee "$base-prefix.log"
+              grep -q 'V323 PREFIX cursor=48 gen=2' "$base-prefix.log"
+              java -Xmx1536m $args -cp /tmp/overmind com.overmind.zero.Zero3SurvivalRestartV323Regression resume "$base" "$base-resume.txt" | tee "$base-resume.log"
+              grep -q 'V323 RESUME cursor=96 gen=3' "$base-resume.log"
+              java -Xmx1536m $args -cp /tmp/overmind com.overmind.zero.Zero3SurvivalRestartV323Regression reference "$base-reference.txt" | tee "$base-ref.log"
+              cmp "$base-resume.txt" "$base-reference.txt"
+              grep -q 'fullRecords=96' "$base-resume.txt"
+              grep -q 'scarcity=true' "$base-resume.txt"
+              java -Xmx1536m $args -cp /tmp/overmind com.overmind.zero.Zero3SurvivalRestartV323Regression fault "$base" | tee "$base-fault.log"
+              grep -q 'V323 FAULT rollbackCursor=48' "$base-fault.log"
+              echo "ZERO3 V323 SCENE=${mode} CASE=${ordinal} NEURAL_PHYSICS_SURVIVAL_BITWISE=PASS"
+              cat "$base-resume.txt"
+            done
+          done
+          echo 'ZERO3 V323 TWENTY_SCENES_SAME_LIFE_METABOLIC_RESTART=PASS'
+      - name: Android Debug compilation only, NO release or OTA
+        run: gradle --no-daemon assembleDebug
+      - name: Gate label
+        run: echo 'ZERO3 V323_LAB_GATE=PASS GAMEPLAY_SURVIVAL_NOT_INTEGRATED G3_BLOCKED G5_BLOCKED NO_OTA'

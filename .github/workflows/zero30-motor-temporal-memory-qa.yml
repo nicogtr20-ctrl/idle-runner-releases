@@ -1,0 +1,42 @@
+name: ZERO3 temporal motor memory 96+384 real-physics holdout
+on:
+  push:
+    branches: [feature/zero30-foundation-g0-g3-20261016]
+    paths:
+      - 'app/src/main/java/com/overmind/zero/Zero3MotorTemporalHistoryRegression.java'
+      - '.github/workflows/zero30-motor-temporal-memory-qa.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  temporal-memory:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+      - name: Compile real symbiote physics and V3 temporal model
+        run: |
+          set -euo pipefail
+          mkdir -p /tmp/overmind
+          python3 - <<'PY'
+          import pathlib,re,shlex,subprocess
+          workflow=pathlib.Path('.github/workflows/overmind-ota-publish.yml').read_text()
+          match=re.search(r'^\s*(javac -d /tmp/overmind [^\n]+)',workflow,re.M)
+          if not match:
+              raise RuntimeError('Real physics baseline JVM source list not found')
+          cmd=shlex.split(match.group(1))+[
+              'app/src/main/java/com/overmind/zero/Zero3LearningFoundation.java',
+              'app/src/main/java/com/overmind/zero/Zero3MotorResponseKernel.java',
+              'app/src/main/java/com/overmind/zero/Zero3MotorRetentionRegression.java',
+              'app/src/main/java/com/overmind/zero/Zero3MotorPromotionGate.java',
+              'app/src/main/java/com/overmind/zero/Zero3MotorImpulseResponseRegression.java',
+              'app/src/main/java/com/overmind/zero/Zero3MotorLongHorizonRegression.java',
+              'app/src/main/java/com/overmind/zero/Zero3MotorTemporalHistoryRegression.java']
+          subprocess.run(cmd,check=True)
+          PY
+      - name: Evaluate static 52 vs historical 68 features with separate calibration and blind states
+        run: java -cp /tmp/overmind com.overmind.zero.Zero3MotorTemporalHistoryRegression

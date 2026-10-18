@@ -1,0 +1,48 @@
+name: ZERO3 V3.12 authentic world contact and grip QA
+on:
+  push:
+    branches: [feature/zero30-foundation-g0-g3-20261016]
+    paths:
+      - 'app/src/main/java/com/overmind/zero/Zero3MotorRealContactV312Regression.java'
+      - '.github/workflows/zero30-motor-real-contact-v312-qa.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  real-world-contact:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+      - name: Compile unchanged production world solvers and 3.12 isolated fixture
+        run: |
+          set -euo pipefail
+          mkdir -p /tmp/overmind
+          python3 - <<'PY'
+          import pathlib,re,shlex,subprocess
+          s=pathlib.Path('.github/workflows/overmind-ota-publish.yml').read_text()
+          m=re.search(r'^\s*(javac -d /tmp/overmind [^\n]+)',s,re.M)
+          if m is None: raise RuntimeError('Production world javac source list missing')
+          root='app/src/main/java/com/overmind/zero/'
+          files=['Zero3LearningFoundation.java',
+            'Zero3MotorResponseKernel.java',
+            'Zero3MotorRetentionRegression.java',
+            'Zero3MotorPromotionGate.java',
+            'Zero3MotorImpulseResponseRegression.java',
+            'Zero3MotorLongHorizonRegression.java',
+            'Zero3MotorTemporalHistoryRegression.java',
+            'Zero3MotorLocalFrameV310Regression.java',
+            'Zero3MotorRealContactV312Regression.java']
+          subprocess.run(["javac","-sourcepath","app/src/main/java"]+shlex.split(m.group(1))[1:]+[root+f for f in files],check=True)
+          PY
+      - name: Measure authentic free/far/near/disk touch and hold consequences
+        run: |
+          set -euo pipefail
+          java -Xmx1536m -cp /tmp/overmind com.overmind.zero.Zero3MotorRealContactV312Regression | tee /tmp/zero312.txt
+          grep -q 'ZERO3 V312 SUMMARY' /tmp/zero312.txt
+          grep -q 'NO_FAKE_HOLDS NO_GAIT NO_GAMEPLAY' /tmp/zero312.txt
+          grep -q 'NO_OTA' /tmp/zero312.txt

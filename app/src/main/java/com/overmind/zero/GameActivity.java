@@ -19,6 +19,9 @@ public final class GameActivity extends Activity {
     private Lab lab;
     @Override public void onCreate(Bundle b){
         super.onCreate(b);
+        if(getSharedPreferences("zero3-ui-v354",0).getBoolean("default",getResources().getBoolean(R.bool.zero3_candidate))){
+            startActivity(new android.content.Intent(this,Zero3DashboardActivityV354.class));finish();return;
+        }
         getWindow().setFlags(1024,1024);
         getWindow().getDecorView().setSystemUiVisibility(5894 | 1024 | 512);
         lab=new Lab(this);setContentView(lab);
@@ -2128,7 +2131,7 @@ public final class GameActivity extends Activity {
                 "ANALISI CERVELLO 2.2",
                 "STATISTICHE VITE",
                 "PESI E PARAMETRI 2.2",
-                "LABORATORIO ISOLATO",
+                "LABORATORI • 2.2 / 3.0",
                 "ATTIVA STANZA",
                 "AGGIORNA APP"
             };
@@ -2137,7 +2140,7 @@ public final class GameActivity extends Activity {
                 "Memoria, sensi, affidabilita",
                 "Durata, eventi, medie 25 vite",
                 "Pesi reali: nucleo e muscoli",
-                "Confronto storico, non il corpo vivo",
+                "Confronto 2.2 e ambiente V3 sperimentale",
                 "Ambiente e cancello fisico",
                 "Controlla la prossima OTA"
             };
@@ -2304,7 +2307,28 @@ public final class GameActivity extends Activity {
                     break;
                 case 4:
                     settingsExpanded=false;
-                    compare();
+                    new android.app.AlertDialog.Builder(GameActivity.this)
+                        .setTitle("LABORATORI SEPARATI")
+                        .setItems(new String[]{
+                            "CONFRONTO ZERO 2.2 (già esistente)",
+                            "ZERO 3.0 — LABORATORIO SPERIMENTALE"
+                        },(dialog,choice)->{
+                            if(choice==0){compare();postInvalidateOnAnimation();}
+                            else new android.app.AlertDialog.Builder(GameActivity.this)
+                                .setTitle("ZERO 3.0 — AREA SPERIMENTALE")
+                                .setMessage("Questo laboratorio avvia un organismo V3 distinto. "+
+                                    "Non carica né sostituisce i 12 cervelli della 2.2. "+
+                                    "I movimenti e l'apprendimento non sono ancora validati.")
+                                .setNegativeButton("ANNULLA",null)
+                                .setPositiveButton("APRI V3",(d,w)->{
+                                    // Pause the live 2.2 world before entering,
+                                    // preserving its original save contracts.
+                                    simulationRunning=false;
+                                    save();saveScene();
+                                    GameActivity.this.startActivity(new android.content.Intent(
+                                        GameActivity.this,Zero3DashboardActivityV354.class));
+                                }).show();
+                        }).show();
                     break;
                 case 5:
                     settingsExpanded=false;

@@ -1,6 +1,7 @@
 plugins { id 'com.android.application' }
 def stableSigningFile = System.getenv('OVERMIND_KEYSTORE_FILE')
 def ciBuildNumber = System.getenv('OVERMIND_BUILD_NUMBER')
+def candidateName = System.getenv('OVERMIND_CANDIDATE_NAME')
 android {
   namespace 'com.overmind.zero'
   compileSdk 35
@@ -8,8 +9,10 @@ android {
     applicationId 'com.overmind.zero.ota'
     minSdk 24
     targetSdk 35
+    resValue "bool", "zero3_candidate", candidateName ? "true" : "false"
+    testInstrumentationRunner 'androidx.test.runner.AndroidJUnitRunner'
     versionCode(ciBuildNumber ? 1000 + ciBuildNumber.toInteger() : 4)
-    versionName(ciBuildNumber ? "0.11.6-ota.${ciBuildNumber}" : '0.11.6-ota')
+    versionName(candidateName ? candidateName : ciBuildNumber ? "0.11.6-ota.${ciBuildNumber}" : '0.11.6-ota')
   }
   signingConfigs {
     if (stableSigningFile) {
@@ -31,4 +34,12 @@ android {
     sourceCompatibility JavaVersion.VERSION_17
     targetCompatibility JavaVersion.VERSION_17
   }
+}
+
+// Pinned AndroidX Test components; runtime app has no dependency on the test runner.
+dependencies {
+  androidTestImplementation 'androidx.test:runner:1.6.2'
+  androidTestImplementation 'androidx.test:core:1.6.1'
+  androidTestImplementation 'androidx.test.ext:junit:1.2.1'
+  androidTestImplementation 'androidx.test.espresso:espresso-core:3.6.1'
 }

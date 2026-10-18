@@ -1,0 +1,46 @@
+name: ZERO3 V3.32 local temporal credit learned-v-old-v-frozen G3
+on:
+  push:
+    branches: [feature/zero30-foundation-g0-g3-20261016]
+    paths:
+      - 'app/src/main/java/com/overmind/zero/Zero3TemporalLocalMotorV332Regression.java'
+      - '.github/workflows/zero30-v332-temporal-credit-qa.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  scientific-three-arm-blind:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+      - name: Compile real production gel body and scientific motor modules
+        run: |
+          set -euo pipefail
+          mkdir -p /tmp/overmind
+          python3 - <<'PY'
+          import pathlib,re,shlex,subprocess
+          src=pathlib.Path('.github/workflows/overmind-ota-publish.yml').read_text()
+          m=re.search(r'^\s*(javac -d /tmp/overmind [^\n]+)',src,re.M)
+          if not m:raise RuntimeError('production physical solver javac absent')
+          root='app/src/main/java/com/overmind/zero/'
+          extra='Zero3LearningFoundation Zero3MotorResponseKernel Zero3MotorRetentionRegression Zero3MotorPromotionGate Zero3MotorImpulseResponseRegression Zero3MotorLocalFrameV310Regression Zero3SensoryFrameV315 Zero3CausalRecorderV315 Zero3SensoryContractV315Regression Zero3MotorIntentV316 Zero3AutonomousLoopV317 Zero3LearnedAdhesionV318 Zero3LearnedAdhesionV318Regression Zero3ContextAdhesionV319 Zero3ContextAdhesionV319Regression Zero3MotorHeadStoreV320 Zero3NeuralBundleStoreV321 Zero3OrganismStoreV322 Zero3FullCausalExperienceV322B Zero3FullArchiveStoreV322B Zero3MultiSceneRestartV322BRegression Zero3TemporalLocalMotorV332Regression'
+          subprocess.run(["javac","-sourcepath","app/src/main/java"]+shlex.split(m.group(1))[1:]+[root+n+'.java' for n in extra.split()],check=True)
+          PY
+      - name: Run three arm 3072 training and 2304 BLIND real decisions each
+        run: |
+          set -euo pipefail
+          java -Xmx1792m -cp /tmp/overmind com.overmind.zero.Zero3TemporalLocalMotorV332Regression | tee /tmp/v332-qa.log
+          grep -q 'V332 TRAIN oldUpdates=' /tmp/v332-qa.log
+          grep -q 'V332 SUMMARY technicalThreeArmGate=PASS' /tmp/v332-qa.log
+          grep -q 'blindMaxDecisionsPerArm=2304' /tmp/v332-qa.log
+          test "$(grep -c 'V332 BLIND FAMILY=' /tmp/v332-qa.log)" -eq 4
+          echo 'ZERO3 V332 SCIENTIFIC_RESULT_IN_LOG_NOT_AUTOPROMOTED'
+      - name: Compile Android Debug with LEGACY motor behavior unchanged
+        run: gradle --no-daemon assembleDebug
+      - name: Protect old 2.2 saves and release
+        run: echo 'ZERO3 V332 LAB_ONLY G3_NOT_AUTOPROMOTED NO_OTA NO_MERGE'

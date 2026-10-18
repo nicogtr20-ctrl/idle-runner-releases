@@ -1,0 +1,66 @@
+name: ZERO3 V3.22 same-life joint snapshot laboratory QA
+on:
+  push:
+    branches: [feature/zero30-foundation-g0-g3-20261016]
+    paths:
+      - 'app/src/main/java/com/overmind/zero/Zero3OrganismStoreV322.java'
+      - 'app/src/main/java/com/overmind/zero/Zero3SameLifeRestartV322Regression.java'
+      - 'app/src/main/java/com/overmind/zero/Zero3MotorIntentV316.java'
+      - '.github/workflows/zero30-v322-same-life-qa.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  same-life-physical-resume:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+      - name: Compile actual production world, three neural modules and V3.22 joint snapshot
+        run: |
+          set -euo pipefail
+          mkdir -p /tmp/overmind
+          python3 - <<'PY'
+          import pathlib,re,shlex,subprocess
+          src=pathlib.Path('.github/workflows/overmind-ota-publish.yml').read_text()
+          cmd=re.search(r'^\s*(javac -d /tmp/overmind [^\n]+)',src,re.M)
+          if not cmd:raise RuntimeError('production Java compiler list unavailable')
+          root='app/src/main/java/com/overmind/zero/'
+          names='Zero3LearningFoundation Zero3MotorResponseKernel Zero3MotorRetentionRegression Zero3MotorPromotionGate Zero3MotorImpulseResponseRegression Zero3MotorLocalFrameV310Regression Zero3SensoryFrameV315 Zero3CausalRecorderV315 Zero3SensoryContractV315Regression Zero3MotorIntentV316 Zero3AutonomousLoopV317 Zero3LearnedAdhesionV318 Zero3LearnedAdhesionV318Regression Zero3ContextAdhesionV319 Zero3ContextAdhesionV319Regression Zero3MotorHeadStoreV320 Zero3NeuralBundleStoreV321 Zero3OrganismStoreV322 Zero3SameLifeRestartV322Regression Zero3ContactTopologyExperimentV336'
+          subprocess.run(["javac","-sourcepath","app/src/main/java"]+shlex.split(cmd.group(1))[1:]+[root+x+'.java' for x in names.split()],check=True)
+          PY
+      - name: Process 1 initial same life — train 48 decisions, two generations
+        run: |
+          set -euo pipefail
+          java -Xmx1536m -cp /tmp/overmind com.overmind.zero.Zero3SameLifeRestartV322Regression prefix /tmp/zero322 | tee /tmp/v322-prefix.log
+          grep -q 'V322 PREFIX SAME_LIFE cursor=48 gen=2' /tmp/v322-prefix.log
+      - name: Process 2 restore body physics brain world authority; continue same life
+        run: |
+          set -euo pipefail
+          java -Xmx1536m -cp /tmp/overmind com.overmind.zero.Zero3SameLifeRestartV322Regression resume /tmp/zero322 /tmp/v322-resumed.txt | tee /tmp/v322-resume.log
+          grep -q 'V322 RESUME SAME_LIFE cursor=96 gen=3' /tmp/v322-resume.log
+      - name: Process 3 never interrupted same organism; compare entire evidence bytewise
+        run: |
+          set -euo pipefail
+          java -Xmx1536m -cp /tmp/overmind com.overmind.zero.Zero3SameLifeRestartV322Regression reference /tmp/v322-reference.txt | tee /tmp/v322-reference.log
+          cmp /tmp/v322-resumed.txt /tmp/v322-reference.txt
+          grep -q 'autonomousDecisions=96' /tmp/v322-resumed.txt
+          grep -q 'encoderUpdates=96' /tmp/v322-resumed.txt
+          grep -q 'cortexUpdates=' /tmp/v322-resumed.txt
+          grep -q 'adhesionUpdates=96' /tmp/v322-resumed.txt
+          cat /tmp/v322-resumed.txt
+          echo 'V322 BITWISE_SAME_LIFE_NEURAL_PHYSICS_TRACE=PASS'
+      - name: Process 4 atomic generations, truncated state, manifest fault and fail closed
+        run: |
+          set -euo pipefail
+          java -Xmx1536m -cp /tmp/overmind com.overmind.zero.Zero3SameLifeRestartV322Regression corrupt /tmp/zero322 | tee /tmp/v322-fault.log
+          grep -q 'rollbackCursor=48 noDuplicateCredit=true' /tmp/v322-fault.log
+          grep -q 'bothGenerationsBadFailClosed=true' /tmp/v322-fault.log
+          echo 'V322 LAB_GATE=PASS NOT_PRODUCTION_BRAIN_SNAPSHOT G3_BLOCKED G5_BLOCKED NO_OTA'
+      - name: Compile Android Debug only (no signed OTA or publisher)
+        run: |
+          gradle --no-daemon assembleDebug

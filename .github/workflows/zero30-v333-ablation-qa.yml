@@ -1,0 +1,48 @@
+name: ZERO3 V3.33 local-delay ablation and bilateral hold guardrail
+on:
+  push:
+    branches: [feature/zero30-foundation-g0-g3-20261016]
+    paths:
+      - 'app/src/main/java/com/overmind/zero/Zero3FiveArmAblationV333Regression.java'
+      - '.github/workflows/zero30-v333-ablation-qa.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  five-arm-preregistered:
+    runs-on: ubuntu-latest
+    timeout-minutes: 55
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+      - name: Compile original production gel, motor head and all five scientific arms
+        run: |
+          set -euo pipefail
+          mkdir -p /tmp/overmind
+          python3 - <<'PY'
+          import pathlib,re,shlex,subprocess
+          src=pathlib.Path('.github/workflows/overmind-ota-publish.yml').read_text()
+          m=re.search(r'^\s*(javac -d /tmp/overmind [^\n]+)',src,re.M)
+          if not m:raise RuntimeError('production unchanged solver java source list missing')
+          root='app/src/main/java/com/overmind/zero/'
+          extra='Zero3LearningFoundation Zero3MotorResponseKernel Zero3MotorRetentionRegression Zero3MotorPromotionGate Zero3MotorImpulseResponseRegression Zero3MotorLocalFrameV310Regression Zero3SensoryFrameV315 Zero3CausalRecorderV315 Zero3SensoryContractV315Regression Zero3MotorIntentV316 Zero3AutonomousLoopV317 Zero3LearnedAdhesionV318 Zero3LearnedAdhesionV318Regression Zero3ContextAdhesionV319 Zero3ContextAdhesionV319Regression Zero3MotorHeadStoreV320 Zero3NeuralBundleStoreV321 Zero3OrganismStoreV322 Zero3FullCausalExperienceV322B Zero3FullArchiveStoreV322B Zero3MultiSceneRestartV322BRegression Zero3FiveArmAblationV333Regression'
+          subprocess.run(["javac","-sourcepath","app/src/main/java"]+shlex.split(m.group(1))[1:]+[root+n+'.java' for n in extra.split()],check=True)
+          PY
+      - name: Train 5 matched methods and evaluate 24 NEW physical heldout lives per method
+        run: |
+          set -euo pipefail
+          java -Xmx1900m -cp /tmp/overmind com.overmind.zero.Zero3FiveArmAblationV333Regression | tee /tmp/v333-results.log
+          grep -q 'V333 SUMMARY technicalFiveArmBenchmark=PASS' /tmp/v333-results.log
+          test "$(grep -c 'V333 TEST FAMILY=' /tmp/v333-results.log)" -eq 4
+          test "$(grep -c 'V333 BLIND FAMILY=' /tmp/v333-results.log)" -eq 20
+          test "$(grep -c 'V333 TRAIN ARM=' /tmp/v333-results.log)" -eq 5
+          # A scientific FAIL is expected to appear as FAIL, NOT hidden by CI.
+          echo 'V333 SCIENTIFIC_GATE_IS_REPORTED_EXACTLY_AS_MEASURED'
+          grep 'V333 SUMMARY' /tmp/v333-results.log
+      - name: Android Debug compile without production integration or OTA
+        run: gradle --no-daemon assembleDebug
+      - name: Label isolated result
+        run: echo 'V333 FIVE_ARM_LAB_QA_COMPLETE G3_NOT_AUTO_PROMOTED NO_OTA NO_MERGE'

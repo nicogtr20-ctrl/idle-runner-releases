@@ -1,0 +1,50 @@
+name: ZERO3 V3.11 body-frame contact-aware dynamics QA
+on:
+  push:
+    branches: [feature/zero30-foundation-g0-g3-20261016]
+    paths:
+      - 'app/src/main/java/com/overmind/zero/Zero3MotorBodyFrameV311Regression.java'
+      - '.github/workflows/zero30-motor-bodyframe-v311-qa.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  body-frame-physics:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+      - name: Compile actual production gel solver and independent E2 regressions
+        run: |
+          set -euo pipefail
+          mkdir -p /tmp/overmind
+          python3 - <<'PY'
+          import pathlib,re,shlex,subprocess
+          source=pathlib.Path('.github/workflows/overmind-ota-publish.yml').read_text()
+          m=re.search(r'^\s*(javac -d /tmp/overmind [^\n]+)',source,re.M)
+          if m is None: raise RuntimeError('Production body compilation source list missing')
+          root='app/src/main/java/com/overmind/zero/'
+          names=[
+            'Zero3LearningFoundation.java',
+            'Zero3MotorResponseKernel.java',
+            'Zero3MotorRetentionRegression.java',
+            'Zero3MotorPromotionGate.java',
+            'Zero3MotorImpulseResponseRegression.java',
+            'Zero3MotorLongHorizonRegression.java',
+            'Zero3MotorTemporalHistoryRegression.java',
+            'Zero3MotorLocalFrameV310Regression.java',
+            'Zero3MotorBodyFrameV311Regression.java',
+          ]
+          subprocess.run(["javac","-sourcepath","app/src/main/java"]+shlex.split(m.group(1))[1:]+[root+n for n in names],check=True)
+          PY
+      - name: Execute physically observed 22D+64D body frame identification and independent validation
+        run: |
+          set -euo pipefail
+          java -Xmx1536m -cp /tmp/overmind com.overmind.zero.Zero3MotorBodyFrameV311Regression | tee /tmp/zero311.txt
+          grep -q 'ZERO3 V311 SUMMARY' /tmp/zero311.txt
+          grep -q 'futureStatesLeak=false' /tmp/zero311.txt
+          grep -q 'NO_OTA' /tmp/zero311.txt

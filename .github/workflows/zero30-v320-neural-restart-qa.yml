@@ -1,0 +1,49 @@
+name: ZERO3 V320 neural head restart QA
+on:
+  push:
+    branches: [feature/zero30-foundation-g0-g3-20261016]
+    paths:
+      - 'app/src/main/java/com/overmind/zero/Zero3MotorHeadStoreV320.java'
+      - 'app/src/main/java/com/overmind/zero/Zero3MotorHeadRestartV320Regression.java'
+      - '.github/workflows/zero30-v320-neural-restart-qa.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  verified-restart:
+    runs-on: ubuntu-latest
+    timeout-minutes: 35
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+      - name: Compile real solvers and checkpoint lab
+        run: |
+          mkdir -p /tmp/overmind
+          python3 - <<'PY'
+          import pathlib,re,shlex,subprocess
+          text=pathlib.Path('.github/workflows/overmind-ota-publish.yml').read_text()
+          command=re.search(r'^\s*(javac -d /tmp/overmind [^\n]+)',text,re.M).group(1)
+          root='app/src/main/java/com/overmind/zero/'
+          extra='Zero3LearningFoundation Zero3MotorResponseKernel Zero3MotorRetentionRegression Zero3MotorPromotionGate Zero3MotorImpulseResponseRegression Zero3MotorLocalFrameV310Regression Zero3SensoryFrameV315 Zero3CausalRecorderV315 Zero3SensoryContractV315Regression Zero3MotorIntentV316 Zero3AutonomousLoopV317 Zero3LearnedAdhesionV318 Zero3LearnedAdhesionV318Regression Zero3ContextAdhesionV319 Zero3ContextAdhesionV319Regression Zero3MotorHeadStoreV320 Zero3MotorHeadRestartV320Regression'
+          subprocess.run(shlex.split(command)+[root+x+'.java' for x in extra.split()],check=True)
+          PY
+      - name: Run separate process prefix and resumed neural training
+        run: |
+          set -euo pipefail
+          java -cp /tmp/overmind com.overmind.zero.Zero3MotorHeadRestartV320Regression prefix /tmp/zero320
+          java -cp /tmp/overmind com.overmind.zero.Zero3MotorHeadRestartV320Regression resume /tmp/zero320 /tmp/zero320-resumed.txt
+      - name: Compare uninterrupted neural state and real grip retention
+        run: |
+          set -euo pipefail
+          java -cp /tmp/overmind com.overmind.zero.Zero3MotorHeadRestartV320Regression reference /tmp/zero320 /tmp/zero320-reference.txt
+          cmp /tmp/zero320-resumed.txt /tmp/zero320-reference.txt
+          cat /tmp/zero320-resumed.txt
+          echo 'ZERO3 V320 BITWISE_RESTART_AND_RETENTION=PASS'
+      - name: Verify rollback after broken checkpoint
+        run: |
+          set -euo pipefail
+          java -cp /tmp/overmind com.overmind.zero.Zero3MotorHeadRestartV320Regression fault /tmp/zero320
+          echo 'ZERO3 V320 GATE=PASS HEAD_ONLY NO_GAIT G3_BLOCKED G5_BLOCKED NO_OTA'
