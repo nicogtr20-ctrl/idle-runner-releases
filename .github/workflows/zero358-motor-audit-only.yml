@@ -1,0 +1,24 @@
+name: ZERO 3.0 V357 muscle strength diagnostic ONLY
+on:
+  push:
+    branches: [audit/zero357-physical-muscle-gate]
+  workflow_dispatch:
+  pull_request:
+    branches: [feature/zero30-brain-only-original-game]
+permissions:
+  contents: read
+jobs:
+  motor-readonly:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with: {distribution: temurin, java-version: '17'}
+      - name: Real V2.2 vs V3.0 muscle drive, impulse and learning gate
+        run: python3 tools/zero358_motor_audit.py
+      - name: Assert production APK source unchanged by this audit
+        run: |
+          git fetch origin feature/zero30-brain-only-original-game:refs/remotes/origin/feature/zero30-brain-only-original-game
+          test -z "$(git diff --name-only origin/feature/zero30-brain-only-original-game -- app/src/main)"
+          echo "APP_SOURCE_IDENTICAL=PASS - no production fixes or APK changes"
