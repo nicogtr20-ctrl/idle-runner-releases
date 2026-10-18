@@ -53,8 +53,12 @@ public final class Zero3DashboardActivityV354 extends Activity {
         if(page==0||page==1||page==3){body=new BodyCanvas(this);content.addView(body,new LinearLayout.LayoutParams(-1,dp(page==0?340:260)));}
         if(page==2){atlas=new Zero3AtlasViewV354(this);content.addView(atlas,new LinearLayout.LayoutParams(-1,dp(450)));
             Spinner modules=new Spinner(this);String[] names={"Tutti i moduli","GRU centrale","Attore","Critic","Predizione sensi","Corteccia","Adesione","Modello fisico","Output fisici","Candidata shadow","Output shadow","Valore contestuale","Critic target"};
-            modules.setBackgroundColor(0xffb3d7e5);
-            modules.setAdapter(new ArrayAdapter<>(this,android.R.layout.simple_spinner_dropdown_item,names));content.addView(modules);
+            modules.setBackgroundColor(CARD);
+            modules.setAdapter(new ArrayAdapter<String>(this,android.R.layout.simple_spinner_dropdown_item,names){
+                private View readable(View view){((TextView)view).setTextColor(WHITE);view.setBackgroundColor(CARD);return view;}
+                @Override public View getView(int position,View recycled,ViewGroup parent){return readable(super.getView(position,recycled,parent));}
+                @Override public View getDropDownView(int position,View recycled,ViewGroup parent){return readable(super.getDropDownView(position,recycled,parent));}
+            });content.addView(modules);
             modules.setOnItemSelectedListener(new android.widget.AdapterView.OnItemSelectedListener(){public void onNothingSelected(android.widget.AdapterView<?> p){}public void onItemSelected(android.widget.AdapterView<?> p,View v,int n,long id){if(atlas!=null)atlas.filter(n-1);}});
         }
         facts=text(content,"Carica o crea un profilo per osservare dati reali.",14,WHITE);

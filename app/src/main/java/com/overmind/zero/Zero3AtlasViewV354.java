@@ -17,9 +17,10 @@ public final class Zero3AtlasViewV354 extends View {
         scale=new ScaleGestureDetector(c,new ScaleGestureDetector.SimpleOnScaleGestureListener(){@Override public boolean onScale(ScaleGestureDetector d){zoom=Math.max(.3f,Math.min(4,zoom*d.getScaleFactor()));invalidate();return true;}});}
     public void setGraph(Zero3NeuralGraphV354 g){graph=g;if(g!=null&&sx.length!=g.nodes.length){sx=new float[g.nodes.length];sy=new float[sx.length];}invalidate();}
     public void filter(int f){filter=f;selected=-1;invalidate();}
+    private float dp(float value){return value*getResources().getDisplayMetrics().density;}
     private boolean visible(int id){return filter<0||graph.nodes[id].module==filter;}
-    @Override protected void onDraw(Canvas c){super.onDraw(c);c.drawColor(0xff070e1c);if(graph==null){label(c,"In attesa del primo snapshot neurale",18,32,0xffb8cfdd);return;}
-        float unit=Math.min(getWidth(),getHeight())*.19f*zoom;
+    @Override protected void onDraw(Canvas c){super.onDraw(c);c.drawColor(0xff070e1c);if(graph==null){label(c,"In attesa del primo snapshot neurale",dp(6),dp(24),0xffb8cfdd);return;}
+        float unit=Math.min(getWidth(),getHeight())*.14f*zoom;
         for(Zero3NeuralGraphV354.Node n:graph.nodes){
             float angle=n.index*2.399963f,r=.15f+.08f*(float)Math.sqrt(n.index+1);
             float x=(n.module%4-1.5f)*1.35f+r*(float)Math.cos(angle),y=(n.module/4-1)*1.2f+r*(float)Math.sin(angle),z=(n.index%7-3)*.08f;
@@ -36,12 +37,12 @@ public final class Zero3AtlasViewV354 extends View {
             p.setColor(n.id==selected?0xffffffff:Float.isFinite(n.activity)?Color.rgb(65+(int)(activation*120),145+(int)(activation*90),205):0xff718096);
             c.drawCircle(sx[n.id],sy[n.id],n.id==selected?8:4+activation*2,p);
         }
-        label(c,graph.nodes.length+" unità reali · "+graph.actualSynapses+" pesi/connessioni",14,22,0xffdff8ff);
-        label(c,"Filtro |peso| ≥0,04 · max140 per modulo · "+graph.omittedEdges+" non disegnati",14,43,0xff96afc2);
+        label(c,graph.nodes.length+" unità reali · "+graph.actualSynapses+" pesi/connessioni",dp(6),dp(24),0xffdff8ff);
+        label(c,"Peso≥0,04 · max140/modulo · esclusi "+graph.omittedEdges,dp(6),dp(46),0xff96afc2);
         if(selected>=0&&selected<graph.nodes.length){Zero3NeuralGraphV354.Node n=graph.nodes[selected];
-            label(c,"#"+n.id+" "+n.name+" · "+graph.modules[n.module],14,getHeight()-64,0xff8ee8ef);
-            label(c,"Ingressi "+n.inputs+" · norma matrice locale "+String.format(Locale.ITALY,"%.4f",n.norm),14,getHeight()-43,0xffb8cfdd);
-            label(c,"Attività: "+(Float.isFinite(n.activity)?String.format(Locale.ITALY,"%.4f",n.activity):"non acquisita per questa unità"),14,getHeight()-22,0xffb8cfdd);
+            label(c,"#"+n.id+" "+n.name+" · "+graph.modules[n.module],dp(6),getHeight()-dp(70),0xff8ee8ef);
+            label(c,"Ingressi "+n.inputs+" · norma matrice locale "+String.format(Locale.ITALY,"%.4f",n.norm),dp(6),getHeight()-dp(46),0xffb8cfdd);
+            label(c,"Attività: "+(Float.isFinite(n.activity)?String.format(Locale.ITALY,"%.4f",n.activity):"non acquisita per questa unità"),dp(6),getHeight()-dp(22),0xffb8cfdd);
         }
     }
     private void label(Canvas c,String text,float x,float y,int color){p.setColor(color);p.setTextSize(12*getResources().getDisplayMetrics().scaledDensity);c.drawText(text,x,y,p);}
