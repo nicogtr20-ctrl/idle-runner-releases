@@ -1995,10 +1995,13 @@ public final class GameActivity extends Activity {
          */
         void renderHud(Canvas c){
             // Energy dots are vertically stacked over the transparent world.
-            hudEnergy(c,37,46,"BLU",energyTotals.blue,0xff58d4ff);
-            hudEnergy(c,37,95,"ROSSA",energyTotals.red,0xffff5789);
-            hudEnergy(c,37,144,"VIOLA",energyTotals.violet,0xffbc8bff);
-            if(energyTotals.legacyPositive>0){
+            // V3 does not checkpoint by-colour lifetime counts. Preserve
+            // the original three graphics, but never fabricate blue/red/purple.
+            hudEnergy(c,37,46,"BLU",zero3Mode?-1:energyTotals.blue,0xff58d4ff);
+            hudEnergy(c,37,95,"ROSSA",zero3Mode?-1:energyTotals.red,0xffff5789);
+            hudEnergy(c,37,144,"VIOLA",zero3Mode?-1:energyTotals.violet,0xffbc8bff);
+            if(zero3Mode){text(c,"SENSORI 3.0",20,181,8,GOLD,false);
+            }else if(energyTotals.legacyPositive>0){
                 text(c,"PRECEDENTI +"+energyTotals.legacyPositive,20,181,8,GOLD,false);
             }else if(!energyTotals.complete){
                 text(c,"STORICO PARZIALE",20,181,8,GOLD,false);
@@ -2009,7 +2012,7 @@ public final class GameActivity extends Activity {
             text(c,"NETTO "+(int)journey.netDistance+" U",172,40,13,0xffefffff,false);
             text(c,"VIA "+(int)lifeDistance+" U",303,40,12,0xffe8fbff,false);
             text(c,"MAX "+(int)journey.recordNet+" U • VITA "+
-                LifeStatistics.duration(lifeStats.current().seconds),
+                LifeStatistics.duration(zero3Mode?elapsedLife:lifeStats.current().seconds),
                 172,62,10,GOLD,false);
             neonOrb(c,438,48,20,0xff83eaff,simulationRunning);
             text(c,simulationRunning?"Ⅱ":"▶",438,55,15,0xffe8fdff,true);
@@ -2022,16 +2025,24 @@ public final class GameActivity extends Activity {
             text(c,wind,450,128,9,0xff97a8c9,true);
             neonBar(c,173,137,456,149,shelter.integrity,0xffb4b9ff,0xff648fea);
             dividerHud(c,171,161,453);
-            text(c,"ESPERIENZE "+sensorMind.experiences+" • DECISIONI "+sensorMind.decisions,
-                173,179,10,0xffb3ced7,false);
-            text(c,"DISCHI "+pushes+" • BLOCCHI "+boxesUncovered+" • ZONE "+journey.lifeCells+
-                " • STANZE "+chambersCleared,173,195,9,GOLD,false);
-            text(c,useSymbiote?
+            if(zero3Mode){
+                text(c,"ESPERIENZE "+zero3DecisionCount+" • DECISIONI "+zero3DecisionCount,
+                    173,179,10,0xffb3ced7,false);
+                text(c,"CONTATTI +"+zero3Positive+" / -"+zero3Negative+
+                    " • RISORSE "+zero3Consumed,173,195,9,GOLD,false);
+                text(c,"CERVELLO 3.0 • GRU64 • TRAIN "+zero3Train+
+                    " • TEST "+zero3Heldout,173,210,9,TEAL,false);
+            }else{
+                text(c,"ESPERIENZE "+sensorMind.experiences+" • DECISIONI "+sensorMind.decisions,
+                    173,179,10,0xffb3ced7,false);
+                text(c,"DISCHI "+pushes+" • BLOCCHI "+boxesUncovered+" • ZONE "+journey.lifeCells+
+                    " • STANZE "+chambersCleared,173,195,9,GOLD,false);
+                text(c,useSymbiote?
                 "CERVELLO 2.2 • SKILL TEMPO "+temporalSkillBank.stored()+
                 " • MOTORIE "+(symMotor==null?0:symMotor.skillMemory().verifiedCount()):
                 "ABILITA "+skillBank.count()+" • RICORDI "+episodic.stored()+
                 " • TECNICHE "+gripBank.count(),173,210,9,TEAL,false);
-
+            }
             // TEST MAX stop is its own small hit target, away from TEMPO.
             if(testMax&&!settingsExpanded){
                 rounded(c,13,217,153,260,0xe6172534,9);
@@ -2053,6 +2064,12 @@ public final class GameActivity extends Activity {
                     240,ty-5,10,0xffdcfdf5,true);
             }
             if(showBenchmark)renderBenchmark(c);
+            if(zero3Mode&&!zero3Failure.isEmpty()){
+                float ty=H-172f;
+                rounded(c,22,ty-34,459,ty+13,0xf2361b2c,10);
+                text(c,zero3Failure.length()>57?zero3Failure.substring(0,57):
+                    zero3Failure,240,ty-8,10,0xffffcccc,true);
+            }
         }
 
         void hudEnergy(Canvas c,float x,float cy,String label,long total,int color){
@@ -2068,7 +2085,7 @@ public final class GameActivity extends Activity {
             paint.setStyle(Paint.Style.FILL);paint.setColor(color);
             c.drawCircle(x,cy,9.4f,paint);
             paint.setColor(0x99ffffff);c.drawCircle(x-3,cy-3,3.1f,paint);
-            text(c,String.valueOf(total),61,cy+4,17,0xfff4faff,false);
+            text(c,total<0?"—":String.valueOf(total),61,cy+4,17,0xfff4faff,false);
             text(c,label,61,cy+18,8,color,false);
         }
         void neonFrame(Canvas c,float l,float t,float r,float b,float radius){
@@ -2193,6 +2210,23 @@ public final class GameActivity extends Activity {
             }
         }
         void renderDetails(Canvas c){
+            if(zero3Mode){
+                float end=Math.min(H-155,648);
+                if(end<320)return;
+                neonFrame(c,158,278,471,end,16);
+                c.save();c.clipRect(164,283,465,end-8);
+                text(c,"DATI TECNICI • ZERO 3.0",174,303,12,TEAL,false);
+                text(c,"GRU64 UNICO DECISORE",174,326,10,0xffc3dee2,false);
+                text(c,"TRAIN "+zero3Train+" • HELDOUT "+zero3Heldout+
+                    " • OSS "+zero3Observed,174,349,9,MUTED,false);
+                text(c,"MEMBRANA 96 • INTERNO 74 • MOTORI 64",174,372,9,MUTED,false);
+                text(c,"RISERVA "+(int)reserve+" • PASSO 0.025s",174,403,10,GOLD,false);
+                text(c,"CONTATTI POSITIVI "+zero3Positive,174,428,10,MUTED,false);
+                text(c,"CONTATTI NEGATIVI "+zero3Negative,174,451,10,MUTED,false);
+                text(c,"FONTI CONSUMATE "+zero3Consumed,174,474,10,MUTED,false);
+                text(c,"GESTIONE NEL MENU ORIGINALE",174,517,9,TEAL,false);
+                c.restore();return;
+            }
             float bottom=Math.min(H-155,648);
             if(bottom<320)return;
             neonFrame(c,158,278,471,bottom,16);
