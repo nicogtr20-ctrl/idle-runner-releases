@@ -9,6 +9,14 @@ on:
       - 'tools/fixtures/**'
       - 'tools/zero354_android_ui.sh'
       - '.github/workflows/zero30-v355-original-game.yml'
+  pull_request:
+    branches: [feature/zero30-foundation-g0-g3-20261016]
+    paths:
+      - 'app/src/**'
+      - 'app/build.gradle'
+      - 'docs/**'
+      - 'tools/**'
+      - '.github/workflows/zero30-v355-original-game.yml'
   workflow_dispatch:
 permissions:
   contents: read
