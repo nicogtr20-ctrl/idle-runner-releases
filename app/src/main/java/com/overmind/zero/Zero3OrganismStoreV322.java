@@ -93,6 +93,10 @@ public final class Zero3OrganismStoreV322 {
             lastActuators=last.clone();
         }
         public boolean hasGru(){return gruCheckpoint!=null;}
+        public byte[] gruBytes()throws IOException{
+            if(!hasGru())throw new IOException("no GRU in legacy V322 state");
+            return gruCheckpoint.clone();
+        }
         public Trace[] trace(){return records.clone();}
         public float[] last64(){return lastActuators.clone();}
         public Physical physical()throws IOException {return decodePhysical(material);}
@@ -105,16 +109,9 @@ public final class Zero3OrganismStoreV322 {
         }
         public void restoreGruModules(Zero3AutonomousLoopV317.Encoder encoder,
                    Zero3LearningFoundation.AdaptiveCortex cortex,
-                   Zero3ContextAdhesionV319 head,Zero3RecurrentBrain gru)throws IOException {
-            if(!hasGru()||gru==null)throw new IOException("missing V348 GRU");
-            try{new Zero3RecurrentBrain().restoreAtBoundaryV345(gruCheckpoint);}
-            catch(RuntimeException bad){throw new IOException("invalid V348 GRU",bad);}
+                   Zero3ContextAdhesionV319 head)throws IOException {
+            if(!hasGru())throw new IOException("missing V348 GRU");
             restoreNeural(encoder,cortex,head,true);
-            try{
-                gru.restoreAtBoundaryV345(gruCheckpoint);
-                if(gru.trainingUpdates()!=nextDecision)
-                    throw new IOException("V348 GRU cursor disagrees with physics");
-            }catch(RuntimeException bad){throw new IOException("V348 GRU restore failed",bad);}
         }
         private void restoreNeural(Zero3AutonomousLoopV317.Encoder encoder,
                    Zero3LearningFoundation.AdaptiveCortex cortex,
@@ -325,14 +322,14 @@ public final class Zero3OrganismStoreV322 {
     public static State captureGru(long episode,int next,long worldRng,
                      Zero3AutonomousLoopV317.Encoder inactiveEncoder,
                      Zero3LearningFoundation.AdaptiveCortex cortex,
-                     Zero3ContextAdhesionV319 head,Zero3RecurrentBrain gru,
+                     Zero3ContextAdhesionV319 head,byte[] gru,
                      MotorBrain.Body b,Morphology.Surface s,SymbioteMatterV1 gel,
                      List<UnknownWorld.Entity> world,float[] last,List<Trace> trace)
                      throws IOException {
         if(inactiveEncoder==null||cortex==null||head==null||gru==null||
            b==null||s==null||gel==null||trace==null||last==null||
            next<=0||next!=trace.size()||inactiveEncoder.updates()!=0||
-           gru.trainingUpdates()!=next||cortex.updates()>next||
+           gru.length<100||gru.length>1024*1024||cortex.updates()>next||
            head.updates()!=next||gel.invalid!=0||
            trace.get(next-1).endTick!=gel.ticks)
             throw new IOException("V348 GRU/physical cursor invalid");
@@ -344,7 +341,7 @@ public final class Zero3OrganismStoreV322 {
         nd.writeInt(grip.length);nd.write(grip);nd.flush();
         return new State(episode,next,worldRng,trace.toArray(new Trace[0]),
             encodePhysical(b,s,gel,world),n.toByteArray(),last,
-            gru.checkpointAtBoundaryV345());
+            gru);
     }
     static byte[] encode(State state)throws IOException {
         ByteArrayOutputStream bytes=new ByteArrayOutputStream();
@@ -403,8 +400,7 @@ public final class Zero3OrganismStoreV322 {
             if(state.hasGru())
                 state.restoreGruModules(new Zero3AutonomousLoopV317.Encoder(0x317L),
                     new Zero3LearningFoundation.AdaptiveCortex(.013f),
-                    new Zero3ContextAdhesionV319(0x319L,true),
-                    new Zero3RecurrentBrain());
+                    new Zero3ContextAdhesionV319(0x319L,true));
             else state.restoreModules(new Zero3AutonomousLoopV317.Encoder(0x317L),
                 new Zero3LearningFoundation.AdaptiveCortex(.013f),
                 new Zero3ContextAdhesionV319(0x319L,true));

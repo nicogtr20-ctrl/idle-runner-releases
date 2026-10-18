@@ -569,7 +569,8 @@ public final class Zero3RuntimeV325 implements AutoCloseable {
                 episode,next,rngState,encoder,cortex,grip,
                 body,skin,gel,world,last64,trace):
             Zero3OrganismStoreV322.captureGru(
-                episode,next,rngState,encoder,cortex,grip,gruResearchV347,
+                episode,next,rngState,encoder,cortex,grip,
+                gruResearchV347.checkpointAtBoundaryV345(),
                 body,skin,gel,world,last64,trace);
         return new Zero3SegmentedArchiveV328.Bundle(
                 organ,metabolism.checkpoint(),
@@ -624,7 +625,10 @@ public final class Zero3RuntimeV325 implements AutoCloseable {
             if(s.hasGru()){
                 Zero3RecurrentBrain restoredGru=new Zero3RecurrentBrain();
                 s.restoreGruModules(result.encoder,result.cortex,
-                                    result.grip,restoredGru);
+                                    result.grip);
+                restoredGru.restoreAtBoundaryV345(s.gruBytes());
+                require(restoredGru.trainingUpdates()==s.nextDecision,
+                        "V348 GRU updates disagree with real experiences");
                 Zero3MotorIntentV316.Authority nextAuthority=
                     new Zero3MotorIntentV316.Authority(s.episodeId,OWNER_GRU_V347);
                 nextAuthority.restoreCompletedDecisions(s.nextDecision);
