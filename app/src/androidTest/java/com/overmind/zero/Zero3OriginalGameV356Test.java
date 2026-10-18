@@ -116,9 +116,15 @@ public final class Zero3OriginalGameV356Test {
             ui(game::finish);
             // Closing the original activity writes physical_scene_v100
             // AND zero3_original_brain_only_v356 in the SAME working profile.
-            eventually("original profile persisted",30000,
-                ()->old.contains("physical_scene_v100")&&
-                  old.getString(Zero3OriginalBrainV356.KEY,"").length()>1000);
+            eventually("original scene and FINAL V3 generation flushed on real onPause",30000,
+                ()->{
+                    if(!old.contains("physical_scene_v100"))return false;
+                    String saved=old.getString(Zero3OriginalBrainV356.KEY,"");
+                    if(saved.length()<1000)return false;
+                    try{
+                        return Zero3OriginalBrainV356.inspectSaved(saved).decisions>=completed;
+                    }catch(Exception unfinished){return false;}
+                });
             Zero3OriginalBrainV356.Readout read=
                 Zero3OriginalBrainV356.inspectSaved(
                     old.getString(Zero3OriginalBrainV356.KEY,""));
