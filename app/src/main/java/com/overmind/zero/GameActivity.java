@@ -19,9 +19,6 @@ public final class GameActivity extends Activity {
     private Lab lab;
     @Override public void onCreate(Bundle b){
         super.onCreate(b);
-        if(getSharedPreferences("zero3-ui-v354",0).getBoolean("default",getResources().getBoolean(R.bool.zero3_candidate))){
-            startActivity(new android.content.Intent(this,Zero3DashboardActivityV354.class));finish();return;
-        }
         getWindow().setFlags(1024,1024);
         getWindow().getDecorView().setSystemUiVisibility(5894 | 1024 | 512);
         lab=new Lab(this);setContentView(lab);
@@ -157,11 +154,20 @@ public final class GameActivity extends Activity {
         float resetNotice=0,helpNotice=0;
         final int[] darks={0xff060a13,0xff0d1823,0xff14262e,0xff06121c};
 
+        // V355: never swap the original game UI for a replacement dashboard.
+        final boolean zero3Mode=getResources().getBoolean(R.bool.zero3_candidate);
+        Zero3AndroidSessionV325 zero3;
+        String zero3Failure="";
+        int zero3Slot=1;
+        float zero3Budget,zero3OriginX=Float.NaN,zero3OriginY=Float.NaN;
+        float zero3LastX=Float.NaN,zero3LastY=Float.NaN;
+        int zero3DecisionCount,zero3Positive,zero3Negative,zero3Consumed;
+        long zero3Train,zero3Heldout,zero3Observed;
         Lab(Context c){
             super(c);setLayerType(View.LAYER_TYPE_HARDWARE,null);setFocusable(true);
             prefs=c.getSharedPreferences("zero_motorbrain_001",Context.MODE_PRIVATE);
             gripPrefs=c.getSharedPreferences(GripContactObserver.PREFS,Context.MODE_PRIVATE);
-            load();
+            if(zero3Mode)startZero3();else load();
             try {
                 installedVersion=GameActivity.this.getPackageManager().getPackageInfo(
                     GameActivity.this.getPackageName(),0).versionName;
@@ -171,6 +177,121 @@ public final class GameActivity extends Activity {
                 updaterStatusUntil=uiTime+8.0f;
                 invalidate();
             });
+        }
+        /** No 2.2 preferences are read or mutated in this V3 path. */
+        void startZero3(){
+            try{
+                int requested=getSharedPreferences("zero3-ui-v354",0).getInt("slot",1);
+                zero3Slot=Math.max(1,Math.min(12,requested));
+                Zero3ProfileStoreV354 profiles=Zero3AndroidSessionV325.profilesV354(GameActivity.this);
+                String status=profiles.status(zero3Slot);
+                zero3=Zero3AndroidSessionV325.profileV354(GameActivity.this,zero3Slot);
+                if("VUOTO".equals(status)){
+                    long episode=Math.max(1,System.currentTimeMillis());
+                    Zero3RuntimeV325 newborn=Zero3WorldBirthV355.create(episode,episode^0x355A55L);
+                    try{
+                        zero3.startNewCompletionV354(newborn);
+                        zero3.step(); // Real experience required by atomic V3 archive.
+                        zero3.suspend();zero3.resume();
+                    }catch(Exception failure){newborn.close();throw failure;}
+                }else if(status.startsWith("VITA ")){
+                    zero3.resume();
+                }else throw new java.io.IOException("Checkpoint V3 danneggiato, nessun reset eseguito");
+                zero3Failure="";adoptZero3();
+            }catch(Exception failure){
+                if(zero3!=null){zero3.close();zero3=null;}
+                zero3Failure="ZERO 3.0: "+failure.getMessage();
+                simulationRunning=false;
+            }
+        }
+        /** Only called on the UI thread AFTER a whole physical decision. */
+        void adoptZero3()throws java.io.IOException{
+            if(zero3==null||!zero3.active())return;
+            Zero3RuntimeV325.CanvasStateV355 s=zero3.canvasStateV355();
+            creature=s.body;surface=s.skin;symMatter=s.gel;environment=s.world;
+            chamber=s.room;shelter=s.shelter;reserve=s.reserve;worldTime=s.worldTime;
+            elapsedLife=s.worldTime;scarcity=elapsedLife>=70f;useSymbiote=true;
+            zero3DecisionCount=s.decisions;zero3Train=s.train;zero3Heldout=s.validation;
+            zero3Observed=s.observations;zero3Positive=s.positive;
+            zero3Negative=s.negative;zero3Consumed=s.consumed;
+            if(!Float.isFinite(zero3OriginX)){
+                zero3OriginX=creature.cx;zero3OriginY=creature.cy;
+                zero3LastX=creature.cx;zero3LastY=creature.cy;
+            }else{
+                lifeDistance+=(float)Math.hypot(creature.cx-zero3LastX,creature.cy-zero3LastY);
+                zero3LastX=creature.cx;zero3LastY=creature.cy;
+            }
+            journey.netDistance=(float)Math.hypot(creature.cx-zero3OriginX,creature.cy-zero3OriginY);
+            journey.recordNet=Math.max(journey.recordNet,journey.netDistance);
+            trailClock+=.025f;
+            if(trailClock>.25f){
+                trailClock=0f;
+                if(trailCount<trailX.length)trailCount++;
+                for(int i=trailCount-1;i>0;i--){trailX[i]=trailX[i-1];trailY[i]=trailY[i-1];}
+                trailX[0]=creature.cx;trailY[0]=creature.cy;
+            }
+        }
+        /** Original world/body/HUD renderers; ONLY V3 advances the physics. */
+        void drawZero3(Canvas c){
+            if(getWidth()==0)return;
+            long now=System.nanoTime();
+            float dt=lastFrame==0?0:Math.min(.038f,(now-lastFrame)*1e-9f);
+            lastFrame=now;uiTime+=dt;
+            if(simulationRunning&&zero3!=null&&zero3.active()){
+                if(zero3.ended()||zero3.atArchiveCapacity()){
+                    simulationRunning=false;
+                    zero3Failure=zero3.ended()?
+                        "Vita terminata: crea una nuova vita ereditata":
+                        "Archivio 10.000 decisioni completo: conserva il profilo";
+                }else{
+                    zero3Budget=Math.min(3f,zero3Budget+dt*speed);
+                    long budgetNs=System.nanoTime()+(testMax?40000000L:20000000L);
+                    for(int n=0;n<(testMax?12:8);n++){
+                        float duration=zero3.lastDecisionSeconds();
+                        if(!Float.isFinite(duration)||duration<=0)duration=.3f;
+                        if(!testMax&&zero3Budget<duration)break;
+                        if(n>0&&System.nanoTime()>budgetNs)break;
+                        if(testMax&&android.os.Build.VERSION.SDK_INT>=29){
+                            android.os.PowerManager thermal=(android.os.PowerManager)
+                                GameActivity.this.getSystemService(Context.POWER_SERVICE);
+                            if(thermal!=null&&thermal.getCurrentThermalStatus()>=
+                                android.os.PowerManager.THERMAL_STATUS_SEVERE){
+                                stopTestMax("TEST MAX fermato: temperatura alta");break;
+                            }
+                        }
+                        try{
+                            zero3.step();
+                            float actual=zero3.lastDecisionSeconds();
+                            if(!Float.isFinite(actual)||actual<=0)actual=duration;
+                            if(testMax)testMaxSimSeconds+=actual;
+                            else zero3Budget=Math.max(0f,zero3Budget-actual);
+                            adoptZero3();
+                        }catch(Exception failure){
+                            zero3Failure="ZERO 3.0 interrotto: "+failure.getMessage();
+                            simulationRunning=false;testMax=false;break;
+                        }
+                    }
+                }
+            }
+            if(testMax&&testMaxStartedNs>0){
+                float seconds=(System.nanoTime()-testMaxStartedNs)*1e-9f;
+                if(seconds>.1f)testMaxActualRate=testMaxSimSeconds/seconds;
+            }
+            c.save();float scale=getWidth()/W;c.scale(scale,scale);
+            renderWorld(c);renderBody(c);renderHud(c);c.restore();
+            postInvalidateOnAnimation();
+        }
+        void zero3Panel(int page){
+            try{
+                if(zero3!=null&&zero3.active())zero3.suspend();
+                android.content.Intent i=new android.content.Intent(
+                    GameActivity.this,Zero3DashboardActivityV354.class);
+                i.putExtra("zero3_page",page);
+                GameActivity.this.startActivity(i);
+            }catch(Exception failure){
+                zero3Failure="ZERO3 salvataggio: "+failure.getMessage();
+                simulationRunning=false;
+            }
         }
         /** Consume reset requests only after dashboard left the foreground.
             Scoped keys are removed before reloading live runtime objects. */
