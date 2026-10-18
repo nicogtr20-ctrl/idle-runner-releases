@@ -28,6 +28,8 @@ final class Zero3OriginalBrainV356 {
     // V359: pain is ONLY physically observed red-contact/weather loss.
     // It must not be fabricated from basal hunger or muscle metabolism.
     private float actualDamageDuringDecisionV359;
+    // Physical motor RESERVE spent, not raw gel work, is the predicted cost.
+    private float motorReserveSpentDuringDecisionV359;
     private long damagedDecisionsV359;
     private float maxVerifiedDecisionDamageV359;
     private boolean pending,heldout,disturbed;
@@ -151,7 +153,8 @@ final class Zero3OriginalBrainV356 {
             if(!pending){
                 prior194=sense(body,skin,matter,objects,chamber,reserve,time,true);
                 beforeFuel=reserve;workAccum=0f;
-                actualDamageDuringDecisionV359=0f;elapsed=0;disturbed=false;
+                actualDamageDuringDecisionV359=0f;
+                motorReserveSpentDuringDecisionV359=0f;elapsed=0;disturbed=false;
                 heldout=Zero3ConfigurationV354.heldout(cursor);
                 choice=brain.choose(prior194,epoch,cursor,cortex.revision());
                 issued=authority.issue(OWNER,cursor,(int)Math.min(Integer.MAX_VALUE,cortex.revision()),
@@ -178,15 +181,19 @@ final class Zero3OriginalBrainV356 {
     void observed(MotorBrain.Body body,Morphology.Surface skin,SymbioteMatterV1 gel,
             ArrayList<UnknownWorld.Entity> objects,ScarcityLab chamber,
             float reserve,float time,float dt,float work,float impulse,
-            float actualHarmThisPhysicalFrame,boolean external)throws IOException{
+            float actualMotorReserveSpentThisFrame,float actualHarmThisPhysicalFrame,
+            boolean external)throws IOException{
         if(!pending)throw new IOException("V356 risultato senza un comando vero");
         // A damage reading is measured by the original world only. This value
         // NEVER includes ordinary hunger or fuel spent contracting muscles.
-        if(!Float.isFinite(actualHarmThisPhysicalFrame)||actualHarmThisPhysicalFrame<0f)
+        if(!Float.isFinite(actualMotorReserveSpentThisFrame)||actualMotorReserveSpentThisFrame<0f||
+           !Float.isFinite(actualHarmThisPhysicalFrame)||actualHarmThisPhysicalFrame<0f)
             throw new IOException("Danno interocettivo fisico non valido");
         try{
             actualDamageDuringDecisionV359+=actualHarmThisPhysicalFrame;
-            if(!Float.isFinite(actualDamageDuringDecisionV359))
+            motorReserveSpentDuringDecisionV359+=actualMotorReserveSpentThisFrame;
+            if(!Float.isFinite(actualDamageDuringDecisionV359)||
+               !Float.isFinite(motorReserveSpentDuringDecisionV359))
                 throw new IllegalStateException("Danno interocettivo cumulato non finito");
             motor.observe(body,dt,Math.max(0,work),Math.max(0,impulse),external,false);
             grip.observeWorldV354(skin,objects,chamber,Math.max(0,work));
@@ -205,12 +212,14 @@ final class Zero3OriginalBrainV356 {
             float touch=0,held=0,optical=0;
             for(int i=0;i<16;i++){touch+=after[60+i]/16f;held+=after[92+i]/16f;}
             for(int i=20;i<44;i++)optical+=Math.abs(after[i]-prior194[i])/48f;
-            float[] targets={clip(net/100f),clip(harm/100f),clip(workAccum/100f),
+            float[] targets={clip(net/100f),clip(harm/100f),
+                clip(motorReserveSpentDuringDecisionV359/100f),
                 after[191],after[192],clip(touch),clip(held),after[190],clip(optical),
                 reserve<=0?1f:0f,clip(Math.max(0,net)/100f),clip(elapsed/.65f)};
             brain.physicalTargetsV353(targets,heldout);
             brain.consequenceObservedV352(after,net,heldout,elapsed,reserve<=0,false);
-            brain.completeExecutiveV354(outcome.score,net,harm,workAccum,heldout,
+            brain.completeExecutiveV354(outcome.score,net,harm,
+                motorReserveSpentDuringDecisionV359,heldout,
                 outcome.physicalEvidence&&!disturbed&&!outcome.censored);
             cursor++;
         }catch(RuntimeException failure){
@@ -223,6 +232,7 @@ final class Zero3OriginalBrainV356 {
         motor.abort();grip.abortOriginalV356();brain.abort();
         pending=false;choice=null;issued=null;elapsed=0;prior194=null;
         actualDamageDuringDecisionV359=0f;
+        motorReserveSpentDuringDecisionV359=0f;
         // issued authority count is ahead one. New authority starts exactly at
         // completed cursor without contaminating or reusing an incomplete ID.
         rearmAuthority();
@@ -231,6 +241,7 @@ final class Zero3OriginalBrainV356 {
         interrupt();brain.resetLife();lastLife=-1;
         // A new physical body has no previous-life pain stimulus.
         priorDamage=0f;actualDamageDuringDecisionV359=0f;
+        motorReserveSpentDuringDecisionV359=0f;
     }
     void close(){interrupt();if(authority!=null)authority.close();}
     String checkpoint()throws IOException{
