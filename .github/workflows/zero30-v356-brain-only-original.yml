@@ -40,7 +40,7 @@ jobs:
           score=SequenceMatcher(None,a.splitlines(),b.splitlines(),autojunk=False).ratio()
           assert score>.91, f'Original game Java drifted: similarity={score:.3f}'
           for essential in ['void updateHabitat(float dt)','void resolveObjects(float dt)',
-                            'void resetEpisode()','void saveScene()','void restoreScene',
+                            'void resetEpisode()','void saveScene()','boolean restoreScene',
                             'void renderWorld(Canvas c)','void renderBody(Canvas c)',
                             'void renderHud(Canvas c)','void renderDock(Canvas c)',
                             'void renderSettings(Canvas c)','void settingsChoice(int index)']:
