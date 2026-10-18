@@ -70,3 +70,19 @@ Stesso package/certificato e versionCode1172 (sostituzione manuale della stessa
 versione); versionName3.0-candidate.354. Non cambiare manifest OTA172, non usare
 il publisher stable e non richiedere disinstallazione. Il test S21 resta
 necessario per installazione/termica/heap e prestazione comportamentale.
+
+
+## Android: confine di lettura e raccolta delle prove
+
+La prova di ricreazione Activity deve confrontare lo stato dopo la coda owner
+che completa PAUSA/salvataggio, non l'ultimo frame pubblicato periodicamente
+prima del tap. V354 espone alla QA una Future di sola lettura sullo stesso
+executor: nessuna decisione viene aggiunta o ignorata per far passare il test.
+La normale UI continua a usare snapshot difensivi e non attende sul thread UI.
+L'executor condiviso serializza salvataggio/chiusura e apertura successiva.
+
+Gradle disinstalla normalmente l'app di test dopo il test connesso: per poter
+raccogliere PNG dal filesDir target il job abilita leaveApksInstalledAfterRun.
+Le immagini vengono raccolte anche in caso di test fallito, mantenendo l'esito
+nonzero. Errori di download dell'emulatore non equivalgono a errori dell'app:
+si ripete il job fallito, senza modificare algoritmo o criteri di accettazione.

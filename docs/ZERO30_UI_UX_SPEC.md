@@ -1,3 +1,5 @@
+> **18/10/2026 — V354, candidata integrata per prova telefonica.** [Stato corrente, componenti e prove](ZERO30_V354_INTEGRATED_PHONE_CANDIDATE_20261018.md). Habitat completo, correzione fisica congiunta, opzioni/goals/valore contestuale, planning1–3 passi condizionato all’affidabilità, eredità e12 profili V3 separati, backup,10 pagine e atlante reale sono collegati al runtime. **10000 decisioni con cold restart bitwise PASS,20 vite/8000 decisioni fisiche indipendenti PASS, core e build Android in CI PASS.** UI nativa e firma candidato in verifica finale. L’utente ha autorizzato la candidata per il telefono; questo supera il precedente divieto di produrre APK di laboratorio, NON autorizza merge nel publisher o OTA stabile. Scientificità G3–G7 e Galaxy S21 G9 ancora da dimostrare; nessuna abilità emergente o neurogenesi utile dichiarata. I blocchi V353 e precedenti sotto sono storici, non l’inventario corrente. Non ricreare componenti già integrati; consultare il rapporto e il nuovo ADR V354.
+
 > **18/10/2026 — V353: modello predittivo fisico integrato, progetto ancora incompleto.** [Rapporto attuale](ZERO30_V353_COGNITIVE_MODEL_RESULTS_20261018.md): 3 predittori/12 uscite nel vero V325; validazione online separata da GRU/cortex/presa/replay valore; memoria di64 episodi TRAIN, crescita shadow reale con veto, schema353 atomico e diagnostica LAB. Suite JVM locale: 1000+restart+1000 = 2000 bitwise, corruzione/rollback PASS; [CI del codice finale](https://github.com/nicogtr20-ctrl/idle-runner-releases/actions/runs/39122690894). **Non ricreare V351/V352/V353. Non certifica G5/G7:** 2 candidati sintetici respinti, nessun vantaggio di crescita dimostrato. Restano G1/G3, efficacia G4, validazione indipendente/planning multistep G5, goals/skills G6, vantaggio crescita G7, UI completa G8, Galaxy S21 G9 e OTA G10. Nessun merge/OTA o modifica ai12 slot2.2.
 
 # ZERO 3.0 — NUOVA INTERFACCIA GIOCO, IMPOSTAZIONI, CERVELLO, NEURONI, ABILITÀ ED EVOLUZIONE
@@ -381,21 +383,21 @@ Per V3:
 
 Un test di rendering con JSON mock dimostra solo UI-structure; è necessario anche un test integrato collegato al **cervello V3 realmente allenato**. La UI non è completa se le schermate non mostrano i dati aggiornati dopo esperienze vere.
 
-## 14. Checklist realizzazione UI (ancora non implementata)
+## 14. Checklist realizzazione UI (aggiornata V354)
 
-- [ ] UX schema e data provider definito nel codice.
-- [ ] Implementazione nuova shell di navigazione 3.0.
-- [ ] Home/panoramica da snapshot reale.
-- [ ] Cervello/neuroni 3D con unità e connessioni vere.
-- [ ] Cortex/corpo 16x4/96+74 con fisica.
-- [ ] Abilità candidate/champion/recall/failure.
-- [ ] Evoluzione weight deltas/neurogenesis/retention.
-- [ ] Percezione/memoria/obiettivi/world model.
+- [x] UX schema e data provider definito nel codice.
+- [x] Implementazione nuova shell di navigazione 3.0.
+- [x] Home/panoramica da snapshot reale.
+- [x] Cervello/neuroni 3D con unità e connessioni vere.
+- [x] Cortex/corpo 16x4/96+74 con fisica.
+- [x] Abilità candidate/champion/recall/failure.
+- [ ] Evoluzione: conteggi crescita/shadow reali implementati; deltas dettagliati e prova UI-03 di crescita accettata non certificati.
+- [x] Percezione/memoria/obiettivi/world model.
 - [ ] Analisi/baseline/benchmark/report.
-- [ ] Impostazioni V3 e preservazione updater/slot/backup.
-- [ ] Risoluzione UX di tutti i menu 2.2 rimasti raggiungibili da V3.
+- [x] Impostazioni V3 e preservazione updater/slot/backup.
+- [x] Risoluzione UX di tutti i menu 2.2 rimasti raggiungibili da V3.
 - [ ] QA UI-01..UI-16 e verifica Galaxy S21.
-- [ ] Handoff della UI e mapping metriche aggiornato nel contratto.
+- [x] Handoff della UI e mapping metriche aggiornato nel contratto.
 
 **Successo significa:** l'utente può aprire Cervello, Neuroni, Abilità, Corpo, Evoluzione, Memoria, Analisi e Impostazioni e osservare fedelmente l'apprendimento di ZERO 3.0. Tutto coerente fra pannelli, con visualizzazione attraente e reale, nessun menù fantasma 2.2.
 
