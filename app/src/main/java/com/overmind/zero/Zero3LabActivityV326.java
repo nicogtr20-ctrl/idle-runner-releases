@@ -56,12 +56,12 @@ public final class Zero3LabActivityV326 extends Activity {
         info=addText(root,"Nessun organismo V3 caricato.",13,WHITE);
         status=addText(root,"Crea una vita vergine o riprendi un checkpoint V3.",
                        12,MUTED);
-        row(root,"CREA GRU64 3.0 VERGINE","RIPRENDI SOLO V3",
+        row(root,"CREA GRU64 SENSORI V3","RIPRENDI SOLO V3",
              ()->confirmBirth(),()->enqueue(this::resume));
         row(root,"AVVIA x1","AVVIA x5",()->start(1),()->start(5));
         row(root,"PAUSA E SALVA","TORNA ALLA 2.2",
              ()->stopAndSave(false),()->{stopAndSave(true);});
-        addText(root,"V3 GRU64 SPERIMENTALE: replay a segmenti (V3.48), "+
+        addText(root,"V3 GRU64 SPERIMENTALE: percezione unificata a 194 ingressi, replay a segmenti (V3.48), "+
             "limite di 10.000 decisioni per nuove vite GRU64 (3.500 V317). "+
             "Le prestazioni vanno ancora verificate sul Galaxy S21.",
             12,0xffffc98c);
@@ -107,7 +107,7 @@ public final class Zero3LabActivityV326 extends Activity {
                 Zero3RuntimeV325 organism=
                     Zero3WorldBirthV326.create(episode,0x33226017L^episode);
                 try{
-                    session.startNewGruResearch(organism);
+                    session.startNewUnifiedResearch(organism);
                     // V348 atomic journal requires one COMPLETED physics
                     // decision; don't leave a newborn with no durable history.
                     session.step();

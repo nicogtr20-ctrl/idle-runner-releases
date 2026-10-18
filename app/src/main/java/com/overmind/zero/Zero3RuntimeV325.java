@@ -181,7 +181,7 @@ public final class Zero3RuntimeV325 implements AutoCloseable {
      */
     public static final class Display {
         public final long episode,solverTicks;
-        public final int decisions,neurons,objects,residentReplay,unsavedReplay;
+        public final int decisions,neurons,objects,residentReplay,unsavedReplay,neuralInputs;
         public final float reserve,priorDamage,cx,cy,doorX,doorY;
         public final boolean dead,hasMotorOutcome,hasVitalOutcome;
         public final float lastEnergyNet,lastEnergyGained,lastEnergyBasal,
@@ -195,6 +195,7 @@ public final class Zero3RuntimeV325 implements AutoCloseable {
             episode=r.episode;solverTicks=r.gel.ticks;
             decisions=r.next;neurons=r.gruResearchV347==null?
                 Zero3AutonomousLoopV317.HIDDEN:Zero3RecurrentBrain.HIDDEN;
+            neuralInputs=r.neuralInputWidth();
             objects=r.world.size();reserve=r.metabolism.reserve();
             residentReplay=r.residentFullExperiences();
             unsavedReplay=r.unsavedFullExperiences();
@@ -334,6 +335,16 @@ public final class Zero3RuntimeV325 implements AutoCloseable {
         authority=new Zero3MotorIntentV316.Authority(episode,OWNER_GRU_V347);
         gruResearchV347=newActor;
     }
+    public void enableUnifiedResearchV351(){
+        require(!closed&&!inDecision&&!ended&&next==0&&
+                !jointPhysicsResearchV346&&gruResearchV347==null,
+                "V351 requires isolated virgin real world");
+        Zero3RecurrentBrain nextBrain=new Zero3RecurrentBrain(194);
+        authority.close();
+        authority=new Zero3MotorIntentV316.Authority(episode,OWNER_GRU_V347);
+        gruResearchV347=nextBrain;
+    }
+    public int neuralInputWidth(){return gruResearchV347==null?20:gruResearchV347.sensorWidth();}
     public long gruLearningUpdatesV347(){
         return gruResearchV347==null?0:gruResearchV347.trainingUpdates();
     }
@@ -415,6 +426,9 @@ public final class Zero3RuntimeV325 implements AutoCloseable {
             // true V323 ledger. This does not alter a single neural input.
             Zero3CausalVitalBoundaryV344.Before vitalBefore=
                 Zero3CausalVitalBoundaryV344.before(n,before,metabolism);
+            boolean unified=gruResearchV347!=null&&gruResearchV347.sensorWidth()==194;
+            Zero3GruSensoryV347.Unified unifiedBefore=unified?
+                Zero3GruSensoryV347.unifiedBefore(before,vitalBefore,body,skin,room,world):null;
             float[] choice;
             if(gruResearchV347==null){
                 encoder.before(before,vitalBefore.fuelRatio,
@@ -423,7 +437,7 @@ public final class Zero3RuntimeV325 implements AutoCloseable {
             }else{
                 Zero3LearningFoundation.MotorIntent proposal=
                     gruResearchV347.choose(
-                        Zero3GruSensoryV347.before(before,vitalBefore),
+                        unified?unifiedBefore.neural():Zero3GruSensoryV347.before(before,vitalBefore),
                         episode,n,cortex.revision());
                 // The true V325/V323 clock is fixed 12x0.025s;
                 // GRU duration learning remains UNSUPPORTED, G4 OPEN.
@@ -511,9 +525,12 @@ public final class Zero3RuntimeV325 implements AutoCloseable {
             // can a POST outcome be exposed. It cannot affect this choice.
             lastVitalOutcome=Zero3CausalVitalBoundaryV344.after(
                 vitalBefore,after,metabolism);
+            Zero3GruSensoryV347.Unified unifiedAfter=unified?
+                Zero3GruSensoryV347.unifiedAfter(after,lastVitalOutcome,body,skin,room,world):null;
+            if(unified)record=Zero3FullCausalExperienceV322B.withUnified(record,unifiedBefore,unifiedAfter);
             if(gruResearchV347!=null)
                 gruResearchV347.consequenceFixedClockV350(
-                    Zero3GruSensoryV347.after(after,lastVitalOutcome),
+                    unified?unifiedAfter.neural():Zero3GruSensoryV347.after(after,lastVitalOutcome),
                     lastVitalOutcome.netEnergy,false);
             trace.add(event);
             replay.add(record);
@@ -622,10 +639,9 @@ public final class Zero3RuntimeV325 implements AutoCloseable {
             disk.openReplay(),s.last64(),true,.013f);
         try{
             if(s.hasGru()){
-                Zero3RecurrentBrain restoredGru=new Zero3RecurrentBrain();
+                Zero3RecurrentBrain restoredGru=Zero3RecurrentBrain.fromCheckpoint(s.gruBytes());
                 s.restoreGruModules(result.encoder,result.cortex,
                                     result.grip);
-                restoredGru.restoreAtBoundaryV345(s.gruBytes());
                 require(restoredGru.trainingUpdates()==s.nextDecision,
                         "V348 GRU updates disagree with real experiences");
                 // Close the temporary V317 owner BEFORE claiming the episode

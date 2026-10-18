@@ -398,6 +398,8 @@ public final class Zero3OrganismStoreV322 {
             // Validate neural counters/config by cold restoring into a laboratory
             // clone, not into the user-provided target.
             if(state.hasGru())
+                Zero3RecurrentBrain.fromCheckpoint(state.gruBytes());
+            if(state.hasGru())
                 state.restoreGruModules(new Zero3AutonomousLoopV317.Encoder(0x317L),
                     new Zero3LearningFoundation.AdaptiveCortex(.013f),
                     new Zero3ContextAdhesionV319(0x319L,true));

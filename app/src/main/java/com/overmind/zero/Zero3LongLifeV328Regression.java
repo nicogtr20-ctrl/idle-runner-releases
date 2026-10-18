@@ -26,7 +26,8 @@ public final class Zero3LongLifeV328Regression {
     }
     private static Zero3RuntimeV325 birth()throws Exception{
         Zero3RuntimeV325 r=Zero3WorldBirthV326.create(EPISODE,SEED);
-        if(GRU_MODE)r.enableGruResearchV347();
+        if(Boolean.getBoolean("v351.unified"))r.enableUnifiedResearchV351();
+        else if(GRU_MODE)r.enableGruResearchV347();
         r.enableSegmented();
         return r;
     }

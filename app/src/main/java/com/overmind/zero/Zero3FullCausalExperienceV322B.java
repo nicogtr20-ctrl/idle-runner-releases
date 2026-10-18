@@ -16,15 +16,38 @@ public final class Zero3FullCausalExperienceV322B {
     public final long episode,preHash,postHash,preTick,postTick,actuatorHash,workBits;
     public final int gripFrames,bilateralFrames;
     private final byte[] bytes;
+    private final float[] unifiedPre,unifiedPost;
 
     private Zero3FullCausalExperienceV322B(int n,long ep,long pre,long post,
               long beforeTick,long afterTick,long commands,long workBits,
-              int gripFrames,int bilateralFrames,byte[] immutable) {
+              int gripFrames,int bilateralFrames,byte[] immutable,float[] upre,float[] upost) {
         decision=n;episode=ep;preHash=pre;postHash=post;
         preTick=beforeTick;postTick=afterTick;actuatorHash=commands;
         this.workBits=workBits;this.gripFrames=gripFrames;
         this.bilateralFrames=bilateralFrames;
         bytes=immutable.clone();
+        unifiedPre=upre==null?null:upre.clone();unifiedPost=upost==null?null:upost.clone();
+    }
+    public boolean hasUnifiedSensesV351(){return unifiedPre!=null;}
+    public float[] neuralBeforeV351(){return unifiedPre==null?null:unifiedPre.clone();}
+    public float[] neuralAfterV351(){return unifiedPost==null?null:unifiedPost.clone();}
+    static Zero3FullCausalExperienceV322B withUnified(
+            Zero3FullCausalExperienceV322B record,
+            Zero3GruSensoryV347.Unified pre,Zero3GruSensoryV347.Unified post)throws IOException{
+        check(record!=null&&!record.hasUnifiedSensesV351()&&pre!=null&&post!=null&&
+            pre.intact()&&post.intact()&&pre.preAction&&!post.preAction&&
+            pre.episode==record.episode&&post.episode==record.episode&&
+            pre.decision==record.decision&&post.decision==record.decision+1&&
+            pre.mechanicalHash==record.preHash&&post.mechanicalHash==record.postHash&&
+            pre.ticks==record.preTick&&post.ticks==record.postTick,
+            "V351 future/foreign/missing unified sensory record");
+        ByteArrayOutputStream stream=new ByteArrayOutputStream();
+        byte[] base=record.encoded();
+        base[4]=0;base[5]=0;base[6]=1;base[7]=95; // version351, legacy bytes otherwise identical
+        stream.write(base);
+        DataOutputStream out=new DataOutputStream(stream);
+        writeArray(out,pre.neural(),194);writeArray(out,post.neural(),194);out.flush();
+        return decode(stream.toByteArray());
     }
     public byte[] encoded(){return bytes.clone();}
     private static void check(boolean condition,String reason)throws IOException {
@@ -154,7 +177,7 @@ public final class Zero3FullCausalExperienceV322B {
         ByteArrayOutputStream stream=new ByteArrayOutputStream();
         DataOutputStream copy=new DataOutputStream(stream);
         int magic=d.readInt(),version=d.readInt(),decision=d.readInt();
-        check(magic==MAGIC&&version==VERSION&&decision>=0,"record schema");
+        check(magic==MAGIC&&(version==VERSION||version==351)&&decision>=0,"record schema");
         copy.writeInt(magic);copy.writeInt(version);copy.writeInt(decision);
         Metadata before=readFrame(d,copy);
         long hash=0xcbf29ce484222325L;
@@ -168,7 +191,17 @@ public final class Zero3FullCausalExperienceV322B {
         }
         Metadata after=readFrame(d,copy);
         int grip=d.readInt(),bilateral=d.readInt();
-        copy.writeInt(grip);copy.writeInt(bilateral);copy.flush();
+        copy.writeInt(grip);copy.writeInt(bilateral);
+        float[] unifiedPre=null,unifiedPost=null;
+        if(version==351){
+            unifiedPre=readArray(d,copy,194);unifiedPost=readArray(d,copy,194);
+            for(float[] sense:new float[][]{unifiedPre,unifiedPost})for(float v:sense)
+                check(v>=-1f&&v<=1f,"V351 neural input out of range");
+            check((unifiedPre[193]==1f)==before.lastAvailable&&
+                  (unifiedPost[193]==1f)==after.lastAvailable,
+                  "V351 efference availability mismatch");
+        }
+        copy.flush();
         check(d.available()==0&&Arrays.equals(b,stream.toByteArray())&&
               before.frame==decision&&after.frame==decision+1&&
               before.episode==after.episode&&before.pre&&!after.pre&&
@@ -177,7 +210,7 @@ public final class Zero3FullCausalExperienceV322B {
               "invalid or noncanonical full experience");
         return new Zero3FullCausalExperienceV322B(decision,before.episode,
                   before.hash,after.hash,before.ticks,after.ticks,hash,
-                  Double.doubleToLongBits(work),grip,bilateral,b);
+                  Double.doubleToLongBits(work),grip,bilateral,b,unifiedPre,unifiedPost);
     }
     public void validate(Zero3OrganismStoreV322.Trace trace,long expectedEpisode)
               throws IOException {

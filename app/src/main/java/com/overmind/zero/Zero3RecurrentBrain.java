@@ -17,22 +17,29 @@ import java.util.zip.CRC32;
 public final class Zero3RecurrentBrain {
     public static final int SENSOR=SensorimotorMind.S, HIDDEN=64, MOTOR=5, ACTION=4;
     private static final float MODEL_LR=.008f, CRITIC_LR=.009f, ACTOR_LR=.003f;
-    private final float[] wz=new float[HIDDEN*(SENSOR+HIDDEN+1)];
-    private final float[] wr=new float[wz.length],wn=new float[wz.length];
+    private final int inputs;
+    private final float[] wz,wr,wn,world,before;
+
     private final float[] actor=new float[MOTOR*(HIDDEN+1)];
     private final float[][] critic={new float[HIDDEN+1],new float[HIDDEN+1]};
-    private final float[] world=new float[SENSOR*(HIDDEN+ACTION+1)];
+
     private final float[] state=new float[HIDDEN],prior=new float[HIDDEN];
     private final float[] gatedZ=new float[HIDDEN],gatedR=new float[HIDDEN],
         candidate=new float[HIDDEN],decisionState=new float[HIDDEN];
-    private final float[] before=new float[SENSOR],lastNoise=new float[MOTOR],
+    private final float[] lastNoise=new float[MOTOR],
         action=new float[ACTION],worldInput=new float[HIDDEN+ACTION+1];
     private long rng=0x34EA7CA51DA1L,trainCount,validationCount,recurrentUpdates;
     private boolean pending;
     private float heldoutModelError=Float.NaN,heldoutBaselineError=Float.NaN;
     private final float[] proposal=new float[MOTOR];
     private float storedValue;
-    public Zero3RecurrentBrain(){
+    public Zero3RecurrentBrain(){this(SENSOR);}
+    public Zero3RecurrentBrain(int width){
+        if(width!=SENSOR&&width!=194)throw new IllegalArgumentException("unknown sensory schema");
+        inputs=width;
+        wz=new float[HIDDEN*(inputs+HIDDEN+1)];
+        wr=new float[wz.length];wn=new float[wz.length];
+        world=new float[inputs*(HIDDEN+ACTION+1)];before=new float[inputs];
         for(int i=0;i<wz.length;i++){
             wz[i]=(random()-.5f)*.035f;
             wr[i]=(random()-.5f)*.035f;
@@ -50,8 +57,8 @@ public final class Zero3RecurrentBrain {
     }
     private static float clip(float v,float lo,float hi){return Math.max(lo,Math.min(hi,v));}
     private static float sigmoid(float v){return 1f/(1f+(float)Math.exp(-clip(v,-16f,16f)));}
-    private static float[] sense(float[] raw){
-        if(raw==null||raw.length!=SENSOR)throw new IllegalArgumentException("sensor width");
+    private float[] sense(float[] raw){
+        if(raw==null||raw.length!=inputs)throw new IllegalArgumentException("sensor width");
         float[] x=raw.clone();
         for(int i=0;i<x.length;i++){
             if(!Float.isFinite(x[i]))throw new IllegalArgumentException("invalid sensor");
@@ -59,21 +66,21 @@ public final class Zero3RecurrentBrain {
         }
         return x;
     }
-    private static void forward(float[] x,float[] from,float[] to,
+    private void forward(float[] x,float[] from,float[] to,
         float[] z,float[] r,float[] n,float[] wz,float[] wr,float[] wn){
-        int stride=SENSOR+HIDDEN+1;
+        int stride=inputs+HIDDEN+1;
         for(int i=0;i<HIDDEN;i++){
             int at=i*stride;
             float iz=wz[at+stride-1],ir=wr[at+stride-1];
-            for(int j=0;j<SENSOR;j++){iz+=wz[at+j]*x[j];ir+=wr[at+j]*x[j];}
-            for(int j=0;j<HIDDEN;j++){iz+=wz[at+SENSOR+j]*from[j];ir+=wr[at+SENSOR+j]*from[j];}
+            for(int j=0;j<inputs;j++){iz+=wz[at+j]*x[j];ir+=wr[at+j]*x[j];}
+            for(int j=0;j<HIDDEN;j++){iz+=wz[at+inputs+j]*from[j];ir+=wr[at+inputs+j]*from[j];}
             z[i]=sigmoid(iz);r[i]=sigmoid(ir);
         }
         for(int i=0;i<HIDDEN;i++){
             int at=i*stride;
             float in=wn[at+stride-1];
-            for(int j=0;j<SENSOR;j++)in+=wn[at+j]*x[j];
-            for(int j=0;j<HIDDEN;j++)in+=wn[at+SENSOR+j]*r[j]*from[j];
+            for(int j=0;j<inputs;j++)in+=wn[at+j]*x[j];
+            for(int j=0;j<HIDDEN;j++)in+=wn[at+inputs+j]*r[j]*from[j];
             n[i]=(float)Math.tanh(in);
             to[i]=from[i]+z[i]*(n[i]-from[i]);
         }
@@ -87,6 +94,20 @@ public final class Zero3RecurrentBrain {
         float a=w[at+size];
         for(int i=0;i<size;i++)a+=w[at+i]*h[i];
         return a;
+    }
+    public int sensorWidth(){return inputs;}
+    public static Zero3RecurrentBrain fromCheckpoint(byte[] raw){
+        if(raw==null||raw.length<100||raw.length>CHECK_MAX_BYTES_V345)
+            throw new IllegalArgumentException("invalid GRU checkpoint size");
+        try {
+            DataInputStream in=new DataInputStream(new ByteArrayInputStream(raw));
+            if(in.readInt()!=CHECK_MAGIC_V345)throw new IllegalArgumentException("GRU magic");
+            int version=in.readInt(),width=in.readInt();
+            if(!((version==345&&width==SENSOR)||(version==351&&width==194)))
+                throw new IllegalArgumentException("unknown GRU sensory configuration");
+            Zero3RecurrentBrain restored=new Zero3RecurrentBrain(width);
+            restored.restoreAtBoundaryV345(raw);return restored;
+        }catch(IOException bad){throw new IllegalArgumentException("truncated GRU",bad);}
     }
     public int realRecurrentUnits(){return HIDDEN;}
     public long trainingUpdates(){return trainCount;}
@@ -112,7 +133,7 @@ public final class Zero3RecurrentBrain {
         System.arraycopy(state,0,prior,0,HIDDEN);
         forward(x,prior,state,gatedZ,gatedR,candidate,wz,wr,wn);
         System.arraycopy(state,0,decisionState,0,HIDDEN);
-        System.arraycopy(x,0,before,0,SENSOR);
+        System.arraycopy(x,0,before,0,inputs);
         storedValue=.5f*(read(critic[0],state)+read(critic[1],state));
         for(int out=0;out<MOTOR;out++){
             int at=out*(HIDDEN+1);
@@ -173,11 +194,11 @@ public final class Zero3RecurrentBrain {
         if(!Float.isFinite(realSurvivalReward))throw new IllegalArgumentException("nonfinite reward");
         float[] next=sense(rawNext);
         pending=false;
-        float[] predictionError=new float[SENSOR];
+        float[] predictionError=new float[inputs];
         float modelMse=0,baselineMse=0;
         float[] dh=new float[HIDDEN];
         final int WIDTH=worldInput.length;
-        for(int d=0;d<SENSOR;d++){
+        for(int d=0;d<inputs;d++){
             int at=d*WIDTH;
             float predicted=0;
             for(int j=0;j<WIDTH;j++)predicted+=world[at+j]*worldInput[j];
@@ -192,7 +213,7 @@ public final class Zero3RecurrentBrain {
             }
         }
         if(heldout){
-            float err=modelMse/SENSOR,base=baselineMse/SENSOR;
+            float err=modelMse/inputs,base=baselineMse/inputs;
             float a=validationCount==0?1f:.06f;
             heldoutModelError=validationCount==0?err:heldoutModelError*(1-a)+a*err;
             heldoutBaselineError=validationCount==0?base:heldoutBaselineError*(1-a)+a*base;
@@ -225,20 +246,20 @@ public final class Zero3RecurrentBrain {
         // One-step truncated-BPTT through ALL GRU gates (the past hidden state
         // is detached). This does not falsely claim long-range BPTT.
         float[] dn=new float[HIDDEN],dz=new float[HIDDEN],dr=new float[HIDDEN];
-        int stride=SENSOR+HIDDEN+1;
+        int stride=inputs+HIDDEN+1;
         for(int i=0;i<HIDDEN;i++){
             dn[i]=clip(dh[i]*gatedZ[i]*(1-candidate[i]*candidate[i]),-.75f,.75f);
             dz[i]=clip(dh[i]*(candidate[i]-prior[i])*gatedZ[i]*(1-gatedZ[i]),-.75f,.75f);
         }
         for(int j=0;j<HIDDEN;j++){
             float sum=0;
-            for(int i=0;i<HIDDEN;i++)sum+=dn[i]*wn[i*stride+SENSOR+j]*prior[j];
+            for(int i=0;i<HIDDEN;i++)sum+=dn[i]*wn[i*stride+inputs+j]*prior[j];
             dr[j]=clip(sum*gatedR[j]*(1-gatedR[j]),-.75f,.75f);
         }
         float changed=0;
         for(int i=0;i<HIDDEN;i++){
             int at=i*stride;
-            for(int j=0;j<SENSOR;j++){
+            for(int j=0;j<inputs;j++){
                 float old=wn[at+j];
                 wn[at+j]=clip(old+MODEL_LR*dn[i]*before[j],-1.5f,1.5f);
                 wz[at+j]=clip(wz[at+j]+MODEL_LR*dz[i]*before[j],-1.5f,1.5f);
@@ -246,7 +267,7 @@ public final class Zero3RecurrentBrain {
                 changed+=Math.abs(wn[at+j]-old);
             }
             for(int j=0;j<HIDDEN;j++){
-                int ix=at+SENSOR+j;
+                int ix=at+inputs+j;
                 wn[ix]=clip(wn[ix]+MODEL_LR*dn[i]*gatedR[j]*prior[j],-1.5f,1.5f);
                 wz[ix]=clip(wz[ix]+MODEL_LR*dz[i]*prior[j],-1.5f,1.5f);
                 wr[ix]=clip(wr[ix]+MODEL_LR*dr[i]*prior[j],-1.5f,1.5f);
@@ -280,8 +301,8 @@ public final class Zero3RecurrentBrain {
             ByteArrayOutputStream buffer=new ByteArrayOutputStream(128*1024);
             DataOutputStream out=new DataOutputStream(buffer);
             out.writeInt(CHECK_MAGIC_V345);
-            out.writeInt(CHECK_VERSION_V345);
-            out.writeInt(SENSOR);
+            out.writeInt(inputs==SENSOR?CHECK_VERSION_V345:351);
+            out.writeInt(inputs);
             out.writeInt(HIDDEN);
             out.writeInt(MOTOR);
             out.writeInt(ACTION);
@@ -338,8 +359,8 @@ public final class Zero3RecurrentBrain {
             DataInputStream in=new DataInputStream(
                 new ByteArrayInputStream(raw,0,tail));
             if(in.readInt()!=CHECK_MAGIC_V345||
-               in.readInt()!=CHECK_VERSION_V345||
-               in.readInt()!=SENSOR||in.readInt()!=HIDDEN||
+               in.readInt()!=(inputs==SENSOR?CHECK_VERSION_V345:351)||
+               in.readInt()!=inputs||in.readInt()!=HIDDEN||
                in.readInt()!=MOTOR||in.readInt()!=ACTION)
                 throw new IllegalArgumentException(
                     "V345 unknown version / incompatible neuron dimensions");
