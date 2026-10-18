@@ -17,6 +17,6 @@ jobs:
         run: python3 tools/zero358_motor_audit.py
       - name: Assert production APK source unchanged by this audit
         run: |
-          git fetch origin feature/zero30-brain-only-original-game
+          git fetch origin feature/zero30-brain-only-original-game:refs/remotes/origin/feature/zero30-brain-only-original-game
           test -z "$(git diff --name-only origin/feature/zero30-brain-only-original-game -- app/src/main)"
           echo "APP_SOURCE_IDENTICAL=PASS - no production fixes or APK changes"
