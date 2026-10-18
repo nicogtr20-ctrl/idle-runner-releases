@@ -14,6 +14,7 @@ on:
       - 'app/src/main/java/com/overmind/zero/Zero3RecurrentBrainCheckpointV345Regression.java'
       - 'app/src/main/java/com/overmind/zero/Zero3GruRuntimeV347Regression.java'
       - 'app/src/main/java/com/overmind/zero/Zero3GruWholeLifeV348Regression.java'
+      - 'app/src/main/java/com/overmind/zero/Zero3CapacityV349Regression.java'
       - 'app/src/main/java/com/overmind/zero/Zero3OrganismStoreV322.java'
       - 'app/src/main/java/com/overmind/zero/Zero3SegmentedArchiveV328.java'
       - 'app/src/main/java/com/overmind/zero/Zero3CapacityV327Regression.java'
@@ -43,7 +44,7 @@ jobs:
           m=re.search(r'^\s*(javac -d /tmp/overmind [^\n]+)',source,re.M)
           if not m:raise RuntimeError('production Java material compile list unavailable')
           root='app/src/main/java/com/overmind/zero/'
-          names='Zero3LearningFoundation Zero3MotorResponseKernel Zero3MotorRetentionRegression Zero3MotorPromotionGate Zero3MotorImpulseResponseRegression Zero3MotorLocalFrameV310Regression Zero3SensoryFrameV315 Zero3CausalRecorderV315 Zero3SensoryContractV315Regression Zero3MotorIntentV316 Zero3AutonomousLoopV317 Zero3LearnedAdhesionV318 Zero3LearnedAdhesionV318Regression Zero3ContextAdhesionV319 Zero3ContextAdhesionV319Regression Zero3MotorHeadStoreV320 Zero3NeuralBundleStoreV321 Zero3OrganismStoreV322 Zero3FullCausalExperienceV322B Zero3FullArchiveStoreV322B Zero3MultiSceneRestartV322BRegression Zero3SurvivalLedgerV323 Zero3SurvivalArchiveV323 Zero3SurvivalRestartV323Regression Zero3RoomStateV324 Zero3RoomArchiveV324 Zero3RuntimeV325 Zero3MotorEvidenceV330 Zero3ContactTopologyExperimentV336 Zero3SegmentedArchiveV328 Zero3ReplayJournalV329 Zero3RuntimeV325Regression Zero3WorldBirthV326 Zero3VitalV327Regression Zero3CapacityV327Regression Zero3CausalVitalBoundaryV344 Zero3CausalVitalBoundaryV344Regression Zero3RecurrentBrain Zero3GruSensoryV347 Zero3JointBoxConstraintV338 Zero3RecurrentBrainRegression Zero3RecurrentBrainCheckpointV345Regression Zero3GruRuntimeV347Regression Zero3GruWholeLifeV348Regression'
+          names='Zero3LearningFoundation Zero3MotorResponseKernel Zero3MotorRetentionRegression Zero3MotorPromotionGate Zero3MotorImpulseResponseRegression Zero3MotorLocalFrameV310Regression Zero3SensoryFrameV315 Zero3CausalRecorderV315 Zero3SensoryContractV315Regression Zero3MotorIntentV316 Zero3AutonomousLoopV317 Zero3LearnedAdhesionV318 Zero3LearnedAdhesionV318Regression Zero3ContextAdhesionV319 Zero3ContextAdhesionV319Regression Zero3MotorHeadStoreV320 Zero3NeuralBundleStoreV321 Zero3OrganismStoreV322 Zero3FullCausalExperienceV322B Zero3FullArchiveStoreV322B Zero3MultiSceneRestartV322BRegression Zero3SurvivalLedgerV323 Zero3SurvivalArchiveV323 Zero3SurvivalRestartV323Regression Zero3RoomStateV324 Zero3RoomArchiveV324 Zero3RuntimeV325 Zero3MotorEvidenceV330 Zero3ContactTopologyExperimentV336 Zero3SegmentedArchiveV328 Zero3ReplayJournalV329 Zero3RuntimeV325Regression Zero3WorldBirthV326 Zero3VitalV327Regression Zero3CapacityV327Regression Zero3CausalVitalBoundaryV344 Zero3CausalVitalBoundaryV344Regression Zero3RecurrentBrain Zero3GruSensoryV347 Zero3JointBoxConstraintV338 Zero3RecurrentBrainRegression Zero3RecurrentBrainCheckpointV345Regression Zero3GruRuntimeV347Regression Zero3GruWholeLifeV348Regression Zero3CapacityV349Regression'
           subprocess.run(shlex.split(m.group(1))+[root+n+'.java' for n in names.split()],check=True)
           PY
       - name: Vital causality, brain CHOICES and real material cost
@@ -68,6 +69,11 @@ jobs:
           set -euo pipefail
           java -Xmx1900m -cp /tmp/overmind com.overmind.zero.Zero3GruWholeLifeV348Regression | tee /tmp/v348-life-restart.log
           grep -q 'V348 GRU_WHOLE_LIFE_ATOMIC=PASS' /tmp/v348-life-restart.log
+      - name: 'V349 synthetic 10000 metabolic codec boundary, with all old V317 ceilings unchanged'
+        run: |
+          set -euo pipefail
+          java -Xmx1800m -cp /tmp/overmind com.overmind.zero.Zero3CapacityV349Regression | tee /tmp/v349-schema.log
+          grep -q 'V349 SCHEMA_10000_CAPACITY=PASS' /tmp/v349-schema.log
       - name: Original V317 remains default and bytewise V328 cold restarts unchanged
         run: |
           set -euo pipefail
