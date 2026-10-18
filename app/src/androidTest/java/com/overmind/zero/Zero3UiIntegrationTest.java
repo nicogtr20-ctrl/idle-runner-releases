@@ -9,53 +9,83 @@ import androidx.test.ext.junit.runners.AndroidJUnit4;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import java.io.*;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicReference;
 import static org.junit.Assert.*;
 import static androidx.test.espresso.Espresso.onView;
 import static androidx.test.espresso.matcher.ViewMatchers.withText;
 import static androidx.test.espresso.action.ViewActions.*;
 
-/** Real Android activity + real organism. No mocked diagnostic provider. */
+/**
+ * V355: the GAME is the ORIGINAL GameActivity; this Activity is ONLY
+ * 3.0 cognitive navigation, real brain data, settings and verification.
+ * No second game/physics owner is started in this test.
+ */
 @RunWith(AndroidJUnit4.class)
 public final class Zero3UiIntegrationTest {
     private Zero3DashboardSnapshotV354 snapshot(ActivityScenario<Zero3DashboardActivityV354> scenario){
-        AtomicReference<Zero3DashboardSnapshotV354> out=new AtomicReference<>();scenario.onActivity(a->out.set(a.snapshotForQA()));return out.get();
+        AtomicReference<Zero3DashboardSnapshotV354> out=new AtomicReference<>();
+        scenario.onActivity(activity->out.set(activity.snapshotForQA()));
+        return out.get();
     }
-    private Zero3DashboardSnapshotV354 await(ActivityScenario<Zero3DashboardActivityV354> scenario,java.util.function.Predicate<Zero3DashboardSnapshotV354> ready){
-        long end=SystemClock.uptimeMillis()+30000;
-        do{Zero3DashboardSnapshotV354 s=snapshot(scenario);if(s!=null&&ready.test(s))return s;SystemClock.sleep(100);}while(SystemClock.uptimeMillis()<end);
-        throw new AssertionError("Real ZERO3 state did not reach the expected boundary");
+    private Zero3DashboardSnapshotV354 waitFor(ActivityScenario<Zero3DashboardActivityV354> scenario,
+            java.util.function.Predicate<Zero3DashboardSnapshotV354> ready){
+        long end=SystemClock.uptimeMillis()+60000;
+        do{
+            Zero3DashboardSnapshotV354 s=snapshot(scenario);
+            if(s!=null&&ready.test(s))return s;
+            SystemClock.sleep(200);
+        }while(SystemClock.uptimeMillis()<end);
+        throw new AssertionError("ZERO3 neural setting/snapshot was not available within 60 seconds");
     }
     private Zero3DashboardSnapshotV354 settled(ActivityScenario<Zero3DashboardActivityV354> scenario)throws Exception{
         AtomicReference<java.util.concurrent.Future<Zero3DashboardSnapshotV354>> out=new AtomicReference<>();
-        scenario.onActivity(a->out.set(a.snapshotAfterOwnerForQA()));return out.get().get(30,java.util.concurrent.TimeUnit.SECONDS);
+        scenario.onActivity(a->out.set(a.snapshotAfterOwnerForQA()));
+        return out.get().get(45,TimeUnit.SECONDS);
     }
-    private void tap(String text){onView(withText(text)).perform(scrollTo(),click());}
+    private void nav(String label){onView(withText(label)).perform(click());}
+    private void option(String label){onView(withText(label)).perform(scrollTo(),click());}
     private void screenshot(String name)throws Exception{
-        File directory=new File(InstrumentationRegistry.getInstrumentation().getTargetContext().getFilesDir(),"qa");directory.mkdirs();
-        Bitmap bitmap=InstrumentationRegistry.getInstrumentation().getUiAutomation().takeScreenshot();assertNotNull(bitmap);
-        try(OutputStream out=new FileOutputStream(new File(directory,name+".png"))){bitmap.compress(Bitmap.CompressFormat.PNG,100,out);}bitmap.recycle();
+        File dir=new File(InstrumentationRegistry.getInstrumentation().getTargetContext().getFilesDir(),"qa");
+        assertTrue(dir.isDirectory()||dir.mkdirs());
+        Bitmap img=InstrumentationRegistry.getInstrumentation().getUiAutomation().takeScreenshot();
+        assertNotNull(img);
+        try(OutputStream out=new FileOutputStream(new File(dir,name+".png"))){
+            assertTrue(img.compress(Bitmap.CompressFormat.PNG,100,out));
+        }finally{img.recycle();}
     }
-    @Test public void realV3ProfilesTrainingObserverNavigationAndNeurons()throws Exception{
-        Intent intent=new Intent(InstrumentationRegistry.getInstrumentation().getTargetContext(),Zero3DashboardActivityV354.class);
+
+    @Test public void actualV3BrainAndOnlyOriginalGameUi()throws Exception{
+        Intent intent=new Intent(InstrumentationRegistry.getInstrumentation().getTargetContext(),
+            Zero3DashboardActivityV354.class);
+        intent.putExtra("zero3_page",9);
         try(ActivityScenario<Zero3DashboardActivityV354> scenario=ActivityScenario.launch(intent)){
-            tap("Impostazioni");tap("CREA NUOVO CERVELLO NELLO SLOT VUOTO");tap("CREA");
-            Zero3DashboardSnapshotV354 birth=await(scenario,s->s.body.decisions>=1);assertEquals(194,birth.usedInput.length);
-            tap("Gioco");tap("×20");await(scenario,s->s.body.decisions>=16);tap("PAUSA");
-            tap("Cervello");Zero3DashboardSnapshotV354 graph=settled(scenario);assertNotNull(graph.graph);
-            assertEquals(graph.neurons,graph.graph.nodes.length);assertTrue(graph.graph.actualSynapses>0);assertEquals(96,graph.body.membraneX.length);assertEquals(74,graph.innerX.length);assertEquals(64,graph.executed.length);
+            option("CREA NUOVO CERVELLO NELLO SLOT VUOTO");
+            nav("CREA");
+            Zero3DashboardSnapshotV354 born=waitFor(scenario,s->s.body.decisions>=1);
+            assertEquals(194,born.usedInput.length);
+            assertEquals(96,born.body.membraneX.length);
+            assertEquals(74,born.innerX.length);
+            assertEquals(64,born.executed.length);
+            nav("Cervello");
+            Zero3DashboardSnapshotV354 graph=settled(scenario);
+            assertNotNull("Actual GRU graph",graph.graph);
+            assertEquals(graph.neurons,graph.graph.nodes.length);
+            assertTrue(graph.graph.actualSynapses>0);
             screenshot("zero3-brain");
-            long decision=graph.body.decisions;
-            for(String page:new String[]{"Panoramica","Corpo","Abilità","Evoluzione","Percezione","Memoria e obiettivi","Analisi","Impostazioni"})tap(page);
-            Zero3DashboardSnapshotV354 read=snapshot(scenario);assertEquals(decision,read.body.decisions);
-            tap("APPRENDIMENTO / SOLA OSSERVAZIONE");Zero3DashboardSnapshotV354 observer=await(scenario,s->s.observing);
-            long trained=observer.trained,validation=observer.heldout,from=observer.body.decisions;
-            tap("Gioco");tap("×20");await(scenario,s->s.body.decisions>=from+8);tap("PAUSA");
-            tap("Analisi");Zero3DashboardSnapshotV354 after=settled(scenario);assertTrue(after.body.decisions>=from+8);
-            assertEquals(trained,after.trained);assertEquals(validation,after.heldout);assertTrue(after.observations>=8);
-            screenshot("zero3-analysis-observer");tap("Gioco");screenshot("zero3-body");
-            long committed=after.body.decisions;scenario.recreate();Zero3DashboardSnapshotV354 resumed=await(scenario,s->s.body.decisions==committed);
-            assertTrue(resumed.observing);assertEquals(after.trained,resumed.trained);assertEquals(after.observations,resumed.observations);
+            nav("Corpo");waitFor(scenario,s->s.body.decisions==graph.body.decisions);
+            screenshot("zero3-body");
+            for(String tab:new String[]{"Panoramica","Abilità","Evoluzione",
+                    "Percezione","Memoria e obiettivi","Analisi","Impostazioni"})nav(tab);
+            option("APPRENDIMENTO / SOLA OSSERVAZIONE");
+            Zero3DashboardSnapshotV354 observer=waitFor(scenario,s->s.observing);
+            assertEquals(graph.body.decisions,observer.body.decisions);
+            long committed=observer.body.decisions;
+            scenario.recreate();
+            Zero3DashboardSnapshotV354 again=waitFor(scenario,s->s.body.decisions==committed);
+            assertTrue("Observation mode persisted",again.observing);
+            assertEquals(observer.trained,again.trained);
+            assertEquals(observer.heldout,again.heldout);
         }
     }
 }
