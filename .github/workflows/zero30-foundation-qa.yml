@@ -39,6 +39,7 @@ jobs:
           m=re.search(r'^\s*(javac -d /tmp/overmind [^\n]+)',text,re.M)
           if not m:raise RuntimeError('Production JVM source list unavailable; do not silently weaken test')
           command=shlex.split(m.group(1))
+          command[1:1]=["-sourcepath","app/src/main/java"]
           command+=['app/src/main/java/com/overmind/zero/Zero3LearningFoundation.java',
                     'app/src/main/java/com/overmind/zero/Zero3FoundationRegression.java',
                     'app/src/main/java/com/overmind/zero/Zero3RecurrentBrain.java',
