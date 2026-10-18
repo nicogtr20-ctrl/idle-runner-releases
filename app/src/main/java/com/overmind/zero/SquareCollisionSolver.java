@@ -117,22 +117,6 @@ final class SquareCollisionSolver {
     static int repairLinks(float[] x,float[] y,float[] vx,float[] vy,
                            int n,UnknownWorld.Entity square,float clearance,
                            Morphology.Surface skin){
-        return repairLinks(x,y,vx,vy,n,square,clearance,skin,null,null);
-    }
-    static int repairLinks(float[] x,float[] y,float[] vx,float[] vy,
-                           int n,UnknownWorld.Entity square,float clearance,
-                           Morphology.Surface skin,
-                           MotorBrain.Body body,
-                           SquareGripPuzzle.StageObserver observer){
-        return repairLinks(x,y,vx,vy,n,square,clearance,skin,body,
-                           observer,false);
-    }
-    static int repairLinks(float[] x,float[] y,float[] vx,float[] vy,
-                           int n,UnknownWorld.Entity square,float clearance,
-                           Morphology.Surface skin,
-                           MotorBrain.Body body,
-                           SquareGripPuzzle.StageObserver observer,
-                           boolean labTopologyAware){
         int count=0;
         float left=square.x-SquareGripPuzzle.HALF,
               right=square.x+SquareGripPuzzle.HALF,
@@ -142,34 +126,8 @@ final class SquareCollisionSolver {
             int fixed=0;
             for(int i=0;i<n;i++){
                 int j=(i+1)%n;
-                boolean inspect=labTopologyAware&&skin!=null;
-                int oldCross=inspect?MaterialGeometry.selfCrossings(skin):0;
-                float[] px=inspect?new float[]{x[i],x[j]}:null;
-                float[] py=inspect?new float[]{y[i],y[j]}:null;
-                float[] pvx=inspect?new float[]{vx[i],vx[j]}:null;
-                float[] pvy=inspect?new float[]{vy[i],vy[j]}:null;
-                float[] ph=inspect?new float[]{skin.gripHold[i],
-                                                skin.gripHold[j]}:null;
-                float[] pt=inspect?new float[]{skin.touchSense[i],
-                                                skin.touchSense[j]}:null;
                 if(correctLink(x,y,vx,vy,i,j,left,top,right,bottom,
-                               clearance,skin)){
-                    fixed++;
-                    if(inspect&&oldCross==0&&
-                       MaterialGeometry.selfCrossings(skin)>0){
-                        boolean alternate=
-                            Zero3ContactTopologyExperimentV336.tryAlternate(
-                                skin,square,i,j,clearance,
-                                px,py,pvx,pvy,ph,pt);
-                        if(alternate&&observer instanceof SquareGripPuzzle.DetailObserver)
-                            ((SquareGripPuzzle.DetailObserver)observer).detail(
-                                "V336_LAB_ALTERNATE_LINK",pass,i,j,
-                                body,skin,square);
-                    }
-                    if(observer instanceof SquareGripPuzzle.DetailObserver)
-                        ((SquareGripPuzzle.DetailObserver)observer).detail(
-                            "CCD_SHELL_LINK",pass,i,j,body,skin,square);
-                }
+                               clearance,skin))fixed++;
             }
             count+=fixed;
             if(fixed==0)break;
@@ -184,23 +142,6 @@ final class SquareCollisionSolver {
                           UnknownWorld.Entity box,float[] oldSkinX,float[] oldSkinY,
                           float[] oldBodyX,float[] oldBodyY,
                           float oldCoreX,float oldCoreY){
-        constrain(body,skin,box,oldSkinX,oldSkinY,oldBodyX,oldBodyY,
-                  oldCoreX,oldCoreY,null);
-    }
-    static void constrain(MotorBrain.Body body,Morphology.Surface skin,
-                          UnknownWorld.Entity box,float[] oldSkinX,float[] oldSkinY,
-                          float[] oldBodyX,float[] oldBodyY,
-                          float oldCoreX,float oldCoreY,
-                          SquareGripPuzzle.StageObserver observer){
-        constrain(body,skin,box,oldSkinX,oldSkinY,oldBodyX,oldBodyY,
-                  oldCoreX,oldCoreY,observer,false);
-    }
-    static void constrain(MotorBrain.Body body,Morphology.Surface skin,
-                          UnknownWorld.Entity box,float[] oldSkinX,float[] oldSkinY,
-                          float[] oldBodyX,float[] oldBodyY,
-                          float oldCoreX,float oldCoreY,
-                          SquareGripPuzzle.StageObserver observer,
-                          boolean labTopologyAware){
         float l=box.x-SquareGripPuzzle.HALF,r=box.x+SquareGripPuzzle.HALF;
         float t=box.y-SquareGripPuzzle.HALF,b=box.y+SquareGripPuzzle.HALF;
         for(int i=0;i<Morphology.POINTS;i++){
@@ -236,7 +177,6 @@ final class SquareCollisionSolver {
                 // 0.075s continuous hold remain strictly necessary.
             }
         }
-        if(observer!=null)observer.stage("CCD_AFTER_SHELL_PROJECT",body,skin,box);
         for(int i=0;i<MotorBrain.N;i++)
             project(body.x,body.y,body.vx,body.vy,i,
                     oldBodyX==null?body.x[i]:oldBodyX[i],
@@ -244,14 +184,11 @@ final class SquareCollisionSolver {
                     l,t,r,b,BODY_CLEARANCE);
         // The geometric centroid has no mass, cannot collide with a box,
         // and must never push the distributed organism through a solid.
-        if(observer!=null)observer.stage("CCD_AFTER_BODY_PROJECT",body,skin,box);
         MaterialGeometry.observe(body);
         repairLinks(skin.x,skin.y,skin.vx,skin.vy,Morphology.POINTS,box,
-                    LINK_CLEARANCE,skin,body,observer,labTopologyAware);
-        if(observer!=null)observer.stage("CCD_AFTER_SHELL_LINKS",body,skin,box);
+                    LINK_CLEARANCE,skin);
         repairLinks(body.x,body.y,body.vx,body.vy,MotorBrain.N,box,
                     BODY_CLEARANCE,null);
-        if(observer!=null)observer.stage("CCD_AFTER_BODY_LINKS",body,skin,box);
     }
     /** OTA163: a box blocks every living interior fluid parcel as well
      * as the ten legacy parcels. Pure contact projection, no motor credit.
