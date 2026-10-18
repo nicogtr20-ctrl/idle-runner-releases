@@ -18,6 +18,9 @@ jobs:
         run: |
           grep -F 'DEFAULT_ACTIVATION_GAIN_V358=2.4f' app/src/main/java/com/overmind/zero/Zero3LearningFoundation.java
           grep -F 'brain3.actuate(brain3LifeSerial' app/src/main/java/com/overmind/zero/GameActivity.java
+          grep -F 'brain3HarmThisPhysicalFrameV359+=' app/src/main/java/com/overmind/zero/GameActivity.java
+          grep -F 'priorDamage=harm;' app/src/main/java/com/overmind/zero/Zero3OriginalBrainV356.java
+          grep -F 'float previousDamage=tail==4?d.readFloat():0f;' app/src/main/java/com/overmind/zero/Zero3OriginalBrainV356.java
           grep -F 'public void step(MotorBrain.Body body,Morphology.Surface skin,float[] cortex,' app/src/main/java/com/overmind/zero/SymbioteMatterV1.java
       - name: Confirm exact original game physics and menu foundation
         run: |
@@ -74,14 +77,14 @@ jobs:
       - uses: actions/checkout@v4
       - uses: actions/setup-java@v4
         with: {distribution: temurin, java-version: '17'}
-      - name: Matched genuine physical cortex gain A/B (1.0 versus 2.4, learned/frozen)
+      - name: V359 regression: same physics A/B motor (1.0 vs 2.4) + true red nociception in emulator
         run: python3 tools/zero358_motor_audit.py
       - name: Enable emulator acceleration
         run: |
           echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' | sudo tee /etc/udev/rules.d/99-kvm4all.rules
           sudo udevadm control --reload-rules
           sudo udevadm trigger --name-match=kvm
-      - name: Original GameActivity + V3 sole motor actor + original life reset + save/restart
+      - name: V359 original game, real red harm vs muscle fuel, backward checkpoints, zone/life save/restart
         uses: reactivecircus/android-emulator-runner@v2
         with:
           api-level: 35
@@ -92,7 +95,7 @@ jobs:
       - uses: actions/upload-artifact@v4
         if: always()
         with:
-          name: V356-original-game-real-android-QA
+          name: V359-verified-interoception-original-game-QA
           path: /tmp/zero356-ui
 
 
@@ -102,8 +105,8 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 25
     env:
-      OVERMIND_BUILD_NUMBER: '176'
-      OVERMIND_CANDIDATE_NAME: '3.0-ota.358'
+      OVERMIND_BUILD_NUMBER: '177'
+      OVERMIND_CANDIDATE_NAME: '3.0-ota.359'
     steps:
       - uses: actions/checkout@v4
         with:
@@ -118,9 +121,10 @@ jobs:
           import json,subprocess
           old=json.loads(subprocess.check_output(['git','show','origin/main:updater/public/latest.json'],text=True))
           assert old['applicationId']=='com.overmind.zero.ota'
-          assert int(old['versionCode'])<1176, 'OTA already published or newer! Stop rather than downgrade'
+          assert int(old['versionCode'])<1177, 'OTA already published or newer! Stop rather than downgrade'
           assert old['available'] is True
-          print('V358 OTA safe upgrade: old code',old['versionCode'],'new code 1176; previous private V357=1175')
+          assert int(old['versionCode'])>=1176, 'V358 OTA must be the previous published baseline'
+          print('V358 OTA safe upgrade: old code',old['versionCode'],'new code 1177; previous public V358=1176')
           PY
       - name: Restore stable Android signing identity
         env:
@@ -140,7 +144,7 @@ jobs:
               env.write('OVERMIND_KEY_PASSWORD='+obj['password']+'\n')
               env.write('OVERMIND_KEY_ALIAS='+obj['alias']+'\n')
           PY
-      - name: Assemble OTA358 Android signed APK
+      - name: Assemble OTA359 Android signed APK
         run: gradle --no-daemon assembleRelease
       - name: Verify package, version, original stable certificate and updater rights
         run: |
@@ -160,19 +164,19 @@ jobs:
           assert 'certificate SHA-256 digest: 45010684b4fd74de00f87fb81ca89e1e79b58409cf9fefc497b445b0fe19f583' in c
           badging=(Path(os.environ['RUNNER_TEMP'])/'package.txt').read_text()
           assert "package: name='com.overmind.zero.ota'" in badging
-          assert "versionCode='1176'" in badging and "versionName='3.0-ota.358'" in badging
+          assert "versionCode='1177'" in badging and "versionName='3.0-ota.359'" in badging
           perms=(Path(os.environ['RUNNER_TEMP'])/'permissions.txt').read_text()
           for p in ('android.permission.INTERNET','android.permission.REQUEST_INSTALL_PACKAGES'):
               assert p in perms
           assert 'com.overmind.zero.UpdateFileProvider' in (Path(os.environ['RUNNER_TEMP'])/'manifest.txt').read_text()
           m=json.loads(Path('app/build/outputs/apk/release/output-metadata.json').read_text())['elements'][0]
-          assert m['versionCode']==1176 and m['versionName']=='3.0-ota.358'
+          assert m['versionCode']==1177 and m['versionName']=='3.0-ota.359'
           print('V358 STABLE_PACKAGE_SIGNING_VERSION_UPDATER=PASS')
           PY
-      - name: Preserve signed OTA358 APK before publication
+      - name: Preserve signed OTA359 APK before publication
         uses: actions/upload-artifact@v4
         with:
-          name: ZERO3-stable-OTA358-signed-APK
+          name: ZERO3-stable-OTA359-signed-APK
           path: app/build/outputs/apk/release/app-release.apk
           if-no-files-found: error
           retention-days: 30
@@ -184,33 +188,33 @@ jobs:
           apk=app/build/outputs/apk/release/app-release.apk
           sha=$(sha256sum "$apk" | awk '{print $1}')
           bytes=$(wc -c < "$apk" | tr -d ' ')
-          tag=overmind-zero-v3.0-ota.358
-          mkdir -p "$RUNNER_TEMP/ota358"
-          cp "$apk" "$RUNNER_TEMP/ota358/OVERMIND-ZERO.apk"
-          cat > "$RUNNER_TEMP/ota358/notes.md" <<'NOTES'
-          OVERMIND ZERO 3.0 OTA358 — aggiornamento del SOLO cervello originale.
-          Cortecce muscolari: aumento moderato dell'attivazione neurale (tanh con guadagno 2.4).
+          tag=overmind-zero-v3.0-ota.359
+          mkdir -p "$RUNNER_TEMP/ota359"
+          cp "$apk" "$RUNNER_TEMP/ota359/OVERMIND-ZERO.apk"
+          cat > "$RUNNER_TEMP/ota359/notes.md" <<'NOTES'
+          OVERMIND ZERO 3.0 OTA359 — aggiornamento del SOLO cervello originale.
+          Interocezione: rilevamento del danno reale da rosso e ambiente, separato dal costo motorio e dalla fame; canale del danno precedente ora vivo.
           Nessuna modifica di corpo, fisica, casse, mondo, schermate, vite o salvataggi.
           Gestione GRU, decisioni, checkpoint, ciclo vite e interfaccia originale mantenuti.
           Include correzione V357 del falso cambio vita durante lo streaming delle zone.
-          APK firmato con il medesimo certificato storico, versionCode 1176; aggiorna senza disinstallare.
+          APK firmato con il medesimo certificato storico, versionCode 1177; aggiorna senza disinstallare.
           NOTES
           if gh release view "$tag" --repo "${{ github.repository }}" >/dev/null 2>&1;then
-            mkdir -p "$RUNNER_TEMP/ota358/existing"
-            gh release download "$tag" --repo "${{ github.repository }}" -p OVERMIND-ZERO.apk -D "$RUNNER_TEMP/ota358/existing"
-            cmp "$apk" "$RUNNER_TEMP/ota358/existing/OVERMIND-ZERO.apk" || { echo "Existing OTA358 release differs";exit 1; }
+            mkdir -p "$RUNNER_TEMP/ota359/existing"
+            gh release download "$tag" --repo "${{ github.repository }}" -p OVERMIND-ZERO.apk -D "$RUNNER_TEMP/ota359/existing"
+            cmp "$apk" "$RUNNER_TEMP/ota359/existing/OVERMIND-ZERO.apk" || { echo "Existing OTA359 release differs";exit 1; }
           else
-            gh release create "$tag" "$RUNNER_TEMP/ota358/OVERMIND-ZERO.apk" \
+            gh release create "$tag" "$RUNNER_TEMP/ota359/OVERMIND-ZERO.apk" \
               --repo "${{ github.repository }}" \
               --target "${{ github.sha }}" \
-              --title 'OVERMIND ZERO 3.0 OTA358' \
-              --notes-file "$RUNNER_TEMP/ota358/notes.md"
+              --title 'OVERMIND ZERO 3.0 OTA359' \
+              --notes-file "$RUNNER_TEMP/ota359/notes.md"
           fi
           git fetch --no-tags origin main
           git checkout -B main origin/main
           mkdir -p updater/public/apk
-          filename="overmind-zero-1176-${sha:0:12}.apk"
-          cp "$RUNNER_TEMP/ota358/OVERMIND-ZERO.apk" "updater/public/apk/$filename"
+          filename="overmind-zero-1177-${sha:0:12}.apk"
+          cp "$RUNNER_TEMP/ota359/OVERMIND-ZERO.apk" "updater/public/apk/$filename"
           python3 - "$filename" "$sha" "$bytes" <<'PY'
           import json,sys
           from pathlib import Path
@@ -218,30 +222,30 @@ jobs:
           filename,sha,size=sys.argv[1:]
           target=Path('updater/public/latest.json')
           current=json.loads(target.read_text())
-          if int(current['versionCode'])>=1176:
+          if int(current['versionCode'])>=1177:
               raise RuntimeError('Newer OTA published concurrently; never overwrite')
           data={
             'schemaVersion':1,'available':True,
             'applicationId':'com.overmind.zero.ota',
-            'versionCode':1176,'versionName':'3.0-ota.358',
+            'versionCode':1177,'versionName':'3.0-ota.359',
             'apkUrl':'https://overmind-zero-updates.vercel.app/apk/'+filename,
             'sha256':sha,'sizeBytes':int(size),
-            'notes':'ZERO 3.0 OTA358: attivazione muscolare neurale calibrata; gioco e salvataggi invariati',
+            'notes':'ZERO 3.0 OTA359: interocezione corretta, danno reale distinto da fame e muscoli; gioco e salvataggi invariati',
             'publishedAt':datetime.now(timezone.utc).isoformat()}
           target.write_text(json.dumps(data,indent=2)+'\n')
           with open('docs/CHANGELOG.md','a') as out:
-              out.write('\n## ZERO 3.0 OTA358 — '+data['publishedAt']+'\n')
-              out.write('- Calibrato solo il guadagno neurale motore V3 a 2.4; identico gioco/fisica.\n')
-              out.write('- Test fisici A/B, rinascita Android e salvataggi verificati.\n')
-              out.write('- APK firmato con il certificato originale, versione 1176, SHA-256 `'+sha+'`.\n')
-          print('OTA358 manifest ready:',data)
+              out.write('\n## ZERO 3.0 OTA359 — '+data['publishedAt']+'\n')
+              out.write('- Danno reale rosso/ambiente nel cervello V3, distinto da consumo motorio e fame; proprio gioco/fisica invariati.\n')
+              out.write('- Test Android: rosso reale, salvataggi 358 compatibili, rinascita e altre regressioni; gain motorio 2.4 invariato.\n')
+              out.write('- APK firmato con il certificato originale, versione 1177, SHA-256 `'+sha+'`.\n')
+          print('OTA359 manifest ready:',data)
           PY
           git config user.name 'github-actions[bot]'
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
           git add updater/public/latest.json "updater/public/apk/$filename" docs/CHANGELOG.md
-          git commit -m 'Publish original-game ZERO 3.0 OTA358 muscle-cortex calibration'
+          git commit -m 'Publish original-game ZERO 3.0 OTA359 corrected nociception'
           git push origin HEAD:main
-          echo "OTA358_PUBLISHED_MAIN_MANIFEST=PASS SHA256=$sha"
+          echo "OTA359_PUBLISHED_MAIN_MANIFEST=PASS SHA256=$sha"
       - name: Remove ephemeral signing material
         if: always()
         run: rm -f "$RUNNER_TEMP/zero358-stable-ota.p12"
