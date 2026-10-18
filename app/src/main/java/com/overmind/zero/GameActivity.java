@@ -30,6 +30,12 @@ public final class GameActivity extends Activity {
     }
     @Override protected void onPause(){super.onPause();if(lab!=null)lab.suspend();}
     @Override protected void onResume(){super.onResume();if(lab!=null)lab.resume();}
+    @Override protected void onDestroy(){
+        // The ORIGINAL Activity may be recreated after a named save/rotation.
+        // Free only V3's transient authority, never body, world or saved life.
+        if(lab!=null&&lab.brain3!=null){lab.brain3.close();lab.brain3=null;}
+        super.onDestroy();
+    }
     private final class Lab extends View {
         final Paint paint=new Paint(Paint.ANTI_ALIAS_FLAG);
         final Path path=new Path();
