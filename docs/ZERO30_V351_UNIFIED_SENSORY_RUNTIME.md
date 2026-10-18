@@ -44,5 +44,5 @@ V351 sensori fisici/occlusione/immutabilità/PRE→POST→PRE e replay neurale P
 V351 vita GRU194 a 2000 decisioni: 1000 + nuovo processo JVM + 1000 identici
 bytewise al controllo continuo, 63 segmenti e cache bounded. Come V328,
 la fixture facilita energia fisica: non prova ricerca delle risorse.
-CI remota e build Android ancora da verificare prima di ogni promozione.
+CI remota 39118399048 e build Android Debug PASS; la validazione scientifica degli altri gate rimane distinta.
 Il nuovo `tools/zero3_core_qa.py` riproduce la batteria e i fault del journal.

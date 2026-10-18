@@ -49,7 +49,7 @@ Prove di apprendimento del valore e beneficio sulle scelte restano separate
 - Batteria locale completa PASS: legacy V345/V348/V350, V351, V352 e vita 2000.
 - Con target/replay: 1000+JVM restart+1000 identici al controllo continuo;
   63 segmenti, rollback reale a1920, doppia corruzione rifiutata.
-- Build Android e CI remote della V352 ancora da verificare.
+- CI remota 39119103894 SUCCESS: include Android Debug compilata.
 
 Non dichiarare G4 scientificamente chiuso. Mancano ancora le prove indipendenti
 di valore appreso e beneficio delle decisioni; G1/G3/G5/G6/G7 crescita/G8/G9/G10
