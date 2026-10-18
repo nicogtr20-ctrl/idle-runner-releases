@@ -230,9 +230,37 @@ final class Zero3OriginalBrainV356 {
             return Base64.encodeToString(raw.toByteArray(),Base64.NO_WRAP);
         }catch(RuntimeException failure){throw new IOException("Errore checkpoint 3.0",failure);}
     }
-    private void restore(String saved)throws IOException{
+    /** Immutable read-only view of the SAME persisted V3 neuron system.
+     * The legacy analytics screen is never allowed to display old 2.2 values. */
+    static final class Readout {
+        final long decisions,trained,heldout,observations,motorUpdates;
+        final int sensoryInputs,hiddenUnits,actionOutputs,adhesionSectors;
+        final Zero3CognitionV353.Snapshot cognition;
+        final Zero3ExecutiveV354.Snapshot executive;
+        final Zero3NeuralGraphV354 graph;
+        private final Zero3RecurrentBrain core;
+        private final Zero3LearningFoundation.AdaptiveCortex cortex;
+        private final Zero3ContextAdhesionV319 grip;
+        Readout(long count,Zero3RecurrentBrain b,
+                Zero3LearningFoundation.AdaptiveCortex c,
+                Zero3ContextAdhesionV319 g){
+            core=b;cortex=c;grip=g;
+            decisions=count;trained=b.trainingUpdates();heldout=b.validations();
+            observations=b.observationsV354();motorUpdates=c.updates();
+            sensoryInputs=b.sensorWidth();hiddenUnits=b.realRecurrentUnits();
+            actionOutputs=64;adhesionSectors=16;
+            cognition=b.cognitionSnapshot();executive=b.executiveSnapshot();
+            Zero3NeuralGraphV354.Builder builder=new Zero3NeuralGraphV354.Builder();
+            b.appendGraphV354(builder);c.appendGraphV354(builder);
+            g.appendGraphV354(builder);graph=builder.build();
+        }
+    }
+    /** No world or physical objects allocated; no global actor authority. */
+    static Readout inspectSaved(String saved)throws IOException {
+        if(saved==null||saved.isEmpty())throw new IOException("Nessun checkpoint cerebrale V356 disponibile");
         byte[] bytes;
-        try{bytes=Base64.decode(saved,Base64.DEFAULT);}catch(Exception e){throw new IOException("Formato neuronale V356 danneggiato",e);}
+        try{bytes=Base64.decode(saved,Base64.DEFAULT);}
+        catch(Exception e){throw new IOException("Formato neuronale V356 danneggiato",e);}
         if(bytes.length<128||bytes.length>MAX)throw new IOException("Lunghezza checkpoint V356 non valida");
         CRC32 crc=new CRC32();crc.update(bytes,0,bytes.length-4);
         int expected=((bytes[bytes.length-4]&255)<<24)|((bytes[bytes.length-3]&255)<<16)|
@@ -258,8 +286,13 @@ final class Zero3OriginalBrainV356 {
         Zero3ContextAdhesionV319 newGrip=new Zero3ContextAdhesionV319(1L,true);
         newGrip.restoreAtDecisionBoundary(new Zero3ContextAdhesionV319.State(
             w,rng,training,decisions,credits,sq,gripCost,allWork));
-        brain=core;cortex=newCortex;motor=new Zero3LearningFoundation.Coordinator(cortex);
-        grip=newGrip;cursor=count;
+        return new Readout(count,core,newCortex,newGrip);
+    }
+    private void restore(String saved)throws IOException{
+        Readout restored=inspectSaved(saved);
+        brain=restored.core;cortex=restored.cortex;
+        motor=new Zero3LearningFoundation.Coordinator(cortex);
+        grip=restored.grip;cursor=restored.decisions;
         rearmAuthority();
     }
 }
