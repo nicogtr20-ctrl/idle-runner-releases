@@ -80,5 +80,5 @@ jobs:
             sleep 10
           done
           exit 1
-      - name: Retain G4 blocker: no full GRU+organism archive, 12 step fixed time
+      - name: Retain G4 blocker without promotion
         run: echo 'V347_ACTUAL_V325_GRU64_MODE_LAB_ONLY NO_G4_PROMOTION NO_OTA NO_MERGE'
