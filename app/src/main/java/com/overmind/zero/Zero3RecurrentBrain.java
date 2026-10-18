@@ -189,7 +189,10 @@ public final class Zero3RecurrentBrain {
         Arrays.fill(state,0f);
     }
     public void abort(){
-        pending=false;physicalTargetsReadyV353=false;if(cognition!=null)cognition.abort();
+        pending=false;physicalTargetsReadyV353=false;
+        if(cognition!=null)cognition.abort();
+        if(executive!=null)executive.abort();
+        if(plannerV354!=null)plannerV354.abort();
     }
     /**
      * The only source of high-level intentional directions in the experimental
