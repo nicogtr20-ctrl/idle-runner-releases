@@ -3,6 +3,8 @@ on:
   push:
     branches: [audit/zero357-physical-muscle-gate]
   workflow_dispatch:
+  pull_request:
+    branches: [feature/zero30-brain-only-original-game]
 permissions:
   contents: read
 jobs:
