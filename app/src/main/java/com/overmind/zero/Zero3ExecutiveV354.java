@@ -26,6 +26,11 @@ public final class Zero3ExecutiveV354 {
     private String ecology=new ShelterEcology().encode();
     private float nextRoom=150f;
     private boolean pending,usedMemory;
+    // Transient snapshot only: incomplete Android frames cannot become
+    // remembered or counted options when app pauses or original ZERO dies.
+    private long abortGoalId,abortGoalSince;
+    private int abortGoalAge,abortRecallIndex=-1,abortRecallCount;
+    private String abortReason;
     private float[] pendingContext,pendingPolicy;
     private String reason="Nessuna intenzione osservata";
     private static float clamp(float x){return Math.max(-1,Math.min(1,x));}
@@ -43,6 +48,8 @@ public final class Zero3ExecutiveV354 {
     /** Called by the sole actor after its own proposal. Returned option must be authorized there. */
     float[] propose(float[] observation,float[] actorProposal,long decision,boolean observe){
         if(pending||decision!=decisions)throw new IllegalStateException("V354 decision cursor");
+        abortGoalId=goalId;abortGoalSince=goalSince;
+        abortGoalAge=goalAge;abortReason=reason;abortRecallIndex=-1;
         float[] c=context(observation);active=-1;usedMemory=false;lastValue=value(c);
         float nearest=.12f;
         for(int i=0;i<options.size();i++){
@@ -56,10 +63,21 @@ public final class Zero3ExecutiveV354 {
         float[] chosen=actorProposal.clone();
         if(active>=0){
             Option o=options.get(active);System.arraycopy(o.policy,0,chosen,0,5);usedMemory=true;
+            abortRecallIndex=active;abortRecallCount=o.recalls;
             o.recalls++;if(goalId==o.id){goalAge++;reason=observe?"Richiamo osservato; apprendimento congelato":"Richiamo contestuale: vantaggio misurato";}
             else{goalId=o.id;goalSince=decision;goalAge=1;reason=o.state==CANDIDATE?"Prova candidata su dati riservati":"Opzione convalidata richiamata";}
         }else{goalId=0;goalSince=decision;goalAge=1;reason="Nuova intenzione della politica GRU";}
         pending=true;pendingContext=c;pendingPolicy=chosen.clone();return chosen;
+    }
+    /** No reward, no decision, no chosen option on an interrupted physics frame. */
+    void abort(){
+        if(!pending)return;
+        if(abortRecallIndex>=0&&abortRecallIndex<options.size())
+            options.get(abortRecallIndex).recalls=abortRecallCount;
+        goalId=abortGoalId;goalSince=abortGoalSince;
+        goalAge=abortGoalAge;reason=abortReason;
+        pending=false;pendingContext=null;pendingPolicy=null;
+        active=-1;usedMemory=false;abortRecallIndex=-1;
     }
     Zero3ExecutiveV354 inherited(long parent)throws IOException{
         Zero3ExecutiveV354 e=decode(encode());e.historicalDecisions+=e.decisions;e.historicalTrain+=e.train;e.historicalValidation+=e.validation;e.historicalObservations+=e.observations;

@@ -69,6 +69,9 @@ public final class BrainStatsActivity extends Activity {
         if(prefs!=null){loadReadOnly();render();}
     }
     private void loadReadOnly(){
+        // This candidate's only active brain is V3; never load 2.2 weights
+        // and accidentally present stale neural values as LIVE.
+        if(prefs!=null)return;
         core=new RecurrentCoreV22();
         muscle=new SymbioteMotorHeadV1();
         motorDuration=new MotorDurationV22();
@@ -277,7 +280,121 @@ public final class BrainStatsActivity extends Activity {
             default:return "ZERO";
         }
     }
+    /** Original neural settings visual language and navigational sections;
+     * values and modules are exclusively from the verified 3.0 checkpoint. */
+    private void renderZero3(){
+        FrameLayout frame=new FrameLayout(this);
+        frame.setBackgroundColor(BG);
+        frame.addView(new GridView(),new FrameLayout.LayoutParams(-1,-1));
+        ScrollView scroll=new ScrollView(this);
+        scroll.setFillViewport(true);scroll.setVerticalScrollBarEnabled(false);
+        LinearLayout body=vertical();body.setPadding(dp(18),dp(22),dp(18),dp(32));
+        scroll.addView(body);frame.addView(scroll,new FrameLayout.LayoutParams(-1,-1));
+        String current="HOME".equals(section)?"CERVELLO / ZERO":"CERVELLO / "+section;
+        TextView back=label("‹    "+current,19,WHITE,true);
+        back.setPadding(dp(3),dp(5),0,dp(10));
+        back.setOnClickListener(v->{if("HOME".equals(section))finish();else{section="HOME";render();}});
+        body.addView(back);
+        add(body,label("ARCHITETTURA 3.0   /   DATI NEURALI SALVATI",11,TEAL,true),0);
+        Zero3OriginalBrainV356.Readout real=null;
+        String error="";
+        try{real=Zero3OriginalBrainV356.inspectSaved(
+            prefs.getString(Zero3OriginalBrainV356.KEY,""));}
+        catch(Exception invalid){error=invalid.getMessage();}
+        if(real==null){
+            LinearLayout missing=panel(body,"NESSUN CHECKPOINT 3.0 VALIDATO",ORANGE);
+            note(missing,error);
+            note(missing,"Il cervello 2.2 storico non viene mostrato come attivo.");
+        }else if("HOME".equals(section)){
+            LinearLayout overview=panel(body,"RETE VIVA",TEAL);
+            metric(overview,"Nucleo","GRU64 / "+real.sensoryInputs+" sensori");
+            metric(overview,"Decisioni",num(real.decisions));
+            metric(overview,"Allenamento",num(real.trained));
+            metric(overview,"Validazione",num(real.heldout));
+            note(overview,"La fisica, le stanze, la morte e il corpo appartengono alla tua app originale.");
+            tap(body,"Cervello","GRU, actor, valore e memoria di lavoro",VIOLET,
+                ()->{section="BRAIN";render();});
+            tap(body,"Corpo","Corteccia motoria, adesione e muscoli reali",BLUE,
+                ()->{section="BODY";render();});
+            tap(body,"Percezione","Ottica, tatto, propriocezione e interocezione",TEAL,
+                ()->{section="PERCEPTION";render();});
+            tap(body,"Abilità","Opzioni cognitive realmente registrate",GOLD,
+                ()->{section="SKILL";render();});
+            tap(body,"Evoluzione","Crescita neurale e predizioni validate",VIOLET,
+                ()->{section="EVOLUTION";render();});
+            tap(body,"Parametri","Pesi e connessioni della rete neurale vera",BLUE,
+                ()->{section="PARAMS";render();});
+        }else{
+            LinearLayout detail=panel(body,section,TEAL);
+            switch(section){
+                case "BRAIN":
+                    metric(detail,"Unità GRU",real.hiddenUnits+"");
+                    metric(detail,"Ingressi",real.sensoryInputs+"");
+                    metric(detail,"Scelte motorie","5 uscite continue");
+                    metric(detail,"Decisioni completate",num(real.decisions));
+                    metric(detail,"Validazioni fuori training",num(real.heldout));
+                    if(real.executive!=null){
+                        metric(detail,"Richiami possibili",real.executive.skills.length+"");
+                        note(detail,real.executive.reason);
+                    }
+                    break;
+                case "BODY":
+                    metric(detail,"Muscoli",real.actionOutputs+" / 16 settori");
+                    metric(detail,"Adesione",real.adhesionSectors+" settori");
+                    metric(detail,"Passi cortex aggiornati",num(real.motorUpdates));
+                    note(detail,"Stesso SymbioteMatterV1 e solver del gioco precedente.");
+                    break;
+                case "PERCEPTION":
+                    metric(detail,"Ingresso neurale",real.sensoryInputs+" segnali");
+                    metric(detail,"Membrana",Morphology.POINTS+" punti");
+                    metric(detail,"Raggi ottici",SpatialPerception.RAYS+"");
+                    metric(detail,"Interno","74 particelle");
+                    metric(detail,"Feedback motorio",real.actionOutputs+" uscite reali");
+                    note(detail,"Sensi soltanto misurati dalla fisica originale, mai ricostruiti dal mondo della V355.");
+                    break;
+                case "SKILL":
+                    metric(detail,"Azioni reali",num(real.decisions));
+                    metric(detail,"Apprendimento",num(real.trained));
+                    metric(detail,"Osservazioni",num(real.observations));
+                    if(real.executive!=null){
+                        metric(detail,"Opzioni registrate",real.executive.skills.length+"");
+                        metric(detail,"Storico ereditato",num(real.executive.historicalDecisions));
+                    }
+                    note(detail,"La presenza di un'opzione non ne dimostra l'efficacia.");
+                    break;
+                case "EVOLUTION":
+                    if(real.cognition!=null){
+                        metric(detail,"Neuroni predittivi",real.cognition.predictiveUnits+"");
+                        metric(detail,"Candidati",real.cognition.shadowUnits+"");
+                        metric(detail,"Crescite accettate",num(real.cognition.growthAccepted));
+                        metric(detail,"Crescite rifiutate",num(real.cognition.growthRejected));
+                        for(int i=0;i<real.cognition.reliable.length;i++)
+                            metric(detail,"Predizione "+(i+1),
+                                real.cognition.reliable[i]?"Convalidata":"In validazione");
+                    }
+                    note(detail,"Solo le verifiche reali distinguono capacità apprese e strutture presenti.");
+                    break;
+                case "PARAMS":
+                    metric(detail,"Neuroni effettivi",real.graph.nodes.length+"");
+                    metric(detail,"Sinapsi",num(real.graph.actualSynapses));
+                    metric(detail,"Archi resi",real.graph.edges.length+"");
+                    metric(detail,"Archi non resi",real.graph.omittedEdges+"");
+                    note(detail,"Gli archi meno rilevanti sono filtrati solo per la visualizzazione; i pesi reali rimangono in memoria.");
+                    break;
+                default:
+                    note(detail,"Modulo non riconosciuto");
+            }
+            final Zero3NeuralGraphV354 graph=real.graph;
+            if("PARAMS".equals(section))
+                tap(body,"VISTA 3D DEI NEURONI","Unica nuova visualizzazione, pesi e neuroni reali",GOLD,
+                    ()->Zero3OriginalAtlasActivityV356.open(this,graph));
+            tap(body,"‹  TORNA AI MODULI","Cervello • Corpo • Percezione • Abilità • Evoluzione • Parametri",
+                TEAL,()->{section="HOME";render();});
+        }
+        setContentView(frame);
+    }
     private void render(){
+        if(prefs!=null){renderZero3();return;}
         shownAt=SystemClock.uptimeMillis();
         FrameLayout frame=new FrameLayout(this);
         frame.setBackgroundColor(BG);

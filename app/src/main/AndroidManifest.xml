@@ -11,6 +11,8 @@
     android:theme="@android:style/Theme.Material.NoActionBar"
     android:icon="@drawable/ic_launcher" android:supportsRtl="true">
 
+    <activity android:name="com.overmind.zero.Zero3OriginalAtlasActivityV356"
+      android:exported="false" android:screenOrientation="portrait"/>
     <activity android:name="com.overmind.zero.Zero3DashboardActivityV354"
       android:exported="false" android:screenOrientation="portrait"/>
     <!-- Opt-in V3 lab: never exported; launched only from the legacy settings dialog. -->

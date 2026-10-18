@@ -53,6 +53,8 @@ public final class Zero3PlannerV354 {
         }
         if(age==3)clear();
     }
+    /** An interrupted original-game physical choice cannot score a horizon. */
+    void abort(){clear();}
     private void clear(){age=0;observation=hidden=prediction=baseline=null;}
     public static final class Snapshot {
         public final long[] samples;public final boolean[] reliable;public final float[][] mse,baseline;public final long uses;

@@ -73,7 +73,84 @@ public final class BrainToolsActivity extends Activity {
      * obsolete motor genomes are never presented as trained ZERO 2.2 skills.
      * This Activity reads saved preferences without training or mutating them.
      */
+    /** Exactly the previous analysis screen's cards/theme/navigation,
+     * now displaying ONLY the verified saved V3 brain from original gameplay. */
+    void showPageV356(){
+        ScrollView scroll=new ScrollView(this);scroll.setFillViewport(true);
+        scroll.setBackgroundColor(BG);
+        LinearLayout body=vertical();pad(body,17,24);scroll.addView(body);
+        body.addView(label("ZERO • CERVELLO 3.0",25,WHITE,true));
+        paragraph(body,"UN SOLO DECISORE • SIMBIONTE ORIGINALE • DATI REALI DEL SALVATAGGIO");
+        Zero3OriginalBrainV356.Readout real=null;
+        String issue="";
+        try{
+            real=Zero3OriginalBrainV356.inspectSaved(
+                prefs.getString(Zero3OriginalBrainV356.KEY,""));
+        }catch(Exception invalid){issue=invalid.getMessage();}
+        LinearLayout active=panel(body);
+        active.addView(label("01 / SISTEMA ATTIVO",17,CYAN,true));
+        if(real==null){
+            paragraph(active,"Cervello 3.0 non ancora salvato: "+issue);
+            paragraph(active,"Nessun valore del vecchio 2.2 viene presentato come cervello attivo.");
+        }else{
+            line(active,"Architettura","GRU64 + actor + executive",CYAN);
+            line(active,"Ingressi neurali",real.sensoryInputs+"",WHITE);
+            line(active,"Memoria ricorrente",real.hiddenUnits+" unità",WHITE);
+            line(active,"Decisioni completate",real.decisions+"",WHITE);
+            line(active,"Apprendimento",real.trained+"",CYAN);
+            line(active,"Validazione separata",real.heldout+"",WHITE);
+            line(active,"Osservazioni senza training",real.observations+"",WHITE);
+            paragraph(active,"La GRU 3.0 controlla i muscoli REALI del gioco originale. Il sistema 2.2 non decide e non aggiorna la propria politica.");
+            LinearLayout bodySense=panel(body);
+            bodySense.addView(label("02 / SENSI E CORPO",17,CYAN,true));
+            line(bodySense,"Membrana",Morphology.POINTS+" campioni",WHITE);
+            line(bodySense,"Visione",SpatialPerception.RAYS+" raggi + ottica spettrale",WHITE);
+            line(bodySense,"Propriocezione","Corpo e materiale vivo",WHITE);
+            line(bodySense,"Interocezione","74 particelle interne",WHITE);
+            line(bodySense,"Uscite muscolari",real.actionOutputs+" (16 × 4)",WHITE);
+            line(bodySense,"Aree adesive",real.adhesionSectors+"",WHITE);
+            line(bodySense,"Aggiornamenti corteccia",real.motorUpdates+"",CYAN);
+            paragraph(bodySense,"Le letture fisiche provengono dal vecchio simbionte, dalla membrana e dagli oggetti originali. Nessun mondo separato V355.");
+            LinearLayout cognition=panel(body);
+            cognition.addView(label("03 / APPRENDIMENTO E PREVISIONI",17,CYAN,true));
+            Zero3CognitionV353.Snapshot c=real.cognition;
+            if(c!=null){
+                line(cognition,"Neuroni previsionali",c.predictiveUnits+"",WHITE);
+                line(cognition,"Neuroni candidati",c.shadowUnits+"",WHITE);
+                line(cognition,"Crescite accettate",c.growthAccepted+"",CYAN);
+                line(cognition,"Crescite rifiutate",c.growthRejected+"",WHITE);
+                for(int i=0;i<Math.min(3,c.mse.length);i++)
+                    line(cognition,"Predizione "+(i+1),c.reliable[i]?
+                        String.format(Locale.ITALY,"MSE %.4f",c.mse[i]):"IN VALIDAZIONE",
+                        c.reliable[i]?CYAN:AMBER);
+            }
+            Zero3ExecutiveV354.Snapshot e=real.executive;
+            if(e!=null){
+                line(cognition,"Opzioni cognitive",e.skills.length+"",WHITE);
+                line(cognition,"Memoria delle vite",e.historicalDecisions+" decisioni storiche",WHITE);
+                paragraph(cognition,"Obiettivo e richiamo: "+e.reason);
+            }
+            paragraph(cognition,"Le capacità sono valutate sui risultati reali, non semplicemente sulla presenza del codice.");
+        }
+        LinearLayout links=panel(body);
+        links.addView(label("PESI E PARAMETRI 3.0  ›",17,CYAN,true));
+        paragraph(links,"Apri la schermata originale dei parametri, aggiornata per i neuroni e gli archi GRU3.");
+        links.setClickable(true);
+        links.setOnClickListener(v->startActivity(new Intent(this,BrainStatsActivity.class)));
+        LinearLayout saves=panel(body);
+        saves.addView(label("PARTITE E SALVATAGGI  ›",17,CYAN,true));
+        paragraph(saves,"Gli slot, la fisica, le vite e il mondo restano quelli dell'applicazione originale.");
+        saves.setOnClickListener(v->{startActivity(new Intent(this,SaveSlotsActivity.class));finish();});
+        LinearLayout stats=panel(body);
+        stats.addView(label("STATISTICHE VITE  ›",17,CYAN,true));
+        stats.setOnClickListener(v->startActivity(new Intent(this,StatisticsActivity.class)));
+        LinearLayout back=panel(body);
+        back.addView(label("‹  TORNA AL GIOCO",17,WHITE,true));
+        back.setOnClickListener(v->finish());
+        setContentView(scroll);
+    }
     void showPage(){
+        if(prefs!=null){showPageV356();return;}
         ScrollView scroll=new ScrollView(this);scroll.setFillViewport(true);
         scroll.setBackgroundColor(BG);
         LinearLayout body=vertical();pad(body,17,24);scroll.addView(body);

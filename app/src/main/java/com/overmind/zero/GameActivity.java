@@ -17,14 +17,19 @@ import java.util.Locale;
  */
 public final class GameActivity extends Activity {
     private Lab lab;
-    /** UI instrumentation: actual GRU owns physics, not the dormant 2.2 state. */
-    boolean originalZero3OwnerForQA(){
-        return lab!=null&&lab.zero3Mode&&lab.zero3!=null&&lab.zero3.active()
-            &&lab.trainer==null&&lab.zero3DecisionCount>=1;
+    // Android integration checks: the ACTUAL original physics owner (not V355 lab).
+    boolean originalV356NeuralOwnerForQA(){return lab!=null&&lab.brain3!=null&&lab.useSymbiote;}
+    long originalV356DecisionsForQA(){return lab==null||lab.brain3==null?-1:lab.brain3.decisions();}
+    int originalV356LifeForQA(){return lab==null?-1:lab.brain3LifeSerial;}
+    int originalV356WorldZoneForQA(){return lab==null?-1:lab.episode;}
+    String originalV356BrainErrorForQA(){return lab==null?"no game":lab.brain3Error;}
+    // QA: trigger the same original zone extension while an intention is still
+    // executing. The neural LIFE identity must remain unchanged.
+    boolean originalV356ExtendZoneDuringActionForQA(){
+        if(lab==null||lab.brain3==null||!lab.brain3.pending())return false;
+        lab.extendHabitat();return true;
     }
-    int originalZero3DecisionCountForQA(){
-        return lab==null?0:lab.zero3DecisionCount;
-    }
+    void originalV356ForceDeathForQA(){if(lab!=null)lab.reserve=0f;}
     @Override public void onCreate(Bundle b){
         super.onCreate(b);
         getWindow().setFlags(1024,1024);
@@ -33,6 +38,12 @@ public final class GameActivity extends Activity {
     }
     @Override protected void onPause(){super.onPause();if(lab!=null)lab.suspend();}
     @Override protected void onResume(){super.onResume();if(lab!=null)lab.resume();}
+    @Override protected void onDestroy(){
+        // The ORIGINAL Activity may be recreated after a named save/rotation.
+        // Free only V3's transient authority, never body, world or saved life.
+        if(lab!=null&&lab.brain3!=null){lab.brain3.close();lab.brain3=null;}
+        super.onDestroy();
+    }
     private final class Lab extends View {
         final Paint paint=new Paint(Paint.ANTI_ALIAS_FLAG);
         final Path path=new Path();
@@ -118,6 +129,9 @@ public final class GameActivity extends Activity {
         boolean useSymbiote=false;
         SymbioteMatterV1 symMatter=null;
         SymbioteMotorHeadV1 symMotor=null;
+        // Exactly one actor: the V3 neural transplant; original game remains the physics owner.
+        Zero3OriginalBrainV356 brain3;
+        String brain3Error="";
         // Frame-start physical positions for continuous collision detection.
         // These scratch arrays are NEVER part of ZERO's neural state/save.
         final float[] squarePrevSkinX=new float[Morphology.POINTS];
@@ -142,6 +156,10 @@ public final class GameActivity extends Activity {
         float H=850,clock=0,phase=0,uiTime=0,heading=0,trailClock=0;
         float[] trailX=new float[46],trailY=new float[46];
         int trailCount=0,speed=1,episode=0;
+        // The original 'episode' is a WORLD-ZONE seed, not a life identity:
+        // extendHabitat() increases it while the same body is ALIVE.
+        // This is the actual generation, changed ONLY by resetEpisode().
+        int brain3LifeSerial=0;
         // Separate TEST MAX mode: never part of x1/x5/x20 cycling.
         // Session-only, stopped by explicit STOP, Android pause or overheating.
         boolean testMax=false;
@@ -162,27 +180,11 @@ public final class GameActivity extends Activity {
         float resetNotice=0,helpNotice=0;
         final int[] darks={0xff060a13,0xff0d1823,0xff14262e,0xff06121c};
 
-        // V355: never swap the original game UI for a replacement dashboard.
-        final boolean zero3Mode=getResources().getBoolean(R.bool.zero3_candidate);
-        // Android instrumentation only: render a single completed V3 state,
-        // with no endless Choreographer invalidations during test idling.
-        final boolean zero3QaPaused=zero3Mode&&
-            GameActivity.this.getIntent().getBooleanExtra("zero3_qa_pause_v355",false);
-        Zero3AndroidSessionV325 zero3;
-        String zero3Failure="";
-        int zero3Slot=1;
-        float zero3Budget,zero3OriginX=Float.NaN,zero3OriginY=Float.NaN;
-        float zero3LastX=Float.NaN,zero3LastY=Float.NaN;
-        int zero3DecisionCount,zero3Positive,zero3Negative,zero3Consumed;
-        long zero3Train,zero3Heldout,zero3Observed;
         Lab(Context c){
             super(c);setLayerType(View.LAYER_TYPE_HARDWARE,null);setFocusable(true);
             prefs=c.getSharedPreferences("zero_motorbrain_001",Context.MODE_PRIVATE);
             gripPrefs=c.getSharedPreferences(GripContactObserver.PREFS,Context.MODE_PRIVATE);
-            if(zero3Mode){
-                if(zero3QaPaused)simulationRunning=false;
-                startZero3();
-            }else load();
+            load();
             try {
                 installedVersion=GameActivity.this.getPackageManager().getPackageInfo(
                     GameActivity.this.getPackageName(),0).versionName;
@@ -192,121 +194,6 @@ public final class GameActivity extends Activity {
                 updaterStatusUntil=uiTime+8.0f;
                 invalidate();
             });
-        }
-        /** No 2.2 preferences are read or mutated in this V3 path. */
-        void startZero3(){
-            try{
-                int requested=getSharedPreferences("zero3-ui-v354",0).getInt("slot",1);
-                zero3Slot=Math.max(1,Math.min(12,requested));
-                Zero3ProfileStoreV354 profiles=Zero3AndroidSessionV325.profilesV354(GameActivity.this);
-                String status=profiles.status(zero3Slot);
-                zero3=Zero3AndroidSessionV325.profileV354(GameActivity.this,zero3Slot);
-                if("VUOTO".equals(status)){
-                    long episode=Math.max(1,System.currentTimeMillis());
-                    Zero3RuntimeV325 newborn=Zero3WorldBirthV355.create(episode,episode^0x355A55L);
-                    try{
-                        zero3.startNewCompletionV354(newborn);
-                        zero3.step(); // Real experience required by atomic V3 archive.
-                        zero3.suspend();zero3.resume();
-                    }catch(Exception failure){newborn.close();throw failure;}
-                }else if(status.startsWith("VITA ")){
-                    zero3.resume();
-                }else throw new java.io.IOException("Checkpoint V3 danneggiato, nessun reset eseguito");
-                zero3Failure="";adoptZero3();
-            }catch(Exception failure){
-                if(zero3!=null){zero3.close();zero3=null;}
-                zero3Failure="ZERO 3.0: "+failure.getMessage();
-                simulationRunning=false;
-            }
-        }
-        /** Only called on the UI thread AFTER a whole physical decision. */
-        void adoptZero3()throws java.io.IOException{
-            if(zero3==null||!zero3.active())return;
-            Zero3RuntimeV325.CanvasStateV355 s=zero3.canvasStateV355();
-            creature=s.body;surface=s.skin;symMatter=s.gel;environment=s.world;
-            chamber=s.room;shelter=s.shelter;reserve=s.reserve;worldTime=s.worldTime;
-            elapsedLife=s.worldTime;scarcity=elapsedLife>=70f;useSymbiote=true;
-            zero3DecisionCount=s.decisions;zero3Train=s.train;zero3Heldout=s.validation;
-            zero3Observed=s.observations;zero3Positive=s.positive;
-            zero3Negative=s.negative;zero3Consumed=s.consumed;
-            if(!Float.isFinite(zero3OriginX)){
-                zero3OriginX=creature.cx;zero3OriginY=creature.cy;
-                zero3LastX=creature.cx;zero3LastY=creature.cy;
-            }else{
-                lifeDistance+=(float)Math.hypot(creature.cx-zero3LastX,creature.cy-zero3LastY);
-                zero3LastX=creature.cx;zero3LastY=creature.cy;
-            }
-            journey.netDistance=(float)Math.hypot(creature.cx-zero3OriginX,creature.cy-zero3OriginY);
-            journey.recordNet=Math.max(journey.recordNet,journey.netDistance);
-            trailClock+=.025f;
-            if(trailClock>.25f){
-                trailClock=0f;
-                if(trailCount<trailX.length)trailCount++;
-                for(int i=trailCount-1;i>0;i--){trailX[i]=trailX[i-1];trailY[i]=trailY[i-1];}
-                trailX[0]=creature.cx;trailY[0]=creature.cy;
-            }
-        }
-        /** Original world/body/HUD renderers; ONLY V3 advances the physics. */
-        void drawZero3(Canvas c){
-            if(getWidth()==0)return;
-            long now=System.nanoTime();
-            float dt=lastFrame==0?0:Math.min(.038f,(now-lastFrame)*1e-9f);
-            lastFrame=now;uiTime+=dt;
-            if(simulationRunning&&zero3!=null&&zero3.active()){
-                if(zero3.ended()||zero3.atArchiveCapacity()){
-                    simulationRunning=false;
-                    zero3Failure=zero3.ended()?
-                        "Vita terminata: crea una nuova vita ereditata":
-                        "Archivio 10.000 decisioni completo: conserva il profilo";
-                }else{
-                    zero3Budget=Math.min(3f,zero3Budget+dt*speed);
-                    long budgetNs=System.nanoTime()+(testMax?40000000L:20000000L);
-                    for(int n=0;n<(testMax?12:8);n++){
-                        float duration=zero3.lastDecisionSeconds();
-                        if(!Float.isFinite(duration)||duration<=0)duration=.3f;
-                        if(!testMax&&zero3Budget<duration)break;
-                        if(n>0&&System.nanoTime()>budgetNs)break;
-                        if(testMax&&android.os.Build.VERSION.SDK_INT>=29){
-                            android.os.PowerManager thermal=(android.os.PowerManager)
-                                GameActivity.this.getSystemService(Context.POWER_SERVICE);
-                            if(thermal!=null&&thermal.getCurrentThermalStatus()>=
-                                android.os.PowerManager.THERMAL_STATUS_SEVERE){
-                                stopTestMax("TEST MAX fermato: temperatura alta");break;
-                            }
-                        }
-                        try{
-                            zero3.step();
-                            float actual=zero3.lastDecisionSeconds();
-                            if(!Float.isFinite(actual)||actual<=0)actual=duration;
-                            if(testMax)testMaxSimSeconds+=actual;
-                            else zero3Budget=Math.max(0f,zero3Budget-actual);
-                            adoptZero3();
-                        }catch(Exception failure){
-                            zero3Failure="ZERO 3.0 interrotto: "+failure.getMessage();
-                            simulationRunning=false;testMax=false;break;
-                        }
-                    }
-                }
-            }
-            if(testMax&&testMaxStartedNs>0){
-                float seconds=(System.nanoTime()-testMaxStartedNs)*1e-9f;
-                if(seconds>.1f)testMaxActualRate=(float)(testMaxSimSeconds/seconds);
-            }
-            c.save();float scale=getWidth()/W;c.scale(scale,scale);
-            renderWorld(c);renderBody(c);renderHud(c);c.restore();
-            if(!zero3QaPaused)postInvalidateOnAnimation();
-        }
-        void zero3Panel(int page){
-            try{
-                if(zero3!=null&&zero3.active())zero3.suspend();
-                android.content.Intent i=new android.content.Intent(
-                    GameActivity.this,Zero3DashboardActivityV354.class);
-                i.putExtra("zero3_page",page);
-                GameActivity.this.startActivity(i);
-            }catch(Exception failure){
-                zero3Failure="ZERO3 salvataggio: "+failure.getMessage();
-                simulationRunning=false;
-            }
         }
         /** Consume reset requests only after dashboard left the foreground.
             Scoped keys are removed before reloading live runtime objects. */
@@ -323,6 +210,7 @@ public final class GameActivity extends Activity {
             return true;
         }
         void load(){
+            if(brain3!=null){brain3.close();brain3=null;}
             boxLastPositions.clear();boxFailedGripFrames=0;
             shelter=new ShelterEcology();
             java.util.Arrays.fill(cyanLeds,0f);
@@ -516,6 +404,18 @@ public final class GameActivity extends Activity {
                 lifeStats.markPartial();
             }
             save();
+            try{
+                if(!useSymbiote||symMatter==null)throw new java.io.IOException(
+                    "Profilo originale privo del simbionte: nessuna conversione automatica");
+                brain3=Zero3OriginalBrainV356.load(GameActivity.this,
+                    prefs.getString(Zero3OriginalBrainV356.KEY,""));
+                brain3Error="";
+                sensorMind.setLearning(false);
+                if(symMotor!=null)symMotor.setAdaptationEnabled(false);
+            }catch(Exception failure){
+                simulationRunning=false;
+                brain3Error="ZERO 3.0: "+failure.getMessage();
+            }
         }
         float[] decode(String s){
             if(s==null||s.isEmpty())return null;
@@ -568,7 +468,6 @@ public final class GameActivity extends Activity {
         /** Physical checkpoint for a true saved game, not merely a brain
          * export. Named save slots copy this AFTER onPause has flushed it. */
         void saveScene(){
-            if(zero3Mode)return; // V3 atomic snapshot, never old SharedPreferences scene.
             if(creature==null||surface==null||environment==null)return;
             try{
                 JSONObject snapshot=new JSONObject();
@@ -604,11 +503,18 @@ public final class GameActivity extends Activity {
                 snapshot.put("eventTime",eventTime);
                 shelter.capture(environment);
                 snapshot.put(ShelterEcology.SNAPSHOT,shelter.encode());
-                if(!prefs.edit().putString("physical_scene_v100",snapshot.toString())
+                // Original scene bytes + completed V3 neural weights in ONE
+                // old working profile. Named saves copy the unchanged profile map.
+                android.content.SharedPreferences.Editor sceneEditor=prefs.edit()
+                    .putString("physical_scene_v100",snapshot.toString())
                     .putString(DecisionBlackbox.CURRENT,decisionBlackbox.encodeCurrent())
                     .putString(GateLifeJournal.CURRENT,gateJournal.encode())
-                    .putString(ContactGeometryForensics.KEY,contactGeometry.encode())
-                    .commit())
+                    .putString(ContactGeometryForensics.KEY,contactGeometry.encode());
+                if(brain3!=null){
+                    brain3.interrupt(); // Partial actions earn no fake reward.
+                    sceneEditor.putString(Zero3OriginalBrainV356.KEY,brain3.checkpoint());
+                }
+                if(!sceneEditor.commit())
                     throw new IllegalStateException("Impossibile salvare la scena fisica");
                 saveGripObserver();
             }catch(Exception e){
@@ -696,7 +602,6 @@ public final class GameActivity extends Activity {
                 gripObserver.encode()).apply();
         }
         void save(){
-            if(zero3Mode)return; // Keep every historical 2.2 weight unchanged.
             if(trainer==null)return;
             prefs.edit().putString("virgin",encode(virgin))
               .putString("best",encode(trainer.best))
@@ -793,25 +698,6 @@ public final class GameActivity extends Activity {
               .apply();
         }
         void resume(){
-            if(zero3Mode){
-                try{
-                    int slot=getSharedPreferences("zero3-ui-v354",0).getInt("slot",1);
-                    slot=Math.max(1,Math.min(12,slot));
-                    if(zero3==null||slot!=zero3Slot){
-                        if(zero3!=null)zero3.close();
-                        zero3=null;zero3OriginX=Float.NaN;zero3OriginY=Float.NaN;
-                        zero3LastX=Float.NaN;zero3LastY=Float.NaN;
-                        zero3Budget=0f;lifeDistance=0f;trailCount=0;
-                        startZero3();
-                    }else if(!zero3.active()){
-                        zero3.resume();zero3Failure="";adoptZero3();
-                    }
-                }catch(Exception error){
-                    simulationRunning=false;
-                    zero3Failure="ZERO3 ripresa: "+error.getMessage();
-                }
-                lastFrame=0;postInvalidateOnAnimation();return;
-            }
             // A reset requested from CERVELLO/ANALISI must replace objects in
             // memory before the next frame can save old weights again.
             if(prefs.contains(ResetDomains.REQUEST)||
@@ -820,28 +706,24 @@ public final class GameActivity extends Activity {
             enabled=true;lastFrame=0;physicsClock.reset();postInvalidateOnAnimation();
             // All adaptation happens in the visible world. Inherited motor
             // and membrane weights persist until a lived test is accepted.
-            sensorMind.setLearning(true);
+            sensorMind.setLearning(brain3==null);
         }
         void suspend(){
-            if(zero3Mode){
-                testMax=false;lastFrame=0;
-                if(zero3!=null&&zero3.active())try{zero3.suspend();}
-                catch(Exception error){
-                    simulationRunning=false;
-                    zero3Failure="ZERO3 non salvato: "+error.getMessage();
-                }
-                return;
-            }
             // Test speed is deliberately NOT persisted or resumed blindly.
             testMax=false;
             // Pause and FLUSH BOTH cognition and physical state before the
             // named-slot screen is allowed to inspect the working profile.
             enabled=false;physicsClock.reset();
+            if(brain3!=null)brain3.interrupt();
             save();
             saveScene();
             lastFrame=0;
         }
         void resetEpisode(){
+            brain3LifeSerial++;
+            // The original instant reincarnation remains authoritative.
+            // Only recurrent activations reset, V3 neural weights are retained.
+            if(brain3!=null)brain3.newLife();
             techniqueUsedSinceAction=false;
             shelter.capture(environment);
             shelter.newLife();
@@ -887,7 +769,7 @@ public final class GameActivity extends Activity {
             reserve=Math.max(70,Math.min(92,reserve));
             liveStartX=creature.cx;liveStartY=creature.cy;
             liveStartEnergy=reserve;liveStartContacts=physicalContacts;
-            sensorMind.resetEpisode(SensorimotorMind.Senses.read(
+            if(brain3==null)sensorMind.resetEpisode(SensorimotorMind.Senses.read(
                 creature,surface,chamber,environment,reserve));
             sensorMind.updateBodySense(creature,surface);
             sensorMind.updateDistributedSense(creature,surface,chamber,environment);
@@ -896,7 +778,8 @@ public final class GameActivity extends Activity {
             // The newborn sees from actual membrane sites, never a centroid eye.
             sensorMind.updateSpatialSense(creature,surface,chamber,environment);
             sensorMind.updateNavigationSense(creature,surface,chamber,environment);
-            heading=(float)Math.atan2(sensorMind.motorY(),sensorMind.motorX());
+            heading=brain3!=null?(float)Math.atan2(brain3.directionY(),brain3.directionX()):
+                (float)Math.atan2(sensorMind.motorY(),sensorMind.motorX());
         }
         void extendHabitat(){
             shelter.capture(environment);
@@ -1059,7 +942,7 @@ public final class GameActivity extends Activity {
                     eventEnergyDeltaSinceAction+=reserve-before;
                     // Actual feedback trains the self-selected motor-action
                     // history; no color, target angle or food flag passed.
-                    sensorMind.contactOutcome(reserve-before,object.signature,sightAtTouch);
+                    if(brain3==null)sensorMind.contactOutcome(reserve-before,object.signature,sightAtTouch);
                     energySinceAction[object.signature]+=reserve-before;
                     mind.observe(object.signature,delta,0);
                     if(delta>0){
@@ -1107,7 +990,8 @@ public final class GameActivity extends Activity {
                 // scene expansion, app restart or switching named save slots.
                 // Freeze the last real motor choice (possibly shorter than 0.65s)
                 // BEFORE death clears body and transient sensorimotor traces.
-                sensorMind.recordTerminal(SensorimotorMind.Senses.read(
+                if(brain3!=null)brain3.interrupt();
+                else sensorMind.recordTerminal(SensorimotorMind.Senses.read(
                     creature,surface,chamber,environment,reserve),
                     environmentEffectSinceAction,creature);
                 // Save a separate last-life trace even if the app is closed
@@ -1138,12 +1022,14 @@ public final class GameActivity extends Activity {
         }
         @Override protected void onDraw(Canvas c){
             super.onDraw(c);
-            if(zero3Mode){drawZero3(c);return;}
             if(getWidth()==0)return;
             long now=System.nanoTime();
             float dt=lastFrame==0?0:Math.min(.038f,(now-lastFrame)*.000000001f);
             lastFrame=now;
             uiTime+=dt;
+            // Never allow a V2.2 motor controller to take over after a V3
+            // loading, sensor, checkpoint or device failure.
+            if(brain3==null)simulationRunning=false;
             if(resetNotice>0)resetNotice-=dt;
             // Fixed-step headless-style burst: preserve ALL original physics,
             // senses, hunger, actions, learning and real event timestamps.
@@ -1195,7 +1081,8 @@ public final class GameActivity extends Activity {
                     // ACTION is sampled from learned sensory-action
                     // values. There is no atan2(food), target teleport or
                     // fixed rule that pulling an opened gate is "correct".
-                    float mx=sensorMind.motorX(),my=sensorMind.motorY();
+                    float mx=brain3!=null?brain3.directionX():sensorMind.motorX();
+                    float my=brain3!=null?brain3.directionY():sensorMind.motorY();
                     heading=(float)Math.atan2(my,mx);
                     float px=creature.cx+mx*145f,py=creature.cy+my*145f;
                     float beforeX=creature.cx,beforeY=creature.cy;
@@ -1219,9 +1106,9 @@ public final class GameActivity extends Activity {
                     // Legacy motor genomes do not operate the living cortex.
                     if(!useSymbiote){
                         lastAppliedHand=skillExecution.hand(lastAppliedHand,
-                            sensorMind.adhesion()>.5f,actualTouch,liveBody.testingCandidate());
+                            (brain3!=null?brain3.adhesion():sensorMind.adhesion())>.5f,actualTouch,liveBody.testingCandidate());
                         lastAppliedMembrane=skillExecution.membrane(lastAppliedMembrane,
-                            sensorMind.adhesion()>.5f,actualTouch,liveBody.testingCandidate());
+                            (brain3!=null?brain3.adhesion():sensorMind.adhesion())>.5f,actualTouch,liveBody.testingCandidate());
                     }
                     if(!useSymbiote&&
                        (lastAppliedHand!=trialHand||lastAppliedMembrane!=trialMembrane)){
@@ -1235,11 +1122,19 @@ public final class GameActivity extends Activity {
                     // OTA167: the same neural intent now drives fast
                     // proprioceptive recurrent refinement every real dt.
                     // Record efference from EXACTLY what physics receives.
-                    if(useSymbiote&&symMatter!=null&&symMotor!=null){
+                    if(useSymbiote&&symMatter!=null&&brain3!=null){
+                        try{
+                            brain3.actuate(brain3LifeSerial,creature,surface,symMatter,
+                                environment,chamber,reserve,worldTime,slice);
+                            mx=brain3.directionX();my=brain3.directionY();
+                        }catch(java.io.IOException failure){
+                            simulationRunning=false;
+                            brain3Error=failure.getMessage();break;
+                        }
+                    }else if(useSymbiote&&symMatter!=null&&symMotor!=null){
                         symMotor.fastTick(creature,surface,slice);
                         sensorMind.appliedSymbioteControls(symMotor.commands(),creature,surface);
-                    }
-                    else sensorMind.appliedControls(lastAppliedMotor,lastAppliedHand,lastAppliedMembrane);
+                    }else if(brain3==null)sensorMind.appliedControls(lastAppliedMotor,lastAppliedHand,lastAppliedMembrane);
                     // Prevent fast material masses from skipping through a
                     // square between consecutive frames. Snapshot before any
                     // physical motion, after routine world streaming.
@@ -1251,15 +1146,17 @@ public final class GameActivity extends Activity {
                     // True motor impulse from physical fluid reactions,
                     // recorded BEFORE the external collision solver runs.
                     float witnessedMuscleImpulse=0f;
+                    float brain3WorkBefore=symMatter==null?0f:symMatter.work;
                     float uncorrectedX=oldCoreX,uncorrectedY=oldCoreY;
-                    if(useSymbiote&&symMatter!=null&&symMotor!=null){
+                    if(useSymbiote&&symMatter!=null&&(brain3!=null||symMotor!=null)){
                         // Keep OTA148/151 physics EXACTLY unchanged. Cortex
                         // work is an actually measured material quantity;
                         // debit a small, explicit metabolic energy cost from
                         // the SAME reserve that determines real survival.
                         // No positive feedback for distance or deformation.
                         float workBefore=symMatter.work;
-                        symMatter.step(creature,surface,symMotor.commands(),slice);
+                        symMatter.step(creature,surface,
+                            brain3!=null?brain3.commands():symMotor.commands(),slice);
                         witnessedMuscleImpulse=symMatter.lastMuscleReactionImpulse;
                         uncorrectedX=creature.cx;uncorrectedY=creature.cy;
                         float freshWork=Math.max(0f,symMatter.work-workBefore);
@@ -1271,19 +1168,19 @@ public final class GameActivity extends Activity {
                             float actualFuel=Math.min(reserve,freshWork*8f);
                             if(actualFuel>0f){
                                 reserve-=actualFuel;
-                                sensorMind.motorMetabolicCost(actualFuel);
+                                if(brain3==null)sensorMind.motorMetabolicCost(actualFuel);
                                 mortality.energyFlows(0f,actualFuel,0f,0f);
                             }
                         }
                     }else{
                         creature.step(lastAppliedMotor,mx,my,slice,lastAppliedHand,px,py);
                         surface.step(creature,lastAppliedMembrane,px,py,slice,
-                            sensorMind.adhesion());
+                            (brain3!=null?brain3.adhesion():sensorMind.adhesion()));
                     }
                     if(chamber!=null){
                         float doorBefore=chamber.doorY;
-                        chamber.constrain(creature,surface,slice,sensorMind.adhesion());
-                        gripObserver.gateFrame(surface,chamber,sensorMind.adhesion(),
+                        chamber.constrain(creature,surface,slice,(brain3!=null?brain3.adhesion():sensorMind.adhesion()));
+                        gripObserver.gateFrame(surface,chamber,(brain3!=null?brain3.adhesion():sensorMind.adhesion()),
                             elapsedLife,slice);
                         float actuallyMoved=Math.abs(chamber.doorY-doorBefore);
                         if(Float.isFinite(actuallyMoved))
@@ -1358,7 +1255,7 @@ public final class GameActivity extends Activity {
                             squarePrevSkinX,squarePrevSkinY,
                             squarePrevBodyX,squarePrevBodyY,
                             oldCoreX,oldCoreY);
-                        gripObserver.boxFrame(surface,e,sensorMind.adhesion(),
+                        gripObserver.boxFrame(surface,e,(brain3!=null?brain3.adhesion():sensorMind.adhesion()),
                             elapsedLife,slice);
                         if(grips.contacts>0)boxTouchedThisFrame=true;
                         if(grips.held>0)boxAnyHeldThisFrame=true;
@@ -1397,7 +1294,7 @@ public final class GameActivity extends Activity {
                     // box contact and repeatedly failed to hold it. Never
                     // turn on grips by script and never count bare collision.
                     if(chamber==null&&gripRecoveryCooldown>0)gripRecoveryCooldown--;
-                    boolean voluntaryBoxGrip=boxTouchedThisFrame&&sensorMind.adhesion()>.5f;
+                    boolean voluntaryBoxGrip=boxTouchedThisFrame&&(brain3!=null?brain3.adhesion():sensorMind.adhesion())>.5f;
                     if(voluntaryBoxGrip&&!boxAnyHeldThisFrame)boxFailedGripFrames++;
                     else boxFailedGripFrames=0;
                     if(!useSymbiote&&boxFailedGripFrames>=120&&gripRecoveryCooldown==0&&
@@ -1509,7 +1406,7 @@ public final class GameActivity extends Activity {
                                 creature,surface,chamber.food,reserve-prior,
                                 trailX,trailY,trailCount,"room");
                         eventEnergyDeltaSinceAction+=reserve-prior;
-                        sensorMind.contactOutcome(reserve-prior,chamber.food.signature);
+                        if(brain3==null)sensorMind.contactOutcome(reserve-prior,chamber.food.signature);
                         energySinceAction[chamber.food.signature]+=reserve-prior;
                         int gained=(int)(reserve-prior);
                         energyEaten++;chambersCleared++;
@@ -1536,7 +1433,7 @@ public final class GameActivity extends Activity {
                     // OTA162: real actuator credit from the same completed
                     // material frame, after box/door collisions and object motion.
                     // No new physical force or action chooser. Exclude respawns.
-                    if(lifeStamp==episode&&useSymbiote&&symMotor!=null){
+                    if(lifeStamp==episode&&useSymbiote&&symMotor!=null&&brain3==null){
                         // A felt touch is useful somatic feedback, not
                         // evidence of exogenous displacement. OTA172 marked
                         // nearly every crawling interval as externally
@@ -1577,8 +1474,33 @@ public final class GameActivity extends Activity {
                         // Episodic valence comes only from actual contact;
                         // energyBeforeFrame is retained for motion telemetry.
                     }
-                    // Real temporal observation AFTER collisions, hunger
-                    // and any energy actually collected.
+                    // Same ORIGINAL physics + energy/room/box lifecycle;
+                    // only the live 3.0 neuron's completed action receives credit.
+                    if(brain3!=null&&lifeStamp==episode){
+                        try{
+                            boolean holding=false;
+                            for(float hold:surface.gripHold)
+                                if(hold>=Morphology.GRIP_HOLD){holding=true;break;}
+                            boolean external=MotorResponseJournalV172.externalMotionContaminated(
+                                creature.cx-uncorrectedX,creature.cy-uncorrectedY,
+                                environmentEffectSinceAction-worldEffectAtFrameStart,
+                                shelter.storm(worldTime),holding);
+                            brain3.observed(creature,surface,symMatter,environment,
+                                chamber,reserve,worldTime,slice,
+                                Math.max(0f,symMatter.work-brain3WorkBefore),
+                                witnessedMuscleImpulse,external);
+                            // Keep original HUD visual sensors refreshed but
+                            // never enter the 2.2 decision/training loop.
+                            sensorMind.updateBodySense(creature,surface);
+                            sensorMind.updateDistributedSense(creature,surface,chamber,environment);
+                            sensorMind.updateImpedanceSense(creature,surface);
+                            sensorMind.updateInnerSense(creature,surface);
+                        }catch(Exception failure){
+                            simulationRunning=false;brain3Error=failure.getMessage();break;
+                        }
+                    }
+                    // Legacy actor is strictly disabled whenever V3 is active.
+                    if(brain3==null){
                     sensorMind.setLearning(true);
                     boolean actedFromMemory=!useSymbiote&&episodic.physicallyReplaying();
                     long beforeExperience=sensorMind.experiences;
@@ -1657,6 +1579,7 @@ public final class GameActivity extends Activity {
                             save();
                         }
                     }
+                    }
                     phase+=slice;
                     if(phase>=13f){
                         // NOT a reset: the world expands around ZERO.
@@ -1684,6 +1607,11 @@ public final class GameActivity extends Activity {
             renderWorld(c);
             renderBody(c);
             renderHud(c);
+            if(!brain3Error.isEmpty()){
+                rounded(c,20,H-208,460,H-160,0xe82a1726,12);
+                text(c,brain3Error.length()>72?brain3Error.substring(0,72):brain3Error,
+                    240,H-178,10,0xffffd0ce,true);
+            }
             c.restore();
             postInvalidateOnAnimation();
         }
@@ -1956,7 +1884,7 @@ public final class GameActivity extends Activity {
                 float relativeSpeed=(float)Math.hypot(
                     surface.vx[i]-creature.cvx,surface.vy[i]-creature.cvy);
                 float pressure=Math.max(surface.touchSense[i],surface.touchPulse[i]);
-                float localEye=zero3Mode?0f:distributedSense.node(i,DistributedBodySense.OPTIC);
+                float localEye=distributedSense.node(i,DistributedBodySense.OPTIC);
                 float activation=Math.min(1f,
                     .37f*Math.min(1f,surface.extension[i]/Morphology.MAX_REACH)+
                     .44f*Math.min(1f,relativeSpeed/120f)+
@@ -2010,13 +1938,10 @@ public final class GameActivity extends Activity {
          */
         void renderHud(Canvas c){
             // Energy dots are vertically stacked over the transparent world.
-            // V3 does not checkpoint by-colour lifetime counts. Preserve
-            // the original three graphics, but never fabricate blue/red/purple.
-            hudEnergy(c,37,46,"BLU",zero3Mode?-1:energyTotals.blue,0xff58d4ff);
-            hudEnergy(c,37,95,"ROSSA",zero3Mode?-1:energyTotals.red,0xffff5789);
-            hudEnergy(c,37,144,"VIOLA",zero3Mode?-1:energyTotals.violet,0xffbc8bff);
-            if(zero3Mode){text(c,"SENSORI 3.0",20,181,8,GOLD,false);
-            }else if(energyTotals.legacyPositive>0){
+            hudEnergy(c,37,46,"BLU",energyTotals.blue,0xff58d4ff);
+            hudEnergy(c,37,95,"ROSSA",energyTotals.red,0xffff5789);
+            hudEnergy(c,37,144,"VIOLA",energyTotals.violet,0xffbc8bff);
+            if(energyTotals.legacyPositive>0){
                 text(c,"PRECEDENTI +"+energyTotals.legacyPositive,20,181,8,GOLD,false);
             }else if(!energyTotals.complete){
                 text(c,"STORICO PARZIALE",20,181,8,GOLD,false);
@@ -2027,7 +1952,7 @@ public final class GameActivity extends Activity {
             text(c,"NETTO "+(int)journey.netDistance+" U",172,40,13,0xffefffff,false);
             text(c,"VIA "+(int)lifeDistance+" U",303,40,12,0xffe8fbff,false);
             text(c,"MAX "+(int)journey.recordNet+" U • VITA "+
-                LifeStatistics.duration(zero3Mode?elapsedLife:lifeStats.current().seconds),
+                LifeStatistics.duration(lifeStats.current().seconds),
                 172,62,10,GOLD,false);
             neonOrb(c,438,48,20,0xff83eaff,simulationRunning);
             text(c,simulationRunning?"Ⅱ":"▶",438,55,15,0xffe8fdff,true);
@@ -2040,24 +1965,19 @@ public final class GameActivity extends Activity {
             text(c,wind,450,128,9,0xff97a8c9,true);
             neonBar(c,173,137,456,149,shelter.integrity,0xffb4b9ff,0xff648fea);
             dividerHud(c,171,161,453);
-            if(zero3Mode){
-                text(c,"ESPERIENZE "+zero3DecisionCount+" • DECISIONI "+zero3DecisionCount,
-                    173,179,10,0xffb3ced7,false);
-                text(c,"CONTATTI +"+zero3Positive+" / -"+zero3Negative+
-                    " • RISORSE "+zero3Consumed,173,195,9,GOLD,false);
-                text(c,"CERVELLO 3.0 • GRU64 • TRAIN "+zero3Train+
-                    " • TEST "+zero3Heldout,173,210,9,TEAL,false);
-            }else{
-                text(c,"ESPERIENZE "+sensorMind.experiences+" • DECISIONI "+sensorMind.decisions,
-                    173,179,10,0xffb3ced7,false);
-                text(c,"DISCHI "+pushes+" • BLOCCHI "+boxesUncovered+" • ZONE "+journey.lifeCells+
-                    " • STANZE "+chambersCleared,173,195,9,GOLD,false);
-                text(c,useSymbiote?
+            text(c,"ESPERIENZE "+(brain3!=null?brain3.decisions():sensorMind.experiences)+
+                " • DECISIONI "+(brain3!=null?brain3.decisions():sensorMind.decisions),
+                173,179,10,0xffb3ced7,false);
+            text(c,"DISCHI "+pushes+" • BLOCCHI "+boxesUncovered+" • ZONE "+journey.lifeCells+
+                " • STANZE "+chambersCleared,173,195,9,GOLD,false);
+            text(c,brain3!=null?
+                "CERVELLO 3.0 • GRU64 • TRAIN "+brain3.trained()+
+                    " • TEST "+brain3.validated():useSymbiote?
                 "CERVELLO 2.2 • SKILL TEMPO "+temporalSkillBank.stored()+
                 " • MOTORIE "+(symMotor==null?0:symMotor.skillMemory().verifiedCount()):
                 "ABILITA "+skillBank.count()+" • RICORDI "+episodic.stored()+
                 " • TECNICHE "+gripBank.count(),173,210,9,TEAL,false);
-            }
+
             // TEST MAX stop is its own small hit target, away from TEMPO.
             if(testMax&&!settingsExpanded){
                 rounded(c,13,217,153,260,0xe6172534,9);
@@ -2079,12 +1999,6 @@ public final class GameActivity extends Activity {
                     240,ty-5,10,0xffdcfdf5,true);
             }
             if(showBenchmark)renderBenchmark(c);
-            if(zero3Mode&&!zero3Failure.isEmpty()){
-                float ty=H-172f;
-                rounded(c,22,ty-34,459,ty+13,0xf2361b2c,10);
-                text(c,zero3Failure.length()>57?zero3Failure.substring(0,57):
-                    zero3Failure,240,ty-8,10,0xffffcccc,true);
-            }
         }
 
         void hudEnergy(Canvas c,float x,float cy,String label,long total,int color){
@@ -2100,7 +2014,7 @@ public final class GameActivity extends Activity {
             paint.setStyle(Paint.Style.FILL);paint.setColor(color);
             c.drawCircle(x,cy,9.4f,paint);
             paint.setColor(0x99ffffff);c.drawCircle(x-3,cy-3,3.1f,paint);
-            text(c,total<0?"—":String.valueOf(total),61,cy+4,17,0xfff4faff,false);
+            text(c,String.valueOf(total),61,cy+4,17,0xfff4faff,false);
             text(c,label,61,cy+18,8,color,false);
         }
         void neonFrame(Canvas c,float l,float t,float r,float b,float radius){
@@ -2225,23 +2139,6 @@ public final class GameActivity extends Activity {
             }
         }
         void renderDetails(Canvas c){
-            if(zero3Mode){
-                float end=Math.min(H-155,648);
-                if(end<320)return;
-                neonFrame(c,158,278,471,end,16);
-                c.save();c.clipRect(164,283,465,end-8);
-                text(c,"DATI TECNICI • ZERO 3.0",174,303,12,TEAL,false);
-                text(c,"GRU64 UNICO DECISORE",174,326,10,0xffc3dee2,false);
-                text(c,"TRAIN "+zero3Train+" • HELDOUT "+zero3Heldout+
-                    " • OSS "+zero3Observed,174,349,9,MUTED,false);
-                text(c,"MEMBRANA 96 • INTERNO 74 • MOTORI 64",174,372,9,MUTED,false);
-                text(c,"RISERVA "+(int)reserve+" • PASSO 0.025s",174,403,10,GOLD,false);
-                text(c,"CONTATTI POSITIVI "+zero3Positive,174,428,10,MUTED,false);
-                text(c,"CONTATTI NEGATIVI "+zero3Negative,174,451,10,MUTED,false);
-                text(c,"FONTI CONSUMATE "+zero3Consumed,174,474,10,MUTED,false);
-                text(c,"GESTIONE NEL MENU ORIGINALE",174,517,9,TEAL,false);
-                c.restore();return;
-            }
             float bottom=Math.min(H-155,648);
             if(bottom<320)return;
             neonFrame(c,158,278,471,bottom,16);
@@ -2249,7 +2146,7 @@ public final class GameActivity extends Activity {
             text(c,"DATI TECNICI",174,303,12,TEAL,false);
             text(c,"AZIONE 2.2 "+(sensorMind.action+1)+"/16 • DIREZ "+
                 (sensorMind.action%8+1)+"/8"+
-                " • ADESIONE "+(sensorMind.adhesion()>0?"ON":"OFF"),
+                " • ADESIONE "+((brain3!=null?brain3.adhesion():sensorMind.adhesion())>0?"ON":"OFF"),
                 174,324,9,0xffc3dee2,false);
             text(c,"URTI "+physicalContacts+" • DIST MAX "+(int)biggestDisplacement+
                 " U • ESPERIENZE 2.2 "+recurrentCore.transitions(),174,341,9,MUTED,false);
@@ -2327,37 +2224,21 @@ public final class GameActivity extends Activity {
             text(c,"IMPOSTAZIONI",56,top+36,21,0xfff0fff9,false);
             text(c,"GESTIONE • ANALISI • APP",56,top+55,10,TEAL,false);
             smallChevron(c,419,top+32,true);
-            String[] names=zero3Mode?new String[]{
+            String[] names={
                 "PARTITE E SALVATAGGI",
                 "ANALISI CERVELLO 3.0",
                 "STATISTICHE VITE",
                 "PESI E PARAMETRI 3.0",
-                "ABILITA ED EVOLUZIONE",
-                "IMPOSTAZIONI CERVELLO",
-                "AGGIORNA APP"
-            }:new String[]{
-                "PARTITE E SALVATAGGI",
-                "ANALISI CERVELLO 2.2",
-                "STATISTICHE VITE",
-                "PESI E PARAMETRI 2.2",
-                "LABORATORI • 2.2 / 3.0",
+                "NEURONI 3D",
                 "ATTIVA STANZA",
                 "AGGIORNA APP"
             };
-            String[] hints=zero3Mode?new String[]{
-                "12 profili ZERO 3.0",
-                "GRU reale, sensi e neuroni",
-                "Vite, riserva e risultati",
-                "Pesi della rete connessa",
-                "Competenze e crescita",
-                "Memoria, backup e modalita",
-                "Controlla la prossima OTA"
-            }:new String[]{
+            String[] hints={
                 "Slot, carica, nuovo ZERO",
-                "Memoria, sensi, affidabilita",
+                "GRU64, sensi e apprendimento reale",
                 "Durata, eventi, medie 25 vite",
-                "Pesi reali: nucleo e muscoli",
-                "Confronto 2.2 e ambiente V3 sperimentale",
+                "Parametri e neuroni 3.0",
+                "Moduli e connessioni reali della rete 3.0",
                 "Ambiente e cancello fisico",
                 "Controlla la prossima OTA"
             };
@@ -2453,9 +2334,8 @@ public final class GameActivity extends Activity {
                     if(x<179){
                         settingsExpanded=false;
                         save();
-                        if(zero3Mode)zero3Panel(2);
-                    else GameActivity.this.startActivity(new android.content.Intent(
-                        GameActivity.this,BrainStatsActivity.class));
+                        GameActivity.this.startActivity(new android.content.Intent(
+                            GameActivity.this,BrainStatsActivity.class));
                     }else if(x<301){
                         speed=speed==1?5:speed==5?20:1;
                         settingsExpanded=false;
@@ -2479,8 +2359,7 @@ public final class GameActivity extends Activity {
             if(y>=H-147){
                 if(x<180){
                     save();
-                    if(zero3Mode)zero3Panel(2);
-                    else GameActivity.this.startActivity(new android.content.Intent(
+                    GameActivity.this.startActivity(new android.content.Intent(
                         GameActivity.this,BrainStatsActivity.class));
                 }else if(x<300){
                     speed=speed==1?5:speed==5?20:1;
@@ -2503,20 +2382,6 @@ public final class GameActivity extends Activity {
             return true;
         }
         void settingsChoice(int index){
-            if(zero3Mode){
-                settingsExpanded=false;
-                switch(index){
-                    case 0:zero3Panel(9);break;
-                    case 1:zero3Panel(2);break;
-                    case 2:zero3Panel(1);break;
-                    case 3:zero3Panel(2);break;
-                    case 4:zero3Panel(4);break;
-                    case 5:zero3Panel(9);break;
-                    case 6:updater.checkAndInstall();break;
-                    default:break;
-                }
-                return;
-            }
             switch(index){
                 case 0:
                     save();saveScene();
@@ -2540,28 +2405,17 @@ public final class GameActivity extends Activity {
                     break;
                 case 4:
                     settingsExpanded=false;
-                    new android.app.AlertDialog.Builder(GameActivity.this)
-                        .setTitle("LABORATORI SEPARATI")
-                        .setItems(new String[]{
-                            "CONFRONTO ZERO 2.2 (già esistente)",
-                            "ZERO 3.0 — LABORATORIO SPERIMENTALE"
-                        },(dialog,choice)->{
-                            if(choice==0){compare();postInvalidateOnAnimation();}
-                            else new android.app.AlertDialog.Builder(GameActivity.this)
-                                .setTitle("ZERO 3.0 — AREA SPERIMENTALE")
-                                .setMessage("Questo laboratorio avvia un organismo V3 distinto. "+
-                                    "Non carica né sostituisce i 12 cervelli della 2.2. "+
-                                    "I movimenti e l'apprendimento non sono ancora validati.")
-                                .setNegativeButton("ANNULLA",null)
-                                .setPositiveButton("APRI V3",(d,w)->{
-                                    // Pause the live 2.2 world before entering,
-                                    // preserving its original save contracts.
-                                    simulationRunning=false;
-                                    save();saveScene();
-                                    GameActivity.this.startActivity(new android.content.Intent(
-                                        GameActivity.this,Zero3DashboardActivityV354.class));
-                                }).show();
-                        }).show();
+                    if(brain3!=null){
+                        try{
+                            brain3.interrupt();
+                            Zero3NeuralGraphV354 real=brain3.graph();
+                            saveScene();
+                            Zero3OriginalAtlasActivityV356.open(GameActivity.this,real);
+                        }catch(Exception invalid){
+                            brain3Error="Vista 3D: "+invalid.getMessage();
+                            simulationRunning=false;
+                        }
+                    }
                     break;
                 case 5:
                     settingsExpanded=false;
