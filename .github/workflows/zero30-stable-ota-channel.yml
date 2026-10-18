@@ -18,7 +18,7 @@ jobs:
         run: |
           grep -F 'DEFAULT_ACTIVATION_GAIN_V358=2.4f' app/src/main/java/com/overmind/zero/Zero3LearningFoundation.java
           grep -F 'brain3.actuate(brain3LifeSerial' app/src/main/java/com/overmind/zero/GameActivity.java
-          grep -F 'brain3HarmThisPhysicalFrameV360+=' app/src/main/java/com/overmind/zero/GameActivity.java
+          grep -F 'brain3HarmThisPhysicalFrameV359+=' app/src/main/java/com/overmind/zero/GameActivity.java
           grep -F 'priorDamage=harm;' app/src/main/java/com/overmind/zero/Zero3OriginalBrainV356.java
           grep -F 'float previousDamage=tail==4?d.readFloat():0f;' app/src/main/java/com/overmind/zero/Zero3OriginalBrainV356.java
           grep -F 'CONDIVIDI DATI CON GPT  ↗' app/src/main/java/com/overmind/zero/BrainToolsActivity.java
