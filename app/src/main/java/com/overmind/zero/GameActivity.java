@@ -2312,7 +2312,15 @@ public final class GameActivity extends Activity {
             text(c,"IMPOSTAZIONI",56,top+36,21,0xfff0fff9,false);
             text(c,"GESTIONE • ANALISI • APP",56,top+55,10,TEAL,false);
             smallChevron(c,419,top+32,true);
-            String[] names={
+            String[] names=zero3Mode?new String[]{
+                "PARTITE E SALVATAGGI",
+                "ANALISI CERVELLO 3.0",
+                "STATISTICHE VITE",
+                "PESI E PARAMETRI 3.0",
+                "ABILITA ED EVOLUZIONE",
+                "IMPOSTAZIONI CERVELLO",
+                "AGGIORNA APP"
+            }:new String[]{
                 "PARTITE E SALVATAGGI",
                 "ANALISI CERVELLO 2.2",
                 "STATISTICHE VITE",
@@ -2321,7 +2329,15 @@ public final class GameActivity extends Activity {
                 "ATTIVA STANZA",
                 "AGGIORNA APP"
             };
-            String[] hints={
+            String[] hints=zero3Mode?new String[]{
+                "12 profili ZERO 3.0",
+                "GRU reale, sensi e neuroni",
+                "Vite, riserva e risultati",
+                "Pesi della rete connessa",
+                "Competenze e crescita",
+                "Memoria, backup e modalita",
+                "Controlla la prossima OTA"
+            }:new String[]{
                 "Slot, carica, nuovo ZERO",
                 "Memoria, sensi, affidabilita",
                 "Durata, eventi, medie 25 vite",
@@ -2422,8 +2438,9 @@ public final class GameActivity extends Activity {
                     if(x<179){
                         settingsExpanded=false;
                         save();
-                        GameActivity.this.startActivity(new android.content.Intent(
-                            GameActivity.this,BrainStatsActivity.class));
+                        if(zero3Mode)zero3Panel(2);
+                    else GameActivity.this.startActivity(new android.content.Intent(
+                        GameActivity.this,BrainStatsActivity.class));
                     }else if(x<301){
                         speed=speed==1?5:speed==5?20:1;
                         settingsExpanded=false;
@@ -2447,7 +2464,8 @@ public final class GameActivity extends Activity {
             if(y>=H-147){
                 if(x<180){
                     save();
-                    GameActivity.this.startActivity(new android.content.Intent(
+                    if(zero3Mode)zero3Panel(2);
+                    else GameActivity.this.startActivity(new android.content.Intent(
                         GameActivity.this,BrainStatsActivity.class));
                 }else if(x<300){
                     speed=speed==1?5:speed==5?20:1;
@@ -2470,6 +2488,20 @@ public final class GameActivity extends Activity {
             return true;
         }
         void settingsChoice(int index){
+            if(zero3Mode){
+                settingsExpanded=false;
+                switch(index){
+                    case 0:zero3Panel(9);break;
+                    case 1:zero3Panel(2);break;
+                    case 2:zero3Panel(1);break;
+                    case 3:zero3Panel(2);break;
+                    case 4:zero3Panel(4);break;
+                    case 5:zero3Panel(9);break;
+                    case 6:updater.checkAndInstall();break;
+                    default:break;
+                }
+                return;
+            }
             switch(index){
                 case 0:
                     save();saveScene();
