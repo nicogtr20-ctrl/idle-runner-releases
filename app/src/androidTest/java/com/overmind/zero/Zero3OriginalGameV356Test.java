@@ -1,98 +1,132 @@
 package com.overmind.zero;
 
+import android.app.Instrumentation;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.graphics.Bitmap;
 import android.graphics.Canvas;
 import android.os.SystemClock;
+import android.util.Log;
 import android.view.View;
-import androidx.test.core.app.ActivityScenario;
 import androidx.test.platform.app.InstrumentationRegistry;
 import androidx.test.ext.junit.runners.AndroidJUnit4;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import java.io.File;
 import java.io.FileOutputStream;
-import java.util.concurrent.atomic.AtomicBoolean;
-import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
+import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicReference;
 import static org.junit.Assert.*;
 
 /**
- * The genuine original game (not a rewritten laboratory or alternate V3
- * world) must own the actual V3 neural actor, preserve its original world,
- * die and reincarnate automatically, persist the SAME working-game profile
- * and recover it on cold activity recreation. No physical reset in normal use.
+ * A live, continuously redrawn REAL game can never satisfy Espresso's
+ * waitForIdle, including ActivityScenario.launch()/onActivity(). Use Android
+ * Instrumentation startActivitySync and runOnMainSync directly; these perform
+ * actual app lifecycle and physical frames but never demand animation idle.
+ * Tests native GameActivity + REAL V3 learning, genuine original death/rebirth,
+ * completed neural/physical checkpoint and cold Activity recreation.
  */
 @RunWith(AndroidJUnit4.class)
 public final class Zero3OriginalGameV356Test {
-    private long decisions(ActivityScenario<GameActivity> scenario){
-        AtomicLong n=new AtomicLong(-1);
-        scenario.onActivity(activity->n.set(activity.originalV356DecisionsForQA()));
-        return n.get();
+    private static final String TAG="ZERO3_V356_QA";
+    private final Instrumentation android=InstrumentationRegistry.getInstrumentation();
+    private void ui(Runnable action){android.runOnMainSync(action);}
+    private long decisions(GameActivity game){
+        AtomicLong result=new AtomicLong();
+        ui(()->result.set(game.originalV356DecisionsForQA()));
+        return result.get();
     }
-    private int episode(ActivityScenario<GameActivity> scenario){
-        AtomicInteger n=new AtomicInteger(-1);
-        scenario.onActivity(activity->n.set(activity.originalV356LifeForQA()));
-        return n.get();
+    private int life(GameActivity game){
+        AtomicInteger result=new AtomicInteger();
+        ui(()->result.set(game.originalV356LifeForQA()));
+        return result.get();
     }
-    private void until(long limitMs,java.util.function.BooleanSupplier done)throws Exception{
-        long start=SystemClock.uptimeMillis();
-        while(SystemClock.uptimeMillis()-start<limitMs){
-            if(done.getAsBoolean())return;
-            SystemClock.sleep(175);
-        }
-        throw new AssertionError("Original game + V3 neuronal owner did not progress within "+limitMs+" ms");
+    private void eventually(String condition,long timeoutMs,java.util.function.BooleanSupplier ready){
+        long end=SystemClock.uptimeMillis()+timeoutMs;
+        do{
+            if(ready.getAsBoolean())return;
+            SystemClock.sleep(180);
+        }while(SystemClock.uptimeMillis()<end);
+        throw new AssertionError(condition+" not reached after "+timeoutMs+" ms");
     }
-    private void capture(ActivityScenario<GameActivity> scenario,String filename){
-        scenario.onActivity(activity->{
-            View original=activity.getWindow().getDecorView();
-            assertTrue(original.getWidth()>0&&original.getHeight()>0);
-            Bitmap screenshot=Bitmap.createBitmap(original.getWidth(),
-                original.getHeight(),Bitmap.Config.ARGB_8888);
+    private void capture(GameActivity game,String filename){
+        ui(()->{
+            View view=game.getWindow().getDecorView();
+            assertTrue(view.getWidth()>0&&view.getHeight()>0);
+            Bitmap bitmap=Bitmap.createBitmap(view.getWidth(),view.getHeight(),
+                Bitmap.Config.ARGB_8888);
             try{
-                original.draw(new Canvas(screenshot));
-                File dir=new File(activity.getFilesDir(),"qa");
+                view.draw(new Canvas(bitmap));
+                File dir=new File(game.getFilesDir(),"qa");
                 assertTrue(dir.isDirectory()||dir.mkdirs());
-                try(FileOutputStream stream=new FileOutputStream(new File(dir,filename))){
-                    assertTrue(screenshot.compress(Bitmap.CompressFormat.PNG,100,stream));
-                }catch(java.io.IOException io){throw new IllegalStateException(io);}
-            }finally{screenshot.recycle();}
+                try(FileOutputStream out=new FileOutputStream(new File(dir,filename))){
+                    assertTrue(bitmap.compress(Bitmap.CompressFormat.PNG,100,out));
+                }catch(java.io.IOException error){throw new RuntimeException(error);}
+            }finally{bitmap.recycle();}
         });
+    }
+    private GameActivity launch(Context context){
+        Intent intent=new Intent(context,GameActivity.class);
+        intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK|Intent.FLAG_ACTIVITY_CLEAR_TASK);
+        GameActivity activity=(GameActivity)android.startActivitySync(intent);
+        assertNotNull(activity);
+        return activity;
     }
     @Test public void originalWorldAliveThenDeathAutomaticallyRenewsGru()throws Exception{
         Context context=InstrumentationRegistry.getInstrumentation().getTargetContext();
         SharedPreferences old=context.getSharedPreferences("zero_motorbrain_001",0);
-        // A fresh symbiote on the QA emulator, never touching any user device.
         assertTrue(old.edit().putBoolean(SymbioteMatterV1.ENABLED,true).commit());
-        try(ActivityScenario<GameActivity> scenario=ActivityScenario.launch(
-                new Intent(context,GameActivity.class))){
-            AtomicBoolean actor=new AtomicBoolean();
-            scenario.onActivity(activity->{
-                actor.set(activity.originalV356NeuralOwnerForQA());
-                assertEquals(GameActivity.class,activity.getClass());
-                assertTrue("Original fullscreen immersive flag",
-                    (activity.getWindow().getAttributes().flags&1024)!=0);
+        GameActivity game=launch(context);
+        try{
+            AtomicBoolean owner=new AtomicBoolean();
+            ui(()->{
+                owner.set(game.originalV356NeuralOwnerForQA());
+                assertEquals(GameActivity.class,game.getClass());
+                assertTrue((game.getWindow().getAttributes().flags&1024)!=0);
             });
-            assertTrue("The original game, not alternate V355 runtime, must own V3",actor.get());
-            until(25000,()->decisions(scenario)>=2);
-            long before=decisions(scenario);
-            int lifetime=episode(scenario);
-            assertTrue(lifetime>0);
-            capture(scenario,"zero3-v356-original-game.png");
-            // Real original reserve death triggers the original resetEpisode;
-            // neural weights and completed experience MUST survive.
-            scenario.onActivity(GameActivity::originalV356ForceDeathForQA);
-            until(25000,()->episode(scenario)>lifetime);
-            until(25000,()->decisions(scenario)>before);
-            long after=decisions(scenario);
-            assertTrue(after>before);
-            scenario.recreate();
-            until(20000,()->decisions(scenario)>=after);
-            assertTrue(old.contains(Zero3OriginalBrainV356.KEY));
-            assertTrue(old.getString(Zero3OriginalBrainV356.KEY,"").length()>1000);
-            scenario.onActivity(activity->assertTrue(activity.originalV356NeuralOwnerForQA()));
-        }
+            assertTrue("ONE V3 neural actor over ORIGINAL physics",owner.get());
+            eventually("GRU3 decisions in original world",30000,()->decisions(game)>=2);
+            long before=decisions(game);int lifeBefore=life(game);
+            Log.i(TAG,"ORIGINAL_WORLD_V3_REAL_DECISIONS="+before+",life="+lifeBefore);
+            capture(game,"zero3-v356-original-game.png");
+
+            // The real original resolveObjects() owns death and automatically
+            // calls its unchanged resetEpisode(); there is no V355 dead end.
+            ui(game::originalV356ForceDeathForQA);
+            eventually("original life recreation",30000,()->life(game)>lifeBefore);
+            eventually("V3 neurons still choosing on inherited life",30000,
+                ()->decisions(game)>before);
+            long completed=decisions(game);
+            Log.i(TAG,"ORIGINAL_REBIRTH_PASS="+life(game)+",decisions="+completed);
+
+            ui(game::finish);
+            // Closing the original activity writes physical_scene_v100
+            // AND zero3_original_brain_only_v356 in the SAME working profile.
+            eventually("original profile persisted",30000,
+                ()->old.contains("physical_scene_v100")&&
+                  old.getString(Zero3OriginalBrainV356.KEY,"").length()>1000);
+            Zero3OriginalBrainV356.Readout read=
+                Zero3OriginalBrainV356.inspectSaved(
+                    old.getString(Zero3OriginalBrainV356.KEY,""));
+            assertTrue(read.decisions>=completed);
+            assertEquals(194,read.sensoryInputs);
+            assertEquals(64,read.hiddenUnits);
+            assertTrue(read.graph.nodes.length>64);
+            Log.i(TAG,"NEURAL_CHECKPOINT_VALIDATED="+read.decisions);
+
+            GameActivity resumed=launch(context);
+            try{
+                eventually("cold activity restored V3",30000,
+                    ()->decisions(resumed)>=read.decisions);
+                AtomicBoolean ownerRestored=new AtomicBoolean();
+                ui(()->ownerRestored.set(resumed.originalV356NeuralOwnerForQA()));
+                assertTrue("V3 exclusive neural actor survived cold activity restart",
+                    ownerRestored.get());
+                Log.i(TAG,"V356_ORIGINAL_APP_LIVES_AND_SAVES=PASS");
+            }finally{ui(resumed::finish);}
+        }finally{ui(game::finish);}
     }
 }
