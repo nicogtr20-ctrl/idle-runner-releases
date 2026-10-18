@@ -9,6 +9,7 @@ android {
     applicationId 'com.overmind.zero.ota'
     minSdk 24
     targetSdk 35
+    resValue "bool", "zero3_candidate", candidateName ? "true" : "false"
     testInstrumentationRunner 'androidx.test.runner.AndroidJUnitRunner'
     versionCode(ciBuildNumber ? 1000 + ciBuildNumber.toInteger() : 4)
     versionName(candidateName ? candidateName : ciBuildNumber ? "0.11.6-ota.${ciBuildNumber}" : '0.11.6-ota')

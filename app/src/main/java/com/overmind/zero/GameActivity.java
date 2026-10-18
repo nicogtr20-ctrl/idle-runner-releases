@@ -19,7 +19,7 @@ public final class GameActivity extends Activity {
     private Lab lab;
     @Override public void onCreate(Bundle b){
         super.onCreate(b);
-        if(getSharedPreferences("zero3-ui-v354",0).getBoolean("default",false)){
+        if(getSharedPreferences("zero3-ui-v354",0).getBoolean("default",getResources().getBoolean(R.bool.zero3_candidate))){
             startActivity(new android.content.Intent(this,Zero3DashboardActivityV354.class));finish();return;
         }
         getWindow().setFlags(1024,1024);

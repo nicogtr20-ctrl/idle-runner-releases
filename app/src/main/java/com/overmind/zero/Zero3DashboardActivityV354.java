@@ -17,7 +17,8 @@ import org.json.*;
 public final class Zero3DashboardActivityV354 extends Activity {
     private static final String[] PAGES={"Gioco","Panoramica","Cervello","Corpo","Abilità","Evoluzione","Percezione","Memoria e obiettivi","Analisi","Impostazioni"};
     private static final int BG=0xff070c17,CARD=0xff101e30,WHITE=0xffe8f7ff,MUTED=0xff9ab0c6,CYAN=0xff62e3e5;
-    private final ExecutorService owner=Executors.newSingleThreadExecutor(r->{Thread t=new Thread(r,"zero3-owner-v354");t.setPriority(Thread.MIN_PRIORITY);return t;});
+    private static final ExecutorService SERIAL_OWNER=Executors.newSingleThreadExecutor(r->{Thread t=new Thread(r,"zero3-owner-v354");t.setPriority(Thread.MIN_PRIORITY);return t;});
+    private final ExecutorService owner=SERIAL_OWNER;
     private Zero3AndroidSessionV325 session;private Zero3ProfileStoreV354 profiles;
     private volatile boolean running,destroyed;private volatile int page;
     private int slot=1,documentOperation;
@@ -39,7 +40,7 @@ public final class Zero3DashboardActivityV354 extends Activity {
         for(int i=0;i<PAGES.length;i++){final int destination=i;button(nav,PAGES[i],()->showPage(destination));}
         ScrollView scroll=new ScrollView(this);content=new LinearLayout(this);content.setOrientation(1);scroll.addView(content);root.addView(scroll,new LinearLayout.LayoutParams(-1,0,1));showPage(0);
         work(()->{profiles=Zero3AndroidSessionV325.profilesV354(this);session=Zero3AndroidSessionV325.profileV354(this,slot);
-            try{session.resume();publish("Profilo ripristinato e verificato");}catch(IOException empty){say(empty.getMessage());}});
+            try{session.resume();remember();publish("Profilo ripristinato e verificato");}catch(IOException empty){say(empty.getMessage());}});
     }
     private TextView text(LinearLayout parent,String value,int size,int color){TextView t=new TextView(this);t.setText(value);t.setTextSize(size);t.setTextColor(color);t.setPadding(dp(10),dp(10),dp(10),dp(10));t.setTextIsSelectable(true);parent.addView(t);return t;}
     private void button(LinearLayout parent,String label,Runnable action){Button b=new Button(this);b.setText(label);b.setTextSize(12);b.setMinHeight(dp(48));b.setContentDescription(label);b.setOnClickListener(v->action.run());parent.addView(b,new LinearLayout.LayoutParams(parent.getOrientation()==1?-1:-2,-2));}
@@ -195,7 +196,7 @@ public final class Zero3DashboardActivityV354 extends Activity {
                 try(OutputStream out=getContentResolver().openOutputStream(uri,"wt")){out.write(j.toString(2).getBytes(java.nio.charset.StandardCharsets.UTF_8));}say("Telemetria esportata localmente su tua richiesta");}
         });}
     @Override protected void onPause(){super.onPause();pause();}
-    @Override protected void onDestroy(){running=false;destroyed=true;owner.execute(()->{if(session!=null)session.close();});owner.shutdown();super.onDestroy();}
+    @Override protected void onDestroy(){running=false;destroyed=true;owner.execute(()->{if(session!=null)session.close();});super.onDestroy();}
     private final class BodyCanvas extends View {
         Zero3DashboardSnapshotV354 snapshot;private final Paint p=new Paint(3);private final Path outline=new Path();private float zoom=1,panX,panY,lastX,lastY;private final ScaleGestureDetector scale;
         BodyCanvas(Context c){super(c);setContentDescription("Corpo fisico:96 punti membrana,74 particelle. Trascina per spostare la vista e pizzica per zoom; non controlla l'organismo.");scale=new ScaleGestureDetector(c,new ScaleGestureDetector.SimpleOnScaleGestureListener(){public boolean onScale(ScaleGestureDetector d){zoom=Math.max(.3f,Math.min(5,zoom*d.getScaleFactor()));invalidate();return true;}});}

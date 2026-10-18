@@ -50,6 +50,8 @@ public final class Zero3UiIntegrationTest {
             tap("Analisi");Zero3DashboardSnapshotV354 after=await(scenario,s->s.body.decisions>=from+8);
             assertEquals(trained,after.trained);assertEquals(validation,after.heldout);assertTrue(after.observations>=8);
             screenshot("zero3-analysis-observer");tap("Gioco");screenshot("zero3-body");
+            long committed=after.body.decisions;scenario.recreate();Zero3DashboardSnapshotV354 resumed=await(scenario,s->s.body.decisions==committed);
+            assertTrue(resumed.observing);assertEquals(after.trained,resumed.trained);assertEquals(after.observations,resumed.observations);
         }
     }
 }
