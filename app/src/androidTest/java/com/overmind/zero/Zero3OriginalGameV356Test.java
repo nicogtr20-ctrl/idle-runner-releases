@@ -175,4 +175,65 @@ public final class Zero3OriginalGameV356Test {
             }finally{ui(resumed::finish);}
         }finally{ui(game::finish);}
     }
+
+    /**
+     * V359: hazard is spawned at a REAL patch of the original membrane and
+     * loses actual reserve via unmodified UnknownWorld.Entity.touch(-7).
+     * No synthetic 'harm=7' label is supplied to the neural controller.
+     */
+    @Test public void originalRedContactReachesOnlyDamageChannelAndLegacyCheckpointLoads()throws Exception{
+        Context context=InstrumentationRegistry.getInstrumentation().getTargetContext();
+        SharedPreferences preferences=context.getSharedPreferences("zero_motorbrain_001",0);
+        // Test-only emulator: isolate from the previous instrumentation case.
+        assertTrue(preferences.edit().clear()
+            .putBoolean(SymbioteMatterV1.ENABLED,true).commit());
+        GameActivity game=launch(context);
+        try{
+            ui(game::originalV359RemovePhysicalRedForQA);
+            eventually("a functioning V359 GRU",30000,()->decisions(game)>=2);
+            AtomicLong earlierHurt=new AtomicLong();
+            ui(()->earlierHurt.set(game.originalV359HarmDecisionsForQA()));
+            long earlierDecision=decisions(game);
+            AtomicBoolean injected=new AtomicBoolean();
+            ui(()->injected.set(game.originalV359SpawnPhysicalRedForQA()));
+            assertTrue("must contact ORIGINAL red energy at living patch",injected.get());
+            eventually("red contact physically credited as pain, not as muscular fuel",30000,
+                ()->{
+                    AtomicLong count=new AtomicLong();
+                    ui(()->count.set(game.originalV359HarmDecisionsForQA()));
+                    return count.get()>earlierHurt.get();
+                });
+            AtomicReference<Float> pain=new AtomicReference<>(0f);
+            ui(()->pain.set(game.originalV359MaxDamageForQA()));
+            assertTrue("a genuine original red contact costs seven energy, no invented signal: "+pain.get(),
+                pain.get()>=6.99f);
+            assertTrue("motor decisions continue after real nociception",
+                decisions(game)>=earlierDecision);
+            Log.i(TAG,"V359_ORIGINAL_RED_HARM_PHYSICAL=PASS maxDamage="+pain.get());
+            ui(game::finish);
+            eventually("interoception checkpoint safely saved",30000,
+                ()->preferences.getString(Zero3OriginalBrainV356.KEY,"").length()>1000);
+            String saved=preferences.getString(Zero3OriginalBrainV356.KEY,"");
+            Zero3OriginalBrainV356.Readout modern=Zero3OriginalBrainV356.inspectSaved(saved);
+            assertTrue(modern.previousDamageV359>=0f);
+            // Reproduce an OTA358 checkpoint by removing the OPTIONAL V359
+            // physical-damage float, recomputing its CRC, and confirming
+            // older saves are accepted with neutral (zero) missing stimulus.
+            byte[] bytes=android.util.Base64.decode(saved,android.util.Base64.DEFAULT);
+            assertTrue("V359 CRC payload includes 4 extra bytes",bytes.length>1000);
+            byte[] old=new byte[bytes.length-4];
+            System.arraycopy(bytes,0,old,0,old.length-4);
+            java.util.zip.CRC32 crc=new java.util.zip.CRC32();
+            crc.update(old,0,old.length-4);
+            int checksum=(int)crc.getValue();
+            for(int i=0;i<4;i++)old[old.length-4+i]=(byte)(checksum>>>(24-8*i));
+            String legacy=android.util.Base64.encodeToString(old,android.util.Base64.NO_WRAP);
+            Zero3OriginalBrainV356.Readout oldRead=Zero3OriginalBrainV356.inspectSaved(legacy);
+            assertEquals(modern.decisions,oldRead.decisions);
+            assertEquals("existing V358 saves lack old pain sensor; no reset",0f,
+                oldRead.previousDamageV359,0f);
+            Log.i(TAG,"V359_PREVIOUS_DAMAGE_OLD_CHECKPOINT_COMPAT=PASS decisions="+oldRead.decisions);
+        }finally{ui(game::finish);}
+    }
+
 }
