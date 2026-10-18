@@ -92,3 +92,12 @@ G4 efficacia attore, G5 affidabilità indipendente e pianificazione multistep,
 G6 goals/skills/recall/probation, G7 vantaggio crescita, G8 UI/atlante3D completo,
 G9 Galaxy S21 offline/heap/termica/process-kill e G10 pubblicazione.
 Nessun merge nel publisher, nessuna OTA, nessun profilo2.2 modificato.
+
+### Riconferma suite storiche dopo correzione dipendenze
+
+Sul commit `147eeeb3cd947a90f389f45f5299b36c59d6f3cd`:
+[V34539122975128 SUCCESS](https://github.com/nicogtr20-ctrl/idle-runner-releases/actions/runs/39122975128),
+[V34739122975105 SUCCESS](https://github.com/nicogtr20-ctrl/idle-runner-releases/actions/runs/39122975105),
+[V34839122975157 SUCCESS](https://github.com/nicogtr20-ctrl/idle-runner-releases/actions/runs/39122975157).
+Confermano checkpoint storico, attore unico reale e salvataggio integrale;
+non promuovono retroattivamente le capacità scientifiche fallite.
