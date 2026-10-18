@@ -6,12 +6,12 @@ import java.util.Locale;
  * READ-ONLY SCIENTIFIC QA: ORIGINAL SymbioteMatterV1 real force integration.
  * No app, live profiles, APK, rewards/gaits or physics implementation changed.
  * Compares virgin V2.2 motor readout vs virgin V3.0 readout under SAME body,
- * then 350 honest V3.0 physical choices with real coordinator learning.
+ * then 2,000 honest V3.0 physical choices in learned AND matched frozen arms with real coordinator learning.
  * It is a controlled stimulation fixture, NOT a test of autonomous navigation.
  */
 public final class Zero3MuscleStrengthAuditV358 {
     private static final float DT=1f/60f;
-    private static final int FRAMES=24,CHOICES=350;
+    private static final int FRAMES=24,CHOICES=2000;
     private static final class Meter {
         double absExt,absLat,rms,impulse,work,displacement;
         double radialError;
@@ -65,7 +65,7 @@ public final class Zero3MuscleStrengthAuditV358 {
         }
         System.out.println("V358_OLD_22_VIRGIN_FIRST_DECISION "+m.summary());
     }
-    private static void newVirginAndLearn(){
+    private static void newVirginAndLearn(boolean learning){
         World w=new World();
         Zero3LearningFoundation.AdaptiveCortex cortex=new Zero3LearningFoundation.AdaptiveCortex();
         Zero3LearningFoundation.Coordinator owner=new Zero3LearningFoundation.Coordinator(cortex);
@@ -73,7 +73,7 @@ public final class Zero3MuscleStrengthAuditV358 {
         long physical=0,valid=0;double scores=0,sqScore=0,physicalImp=0;
         long beforeUpdates=0;
         for(int d=0;d<CHOICES;d++){
-            boolean heldout=d%5==4;
+            boolean heldout=!learning||d%5==4;
             // Purely diagnostic intent fixture, direction fixed to separate
             // raw muscle learning from whether the GRU chooses a good target.
             Zero3LearningFoundation.MotorIntent intent=
@@ -98,21 +98,26 @@ public final class Zero3MuscleStrengthAuditV358 {
             if(e.train&&e.physicalEvidence&&!e.externalCorrection)valid++;
             if(d==24)beforeUpdates=cortex.updates();
         }
-        System.out.println("V358_NEW_30_VIRGIN_FIRST_DECISION "+first.summary());
-        System.out.println("V358_NEW_30_EARLY_25_DECISIONS "+early.summary());
-        System.out.println("V358_NEW_30_LATE_25_DECISIONS "+late.summary());
-        System.out.println("V358_NEW_30_ALL "+all.summary());
+        String mode=learning?"LEARNING":"FROZEN_SAME_PHYSICS";
+        System.out.println("V358_"+mode+"_VIRGIN_FIRST_DECISION "+first.summary());
+        System.out.println("V358_"+mode+"_EARLY_25_DECISIONS "+early.summary());
+        System.out.println("V358_"+mode+"_LATE_25_DECISIONS "+late.summary());
+        System.out.println("V358_"+mode+"_ALL "+all.summary());
         System.out.printf(Locale.ROOT,
-            "V358_TRAIN_GATE physicalEvidence=%d/%d eligibility=%d/%d cortexSynapseUpdatesEarly=%d cortexSynapseUpdatesTotal=%d trainedDecisions=%d discarded=%d averageScore=%+.7f rmsScore=%.7f averageImpulsePerDecision=%.4f%n",
+            "V358_"+(learning?"LEARNING":"FROZEN")+"_GATE physicalEvidence=%d/%d eligibility=%d/%d cortexSynapseUpdatesEarly=%d cortexSynapseUpdatesTotal=%d trainedDecisions=%d discarded=%d averageScore=%+.7f rmsScore=%.7f averageImpulsePerDecision=%.4f%n",
             physical,CHOICES,valid,CHOICES,beforeUpdates,cortex.updates(),
             owner.trained(),owner.discarded(),scores/CHOICES,
             Math.sqrt(sqScore/CHOICES),physicalImp/CHOICES);
         if(physical==0)throw new AssertionError("V3 cortex cannot reach physical impulse threshold");
-        if(cortex.updates()==0)throw new AssertionError("V3 cortex receives no useful training updates under controlled real muscle stimulation");
+        if(learning&&cortex.updates()==0)
+            throw new AssertionError("V3 cortex receives no useful training updates under controlled real muscle stimulation");
+        if(!learning&&cortex.updates()!=0)
+            throw new AssertionError("Frozen neural baseline illegally changed motor weights");
     }
     public static void main(String[] args){
         oldVirgin();
-        newVirginAndLearn();
-        System.out.println("V358_MUSCLE_GATE_MEASURED=PASS (test-only, no production edits)");
+        newVirginAndLearn(true);
+        newVirginAndLearn(false);
+        System.out.println("V358_MUSCLE_GATE_2000_A_B_MEASURED=PASS (test-only, no production edits)");
     }
 }
