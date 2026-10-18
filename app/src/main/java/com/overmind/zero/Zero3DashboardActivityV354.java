@@ -29,6 +29,9 @@ public final class Zero3DashboardActivityV354 extends Activity {
     private interface Work{void run()throws Exception;}
     private int dp(int n){return (int)(n*getResources().getDisplayMetrics().density+.5f);}
     @Override public void onCreate(Bundle state){super.onCreate(state);
+        // Same fullscreen/immersive presentation used by the original neural pages.
+        getWindow().setFlags(1024,1024);
+        getWindow().getDecorView().setSystemUiVisibility(5894|1024|512);
         slot=getSharedPreferences("zero3-ui-v354",0).getInt("slot",1);if(slot<1||slot>12)slot=1;
         LinearLayout root=new LinearLayout(this);root.setOrientation(1);root.setPadding(dp(12),dp(14),dp(12),dp(8));root.setBackgroundColor(BG);setContentView(root);
         root.setOnApplyWindowInsetsListener((view,insets)->{
@@ -37,8 +40,22 @@ public final class Zero3DashboardActivityV354 extends Activity {
             view.setPadding(dp(12),dp(14)+top,dp(12),dp(8)+bottom);return insets;
         });root.requestApplyInsets();
         header=text(root,"ZERO 3.0  /  PROFILO "+slot,22,WHITE);status=text(root,"Versione candidata · prove sul Galaxy S21 da eseguire",12,MUTED);
-        HorizontalScrollView horizontal=new HorizontalScrollView(this);LinearLayout nav=new LinearLayout(this);horizontal.addView(nav);root.addView(horizontal);
-        for(int i=0;i<PAGES.length;i++){final int destination=i;button(nav,PAGES[i],()->showPage(destination));}
+        // All settings tabs are now visible, not hidden beyond a horizontal scroll.
+        // GAME in this panel is for existing QA; the normal entry is GameActivity.
+        LinearLayout nav=new LinearLayout(this);nav.setOrientation(1);root.addView(nav);
+        int[][] groups={{0,1,2,3},{4,5,6},{7,8,9}};
+        for(int[] indices:groups){
+            LinearLayout buttons=new LinearLayout(this);
+            nav.addView(buttons,new LinearLayout.LayoutParams(-1,-2));
+            for(int destination:indices){
+                Button b=new Button(this);b.setText(PAGES[destination]);b.setAllCaps(false);
+                b.setTextSize(11);b.setTextColor(WHITE);b.setMinHeight(dp(46));
+                b.setBackground(neuralButton());final int choice=destination;
+                b.setOnClickListener(v->showPage(choice));
+                LinearLayout.LayoutParams lp=new LinearLayout.LayoutParams(0,-2,1);
+                lp.setMargins(dp(2),dp(3),dp(2),dp(3));buttons.addView(b,lp);
+            }
+        }
         ScrollView scroll=new ScrollView(this);content=new LinearLayout(this);content.setOrientation(1);scroll.addView(content);root.addView(scroll,new LinearLayout.LayoutParams(-1,0,1));
         int pageFromOriginal=getIntent().getIntExtra("zero3_page",2);
         showPage(pageFromOriginal<1||pageFromOriginal>=PAGES.length?2:pageFromOriginal);
@@ -46,8 +63,31 @@ public final class Zero3DashboardActivityV354 extends Activity {
             try{session.resume();remember();publish("Profilo ripristinato e verificato");}catch(IOException empty){say(empty.getMessage());}});
     }
     private TextView text(LinearLayout parent,String value,int size,int color){TextView t=new TextView(this);t.setText(value);t.setTextSize(size);t.setTextColor(color);t.setPadding(dp(10),dp(10),dp(10),dp(10));t.setTextIsSelectable(true);parent.addView(t);return t;}
-    private void button(LinearLayout parent,String label,Runnable action){Button b=new Button(this);b.setText(label);b.setTextSize(12);b.setMinHeight(dp(48));b.setContentDescription(label);b.setOnClickListener(v->action.run());parent.addView(b,new LinearLayout.LayoutParams(parent.getOrientation()==1?-1:-2,-2));}
-    private void row(String[] labels,Runnable[] actions){LinearLayout line=new LinearLayout(this);content.addView(line);for(int i=0;i<labels.length;i++){Button b=new Button(this);b.setText(labels[i]);b.setTextSize(12);b.setMinHeight(dp(48));final Runnable a=actions[i];b.setOnClickListener(v->a.run());line.addView(b,new LinearLayout.LayoutParams(0,-2,1));}}
+    private GradientDrawable neuralButton(){
+        GradientDrawable shape=new GradientDrawable(
+            GradientDrawable.Orientation.TL_BR,
+            new int[]{0xff142d40,0xff0b1728});
+        shape.setCornerRadius(dp(12));shape.setStroke(dp(1),0xff40758a);return shape;
+    }
+    private void button(LinearLayout parent,String label,Runnable action){
+        Button b=new Button(this);b.setText(label);b.setAllCaps(false);
+        b.setTextColor(WHITE);b.setBackground(neuralButton());
+        b.setTextSize(12);b.setMinHeight(dp(48));b.setContentDescription(label);
+        b.setOnClickListener(v->action.run());
+        LinearLayout.LayoutParams params=new LinearLayout.LayoutParams(parent.getOrientation()==1?-1:-2,-2);
+        params.setMargins(dp(2),dp(4),dp(2),dp(4));parent.addView(b,params);
+    }
+    private void row(String[] labels,Runnable[] actions){
+        LinearLayout line=new LinearLayout(this);content.addView(line);
+        for(int i=0;i<labels.length;i++){
+            Button b=new Button(this);b.setText(labels[i]);b.setAllCaps(false);
+            b.setTextColor(WHITE);b.setBackground(neuralButton());b.setTextSize(12);
+            b.setMinHeight(dp(48));final Runnable action=actions[i];
+            b.setOnClickListener(v->action.run());
+            LinearLayout.LayoutParams params=new LinearLayout.LayoutParams(0,-2,1);
+            params.setMargins(dp(2),dp(3),dp(2),dp(3));line.addView(b,params);
+        }
+    }
     public Zero3DashboardSnapshotV354 snapshotForQA(){return latest;}
     /** Read-only fence: queued pause/save operations complete before this snapshot. */
     public Future<Zero3DashboardSnapshotV354> snapshotAfterOwnerForQA(){return owner.submit(()->session.dashboardV354(page==2));}
