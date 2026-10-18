@@ -128,6 +128,11 @@ public final class Zero3AndroidSessionV325 implements AutoCloseable {
         if(session==null)throw new IOException("V3 runtime not active");
         return session.display();
     }
+    /** Read-only while the original Android painter owns the UI thread. */
+    synchronized Zero3RuntimeV325.CanvasStateV355 canvasStateV355()throws IOException {
+        if(session==null)throw new IOException("V3 organism not active");
+        return session.canvasStateV355();
+    }
     public synchronized boolean ended(){return session!=null&&session.ended();}
     public synchronized boolean atArchiveCapacity(){
         return session!=null&&session.atArchiveCapacity();
