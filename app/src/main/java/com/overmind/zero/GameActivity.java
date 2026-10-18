@@ -17,6 +17,14 @@ import java.util.Locale;
  */
 public final class GameActivity extends Activity {
     private Lab lab;
+    /** UI instrumentation: actual GRU owns physics, not the dormant 2.2 state. */
+    boolean originalZero3OwnerForQA(){
+        return lab!=null&&lab.zero3Mode&&lab.zero3!=null&&lab.zero3.active()
+            &&lab.trainer==null&&lab.zero3DecisionCount>=1;
+    }
+    int originalZero3DecisionCountForQA(){
+        return lab==null?0:lab.zero3DecisionCount;
+    }
     @Override public void onCreate(Bundle b){
         super.onCreate(b);
         getWindow().setFlags(1024,1024);
