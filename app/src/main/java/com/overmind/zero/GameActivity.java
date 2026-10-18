@@ -27,6 +27,7 @@ public final class GameActivity extends Activity {
     // injected directly into the V3 policy or its reward function.
     long originalV359HarmDecisionsForQA(){return lab==null||lab.brain3==null?-1:lab.brain3.damagedDecisionsV359();}
     float originalV359PreviousDamageForQA(){return lab==null||lab.brain3==null?-1:lab.brain3.previousDamageV359();}
+    float originalV359MaxDamageForQA(){return lab==null||lab.brain3==null?-1:lab.brain3.maxVerifiedDecisionDamageV359();}
     float originalV359ReserveForQA(){return lab==null?-1:lab.reserve;}
     boolean originalV359SpawnPhysicalRedForQA(){
         if(lab==null||lab.brain3==null||lab.reserve<16f)return false;
