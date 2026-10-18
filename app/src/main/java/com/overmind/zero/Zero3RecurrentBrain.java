@@ -7,7 +7,8 @@ import java.util.zip.CRC32;
 /**
  * ZERO3 experimental trainable 64-GRU actor/dual-critic/world-prediction core.
  * Runs locally without Android, external knowledge, target labels or servers.
- * This is NOT yet integrated in GameActivity or a complete ZERO3 learner.
+ * Integrated in the isolated V325/V326 laboratory, not the stable 2.2 profile.
+ * Scientific behavioral gates remain open.
  *
  * One-step truncated recurrent backprop is deliberately explicit: gradients
  * update all GRU gate matrices from real next-observation prediction error;
@@ -19,6 +20,7 @@ public final class Zero3RecurrentBrain {
     private static final float MODEL_LR=.008f, CRITIC_LR=.009f, ACTOR_LR=.003f;
     private final int inputs;
     private final boolean variableClock;
+    private Zero3CognitionV353 cognition;
     private final float[] wz,wr,wn,world,before;
 
     private final float[] actor=new float[MOTOR*(HIDDEN+1)];
@@ -107,6 +109,16 @@ public final class Zero3RecurrentBrain {
         return a;
     }
     public boolean variableClock(){return variableClock;}
+    public boolean cognitiveMode(){return cognition!=null;}
+    public Zero3CognitionV353.Snapshot cognitionSnapshot(){return cognition==null?null:cognition.snapshot();}
+    public void enableCognitionV353(){
+        if(!variableClock||pending||trainCount+validationCount!=0||cognition!=null)throw new IllegalStateException("V353 fresh variable core required");
+        cognition=new Zero3CognitionV353();
+    }
+    void physicalTargetsV353(float[] targets,boolean heldout){
+        if(cognition==null)throw new IllegalStateException("V353 disabled");
+        cognition.complete(targets,heldout);
+    }
     public int sensorWidth(){return inputs;}
     public static Zero3RecurrentBrain fromCheckpoint(byte[] raw){
         if(raw==null||raw.length<100||raw.length>CHECK_MAX_BYTES_V345)
@@ -115,14 +127,21 @@ public final class Zero3RecurrentBrain {
             DataInputStream in=new DataInputStream(new ByteArrayInputStream(raw));
             if(in.readInt()!=CHECK_MAGIC_V345)throw new IllegalArgumentException("GRU magic");
             int version=in.readInt(),width=in.readInt();
-            if(!((version==345&&width==SENSOR)||((version==351||version==352)&&width==194)))
+            if(!((version==345&&width==SENSOR)||((version==351||version==352||version==353)&&width==194)))
                 throw new IllegalArgumentException("unknown GRU sensory configuration");
-            Zero3RecurrentBrain restored=new Zero3RecurrentBrain(width,version==352);
+            Zero3RecurrentBrain restored=new Zero3RecurrentBrain(width,version>=352);
+            if(version==353)restored.enableCognitionV353();
             restored.restoreAtBoundaryV345(raw);return restored;
         }catch(IOException bad){throw new IllegalArgumentException("truncated GRU",bad);}
     }
     public int realRecurrentUnits(){return HIDDEN;}
     public long trainingUpdates(){return trainCount;}
+    float[] learningStateV353(){
+        float[] p=parameterSnapshot(),result=Arrays.copyOf(p,p.length+valueReplay.length+targetCritic.length*(HIDDEN+1));
+        int at=p.length;
+        for(float[] a:targetCritic){System.arraycopy(a,0,result,at,a.length);at+=a.length;}
+        System.arraycopy(valueReplay,0,result,at,valueReplay.length);return result;
+    }
     public long recurrentUpdates(){return recurrentUpdates;}
     public long validations(){return validationCount;}
     public float heldoutModelError(){return heldoutModelError;}
@@ -132,7 +151,7 @@ public final class Zero3RecurrentBrain {
         Arrays.fill(state,0f);
     }
     public void abort(){
-        pending=false;
+        pending=false;if(cognition!=null)cognition.abort();
     }
     /**
      * The only source of high-level intentional directions in the experimental
@@ -152,14 +171,22 @@ public final class Zero3RecurrentBrain {
             proposal[out]=dot(actor,at,state,HIDDEN);
             lastNoise[out]=sample();
         }
-        float sx=clip(proposal[0]+lastNoise[0],-1,1);
-        float sy=clip(proposal[1]+lastNoise[1],-1,1);
-        float len=(float)Math.hypot(sx,sy);
-        if(len<.00001f){sx=1;sy=0;len=1;}
-        float dx=sx/len,dy=sy/len;
-        float effort=sigmoid(proposal[2]+lastNoise[2]);
-        float adhesion=sigmoid(proposal[3]+lastNoise[3]);
-        float duration=.25f+.4f*sigmoid(proposal[4]+lastNoise[4]);
+        float[][] options=new float[cognition==null?1:3][5];
+        float[][] noise=new float[options.length][MOTOR];
+        for(int k=0;k<options.length;k++){
+            for(int j=0;j<MOTOR;j++)noise[k][j]=k==0?lastNoise[j]:sample();
+            float sx=clip(proposal[0]+noise[k][0],-1,1),sy=clip(proposal[1]+noise[k][1],-1,1);
+            float len=(float)Math.hypot(sx,sy);if(len<.00001f){sx=1;sy=0;len=1;}
+            options[k][0]=sx/len;options[k][1]=sy/len;
+            options[k][2]=sigmoid(proposal[2]+noise[k][2]);options[k][3]=sigmoid(proposal[3]+noise[k][3]);
+            options[k][4]=.25f+.4f*sigmoid(proposal[4]+noise[k][4]);
+            if(cognition!=null)options[k][4]=Math.round(options[k][4]/.025f)*.025f;
+        }
+        int selected=cognition==null?0:cognition.select(x,options);
+        System.arraycopy(noise[selected],0,lastNoise,0,MOTOR);
+        float dx=options[selected][0],dy=options[selected][1],effort=options[selected][2],
+            adhesion=options[selected][3],duration=options[selected][4];
+        if(cognition!=null)cognition.begin(x,options[selected]);
         action[0]=dx;action[1]=dy;action[2]=effort;action[3]=adhesion;
         Arrays.fill(worldInput,0);
         System.arraycopy(decisionState,0,worldInput,0,HIDDEN);
@@ -348,7 +375,7 @@ public final class Zero3RecurrentBrain {
             ByteArrayOutputStream buffer=new ByteArrayOutputStream(128*1024);
             DataOutputStream out=new DataOutputStream(buffer);
             out.writeInt(CHECK_MAGIC_V345);
-            out.writeInt(variableClock?352:(inputs==SENSOR?CHECK_VERSION_V345:351));
+            out.writeInt(cognition!=null?353:variableClock?352:(inputs==SENSOR?CHECK_VERSION_V345:351));
             out.writeInt(inputs);
             out.writeInt(HIDDEN);
             out.writeInt(MOTOR);
@@ -370,6 +397,7 @@ public final class Zero3RecurrentBrain {
                     out.writeFloat(x);
                 }
             }
+            if(cognition!=null){byte[] cognitive=cognition.encode();out.writeInt(cognitive.length);out.write(cognitive);}
             out.flush();
             byte[] payload=buffer.toByteArray();
             CRC32 crc=new CRC32();
@@ -406,7 +434,7 @@ public final class Zero3RecurrentBrain {
             DataInputStream in=new DataInputStream(
                 new ByteArrayInputStream(raw,0,tail));
             if(in.readInt()!=CHECK_MAGIC_V345||
-               in.readInt()!=(variableClock?352:(inputs==SENSOR?CHECK_VERSION_V345:351))||
+               in.readInt()!=(cognition!=null?353:variableClock?352:(inputs==SENSOR?CHECK_VERSION_V345:351))||
                in.readInt()!=inputs||in.readInt()!=HIDDEN||
                in.readInt()!=MOTOR||in.readInt()!=ACTION)
                 throw new IllegalArgumentException(
@@ -443,12 +471,20 @@ public final class Zero3RecurrentBrain {
                             "V345 invalid learned weight "+j+"/"+k);
                 }
             }
+            Zero3CognitionV353 decodedCognition=null;
+            if(cognition!=null){
+                int size=in.readInt();if(size<100||size>250000||size>in.available())throw new IOException("V353 cognitive size");
+                byte[] cognitive=new byte[size];in.readFully(cognitive);decodedCognition=Zero3CognitionV353.decode(cognitive);
+                Zero3CognitionV353.Snapshot stats=decodedCognition.snapshot();
+                if(stats.train!=updates||stats.heldout!=validations)throw new IOException("V353 mixed neural generations");
+            }
             if(in.available()!=0)
                 throw new IllegalArgumentException(
                     "V345 unexpected trailing checkpoint data");
             // All checks completed: only now commit the new state.
             for(int j=0;j<dest.length;j++)
                 System.arraycopy(decoded[j],0,dest[j],0,dest[j].length);
+            if(decodedCognition!=null)cognition=decodedCognition;
             rng=nextRng;
             trainCount=updates;validationCount=validations;
             recurrentUpdates=recurrent;

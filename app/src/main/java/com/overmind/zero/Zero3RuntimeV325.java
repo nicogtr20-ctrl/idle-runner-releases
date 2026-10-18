@@ -349,6 +349,13 @@ public final class Zero3RuntimeV325 implements AutoCloseable {
         gruResearchV347=new Zero3RecurrentBrain(194,true);
         metabolism.enableVariableClockV352();
     }
+    public void enableCognitiveResearchV353(){
+        enableVariableResearchV352();gruResearchV347.enableCognitionV353();
+    }
+    public Zero3CognitionV353.Snapshot cognitionSnapshot(){
+        require(!closed&&!inDecision,"cognition snapshot only at a completed boundary");
+        return gruResearchV347==null?null:gruResearchV347.cognitionSnapshot();
+    }
     public float lastDecisionSeconds(){return next==0?0f:(trace.get(next-1).endTick-trace.get(next-1).startTick)*DT;}
     public int neuralInputWidth(){return gruResearchV347==null?20:gruResearchV347.sensorWidth();}
     public long gruLearningUpdatesV347(){
@@ -436,6 +443,8 @@ public final class Zero3RuntimeV325 implements AutoCloseable {
             Zero3GruSensoryV347.Unified unifiedBefore=unified?
                 Zero3GruSensoryV347.unifiedBefore(before,vitalBefore,body,skin,room,world):null;
             boolean variable=gruResearchV347!=null&&gruResearchV347.variableClock();
+            boolean cognitive=gruResearchV347!=null&&gruResearchV347.cognitiveMode();
+            boolean heldout=cognitive&&Zero3CognitionV353.heldout(n);
             int plannedSteps=SUBSTEPS;
             float[] choice;
             if(gruResearchV347==null){
@@ -447,8 +456,8 @@ public final class Zero3RuntimeV325 implements AutoCloseable {
                     gruResearchV347.choose(
                         unified?unifiedBefore.neural():Zero3GruSensoryV347.before(before,vitalBefore),
                         episode,n,cortex.revision());
-                // The true V325/V323 clock is fixed 12x0.025s;
-                // GRU duration learning remains UNSUPPORTED, G4 OPEN.
+                // Only V352/V353 execute the actor duration. Historical cores retain
+                // the original 12-step causal contract.
                 if(variable)plannedSteps=Math.max(10,Math.min(26,Math.round(proposal.duration/DT)));
                 choice=new float[]{proposal.x,proposal.y,
                                    proposal.effort,proposal.adhesion};
@@ -463,11 +472,11 @@ public final class Zero3RuntimeV325 implements AutoCloseable {
                     choice[2],choice[3],plannedSteps*DT);
             // PRE momentum is observed from material, never a target direction.
             final float initialVX=body.cvx,initialVY=body.cvy;
-            coordinator.begin(motor,body,true,false,true);
+            coordinator.begin(motor,body,!heldout,heldout,true);
             Zero3MotorEvidenceV330.Accumulator audit=
                 new Zero3MotorEvidenceV330.Accumulator(episode,n,
                     motor.x,motor.y,initialVX,initialVY,variable);
-            grip.begin();
+            grip.begin(heldout);
             metabolism.begin(n,gel.ticks);
             long actions=0xcbf29ce484222325L;
             ArrayList<float[]> efferences=new ArrayList<>();
@@ -546,8 +555,13 @@ public final class Zero3RuntimeV325 implements AutoCloseable {
                 record=Zero3FullCausalExperienceV322B.capture(event,before,after,efferences,costs,gripFrames,bilateral);
                 if(unified)record=Zero3FullCausalExperienceV322B.withUnified(record,unifiedBefore,unifiedAfter);
             }
+            if(cognitive){
+                record=Zero3FullCausalExperienceV322B.withPartitionV353(record,heldout);
+                gruResearchV347.physicalTargetsV353(Zero3CognitionV353.targets(unifiedBefore.neural(),
+                    unifiedAfter.neural(),lastVitalOutcome,actualSteps*DT),heldout);
+            }
             if(variable)gruResearchV347.consequenceObservedV352(
-                unifiedAfter.neural(),lastVitalOutcome.netEnergy,false,actualSteps*DT,metabolism.reserve()<=0f,interruption!=0);
+                unifiedAfter.neural(),lastVitalOutcome.netEnergy,heldout,actualSteps*DT,metabolism.reserve()<=0f,interruption!=0);
             else if(gruResearchV347!=null)
                 gruResearchV347.consequenceFixedClockV350(
                     unified?unifiedAfter.neural():Zero3GruSensoryV347.after(after,lastVitalOutcome),
@@ -561,7 +575,7 @@ public final class Zero3RuntimeV325 implements AutoCloseable {
             require(authority.nextDecision()==next&&
                     metabolism.decisions()==next&&
                     (gruResearchV347==null?encoder.updates()==next:
-                         gruResearchV347.trainingUpdates()==next&&
+                         gruResearchV347.trainingUpdates()+gruResearchV347.validations()==next&&
                          encoder.updates()==0)&&
                     grip.updates()==next&&cortex.updates()<=next,
                     "physiology/actor/neural counters drifted after experience");
@@ -662,7 +676,7 @@ public final class Zero3RuntimeV325 implements AutoCloseable {
                 Zero3RecurrentBrain restoredGru=Zero3RecurrentBrain.fromCheckpoint(s.gruBytes());
                 s.restoreGruModules(result.encoder,result.cortex,
                                     result.grip);
-                require(restoredGru.trainingUpdates()==s.nextDecision,
+                require(restoredGru.trainingUpdates()+restoredGru.validations()==s.nextDecision,
                         "V348 GRU updates disagree with real experiences");
                 // Close the temporary V317 owner BEFORE claiming the episode
                 // as GRU; the single-owner guard rejects two live issuers.
@@ -674,7 +688,7 @@ public final class Zero3RuntimeV325 implements AutoCloseable {
                 result.gruResearchV347=restoredGru;
             }else s.restoreModules(result.encoder,result.cortex,result.grip);
             require((s.hasGru()?result.encoder.updates()==0&&
-                    result.gruResearchV347.trainingUpdates()==s.nextDecision:
+                    result.gruResearchV347.trainingUpdates()+result.gruResearchV347.validations()==s.nextDecision:
                     result.encoder.updates()==s.nextDecision)&&
                     result.grip.updates()==s.nextDecision,
                     "V328 neural replay and restored authority disagree");

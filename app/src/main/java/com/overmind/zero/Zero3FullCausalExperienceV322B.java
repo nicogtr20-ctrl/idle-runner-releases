@@ -28,6 +28,13 @@ public final class Zero3FullCausalExperienceV322B {
         bytes=immutable.clone();
         unifiedPre=upre==null?null:upre.clone();unifiedPost=upost==null?null:upost.clone();
     }
+    public boolean hasPartitionV353(){return bytes[6]==1&&(bytes[7]&255)==97;}
+    public boolean heldoutV353(){return hasPartitionV353()&&bytes[bytes.length-1]==1;}
+    static Zero3FullCausalExperienceV322B withPartitionV353(Zero3FullCausalExperienceV322B record,boolean heldout)throws IOException{
+        check(record!=null&&(record.bytes[7]&255)==96,"V353 requires V352 physical record");
+        byte[] encoded=Arrays.copyOf(record.bytes,record.bytes.length+1);encoded[7]=97;
+        encoded[encoded.length-1]=(byte)(heldout?1:0);return decode(encoded);
+    }
     public boolean hasUnifiedSensesV351(){return unifiedPre!=null;}
     public float[] neuralBeforeV351(){return unifiedPre==null?null:unifiedPre.clone();}
     public float[] neuralAfterV351(){return unifiedPost==null?null:unifiedPost.clone();}
@@ -196,10 +203,10 @@ public final class Zero3FullCausalExperienceV322B {
         ByteArrayOutputStream stream=new ByteArrayOutputStream();
         DataOutputStream copy=new DataOutputStream(stream);
         int magic=d.readInt(),version=d.readInt(),decision=d.readInt();
-        check(magic==MAGIC&&(version==VERSION||version==351||version==352)&&decision>=0,"record schema");
+        check(magic==MAGIC&&(version==VERSION||version==351||version==352||version==353)&&decision>=0,"record schema");
         copy.writeInt(magic);copy.writeInt(version);copy.writeInt(decision);
         int steps=STEPS,planned=STEPS,reason=0;
-        if(version==352){
+        if(version==352||version==353){
             steps=d.readInt();planned=d.readInt();reason=d.readInt();
             copy.writeInt(steps);copy.writeInt(planned);copy.writeInt(reason);
             check(steps>=1&&steps<=26&&planned>=10&&planned<=26&&steps<=planned&&
@@ -219,15 +226,19 @@ public final class Zero3FullCausalExperienceV322B {
         int grip=d.readInt(),bilateral=d.readInt();
         copy.writeInt(grip);copy.writeInt(bilateral);
         float[] unifiedPre=null,unifiedPost=null;
-        if(version==351||version==352){
+        if(version==351||version==352||version==353){
             unifiedPre=readArray(d,copy,194);unifiedPost=readArray(d,copy,194);
             for(float[] sense:new float[][]{unifiedPre,unifiedPost})for(float v:sense)
                 check(v>=-1f&&v<=1f,"V351 neural input out of range");
             check((unifiedPre[193]==1f)==before.lastAvailable&&
                   (unifiedPost[193]==1f)==after.lastAvailable,
                   "V351 efference availability mismatch");
-            if(version==352)check((reason!=2||unifiedPost[188]==-1f)&&
+            if(version==352||version==353)check((reason!=2||unifiedPost[188]==-1f)&&
                 (reason!=1||unifiedPost[189]>0f),"V352 interruption lacks real vital evidence");
+        }
+        if(version==353){
+            int partition=d.readUnsignedByte();copy.writeByte(partition);
+            check(partition<=1&&(partition==1)==Zero3CognitionV353.heldout(decision),"V353 partition changed after observation");
         }
         copy.flush();
         check(d.available()==0&&Arrays.equals(b,stream.toByteArray())&&

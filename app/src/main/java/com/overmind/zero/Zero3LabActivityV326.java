@@ -34,7 +34,7 @@ public final class Zero3LabActivityV326 extends Activity {
     });
     private volatile boolean running,leaving;
     private Zero3AndroidSessionV325 session;
-    private TextView info,status;
+    private TextView info,status,cognitiveInfo;
     private BodyView body;
     private volatile Zero3RuntimeV325.Display latest;
     private long lastDraw;
@@ -56,6 +56,7 @@ public final class Zero3LabActivityV326 extends Activity {
         info=addText(root,"Nessun organismo V3 caricato.",13,WHITE);
         status=addText(root,"Crea una vita vergine o riprendi un checkpoint V3.",
                        12,MUTED);
+        cognitiveInfo=addText(root,"Modello predittivo: nessun organismo caricato.",12,MUTED);
         row(root,"CREA GRU64 SENSORI V3","RIPRENDI SOLO V3",
              ()->confirmBirth(),()->enqueue(this::resume));
         row(root,"AVVIA x1","AVVIA x5",()->start(1),()->start(5));
@@ -70,7 +71,7 @@ public final class Zero3LabActivityV326 extends Activity {
             "limite di 10.000 decisioni per nuove vite GRU64 (3.500 V317). "+
             "Le prestazioni vanno ancora verificate sul Galaxy S21.",
             12,0xffffc98c);
-        addText(root,"Nuove vite: durata scelta 0,25–0,65 s, interrotta da danno o morte. Salvataggio automatico "+
+        addText(root,"Nuove vite: modello fisico a 12 uscite e validazione separata (1 decisione su 5 senza training). Durata scelta 0,25–0,65 s, interrotta da danno o morte. Salvataggio automatico "+
             "ogni 8 decisioni completate; nessun salvataggio a metà di un'azione. "+
             "Una chiusura forzata può perdere fino alle ultime decisioni non salvate.",
             11,MUTED);
@@ -112,7 +113,7 @@ public final class Zero3LabActivityV326 extends Activity {
                 Zero3RuntimeV325 organism=
                     Zero3WorldBirthV326.create(episode,0x33226017L^episode);
                 try{
-                    session.startNewVariableResearch(organism);
+                    session.startNewCognitiveResearch(organism);
                     // V348 atomic journal requires one COMPLETED physics
                     // decision; don't leave a newborn with no durable history.
                     long decisionStarted=System.nanoTime();
@@ -203,6 +204,7 @@ public final class Zero3LabActivityV326 extends Activity {
     private void publish(String message)throws Exception{
         Zero3RuntimeV325.Display s=session.display();
         latest=s;
+        Zero3CognitionV353.Snapshot cognition=session.cognitionSnapshot();
         runOnUiThread(()->{
             if(isFinishing()||isDestroyed())return;
             // V330 outcome is deliberately NOT restored from an old
@@ -237,6 +239,25 @@ public final class Zero3LabActivityV326 extends Activity {
                 s.episode,s.decisions,s.reserve,s.priorDamage,s.neuralInputs,s.objects,
                 s.solverTicks,s.neurons,s.residentReplay,s.unsavedReplay,
                 movement+vitalOutcome,s.dead?"   •   VITA TERMINATA":""));
+            if(cognition==null)cognitiveInfo.setText("Modello V353 non presente in questa vita storica. Nessuna conversione automatica.");
+            else{
+                StringBuilder details=new StringBuilder("MODELLO DEL MONDO • VALIDAZIONE ONLINE\n");
+                details.append("Train ").append(cognition.train).append(" • validazione ").append(cognition.heldout)
+                    .append(" • confronti planner ").append(cognition.plannerUses)
+                    .append("\nUnità predittive reali ").append(cognition.predictiveUnits)
+                    .append(" • copia candidata ").append(cognition.shadowUnits)
+                    .append("\nCrescita mantenuta ").append(cognition.growthAccepted)
+                    .append(" • respinta ").append(cognition.growthRejected)
+                    .append(" • episodi train in cache ").append(cognition.episodicRecords);
+                for(int h=0;h<Zero3CognitionV353.HEADS;h++)if(!Float.isFinite(cognition.mse[h]))
+                    details.append("\n").append(Zero3CognitionV353.HEAD_NAMES[h]).append(": MISURA NON DISPONIBILE");
+                else details.append(String.format(Locale.ITALY,
+                    "\n%s: %s • errore %.6f / baseline %.6f • dispersione %.6f",
+                    Zero3CognitionV353.HEAD_NAMES[h],cognition.reliable[h]?"UTILIZZABILE":"NON AFFIDABILE",
+                    cognition.mse[h],cognition.baselineMse[h],cognition.uncertainty[h]));
+                details.append("\nValidazione online del predittore: non certifica locomozione, skill o sopravvivenza autonoma.");
+                cognitiveInfo.setText(details.toString());
+            }
             status.setText(message);body.invalidate();
         });
     }

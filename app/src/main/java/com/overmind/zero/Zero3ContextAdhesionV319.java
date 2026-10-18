@@ -30,7 +30,7 @@ public final class Zero3ContextAdhesionV319 {
         sumCommand=new float[SECTORS],sumTrueCost=new float[SECTORS];
     private final Rng rng;
     private final boolean training;
-    private boolean active,hasStep;
+    private boolean active,hasStep,heldoutDecision;
     private int decisions,realCreditEvents;
     private int steps;
     private double weightChangeSq,allMeasuredAdhesionWork,
@@ -116,7 +116,9 @@ public final class Zero3ContextAdhesionV319 {
             return (state>>>40)/16777216f;
         }
     }
-    public void begin(){
+    public void begin(){begin(false);}
+    public void begin(boolean heldout){
+        heldoutDecision=heldout;
         if(active)throw new IllegalStateException("two active adhesions");
         active=true;steps=0;hasStep=false;
         for(int s=0;s<SECTORS;s++){
@@ -218,6 +220,7 @@ public final class Zero3ContextAdhesionV319 {
             throw new IllegalStateException("decision incomplete");
         active=false;
         if(!training)return;
+        if(heldoutDecision){decisions++;return;}
         for(int s=0;s<SECTORS;s++){
             float meanDrive=sumCommand[s]/steps;
             // Derive negative gradient from the EXACT physical glue term

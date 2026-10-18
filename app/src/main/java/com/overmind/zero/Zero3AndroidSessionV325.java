@@ -68,6 +68,17 @@ public final class Zero3AndroidSessionV325 implements AutoCloseable {
             throw new IOException("V352 existing V3 history requires explicit resume");
         organism.enableVariableResearchV352();startNew(organism);
     }
+    public synchronized void startNewCognitiveResearch(Zero3RuntimeV325 organism)throws IOException {
+        if(session!=null||organism==null||organism.decisions()!=0||
+           Files.exists(directory.resolve("v324-current.mf"))||
+           Files.exists(directory.resolve("v324-backup.mf"))||
+           Zero3SegmentedArchiveV328.hasAny(directory))
+            throw new IOException("V353 existing history requires explicit resume");
+        organism.enableCognitiveResearchV353();startNew(organism);
+    }
+    public synchronized Zero3CognitionV353.Snapshot cognitionSnapshot(){
+        return session==null?null:session.cognitionSnapshot();
+    }
     public synchronized float lastDecisionSeconds(){return session==null?0f:session.lastDecisionSeconds();}
     /** App lifecycle onResume, never silently generate a replacement brain. */
     public synchronized void resume()throws IOException {

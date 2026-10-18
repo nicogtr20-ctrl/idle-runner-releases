@@ -96,7 +96,8 @@ public final class Zero3OrganismStoreV322 {
             gruCheckpoint=gruState==null?null:gruState.clone();
             lastActuators=last.clone();
         }
-        public boolean variableClock(){return gruCheckpoint!=null&&gruCheckpoint.length>8&&gruCheckpoint[4]==0&&gruCheckpoint[5]==0&&gruCheckpoint[6]==1&&(gruCheckpoint[7]&255)==96;}
+        public boolean cognitiveMode(){return gruCheckpoint!=null&&gruCheckpoint.length>8&&(gruCheckpoint[7]&255)==97;}
+        public boolean variableClock(){return gruCheckpoint!=null&&gruCheckpoint.length>8&&gruCheckpoint[4]==0&&gruCheckpoint[5]==0&&gruCheckpoint[6]==1&&((gruCheckpoint[7]&255)==96||(gruCheckpoint[7]&255)==97);}
         public boolean hasGru(){return gruCheckpoint!=null;}
         public byte[] gruBytes()throws IOException{
             if(!hasGru())throw new IOException("no GRU in legacy V322 state");
@@ -351,7 +352,7 @@ public final class Zero3OrganismStoreV322 {
     static byte[] encode(State state)throws IOException {
         ByteArrayOutputStream bytes=new ByteArrayOutputStream();
         DataOutputStream d=new DataOutputStream(bytes);
-        d.writeInt(MAGIC);d.writeInt(state.variableClock()?352:(state.hasGru()?348:VERSION));d.writeLong(state.episodeId);
+        d.writeInt(MAGIC);d.writeInt(state.cognitiveMode()?353:state.variableClock()?352:(state.hasGru()?348:VERSION));d.writeLong(state.episodeId);
         d.writeInt(state.nextDecision);d.writeLong(state.lastRngState);
         d.writeInt(state.material.length);d.write(state.material);
         d.writeInt(state.neural.length);d.write(state.neural);
@@ -374,7 +375,7 @@ public final class Zero3OrganismStoreV322 {
             if(d.readInt()!=MAGIC)
                 throw new IOException("V322 organism magic incompatible");
             int schema=d.readInt();
-            if(schema!=VERSION&&schema!=348&&schema!=352)
+            if(schema!=VERSION&&schema!=348&&schema!=352&&schema!=353)
                 throw new IOException("V322/V348 schema incompatible");
             long episode=d.readLong();int cursor=d.readInt();long rng=d.readLong();
             int physLen=d.readInt();
@@ -390,9 +391,9 @@ public final class Zero3OrganismStoreV322 {
             if(count!=cursor||count<1||count>100000)
                 throw new IOException("causal trace length mismatch");
             Trace[] trace=new Trace[count];
-            for(int i=0;i<count;i++)trace[i]=Trace.read(d,schema==352);
+            for(int i=0;i<count;i++)trace[i]=Trace.read(d,(schema==352||schema==353));
             byte[] gru=null;
-            if(schema==348||schema==352){
+            if(schema==348||(schema==352||schema==353)){
                 int len=d.readInt();
                 if(len<100||len>1024*1024)
                     throw new IOException("V348 GRU blob length invalid");
@@ -400,7 +401,8 @@ public final class Zero3OrganismStoreV322 {
             }
             if(d.available()!=0)throw new IOException("trailing checkpoint bytes");
             State state=new State(episode,cursor,rng,trace,phys,neural,last,gru);
-            if(state.variableClock()!=(schema==352))throw new IOException("torn GRU clock schema");
+            if(state.cognitiveMode()!=(schema==353))throw new IOException("torn cognition schema");
+            if(state.variableClock()!=((schema==352||schema==353)))throw new IOException("torn GRU clock schema");
             // Validate neural counters/config by cold restoring into a laboratory
             // clone, not into the user-provided target.
             if(state.hasGru())
