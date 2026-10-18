@@ -1,4 +1,4 @@
-name: ZERO3 V3.49 GRU64 4096+ true-physics decisions with atomic cold resume
+name: ZERO3 V3.49 GRU64 4100+ true-physics decisions with atomic cold resume
 on:
   push:
     branches: [feature/zero30-foundation-g0-g3-20261016]
@@ -44,25 +44,25 @@ jobs:
           cls=com.overmind.zero.Zero3LongLifeV328Regression
           test "$(grep -o 'MAX_DECISIONS=10000' app/src/main/java/com/overmind/zero/Zero3SegmentedArchiveV328.java | wc -l)" -eq 1
           for ordinal in 49; do
-            opts="-Xmx3072m -Dv328.gru=true -Dv328.target=4096 -Dv328.ordinal=$ordinal"
+            opts="-Xmx3072m -Dv328.gru=true -Dv328.target=4100 -Dv328.ordinal=$ordinal"
             folder="/tmp/v328-organism-$ordinal"
             java $opts -cp /tmp/overmind "$cls" prefix "$folder" | tee "$folder-prefix.log"
             grep -q 'V328 PREFIX organism=' "$folder-prefix.log"
             java $opts -cp /tmp/overmind "$cls" resume "$folder" "$folder-restored.txt" | tee "$folder-resume.log"
-            grep -q 'V328 RESUMED_2000_PLUS_EXPERIENCES=PASS decisions=4096' "$folder-resume.log"
+            grep -q 'V328 RESUMED_2000_PLUS_EXPERIENCES=PASS decisions=4100' "$folder-resume.log"
             java $opts -cp /tmp/overmind "$cls" reference "$folder-control.txt" | tee "$folder-control.log"
             cmp "$folder-restored.txt" "$folder-control.txt"
-            grep -q 'experiences=4096' "$folder-restored.txt"
+            grep -q 'experiences=4100' "$folder-restored.txt"
             grep -q 'V329_BOUNDED_FULL_REPLAY_RESIDENCY=PASS' "$folder-resume.log"
-            grep -q 'decision=4096' "$folder-restored.txt"
-            echo "V349 GRU64_REAL_4096_DECISIONS_BITWISE_RESUMED=PASS ORDINAL=$ordinal"
+            grep -q 'decision=4100' "$folder-restored.txt"
+            echo "V349 GRU64_REAL_4100_DECISIONS_BITWISE_RESUMED=PASS ORDINAL=$ordinal"
           done
       - name: 'Tamper manifest and orphan chunk: rollback and double fault'
         run: |
           set -euo pipefail
           for ordinal in 49; do
             folder="/tmp/v328-organism-$ordinal"
-            java -Xmx3072m -Dv328.gru=true -Dv328.target=4096 -Dv328.ordinal=$ordinal \
+            java -Xmx3072m -Dv328.gru=true -Dv328.target=4100 -Dv328.ordinal=$ordinal \
               -cp /tmp/overmind com.overmind.zero.Zero3LongLifeV328Regression fault "$folder" | tee "$folder-fault.log"
             grep -q 'V328 FAULT_ROLLBACK=PASS SEGMENT_TAMPER=PASS' "$folder-fault.log"
           done
@@ -82,4 +82,4 @@ jobs:
           done
           exit 1
       - name: Research status, DO NOT merge or publish
-        run: echo 'V349_4096_GRU_LIFE=LAB_PASS 10000_CAP_STRUCTURAL_ONLY G4_G7_PARTIAL G9_NOT_TESTED NO_OTA'
+        run: echo 'V349_4100_GRU_LIFE=LAB_PASS 10000_CAP_STRUCTURAL_ONLY G4_G7_PARTIAL G9_NOT_TESTED NO_OTA'
