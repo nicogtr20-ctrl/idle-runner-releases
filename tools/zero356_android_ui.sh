@@ -15,11 +15,11 @@ timeout --signal=TERM --kill-after=10s 420s adb shell am instrument -w -r \
 status="${PIPESTATUS[0]}"
 set -e
 adb logcat -d -v threadtime > /tmp/zero356-ui/android-logcat.txt || true
-if [ "$status" -ne 0 ] || ! grep -q 'OK (2 tests)' /tmp/zero356-ui/original-game-android-instrumentation.txt; then
-  echo "V359_ORIGINAL_GAME_AND_INTEROCEPTION_ANDROID=FAIL exit=$status"
+if [ "$status" -ne 0 ] || ! grep -q 'OK (3 tests)' /tmp/zero356-ui/original-game-android-instrumentation.txt; then
+  echo "V360_ORIGINAL_GAME_INTEROCEPTION_AND_GPT_SHARE_ANDROID=FAIL exit=$status"
   exit 1
 fi
 adb exec-out run-as "$app_package" tar -C files -cf - qa > /tmp/zero356-ui.tar
 tar -xf /tmp/zero356-ui.tar -C /tmp/zero356-ui
 test -s /tmp/zero356-ui/qa/zero3-v356-original-game.png
-echo "V359_ORIGINAL_GAME_REAL_RED_DAMAGE_LEGACY_CHECKPOINT_AND_AUTO_REBIRTH=PASS"
+echo "V360_ORIGINAL_GAME_REAL_RED_DAMAGE_AUTO_REBIRTH_LEGACY_CHECKPOINT_GPT_SHARE=PASS"
