@@ -104,6 +104,35 @@ public final class Zero3OriginalGameV356Test {
             Log.i(TAG,"ORIGINAL_WORLD_V3_REAL_DECISIONS="+before+",life="+lifeBefore);
             capture(game,"zero3-v356-original-game.png");
 
+            // V357: ORIGINAL episode is NOT a life identifier. It is also
+            // incremented whenever extendHabitat streams a new world zone.
+            // Force 4 such transitions while a GRU motor action is PENDING.
+            // The brain must keep the SAME life, continue training, and NEVER
+            // emit "Vita cambiata durante la decisione" or pause.
+            for(int zone=0;zone<4;zone++){
+                long completedBeforeZone=decisions(game);
+                int sameLife=life(game);
+                AtomicInteger areaBefore=new AtomicInteger();
+                ui(()->areaBefore.set(game.originalV356WorldZoneForQA()));
+                AtomicBoolean streamed=new AtomicBoolean();
+                eventually("original zone extension during live GRU decision",15000,
+                    ()->{
+                        ui(()->{if(game.originalV356ExtendZoneDuringActionForQA())
+                            streamed.set(true);});
+                        return streamed.get();
+                    });
+                AtomicInteger areaAfter=new AtomicInteger();
+                ui(()->areaAfter.set(game.originalV356WorldZoneForQA()));
+                assertEquals("original zone counter must increment",areaBefore.get()+1,areaAfter.get());
+                assertEquals("zone is not a new life",sameLife,life(game));
+                eventually("GRU must continue after streamed original world zone",15000,
+                    ()->decisions(game)>completedBeforeZone);
+                AtomicReference<String> error=new AtomicReference<>("");
+                ui(()->error.set(game.originalV356BrainErrorForQA()));
+                assertEquals("V357: no neural auto-pause at original zone streaming","",error.get());
+            }
+            Log.i(TAG,"V357_FOUR_WORLD_ZONES_WITH_SAME_LIFE=PASS");
+
             // The real original resolveObjects() owns death and automatically
             // calls its unchanged resetEpisode(); there is no V355 dead end.
             ui(game::originalV356ForceDeathForQA);
