@@ -1,0 +1,44 @@
+name: ZERO3 V356 brain-only on original game — no APK publication
+on:
+  push:
+    branches: [feature/zero30-brain-only-original-game]
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  original-app-compile:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+        with: {fetch-depth: 0}
+      - uses: actions/setup-java@v4
+        with: {distribution: temurin, java-version: '17'}
+      - name: Confirm exact original game physics and menu foundation
+        run: |
+          set -euo pipefail
+          for path in \
+            app/src/main/java/com/overmind/zero/GameActivity.java \
+            app/src/main/java/com/overmind/zero/ScarcityLab.java \
+            app/src/main/java/com/overmind/zero/SquareCollisionSolver.java \
+            app/src/main/java/com/overmind/zero/SquareGripPuzzle.java; do
+              git cat-file -e origin/feature/zero22-active-recurrent-ota117:"$path"
+              # V356 may add explicit neural handoff changes to GameActivity,
+              # but the original remains the unmodified comparison authority.
+              if [[ "$path" != *GameActivity.java ]]; then
+                git diff --exit-code origin/feature/zero22-active-recurrent-ota117 -- "$path"
+              fi
+          done
+      - name: Android compile and original existing test suite
+        run: gradle --no-daemon assembleDebug assembleDebugAndroidTest
+      - name: No V355 dashboard as launcher / no signed publisher
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          code=Path('app/src/main/java/com/overmind/zero/GameActivity.java').read_text()
+          assert 'Zero3DashboardActivityV354.class' not in code or 'new android.content.Intent' in code
+          assert 'drawZero3(' not in code
+          assert 'zero3.step()' not in code
+          assert 'void resetEpisode()' in code
+          print('ORIGINAL_GAME_OWNER_STATIC=PASS; no independent V355 game runtime')
+          PY
