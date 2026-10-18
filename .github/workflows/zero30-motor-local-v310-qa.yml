@@ -39,7 +39,7 @@ jobs:
             'Zero3MotorLocalFrameV310Regression.java',
           ]
           root='app/src/main/java/com/overmind/zero/'
-          subprocess.run(shlex.split(m.group(1))+[root+f for f in files],check=True)
+          subprocess.run(["javac","-sourcepath","app/src/main/java"]+shlex.split(m.group(1))[1:]+[root+f for f in files],check=True)
           PY
       - name: Compare 16 sector morphology and actual 64 muscle inputs, per-frame and long rollouts
         run: |

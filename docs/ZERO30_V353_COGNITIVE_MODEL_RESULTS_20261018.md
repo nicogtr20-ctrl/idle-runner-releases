@@ -74,9 +74,18 @@ Prova lunga in JVM separate:1000+restart+1000 confrontate bytewise con2000
 continue;63 segmenti, rollback e doppia corruzione fail closed. Il fixture
 alimenta l'organismo con risorse fisiche: non dimostra sopravvivenza appresa.
 
-Risultati locali precedenti alla guardia finale di trigger crescita: PASS.
-La stessa suite finale e Android Debug sono richiesti nel CI del commit;
-consultare l'aggiornamento di verifica in fondo prima di attribuire PASS al CI.
+Risultati locali FINALI (inclusi trigger misurato e guardia di partizione): PASS.
+Il core rifiuta outcome mancante/doppio e un cambio di partizione prima del
+credito neurale. Prima build CI completa: [39122532281 SUCCESS](https://github.com/nicogtr20-ctrl/idle-runner-releases/actions/runs/39122532281),
+suite2000 + Android Debug. La guardia aggiuntiva è nel commit
+`fdbbb93b5dbae14aa06c6f1f439c321d0be8949d`,
+[CI finale39122690894 SUCCESS](https://github.com/nicogtr20-ctrl/idle-runner-releases/actions/runs/39122690894): suite2000 + Android Debug PASS.
+
+Tre CI storici iniziali (V345/V347/V348) fallivano in compilazione perché
+le liste esplicite non caricavano `Zero3CognitionV353`. Corretta la risoluzione
+delle dipendenze JVM tramite `-sourcepath app/src/main/java` nelle suite ZERO30;
+nessun test o soglia scientifica rimosso. Le relative compilazioni V345/V316/V348
+sono rieseguite localmente, oltre alla suite core completa.
 
 **Aperti:** G1 fisica congiunta (V346 respinta), G3 locomozione controllabile,
 G4 efficacia attore, G5 affidabilità indipendente e pianificazione multistep,

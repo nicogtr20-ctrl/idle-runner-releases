@@ -39,7 +39,7 @@ jobs:
             'Zero3MotorObservedTransitionV39Regression.java',
           ]
           root='app/src/main/java/com/overmind/zero/'
-          subprocess.run(shlex.split(match.group(1))+[root+f for f in files],check=True)
+          subprocess.run(["javac","-sourcepath","app/src/main/java"]+shlex.split(match.group(1))[1:]+[root+f for f in files],check=True)
           PY
       - name: Test physical 64-channel action recording, one-step fit, free-state 32-block replay and independent gates
         run: |

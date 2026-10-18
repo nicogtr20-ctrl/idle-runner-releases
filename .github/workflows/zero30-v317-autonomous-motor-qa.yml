@@ -37,7 +37,7 @@ jobs:
             'Zero3SensoryContractV315Regression.java',
             'Zero3MotorIntentV316.java',
             'Zero3AutonomousLoopV317.java','Zero3AutonomousLoopV317Regression.java']
-          subprocess.run(shlex.split(m.group(1))+[root+n for n in required],check=True)
+          subprocess.run(["javac","-sourcepath","app/src/main/java"]+shlex.split(m.group(1))[1:]+[root+n for n in required],check=True)
           PY
       - name: Measure 2048 actor-chosen intentions with real physics vs frozen holdout
         run: |

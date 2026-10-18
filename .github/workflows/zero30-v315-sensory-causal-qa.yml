@@ -39,7 +39,7 @@ jobs:
             'Zero3SensoryFrameV315.java',
             'Zero3CausalRecorderV315.java',
             'Zero3SensoryContractV315Regression.java']
-          subprocess.run(shlex.split(m.group(1))+[root+n for n in extras],check=True)
+          subprocess.run(["javac","-sourcepath","app/src/main/java"]+shlex.split(m.group(1))[1:]+[root+n for n in extras],check=True)
           PY
       - name: Verify immutable real frame 96x12 and at least 2048 causal gel decisions
         run: |

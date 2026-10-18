@@ -38,7 +38,7 @@ jobs:
             'Zero3MotorIntentV316.java','Zero3AutonomousLoopV317.java',
             'Zero3LearnedAdhesionV318.java',
             'Zero3LearnedAdhesionV318Regression.java']
-          subprocess.run(shlex.split(m.group(1))+[root+x for x in needs],check=True)
+          subprocess.run(["javac","-sourcepath","app/src/main/java"]+shlex.split(m.group(1))[1:]+[root+x for x in needs],check=True)
           PY
       - name: Measure legal learned adhesive motor commands and real blind grip against frozen head
         run: |

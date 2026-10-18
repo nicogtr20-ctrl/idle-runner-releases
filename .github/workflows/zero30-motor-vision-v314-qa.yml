@@ -35,7 +35,7 @@ jobs:
             'Zero3MotorTemporalHistoryRegression.java',
             'Zero3MotorLocalFrameV310Regression.java',
             'Zero3MotorVisionV314Regression.java']
-          subprocess.run(shlex.split(m.group(1))+[root+n for n in models],check=True)
+          subprocess.run(["javac","-sourcepath","app/src/main/java"]+shlex.split(m.group(1))[1:]+[root+n for n in models],check=True)
           PY
       - name: Fit causal state/action/ray model, run calibrated and blind physical tests
         run: |

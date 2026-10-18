@@ -29,7 +29,7 @@ jobs:
           if not m: raise RuntimeError('physical baseline compile missing')
           r='app/src/main/java/com/overmind/zero/'
           names='Zero3LearningFoundation Zero3MotorResponseKernel Zero3MotorRetentionRegression Zero3MotorPromotionGate Zero3MotorImpulseResponseRegression Zero3MotorLocalFrameV310Regression Zero3SensoryFrameV315 Zero3CausalRecorderV315 Zero3SensoryContractV315Regression Zero3MotorIntentV316 Zero3AutonomousLoopV317 Zero3LearnedAdhesionV318 Zero3LearnedAdhesionV318Regression Zero3ContextAdhesionV319 Zero3ContextAdhesionV319Regression Zero3MotorHeadStoreV320 Zero3NeuralBundleStoreV321 Zero3OrganismStoreV322 Zero3FullCausalExperienceV322B Zero3FullArchiveStoreV322B Zero3MultiSceneRestartV322BRegression Zero3FiveArmAblationV333Regression Zero3BoxCrossingForensicV334Regression Zero3BoxSubstageForensicV335Regression Zero3ContactTopologyExperimentV336 Zero3JointBoxConstraintV338 Zero3ExactFaceTrialV336Regression Zero3JointMultiObjectV338Regression'
-          subprocess.run(shlex.split(m.group(1))+[r+n+'.java' for n in names.split()],check=True)
+          subprocess.run(["javac","-sourcepath","app/src/main/java"]+shlex.split(m.group(1))[1:]+[r+n+'.java' for n in names.split()],check=True)
           PY
       - name: Original CCD and all 7 masks three boxes and gate
         run: |

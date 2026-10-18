@@ -39,7 +39,7 @@ jobs:
             'Zero3MotorLocalFrameV310Regression.java',
             'Zero3MotorBodyFrameV311Regression.java',
           ]
-          subprocess.run(shlex.split(m.group(1))+[root+n for n in names],check=True)
+          subprocess.run(["javac","-sourcepath","app/src/main/java"]+shlex.split(m.group(1))[1:]+[root+n for n in names],check=True)
           PY
       - name: Execute physically observed 22D+64D body frame identification and independent validation
         run: |

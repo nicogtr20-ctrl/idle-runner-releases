@@ -40,7 +40,7 @@ jobs:
             'Zero3LearnedAdhesionV318Regression.java',
             'Zero3ContextAdhesionV319.java',
             'Zero3ContextAdhesionV319Regression.java']
-          subprocess.run(shlex.split(m.group(1))+[root+name for name in required],check=True)
+          subprocess.run(["javac","-sourcepath","app/src/main/java"]+shlex.split(m.group(1))[1:]+[root+name for name in required],check=True)
           PY
       - name: Run 3072 new self-chosen decisions and paired 3-arm blind true-world physics
         run: |

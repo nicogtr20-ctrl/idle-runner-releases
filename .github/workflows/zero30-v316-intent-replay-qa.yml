@@ -38,7 +38,7 @@ jobs:
             'Zero3SensoryContractV315Regression.java',
             'Zero3MotorIntentV316.java','Zero3ExperienceJournalV316.java',
             'Zero3IntentPersistenceV316Regression.java']
-          subprocess.run(shlex.split(m.group(1))+[root+x for x in models],check=True)
+          subprocess.run(["javac","-sourcepath","app/src/main/java"]+shlex.split(m.group(1))[1:]+[root+x for x in models],check=True)
           PY
       - name: Test 2048 real actions 4 atomic generation switch and corruption recovery
         run: |

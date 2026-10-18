@@ -37,7 +37,7 @@ jobs:
             'Zero3MotorTemporalHistoryRegression.java',
             'Zero3MotorLocalFrameV310Regression.java',
             'Zero3MotorRealContactV312Regression.java']
-          subprocess.run(shlex.split(m.group(1))+[root+f for f in files],check=True)
+          subprocess.run(["javac","-sourcepath","app/src/main/java"]+shlex.split(m.group(1))[1:]+[root+f for f in files],check=True)
           PY
       - name: Measure authentic free/far/near/disk touch and hold consequences
         run: |
