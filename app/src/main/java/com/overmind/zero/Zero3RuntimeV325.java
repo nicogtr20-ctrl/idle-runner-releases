@@ -258,6 +258,41 @@ public final class Zero3RuntimeV325 implements AutoCloseable {
         Zero3NeuralGraphV354.Builder b=new Zero3NeuralGraphV354.Builder();
         gruResearchV347.appendGraphV354(b);cortex.appendGraphV354(b);grip.appendGraphV354(b);return b.build();
     }
+    /**
+     * V355: rendering-only bridge to the ORIGINAL GameActivity painter.
+     * All references belong to this organism. The single Android UI thread
+     * may read them only outside advanceOneDecision(); it must never call a
+     * physics, neural, world or mutating method on any of these objects.
+     * This avoids building a second simulated (2.2) body behind the picture.
+     */
+    static final class CanvasStateV355 {
+        final MotorBrain.Body body;
+        final Morphology.Surface skin;
+        final SymbioteMatterV1 gel;
+        final ArrayList<UnknownWorld.Entity> world;
+        final ScarcityLab room;
+        final ShelterEcology shelter;
+        final float reserve,worldTime;
+        final int decisions,positive,negative,consumed;
+        final long train,validation,observations;
+        final boolean dead;
+        CanvasStateV355(Zero3RuntimeV325 r){
+            body=r.body;skin=r.skin;gel=r.gel;world=r.world;room=r.room;
+            shelter=r.shelterV354;reserve=r.metabolism.reserve();
+            worldTime=r.metabolism.worldTimeV354();decisions=r.next;
+            positive=r.metabolism.positiveTouches();
+            negative=r.metabolism.negativeTouches();
+            consumed=r.metabolism.consumedSources();
+            train=r.gruLearningUpdatesV347();
+            validation=r.gruResearchV347==null?0:r.gruResearchV347.validations();
+            observations=r.observationDecisionsV354();dead=r.ended;
+        }
+    }
+    CanvasStateV355 canvasStateV355(){
+        require(!closed&&!inDecision&&completionModeV354(),
+            "V355 renderer requires one completed 3.0 decision boundary");
+        return new CanvasStateV355(this);
+    }
     public Display display(){
         require(!closed&&!inDecision,"render only finished physical states");
         return new Display(this);
