@@ -135,18 +135,66 @@ final class TelemetryGitHub {
         result.put("schema","overmind-zero-telemetry-v1");
         result.put("recordedAtUtc",System.currentTimeMillis());
         result.put("source","ANDROID_EXPLICIT_SHARE");
-        result.put("gameplayBaseline",Boolean.TRUE.equals(all.get(SymbioteMatterV1.ENABLED))?
-            "ZERO 2.2 / symbiote temporal motor runtime 172":"ZERO historical material runtime");
+        // The saved V3 checkpoint is the ONLY source of truth for the
+        // current actor. Legacy motor data may remain in working preferences,
+        // but it never acts as a second brain when the V3 player is active.
+        String v3Checkpoint=all.get(Zero3OriginalBrainV356.KEY) instanceof String?
+            (String)all.get(Zero3OriginalBrainV356.KEY):"";
+        result.put("gameplayBaseline",v3Checkpoint.isEmpty()?
+            "NO_VALID_V3_CHECKPOINT_YET; historical working profile only":
+            "ZERO 3.0 GRU64 sole original-game motor actor; V2.2 legacy data archival only");
         android.content.pm.PackageInfo installed=c.getPackageManager().getPackageInfo(c.getPackageName(),0);
-        result.put("runtimeRevision","sensorimotor-172");
+        result.put("runtimeRevision","zero3-original-game-ota360");
         result.put("installedVersionName",installed.versionName);
         result.put("installedVersionCode",android.os.Build.VERSION.SDK_INT>=28?
             installed.getLongVersionCode():installed.versionCode);
-        result.put("predictionDiagnostic",Boolean.TRUE.equals(all.get(SymbioteMatterV1.ENABLED))?
-            "active recurrent 164D predictor in active_recurrent_diagnostics_v171; legacy journal separate":"legacy 26D predictor");
+        result.put("predictionDiagnostic","ACTIVE: ZERO3 V353/V354 predictive GRU modules in zero3Summary and full checkpoint. V2.2 diagnostics in currentZero are HISTORICAL.");
         result.put("liveProfileKeys",copied);
         result.put("dataPolicy","Current ZERO working game data only; no named slots, device identifiers, private contacts, user account, or GitHub token");
         result.put("currentZero",values);
+        // This compact, factual summary is directly visible in the current
+        // GitHub index (without manually reconstructing segmented checkpoints).
+        // Its counts come ONLY from inspectSaved() of the exact exported bytes.
+        // Never manufacture decision counts, sensor evidence or a valid brain.
+        JSONObject v3=new JSONObject();
+        v3.put("checkpointKey",Zero3OriginalBrainV356.KEY);
+        v3.put("checkpointPresent",!v3Checkpoint.isEmpty());
+        v3.put("checkpointIncludedInCurrentZero",values.has(Zero3OriginalBrainV356.KEY));
+        if(!v3Checkpoint.isEmpty()){
+            try{
+                Zero3OriginalBrainV356.Readout neural=
+                    Zero3OriginalBrainV356.inspectSaved(v3Checkpoint);
+                v3.put("checkpointValid",true);
+                v3.put("role","SOLE_ACTIVE_NEURAL_ACTOR_ORIGINAL_GAME");
+                v3.put("sensoryInputs",neural.sensoryInputs);
+                v3.put("recurrentUnits",neural.hiddenUnits);
+                v3.put("muscleOutputs",neural.actionOutputs);
+                v3.put("adhesionSectors",neural.adhesionSectors);
+                v3.put("completedDecisions",neural.decisions);
+                v3.put("trainingDecisions",neural.trained);
+                v3.put("heldoutDecisions",neural.heldout);
+                v3.put("observationDecisions",neural.observations);
+                v3.put("cortexUpdates",neural.motorUpdates);
+                v3.put("previousPhysicalDamage",neural.previousDamageV359);
+                if(neural.cognition!=null){
+                    v3.put("predictiveUnits",neural.cognition.predictiveUnits);
+                    v3.put("shadowUnits",neural.cognition.shadowUnits);
+                    v3.put("growthAccepted",neural.cognition.growthAccepted);
+                    v3.put("growthRejected",neural.cognition.growthRejected);
+                }
+                if(neural.executive!=null){
+                    v3.put("candidateOptions",neural.executive.skills.length);
+                    v3.put("historicalDecisions",neural.executive.historicalDecisions);
+                }
+            }catch(Exception badCheckpoint){
+                v3.put("checkpointValid",false);
+                v3.put("reason","Saved V3 checkpoint is corrupt or incomplete; no V3 metrics inferred");
+            }
+        }else{
+            v3.put("checkpointValid",false);
+            v3.put("reason","Game has not yet saved the active 3.0 profile");
+        }
+        result.put("zero3Summary",v3);
         // ZERO 2.0 observer metrics are reconstructed from the saved copy,
         // only on a user-initiated upload thread. No live brain is touched.
         result.put("zero20Passive",new JSONObject(Zero20PassiveSnapshot.fromSaved(all)));
@@ -413,6 +461,9 @@ final class TelemetryGitHub {
         for(String meta:new String[]{"runtimeRevision","installedVersionName","installedVersionCode","predictionDiagnostic"})
             if(data.has(meta))index.put(meta,data.get(meta));
         index.put("liveProfileKeys",data.getInt("liveProfileKeys"));
+        // Always include this summary in the FIRST current.json, even when
+        // the full GRU checkpoint is fragmented into immutable report parts.
+        if(data.has("zero3Summary"))index.put("zero3Summary",data.getJSONObject("zero3Summary"));
         index.put("currentZero",inline);
         index.put("parts",entries);
         index.put("partCount",pieces.size());
