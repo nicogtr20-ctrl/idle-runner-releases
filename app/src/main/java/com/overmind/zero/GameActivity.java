@@ -17,6 +17,11 @@ import java.util.Locale;
  */
 public final class GameActivity extends Activity {
     private Lab lab;
+    // Android integration checks: the ACTUAL original physics owner (not V355 lab).
+    boolean originalV356NeuralOwnerForQA(){return lab!=null&&lab.brain3!=null&&lab.useSymbiote;}
+    long originalV356DecisionsForQA(){return lab==null||lab.brain3==null?-1:lab.brain3.decisions();}
+    int originalV356LifeForQA(){return lab==null?-1:lab.episode;}
+    void originalV356ForceDeathForQA(){if(lab!=null)lab.reserve=0f;}
     @Override public void onCreate(Bundle b){
         super.onCreate(b);
         getWindow().setFlags(1024,1024);
@@ -1003,6 +1008,9 @@ public final class GameActivity extends Activity {
             float dt=lastFrame==0?0:Math.min(.038f,(now-lastFrame)*.000000001f);
             lastFrame=now;
             uiTime+=dt;
+            // Never allow a V2.2 motor controller to take over after a V3
+            // loading, sensor, checkpoint or device failure.
+            if(brain3==null)simulationRunning=false;
             if(resetNotice>0)resetNotice-=dt;
             // Fixed-step headless-style burst: preserve ALL original physics,
             // senses, hunger, actions, learning and real event timestamps.
