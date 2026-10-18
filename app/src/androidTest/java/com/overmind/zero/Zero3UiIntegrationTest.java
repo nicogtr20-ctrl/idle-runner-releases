@@ -26,6 +26,10 @@ public final class Zero3UiIntegrationTest {
         do{Zero3DashboardSnapshotV354 s=snapshot(scenario);if(s!=null&&ready.test(s))return s;SystemClock.sleep(100);}while(SystemClock.uptimeMillis()<end);
         throw new AssertionError("Real ZERO3 state did not reach the expected boundary");
     }
+    private Zero3DashboardSnapshotV354 settled(ActivityScenario<Zero3DashboardActivityV354> scenario)throws Exception{
+        AtomicReference<java.util.concurrent.Future<Zero3DashboardSnapshotV354>> out=new AtomicReference<>();
+        scenario.onActivity(a->out.set(a.snapshotAfterOwnerForQA()));return out.get().get(30,java.util.concurrent.TimeUnit.SECONDS);
+    }
     private void tap(String text){onView(withText(text)).perform(scrollTo(),click());}
     private void screenshot(String name)throws Exception{
         File directory=new File(InstrumentationRegistry.getInstrumentation().getTargetContext().getFilesDir(),"qa");directory.mkdirs();
@@ -38,7 +42,7 @@ public final class Zero3UiIntegrationTest {
             tap("Impostazioni");tap("CREA NUOVO CERVELLO NELLO SLOT VUOTO");tap("CREA");
             Zero3DashboardSnapshotV354 birth=await(scenario,s->s.body.decisions>=1);assertEquals(194,birth.usedInput.length);
             tap("Gioco");tap("×20");await(scenario,s->s.body.decisions>=16);tap("PAUSA");
-            tap("Cervello");Zero3DashboardSnapshotV354 graph=await(scenario,s->s.graph!=null);
+            tap("Cervello");Zero3DashboardSnapshotV354 graph=settled(scenario);assertNotNull(graph.graph);
             assertEquals(graph.neurons,graph.graph.nodes.length);assertTrue(graph.graph.actualSynapses>0);assertEquals(96,graph.body.membraneX.length);assertEquals(74,graph.innerX.length);assertEquals(64,graph.executed.length);
             screenshot("zero3-brain");
             long decision=graph.body.decisions;
@@ -47,7 +51,7 @@ public final class Zero3UiIntegrationTest {
             tap("APPRENDIMENTO / SOLA OSSERVAZIONE");Zero3DashboardSnapshotV354 observer=await(scenario,s->s.observing);
             long trained=observer.trained,validation=observer.heldout,from=observer.body.decisions;
             tap("Gioco");tap("×20");await(scenario,s->s.body.decisions>=from+8);tap("PAUSA");
-            tap("Analisi");Zero3DashboardSnapshotV354 after=await(scenario,s->s.body.decisions>=from+8);
+            tap("Analisi");Zero3DashboardSnapshotV354 after=settled(scenario);assertTrue(after.body.decisions>=from+8);
             assertEquals(trained,after.trained);assertEquals(validation,after.heldout);assertTrue(after.observations>=8);
             screenshot("zero3-analysis-observer");tap("Gioco");screenshot("zero3-body");
             long committed=after.body.decisions;scenario.recreate();Zero3DashboardSnapshotV354 resumed=await(scenario,s->s.body.decisions==committed);

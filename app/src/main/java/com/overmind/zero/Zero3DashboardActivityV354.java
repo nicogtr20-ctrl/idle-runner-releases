@@ -46,6 +46,8 @@ public final class Zero3DashboardActivityV354 extends Activity {
     private void button(LinearLayout parent,String label,Runnable action){Button b=new Button(this);b.setText(label);b.setTextSize(12);b.setMinHeight(dp(48));b.setContentDescription(label);b.setOnClickListener(v->action.run());parent.addView(b,new LinearLayout.LayoutParams(parent.getOrientation()==1?-1:-2,-2));}
     private void row(String[] labels,Runnable[] actions){LinearLayout line=new LinearLayout(this);content.addView(line);for(int i=0;i<labels.length;i++){Button b=new Button(this);b.setText(labels[i]);b.setTextSize(12);b.setMinHeight(dp(48));final Runnable a=actions[i];b.setOnClickListener(v->a.run());line.addView(b,new LinearLayout.LayoutParams(0,-2,1));}}
     public Zero3DashboardSnapshotV354 snapshotForQA(){return latest;}
+    /** Read-only fence: queued pause/save operations complete before this snapshot. */
+    public Future<Zero3DashboardSnapshotV354> snapshotAfterOwnerForQA(){return owner.submit(()->session.dashboardV354(page==2));}
     private void showPage(int destination){page=destination;content.removeAllViews();body=null;atlas=null;
         text(content,PAGES[page].toUpperCase(Locale.ITALY),20,CYAN);
         if(page==0||page==1||page==3){body=new BodyCanvas(this);content.addView(body,new LinearLayout.LayoutParams(-1,dp(page==0?340:260)));}
