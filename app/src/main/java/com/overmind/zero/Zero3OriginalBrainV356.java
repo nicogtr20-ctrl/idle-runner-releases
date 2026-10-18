@@ -29,6 +29,7 @@ final class Zero3OriginalBrainV356 {
     // It must not be fabricated from basal hunger or muscle metabolism.
     private float actualDamageDuringDecisionV359;
     private long damagedDecisionsV359;
+    private float maxVerifiedDecisionDamageV359;
     private boolean pending,heldout,disturbed;
     private int lastLife=-1;
 
@@ -84,6 +85,7 @@ final class Zero3OriginalBrainV356 {
     long observed(){return brain.observationsV354();}
     float previousDamageV359(){return priorDamage;}
     long damagedDecisionsV359(){return damagedDecisionsV359;}
+    float maxVerifiedDecisionDamageV359(){return maxVerifiedDecisionDamageV359;}
     float directionX(){return choice==null?0:choice.x;}
     float directionY(){return choice==null?0:choice.y;}
     float adhesion(){return choice==null?0:choice.adhesion;}
@@ -197,7 +199,7 @@ final class Zero3OriginalBrainV356 {
             // Persist this exact measurement across a normal app restart.
             float harm=actualDamageDuringDecisionV359;
             priorDamage=harm;
-            if(harm>0f)damagedDecisionsV359++;
+            if(harm>0f){damagedDecisionsV359++;maxVerifiedDecisionDamageV359=Math.max(maxVerifiedDecisionDamageV359,harm);}
             float[] after=sense(body,skin,gel,objects,chamber,reserve,time,false);
             float net=reserve-beforeFuel;
             float touch=0,held=0,optical=0;
