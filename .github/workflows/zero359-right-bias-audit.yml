@@ -1,0 +1,24 @@
+name: ZERO358 read-only GRU rightward-bias audit
+on:
+  push:
+    branches: [audit/zero358-rightward-direction-bias]
+  pull_request:
+    branches: [release/zero30-ota]
+permissions:
+  contents: read
+jobs:
+  v359-direction-bias:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+        with: {fetch-depth: 0}
+      - uses: actions/setup-java@v4
+        with: {distribution: temurin, java-version: '17'}
+      - name: Sample real V358 GRU first-choice/random input and life-reset directions
+        run: python3 tools/zero359_direction_audit.py
+      - name: Verify ZERO production app source edits
+        run: |
+          git fetch origin release/zero30-ota:refs/remotes/origin/release/zero30-ota
+          test -z "$(git diff --name-only origin/release/zero30-ota -- app/src/main)"
+          echo 'V359_LIVE_APP_UNMODIFIED=PASS'
