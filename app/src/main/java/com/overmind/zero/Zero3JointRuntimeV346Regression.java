@@ -10,7 +10,7 @@ public final class Zero3JointRuntimeV346Regression {
     private static void check(boolean ok,String message){
         if(!ok)throw new AssertionError("V346 "+message);
     }
-    private static Zero3RuntimeV325 birth(int scenario,boolean candidate)
+    static Zero3RuntimeV325 birth(int scenario,boolean candidate)
             throws Exception{
         long episode=346000L+scenario,seed=0x34653ABCDL+scenario*32771L;
         int pose=scenario%4;
@@ -39,7 +39,7 @@ public final class Zero3JointRuntimeV346Regression {
         Zero3RuntimeV325 r=Zero3RuntimeV325.newborn(
             episode,seed,p.body,p.skin,p.gel,world,room,100f,0f);
         if(candidate){
-            r.enableJointPhysicsResearchV346();
+            if(Boolean.getBoolean("v354.joint"))r.enableJointPhysicsResearchV354();else r.enableJointPhysicsResearchV346();
             boolean rejected=false;
             try{r.snapshot();}
             catch(IllegalStateException expected){rejected=true;}

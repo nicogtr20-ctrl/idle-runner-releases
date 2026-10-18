@@ -70,7 +70,10 @@ public final class Zero3SurvivalLedgerV323 {
     /** Called AFTER actual gel.step, never before computing true work. */
     public void physicalStep(float dt,float actualWork,
                              MotorBrain.Body b,Morphology.Surface skin,
-                             List<UnknownWorld.Entity> objects){
+                             List<UnknownWorld.Entity> objects){physicalStep(dt,actualWork,b,skin,objects,0f);}
+    public void physicalStep(float dt,float actualWork,MotorBrain.Body b,Morphology.Surface skin,
+                             List<UnknownWorld.Entity> objects,float measuredWeatherLoss){
+        good(Float.isFinite(measuredWeatherLoss)&&measuredWeatherLoss>=0,"invalid weather outcome");
         good(active&&dt>0&&dt<=.04f&&Float.isFinite(dt)&&
              actualWork>=0&&Float.isFinite(actualWork)&&
              partialSteps<(variableClock?26:12)&&b!=null&&skin!=null&&objects!=null,
@@ -109,6 +112,8 @@ public final class Zero3SurvivalLedgerV323 {
                 negativeTouches++;thisDecisionNegative++;
             }
         }
+        float weatherDebit=Math.min(reserve,measuredWeatherLoss);
+        reserve-=weatherDebit;negativeContactEnergy+=weatherDebit;decisionDamage+=weatherDebit;
         partialSteps++;
         good(Float.isFinite(reserve)&&reserve>=0&&reserve<=100,
              "metabolic value nonfinite/overflow");
@@ -122,6 +127,7 @@ public final class Zero3SurvivalLedgerV323 {
         active=false;next++;
     }
     public int decisions(){return next;}
+    public float worldTimeV354(){return worldTime;}
     public float reserve(){return reserve;}
     /** Only the PRIOR completed physical event may enter PRE sensing. */
     public float previousDecisionDamage(){

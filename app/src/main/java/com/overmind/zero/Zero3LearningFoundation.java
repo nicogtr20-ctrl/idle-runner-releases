@@ -188,6 +188,12 @@ public final class Zero3LearningFoundation {
         public long revision(){return revision;}
         public long updates(){return updates;}
         public float[] weights(){return weights.clone();}
+        void appendGraphV354(Zero3NeuralGraphV354.Builder b){
+            for(int u=0;u<64;u++){
+                int id=b.node(4,u,8,"sector "+(u/4)+" channel "+(u%4),output[u],weights,u*8,8);
+                for(int i=0;i<8;i++)b.edge(-2000-i,id,0,weights[u*8+i]);
+            }
+        }
         /**
          * V332 LAB ONLY: evaluate learned synaptic weights on a newborn,
          * identical slow-state cortex without modifying the live runtime.

@@ -26,7 +26,8 @@ public final class Zero3LongLifeV328Regression {
     }
     private static Zero3RuntimeV325 birth()throws Exception{
         Zero3RuntimeV325 r=Zero3WorldBirthV326.create(EPISODE,SEED);
-        if(Boolean.getBoolean("v353.cognitive"))r.enableCognitiveResearchV353();
+        if(Boolean.getBoolean("v354.completion"))r.enableCompletionV354();
+        else if(Boolean.getBoolean("v353.cognitive"))r.enableCognitiveResearchV353();
         else if(Boolean.getBoolean("v352.variable"))r.enableVariableResearchV352();
         else if(Boolean.getBoolean("v351.unified"))r.enableUnifiedResearchV351();
         else if(GRU_MODE)r.enableGruResearchV347();
@@ -62,7 +63,7 @@ public final class Zero3LongLifeV328Regression {
         }
         yes(r.decisions()==target&&r.completeExperiences()==target&&
             (GRU_MODE?r.encoderUpdates()==0&&
-                r.gruLearningUpdatesV347()+(r.cognitionSnapshot()==null?0:r.cognitionSnapshot().heldout)==target:r.encoderUpdates()==target)&&
+                r.gruLearningUpdatesV347()+r.observationDecisionsV354()+(r.cognitionSnapshot()==null?0:r.cognitionSnapshot().heldout)==target:r.encoderUpdates()==target)&&
             r.gripUpdates()==target,
             "physics/sensory/neural authority misaligned");
     }
@@ -103,7 +104,7 @@ public final class Zero3LongLifeV328Regression {
         try(Zero3RuntimeV325 r=Zero3RuntimeV325.loadSegmented(dir)){
             yes(r!=null&&r.episode()==EPISODE&&r.decisions()==STOP&&
                 r.residentFullExperiences()<=32&&
-                (GRU_MODE?r.gruLearningUpdatesV347()+(r.cognitionSnapshot()==null?0:r.cognitionSnapshot().heldout)==STOP&&r.encoderUpdates()==0:
+                (GRU_MODE?r.gruLearningUpdatesV347()+r.observationDecisionsV354()+(r.cognitionSnapshot()==null?0:r.cognitionSnapshot().heldout)==STOP&&r.encoderUpdates()==0:
                     r.encoderUpdates()==STOP),
                 "cold load did not restore exact authority");
             advance(r,TARGET,dir);r.saveSegmented(dir);

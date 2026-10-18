@@ -27,6 +27,22 @@ public final class Zero3AndroidSessionV325 implements AutoCloseable {
                 .resolve(ROOT).resolve("v3-"+slot);
         return new Zero3AndroidSessionV325(dir);
     }
+    public static Zero3ProfileStoreV354 profilesV354(Context context)throws IOException{
+        return new Zero3ProfileStoreV354(context.getApplicationContext().getNoBackupFilesDir().toPath().resolve("zero3-profiles-v354"));
+    }
+    public static Zero3AndroidSessionV325 profileV354(Context context,int slot)throws IOException{
+        return new Zero3AndroidSessionV325(profilesV354(context).profile(slot));
+    }
+    public synchronized void startNewCompletionV354(Zero3RuntimeV325 organism)throws IOException{
+        if(session!=null||organism==null||organism.decisions()!=0||Zero3SegmentedArchiveV328.hasAny(directory))throw new IOException("V354 use an empty profile");
+        organism.enableCompletionV354();startNew(organism);
+    }
+    public synchronized Zero3DashboardSnapshotV354 dashboardV354(boolean graph)throws IOException{
+        if(session==null)throw new IOException("Profilo non attivo");return session.dashboardV354(graph);
+    }
+    public synchronized void observationModeV354(boolean enabled)throws IOException{
+        if(session==null)throw new IOException("Profilo non attivo");session.observationModeV354(enabled);
+    }
     /** Reject a new life if any existing V3 checkpoint may contain history. */
     public synchronized void startNew(Zero3RuntimeV325 organism)throws IOException {
         if(session!=null||organism==null||organism.decisions()!=0)

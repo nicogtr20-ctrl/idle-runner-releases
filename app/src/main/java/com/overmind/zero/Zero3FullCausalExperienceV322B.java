@@ -28,8 +28,18 @@ public final class Zero3FullCausalExperienceV322B {
         bytes=immutable.clone();
         unifiedPre=upre==null?null:upre.clone();unifiedPost=upost==null?null:upost.clone();
     }
-    public boolean hasPartitionV353(){return bytes[6]==1&&(bytes[7]&255)==97;}
-    public boolean heldoutV353(){return hasPartitionV353()&&bytes[bytes.length-1]==1;}
+    public boolean hasPartitionV353(){return bytes[6]==1&&((bytes[7]&255)==97||(bytes[7]&255)==98);}
+    public boolean heldoutV353(){return hasPartitionV353()&&partitionV354()==1;}
+    public int partitionV354(){return (bytes[7]&255)==98?bytes[bytes.length-29]&255:((bytes[7]&255)==97?bytes[bytes.length-1]&255:-1);}
+    public float[] intentionV354(){
+        if((bytes[7]&255)!=98)return null;
+        try{DataInputStream d=new DataInputStream(new ByteArrayInputStream(bytes,bytes.length-28,28));float[] a=new float[5];for(int i=0;i<5;i++)a[i]=d.readFloat();return a;}catch(IOException impossible){throw new IllegalStateException(impossible);}
+    }
+    static Zero3FullCausalExperienceV322B withModeV354(Zero3FullCausalExperienceV322B record,int mode,float[] intent,long option)throws IOException{
+        check(record!=null&&(record.bytes[7]&255)==96&&mode>=0&&mode<=2&&intent!=null&&intent.length==5&&option>=0,"V354 causal metadata");
+        ByteArrayOutputStream b=new ByteArrayOutputStream();byte[] raw=record.bytes.clone();raw[7]=98;b.write(raw);
+        DataOutputStream d=new DataOutputStream(b);d.writeByte(mode);writeArray(d,intent,5);d.writeLong(option);d.flush();return decode(b.toByteArray());
+    }
     static Zero3FullCausalExperienceV322B withPartitionV353(Zero3FullCausalExperienceV322B record,boolean heldout)throws IOException{
         check(record!=null&&(record.bytes[7]&255)==96,"V353 requires V352 physical record");
         byte[] encoded=Arrays.copyOf(record.bytes,record.bytes.length+1);encoded[7]=97;
@@ -203,10 +213,10 @@ public final class Zero3FullCausalExperienceV322B {
         ByteArrayOutputStream stream=new ByteArrayOutputStream();
         DataOutputStream copy=new DataOutputStream(stream);
         int magic=d.readInt(),version=d.readInt(),decision=d.readInt();
-        check(magic==MAGIC&&(version==VERSION||version==351||version==352||version==353)&&decision>=0,"record schema");
+        check(magic==MAGIC&&(version==VERSION||version==351||version==352||version==353||version==354)&&decision>=0,"record schema");
         copy.writeInt(magic);copy.writeInt(version);copy.writeInt(decision);
         int steps=STEPS,planned=STEPS,reason=0;
-        if(version==352||version==353){
+        if(version==352||version==353||version==354){
             steps=d.readInt();planned=d.readInt();reason=d.readInt();
             copy.writeInt(steps);copy.writeInt(planned);copy.writeInt(reason);
             check(steps>=1&&steps<=26&&planned>=10&&planned<=26&&steps<=planned&&
@@ -226,19 +236,24 @@ public final class Zero3FullCausalExperienceV322B {
         int grip=d.readInt(),bilateral=d.readInt();
         copy.writeInt(grip);copy.writeInt(bilateral);
         float[] unifiedPre=null,unifiedPost=null;
-        if(version==351||version==352||version==353){
+        if(version==351||version==352||version==353||version==354){
             unifiedPre=readArray(d,copy,194);unifiedPost=readArray(d,copy,194);
             for(float[] sense:new float[][]{unifiedPre,unifiedPost})for(float v:sense)
                 check(v>=-1f&&v<=1f,"V351 neural input out of range");
             check((unifiedPre[193]==1f)==before.lastAvailable&&
                   (unifiedPost[193]==1f)==after.lastAvailable,
                   "V351 efference availability mismatch");
-            if(version==352||version==353)check((reason!=2||unifiedPost[188]==-1f)&&
+            if(version==352||version==353||version==354)check((reason!=2||unifiedPost[188]==-1f)&&
                 (reason!=1||unifiedPost[189]>0f),"V352 interruption lacks real vital evidence");
         }
-        if(version==353){
+        if(version==353||version==354){
             int partition=d.readUnsignedByte();copy.writeByte(partition);
-            check(partition<=1&&(partition==1)==Zero3CognitionV353.heldout(decision),"V353 partition changed after observation");
+            check(partition<=(version==354?2:1)&&(partition==2||(partition==1)==(version==354?Zero3ConfigurationV354.heldout(decision):Zero3CognitionV353.heldout(decision))),"V353 partition changed after observation");
+        }
+        if(version==354){
+            float[] intent=readArray(d,copy,5);long option=d.readLong();copy.writeLong(option);
+            check(option>=0&&Math.abs(Math.hypot(intent[0],intent[1])-1)<.001&&intent[2]>=0&&intent[2]<=1&&
+                intent[3]>=0&&intent[3]<=1&&intent[4]>=.2499&&intent[4]<=.6501,"V354 invalid actual intention");
         }
         copy.flush();
         check(d.available()==0&&Arrays.equals(b,stream.toByteArray())&&

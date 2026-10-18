@@ -21,6 +21,10 @@ public final class Zero3RecurrentBrain {
     private final int inputs;
     private final boolean variableClock;
     private Zero3CognitionV353 cognition;
+    private Zero3ExecutiveV354 executive;
+    private Zero3PlannerV354 plannerV354;
+    private long observationCount;
+    private boolean observeV354,optionReplayV354;
     private boolean physicalTargetsReadyV353,physicalHeldoutV353;
     private final float[] wz,wr,wn,world,before;
 
@@ -116,10 +120,30 @@ public final class Zero3RecurrentBrain {
         if(!variableClock||pending||trainCount+validationCount!=0||cognition!=null)throw new IllegalStateException("V353 fresh variable core required");
         cognition=new Zero3CognitionV353();
     }
+    float measuredConfidenceV354(){
+        if(cognition==null)return 0;Zero3CognitionV353.Snapshot s=cognition.snapshot();float quality=0;
+        for(int h=0;h<3;h++)if(s.reliable[h]&&s.baselineMse[h]>0)quality+=clip(1-s.mse[h]/s.baselineMse[h],0,1)/3;
+        return quality; // measured model advantage, not a success probability
+    }
+    public boolean completionModeV354(){return executive!=null;}
+    public long observationsV354(){return observationCount;}
+    public boolean observingV354(){return observeV354;}
+    public void observingV354(boolean enabled){if(executive==null||pending)throw new IllegalStateException("V354 boundary required");observeV354=enabled;}
+    public Zero3ExecutiveV354.Snapshot executiveSnapshot(){return executive==null?null:executive.snapshot();}
+    void enableExecutiveV354(){if(cognition==null||pending||trainCount+validationCount!=0||executive!=null)throw new IllegalStateException("V354 fresh cognition required");executive=new Zero3ExecutiveV354();plannerV354=new Zero3PlannerV354();}
+    void completeExecutiveV354(float motor,float energy,float harm,float cost,boolean heldout){
+        if(executive==null)throw new IllegalStateException("V354 unavailable");
+        executive.complete(motor,energy,harm,cost,heldout,observeV354,cognition.snapshot());
+    }
+    String ecologyStateV354(){return executive.ecology();}
+    float nextRoomV354(){return executive.nextRoom();}
+    void ecologyStateV354(String state,float next){executive.ecology(state,next);}
+    long selectedOptionV354(){return executive==null?0:executive.selectedId();}
     void physicalTargetsV353(float[] targets,boolean heldout){
         if(cognition==null||!pending||physicalTargetsReadyV353)throw new IllegalStateException("V353 missing/duplicate physical transition");
-        if(heldout!=Zero3CognitionV353.heldout(trainCount+validationCount))throw new IllegalArgumentException("V353 partition mismatch");
-        cognition.complete(targets,heldout);physicalHeldoutV353=heldout;physicalTargetsReadyV353=true;
+        if(heldout!=(executive!=null?Zero3ConfigurationV354.heldout(trainCount+validationCount+observationCount):Zero3CognitionV353.heldout(trainCount+validationCount+observationCount)))throw new IllegalArgumentException("V353 partition mismatch");
+        if(plannerV354!=null)plannerV354.complete(targets,heldout,observeV354);
+        if(observeV354)cognition.abort();else cognition.complete(targets,heldout);physicalHeldoutV353=heldout;physicalTargetsReadyV353=true;
     }
     public int sensorWidth(){return inputs;}
     public static Zero3RecurrentBrain fromCheckpoint(byte[] raw){
@@ -129,10 +153,11 @@ public final class Zero3RecurrentBrain {
             DataInputStream in=new DataInputStream(new ByteArrayInputStream(raw));
             if(in.readInt()!=CHECK_MAGIC_V345)throw new IllegalArgumentException("GRU magic");
             int version=in.readInt(),width=in.readInt();
-            if(!((version==345&&width==SENSOR)||((version==351||version==352||version==353)&&width==194)))
+            if(!((version==345&&width==SENSOR)||((version==351||version==352||version==353||version==354)&&width==194)))
                 throw new IllegalArgumentException("unknown GRU sensory configuration");
             Zero3RecurrentBrain restored=new Zero3RecurrentBrain(width,version>=352);
-            if(version==353)restored.enableCognitionV353();
+            if(version>=353)restored.enableCognitionV353();
+            if(version==354)restored.enableExecutiveV354();
             restored.restoreAtBoundaryV345(raw);return restored;
         }catch(IOException bad){throw new IllegalArgumentException("truncated GRU",bad);}
     }
@@ -162,7 +187,7 @@ public final class Zero3RecurrentBrain {
     public Zero3LearningFoundation.MotorIntent choose(float[] observation,
             long episode,long decision,long cortexRevision){
         if(pending)throw new IllegalStateException("unfinished decision");
-        if(cognition!=null&&decision!=trainCount+validationCount)throw new IllegalArgumentException("V353 causal decision cursor");
+        if(cognition!=null&&decision!=trainCount+validationCount+observationCount)throw new IllegalArgumentException("V353 causal decision cursor");
         float[] x=sense(observation);
         System.arraycopy(state,0,prior,0,HIDDEN);
         forward(x,prior,state,gatedZ,gatedR,candidate,wz,wr,wn);
@@ -186,10 +211,18 @@ public final class Zero3RecurrentBrain {
             if(cognition!=null)options[k][4]=Math.round(options[k][4]/.025f)*.025f;
         }
         int selected=cognition==null?0:cognition.select(x,options);
+        if(plannerV354!=null){
+            boolean ready=validationCount>=64&&heldoutModelError<heldoutBaselineError*.9f&&cognition.trusted(0)&&cognition.trusted(1)&&cognition.trusted(2);
+            int planned=plannerV354.select(x,decisionState,options,modelV354(),ready);if(planned>=0)selected=planned;
+        }
         System.arraycopy(noise[selected],0,lastNoise,0,MOTOR);
-        float dx=options[selected][0],dy=options[selected][1],effort=options[selected][2],
-            adhesion=options[selected][3],duration=options[selected][4];
-        if(cognition!=null)cognition.begin(x,options[selected]);
+        float[] authorized=options[selected];
+        optionReplayV354=false;
+        if(executive!=null){authorized=executive.propose(x,authorized,decision,observeV354);optionReplayV354=executive.usedMemory();}
+        float dx=authorized[0],dy=authorized[1],effort=authorized[2],
+            adhesion=authorized[3],duration=authorized[4];
+        if(cognition!=null)cognition.begin(x,authorized);
+        if(plannerV354!=null)plannerV354.begin(decision,x,decisionState,authorized,modelV354(),Zero3ConfigurationV354.heldout(decision),observeV354,cognition.baselineV354());
         action[0]=dx;action[1]=dy;action[2]=effort;action[3]=adhesion;
         Arrays.fill(worldInput,0);
         System.arraycopy(decisionState,0,worldInput,0,HIDDEN);
@@ -198,6 +231,49 @@ public final class Zero3RecurrentBrain {
         pending=true;
         return new Zero3LearningFoundation.MotorIntent(episode,decision,cortexRevision,
                 dx,dy,effort,adhesion,duration);
+    }
+    public Zero3PlannerV354.Snapshot plannerSnapshotV354(){return plannerV354==null?null:plannerV354.snapshot();}
+    private Zero3PlannerV354.Predictor modelV354(){return new Zero3PlannerV354.Predictor(){
+        public float[] meanAction(float[] h){
+            float[] a=new float[5];for(int i=0;i<5;i++)a[i]=dot(actor,i*(HIDDEN+1),h,HIDDEN);
+            float len=(float)Math.hypot(a[0],a[1]);if(len<.00001f){a[0]=1;a[1]=0;len=1;}a[0]/=len;a[1]/=len;
+            a[2]=sigmoid(a[2]);a[3]=sigmoid(a[3]);a[4]=Math.round((.25f+.4f*sigmoid(a[4]))/.025f)*.025f;return a;
+        }
+        public Zero3PlannerV354.Step step(float[] o,float[] h,float[] a){
+            float[] physical=cognition.predictionV354(o,a),next=new float[inputs],z=new float[HIDDEN];
+            for(int d=0;d<inputs;d++){
+                int at=d*worldInput.length;float delta=world[at+HIDDEN+ACTION];
+                for(int i=0;i<HIDDEN;i++)delta+=world[at+i]*h[i];for(int i=0;i<ACTION;i++)delta+=world[at+HIDDEN+i]*a[i];
+                next[d]=clip(o[d]+delta,-1,1);
+            }
+            forward(next,h,z,new float[HIDDEN],new float[HIDDEN],new float[HIDDEN],wz,wr,wn);
+            return new Zero3PlannerV354.Step(next,z,Arrays.copyOf(physical,12),physical[12]);
+        }
+    };}
+    void appendGraphV354(Zero3NeuralGraphV354.Builder b){
+        int stride=inputs+HIDDEN+1;
+        for(int u=0;u<HIDDEN;u++)b.node(0,u,stride*3,"GRU "+u,state[u],wn,u*stride,stride);
+        for(int gate=0;gate<3;gate++){
+            float[] w=gate==0?wz:gate==1?wr:wn;
+            for(int u=0;u<HIDDEN;u++)for(int i=0;i<stride;i++)b.edge(i>=inputs&&i<inputs+HIDDEN?i-inputs:-1-i,u,gate,w[u*stride+i]);
+        }
+        int actorBase=b.nodes.size();
+        for(int u=0;u<MOTOR;u++)b.node(1,u,HIDDEN+1,new String[]{"direction X","direction Y","effort","adhesion","duration"}[u],proposal[u],actor,u*(HIDDEN+1),HIDDEN+1);
+        for(int u=0;u<MOTOR;u++)for(int i=0;i<=HIDDEN;i++)b.edge(i==HIDDEN?-1000:i,actorBase+u,0,actor[u*(HIDDEN+1)+i]);
+        for(int u=0;u<2;u++){
+            int id=b.node(2,u,HIDDEN+1,"critic "+u,read(critic[u],state),critic[u],0,HIDDEN+1);
+            for(int i=0;i<=HIDDEN;i++)b.edge(i==HIDDEN?-1000:i,id,0,critic[u][i]);
+        }
+        for(int u=0;u<inputs;u++){
+            int id=b.node(3,u,worldInput.length,"sensory prediction "+u,Float.NaN,world,u*worldInput.length,worldInput.length);
+            for(int i=0;i<worldInput.length;i++)b.edge(i<HIDDEN?i:-1-i,id,0,world[u*worldInput.length+i]);
+        }
+        for(int u=0;u<targetCritic.length;u++){
+            int id=b.node(11,u,HIDDEN+1,"target critic "+u,read(targetCritic[u],state),targetCritic[u],0,HIDDEN+1);
+            for(int i=0;i<=HIDDEN;i++)b.edge(i==HIDDEN?-1000:i,id,0,targetCritic[u][i]);
+        }
+        if(cognition!=null)cognition.appendGraphV354(b);
+        if(executive!=null)executive.appendGraphV354(b);
     }
     public float[] recurrentState(){return state.clone();}
     /** Flatten trainable parameters, excluding transient hidden state / RNG. */
@@ -244,6 +320,7 @@ public final class Zero3RecurrentBrain {
         if(!Float.isFinite(realSurvivalReward))throw new IllegalArgumentException("nonfinite reward");
         float[] next=sense(rawNext);
         pending=false;physicalTargetsReadyV353=false;
+        if(observeV354){observationCount++;return;}
         float[] predictionError=new float[inputs];
         float modelMse=0,baselineMse=0;
         float[] dh=new float[HIDDEN];
@@ -314,6 +391,7 @@ public final class Zero3RecurrentBrain {
                 targetCritic[head][j]+=.02f*(critic[head][j]-targetCritic[head][j]);
         }
         for(int k=0;k<MOTOR;k++){
+            if(optionReplayV354)continue; // recalled action did not execute this sampled noise
             if(k==MOTOR-1&&!durationExecuted)continue; // V350 no fictitious duration credit
             float explorationGradient=clip(lastNoise[k]/(.2f*.2f),-3f,3f);
             int at=k*(HIDDEN+1);
@@ -380,7 +458,7 @@ public final class Zero3RecurrentBrain {
             ByteArrayOutputStream buffer=new ByteArrayOutputStream(128*1024);
             DataOutputStream out=new DataOutputStream(buffer);
             out.writeInt(CHECK_MAGIC_V345);
-            out.writeInt(cognition!=null?353:variableClock?352:(inputs==SENSOR?CHECK_VERSION_V345:351));
+            out.writeInt(executive!=null?354:cognition!=null?353:variableClock?352:(inputs==SENSOR?CHECK_VERSION_V345:351));
             out.writeInt(inputs);
             out.writeInt(HIDDEN);
             out.writeInt(MOTOR);
@@ -403,6 +481,11 @@ public final class Zero3RecurrentBrain {
                 }
             }
             if(cognition!=null){byte[] cognitive=cognition.encode();out.writeInt(cognitive.length);out.write(cognitive);}
+            if(executive!=null){
+                out.writeUTF(Zero3ConfigurationV354.HASH);out.writeLong(observationCount);out.writeBoolean(observeV354);
+                byte[] options=executive.encode();out.writeInt(options.length);out.write(options);
+                byte[] planner=plannerV354.encode();out.writeInt(planner.length);out.write(planner);
+            }
             out.flush();
             byte[] payload=buffer.toByteArray();
             CRC32 crc=new CRC32();
@@ -424,7 +507,7 @@ public final class Zero3RecurrentBrain {
      */
     public void restoreAtBoundaryV345(byte[] raw){
         if(pending||restoredV345||trainCount!=0||
-           validationCount!=0||recurrentUpdates!=0)
+           validationCount!=0||observationCount!=0||recurrentUpdates!=0)
             throw new IllegalStateException("V345 restoration only on virgin core");
         if(raw==null||raw.length<100||raw.length>CHECK_MAX_BYTES_V345)
             throw new IllegalArgumentException("V345 invalid checkpoint length");
@@ -439,7 +522,7 @@ public final class Zero3RecurrentBrain {
             DataInputStream in=new DataInputStream(
                 new ByteArrayInputStream(raw,0,tail));
             if(in.readInt()!=CHECK_MAGIC_V345||
-               in.readInt()!=(cognition!=null?353:variableClock?352:(inputs==SENSOR?CHECK_VERSION_V345:351))||
+               in.readInt()!=(executive!=null?354:cognition!=null?353:variableClock?352:(inputs==SENSOR?CHECK_VERSION_V345:351))||
                in.readInt()!=inputs||in.readInt()!=HIDDEN||
                in.readInt()!=MOTOR||in.readInt()!=ACTION)
                 throw new IllegalArgumentException(
@@ -483,6 +566,19 @@ public final class Zero3RecurrentBrain {
                 Zero3CognitionV353.Snapshot stats=decodedCognition.snapshot();
                 if(stats.train!=updates||stats.heldout!=validations)throw new IOException("V353 mixed neural generations");
             }
+            Zero3PlannerV354 decodedPlanner=null;
+            Zero3ExecutiveV354 decodedExecutive=null;long decodedObservations=0;boolean decodedObserve=false;
+            if(executive!=null){
+                if(!in.readUTF().equals(Zero3ConfigurationV354.HASH))throw new IOException("V354 configuration mismatch");
+                decodedObservations=in.readLong();decodedObserve=in.readBoolean();
+                int size=in.readInt();if(decodedObservations<0||size<100||size>120000||size>in.available())throw new IOException("V354 executive size/counters");
+                byte[] options=new byte[size];in.readFully(options);decodedExecutive=Zero3ExecutiveV354.decode(options);
+                int plannerSize=in.readInt();if(plannerSize<1||plannerSize>4096||plannerSize>in.available())throw new IOException("V354 planner blob");
+                byte[] planner=new byte[plannerSize];in.readFully(planner);decodedPlanner=Zero3PlannerV354.decode(planner);
+                Zero3ExecutiveV354.Snapshot e=decodedExecutive.snapshot();
+                if(e.decisions!=updates+validations+decodedObservations||e.train!=updates||e.validation!=validations||e.observations!=decodedObservations)
+                    throw new IOException("V354 executive generation mismatch");
+            }
             if(in.available()!=0)
                 throw new IllegalArgumentException(
                     "V345 unexpected trailing checkpoint data");
@@ -490,6 +586,7 @@ public final class Zero3RecurrentBrain {
             for(int j=0;j<dest.length;j++)
                 System.arraycopy(decoded[j],0,dest[j],0,dest[j].length);
             if(decodedCognition!=null)cognition=decodedCognition;
+            if(decodedExecutive!=null){executive=decodedExecutive;plannerV354=decodedPlanner;observationCount=decodedObservations;observeV354=decodedObserve;}
             rng=nextRng;
             trainCount=updates;validationCount=validations;
             recurrentUpdates=recurrent;

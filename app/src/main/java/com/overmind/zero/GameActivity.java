@@ -19,6 +19,9 @@ public final class GameActivity extends Activity {
     private Lab lab;
     @Override public void onCreate(Bundle b){
         super.onCreate(b);
+        if(getSharedPreferences("zero3-ui-v354",0).getBoolean("default",false)){
+            startActivity(new android.content.Intent(this,Zero3DashboardActivityV354.class));finish();return;
+        }
         getWindow().setFlags(1024,1024);
         getWindow().getDecorView().setSystemUiVisibility(5894 | 1024 | 512);
         lab=new Lab(this);setContentView(lab);
@@ -2323,7 +2326,7 @@ public final class GameActivity extends Activity {
                                     simulationRunning=false;
                                     save();saveScene();
                                     GameActivity.this.startActivity(new android.content.Intent(
-                                        GameActivity.this,Zero3LabActivityV326.class));
+                                        GameActivity.this,Zero3DashboardActivityV354.class));
                                 }).show();
                         }).show();
                     break;

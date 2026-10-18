@@ -1,0 +1,173 @@
+package com.overmind.zero;
+
+import java.io.*;
+import java.util.*;
+
+/** Learned options from actual actor intentions. No object labels, authored movement or second issuer.
+ * Online validation is explicitly separate from final independent capability certification.
+ */
+public final class Zero3ExecutiveV354 {
+    static final int CONTEXT=12,LIMIT=16;
+    static final int CANDIDATE=0,CHAMPION=1,PROBATION=2,RETIRED=3;
+    private static final class Option {
+        long id,born,blocks;int state,train,optionN,controlN,recalls,reverts,probationN;
+        final float[] context=new float[CONTEXT],policy=new float[5];
+        double optionSum,controlSum,optionSq,controlSq,optionEnergy,controlEnergy,optionHarm,controlHarm;
+    }
+    private final ArrayList<Option> options=new ArrayList<>();
+    private final float[] valueWeights=new float[CONTEXT+1];
+    private long decisions,train,validation,observations,nextId=1,goalId,goalSince,goalInterruptions;
+    private float lastEnergy,lastHarm,lastValue,informationProgress,previousPredictionError=Float.NaN;
+    private long lastPredictionValidation;
+    private int active=-1,goalAge;
+    private String ecology=new ShelterEcology().encode();
+    private float nextRoom=150f;
+    private boolean pending,usedMemory;
+    private float[] pendingContext,pendingPolicy;
+    private String reason="Nessuna intenzione osservata";
+    private static float clamp(float x){return Math.max(-1,Math.min(1,x));}
+    private static float[] context(float[] x){
+        if(x==null||x.length!=194)throw new IllegalArgumentException("V354 sensory shape");
+        float[] c=new float[CONTEXT];
+        for(int i=0;i<8;i++)c[i]=x[i];
+        c[8]=x[188];c[9]=x[189];c[10]=x[190];c[11]=(x[191]+x[192])*.5f;
+        for(float f:c)if(!Float.isFinite(f))throw new IllegalArgumentException("V354 invalid context");return c;
+    }
+    private static float distance(float[] a,float[] b){float d=0;for(int i=0;i<CONTEXT;i++){float v=a[i]-b[i];d+=v*v;}return d/CONTEXT;}
+    private float value(float[] c){float a=valueWeights[CONTEXT];for(int i=0;i<CONTEXT;i++)a+=c[i]*valueWeights[i];return clamp(a);}
+    /** Called by the sole actor after its own proposal. Returned option must be authorized there. */
+    float[] propose(float[] observation,float[] actorProposal,long decision,boolean observe){
+        if(pending||decision!=decisions)throw new IllegalStateException("V354 decision cursor");
+        float[] c=context(observation);active=-1;usedMemory=false;lastValue=value(c);
+        float nearest=.12f;
+        for(int i=0;i<options.size();i++){
+            Option o=options.get(i);float d=distance(c,o.context);
+            if(o.state==RETIRED||o.train<4||d>=nearest)continue;
+            boolean probe=Zero3ConfigurationV354.heldout(decision)&&((decision/15)&1)==1;
+            boolean recall=(o.state==CHAMPION||o.state==PROBATION)&&o.optionN>0&&
+                o.optionEnergy/o.optionN>=0&&o.optionSum/o.optionN>o.controlSum/Math.max(1,o.controlN);
+            if(probe||recall){active=i;nearest=d;}
+        }
+        float[] chosen=actorProposal.clone();
+        if(active>=0){
+            Option o=options.get(active);System.arraycopy(o.policy,0,chosen,0,5);usedMemory=true;
+            if(!observe){o.recalls++;if(goalId==o.id){goalAge++;reason="Richiamo contestuale: vantaggio misurato";}
+                else{goalId=o.id;goalSince=decision;goalAge=1;reason=o.state==CANDIDATE?"Prova candidata su dati riservati":"Opzione convalidata richiamata";}}
+        }else if(!observe){goalId=0;goalSince=decision;goalAge=1;reason="Nuova intenzione della politica GRU";}
+        pending=true;pendingContext=c;pendingPolicy=chosen.clone();return chosen;
+    }
+    String ecology(){return ecology;}
+    float nextRoom(){return nextRoom;}
+    void ecology(String state,float next){if(pending)throw new IllegalStateException("V354 ecology boundary");ecology=state;nextRoom=next;}
+    long selectedId(){return active<0?0:options.get(active).id;}
+    boolean usedMemory(){return usedMemory;}
+    void complete(float motorScore,float realEnergy,float harm,float cost,boolean heldout,boolean observe,
+                  Zero3CognitionV353.Snapshot prediction){
+        if(!pending||!Float.isFinite(motorScore)||!Float.isFinite(realEnergy)||!Float.isFinite(harm)||harm<0||!Float.isFinite(cost)||cost<0)
+            throw new IllegalStateException("V354 missing/invalid physical outcome");
+        motorScore=clamp(motorScore);pending=false;
+        if(observe){observations++;decisions++;active=-1;return;}
+        lastEnergy=realEnergy;lastHarm=harm;
+        if(heldout){
+            validation++;
+            for(int i=0;i<options.size();i++){
+                Option o=options.get(i);if(o.state==RETIRED||distance(pendingContext,o.context)>.12f)continue;
+                if(i==active){o.optionN++;o.optionSum+=motorScore;o.optionSq+=motorScore*motorScore;o.optionEnergy+=realEnergy;o.optionHarm+=harm;}
+                else if(active==-1){o.controlN++;o.controlSum+=motorScore;o.controlSq+=motorScore*motorScore;o.controlEnergy+=realEnergy;o.controlHarm+=harm;}
+                else continue;
+                o.blocks|=1L<<((decisions/64)%63);
+            }
+            if(prediction!=null&&prediction.heldout>lastPredictionValidation){
+                float e=0;int count=0;
+                for(float f:prediction.mse)if(Float.isFinite(f)){e+=f;count++;}
+                if(count>0){e/=count;informationProgress=Float.isFinite(previousPredictionError)?Math.max(0,previousPredictionError-e):0;
+                    previousPredictionError=e;lastPredictionValidation=prediction.heldout;}
+            }
+        }else{
+            train++;
+            float target=clamp(realEnergy/20),err=clamp(target-lastValue);
+            for(int i=0;i<CONTEXT;i++)valueWeights[i]=clamp(valueWeights[i]+.005f*err*pendingContext[i]);
+            valueWeights[CONTEXT]=clamp(valueWeights[CONTEXT]+.005f*err);
+            for(Option o:options)if(o.state!=RETIRED&&distance(pendingContext,o.context)<.12f&&
+                o.policy[0]*pendingPolicy[0]+o.policy[1]*pendingPolicy[1]>.8f)o.train++;
+            if(train%32==0&&options.size()<LIMIT&&motorScore>0&&harm==0){
+                Option o=new Option();o.id=nextId++;o.born=decisions;o.train=1;
+                System.arraycopy(pendingContext,0,o.context,0,CONTEXT);System.arraycopy(pendingPolicy,0,o.policy,0,5);options.add(o);
+            }
+            // Lifecycle changes occur only on TRAIN boundaries, never on validation/observe.
+            for(Option o:options)if(o.state!=RETIRED&&o.optionN>=8&&o.controlN>=8&&Long.bitCount(o.blocks)>=2){
+                double a=o.optionSum/o.optionN,b=o.controlSum/o.controlN;
+                double variance=Math.max(0,o.optionSq/o.optionN-a*a)/o.optionN+
+                    Math.max(0,o.controlSq/o.controlN-b*b)/o.controlN;
+                boolean better=a-b>Math.max(.01,2*Math.sqrt(variance))&&o.optionHarm/o.optionN<=o.controlHarm/o.controlN+.001&&
+                    o.optionEnergy/o.optionN>=o.controlEnergy/o.controlN-.02;
+                if(o.state==CANDIDATE&&better){o.state=PROBATION;o.probationN=o.optionN+o.controlN;}
+                else if(o.state==PROBATION&&o.optionN+o.controlN>=o.probationN+16){
+                    if(better)o.state=CHAMPION;else{o.state=RETIRED;o.reverts++;}
+                }else if(o.state==CHAMPION&&a<b-.02){o.state=RETIRED;o.reverts++;}
+            }
+        }
+        if(harm>0||goalAge>=4){goalInterruptions++;goalId=0;goalAge=0;reason=harm>0?"Interruzione: danno fisico osservato":"Nuova valutazione dell'opzione temporale";}
+        decisions++;active=-1;
+    }
+    public static final class Skill {
+        public final long id,born;public final int state,train,validation,controls,recalls,reverts;
+        public final float score,baseline,energy;
+        Skill(Option o){id=o.id;born=o.born;state=o.state;train=o.train;validation=o.optionN;controls=o.controlN;recalls=o.recalls;reverts=o.reverts;
+            score=o.optionN==0?Float.NaN:(float)(o.optionSum/o.optionN);baseline=o.controlN==0?Float.NaN:(float)(o.controlSum/o.controlN);
+            energy=o.optionN==0?Float.NaN:(float)(o.optionEnergy/o.optionN);}
+        public String status(){return new String[]{"CANDIDATA","CONSOLIDATA ONLINE","PROBATION A/B","SCARTATA"}[state];}
+    }
+    public static final class Snapshot {
+        public final long decisions,train,validation,observations,goalId,goalSince,interruptions;
+        public final float value,lastEnergy,lastHarm,informationProgress;public final String reason;public final Skill[] skills;
+        Snapshot(Zero3ExecutiveV354 e){decisions=e.decisions;train=e.train;validation=e.validation;observations=e.observations;
+            goalId=e.goalId;goalSince=e.goalSince;interruptions=e.goalInterruptions;value=e.lastValue;lastEnergy=e.lastEnergy;lastHarm=e.lastHarm;
+            informationProgress=e.informationProgress;reason=e.reason;skills=new Skill[e.options.size()];for(int i=0;i<skills.length;i++)skills[i]=new Skill(e.options.get(i));}
+    }
+    void appendGraphV354(Zero3NeuralGraphV354.Builder b){
+        int id=b.node(10,0,CONTEXT+1,"valore contestuale",lastValue,valueWeights,0,valueWeights.length);
+        for(int i=0;i<valueWeights.length;i++)b.edge(-2200-i,id,0,valueWeights[i]);
+    }
+    public Snapshot snapshot(){return new Snapshot(this);}
+    byte[] encode()throws IOException{
+        if(pending)throw new IOException("V354 pending option");
+        ByteArrayOutputStream b=new ByteArrayOutputStream();DataOutputStream d=new DataOutputStream(b);d.writeInt(354);
+        for(long v:new long[]{decisions,train,validation,observations,nextId,goalId,goalSince,goalInterruptions,lastPredictionValidation})d.writeLong(v);
+        d.writeInt(goalAge);for(float f:new float[]{lastEnergy,lastHarm,lastValue,informationProgress,previousPredictionError})d.writeFloat(f);
+        d.writeUTF(reason);d.writeUTF(ecology);d.writeFloat(nextRoom);for(float f:valueWeights)d.writeFloat(f);d.writeInt(options.size());
+        for(Option o:options){d.writeLong(o.id);d.writeLong(o.born);d.writeLong(o.blocks);
+            for(int v:new int[]{o.state,o.train,o.optionN,o.controlN,o.recalls,o.reverts,o.probationN})d.writeInt(v);
+            for(float f:o.context)d.writeFloat(f);for(float f:o.policy)d.writeFloat(f);
+            for(double v:new double[]{o.optionSum,o.controlSum,o.optionSq,o.controlSq,o.optionEnergy,o.controlEnergy,o.optionHarm,o.controlHarm})d.writeDouble(v);
+        }
+        d.flush();return b.toByteArray();
+    }
+    private static float finite(DataInputStream d)throws IOException{float f=d.readFloat();if(!Float.isFinite(f))throw new IOException("V354 nonfinite");return f;}
+    static Zero3ExecutiveV354 decode(byte[] raw)throws IOException{
+        if(raw==null||raw.length<100||raw.length>120000)throw new IOException("V354 executive size");
+        DataInputStream d=new DataInputStream(new ByteArrayInputStream(raw));if(d.readInt()!=354)throw new IOException("V354 executive schema");
+        Zero3ExecutiveV354 e=new Zero3ExecutiveV354();long[] v=new long[9];for(int i=0;i<v.length;i++){v[i]=d.readLong();if(v[i]<0||v[i]>100000000)throw new IOException("V354 counter");}
+        e.decisions=v[0];e.train=v[1];e.validation=v[2];e.observations=v[3];e.nextId=v[4];e.goalId=v[5];e.goalSince=v[6];e.goalInterruptions=v[7];e.lastPredictionValidation=v[8];
+        if(e.decisions!=e.train+e.validation+e.observations||e.nextId<1||e.goalSince>e.decisions)throw new IOException("V354 counters disagree");
+        e.goalAge=d.readInt();if(e.goalAge<0||e.goalAge>4)throw new IOException("V354 goal age");
+        e.lastEnergy=finite(d);e.lastHarm=finite(d);e.lastValue=finite(d);e.informationProgress=finite(d);e.previousPredictionError=d.readFloat();
+        if((!Float.isNaN(e.previousPredictionError)&&!Float.isFinite(e.previousPredictionError))||e.lastHarm<0||e.informationProgress<0)throw new IOException("V354 value evidence");
+        e.reason=d.readUTF();if(e.reason.length()>180)throw new IOException("V354 reason size");
+        e.ecology=d.readUTF();e.nextRoom=finite(d);if(e.nextRoom<0||!new ShelterEcology().restore(e.ecology))throw new IOException("V354 invalid ecology");
+        for(int i=0;i<e.valueWeights.length;i++)e.valueWeights[i]=finite(d);
+        int n=d.readInt();if(n<0||n>LIMIT)throw new IOException("V354 option capacity");
+        long last=0;
+        for(int i=0;i<n;i++){
+            Option o=new Option();o.id=d.readLong();o.born=d.readLong();o.blocks=d.readLong();
+            if(o.id<=last||o.id>=e.nextId||o.born<0||o.born>=e.decisions)throw new IOException("V354 option identity");last=o.id;
+            o.state=d.readInt();o.train=d.readInt();o.optionN=d.readInt();o.controlN=d.readInt();o.recalls=d.readInt();o.reverts=d.readInt();o.probationN=d.readInt();
+            if(o.state<0||o.state>3||o.train<1||o.optionN<0||o.controlN<0||o.recalls<0||o.reverts<0||o.probationN<0||o.optionN>e.validation||o.controlN>e.validation)throw new IOException("V354 option evidence");
+            for(int j=0;j<CONTEXT;j++)o.context[j]=finite(d);for(int j=0;j<5;j++)o.policy[j]=finite(d);
+            double[] a=new double[8];for(int j=0;j<a.length;j++){a[j]=d.readDouble();if(!Double.isFinite(a[j]))throw new IOException("V354 option moments");}
+            o.optionSum=a[0];o.controlSum=a[1];o.optionSq=a[2];o.controlSq=a[3];o.optionEnergy=a[4];o.controlEnergy=a[5];o.optionHarm=a[6];o.controlHarm=a[7];
+            if(o.optionSq<0||o.controlSq<0||o.optionHarm<0||o.controlHarm<0)throw new IOException("V354 option signs");e.options.add(o);
+        }
+        if(d.available()!=0)throw new IOException("V354 trailing bytes");return e;
+    }
+}

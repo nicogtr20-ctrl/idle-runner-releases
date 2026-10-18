@@ -116,6 +116,12 @@ public final class Zero3ContextAdhesionV319 {
             return (state>>>40)/16777216f;
         }
     }
+    void appendGraphV354(Zero3NeuralGraphV354.Builder b){
+        for(int u=0;u<16;u++){
+            int id=b.node(5,u,8,"grip sector "+u,lastCmd[u],weights,u*8,8);
+            for(int i=0;i<8;i++)b.edge(-2100-i,id,0,weights[u*8+i]);
+        }
+    }
     public void begin(){begin(false);}
     public void begin(boolean heldout){
         heldoutDecision=heldout;

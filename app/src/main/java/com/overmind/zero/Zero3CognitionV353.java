@@ -97,6 +97,13 @@ public final class Zero3CognitionV353 {
         for(int i=0;i<ACTIONS;i++)x[INPUTS+i]=clip(action[i]);x[WIDTH-1]=1;
         return x;
     }
+    float[] baselineV354(){return previousTarget.clone();}
+    float[] predictionV354(float[] observation,float[] action){
+        float[][] p=champion.predict(input(observation,action),false,null);float[] result=new float[HEADS+1];
+        for(int h=0;h<HEADS;h++)result[h]=mean(p,h);
+        float variance=0;for(int e=0;e<ENSEMBLE;e++)for(int h=0;h<3;h++){float diff=p[e][h]-result[h];variance+=diff*diff/9;}
+        result[HEADS]=(float)Math.sqrt(variance);return result;
+    }
     private static float mean(float[][] p,int h){return (p[0][h]+p[1][h]+p[2][h])/ENSEMBLE;}
     /** Select only among supplied actor proposals, with a confidence-gated one-step comparison.
      * The selected proposal's noise remains the actor's on-policy sample.
@@ -252,6 +259,18 @@ public final class Zero3CognitionV353 {
            (c.shadow==null&&(c.shadowTrains!=0||c.shadowValidations!=0))||d.available()!=0)
             throw new IOException("V353 inconsistent growth/trailing bytes");
         return c;
+    }
+    void appendGraphV354(Zero3NeuralGraphV354.Builder b){
+        for(int mode=0;mode<2;mode++){
+            Model m=mode==0?champion:shadow;if(m==null)continue;
+            for(int e=0;e<ENSEMBLE;e++){
+                int base=b.nodes.size();
+                for(int u=0;u<m.units;u++)b.node(mode==0?6:8,e*m.units+u,WIDTH,"predictor"+e+"/"+u,Float.NaN,m.in[e],u*WIDTH,WIDTH);
+                for(int h=0;h<HEADS;h++)b.node(mode==0?7:9,e*HEADS+h,m.units+1,HEAD_NAMES[h]+"/"+e,Float.NaN,m.out[e],h*(m.units+1),m.units+1);
+                for(int u=0;u<m.units;u++)for(int i=0;i<WIDTH;i++)b.edge(-1-i,base+u,0,m.in[e][u*WIDTH+i]);
+                for(int h=0;h<HEADS;h++)for(int u=0;u<=m.units;u++)b.edge(u==m.units?-1000:base+u,base+m.units+h,0,m.out[e][h*(m.units+1)+u]);
+            }
+        }
     }
     /** Trainable matrices only, excluding validation evidence and neural activity. */
     float[] weights(){
