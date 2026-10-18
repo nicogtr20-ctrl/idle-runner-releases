@@ -2,11 +2,11 @@
   "schemaVersion": 1,
   "available": true,
   "applicationId": "com.overmind.zero.ota",
-  "versionCode": 1176,
-  "versionName": "3.0-ota.358",
-  "apkUrl": "https://overmind-zero-updates.vercel.app/apk/overmind-zero-1176-483694a317f2.apk",
-  "sha256": "483694a317f2cf1974874a558631fa6353d05b846f894b63ee62997c5a73f4c5",
-  "sizeBytes": 916604,
-  "notes": "ZERO 3.0 OTA358: attivazione muscolare neurale calibrata; gioco e salvataggi invariati",
-  "publishedAt": "2026-10-18T22:32:06.859461+00:00"
+  "versionCode": 1177,
+  "versionName": "3.0-ota.359",
+  "apkUrl": "https://overmind-zero-updates.vercel.app/apk/overmind-zero-1177-e53cb4ba423e.apk",
+  "sha256": "e53cb4ba423e6e4d1c1c240e686b6e3de60d2f22f165bdf94a43f988893131f6",
+  "sizeBytes": 917596,
+  "notes": "ZERO 3.0 OTA359: interocezione corretta, danno reale distinto da fame e muscoli; gioco e salvataggi invariati",
+  "publishedAt": "2026-10-18T23:40:44.857919+00:00"
 }

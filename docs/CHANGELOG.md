@@ -738,3 +738,8 @@ Richiesta utente: APK pronta con centro decisionale rivisto attivo, conservazion
 - Calibrato solo il guadagno neurale motore V3 a 2.4; identico gioco/fisica.
 - Test fisici A/B, rinascita Android e salvataggi verificati.
 - APK firmato con il certificato originale, versione 1176, SHA-256 `483694a317f2cf1974874a558631fa6353d05b846f894b63ee62997c5a73f4c5`.
+
+## ZERO 3.0 OTA359 — 2026-10-18T23:40:44.857919+00:00
+- Danno reale rosso/ambiente nel cervello V3, distinto da consumo motorio e fame; proprio gioco/fisica invariati.
+- Test Android: rosso reale, salvataggi 358 compatibili, rinascita e altre regressioni; gain motorio 2.4 invariato.
+- APK firmato con il certificato originale, versione 1177, SHA-256 `e53cb4ba423e6e4d1c1c240e686b6e3de60d2f22f165bdf94a43f988893131f6`.
