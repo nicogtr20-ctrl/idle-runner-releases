@@ -190,7 +190,7 @@ public final class Zero3SurvivalLedgerV323 {
             for(Trace t:history)t.write(d);d.flush();return b.toByteArray();
         }
         static State decoded(byte[] bytes)throws IOException{
-            if(bytes==null||bytes.length<53||bytes.length>262144)
+            if(bytes==null||bytes.length<53||bytes.length>600053)
                 throw new IOException("invalid V323 state payload length");
             DataInputStream d=new DataInputStream(new ByteArrayInputStream(bytes));
             if(d.readInt()!=MAGIC||d.readInt()!=VERSION)
@@ -199,7 +199,7 @@ public final class Zero3SurvivalLedgerV323 {
             boolean scarcity=d.readBoolean();int n=d.readInt(),p=d.readInt(),
                 neg=d.readInt(),consumed=d.readInt();
             float basal=d.readFloat(),motor=d.readFloat(),gain=d.readFloat(),loss=d.readFloat();
-            if(n<0||n>4096||bytes.length!=53+56*n)
+            if(n<0||n>10000||bytes.length!=53+56*n)
                 throw new IOException("metabolic count/length mismatch");
             ArrayList<Trace> trace=new ArrayList<>();
             try{

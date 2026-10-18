@@ -236,12 +236,11 @@ public final class Zero3RuntimeV325 implements AutoCloseable {
     }
     public int decisions(){return next;}
     public boolean atArchiveCapacity(){
-        return next>=(segmented?Zero3SegmentedArchiveV328.MAX_DECISIONS:
-                       MAX_DURABLE_DECISIONS);
+        return next>=durableDecisionLimit();
     }
     public int durableDecisionLimit(){
-        return segmented?Zero3SegmentedArchiveV328.MAX_DECISIONS:
-                         MAX_DURABLE_DECISIONS;
+        return segmented?Zero3SegmentedArchiveV328.maxFor(
+                gruResearchV347!=null):MAX_DURABLE_DECISIONS;
     }
     /** Enable ONLY for an isolated V3 research folder; no V324 migration
      * is performed until the first valid V328 generation is durably written.

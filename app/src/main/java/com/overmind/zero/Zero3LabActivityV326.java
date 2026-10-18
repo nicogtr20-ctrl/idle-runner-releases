@@ -62,7 +62,7 @@ public final class Zero3LabActivityV326 extends Activity {
         row(root,"PAUSA E SALVA","TORNA ALLA 2.2",
              ()->stopAndSave(false),()->{stopAndSave(true);});
         addText(root,"V3 GRU64 SPERIMENTALE: replay a segmenti (V3.48), "+
-            "limite provvisorio di 3.500 decisioni per vita. "+
+            "limite di 10.000 decisioni per nuove vite GRU64 (3.500 V317). "+
             "Le prestazioni vanno ancora verificate sul Galaxy S21.",
             12,0xffffc98c);
         addText(root,"Ogni decisione = 12 passi fisici. Salvataggio automatico "+

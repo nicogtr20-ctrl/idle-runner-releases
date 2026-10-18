@@ -20,7 +20,11 @@ import java.util.*;
 public final class Zero3SegmentedArchiveV328 {
     static final int MAGIC=0x5A333238, VERSION=328, CHUNK=32;
     private static final int MAX_MANIFEST=2*1024*1024,MAX_CHUNK=2*1024*1024;
-    static final int MAX_DECISIONS=3500;
+    // The old V317 data format remains capped at its tested 3500 boundary.
+    static final int LEGACY_MAX_DECISIONS=3500;
+    // V349: Only GRU348 can store 10000 genuine consecutive decisions.
+    static final int MAX_DECISIONS=10000;
+    static int maxFor(boolean hasGru){return hasGru?MAX_DECISIONS:LEGACY_MAX_DECISIONS;}
     private static void require(boolean ok,String reason)throws IOException{
         if(!ok)throw new IOException("V328 "+reason);
     }
@@ -45,7 +49,7 @@ public final class Zero3SegmentedArchiveV328 {
                List<Zero3FullCausalExperienceV322B> experiences)throws IOException{
             require(organism!=null&&survival!=null&&room!=null&&
                     experiences!=null&&organism.nextDecision>=1&&
-                    organism.nextDecision<=MAX_DECISIONS&&
+                    organism.nextDecision<=maxFor(organism.hasGru())&&
                     survival.next==organism.nextDecision&&
                     experiences.size()==organism.nextDecision,
                     "inconsistent world/energy/replay decision");
@@ -207,12 +211,14 @@ public final class Zero3SegmentedArchiveV328 {
                 "manifest schema mismatch");
         long generation=d.readLong(),episode=d.readLong();
         int cursor=d.readInt();
-        require(generation>0&&episode>0&&cursor>0&&cursor<=MAX_DECISIONS,
+        require(generation>0&&episode>0&&cursor>0&&
+                cursor<=maxFor(schema==348),
                 "generation/cursor invalid");
         Zero3OrganismStoreV322.State organism=Zero3OrganismStoreV322.decode(
             get(d,Zero3OrganismStoreV322.MAX_STATE_BYTES));
         Zero3SurvivalLedgerV323.State survival=
-            Zero3SurvivalLedgerV323.State.decoded(get(d,262144));
+            Zero3SurvivalLedgerV323.State.decoded(
+                get(d,schema==348?600053:262144));
         Zero3RoomStateV324 room=Zero3RoomStateV324.decode(get(d,16384));
         require(organism.episodeId==episode&&organism.nextDecision==cursor&&
                 survival.next==cursor&&

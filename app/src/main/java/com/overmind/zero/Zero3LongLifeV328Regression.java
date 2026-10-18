@@ -14,6 +14,7 @@ import java.util.*;
  * benchmark, never by the actor; no motor direction or fake rewards.
  */
 public final class Zero3LongLifeV328Regression {
+    private static final boolean GRU_MODE=Boolean.getBoolean("v328.gru");
     private static final int TARGET=Integer.parseInt(
         System.getProperty("v328.target","2000"));
     private static final int STOP=TARGET/2,INTERMEDIATE=(TARGET*3)/4;
@@ -25,6 +26,7 @@ public final class Zero3LongLifeV328Regression {
     }
     private static Zero3RuntimeV325 birth()throws Exception{
         Zero3RuntimeV325 r=Zero3WorldBirthV326.create(EPISODE,SEED);
+        if(GRU_MODE)r.enableGruResearchV347();
         r.enableSegmented();
         return r;
     }
@@ -56,7 +58,9 @@ public final class Zero3LongLifeV328Regression {
                 throw new AssertionError("V329 decoded replay memory exceeded bounded cache");
         }
         yes(r.decisions()==target&&r.completeExperiences()==target&&
-            r.encoderUpdates()==target&&r.gripUpdates()==target,
+            (GRU_MODE?r.encoderUpdates()==0&&
+                r.gruLearningUpdatesV347()==target:r.encoderUpdates()==target)&&
+            r.gripUpdates()==target,
             "physics/sensory/neural authority misaligned");
     }
     private static String fingerprint(Zero3RuntimeV325 r)throws Exception{
@@ -71,6 +75,7 @@ public final class Zero3LongLifeV328Regression {
             "energyBits="+Float.floatToRawIntBits(r.energy())+"\n"+
             "material="+b.organism.materialHash()+"\n"+
             "worldRng="+r.worldRng()+"\n"+
+            "gru="+GRU_MODE+"\n"+
             "roomFoodIdentity="+r.roomFoodCanonical()+"\n"+
             "experiences="+b.records()+"\n"+
             "fullCausalDigest="+Zero3SegmentedArchiveV328.hex(sha.digest())+"\n";
@@ -94,7 +99,9 @@ public final class Zero3LongLifeV328Regression {
     static void resume(Path dir,Path out)throws Exception {
         try(Zero3RuntimeV325 r=Zero3RuntimeV325.loadSegmented(dir)){
             yes(r!=null&&r.episode()==EPISODE&&r.decisions()==STOP&&
-                r.residentFullExperiences()<=32,
+                r.residentFullExperiences()<=32&&
+                (GRU_MODE?r.gruLearningUpdatesV347()==STOP&&r.encoderUpdates()==0:
+                    r.encoderUpdates()==STOP),
                 "cold load did not restore exact authority");
             advance(r,TARGET,dir);r.saveSegmented(dir);
             evidence(out,r);
