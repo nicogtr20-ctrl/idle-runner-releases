@@ -23,6 +23,21 @@ public final class GameActivity extends Activity {
     int originalV356LifeForQA(){return lab==null?-1:lab.brain3LifeSerial;}
     int originalV356WorldZoneForQA(){return lab==null?-1:lab.episode;}
     String originalV356BrainErrorForQA(){return lab==null?"no game":lab.brain3Error;}
+    // QA probes read actual original-world physical harm, never test labels
+    // injected directly into the V3 policy or its reward function.
+    long originalV359HarmDecisionsForQA(){return lab==null||lab.brain3==null?-1:lab.brain3.damagedDecisionsV359();}
+    float originalV359PreviousDamageForQA(){return lab==null||lab.brain3==null?-1:lab.brain3.previousDamageV359();}
+    float originalV359MaxDamageForQA(){return lab==null||lab.brain3==null?-1:lab.brain3.maxVerifiedDecisionDamageV359();}
+    float originalV359ReserveForQA(){return lab==null?-1:lab.reserve;}
+    boolean originalV359SpawnPhysicalRedForQA(){
+        if(lab==null||lab.brain3==null||lab.reserve<16f)return false;
+        // The unchanged original resolveObjects().touch() computes -7 energy.
+        lab.environment.add(new UnknownWorld.Entity(lab.surface.x[0],lab.surface.y[0],1,1));
+        return true;
+    }
+    void originalV359RemovePhysicalRedForQA(){
+        if(lab!=null)lab.environment.removeIf(e->e.physicalLaw()==1);
+    }
     // QA: trigger the same original zone extension while an intention is still
     // executing. The neural LIFE identity must remain unchanged.
     boolean originalV356ExtendZoneDuringActionForQA(){
@@ -132,6 +147,10 @@ public final class GameActivity extends Activity {
         // Exactly one actor: the V3 neural transplant; original game remains the physics owner.
         Zero3OriginalBrainV356 brain3;
         String brain3Error="";
+        // Measured ONLY from the original world's red contact and weather.
+        // Reset each real simulation substep, not once per GRU decision.
+        float brain3HarmThisPhysicalFrameV359=0f;
+        float brain3MotorSpentThisPhysicalFrameV359=0f;
         // Frame-start physical positions for continuous collision detection.
         // These scratch arrays are NEVER part of ZERO's neural state/save.
         final float[] squarePrevSkinX=new float[Morphology.POINTS];
@@ -935,7 +954,9 @@ public final class GameActivity extends Activity {
                     reserve=Math.max(0,Math.min(100,reserve+delta));
                     lifeStats.contact(reserve-before); // actual clamped contact outcome
                     energyTotals.record(reserve-before,object.isRare());
-                    mortality.energyFlows(0,0,Math.max(0,before-reserve),
+                    float realContactHarm=Math.max(0f,before-reserve);
+                    brain3HarmThisPhysicalFrameV359+=realContactHarm;
+                    mortality.energyFlows(0,0,realContactHarm,
                         Math.max(0,reserve-before));
                     // Only actual physical contact, never passive hunger,
                     // determines positive/negative autobiographical valence.
@@ -1067,6 +1088,8 @@ public final class GameActivity extends Activity {
                     // immediately and again on every app relaunch.
                     if(!Float.isFinite(slice)||slice<=0f)continue;
                     if(fullSpeed)testMaxSimSeconds+=slice;
+                    brain3HarmThisPhysicalFrameV359=0f;
+                    brain3MotorSpentThisPhysicalFrameV359=0f;
                     float energyBeforeFrame=reserve;
                     float gateStart=chamber==null?0f:chamber.doorY;
                     long previousFrameGateHolds=chamber==null?0:chamber.gateHeldFrames;
@@ -1168,6 +1191,7 @@ public final class GameActivity extends Activity {
                             float actualFuel=Math.min(reserve,freshWork*8f);
                             if(actualFuel>0f){
                                 reserve-=actualFuel;
+                                brain3MotorSpentThisPhysicalFrameV359+=actualFuel;
                                 if(brain3==null)sensorMind.motorMetabolicCost(actualFuel);
                                 mortality.energyFlows(0f,actualFuel,0f,0f);
                             }
@@ -1364,6 +1388,7 @@ public final class GameActivity extends Activity {
                     if(weather.energyLoss>0){
                         float actual=Math.min(reserve,weather.energyLoss);
                         reserve-=actual;
+                        brain3HarmThisPhysicalFrameV359+=actual;
                         sensorMind.ambientDamage(actual);
                         mortality.energyFlows(0f,0f,actual,0f);
                         // Real experienced energy drain; never assign to a
@@ -1488,7 +1513,9 @@ public final class GameActivity extends Activity {
                             brain3.observed(creature,surface,symMatter,environment,
                                 chamber,reserve,worldTime,slice,
                                 Math.max(0f,symMatter.work-brain3WorkBefore),
-                                witnessedMuscleImpulse,external);
+                                witnessedMuscleImpulse,
+                                brain3MotorSpentThisPhysicalFrameV359,
+                                brain3HarmThisPhysicalFrameV359,external);
                             // Keep original HUD visual sensors refreshed but
                             // never enter the 2.2 decision/training loop.
                             sensorMind.updateBodySense(creature,surface);
