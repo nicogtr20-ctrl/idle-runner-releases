@@ -119,7 +119,7 @@ public final class Zero3DashboardActivityV354 extends Activity {
             button(content,"ESPORTA BACKUP VERIFICATO",()->document(1));button(content,"IMPORTA BACKUP IN SLOT VUOTO",()->document(2));
             button(content,"ESPORTA TELEMETRIA LOCALE",()->document(3));
             button(content,"AGGIORNA APP",()->new UpdateClient(this,this::say).checkAndInstall());
-            button(content,"APRI PROFILI STORICI 2.2",()->{pause();getSharedPreferences("zero3-ui-v354",0).edit().putBoolean("default",false).apply();startActivity(new Intent(this,GameActivity.class));finish();});
+            button(content,"TORNA AL GIOCO ORIGINALE",()->{pause();finish();});
             text(content,"I 12 slot ZERO3 sono separati dai 12 slot storici. Backup e importazione non sovrascrivono un profilo esistente. Versione configurazione354 · "+Zero3ConfigurationV354.HASH.substring(0,12)+". Salvataggio ogni32 decisioni: una chiusura forzata può perdere il tail non salvato.",12,MUTED);
         }
         if(page==8){button(content,"VERIFICA INTEGRITÀ SU CLONE DI LETTURA",()->{pause();work(()->{save();String result=profiles.status(slot);publish("Verifica archivio: "+result);});});button(content,"ESPORTA RAPPORTO DEL FRAME",()->document(3));}
