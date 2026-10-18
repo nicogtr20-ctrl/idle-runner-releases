@@ -12,6 +12,7 @@ on:
       - 'app/src/main/java/com/overmind/zero/Zero3CausalVitalBoundaryV344Regression.java'
       - 'app/src/main/java/com/overmind/zero/Zero3RecurrentBrain.java'
       - 'app/src/main/java/com/overmind/zero/Zero3RecurrentBrainCheckpointV345Regression.java'
+      - 'app/src/main/java/com/overmind/zero/Zero3GruRuntimeV347Regression.java'
       - 'app/src/main/java/com/overmind/zero/Zero3CapacityV327Regression.java'
       - 'app/src/main/java/com/overmind/zero/Zero3AndroidSessionV325.java'
       - 'app/src/main/java/com/overmind/zero/Zero3LabActivityV326.java'
