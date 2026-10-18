@@ -1,0 +1,112 @@
+# ZERO 3.0 — G3/G5 LAB V3.3: RISPOSTA MUSCOLARE CAUSALE RITARDATA
+
+**Stato:** laboratorio Java/CI sul ramo \`feature/zero30-foundation-g0-g3-20261016\`; NON attivo in gameplay, nessun salvataggio migrato, nessuna OTA V3. Data: 17 ottobre 2026 (Europe/Rome).
+
+**Lettura vincolante preventiva:** [MASTER BLUEPRINT](ZERO30_MASTER_BLUEPRINT.md), [CONTRATTO IMPLEMENTAZIONE](ZERO30_IMPLEMENTATION_CONTRACT.md), [NUOVA UI 3.0](ZERO30_UI_UX_SPEC.md), [MOTOR V3.2](ZERO30_MOTOR_V32_COST_CONSTRAINED.md), [BENCHMARK A 2.000](ZERO30_LONG_HORIZON_2000_20261017.md).
+
+**Codice:** [Zero3MotorImpulseResponseRegression.java](https://github.com/nicogtr20-ctrl/idle-runner-releases/blob/feature/zero30-foundation-g0-g3-20261016/app/src/main/java/com/overmind/zero/Zero3MotorImpulseResponseRegression.java) — [Workflow](https://github.com/nicogtr20-ctrl/idle-runner-releases/blob/feature/zero30-foundation-g0-g3-20261016/.github/workflows/zero30-foundation-qa.yml) — [PR #87 (DRAFT)](https://github.com/nicogtr20-ctrl/idle-runner-releases/pull/87).
+
+## 1. Perché questa modifica
+
+Il learner online esaminato fino a 2.000 esperienze modifica i pesi ma non conserva movimenti controllati: posture normali a 2.000: somma forward vergine **+27,970 U** vs allenato **−19,284 U**; cervello autonomo GRU, allineamento alle intenzioni congelato **+18,237 U** vs allenato **−5,059 U**. La ricerca locale V3.2 ha dato utility migliore ma 3/4 direzioni superano il limite di spreco. **Non basta aggiungere esperienze; serve un segnale di conseguenza specifico, non un reward globale.**
+
+## 2. ADR ZERO3-M33: intervento reale + coppia controllata + ritardo
+
+Il nuovo laboratorio non utilizza ricompense o traiettorie inventate. Per ogni prova:
+
+1. Genera **due istanze realmente indipendenti** del solver \`SymbioteMatterV1\` in condizioni identiche, stesso corpo a 96 punti e 74 masse, stesso comando volontario e identici parametri baseline. Registra stato preintervento.
+2. Prima di intervenire lascia entrambe evolvere per 12 frame a \`dt=.025\` secondi simulati.
+3. In una sola istanza aggiunge per 12 frame una **piccola perturbazione localizzata di un solo tipo di attuatore** (radiale/tangenziale/adesione/tensione), in cinque settori vicini con pesi scalati. Applica la perturbazione esclusivamente nell'array dei **64 comandi effettivamente consumati** dal solver; **non** sposta mai artificialmente il centro di massa e non introduce forze occulte.
+4. Dalla fine della perturbazione, continua altre **48 integrazioni fisiche** a muscoli baseline in entrambe le copie. Registra spostamento incrementale firmato durante impulso, contributo **ritardato**, distanza lorda differenziale e lavoro muscolare aggiuntivo.
+5. Calcola l'effetto relativo alla traiettoria **controfattuale effettivamente simulata in un controllo fisico indipendente**: \`delta = outcome_pulse - outcome_matched_baseline\`, non deduce il risultato dall'intenzione nominale. Queste prove gemelle sono per il LABORATORIO, **non replay immaginari per l'allenamento di ZERO nel gioco**.
+6. Addestra con regressione ridge un **modello leggero del segno/ampiezza della risposta**, condizionato su intenzione, orientamento iniziale, posizione della regione, tipo di muscolo e segno dell'intervento. Output distinti: effetto immediato, effetto ritardato, costo aggiunto. Non sono inserite coordinate delle gemme, comportamenti predefiniti o fasi di andatura.
+7. L'allenamento usa pose **0° e 90°**. Test delle previsioni e scelta sperimentale della perturbazione su pose **+45° e −45°** (tenute fuori dai fit). La scelta è fatta dal modello **prima** di leggere il risultato fisico di quella prova.
+8. Confronta heldout MSE del modello contro baseline **zero effetto** per ogni testa; registra anche un'opzione **nessun intervento** e la differenza osservata rispetto ad alternativa casuale. Nessun auto-promote nel cervello né salvataggio di skill.
+9. Test automatico su solver reale, limiti numerici, topologia, segnalazioni degli effetti negativi, compilazione Android Debug senza pubblicazione.
+10. Il laboratorio registra comunque forti limiti: stesse proprietà del mondo, niente ostacoli/gemme/storm, nessun seed ambientale indipendente, niente training online da esperienza vissuta normale, nessun model-based control di produzione. **Risolvere G3 e G5 richiederà scene nuove, seed e misure multiseme.**
+
+## 3. Metriche e criteri falsificabili
+
+Campioni previsti: 4 intenzioni × 2 pose training × 4 canali × 4 zone × 2 polarità = **256 coppie train**; stessa struttura nelle 2 pose unseen = **256 coppie heldout**. Ogni coppia ha 72 frame per istanza; **73.728 integrazioni del solver reale** complessive.
+
+**Predizioni necessarie per parlare di progresso parziale:**
+
+- MSE heldout immediate/ritardata inferiore a baseline zero, separatamente; in caso contrario il modello NON può consigliare azioni (nessuna falsa confidence).
+- Direzione e costo misurati realmente per ciascuna decisione nel laboratorio; non premiare la deformazione interna se manca locomozione netta.
+- Il vantaggio osservato delle perturbazioni suggerite dal modello va dimostrato su pose heldout senza campionare/allenare sul loro esito.
+- Verificare che il costo non annulli il beneficio; un segnale utile ma con consumo eccessivo resta competenza non promossa.
+- Per risultati del test fisico estesi: 400/1.000/2.000 decisioni precedenti restano validi come benchmark comparativo, ma non vanno attribuiti al nuovo predictor.
+- Non dichiarare «modello causalmente generalizzabile» o «ZERO sa camminare» sulla base di appena due pose di train e due pose di validation.
+
+## 4. Stato dei risultati
+
+**CI avviata:** [Workflow ZERO 3.0 sperimentale](https://github.com/nicogtr20-ctrl/idle-runner-releases/actions) su commit del ramo che introduce il modello. Scrivere di seguito il run, l'esito e ogni valore numerico dopo verifica del log. **La compilazione può essere verde anche quando il predictive gate è FALLITO**.
+
+### Risultati verificati e ADR successive
+
+### CI reali e risultato del modello corretto
+
+- **[Primo modello 22 feature — CI 38975682552 SUCCESS](https://github.com/nicogtr20-ctrl/idle-runner-releases/actions/runs/38975682552):** MSE immediate 0.005319504 (baseline zero 0.005320521); MSE ritardata 0.018453053 (zero 0.018610250). Miglioramento insufficiente, selezione vera di interventi utile in 4/8 condizioni.
+- **[Modello corretto 42 feature — CI 38975833848 SUCCESS](https://github.com/nicogtr20-ctrl/idle-runner-releases/actions/runs/38975833848):** aggiunte proiezioni geometriche **radiali/tangenziali dell'intenzione nel frame del corpo** e interazioni differenziate per ciascuno dei 4 tipi muscolari (non un filtro sul colore o un gait). Stesso dataset di 256 coppie train, 256 pose esclusivamente validation. MSE effetto immediato **0.000486950** vs baseline zero **0.005320521**; MSE effetto ritardato **0.000766748** vs baseline zero **0.018610250**. Miglioramento relativo circa **90.8% / 95.9%** sul confronto zero per l'MSE, nelle pose testate. MSE costo 0.000000000380 vs baseline zero 0.000000007780.
+- Effetto fisico: somma ampiezze risposta immediata **10.589 U**, effetto aggiuntivo accumulato **dopo la contrazione** 21.759 U nel set heldout; il secondo contributo è circa 2.05 volte il primo (somme delle ampiezze, non singola traiettoria).
+- **Selezione degli interventi:** 8/8 contesti direzione × posa testata producono incremento direzionale positivo, con lavoro aggiuntivo sotto 0.005; incremento complessivo fisicamente misurato **+4.24760 U**, lavoro addizionale **0.00120341**, utilità dopo penalizzazione costo **+4.19345**. Il singolo candidato casuale predefinito per ogni contesto ha somma firmata **+0.04763 U**; campione casuale è un riferimento esplorativo, non una distribuzione random completa.
+- **Esito ingegneristico:** il modello predittivo specializzato **supera nettamente il baseline zero su due output motori** e propone interventi utili in questa famiglia ristretta di posture. È una prima **dimostrazione di controllabilità per piccoli interventi**, non G3 superato: non sono testate vite complete, competenze persistenti, shock, diversi corpi/scene, multi-seed, ricompensa di sopravvivenza o integrazione del brain 3.0. Il predictor è attualmente **interno alla regression Java**, non modulo di produzione, e non modifica alcun peso del cervello nel gioco.
+
+**Decisione:** G3 apprendimento autonomo della locomozione **BLOCCATO**. G5 modello del mondo generale **BLOCCATO** (pur essendoci risultati positivi per la piccola testa di risposta motoria). **Nessun OTA e nessuna UI V3 simulata come implementata.**
+
+## 5. Prossimo sviluppo necessario
+
+1. Misurare esattamente cosa succede quando il modello prevede un intervento muscolare, inclusi effetti nelle 48 integrazioni successive. Correggere bias e normalizzazione se non batte baseline su holdout, senza contaminare pose tenute da parte.
+2. Integrarlo eventualmente come **modello di risposta fisica per singolo gruppo** basato su osservazioni reali, non come un secondo cervello che sceglie autonomamente mete.
+3. Produrre nuove prove con posture e urti/adesione differenti e variabilità non vista, confrontare gradienti vs perturbazione-paired e validazione a lungo termine.
+4. Solo dopo introdurre memoria procedurale, life-long learning, neurogenesi, integrazione \`GameActivity\`, persistenza schema V3 e **UI V3 realmente collegata**.
+5. Nessun merge nella branch publisher OTA né attivazione silenziosa del nuovo motore prima dei benchmark G3/G5 completi.
+
+
+## 6. Stress test di generalizzazione geometrica su SEI orientamenti non usati nel fit
+
+**[GitHub Actions fast 38976063930 — SUCCESS](https://github.com/nicogtr20-ctrl/idle-runner-releases/actions/runs/38976063930)**, commit del codice sperimentale \`05822efb4c740705514b814539e98e60c835d006\`.
+
+Rispetto ai test precedenti, questa versione ricava l'orientamento iniziale dalla **propriocezione effettiva di sei patch del mantello** confrontata con la geometria di riferimento del corpo vergine, non dall'angolo fornito al laboratorio. Verifica l'angolo così misurato entro una tolleranza di .001 rad. Le feature geometriche comprendono direzioni locali radiali e tangenziali trasformate nel mondo, il tipo di muscolo e il segno dell'intervento.
+
+**Dataset:** 256 coppie train di vere simulazioni matching baseline/intervento nelle sole posture 0° e 90°; **768 coppie heldout** a ±22,5°, ±45°, ±67,5°, mai usate per apprendere i pesi del predittore. **147.456 passi fisici del solver reale** tra esperimenti di controllo e intervento. La predizione viene usata per scegliere un intervento prima di controllare l'esito della relativa simulazione heldout.
+
+| Errore medio quadratico sulle 768 prove non usate nel training | Modello | Baseline «nessun effetto» |
+|---|---:|---:|
+| Conseguenza immediata | **0.000485641** | 0.005332185 |
+| Conseguenza ritardata | **0.000751627** | 0.018590621 |
+| Costo del muscolo | **0.000000000403** | 0.000000007742 |
+
+- Effetto immediato in valore assoluto aggregato: **30.179 U**.
+- Effetto ritardato dopo la perturbazione: **62.080 U** (circa 2.06× l'immediato).
+- 4 direzioni intenzionali × 6 pose heldout: **24/24** interventi scelti con progresso firmato positivo e costo incrementale inferiore a 0.005.
+- Progresso direzionale addizionale totale **+13.93799 U** contro singola alternativa casuale deterministica totale **+0.17049 U**; qualità penalizzata per costo **+13.76235**; lavoro muscolare incrementale totale **0.00390309**.
+- Una piccola perturbazione efficace in una prova controllata **NON** equivale a una strategia di locomozione continuativa, né a una capacità ricordata.
+
+**Risultato verificato:** il segnale senso-motorio con orientamento misurato e le interazioni muscolo/frame descrivono bene una risposta **locale e ritardata** del corpo su una famiglia di posture ruotate. È un progresso concreto sui due precedenti modelli e sulla ricostruzione del ritardo. **Gate G3 locomozione autonoma ancora BLOCCATO**: le scene hanno la stessa morfologia/materiale e non introducono urti diversi, stati di deformazione indipendenti, inerzia iniziale, energia, ostacoli, gemme, più seed o vite intere. **G5 world model completo NON superato**: è soltanto una piccola testa muscolare di risposta, non il modello del mondo unificato.
+
+**Prossima attività:** stress test di condizioni iniziali deformate e velocità preesistente prima di usare il predittore per scegliere muscoli nel gioco, quindi modulo riutilizzabile e integrazione graduale con vincoli di energia/rollback e UI V3 da vera diagnostica.
+
+
+## 7. Validazione a TRE gruppi separati (prevenzione leakage) — CI 38976457410
+
+**[GitHub Actions 38976457410 — SUCCESS](https://github.com/nicogtr20-ctrl/idle-runner-releases/actions/runs/38976457410)** su codice sperimentale \`497ad8aae0359ec231d71e418fe362973e351ce6\`. Il laboratorio è stato ulteriormente corretto perché il fit e il gate di affidabilità NON devono riutilizzare la stessa valutazione finale.
+
+Gruppi irrevocabili:
+1. **TRAIN**: 256 coppie fisiche (pose 0°, 90°), regredisce i 42 coefficienti di feature per ciascuna delle tre uscite.
+2. **CALIBRAZIONE**: 256 coppie fisiche (pose ±22,5°), serve **solo** a decidere se il modello predittivo possa suggerire candidate (soglia preregistrata: MSE almeno 10% inferiore alla baseline zero su tutte e tre le uscite).
+3. **TEST FINALE**: 512 coppie fisiche (pose ±45° e ±67,5°), **mai usate per il fit o per decidere il gate**. La selezione dell'intervento viene fatta sul risultato PREDETTO, non sul risultato fisico osservato.
+
+| MSE sulla misura reale | Calibrazione modello | Calibrazione zero | Finale modello | Finale zero |
+|---|---:|---:|---:|---:|
+| Spostamento immediato | 0.000483834 | 0.005338025 | **0.000486545** | 0.005329266 |
+| Spostamento ritardato | 0.000691119 | 0.018579312 | **0.000781880** | 0.018596275 |
+| Costo differenziale | 0.000000000238 | 0.000000007722 | **0.000000000485** | 0.000000007751 |
+
+**Gate di calibrazione: ACCEPTED_FOR_LAB_ONLY.**
+
+**Risultato FINALE non riutilizzato per selezione:** **16/16** contesti pose×intenzione con spostamento utile positivo, **16/16** rispettano limite di lavoro aggiuntivo 0.005; spostamento addizionale firmato totale **+9.09315 U**, utilità penalizzata **+8.97825**, lavoro extra **0.00255325**. Baseline di un singolo intervento predefinito per contesto: **+0.10942 U**. Questi sono risultati del laboratorio di perturbazioni locali, **non** risultati di una politica che cammina in una vita autonoma.
+
+L'effetto ritardato nella sola valutazione finale ammonta in ampiezza assoluta aggregata a **41.921 U**, contro **20.384 U** durante la contrazione. Ancora una volta è circa il doppio, confermando un marcato ritardo fisico da attribuire correttamente.
+
+**Prossimi blocchi espliciti:** variare deformazione iniziale, contatto, supporto, stato muscolare, inerzia e seed ambientali; poi modellare l'errore dovuto all'effettiva stato corporeo, consolidare competenze e aggiornare in sicurezza il cortex solo dopo prove indipendenti. **ZERO 3.0 NON è attivo nell'app, la UI 3.0 NON è implementata e G3/G5 rimangono NON superati.**

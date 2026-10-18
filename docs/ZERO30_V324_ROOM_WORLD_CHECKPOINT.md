@@ -1,0 +1,47 @@
+# ZERO 3.0 — V3.24 | Continuità della stanza, porta e identità della risorsa (laboratorio)
+
+> **Checkpoint V3.25 (17 ottobre 2026):** [rapporto tecnico](ZERO30_V325_RUNTIME_BOUNDARY.md) · [CI definitiva 39029780647 PASS](https://github.com/nicogtr20-ctrl/idle-runner-releases/actions/runs/39029780647). Primo `Zero3RuntimeV325` indipendente dal runner di regressione: unico owner di scelte/rete/cortex/adesione/gel fisico/stanza/riserva e journaling causale+snapshot, con `Zero3AndroidSessionV325` compilata per un percorso Android privato V3 non collegato a GameActivity. 25/25 vite, 96 decisioni ciascuna con riavvio a 48, confronto bytewise, terminale da energia zero e rifiuto episodi estranei/doppia corruzione, Android Debug SUCCESS. **Solo gate LAB JVM; G3 locomozione, G5 world model, G9 device e UI 3.0 NON chiusi.** OTA172 e 12 slot 2.2 non toccati.
+
+
+**17 ottobre 2026.** Ramo `feature/zero30-foundation-g0-g3-20261016`, PR #87 ancora DRAFT. Leggere prima [Master Blueprint](ZERO30_MASTER_BLUEPRINT.md), [contratto di implementazione](ZERO30_IMPLEMENTATION_CONTRACT.md), [specifiche UI](ZERO30_UI_UX_SPEC.md), [V3.22/B](ZERO30_V322B_FULL_CAUSAL_REPLAY.md) e [V3.23](ZERO30_V323_SURVIVAL_CONTINUITY.md).
+
+## Perché serve
+
+I gate di V322/B hanno dimostrato ripresa di 20 vite per neuroni, memoria PRE/POST, 96 patch, 74 particelle interne e oggetti. V323 ha aggiunto lo stato metabolico. Restava fuori la stanza `ScarcityLab`: la porta non è un semplice punto visuale. Il suo stato comprende velocità, posizione, timer di presa, memoria privata dei contatti (`gateTouchPrevious`), latch (`wasGrasping`), numerosi contatori fisici e la risorsa `room.food`, che deve riferirsi allo STESSO oggetto presente in `environment`.
+
+`GameSceneSnapshot` legacy salva un sottoinsieme dei campi della stanza: non sarebbe corretto spacciarlo per un checkpoint identico frame-per-frame. ZERO 3.0 richiede uno stato rigido versionato e transazionale.
+
+## Implementazione sperimentale sul ramo Draft
+
+- `Zero3RoomStateV324.java`: codec binario con schema per nome/tipo/dimensione di tutti i campi primitivi/array non statici di `ScarcityLab`, inclusi campi privati di contatto e memoria del solver. Ogni nuovo campo non supportato fallisce esplicitamente, anziché venire ignorato. Il serializer verifica la roundtrip e convalida i numeri. `room.food` non viene clonato indipendentemente: è obbligatorio trovare esattamente la stessa istanza nella lista degli oggetti fisici e ricostruire il riferimento nel mondo dopo il ripristino.
+- `Zero3RoomArchiveV324.java`: archivio unico versionato che contiene V323 (cervello, cortex, 64 comandi, gel, mondo, RNG del laboratorio, replay sensoriale completo ed energia) **e il checkpoint della stanza**. Manifest + payload SHA-256, due generazioni, fsync, rinomina atomica, fallback sull'ultima generazione verificata e rifiuto di doppia corruzione. Nessuna scrittura su profili 2.2.
+- `Zero3RoomRestartV324Regression.java`: nello stesso organismo aggiunge vera `ScarcityLab` e la sua risorsa all'ambiente prima di iniziare la vita, esegue 48 decisioni, salva e riapre in nuova JVM, prosegue fino a 96; una JVM di controllo compie 96 decisioni senza stop; il risultato è confrontato **byte per byte**. Il test del room snapshot è associato al medesimo checkpoint di neuroni, corpo, energia e replay. Esegue il solver della stanza e **`GripSurfaceComposition.compose` dopo**, perché altrimenti `room.solveGate` potrebbe sovrascrivere nel campo condiviso le prese ancora possedute dalla BOX.
+- `Zero3RoomMechanicsV324Regression.java`: test separato del vero `ScarcityLab.solveGate`: posiziona due patch con comandi controllati per attivare una presa bilaterale reale di laboratorio, salva la porta e i suoi timer, poi compara 8 frame di fisica senza stop contro 8 frame dopo restore. È una **fixture deterministica** e non dimostra che ZERO abbia autonomamente imparato la presa o l'apertura.
+
+## Protocollo e verifiche
+
+**Gate iniziale verificato sulla CI 39026578485**: 5 tipologie fisiche × 2 vite ciascuna (10/10 PASS; Android Debug BUILD SUCCESSFUL). **Estensione successiva, non blind originale**, a 5 tipologie × 5 vite ciascuna (25 casi, 2.400 decisioni per gruppo) nella CI del commit `a9e41f7c3e7b22d73cb8a83f8cd2e08e9ddd671d`;  ciascuna vita contiene 96 decisioni e 12 passi del gel per decisione. Passare solo se per tutte le vite:
+1. Due generazioni 24+24 decisioni, riavvio JVM alla 48, stessa vita fino a 96, test di riferimento 96 ininterrotte.
+2. Identità dello snapshot V324 completa, hash corpo e stanza, replay integrale e variabili metaboliche identici; `cmp` sui file prova.
+3. NESSUN oggetto `room.food` duplicato/orfano, checkpoint rifiutato quando il food non appartiene alla lista degli oggetti.
+4. Scena BOX mantiene la presa reale dopo composizione `GripSurfaceComposition`; portare separatamente i contatti della porta già verificati nel test meccanico.
+5. Fault-injection: payload nuovo corrotto → torna esattamente alla vecchia generazione 48 senza inventare aggiornamenti; due generazioni corrotte → fail closed.
+6. Android Debug compila, **non viene pubblicato**.
+
+[CI V3.24 del ramo sperimentale](https://github.com/nicogtr20-ctrl/idle-runner-releases/actions/workflows/zero30-v324-room-qa.yml). Riportare il numero esatto della run e il suo esito dopo verifica completa; compilazione riuscita o qualche singolo scenario non autorizza il gate.
+
+## Limiti e prossimi gate
+
+**Non è integrazione V3 live in `GameActivity`**, né aggiornamento di `GameSceneSnapshot` versione legacy. I 12 slot 2.2 sono protetti e OTA172 non si tocca. La camera nello screening multi-vita è **deliberatamente posizionata lontano dal corpo**, così si testa la persistenza con mondo multi-oggetto e senza introdurre una manipolazione artificiale del gate mentre si addestra il cervello. La meccanica dei contatti bilaterali viene verificata separatamente con due patch controllate, che non possono essere contate come abilità autonoma di ZERO.
+
+Per il futuro: adapter esplicito sul runtime GameActivity 3.0 e il suo ciclo fisico completo (room/shelter/world/metabolism/risorse), provenienza di ogni decisione ed energia/danno reali negli input neurali quando disponibili, crash/restart su Galaxy S21, più seed e scene, benchmark G3 su locomozione e presa **acquisite** contro policy vergine/frozen. G3 locomozione, G5 world model, crescita neurale e UI 3.0 rimangono aperti. Nessun merge verso main OTA e nessuna pubblicazione APK.
+
+## Evidenza intermedia 10 casi
+
+[CI 39026578485 SUCCESS](https://github.com/nicogtr20-ctrl/idle-runner-releases/actions/runs/39026578485): il test separato `REAL_GATE_PHYSICS_BILATERAL_MEMORY=PASS` ha misurato **1 evento di presa bilaterale fisica con comandi fissati dal banco**, conservando lo stesso stato dopo 8 frame; la sequenza di controllo per dieci vite (FREE/BOX/DISK/FAR/BOX+DISK × 2) ha riportato **10/10 PASS** sul confronto bytewise di snapshot neurale/gel/risorsa/stanza/metabolismo/replay, con tutti i rollback validi e Android `BUILD SUCCESSFUL`. La prima CI aveva trovato un errore reale di interazione gate+box: `room.solveGate` sovrascriveva il campo condiviso `skin.gripHold`; corretta nel banco chiamando il compositore dei proprietari `GripSurfaceComposition.compose(skin,room,world)` dopo il solver. La CI successiva è verde. **La serie da 25 è stata avviata dopo questi primi 10 risultati:** non spacciarla per holdout originario e non dichiararla PASS fino al log definitivo.
+
+## Esito definitivo V3.24 — verificato dai log GitHub Actions
+
+**[Run 39026713027 — SUCCESS](https://github.com/nicogtr20-ctrl/idle-runner-releases/actions/runs/39026713027)**, commit sperimentale `a9e41f7c3e7b22d73cb8a83f8cd2e08e9ddd671d`, job con **25** righe effettive `V324 ROOM_AND_WHOLE_ORGANISM SCENE=... PASS` (cinque casi per ciascuna delle cinque scene). `ZERO3 V324 TWENTY_FIVE_ROOM_LIVES_BITWISE_RESTART=PASS`; **Android Debug BUILD SUCCESSFUL in 51s**; test autonomo del cancelllo `REAL_GATE_PHYSICS_BILATERAL_MEMORY=PASS`, con 1 evento di presa reale generato dalla fixture e ripresa degli 8 frame successivi. `V324_GATE_ROOM_LAB=PASS GAMEACTIVITY_RUNTIME_NOT_CONNECTED G3_BLOCKED G5_BLOCKED NO_OTA`.
+
+La batteria estesa comprende **25 vite da 96 decisioni ciascuna = 2.400 decisioni per gruppo**, **28.800 reali sottopassi gel per gruppo** durante le azioni più warmup; la vita interrotta e il controllo non interrotto sono due gruppi matched, non un unico ZERO da 4.800 decisioni. Sono stati confrontati bitwise tutti i 25 risultati, compresi cervello, cortex, adesione, fisica, stanza/risorsa, stato energetico e full causal replay. I test hanno verificato 25 rollback e rifiuto di entrambe le generazioni corrotte. Il sottogate è **solo persistenza di laboratorio** con stanza lontana dall'organismo durante le vite multiscena; il test meccanico indipendente usa patch comandate dalla fixture, non autonomia di ZERO.

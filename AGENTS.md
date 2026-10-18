@@ -1,3 +1,11 @@
+# ZERO 3.0 — PRIORITÀ MASTER E CAPACITÀ APPROVATE (18/10/2026)
+
+> **REGOLA OBBLIGATORIA PRIMA DI OGNI MODIFICA:** leggere [MASTER](docs/ZERO30_MASTER_BLUEPRINT.md), [CONTRATTO](docs/ZERO30_IMPLEMENTATION_CONTRACT.md), [UI G8](docs/ZERO30_UI_UX_SPEC.md), [REGISTRO APPROVAZIONI](docs/ZERO30_VERIFIED_CAPABILITY_LEDGER_20261018.md) e [TRACKER G1–G10](docs/ZERO30_G1_G10_EXECUTION_TRACKER_20261018.md), tutti ora copiati **byte-identici dal ramo main**. Confrontare requisito→classe reale→caller V325→CI preregistrata→solo gap effettivo. Non riscrivere GRU64 V345, grip appreso V319, replay V328, o attività dimostrate; non promuovere physics V346 fallita. V348 GRU+organismo cold resume PASS; V349 GRU 4100 vita lunga PASS e capienza codec 10k PASS; V349B 10k reali recuperati nel primo run, test completo di fault in riesecuzione; V350 blocco credito duration non eseguita PASS. Tutti **gate G1–G10 ancora aperti nel complesso**: no merge, APK, OTA, nessuna alterazione 2.2 OTA172, 12 slot intatti.
+
+> **NOTA:** il testo seguente contiene release e procedure storiche precedenti al Master 3.0. Non prevale sulla documentazione canonica del progetto.
+
+---
+
 # Verified release — OTA171 / Android1171, runtime ZERO172 — 16 October 2026
 
 Published and independently downloaded from Vercel and GitHub: **0.11.6-ota.171**, code1171, `com.overmind.zero.ota`,502916 bytes. APK SHA256 `62e0b5a96916fc8005d5e21aa91de4194ba57ec8b8c1ebf6f27c5bc2a51a0bb0`; original stable certificate `45010684b4fd74de00f87fb81ca89e1e79b58409cf9fefc497b445b0fe19f583`. Both public manifests/bytes match, HTTP200; APK v2 RSA signature, signed content digest and packaged Android identity/permissions independently verified. Update with **AGGIORNA**, without uninstalling or resetting brains/slots.
