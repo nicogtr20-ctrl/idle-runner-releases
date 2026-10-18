@@ -2,11 +2,11 @@
   "schemaVersion": 1,
   "available": true,
   "applicationId": "com.overmind.zero.ota",
-  "versionCode": 1172,
-  "versionName": "0.11.6-ota.172",
-  "apkUrl": "https://overmind-zero-updates.vercel.app/apk/overmind-zero-1172-f4cebbf09007.apk",
-  "sha256": "f4cebbf09007343e956f22389364eea0fd58b160835aa10d54471e27e80d8975",
-  "sizeBytes": 503812,
-  "notes": "Aggiornamento OVERMIND ZERO verificato e firmato",
-  "publishedAt": "2026-10-16T19:43:20.550468+00:00"
+  "versionCode": 1176,
+  "versionName": "3.0-ota.358",
+  "apkUrl": "https://overmind-zero-updates.vercel.app/apk/overmind-zero-1176-483694a317f2.apk",
+  "sha256": "483694a317f2cf1974874a558631fa6353d05b846f894b63ee62997c5a73f4c5",
+  "sizeBytes": 916604,
+  "notes": "ZERO 3.0 OTA358: attivazione muscolare neurale calibrata; gioco e salvataggi invariati",
+  "publishedAt": "2026-10-18T22:32:06.859461+00:00"
 }

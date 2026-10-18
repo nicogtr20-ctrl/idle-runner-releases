@@ -733,3 +733,8 @@ Richiesta utente: APK pronta con centro decisionale rivisto attivo, conservazion
 - Pacchetto Android firmato pubblicato su Vercel (codice 1172).
 - SHA-256: `f4cebbf09007343e956f22389364eea0fd58b160835aa10d54471e27e80d8975`.
 - APK: `/apk/overmind-zero-1172-f4cebbf09007.apk`.
+
+## ZERO 3.0 OTA358 — 2026-10-18T22:32:06.859461+00:00
+- Calibrato solo il guadagno neurale motore V3 a 2.4; identico gioco/fisica.
+- Test fisici A/B, rinascita Android e salvataggi verificati.
+- APK firmato con il certificato originale, versione 1176, SHA-256 `483694a317f2cf1974874a558631fa6353d05b846f894b63ee62997c5a73f4c5`.
