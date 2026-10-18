@@ -8,7 +8,7 @@ assert match,'canonical real-world Java dependencies missing'
 files=shlex.split(match.group(1))[3:]
 java=root/'app/src/main/java/com/overmind/zero'
 files += [str(x.relative_to(root)) for x in java.glob('Zero3*.java')
-          if not any(name in x.name for name in ('AndroidSession','Activity','AtlasView'))]
+          if not any(name in x.name for name in ('AndroidSession','Activity','AtlasView','OriginalBrain'))]
 files+=['tools/qa/Zero3MuscleStrengthAuditV358.java']
 with tempfile.TemporaryDirectory(prefix='v358-physical-motor-audit-') as scratch:
     dst=pathlib.Path(scratch)
