@@ -88,5 +88,5 @@ jobs:
             sleep 10
           done
           exit 1
-      - name: Retain G4 blocker: fixed 12 step timing and absent device validation
+      - name: Retain G4 blocker for variable timing and device validation
         run: echo 'V348_GRU_FULL_SAME_LIFE_LAB_CHECKPOINT ONLY G4_G7_PARTIAL NO_G4_PROMOTION NO_OTA NO_MERGE'
