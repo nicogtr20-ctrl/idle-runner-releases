@@ -21,6 +21,7 @@ public final class Zero3DashboardActivityV354 extends Activity {
     private final ExecutorService owner=SERIAL_OWNER;
     private Zero3AndroidSessionV325 session;private Zero3ProfileStoreV354 profiles;
     private volatile boolean running,destroyed;private volatile int page;
+    private boolean initialResume=true;
     private int slot=1,documentOperation;
     private TextView header,status,facts;private LinearLayout content;private BodyCanvas body;private Zero3AtlasViewV354 atlas;
     private volatile Zero3DashboardSnapshotV354 latest;
@@ -38,7 +39,9 @@ public final class Zero3DashboardActivityV354 extends Activity {
         header=text(root,"ZERO 3.0  /  PROFILO "+slot,22,WHITE);status=text(root,"Versione candidata · prove sul Galaxy S21 da eseguire",12,MUTED);
         HorizontalScrollView horizontal=new HorizontalScrollView(this);LinearLayout nav=new LinearLayout(this);horizontal.addView(nav);root.addView(horizontal);
         for(int i=0;i<PAGES.length;i++){final int destination=i;button(nav,PAGES[i],()->showPage(destination));}
-        ScrollView scroll=new ScrollView(this);content=new LinearLayout(this);content.setOrientation(1);scroll.addView(content);root.addView(scroll,new LinearLayout.LayoutParams(-1,0,1));showPage(0);
+        ScrollView scroll=new ScrollView(this);content=new LinearLayout(this);content.setOrientation(1);scroll.addView(content);root.addView(scroll,new LinearLayout.LayoutParams(-1,0,1));
+        int pageFromOriginal=getIntent().getIntExtra("zero3_page",2);
+        showPage(pageFromOriginal<1||pageFromOriginal>=PAGES.length?2:pageFromOriginal);
         work(()->{profiles=Zero3AndroidSessionV325.profilesV354(this);session=Zero3AndroidSessionV325.profileV354(this,slot);
             try{session.resume();remember();publish("Profilo ripristinato e verificato");}catch(IOException empty){say(empty.getMessage());}});
     }
@@ -194,14 +197,39 @@ public final class Zero3DashboardActivityV354 extends Activity {
     private void document(int operation){pause();documentOperation=operation;Intent i=new Intent(operation==2?Intent.ACTION_OPEN_DOCUMENT:Intent.ACTION_CREATE_DOCUMENT);i.setType(operation==3?"application/json":"application/zip");i.addCategory(Intent.CATEGORY_OPENABLE);
         if(operation!=2)i.putExtra(Intent.EXTRA_TITLE,"ZERO3-slot"+slot+(operation==3?"-telemetria.json":"-backup.zip"));startActivityForResult(i,354);}
     @Override protected void onActivityResult(int request,int result,Intent data){super.onActivityResult(request,result,data);if(request!=354||result!=RESULT_OK||data==null||data.getData()==null)return;Uri uri=data.getData();int operation=documentOperation;
-        work(()->{save();if(operation==2){try(InputStream in=getContentResolver().openInputStream(uri)){profiles.importArchive(slot,in);}session.resume();publish("Backup importato e verificato");}
+        work(()->{if(operation!=2&&session!=null&&!session.active())session.resume();
+            save();if(operation==2){try(InputStream in=getContentResolver().openInputStream(uri)){profiles.importArchive(slot,in);}session.resume();publish("Backup importato e verificato");}
             else if(operation==1){try(OutputStream out=getContentResolver().openOutputStream(uri,"wt")){profiles.exportArchive(slot,out);}say("Backup esportato; originale conservato");}
             else{Zero3DashboardSnapshotV354 s=session.dashboardV354(false);JSONObject j=new JSONObject();j.put("schema",354);j.put("configuration",Zero3ConfigurationV354.HASH);j.put("episode",s.body.episode);j.put("decision",s.body.decisions);j.put("ticks",s.body.solverTicks);j.put("reserve",s.body.reserve);j.put("train",s.trained);j.put("validation",s.heldout);j.put("observations",s.observations);j.put("neurons",s.neurons);
                 JSONArray inputs=new JSONArray();if(s.usedInput!=null)for(float x:s.usedInput)inputs.put(x);j.put("lastRealPRE",inputs);JSONArray motor=new JSONArray();if(s.executed!=null)for(float x:s.executed)motor.put(x);j.put("lastExecuted64",motor);
                 JSONArray predictions=new JSONArray();if(s.prediction!=null)for(int h=0;h<12;h++){JSONObject p=new JSONObject();p.put("head",Zero3CognitionV353.HEAD_NAMES[h]);p.put("samples",s.prediction.heldout);p.put("mse",Float.isFinite(s.prediction.mse[h])?s.prediction.mse[h]:JSONObject.NULL);p.put("baseline",Float.isFinite(s.prediction.baselineMse[h])?s.prediction.baselineMse[h]:JSONObject.NULL);p.put("usable",s.prediction.reliable[h]);predictions.put(p);}j.put("prediction",predictions);
                 try(OutputStream out=getContentResolver().openOutputStream(uri,"wt")){out.write(j.toString(2).getBytes(java.nio.charset.StandardCharsets.UTF_8));}say("Telemetria esportata localmente su tua richiesta");}
         });}
-    @Override protected void onPause(){super.onPause();pause();}
+    /**
+     * GameActivity is now the ONLY foreground simulation. Hand back a fully
+     * persisted, closed V3 owner BEFORE the original canvas can resume.
+     * This prevents two activities from independently writing the same brain.
+     */
+    @Override protected void onPause(){
+        running=false;
+        try{
+            java.util.concurrent.Future<?> fence=owner.submit(()->{
+                if(session!=null&&session.active())try{session.suspend();}
+                catch(IOException e){throw new java.util.concurrent.CompletionException(e);}
+            });
+            fence.get(18,java.util.concurrent.TimeUnit.SECONDS);
+        }catch(Exception failure){say("V3 non salvato: "+failure.getMessage());}
+        super.onPause();
+    }
+    @Override protected void onResume(){
+        super.onResume();
+        if(initialResume){initialResume=false;return;}
+        work(()->{
+            if(session!=null&&!session.active()){
+                session.resume();publish("Checkpoint ripristinato");
+            }
+        });
+    }
     @Override protected void onDestroy(){running=false;destroyed=true;owner.execute(()->{if(session!=null)session.close();});super.onDestroy();}
     private final class BodyCanvas extends View {
         Zero3DashboardSnapshotV354 snapshot;private final Paint p=new Paint(3);private final Path outline=new Path();private float zoom=1,panX,panY,lastX,lastY;private final ScaleGestureDetector scale;
