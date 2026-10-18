@@ -11,4 +11,7 @@ if ! tar -tf /tmp/zero354-ui.tar >/dev/null 2>&1; then cat /tmp/zero354-ui.tar; 
 tar -xf /tmp/zero354-ui.tar -C /tmp/zero354-ui
 test -s /tmp/zero354-ui/qa/zero3-brain.png
 test -s /tmp/zero354-ui/qa/zero3-body.png
+if [[ "${OVERMIND_CANDIDATE_NAME:-}" == "3.0-candidate.355" ]]; then
+  test -s /tmp/zero354-ui/qa/zero3-original-game.png
+fi
 exit "$qa_status"
