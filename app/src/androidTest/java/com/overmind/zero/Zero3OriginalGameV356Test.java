@@ -7,6 +7,10 @@ import android.content.SharedPreferences;
 import android.graphics.Bitmap;
 import android.graphics.Canvas;
 import android.os.SystemClock;
+import android.app.Activity;
+import android.widget.LinearLayout;
+import android.widget.TextView;
+import org.json.JSONObject;
 import android.util.Log;
 import android.util.Base64;
 import android.view.View;
@@ -234,6 +238,104 @@ public final class Zero3OriginalGameV356Test {
             assertEquals("existing V358 saves lack old pain sensor; no reset",0f,
                 oldRead.previousDamageV359,0f);
             Log.i(TAG,"V359_PREVIOUS_DAMAGE_OLD_CHECKPOINT_COMPAT=PASS decisions="+oldRead.decisions);
+        }finally{ui(game::finish);}
+    }
+
+
+    private LinearLayout findShareCard(android.view.View root){
+        if(root instanceof LinearLayout){
+            LinearLayout group=(LinearLayout)root;
+            for(int i=0;i<group.getChildCount();i++){
+                android.view.View child=group.getChildAt(i);
+                if(child instanceof TextView&&
+                  ((TextView)child).getText().toString().contains("CONDIVIDI DATI CON GPT")&&
+                  group.hasOnClickListeners())return group;
+                LinearLayout nested=findShareCard(child);
+                if(nested!=null)return nested;
+            }
+        }else if(root instanceof android.view.ViewGroup){
+            android.view.ViewGroup group=(android.view.ViewGroup)root;
+            for(int i=0;i<group.getChildCount();i++){
+                LinearLayout found=findShareCard(group.getChildAt(i));
+                if(found!=null)return found;
+            }
+        }
+        return null;
+    }
+
+    @Test public void restoredV3ShareButtonAndGptReportCarryActualBrain()throws Exception{
+        Context context=InstrumentationRegistry.getInstrumentation().getTargetContext();
+        SharedPreferences working=context.getSharedPreferences("zero_motorbrain_001",0);
+        assertTrue(working.edit().putBoolean(SymbioteMatterV1.ENABLED,true).commit());
+        GameActivity game=launch(context);
+        try{
+            eventually("real GRU decisions for GPT telemetry",30000,()->decisions(game)>=2);
+            ui(game::finish);
+            eventually("neural profile captured before explicit GPT share",30000,()->{
+                try{
+                    return Zero3OriginalBrainV356.inspectSaved(
+                        working.getString(Zero3OriginalBrainV356.KEY,"")).decisions>=2;
+                }catch(Exception incomplete){return false;}
+            });
+            JSONObject complete=TelemetryGitHub.report(context);
+            JSONObject v3=complete.getJSONObject("zero3Summary");
+            assertTrue("Actual V3 checkpoint must validate",v3.getBoolean("checkpointValid"));
+            assertEquals(194,v3.getInt("sensoryInputs"));
+            assertEquals(64,v3.getInt("recurrentUnits"));
+            assertEquals(64,v3.getInt("muscleOutputs"));
+            assertEquals(16,v3.getInt("adhesionSectors"));
+            assertTrue(v3.getLong("completedDecisions")>=2);
+            assertEquals("Saved full GRU bytes included for GPT, not just counters",true,
+                complete.getJSONObject("currentZero").has(Zero3OriginalBrainV356.KEY));
+            assertTrue(complete.getString("gameplayBaseline").contains("ZERO 3.0"));
+            assertTrue(complete.getString("predictionDiagnostic").contains("ZERO3"));
+            // The actual content summary must survive the multipart index,
+            // because GPT can open the compact current.json before shards.
+            java.lang.reflect.Method build=TelemetryGitHub.class.getDeclaredMethod(
+                "prepare",JSONObject.class);
+            build.setAccessible(true);
+            Object archive=build.invoke(null,complete);
+            java.lang.reflect.Field indexField=archive.getClass().getDeclaredField("index");
+            indexField.setAccessible(true);
+            JSONObject index=new JSONObject((String)indexField.get(archive));
+            assertTrue(index.has("zero3Summary"));
+            assertEquals(v3.getLong("completedDecisions"),
+                index.getJSONObject("zero3Summary").getLong("completedDecisions"));
+            assertTrue(index.getJSONArray("parts").length()>0);
+            Log.i(TAG,"V360_GPT_COMPLETE_NEURAL_CHECKPOINT_AND_INDEX=PASS decisions="+
+                v3.getLong("completedDecisions"));
+
+            // Launch the REAL old-fashioned original analysis Activity, not a
+            // synthetic UI or the discarded V355 dashboard. It MUST show the
+            // old missing sharing card in the ACTIVE V3 branch.
+            Intent analysis=new Intent(context,BrainToolsActivity.class);
+            analysis.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+            Instrumentation.ActivityMonitor a=android.addMonitor(
+                BrainToolsActivity.class.getName(),null,false);
+            Activity tools=null;
+            try{
+                context.startActivity(analysis);
+                tools=android.waitForMonitorWithTimeout(a,30000);
+                assertNotNull("3.0 analysis Activity",tools);
+                final Activity shown=tools;
+                java.util.concurrent.atomic.AtomicReference<LinearLayout> card=
+                    new java.util.concurrent.atomic.AtomicReference<>();
+                ui(()->card.set(findShareCard(shown.getWindow().getDecorView())));
+                assertNotNull("V3 share button must be VISIBLE in ANALISI 3.0",card.get());
+                Instrumentation.ActivityMonitor t=android.addMonitor(
+                    TelemetryActivity.class.getName(),null,false);
+                try{
+                    ui(()->card.get().performClick());
+                    Activity exporter=android.waitForMonitorWithTimeout(t,30000);
+                    assertNotNull("V3 share must launch existing consent screen",exporter);
+                    assertTrue(exporter instanceof TelemetryActivity);
+                    ui(exporter::finish); // Never upload in tests.
+                }finally{android.removeMonitor(t);}
+                Log.i(TAG,"V360_ACTIVE_V3_ANALYSIS_SHARE_BUTTON_OPENS_GPT=PASS");
+            }finally{
+                if(tools!=null){final Activity closing=tools;ui(closing::finish);}
+                android.removeMonitor(a);
+            }
         }finally{ui(game::finish);}
     }
 
