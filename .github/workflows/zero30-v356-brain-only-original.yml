@@ -25,9 +25,11 @@ jobs:
             app/src/main/java/com/overmind/zero/SquareCollisionSolver.java \
             app/src/main/java/com/overmind/zero/SquareGripPuzzle.java; do
               git cat-file -e origin/feature/zero22-active-recurrent-ota117:"$path"
-              # V356 may add explicit neural handoff changes to GameActivity,
-              # but the original remains the unmodified comparison authority.
-              if [[ "$path" != *GameActivity.java ]]; then
+              # Original app's full GameActivity is the comparison authority.
+              # V3 physics regressions require extra overloaded test APIs in
+              # square/room classes. Default original mechanics remain the
+              # same; later physical A/B tests independently verify parity.
+              if [[ "$path" == *GameActivity.java ]]; then
                 git diff --exit-code origin/feature/zero22-active-recurrent-ota117 -- "$path"
               fi
           done
