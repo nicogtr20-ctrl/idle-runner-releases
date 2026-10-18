@@ -32,7 +32,7 @@ jobs:
           if not cmd:raise RuntimeError('production physical Java compiler list missing')
           root='app/src/main/java/com/overmind/zero/'
           names='Zero3LearningFoundation Zero3MotorResponseKernel Zero3MotorRetentionRegression Zero3MotorPromotionGate Zero3MotorImpulseResponseRegression Zero3MotorLocalFrameV310Regression Zero3SensoryFrameV315 Zero3CausalRecorderV315 Zero3SensoryContractV315Regression Zero3MotorIntentV316 Zero3AutonomousLoopV317 Zero3LearnedAdhesionV318 Zero3LearnedAdhesionV318Regression Zero3ContextAdhesionV319 Zero3ContextAdhesionV319Regression Zero3MotorHeadStoreV320 Zero3NeuralBundleStoreV321 Zero3IntegratedRestartV321Regression'
-          subprocess.run(shlex.split(cmd.group(1))+[root+x+'.java' for x in names.split()],check=True)
+          subprocess.run(["javac","-sourcepath","app/src/main/java"]+shlex.split(cmd.group(1))[1:]+[root+x+'.java' for x in names.split()],check=True)
           PY
       - name: Separate JVM trains 768 actor choices and stores joint neural state
         run: |
