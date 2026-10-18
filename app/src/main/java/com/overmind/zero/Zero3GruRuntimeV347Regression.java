@@ -49,6 +49,7 @@ public final class Zero3GruRuntimeV347Regression {
             int n=0;String reason="NONE";
             try(Zero3RuntimeV325 organism=
                     born(scenario,episode,worldSeed)){
+                long bornTicks=organism.gelTicks();
                 organism.enableGruResearchV347();
                 check(organism.display().neurons==Zero3RecurrentBrain.HIDDEN,
                     "GRU64 neuron count is actually shown");
@@ -90,7 +91,7 @@ public final class Zero3GruRuntimeV347Regression {
                 completed+=n;
                 allGru+=organism.gruLearningUpdatesV347();
                 allMotor+=organism.cortexUpdates();
-                allPhysics+=organism.gelTicks()-96;
+                allPhysics+=organism.gelTicks()-bornTicks;
                 if(n==128)full++;else faults++;
                 System.out.printf(Locale.US,
                      "V347 REAL_ACTOR scene=%d completed=%d/128 "+
@@ -100,7 +101,7 @@ public final class Zero3GruRuntimeV347Regression {
                      "fixed12stepDurationLimit=true UNPERSISTABLE=true%n",
                      scenario,n,organism.gruLearningUpdatesV347(),
                      organism.cortexUpdates(),organism.encoderUpdates(),
-                     organism.gelTicks()-96,organism.energy(),reason);
+                     organism.gelTicks()-bornTicks,organism.energy(),reason);
             }
         }
         check(actualGained>0d,
