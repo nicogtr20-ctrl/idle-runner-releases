@@ -144,6 +144,16 @@ public final class BrainToolsActivity extends Activity {
         LinearLayout stats=panel(body);
         stats.addView(label("STATISTICHE VITE  ›",17,CYAN,true));
         stats.setOnClickListener(v->startActivity(new Intent(this,StatisticsActivity.class)));
+        // OTA360: the original GPT sharing card was stranded in the
+        // unreachable V2.2 branch of showPage(). Restore it for the ACTIVE V3.
+        // This opens the existing explicit-consent private GitHub uploader;
+        // it never sends a report in the background or alters the neural brain.
+        LinearLayout shareV3=panel(body);
+        shareV3.addView(label("CONDIVIDI DATI CON GPT  ↗",17,CYAN,true));
+        paragraph(shareV3,"Invia volontariamente una copia dell'ultimo profilo: checkpoint e pesi GRU64 3.0, corteccia e presa, sensi, decisioni, vite, fisica e storico. I dati 2.2 rimasti nel profilo sono archivi, NON un secondo cervello attivo. GitHub privato.");
+        shareV3.setClickable(true);
+        shareV3.setOnClickListener(v->
+            startActivity(new Intent(this,TelemetryActivity.class)));
         LinearLayout back=panel(body);
         back.addView(label("‹  TORNA AL GIOCO",17,WHITE,true));
         back.setOnClickListener(v->finish());
