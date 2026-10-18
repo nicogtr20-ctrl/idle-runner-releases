@@ -20,7 +20,15 @@ public final class GameActivity extends Activity {
     // Android integration checks: the ACTUAL original physics owner (not V355 lab).
     boolean originalV356NeuralOwnerForQA(){return lab!=null&&lab.brain3!=null&&lab.useSymbiote;}
     long originalV356DecisionsForQA(){return lab==null||lab.brain3==null?-1:lab.brain3.decisions();}
-    int originalV356LifeForQA(){return lab==null?-1:lab.episode;}
+    int originalV356LifeForQA(){return lab==null?-1:lab.brain3LifeSerial;}
+    int originalV356WorldZoneForQA(){return lab==null?-1:lab.episode;}
+    String originalV356BrainErrorForQA(){return lab==null?"no game":lab.brain3Error;}
+    // QA: trigger the same original zone extension while an intention is still
+    // executing. The neural LIFE identity must remain unchanged.
+    boolean originalV356ExtendZoneDuringActionForQA(){
+        if(lab==null||lab.brain3==null||!lab.brain3.pending())return false;
+        lab.extendHabitat();return true;
+    }
     void originalV356ForceDeathForQA(){if(lab!=null)lab.reserve=0f;}
     @Override public void onCreate(Bundle b){
         super.onCreate(b);
@@ -148,6 +156,10 @@ public final class GameActivity extends Activity {
         float H=850,clock=0,phase=0,uiTime=0,heading=0,trailClock=0;
         float[] trailX=new float[46],trailY=new float[46];
         int trailCount=0,speed=1,episode=0;
+        // The original 'episode' is a WORLD-ZONE seed, not a life identity:
+        // extendHabitat() increases it while the same body is ALIVE.
+        // This is the actual generation, changed ONLY by resetEpisode().
+        int brain3LifeSerial=0;
         // Separate TEST MAX mode: never part of x1/x5/x20 cycling.
         // Session-only, stopped by explicit STOP, Android pause or overheating.
         boolean testMax=false;
@@ -708,6 +720,7 @@ public final class GameActivity extends Activity {
             lastFrame=0;
         }
         void resetEpisode(){
+            brain3LifeSerial++;
             // The original instant reincarnation remains authoritative.
             // Only recurrent activations reset, V3 neural weights are retained.
             if(brain3!=null)brain3.newLife();
@@ -1111,7 +1124,7 @@ public final class GameActivity extends Activity {
                     // Record efference from EXACTLY what physics receives.
                     if(useSymbiote&&symMatter!=null&&brain3!=null){
                         try{
-                            brain3.actuate(episode,creature,surface,symMatter,
+                            brain3.actuate(brain3LifeSerial,creature,surface,symMatter,
                                 environment,chamber,reserve,worldTime,slice);
                             mx=brain3.directionX();my=brain3.directionY();
                         }catch(java.io.IOException failure){
