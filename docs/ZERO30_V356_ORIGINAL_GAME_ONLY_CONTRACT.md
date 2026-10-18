@@ -9,13 +9,9 @@
 - Mai più costruire due mondi/creature, una vita a secco senza rinascita o una seconda schermata Gioco. Nessuna OTA/APK consegnata finché simulazione originale e comportamento dei menu non superano prove vere.
 
 ## Base verificata su GitHub
-Il branch `feature/zero30-brain-only-original-game` deriva dalla candidata V355 per conservare le classi cognitive sperimentali, MA ripristina byte-identici ai file originali `feature/zero22-active-recurrent-ota117`:
-1. `GameActivity.java` (originale completo, render, gioco, vite e profili).
-2. `ScarcityLab.java`.
-3. `SquareCollisionSolver.java`.
-4. `SquareGripPuzzle.java`.
+Il branch `feature/zero30-brain-only-original-game` deriva dalla candidata V355 per conservare le classi cognitive sperimentali. `GameActivity.java` è stato ripristinato **byte-identico** dalla versione originale `feature/zero22-active-recurrent-ota117` (HUD, fisica chiamante, menu, vite, salvataggi). Sono state inizialmente ripristinate anche `ScarcityLab.java`, `SquareCollisionSolver.java` e `SquareGripPuzzle.java`, ma la compilazione dei test scientifici V3 ha dimostrato che sono necessarie API aggiuntive per il laboratorio. Sono state quindi riapplicate le **overload diagnostiche V3 con flag di laboratorio disattivati nel percorso originale**. Serve ancora un test A/B dinamico di parità fisica, non va dichiarata equivalenza completa senza esso.
 
-Questi quattro file costituiscono l'invariante di compatibilità della base, NON la conclusione del trapianto. Il launcher originale torna a essere GameActivity. Il controller V355 che chiamava Zero3RuntimeV325.step() sull'Android UI thread e fermava la vita a riserva zero **è stato rimosso dalla partita**.
+Il trapianto neurale non è ancora cablato nel gameplay; questo branch non è pronto per l'installazione. Il launcher originale torna a essere GameActivity. Il controller V355 che chiamava Zero3RuntimeV325.step() sull'Android UI thread e fermava la vita a riserva zero **è stato rimosso dalla partita**.
 
 ## Contratto di trapianto (non ancora certificato)
 1. L'unico ciclo fisico deve rimanere GameActivity.Lab.onDraw()/updateHabitat()/resolveObjects()/resetEpisode(); ogni sua evoluzione deve essere un diff minimo e provato dalla versione originale.
