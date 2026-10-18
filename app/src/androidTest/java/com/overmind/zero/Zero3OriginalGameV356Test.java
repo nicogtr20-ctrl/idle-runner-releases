@@ -24,7 +24,7 @@ import static org.junit.Assert.*;
 /**
  * A live, continuously redrawn REAL game can never satisfy Espresso's
  * waitForIdle, including ActivityScenario.launch()/onActivity(). Use Android
- * Instrumentation startActivitySync and runOnMainSync directly; these perform
+ * ActivityMonitor with async startActivity and runOnMainSync; these perform
  * actual app lifecycle and physical frames but never demand animation idle.
  * Tests native GameActivity + REAL V3 learning, genuine original death/rebirth,
  * completed neural/physical checkpoint and cold Activity recreation.
@@ -71,9 +71,20 @@ public final class Zero3OriginalGameV356Test {
     private GameActivity launch(Context context){
         Intent intent=new Intent(context,GameActivity.class);
         intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK|Intent.FLAG_ACTIVITY_CLEAR_TASK);
-        GameActivity activity=(GameActivity)android.startActivitySync(intent);
-        assertNotNull(activity);
-        return activity;
+        // startActivitySync internally waits for MessageQueue idle, which a
+        // 60fps canvas game intentionally never reaches. ActivityMonitor
+        // instead observes the actual OS lifecycle without any idle fence.
+        Instrumentation.ActivityMonitor monitor=android.addMonitor(
+            GameActivity.class.getName(),null,false);
+        try{
+            context.startActivity(intent);
+            android.app.Activity created=android.waitForMonitorWithTimeout(monitor,30000);
+            assertNotNull("Original game Activity not launched",created);
+            assertTrue("Only original GameActivity may launch",created instanceof GameActivity);
+            return (GameActivity)created;
+        }finally{
+            android.removeMonitor(monitor);
+        }
     }
     @Test public void originalWorldAliveThenDeathAutomaticallyRenewsGru()throws Exception{
         Context context=InstrumentationRegistry.getInstrumentation().getTargetContext();
