@@ -2207,18 +2207,18 @@ public final class GameActivity extends Activity {
             smallChevron(c,419,top+32,true);
             String[] names={
                 "PARTITE E SALVATAGGI",
-                "ANALISI CERVELLO 2.2",
+                "ANALISI CERVELLO 3.0",
                 "STATISTICHE VITE",
-                "PESI E PARAMETRI 2.2",
+                "PESI E PARAMETRI 3.0",
                 "NEURONI 3D",
                 "ATTIVA STANZA",
                 "AGGIORNA APP"
             };
             String[] hints={
                 "Slot, carica, nuovo ZERO",
-                "Memoria, sensi, affidabilita",
+                "GRU64, sensi e apprendimento reale",
                 "Durata, eventi, medie 25 vite",
-                "Pesi reali: nucleo e muscoli",
+                "Parametri e neuroni 3.0",
                 "Moduli e connessioni reali della rete 3.0",
                 "Ambiente e cancello fisico",
                 "Controlla la prossima OTA"
