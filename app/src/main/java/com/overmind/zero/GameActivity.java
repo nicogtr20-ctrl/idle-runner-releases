@@ -31,7 +31,7 @@ public final class GameActivity extends Activity {
     boolean originalV359SpawnPhysicalRedForQA(){
         if(lab==null||lab.brain3==null||lab.reserve<16f)return false;
         // The unchanged original resolveObjects().touch() computes -7 energy.
-        lab.environment.add(new UnknownWorld.Entity(lab.creature.cx,lab.creature.cy,1,1));
+        lab.environment.add(new UnknownWorld.Entity(lab.surface.x[0],lab.surface.y[0],1,1));
         return true;
     }
     void originalV359RemovePhysicalRedForQA(){
