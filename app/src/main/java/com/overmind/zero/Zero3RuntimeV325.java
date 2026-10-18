@@ -44,6 +44,7 @@ public final class Zero3RuntimeV325 implements AutoCloseable {
     private ScarcityLab room;
     private final ShelterEcology shelterV354=new ShelterEcology();
     private float weatherLossV354,nextRoomV354=150f;
+    private boolean windDisturbanceV354;
     private final Zero3SurvivalLedgerV323 metabolism;
     private final ArrayList<Zero3OrganismStoreV322.Trace> trace;
     private List<Zero3FullCausalExperienceV322B> replay;
@@ -242,12 +243,12 @@ public final class Zero3RuntimeV325 implements AutoCloseable {
         System.arraycopy(gel.x,0,ix,10,64);System.arraycopy(gel.y,0,iy,10,64);
         Zero3CognitionV353.Snapshot p=cognitionSnapshot();
         Zero3FullCausalExperienceV322B last=next==0?null:replay.get(next-1);
-        int units=gruResearchV347==null?20:64+5+2+(gruResearchV347.variableClock()?2:0)+gruResearchV347.sensorWidth()+64+16+
+        int units=gruResearchV347==null?20+64+16:64+5+2+(gruResearchV347.variableClock()?2:0)+gruResearchV347.sensorWidth()+64+16+
             (p==null?0:p.predictiveUnits+36+(p.shadowUnits==0?0:p.shadowUnits+36))+(completionModeV354()?1:0);
         return new Zero3DashboardSnapshotV354(display(),p,executiveSnapshot(),graph&&gruResearchV347!=null?neuralGraphV354():null,
             gruResearchV347==null?null:gruResearchV347.plannerSnapshotV354(),completionModeV354()&&shelterV354.storm(metabolism.worldTimeV354()),
             completionModeV354()&&shelterV354.warning(metabolism.worldTimeV354()),completionModeV354()?shelterV354.wind(metabolism.worldTimeV354()):0,
-            completionModeV354()?shelterV354.integrity:Float.NaN,room.collisionRectanglesV354(),
+            completionModeV354()?shelterV354.integrity:Float.NaN,room.collisionRectanglesV354(),metabolism.worldTimeV354(),
             observationModeV354(),gruLearningUpdatesV347(),gruResearchV347==null?0:gruResearchV347.validations(),observationDecisionsV354(),units,
             ix,iy,skin.touchSense,skin.gripHold,skin.gripCommand,skin.touchPulse,last64,
             last==null?null:last.neuralBeforeV351(),last==null?null:last.neuralAfterV351(),jointPhysicsCountersV346());
@@ -387,8 +388,24 @@ public final class Zero3RuntimeV325 implements AutoCloseable {
         world.addAll(WorldPlacement.spawn((int)(rngState&0x7fffffff),body.cx,body.cy,metabolism.scarcity(),room,world,skin));
         HabitatContinuity.excludeRoomOverlap(world,room,body,skin);
     }
+    float[] recurrentParametersV354(){return gruResearchV347.parameterSnapshot();}
+    float[] corticalParametersV354(){return cortex.weights();}
+    float[] adhesionParametersV354(){return grip.captureAtDecisionBoundary().weights();}
+    public void inheritCompletionV354(Zero3OrganismStoreV322.State parent)throws IOException{
+        require(next==0&&gruResearchV347==null,"inherit only into a virgin physical life");
+        if(parent==null||!parent.completionModeV354())throw new IOException("V354 parent checkpoint required");
+        Zero3LearningFoundation.AdaptiveCortex oldMotor=new Zero3LearningFoundation.AdaptiveCortex();
+        Zero3ContextAdhesionV319 oldGrip=new Zero3ContextAdhesionV319(1,true);
+        parent.restoreGruModules(new Zero3AutonomousLoopV317.Encoder(1),oldMotor,oldGrip);
+        enableCompletionV354();gruResearchV347=Zero3RecurrentBrain.fromCheckpoint(parent.gruBytes()).inheritedV354(parent.episodeId,rngState);
+        cortex.inheritWeightsV354(oldMotor.weights());grip.inheritWeightsV354(oldGrip.captureAtDecisionBoundary().weights());
+        if(!shelterV354.restore(gruResearchV347.ecologyStateV354()))throw new IOException("V354 inherited structures");
+        world.removeIf(e->e!=room.food);
+        shelterV354.rehydrate(world,body.cx,body.cy,room);
+        world.addAll(WorldPlacement.spawn((int)(rngState&0x7fffffff),body.cx,body.cy,metabolism.scarcity(),room,world,skin));
+    }
     public boolean completionModeV354(){return gruResearchV347!=null&&gruResearchV347.completionModeV354();}
-    public void observationModeV354(boolean enabled){require(!inDecision&&!closed,"mode at a boundary");gruResearchV347.observingV354(enabled);}
+    public void observationModeV354(boolean enabled){require(!inDecision&&!closed&&completionModeV354(),"questa modalità richiede un profilo V354");gruResearchV347.observingV354(enabled);}
     public boolean observationModeV354(){return completionModeV354()&&gruResearchV347.observingV354();}
     public long observationDecisionsV354(){return gruResearchV347==null?0:gruResearchV347.observationsV354();}
     public Zero3ExecutiveV354.Snapshot executiveSnapshot(){return gruResearchV347==null?null:gruResearchV347.executiveSnapshot();}
@@ -407,9 +424,16 @@ public final class Zero3RuntimeV325 implements AutoCloseable {
                           jointUnresolvedV346};
     }
     private void physics(float[] motors,float intendedAdhesion){
-        weatherLossV354=0;
+        weatherLossV354=0;windDisturbanceV354=false;
         if(completionModeV354()){
             float time=metabolism.worldTimeV354();
+                room.reachedEnergy|=room.food.consumed;
+                if(room.reachedEnergy&&metabolism.worldTimeV354()>=nextRoomV354&&!HabitatContinuity.roomOccupied(room,body,skin)){
+                    ScarcityLab fresh=HabitatContinuity.clearChamber(body.cx,body.cy,world);
+                    if(fresh!=null){world.remove(room.food);room=fresh;world.add(room.food);nextRoomV354=metabolism.worldTimeV354()+150f;}
+                    else nextRoomV354=metabolism.worldTimeV354()+8f;
+                }
+
             if((int)((time+DT)/13f)>(int)(time/13f)){
                 shelterV354.capture(world);HabitatContinuity.pruneDistant(world,body,skin,room.food,600f);
                 shelterV354.rehydrate(world,body.cx,body.cy,room);rngState=nextRng(rngState);
@@ -451,7 +475,7 @@ public final class Zero3RuntimeV325 implements AutoCloseable {
                 object.x=x;object.y=y;object.vx=object.vy=0;
             }
         }
-        if(completionModeV354())ShelterEcology.separateBoxes(world);
+        if(completionModeV354()){ShelterEcology.separateBoxes(world);for(UnknownWorld.Entity box:world)if(box.isBilateralBox())SquareGripPuzzle.uncover(box,world);}
         if(jointPhysicsResearchV346){
             // MUST be last (including gate + grip composition + box tick).
             for(UnknownWorld.Entity object:world)
@@ -482,7 +506,7 @@ public final class Zero3RuntimeV325 implements AutoCloseable {
         }
         if(completionModeV354()){
             ShelterEcology.Exposure weather=shelterV354.step(body,skin,world,room,metabolism.worldTimeV354()+DT,DT);
-            weatherLossV354=weather.energyLoss;
+            weatherLossV354=weather.energyLoss;windDisturbanceV354=weather.active&&weather.exposedFraction>0;
         }
         require(gel.invalid==0,"invalid physical gel after solver");
     }
@@ -536,7 +560,7 @@ public final class Zero3RuntimeV325 implements AutoCloseable {
             }
             Zero3MotorIntentV316 intent=authority.issue(
                 gruResearchV347==null?OWNER:OWNER_GRU_V347,n,
-                (int)cortex.revision(),325,choice[0],choice[1],
+                (int)cortex.revision(),completionModeV354()?354:325,choice[0],choice[1],
                 choice[2],choice[3],plannedSteps*DT,completionModeV354()?gruResearchV347.measuredConfidenceV354():.35f);
             Zero3LearningFoundation.MotorIntent motor=
                 new Zero3LearningFoundation.MotorIntent(
@@ -553,6 +577,8 @@ public final class Zero3RuntimeV325 implements AutoCloseable {
             long actions=0xcbf29ce484222325L;
             ArrayList<float[]> efferences=new ArrayList<>();
             ArrayList<Float> costs=new ArrayList<>();
+            long repairsBefore=jointRepairedV346;
+            float ambientDebit=0;int disturbanceMask=0;
             double work=0d;
             int gripFrames=0,bilateral=0,actualSteps=0,interruption=0;
             float[] last=null;
@@ -573,11 +599,13 @@ public final class Zero3RuntimeV325 implements AutoCloseable {
                 costs.add(actualCost);work+=actualCost;
                 float damageBefore=metabolism.damagedEnergy();
                 metabolism.physicalStep(DT,actualCost,body,skin,world,weatherLossV354);
+                ambientDebit+=metabolism.weatherDebitV354();if(windDisturbanceV354)disturbanceMask|=1;
                 boolean newlyHarmed=metabolism.damagedEnergy()>damageBefore;
-                coordinator.observe(body,DT,actualCost,
-                    Math.max(0f,gel.lastMuscleReactionImpulse),false,false);
+                if(completionModeV354())coordinator.observeWithDisturbanceV354(body,DT,actualCost,
+                    Math.max(0f,gel.lastMuscleReactionImpulse),windDisturbanceV354?1:0);
+                else coordinator.observe(body,DT,actualCost,Math.max(0f,gel.lastMuscleReactionImpulse),false,false);
                 UnknownWorld.Entity box=firstBox();
-                grip.observe(skin,box,actualCost);
+                if(completionModeV354())grip.observeWorldV354(skin,world,room,actualCost);else grip.observe(skin,box,actualCost);
                 boolean held=false;
                 for(int patch=0;patch<Morphology.POINTS;patch++){
                     if(skin.gripHold[patch]>=Morphology.GRIP_HOLD){
@@ -629,7 +657,7 @@ public final class Zero3RuntimeV325 implements AutoCloseable {
             }
             if(cognitive){
                 record=completionModeV354()?Zero3FullCausalExperienceV322B.withModeV354(record,observe?2:heldout?1:0,
-                    new float[]{motor.x,motor.y,motor.effort,motor.adhesion,motor.duration},selectedOption):
+                    new float[]{motor.x,motor.y,motor.effort,motor.adhesion,motor.duration},selectedOption,motor.revision,(int)(jointRepairedV346-repairsBefore),ambientDebit,disturbanceMask|((jointRepairedV346>repairsBefore)?4:0)):
                     Zero3FullCausalExperienceV322B.withPartitionV353(record,heldout);
                 gruResearchV347.physicalTargetsV353(Zero3CognitionV353.targets(unifiedBefore.neural(),
                     unifiedAfter.neural(),lastVitalOutcome,actualSteps*DT),heldout);
@@ -641,14 +669,9 @@ public final class Zero3RuntimeV325 implements AutoCloseable {
                     unified?unifiedAfter.neural():Zero3GruSensoryV347.after(after,lastVitalOutcome),
                     lastVitalOutcome.netEnergy,false);
             if(completionModeV354()){
-                gruResearchV347.completeExecutiveV354(result.score,lastVitalOutcome.netEnergy,lastVitalOutcome.actualDamage,(float)work,heldout);
-                room.reachedEnergy|=room.food.consumed;
-                if(room.reachedEnergy&&metabolism.worldTimeV354()>=nextRoomV354&&!HabitatContinuity.roomOccupied(room,body,skin)){
-                    ScarcityLab fresh=HabitatContinuity.clearChamber(body.cx,body.cy,world);
-                    if(fresh!=null){world.remove(room.food);room=fresh;world.add(room.food);nextRoomV354=metabolism.worldTimeV354()+150f;}
-                    else nextRoomV354=metabolism.worldTimeV354()+8f;
-                }
+                gruResearchV347.completeExecutiveV354(result.score,lastVitalOutcome.netEnergy,lastVitalOutcome.actualDamage,(float)work,heldout,result.physicalEvidence&&!result.externalCorrection&&!result.censored);
                 gruResearchV347.ecologyStateV354(shelterV354.encode(),nextRoomV354);
+                gruResearchV347.repairCountersV354(jointPhysicsCountersV346());
             }
             trace.add(event);
             replay.add(record);
@@ -773,6 +796,7 @@ public final class Zero3RuntimeV325 implements AutoCloseable {
                 if(restoredGru.completionModeV354()){
                     if(!result.shelterV354.restore(restoredGru.ecologyStateV354()))throw new IOException("V354 ecology restore rejected");
                     result.nextRoomV354=restoredGru.nextRoomV354();
+                    long[] repairs=restoredGru.repairCountersV354();result.jointAttemptsV346=repairs[0];result.jointRepairedV346=repairs[1];result.jointUnresolvedV346=repairs[2];
                 }
             }else s.restoreModules(result.encoder,result.cortex,result.grip);
             require((s.hasGru()?result.encoder.updates()==0&&

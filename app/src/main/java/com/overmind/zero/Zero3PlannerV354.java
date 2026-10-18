@@ -12,7 +12,11 @@ public final class Zero3PlannerV354 {
     private final double[][] error=new double[2][12],baselineError=new double[2][12];
     private final long[] count=new long[2];
     private float[] observation,hidden,prediction,baseline;
-    private int age;private long start,uses;
+    private int age,predictiveUnits;private long start,uses;
+    void topology(int units){
+        if(predictiveUnits!=0&&predictiveUnits!=units){clear();for(int i=0;i<2;i++){count[i]=0;java.util.Arrays.fill(error[i],0);java.util.Arrays.fill(baselineError[i],0);}}
+        predictiveUnits=units;
+    }
     boolean trusted(int horizon){
         int i=horizon-2;if(i<0||i>1||count[i]<64)return false;
         for(int h=0;h<3;h++)if(baselineError[i][h]<1e-7||error[i][h]>=baselineError[i][h]*.9)return false;
@@ -57,7 +61,7 @@ public final class Zero3PlannerV354 {
     }
     public Snapshot snapshot(){return new Snapshot(this);}
     byte[] encode()throws IOException{
-        ByteArrayOutputStream b=new ByteArrayOutputStream();DataOutputStream d=new DataOutputStream(b);d.writeInt(354);d.writeLong(uses);
+        ByteArrayOutputStream b=new ByteArrayOutputStream();DataOutputStream d=new DataOutputStream(b);d.writeInt(354);d.writeLong(uses);d.writeInt(predictiveUnits);
         for(int i=0;i<2;i++){d.writeLong(count[i]);for(int h=0;h<12;h++){d.writeDouble(error[i][h]);d.writeDouble(baselineError[i][h]);}}
         d.writeInt(age);d.writeLong(start);
         if(age>0)for(float[] a:new float[][]{observation,hidden,prediction,baseline})for(float v:a)d.writeFloat(v);
@@ -65,7 +69,7 @@ public final class Zero3PlannerV354 {
     }
     static Zero3PlannerV354 decode(byte[] raw)throws IOException{
         if(raw==null||raw.length>4096)throw new IOException("V354 planner size");DataInputStream d=new DataInputStream(new ByteArrayInputStream(raw));if(d.readInt()!=354)throw new IOException("V354 planner schema");
-        Zero3PlannerV354 p=new Zero3PlannerV354();p.uses=d.readLong();if(p.uses<0)throw new IOException("V354 planner uses");
+        Zero3PlannerV354 p=new Zero3PlannerV354();p.uses=d.readLong();if(p.uses<0)throw new IOException("V354 planner uses");p.predictiveUnits=d.readInt();if(p.predictiveUnits<0||p.predictiveUnits>60)throw new IOException("V354 planner topology");
         for(int i=0;i<2;i++){p.count[i]=d.readLong();if(p.count[i]<0)throw new IOException("V354 planner samples");for(int h=0;h<12;h++){
             p.error[i][h]=d.readDouble();p.baselineError[i][h]=d.readDouble();if(!Double.isFinite(p.error[i][h])||!Double.isFinite(p.baselineError[i][h])||p.error[i][h]<0||p.baselineError[i][h]<0)throw new IOException("V354 planner evidence");}}
         p.age=d.readInt();p.start=d.readLong();if(p.age<0||p.age>2||p.start<0)throw new IOException("V354 planner cursor");

@@ -37,6 +37,10 @@ public final class Zero3AndroidSessionV325 implements AutoCloseable {
         if(session!=null||organism==null||organism.decisions()!=0||Zero3SegmentedArchiveV328.hasAny(directory))throw new IOException("V354 use an empty profile");
         organism.enableCompletionV354();startNew(organism);
     }
+    public synchronized void startInheritedV354(Zero3RuntimeV325 organism,Zero3OrganismStoreV322.State parent)throws IOException{
+        if(session!=null||organism==null||organism.decisions()!=0||Zero3SegmentedArchiveV328.hasAny(directory))throw new IOException("V354 empty child profile required");
+        organism.inheritCompletionV354(parent);startNew(organism);
+    }
     public synchronized Zero3DashboardSnapshotV354 dashboardV354(boolean graph)throws IOException{
         if(session==null)throw new IOException("Profilo non attivo");return session.dashboardV354(graph);
     }

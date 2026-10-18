@@ -131,10 +131,21 @@ public final class Zero3RecurrentBrain {
     public void observingV354(boolean enabled){if(executive==null||pending)throw new IllegalStateException("V354 boundary required");observeV354=enabled;}
     public Zero3ExecutiveV354.Snapshot executiveSnapshot(){return executive==null?null:executive.snapshot();}
     void enableExecutiveV354(){if(cognition==null||pending||trainCount+validationCount!=0||executive!=null)throw new IllegalStateException("V354 fresh cognition required");executive=new Zero3ExecutiveV354();plannerV354=new Zero3PlannerV354();}
-    void completeExecutiveV354(float motor,float energy,float harm,float cost,boolean heldout){
+    void completeExecutiveV354(float motor,float energy,float harm,float cost,boolean heldout,boolean motorEvidence){
         if(executive==null)throw new IllegalStateException("V354 unavailable");
-        executive.complete(motor,energy,harm,cost,heldout,observeV354,cognition.snapshot());
+        executive.complete(motor,energy,harm,cost,heldout,observeV354,cognition.snapshot(),motorEvidence);
     }
+    Zero3RecurrentBrain inheritedV354(long parentEpisode,long seed)throws IOException{
+        if(executive==null||pending)throw new IOException("V354 completed parent required");
+        Zero3RecurrentBrain child=new Zero3RecurrentBrain(inputs,true);child.enableCognitionV353();child.enableExecutiveV354();
+        float[][] source={wz,wr,wn,actor,critic[0],critic[1],world,targetCritic[0],targetCritic[1]};
+        float[][] target={child.wz,child.wr,child.wn,child.actor,child.critic[0],child.critic[1],child.world,child.targetCritic[0],child.targetCritic[1]};
+        for(int i=0;i<source.length;i++)System.arraycopy(source[i],0,target[i],0,source[i].length);
+        child.cognition=cognition.inheritedV354();child.executive=executive.inherited(parentEpisode);child.rng=rng^seed;if(child.rng==0)child.rng=0x354ABCDEFL;
+        return child;
+    }
+    long[] repairCountersV354(){return executive.repairs();}
+    void repairCountersV354(long[] counters){executive.repairs(counters);}
     String ecologyStateV354(){return executive.ecology();}
     float nextRoomV354(){return executive.nextRoom();}
     void ecologyStateV354(String state,float next){executive.ecology(state,next);}
@@ -212,6 +223,7 @@ public final class Zero3RecurrentBrain {
         }
         int selected=cognition==null?0:cognition.select(x,options);
         if(plannerV354!=null){
+            plannerV354.topology(cognition.snapshot().predictiveUnits);
             boolean ready=validationCount>=64&&heldoutModelError<heldoutBaselineError*.9f&&cognition.trusted(0)&&cognition.trusted(1)&&cognition.trusted(2);
             int planned=plannerV354.select(x,decisionState,options,modelV354(),ready);if(planned>=0)selected=planned;
         }
@@ -252,7 +264,10 @@ public final class Zero3RecurrentBrain {
     };}
     void appendGraphV354(Zero3NeuralGraphV354.Builder b){
         int stride=inputs+HIDDEN+1;
-        for(int u=0;u<HIDDEN;u++)b.node(0,u,stride*3,"GRU "+u,state[u],wn,u*stride,stride);
+        for(int u=0;u<HIDDEN;u++){
+            float[] gates=new float[stride*3];System.arraycopy(wz,u*stride,gates,0,stride);System.arraycopy(wr,u*stride,gates,stride,stride);System.arraycopy(wn,u*stride,gates,2*stride,stride);
+            b.node(0,u,stride,"GRU "+u+" Z/R/N",state[u],gates,0,gates.length);
+        }
         for(int gate=0;gate<3;gate++){
             float[] w=gate==0?wz:gate==1?wr:wn;
             for(int u=0;u<HIDDEN;u++)for(int i=0;i<stride;i++)b.edge(i>=inputs&&i<inputs+HIDDEN?i-inputs:-1-i,u,gate,w[u*stride+i]);

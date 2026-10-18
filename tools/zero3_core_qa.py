@@ -22,6 +22,7 @@ def main():
     parser.add_argument('--variable-clock', action='store_true')
     parser.add_argument('--cognitive', action='store_true')
     parser.add_argument('--completion', action='store_true')
+    parser.add_argument('--independent', action='store_true')
     parser.add_argument('--long-life', type=int, default=2000)
     args = parser.parse_args()
     if args.long_life < 2000 or args.long_life > 10000:
@@ -46,6 +47,8 @@ def main():
                      'Zero3UnifiedSensoryV351Regression', 'Zero3VariableClockV352Regression',
                      'Zero3CognitionV353Regression','Zero3CompletionV354Regression','Zero3ConstraintReplayV354Regression','Zero3JointV354Regression'):
             run('java', '-Xmx1536m', '-cp', classes, 'com.overmind.zero.' + name)
+        if args.independent:
+            run('java','-Xmx1536m','-cp',classes,'com.overmind.zero.Zero3IndependentV354Regression')
         options = ['java', '-Xmx1536m', '-Dv328.gru=true', '-Dv351.unified=true',
                    '-Dv352.variable=' + str(args.variable_clock).lower(),
                    '-Dv353.cognitive=' + str(args.cognitive).lower(),

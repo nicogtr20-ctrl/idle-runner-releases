@@ -5,8 +5,8 @@ import java.util.*;
 /** Immutable diagnostic graph. Negative sources denote input ports, not neurons. */
 public final class Zero3NeuralGraphV354 {
     public static final class Node {
-        public final int id,module,index,inputs;public final String name;public final float activity,norm;
-        Node(int id,int module,int index,int inputs,String name,float activity,float norm){this.id=id;this.module=module;this.index=index;this.inputs=inputs;this.name=name;this.activity=activity;this.norm=norm;}
+        public final int id,module,index,inputs;public final String name;public final float activity,norm;public final float[] parameters;
+        Node(int id,int module,int index,int inputs,String name,float activity,float norm,float[] parameters){this.parameters=parameters.clone();this.id=id;this.module=module;this.index=index;this.inputs=inputs;this.name=name;this.activity=activity;this.norm=norm;}
     }
     public static final class Edge {
         public final int source,target,gate;public final float weight;
@@ -20,11 +20,11 @@ public final class Zero3NeuralGraphV354 {
         final ArrayList<Node> nodes=new ArrayList<>();final ArrayList<Edge> edges=new ArrayList<>();long synapses;
         int node(int module,int index,int inputs,String name,float activity,float[] weights,int offset,int length){
             double sq=0;for(int i=0;i<length;i++)sq+=weights[offset+i]*weights[offset+i];
-            int id=nodes.size();nodes.add(new Node(id,module,index,inputs,name,activity,(float)Math.sqrt(sq)));return id;
+            int id=nodes.size();nodes.add(new Node(id,module,index,inputs,name,activity,(float)Math.sqrt(sq),java.util.Arrays.copyOfRange(weights,offset,offset+length)));return id;
         }
         void edge(int source,int target,int gate,float weight){
             if(!Float.isFinite(weight))throw new IllegalStateException("V354 invalid graph weight");
-            synapses++;if(Math.abs(weight)>=.04f&&edges.size()<1400&&moduleEdges[nodes.get(target).module]<140){edges.add(new Edge(source,target,gate,weight));moduleEdges[nodes.get(target).module]++;}
+            synapses++;if(source>=0&&Math.abs(weight)>=.04f&&edges.size()<1400&&moduleEdges[nodes.get(target).module]<140){edges.add(new Edge(source,target,gate,weight));moduleEdges[nodes.get(target).module]++;}
         }
         Zero3NeuralGraphV354 build(){return new Zero3NeuralGraphV354(this);}
     }

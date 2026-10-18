@@ -97,6 +97,14 @@ public final class Zero3CognitionV353 {
         for(int i=0;i<ACTIONS;i++)x[INPUTS+i]=clip(action[i]);x[WIDTH-1]=1;
         return x;
     }
+    Zero3CognitionV353 inheritedV354(){
+        Zero3CognitionV353 child=new Zero3CognitionV353();child.champion=new Model(champion.units,353);
+        for(int e=0;e<ENSEMBLE;e++){
+            System.arraycopy(champion.in[e],0,child.champion.in[e],0,champion.in[e].length);
+            System.arraycopy(champion.out[e],0,child.champion.out[e],0,champion.out[e].length);
+        }
+        child.growthAccepted=growthAccepted;child.growthRejected=growthRejected;return child;
+    }
     float[] baselineV354(){return previousTarget.clone();}
     float[] predictionV354(float[] observation,float[] action){
         float[][] p=champion.predict(input(observation,action),false,null);float[] result=new float[HEADS+1];

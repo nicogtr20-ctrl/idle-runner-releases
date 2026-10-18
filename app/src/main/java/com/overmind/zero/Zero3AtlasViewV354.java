@@ -29,7 +29,7 @@ public final class Zero3AtlasViewV354 extends View {
         }
         p.setStrokeWidth(1);
         for(Zero3NeuralGraphV354.Edge e:graph.edges)if(e.source>=0&&visible(e.source)&&visible(e.target)){
-            p.setColor(e.weight>=0?0x5551d4dc:0x55ac7cff);c.drawLine(sx[e.source],sy[e.source],sx[e.target],sy[e.target],p);
+            p.setColor(e.weight>=0?0x5551d4dc:0x55ac7cff);if(e.source==e.target){p.setStyle(Paint.Style.STROKE);c.drawCircle(sx[e.source]+5,sy[e.source]-5,7,p);p.setStyle(Paint.Style.FILL);}else c.drawLine(sx[e.source],sy[e.source],sx[e.target],sy[e.target],p);
         }
         for(Zero3NeuralGraphV354.Node n:graph.nodes)if(visible(n.id)){
             float activation=Float.isFinite(n.activity)?Math.min(1,Math.abs(n.activity)):0;
@@ -51,6 +51,19 @@ public final class Zero3AtlasViewV354 extends View {
             if(!scale.isInProgress()){if(e.getPointerCount()>1){panX+=dx;panY+=dy;}else{yaw+=dx*.008f;pitch+=dy*.008f;}}lastX=e.getX();lastY=e.getY();invalidate();return true;}
         if(e.getActionMasked()==MotionEvent.ACTION_UP){getParent().requestDisallowInterceptTouchEvent(false);if(!dragged&&graph!=null){selected=-1;float best=30*30;
             for(Zero3NeuralGraphV354.Node n:graph.nodes)if(visible(n.id)){float d=(sx[n.id]-e.getX())*(sx[n.id]-e.getX())+(sy[n.id]-e.getY())*(sy[n.id]-e.getY());if(d<best){selected=n.id;best=d;}}
+            
+            if(selected>=0){Zero3NeuralGraphV354.Node node=graph.nodes[selected];StringBuilder weights=new StringBuilder("Unità "+node.id+" · "+graph.modules[node.module]+"\nIngressi "+node.inputs+" (bias incluso)\n");
+                for(int i=0;i<node.parameters.length;i++)weights.append("\n").append(node.module==0?new String[]{"Z","R","N"}[i/node.inputs]+" ":"").append(i%node.inputs).append(": ").append(String.format(Locale.ITALY,"%.6f",node.parameters[i]));
+                new android.app.AlertDialog.Builder(getContext()).setTitle(node.name).setMessage(weights.toString()).setPositiveButton("CHIUDI",null).show();
+            }else{
+                Zero3NeuralGraphV354.Edge nearest=null;float bestEdge=12;
+                for(Zero3NeuralGraphV354.Edge edge:graph.edges)if(edge.source>=0&&visible(edge.source)&&visible(edge.target)){
+                    float ax=sx[edge.source],ay=sy[edge.source],bx=sx[edge.target],by=sy[edge.target],dx=bx-ax,dy=by-ay;
+                    float length=dx*dx+dy*dy;if(length<1)continue;float t=Math.max(0,Math.min(1,((e.getX()-ax)*dx+(e.getY()-ay)*dy)/length));
+                    float d=(float)Math.hypot(e.getX()-(ax+t*dx),e.getY()-(ay+t*dy));if(d<bestEdge){bestEdge=d;nearest=edge;}
+                }
+                if(nearest!=null)new android.app.AlertDialog.Builder(getContext()).setTitle("Connessione reale").setMessage("Origine #"+nearest.source+" → destinazione #"+nearest.target+"\nGate "+nearest.gate+"\nPeso "+nearest.weight).setPositiveButton("CHIUDI",null).show();
+            }
             performClick();invalidate();}return true;}return true;
     }
     @Override public boolean performClick(){super.performClick();return true;}

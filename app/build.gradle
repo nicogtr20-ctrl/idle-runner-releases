@@ -1,6 +1,7 @@
 plugins { id 'com.android.application' }
 def stableSigningFile = System.getenv('OVERMIND_KEYSTORE_FILE')
 def ciBuildNumber = System.getenv('OVERMIND_BUILD_NUMBER')
+def candidateName = System.getenv('OVERMIND_CANDIDATE_NAME')
 android {
   namespace 'com.overmind.zero'
   compileSdk 35
@@ -10,7 +11,7 @@ android {
     targetSdk 35
     testInstrumentationRunner 'androidx.test.runner.AndroidJUnitRunner'
     versionCode(ciBuildNumber ? 1000 + ciBuildNumber.toInteger() : 4)
-    versionName(ciBuildNumber ? "0.11.6-ota.${ciBuildNumber}" : '0.11.6-ota')
+    versionName(candidateName ? candidateName : ciBuildNumber ? "0.11.6-ota.${ciBuildNumber}" : '0.11.6-ota')
   }
   signingConfigs {
     if (stableSigningFile) {

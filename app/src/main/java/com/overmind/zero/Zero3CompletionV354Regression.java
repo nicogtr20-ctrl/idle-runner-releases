@@ -39,6 +39,20 @@ public final class Zero3CompletionV354Regression {
             yes(Arrays.equals(reference,Zero3OrganismStoreV322.encode(resumed.segmentedSnapshot().organism)),"V354 cold restore differs");resumed.saveSegmented(profiles.profile(1));
         }
         profiles.status(12); // An opened but empty directory remains a valid destination.
+        Zero3SegmentedArchiveV328.Bundle parent=new Zero3SegmentedArchiveV328(profiles.profile(1)).load();
+        byte[] parentBytes=Zero3OrganismStoreV322.encode(parent.organism);
+        Zero3RecurrentBrain parentBrain=Zero3RecurrentBrain.fromCheckpoint(parent.organism.gruBytes());
+        Zero3LearningFoundation.AdaptiveCortex parentMotor=new Zero3LearningFoundation.AdaptiveCortex();Zero3ContextAdhesionV319 parentGrip=new Zero3ContextAdhesionV319(1,true);
+        parent.organism.restoreGruModules(new Zero3AutonomousLoopV317.Encoder(1),parentMotor,parentGrip);
+        try(Zero3RuntimeV325 child=Zero3WorldBirthV354.create(354003,0x354ABE)){
+            child.inheritCompletionV354(parent.organism);child.enableSegmented();
+            yes(Arrays.equals(parentBrain.parameterSnapshot(),child.recurrentParametersV354()),"new life lost central learned weights");
+            yes(Arrays.equals(parentMotor.weights(),child.corticalParametersV354())&&Arrays.equals(parentGrip.captureAtDecisionBoundary().weights(),child.adhesionParametersV354()),"new life lost motor or grip weights");
+            yes(child.executiveSnapshot().parentEpisode==parent.organism.episodeId&&child.executiveSnapshot().historicalDecisions==96,"new life lost provenance");
+            child.advanceOneDecision();child.saveSegmented(profiles.profile(4));
+        }
+        try(Zero3RuntimeV325 child=Zero3RuntimeV325.loadSegmented(profiles.profile(4))){yes(child.decisions()==1&&!child.ended()&&child.executiveSnapshot().parentEpisode==354001,"inherited child resume");}
+        yes(Arrays.equals(parentBytes,Zero3OrganismStoreV322.encode(new Zero3SegmentedArchiveV328(profiles.profile(1)).load().organism)),"heritage modified original life");
         profiles.cloneProfile(1,12);yes(profiles.status(12).contains("96 decisioni"),"profile clone failed");
         ByteArrayOutputStream backup=new ByteArrayOutputStream();profiles.exportArchive(1,backup);
         profiles.importArchive(2,new ByteArrayInputStream(backup.toByteArray()));yes(profiles.status(2).contains("96 decisioni"),"validated backup import failed");
@@ -48,6 +62,14 @@ public final class Zero3CompletionV354Regression {
         Zero3ExecutiveV354 executive=new Zero3ExecutiveV354();float[] obs=new float[194],action={1,0,.5f,.5f,.45f};
         for(int n=0;n<320;n++){executive.propose(obs,action,n,false);executive.complete(.25f,.01f,0,.01f,Zero3ConfigurationV354.heldout(n),false,null);}
         yes(executive.snapshot().skills.length>0,"no candidate collected from real actor parameters");
+        Zero3ExecutiveV354 lifecycle=new Zero3ExecutiveV354();boolean championSeen=false,retiredSeen=false;
+        for(int n=0;n<1200;n++){
+            lifecycle.propose(obs,action,n,false);boolean recalled=lifecycle.usedMemory();
+            float motor=championSeen?(recalled?-.8f:.1f):(recalled?.7f:.1f);
+            lifecycle.complete(motor,.01f,0,.01f,Zero3ConfigurationV354.heldout(n),false,null);
+            for(Zero3ExecutiveV354.Skill k:lifecycle.snapshot().skills){if(k.state==Zero3ExecutiveV354.CHAMPION)championSeen=true;if(k.state==Zero3ExecutiveV354.RETIRED)retiredSeen=true;}
+        }
+        yes(championSeen&&retiredSeen,"option A/B probation/retirement was not exercised");
         byte[] options=executive.encode();yes(Arrays.equals(options,Zero3ExecutiveV354.decode(options).encode()),"option lifecycle persistence");
         System.out.println("V354 COMPLETION_INTEGRATION=PASS observerFrozen=true providerReadOnly=true neurons="+
             "actual graph=true slots12=true backupCloneImport=true originalProtected=true wholeLifeRestart=bitwise NO_PHONE_OR_BEHAVIORAL_CERTIFICATION");

@@ -15,7 +15,7 @@ public final class Zero3SurvivalLedgerV323 {
     public void enableVariableClockV352(){good(!active&&next==0,"clock must be chosen at birth");variableClock=true;}
     private int next,positiveTouches,negativeTouches,consumedSources;
     private float basalSpent,motorSpent,energyGained,negativeContactEnergy;
-    private float decisionBefore,decisionBasal,decisionMotor,decisionGain,decisionDamage;
+    private float decisionBefore,decisionBasal,decisionMotor,decisionGain,decisionDamage,lastWeatherDebitV354;
     private long decisionStartTick;
     private final ArrayList<Trace> history=new ArrayList<>();
     public Zero3SurvivalLedgerV323(float initial,float elapsed,float worldTime,boolean scarce){
@@ -112,7 +112,7 @@ public final class Zero3SurvivalLedgerV323 {
                 negativeTouches++;thisDecisionNegative++;
             }
         }
-        float weatherDebit=Math.min(reserve,measuredWeatherLoss);
+        float weatherDebit=Math.min(reserve,measuredWeatherLoss);lastWeatherDebitV354=weatherDebit;
         reserve-=weatherDebit;negativeContactEnergy+=weatherDebit;decisionDamage+=weatherDebit;
         partialSteps++;
         good(Float.isFinite(reserve)&&reserve>=0&&reserve<=100,
@@ -127,6 +127,7 @@ public final class Zero3SurvivalLedgerV323 {
         active=false;next++;
     }
     public int decisions(){return next;}
+    public float weatherDebitV354(){return lastWeatherDebitV354;}
     public float worldTimeV354(){return worldTime;}
     public float reserve(){return reserve;}
     /** Only the PRIOR completed physical event may enter PRE sensing. */

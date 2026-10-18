@@ -28,7 +28,7 @@ public final class Zero3UiIntegrationTest {
     }
     private void tap(String text){onView(withText(text)).perform(scrollTo(),click());}
     private void screenshot(String name)throws Exception{
-        File directory=new File(InstrumentationRegistry.getInstrumentation().getTargetContext().getExternalFilesDir(null),"qa");directory.mkdirs();
+        File directory=new File(InstrumentationRegistry.getInstrumentation().getTargetContext().getFilesDir(),"qa");directory.mkdirs();
         Bitmap bitmap=InstrumentationRegistry.getInstrumentation().getUiAutomation().takeScreenshot();assertNotNull(bitmap);
         try(OutputStream out=new FileOutputStream(new File(directory,name+".png"))){bitmap.compress(Bitmap.CompressFormat.PNG,100,out);}bitmap.recycle();
     }

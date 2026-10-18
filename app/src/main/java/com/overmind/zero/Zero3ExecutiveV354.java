@@ -15,8 +15,11 @@ public final class Zero3ExecutiveV354 {
         double optionSum,controlSum,optionSq,controlSq,optionEnergy,controlEnergy,optionHarm,controlHarm;
     }
     private final ArrayList<Option> options=new ArrayList<>();
+    private final ArrayList<long[]> retiredHistory=new ArrayList<>();
     private final float[] valueWeights=new float[CONTEXT+1];
     private long decisions,train,validation,observations,nextId=1,goalId,goalSince,goalInterruptions;
+    private long historicalDecisions,historicalTrain,historicalValidation,historicalObservations,parentEpisode;
+    private final long[] repairs=new long[3];
     private float lastEnergy,lastHarm,lastValue,informationProgress,previousPredictionError=Float.NaN;
     private long lastPredictionValidation;
     private int active=-1,goalAge;
@@ -29,7 +32,9 @@ public final class Zero3ExecutiveV354 {
     private static float[] context(float[] x){
         if(x==null||x.length!=194)throw new IllegalArgumentException("V354 sensory shape");
         float[] c=new float[CONTEXT];
-        for(int i=0;i<8;i++)c[i]=x[i];
+        for(int channel=0;channel<3;channel++)for(int ray=0;ray<8;ray++)c[channel]+=x[20+ray*3+channel]/8;
+        for(int ray=0;ray<8;ray++)for(int channel=0;channel<3;channel++)c[3]+=(ray<4?1:-1)*x[20+ray*3+channel]/24;
+        for(int i=0;i<4;i++)c[4+i]=(x[i*2]+x[i*2+1])*.5f;
         c[8]=x[188];c[9]=x[189];c[10]=x[190];c[11]=(x[191]+x[192])*.5f;
         for(float f:c)if(!Float.isFinite(f))throw new IllegalArgumentException("V354 invalid context");return c;
     }
@@ -44,38 +49,52 @@ public final class Zero3ExecutiveV354 {
             Option o=options.get(i);float d=distance(c,o.context);
             if(o.state==RETIRED||o.train<4||d>=nearest)continue;
             boolean probe=Zero3ConfigurationV354.heldout(decision)&&((decision/15)&1)==1;
-            boolean recall=(o.state==CHAMPION||o.state==PROBATION)&&o.optionN>0&&
+            boolean recall=!Zero3ConfigurationV354.heldout(decision)&&lastHarm==0&&(o.state==CHAMPION||o.state==PROBATION)&&o.optionN>0&&
                 o.optionEnergy/o.optionN>=0&&o.optionSum/o.optionN>o.controlSum/Math.max(1,o.controlN);
             if(probe||recall){active=i;nearest=d;}
         }
         float[] chosen=actorProposal.clone();
         if(active>=0){
             Option o=options.get(active);System.arraycopy(o.policy,0,chosen,0,5);usedMemory=true;
-            if(!observe){o.recalls++;if(goalId==o.id){goalAge++;reason="Richiamo contestuale: vantaggio misurato";}
-                else{goalId=o.id;goalSince=decision;goalAge=1;reason=o.state==CANDIDATE?"Prova candidata su dati riservati":"Opzione convalidata richiamata";}}
-        }else if(!observe){goalId=0;goalSince=decision;goalAge=1;reason="Nuova intenzione della politica GRU";}
+            o.recalls++;if(goalId==o.id){goalAge++;reason=observe?"Richiamo osservato; apprendimento congelato":"Richiamo contestuale: vantaggio misurato";}
+            else{goalId=o.id;goalSince=decision;goalAge=1;reason=o.state==CANDIDATE?"Prova candidata su dati riservati":"Opzione convalidata richiamata";}
+        }else{goalId=0;goalSince=decision;goalAge=1;reason="Nuova intenzione della politica GRU";}
         pending=true;pendingContext=c;pendingPolicy=chosen.clone();return chosen;
     }
+    Zero3ExecutiveV354 inherited(long parent)throws IOException{
+        Zero3ExecutiveV354 e=decode(encode());e.historicalDecisions+=e.decisions;e.historicalTrain+=e.train;e.historicalValidation+=e.validation;e.historicalObservations+=e.observations;
+        e.decisions=e.train=e.validation=e.observations=0;e.goalId=e.goalSince=e.goalInterruptions=0;e.goalAge=0;e.parentEpisode=parent;
+        e.lastHarm=e.lastEnergy=e.lastValue=e.informationProgress=0;e.previousPredictionError=Float.NaN;e.lastPredictionValidation=0;
+        ShelterEcology old=new ShelterEcology();if(!old.restore(e.ecology))throw new IOException("V354 heritage ecology");old.newLife();e.ecology=old.encode();e.nextRoom=150f;
+        Arrays.fill(e.repairs,0);e.reason="Nuova vita: pesi e opzioni ereditati, memoria temporale azzerata";return e;
+    }
+    long[] repairs(){return repairs.clone();}
+    void repairs(long[] data){System.arraycopy(data,0,repairs,0,3);}
     String ecology(){return ecology;}
     float nextRoom(){return nextRoom;}
     void ecology(String state,float next){if(pending)throw new IllegalStateException("V354 ecology boundary");ecology=state;nextRoom=next;}
     long selectedId(){return active<0?0:options.get(active).id;}
     boolean usedMemory(){return usedMemory;}
     void complete(float motorScore,float realEnergy,float harm,float cost,boolean heldout,boolean observe,
-                  Zero3CognitionV353.Snapshot prediction){
+                  Zero3CognitionV353.Snapshot prediction){complete(motorScore,realEnergy,harm,cost,heldout,observe,prediction,true);}
+    void complete(float motorScore,float realEnergy,float harm,float cost,boolean heldout,boolean observe,
+                  Zero3CognitionV353.Snapshot prediction,boolean motorEvidence){
         if(!pending||!Float.isFinite(motorScore)||!Float.isFinite(realEnergy)||!Float.isFinite(harm)||harm<0||!Float.isFinite(cost)||cost<0)
             throw new IllegalStateException("V354 missing/invalid physical outcome");
         motorScore=clamp(motorScore);pending=false;
-        if(observe){observations++;decisions++;active=-1;return;}
         lastEnergy=realEnergy;lastHarm=harm;
+        if(observe){
+            observations++;if(harm>0||goalAge>=4){goalInterruptions++;goalId=0;goalAge=0;reason=harm>0?"Interruzione osservata: danno fisico":"Nuova valutazione in osservazione";}
+            decisions++;active=-1;return;
+        }
         if(heldout){
             validation++;
             for(int i=0;i<options.size();i++){
-                Option o=options.get(i);if(o.state==RETIRED||distance(pendingContext,o.context)>.12f)continue;
+                Option o=options.get(i);if(!motorEvidence||o.state==RETIRED||distance(pendingContext,o.context)>.12f)continue;
                 if(i==active){o.optionN++;o.optionSum+=motorScore;o.optionSq+=motorScore*motorScore;o.optionEnergy+=realEnergy;o.optionHarm+=harm;}
                 else if(active==-1){o.controlN++;o.controlSum+=motorScore;o.controlSq+=motorScore*motorScore;o.controlEnergy+=realEnergy;o.controlHarm+=harm;}
                 else continue;
-                o.blocks|=1L<<((decisions/64)%63);
+                o.blocks|=1L<<(((historicalDecisions+decisions)/64)%63);
             }
             if(prediction!=null&&prediction.heldout>lastPredictionValidation){
                 float e=0;int count=0;
@@ -88,10 +107,14 @@ public final class Zero3ExecutiveV354 {
             float target=clamp(realEnergy/20),err=clamp(target-lastValue);
             for(int i=0;i<CONTEXT;i++)valueWeights[i]=clamp(valueWeights[i]+.005f*err*pendingContext[i]);
             valueWeights[CONTEXT]=clamp(valueWeights[CONTEXT]+.005f*err);
-            for(Option o:options)if(o.state!=RETIRED&&distance(pendingContext,o.context)<.12f&&
+            for(Option o:options)if(motorEvidence&&o.state!=RETIRED&&distance(pendingContext,o.context)<.12f&&
                 o.policy[0]*pendingPolicy[0]+o.policy[1]*pendingPolicy[1]>.8f)o.train++;
-            if(train%32==0&&options.size()<LIMIT&&motorScore>0&&harm==0){
-                Option o=new Option();o.id=nextId++;o.born=decisions;o.train=1;
+            if(motorEvidence&&train%32==0&&(options.size()<LIMIT||hasRetired())&&motorScore>0&&harm==0){
+                if(options.size()==LIMIT)for(int i=0;i<options.size();i++)if(options.get(i).state==RETIRED){
+                    Option old=options.remove(i);retiredHistory.add(new long[]{old.id,old.born,old.train,old.optionN,old.controlN,old.reverts});
+                    if(retiredHistory.size()>64)retiredHistory.remove(0);break;
+                }
+                Option o=new Option();o.id=nextId++;o.born=historicalDecisions+decisions;o.train=1;
                 System.arraycopy(pendingContext,0,o.context,0,CONTEXT);System.arraycopy(pendingPolicy,0,o.policy,0,5);options.add(o);
             }
             // Lifecycle changes occur only on TRAIN boundaries, never on validation/observe.
@@ -101,7 +124,8 @@ public final class Zero3ExecutiveV354 {
                     Math.max(0,o.controlSq/o.controlN-b*b)/o.controlN;
                 boolean better=a-b>Math.max(.01,2*Math.sqrt(variance))&&o.optionHarm/o.optionN<=o.controlHarm/o.controlN+.001&&
                     o.optionEnergy/o.optionN>=o.controlEnergy/o.controlN-.02;
-                if(o.state==CANDIDATE&&better){o.state=PROBATION;o.probationN=o.optionN+o.controlN;}
+                if(o.state==CANDIDATE&&!better&&o.optionN>=16&&o.controlN>=16){o.state=RETIRED;o.reverts++;}
+                else if(o.state==CANDIDATE&&better){o.state=PROBATION;o.probationN=o.optionN+o.controlN;}
                 else if(o.state==PROBATION&&o.optionN+o.controlN>=o.probationN+16){
                     if(better)o.state=CHAMPION;else{o.state=RETIRED;o.reverts++;}
                 }else if(o.state==CHAMPION&&a<b-.02){o.state=RETIRED;o.reverts++;}
@@ -110,6 +134,7 @@ public final class Zero3ExecutiveV354 {
         if(harm>0||goalAge>=4){goalInterruptions++;goalId=0;goalAge=0;reason=harm>0?"Interruzione: danno fisico osservato":"Nuova valutazione dell'opzione temporale";}
         decisions++;active=-1;
     }
+    private boolean hasRetired(){for(Option o:options)if(o.state==RETIRED)return true;return false;}
     public static final class Skill {
         public final long id,born;public final int state,train,validation,controls,recalls,reverts;
         public final float score,baseline,energy;
@@ -119,11 +144,11 @@ public final class Zero3ExecutiveV354 {
         public String status(){return new String[]{"CANDIDATA","CONSOLIDATA ONLINE","PROBATION A/B","SCARTATA"}[state];}
     }
     public static final class Snapshot {
-        public final long decisions,train,validation,observations,goalId,goalSince,interruptions;
-        public final float value,lastEnergy,lastHarm,informationProgress;public final String reason;public final Skill[] skills;
-        Snapshot(Zero3ExecutiveV354 e){decisions=e.decisions;train=e.train;validation=e.validation;observations=e.observations;
+        public final long decisions,train,validation,observations,goalId,goalSince,interruptions,parentEpisode,historicalDecisions;
+        public final float value,lastEnergy,lastHarm,informationProgress;public final String reason;public final Skill[] skills;public final long[][] retiredHistory;
+        Snapshot(Zero3ExecutiveV354 e){parentEpisode=e.parentEpisode;historicalDecisions=e.historicalDecisions;decisions=e.decisions;train=e.train;validation=e.validation;observations=e.observations;
             goalId=e.goalId;goalSince=e.goalSince;interruptions=e.goalInterruptions;value=e.lastValue;lastEnergy=e.lastEnergy;lastHarm=e.lastHarm;
-            informationProgress=e.informationProgress;reason=e.reason;skills=new Skill[e.options.size()];for(int i=0;i<skills.length;i++)skills[i]=new Skill(e.options.get(i));}
+            informationProgress=e.informationProgress;reason=e.reason;retiredHistory=new long[e.retiredHistory.size()][];for(int i=0;i<retiredHistory.length;i++)retiredHistory[i]=e.retiredHistory.get(i).clone();skills=new Skill[e.options.size()];for(int i=0;i<skills.length;i++)skills[i]=new Skill(e.options.get(i));}
     }
     void appendGraphV354(Zero3NeuralGraphV354.Builder b){
         int id=b.node(10,0,CONTEXT+1,"valore contestuale",lastValue,valueWeights,0,valueWeights.length);
@@ -134,6 +159,7 @@ public final class Zero3ExecutiveV354 {
         if(pending)throw new IOException("V354 pending option");
         ByteArrayOutputStream b=new ByteArrayOutputStream();DataOutputStream d=new DataOutputStream(b);d.writeInt(354);
         for(long v:new long[]{decisions,train,validation,observations,nextId,goalId,goalSince,goalInterruptions,lastPredictionValidation})d.writeLong(v);
+        for(long h:new long[]{historicalDecisions,historicalTrain,historicalValidation,historicalObservations,parentEpisode,repairs[0],repairs[1],repairs[2]})d.writeLong(h);
         d.writeInt(goalAge);for(float f:new float[]{lastEnergy,lastHarm,lastValue,informationProgress,previousPredictionError})d.writeFloat(f);
         d.writeUTF(reason);d.writeUTF(ecology);d.writeFloat(nextRoom);for(float f:valueWeights)d.writeFloat(f);d.writeInt(options.size());
         for(Option o:options){d.writeLong(o.id);d.writeLong(o.born);d.writeLong(o.blocks);
@@ -141,6 +167,7 @@ public final class Zero3ExecutiveV354 {
             for(float f:o.context)d.writeFloat(f);for(float f:o.policy)d.writeFloat(f);
             for(double v:new double[]{o.optionSum,o.controlSum,o.optionSq,o.controlSq,o.optionEnergy,o.controlEnergy,o.optionHarm,o.controlHarm})d.writeDouble(v);
         }
+        d.writeInt(retiredHistory.size());for(long[] history:retiredHistory)for(long f:history)d.writeLong(f);
         d.flush();return b.toByteArray();
     }
     private static float finite(DataInputStream d)throws IOException{float f=d.readFloat();if(!Float.isFinite(f))throw new IOException("V354 nonfinite");return f;}
@@ -150,6 +177,9 @@ public final class Zero3ExecutiveV354 {
         Zero3ExecutiveV354 e=new Zero3ExecutiveV354();long[] v=new long[9];for(int i=0;i<v.length;i++){v[i]=d.readLong();if(v[i]<0||v[i]>100000000)throw new IOException("V354 counter");}
         e.decisions=v[0];e.train=v[1];e.validation=v[2];e.observations=v[3];e.nextId=v[4];e.goalId=v[5];e.goalSince=v[6];e.goalInterruptions=v[7];e.lastPredictionValidation=v[8];
         if(e.decisions!=e.train+e.validation+e.observations||e.nextId<1||e.goalSince>e.decisions)throw new IOException("V354 counters disagree");
+        long[] historical=new long[8];for(int i=0;i<historical.length;i++){historical[i]=d.readLong();if(historical[i]<0)throw new IOException("V354 historical counter");}
+        e.historicalDecisions=historical[0];e.historicalTrain=historical[1];e.historicalValidation=historical[2];e.historicalObservations=historical[3];e.parentEpisode=historical[4];System.arraycopy(historical,5,e.repairs,0,3);
+        if(e.historicalDecisions!=e.historicalTrain+e.historicalValidation+e.historicalObservations||e.repairs[1]+e.repairs[2]>e.repairs[0])throw new IOException("V354 heritage/repair evidence");
         e.goalAge=d.readInt();if(e.goalAge<0||e.goalAge>4)throw new IOException("V354 goal age");
         e.lastEnergy=finite(d);e.lastHarm=finite(d);e.lastValue=finite(d);e.informationProgress=finite(d);e.previousPredictionError=d.readFloat();
         if((!Float.isNaN(e.previousPredictionError)&&!Float.isFinite(e.previousPredictionError))||e.lastHarm<0||e.informationProgress<0)throw new IOException("V354 value evidence");
@@ -160,14 +190,16 @@ public final class Zero3ExecutiveV354 {
         long last=0;
         for(int i=0;i<n;i++){
             Option o=new Option();o.id=d.readLong();o.born=d.readLong();o.blocks=d.readLong();
-            if(o.id<=last||o.id>=e.nextId||o.born<0||o.born>=e.decisions)throw new IOException("V354 option identity");last=o.id;
+            if(o.id<=last||o.id>=e.nextId||o.born<0||o.born>=e.historicalDecisions+e.decisions)throw new IOException("V354 option identity");last=o.id;
             o.state=d.readInt();o.train=d.readInt();o.optionN=d.readInt();o.controlN=d.readInt();o.recalls=d.readInt();o.reverts=d.readInt();o.probationN=d.readInt();
-            if(o.state<0||o.state>3||o.train<1||o.optionN<0||o.controlN<0||o.recalls<0||o.reverts<0||o.probationN<0||o.optionN>e.validation||o.controlN>e.validation)throw new IOException("V354 option evidence");
+            if(o.state<0||o.state>3||o.train<1||o.optionN<0||o.controlN<0||o.recalls<0||o.reverts<0||o.probationN<0||o.optionN>e.validation+e.historicalValidation||o.controlN>e.validation+e.historicalValidation)throw new IOException("V354 option evidence");
             for(int j=0;j<CONTEXT;j++)o.context[j]=finite(d);for(int j=0;j<5;j++)o.policy[j]=finite(d);
             double[] a=new double[8];for(int j=0;j<a.length;j++){a[j]=d.readDouble();if(!Double.isFinite(a[j]))throw new IOException("V354 option moments");}
             o.optionSum=a[0];o.controlSum=a[1];o.optionSq=a[2];o.controlSq=a[3];o.optionEnergy=a[4];o.controlEnergy=a[5];o.optionHarm=a[6];o.controlHarm=a[7];
             if(o.optionSq<0||o.controlSq<0||o.optionHarm<0||o.controlHarm<0)throw new IOException("V354 option signs");e.options.add(o);
         }
+        int history=d.readInt();if(history<0||history>64)throw new IOException("V354 history size");
+        for(int i=0;i<history;i++){long[] record=new long[6];for(int j=0;j<record.length;j++){record[j]=d.readLong();if(record[j]<0)throw new IOException("V354 history value");}e.retiredHistory.add(record);}
         if(d.available()!=0)throw new IOException("V354 trailing bytes");return e;
     }
 }

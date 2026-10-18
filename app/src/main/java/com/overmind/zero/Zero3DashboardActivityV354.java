@@ -29,6 +29,11 @@ public final class Zero3DashboardActivityV354 extends Activity {
     @Override public void onCreate(Bundle state){super.onCreate(state);
         slot=getSharedPreferences("zero3-ui-v354",0).getInt("slot",1);if(slot<1||slot>12)slot=1;
         LinearLayout root=new LinearLayout(this);root.setOrientation(1);root.setPadding(dp(12),dp(14),dp(12),dp(8));root.setBackgroundColor(BG);setContentView(root);
+        root.setOnApplyWindowInsetsListener((view,insets)->{
+            int top,bottom;if(Build.VERSION.SDK_INT>=30){android.graphics.Insets bars=insets.getInsets(WindowInsets.Type.systemBars());top=bars.top;bottom=bars.bottom;}
+            else{top=insets.getSystemWindowInsetTop();bottom=insets.getSystemWindowInsetBottom();}
+            view.setPadding(dp(12),dp(14)+top,dp(12),dp(8)+bottom);return insets;
+        });root.requestApplyInsets();
         header=text(root,"ZERO 3.0  /  PROFILO "+slot,22,WHITE);status=text(root,"Versione candidata · prove sul Galaxy S21 da eseguire",12,MUTED);
         HorizontalScrollView horizontal=new HorizontalScrollView(this);LinearLayout nav=new LinearLayout(this);horizontal.addView(nav);root.addView(horizontal);
         for(int i=0;i<PAGES.length;i++){final int destination=i;button(nav,PAGES[i],()->showPage(destination));}
@@ -59,6 +64,7 @@ public final class Zero3DashboardActivityV354 extends Activity {
             button(content,"RIPRENDI PROFILO SELEZIONATO",()->{pause();work(()->{if(session.active())session.suspend();session.resume();publish("Ripresa verificata");});});
             button(content,"PAUSA E SALVA",this::pause);
             button(content,"APPRENDIMENTO / SOLA OSSERVAZIONE",()->{pause();work(()->{Zero3DashboardSnapshotV354 s=session.dashboardV354(false);session.observationModeV354(!s.observing);save();publish(s.observing?"Apprendimento attivo":"Sola osservazione: pesi e replay congelati");});});
+            button(content,"NUOVA VITA EREDITANDO QUESTO CERVELLO",this::inheritLife);
             button(content,"CLONA IN UNO SLOT VUOTO",this::cloneSlot);
             button(content,"ESPORTA BACKUP VERIFICATO",()->document(1));button(content,"IMPORTA BACKUP IN SLOT VUOTO",()->document(2));
             button(content,"ESPORTA TELEMETRIA LOCALE",()->document(3));
@@ -75,7 +81,7 @@ public final class Zero3DashboardActivityV354 extends Activity {
     private void birth(){pause();new AlertDialog.Builder(this).setTitle("Nuovo cervello ZERO3 — slot "+slot).setMessage("Crea una vita e una rete vergini. Uno slot esistente viene protetto: usa uno dei 12 slot vuoti. Nessun dato 2.2 viene convertito.")
         .setNegativeButton("ANNULLA",null).setPositiveButton("CREA",(d,w)->work(()->{
             if(session.active())throw new IOException("Il profilo è già aperto: scegli uno slot vuoto");
-            long ep=Math.max(1,System.currentTimeMillis());Zero3RuntimeV325 r=Zero3WorldBirthV326.create(ep,ep^0x354A12);
+            long ep=Math.max(1,System.currentTimeMillis());Zero3RuntimeV325 r=Zero3WorldBirthV354.create(ep,ep^0x354A12);
             try{session.startNewCompletionV354(r);session.step();save();remember();publish("Nuovo cervello salvato e verificato");}catch(Exception bad){r.close();session.close();throw bad;}
         })).show();}
     private void start(int speed){if(running)return;running=true;work(()->{
@@ -98,17 +104,17 @@ public final class Zero3DashboardActivityV354 extends Activity {
     private static String range(float[] a,int start,int count){if(a==null)return "non disponibile";StringBuilder b=new StringBuilder();for(int i=start;i<Math.min(a.length,start+count);i++)b.append(i==start?"":" · ").append(value(a[i]));return b.toString();}
     private void render(){Zero3DashboardSnapshotV354 s=latest;if(facts==null||s==null)return;header.setText("ZERO 3.0  /  PROFILO "+slot+"  /  "+s.body.decisions);
         if(body!=null)body.snapshot=s;if(body!=null)body.invalidate();if(atlas!=null)atlas.setGraph(s.graph);
-        String common="Frame completato "+s.body.decisions+" · "+String.format(Locale.ITALY,"%.2f s simulati",s.body.solverTicks*.025)+"\n";
+        String common="Frame completato "+s.body.decisions+" · "+String.format(Locale.ITALY,"%.2f s simulati",s.elapsedLife)+"\n";
         StringBuilder b=new StringBuilder(common);
         switch(page){
             case 0:case 1:
                 b.append(s.body.dead?"VITA TERMINATA":"ORGANISMO ATTIVO").append("\nRiserva ").append(value(s.body.reserve)).append(" /100\n").append(s.storm?"TEMPESTA":s.stormWarning?"TEMPESTA IN ARRIVO":"ARIA CALMA").append(" · integrità ").append(value(s.integrity)).append("\n")
                  .append(s.observing?"SOLA OSSERVAZIONE":"APPRENDIMENTO ATTIVO").append("\nTrain ").append(s.trained).append(" · validazione ").append(s.heldout).append(" · osservazione ").append(s.observations)
-                 .append("\n").append(s.neurons).append(" unità neurali reali; nucleo GRU64\nIntenzione → movimento netto ").append(s.body.hasMotorOutcome?value(s.body.lastSignedProgress):"non disponibile dopo ripristino")
+                 .append("\n").append(s.neurons).append(" unità neurali reali; nucleo ").append(s.body.neurons).append("\nIntenzione → movimento netto ").append(s.body.hasMotorOutcome?value(s.body.lastSignedProgress):"non disponibile dopo ripristino")
                  .append("\n").append(checkpoint).append("\nLa presenza di aggiornamenti non dimostra ancora una competenza.");break;
             case 2:
                 b.append("Atlante: ogni nodo è un'unità di calcolo presente. Le porte sensoriali e i bias non sono neuroni. Layout3D illustrativo; pesi e unità provengono dalla rete.\n")
-                 .append("GRU64 · attore5 · critic2+target2 · cortex64 · adesione16 · predizione194\n")
+                 .append("Nucleo "+s.body.neurons+" · cortex64 · adesione16 · ingressi "+s.body.neuralInputs+"\n")
                  .append("Unità totali ").append(s.neurons).append("\nIl GRU usa truncated BPTT a1 passo. Le attività non acquisite restano indicate come mancanti.\n");appendPrediction(b,s);break;
             case 3:
                 b.append("96 siti di membrana ·74 particelle interne\n16 settori ×4 canali: radiale, tangenziale, adesione, tensione\n")
@@ -122,7 +128,7 @@ public final class Zero3DashboardActivityV354 extends Activity {
                     if(s.executive.skills.length==0)b.append("Nessuna candidata raccolta: occorrono esiti reali utili.");
                     for(Zero3ExecutiveV354.Skill k:s.executive.skills)b.append("\nOPZIONE #").append(k.id).append(" · ").append(k.status()).append("\nTrain ").append(k.train).append(" · A/B ").append(k.validation).append("/").append(k.controls)
                         .append(" · score ").append(value(k.score)).append(" / baseline ").append(value(k.baseline)).append("\nRichiami ").append(k.recalls).append(" · rollback ").append(k.reverts).append(" · energia media ").append(value(k.energy)).append("\n");
-                    b.append("\nConsolidamento online distinto dalla certificazione su scene indipendenti.");}break;
+                    b.append("\nStorico opzioni ritirate ").append(s.executive.retiredHistory.length).append(" (ultime64 conservate).\nConsolidamento online distinto dalla certificazione su scene indipendenti.");}break;
             case 5:
                 b.append("Plasticità effettiva: ").append(s.trained).append(" transizioni addestrate.\n");
                 if(s.prediction!=null)b.append("Unità predittive mantenute ").append(s.prediction.predictiveUnits).append(" · shadow ").append(s.prediction.shadowUnits)
@@ -138,6 +144,7 @@ public final class Zero3DashboardActivityV354 extends Activity {
                 if(s.executive!=null)b.append("Opzione corrente #").append(s.executive.goalId).append(" dalla decisione ").append(s.executive.goalSince).append("\n").append(s.executive.reason)
                     .append("\nValore contestuale ").append(value(s.executive.value)).append(" · ultimo bilancio ").append(value(s.executive.lastEnergy))
                     .append("\nProgresso predittivo su validazione ").append(value(s.executive.informationProgress)).append("; non è energia raccolta.\nInterruzioni ").append(s.executive.interruptions);
+                if(s.executive!=null)b.append("\nVita genitore ").append(s.executive.parentEpisode).append(" · esperienze storiche ").append(s.executive.historicalDecisions);
                 b.append("\nLe proposte immaginate non entrano nelle esperienze reali.");break;
             case 8:
                 b.append("Train / validazione / sola osservazione: ").append(s.trained).append(" / ").append(s.heldout).append(" / ").append(s.observations)
@@ -160,6 +167,20 @@ public final class Zero3DashboardActivityV354 extends Activity {
             if(session.active())session.suspend();session.close();slot=index+1;session=Zero3AndroidSessionV325.profileV354(this,slot);latest=null;remember();runOnUiThread(()->showPage(page));
             try{session.resume();publish("Profilo selezionato");}catch(IOException empty){runOnUiThread(()->{header.setText("ZERO3 / PROFILO "+slot);facts.setText("Slot vuoto o non recuperabile: "+empty.getMessage());});}
         })).show());});}
+    private void inheritLife(){pause();work(()->{
+        save();if(!session.active())throw new IOException("Prima carica il cervello da conservare");
+        Zero3SegmentedArchiveV328.Bundle parent=new Zero3SegmentedArchiveV328(profiles.profile(slot)).load();
+        if(parent==null)throw new IOException("Checkpoint genitore non disponibile");
+        ArrayList<Integer> free=new ArrayList<>();for(int i=1;i<=12;i++)if(profiles.status(i).equals("VUOTO"))free.add(i);
+        if(free.isEmpty())throw new IOException("Serve uno slot vuoto: il genitore non viene sovrascritto");
+        String[] names=new String[free.size()];for(int i=0;i<names.length;i++)names[i]="NUOVA VITA NELLO SLOT "+free.get(i);
+        runOnUiThread(()->new AlertDialog.Builder(this).setTitle("Eredita pesi e opzioni, conserva l'originale").setItems(names,(d,n)->work(()->{
+            session.suspend();session.close();slot=free.get(n);session=Zero3AndroidSessionV325.profileV354(this,slot);
+            long episode=Math.max(1,System.currentTimeMillis());Zero3RuntimeV325 child=Zero3WorldBirthV354.create(episode,episode^0x354CD);
+            try{session.startInheritedV354(child,parent.organism);session.step();save();remember();publish("Nuova vita: pesi, presa e opzioni ereditati; originale conservato");}
+            catch(Exception bad){child.close();session.close();throw bad;}
+        })).show());
+    });}
     private void cloneSlot(){pause();work(()->{save();ArrayList<Integer> free=new ArrayList<>();for(int i=1;i<=12;i++)if(profiles.status(i).equals("VUOTO"))free.add(i);
         if(free.isEmpty())throw new IOException("Nessuno slot vuoto");String[] names=new String[free.size()];for(int i=0;i<names.length;i++)names[i]="SLOT "+free.get(i);
         runOnUiThread(()->new AlertDialog.Builder(this).setTitle("Copia completa del profilo").setItems(names,(d,n)->work(()->{profiles.cloneProfile(slot,free.get(n));say("Clone verificato nello slot "+free.get(n));})).show());});}

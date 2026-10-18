@@ -30,15 +30,15 @@ public final class Zero3FullCausalExperienceV322B {
     }
     public boolean hasPartitionV353(){return bytes[6]==1&&((bytes[7]&255)==97||(bytes[7]&255)==98);}
     public boolean heldoutV353(){return hasPartitionV353()&&partitionV354()==1;}
-    public int partitionV354(){return (bytes[7]&255)==98?bytes[bytes.length-29]&255:((bytes[7]&255)==97?bytes[bytes.length-1]&255:-1);}
+    public int partitionV354(){return (bytes[7]&255)==98?bytes[bytes.length-49]&255:((bytes[7]&255)==97?bytes[bytes.length-1]&255:-1);}
     public float[] intentionV354(){
         if((bytes[7]&255)!=98)return null;
-        try{DataInputStream d=new DataInputStream(new ByteArrayInputStream(bytes,bytes.length-28,28));float[] a=new float[5];for(int i=0;i<5;i++)a[i]=d.readFloat();return a;}catch(IOException impossible){throw new IllegalStateException(impossible);}
+        try{DataInputStream d=new DataInputStream(new ByteArrayInputStream(bytes,bytes.length-48,20));float[] a=new float[5];for(int i=0;i<5;i++)a[i]=d.readFloat();return a;}catch(IOException impossible){throw new IllegalStateException(impossible);}
     }
-    static Zero3FullCausalExperienceV322B withModeV354(Zero3FullCausalExperienceV322B record,int mode,float[] intent,long option)throws IOException{
+    static Zero3FullCausalExperienceV322B withModeV354(Zero3FullCausalExperienceV322B record,int mode,float[] intent,long option,long revision,int correctedFrames,float ambient,int disturbance)throws IOException{
         check(record!=null&&(record.bytes[7]&255)==96&&mode>=0&&mode<=2&&intent!=null&&intent.length==5&&option>=0,"V354 causal metadata");
         ByteArrayOutputStream b=new ByteArrayOutputStream();byte[] raw=record.bytes.clone();raw[7]=98;b.write(raw);
-        DataOutputStream d=new DataOutputStream(b);d.writeByte(mode);writeArray(d,intent,5);d.writeLong(option);d.flush();return decode(b.toByteArray());
+        DataOutputStream d=new DataOutputStream(b);d.writeByte(mode);writeArray(d,intent,5);d.writeLong(option);d.writeLong(revision);d.writeInt(correctedFrames);d.writeFloat(ambient);d.writeInt(disturbance);d.flush();return decode(b.toByteArray());
     }
     static Zero3FullCausalExperienceV322B withPartitionV353(Zero3FullCausalExperienceV322B record,boolean heldout)throws IOException{
         check(record!=null&&(record.bytes[7]&255)==96,"V353 requires V352 physical record");
@@ -254,6 +254,9 @@ public final class Zero3FullCausalExperienceV322B {
             float[] intent=readArray(d,copy,5);long option=d.readLong();copy.writeLong(option);
             check(option>=0&&Math.abs(Math.hypot(intent[0],intent[1])-1)<.001&&intent[2]>=0&&intent[2]<=1&&
                 intent[3]>=0&&intent[3]<=1&&intent[4]>=.2499&&intent[4]<=.6501,"V354 invalid actual intention");
+            long revision=d.readLong();int corrected=d.readInt();float ambient=d.readFloat();int disturbance=d.readInt();
+            copy.writeLong(revision);copy.writeInt(corrected);copy.writeFloat(ambient);copy.writeInt(disturbance);
+            check(revision>=0&&corrected>=0&&corrected<=steps&&Float.isFinite(ambient)&&ambient>=0&&(disturbance&~5)==0&&((disturbance&4)!=0)==(corrected>0),"V354 causal disturbance metadata");
         }
         copy.flush();
         check(d.available()==0&&Arrays.equals(b,stream.toByteArray())&&

@@ -188,10 +188,15 @@ public final class Zero3LearningFoundation {
         public long revision(){return revision;}
         public long updates(){return updates;}
         public float[] weights(){return weights.clone();}
+        void inheritWeightsV354(float[] parent){
+            if(pendingDecision||revision!=0||updates!=0||parent==null||parent.length!=weights.length)throw new IllegalStateException("V354 fresh motor cortex");
+            for(float f:parent)if(!Float.isFinite(f)||Math.abs(f)>1.5f)throw new IllegalArgumentException("V354 inherited cortex weight");
+            System.arraycopy(parent,0,weights,0,weights.length);
+        }
         void appendGraphV354(Zero3NeuralGraphV354.Builder b){
             for(int u=0;u<64;u++){
                 int id=b.node(4,u,8,"sector "+(u/4)+" channel "+(u%4),output[u],weights,u*8,8);
-                for(int i=0;i<8;i++)b.edge(-2000-i,id,0,weights[u*8+i]);
+                for(int i=0;i<8;i++)b.edge(i==7&&u%4!=2?id:-2000-i,id,0,weights[u*8+i]);
             }
         }
         /**
@@ -482,6 +487,10 @@ public final class Zero3LearningFoundation {
             lastX=endX=after.cx;lastY=endY=after.cy;
             work+=physicalWork;impulse+=muscleImpulse;seconds+=dt;frames++;
             external|=solverCorrection;censored|=teleport;
+        }
+        public void observeWithDisturbanceV354(MotorBrain.Body b,float dt,float work,float impulse,int reasons){
+            if(reasons<0||reasons>1)throw new IllegalArgumentException("unknown V354 physical disturbance");
+            observe(b,dt,work,impulse,reasons!=0,false);
         }
         public Experience finish(){return finish(false);}
         public Experience finish(boolean interrupted){

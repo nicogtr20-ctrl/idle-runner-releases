@@ -41,3 +41,32 @@ contatto, lato/offset normale e budget9U; permette scorrimento tangenziale
 sulla stessa superficie, come il contatto fisico esistente. Nessun hold viene
 aggiunto, rilasciato o incrementato dal correttore. Nuovi test di retention
 e geometria prima di qualunque promozione.
+
+## Integrazione ulteriore preregistrata
+
+Habitat: riuso WorldPlacement/HabitatContinuity/ShelterEcology/PanelPhysics,
+collisioni complete room.constrain per i74 materiali e96 shell, timer e
+bilateralità originali, uncover energetico reale. Nascita354 normale senza
+BOX/DISK a coordinate di laboratorio. Meteo addebita perdite misurate al
+ledger; esperienze motorie disturbate dal vento non certificano competenza.
+La presa V319 osserva il vero owner fra tutte le BOX, lastre e porta (prima
+V325 passava soltanto la prima BOX). Nessun contatto o premio artificiale.
+
+Planning: previsione condizionata a1–3 passi usando GRU/world esistenti.
+H2/H3 misurati su blocchi consecutivi di3 validazioni ogni15 decisioni (80/20);
+azioni future reali note prima della fisica condizionano il forecast, mai POST
+per costruire la previsione. Ogni orizzonte è escluso finché non batte baseline
+su64 sequenze; nuova topologia azzera la qualificazione. Nessuna fantasia
+allena i modelli. Curiosità registrata come progresso predittivo, non energia.
+
+Nuova vita: genitore immutato in altro slot; ereditare GRU/actor/critic/target,
+modello fisico, opzioni, cortex e adesione appresi. Azzerare working state e
+replay del valore riferiti alla vecchia dinamica; journal genitore e storia
+restano disponibili nello slot originale. Provenienza e conteggi storici
+espliciti, nuova riserva e nuova fisica reali.
+
+Candidato telefonico: APK privato solo dopo JVM10000 e UI nativa su emulatore.
+Stesso package/certificato e versionCode1172 (sostituzione manuale della stessa
+versione); versionName3.0-candidate.354. Non cambiare manifest OTA172, non usare
+il publisher stable e non richiedere disinstallazione. Il test S21 resta
+necessario per installazione/termica/heap e prestazione comportamentale.

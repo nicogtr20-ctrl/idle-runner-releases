@@ -116,6 +116,11 @@ public final class Zero3ContextAdhesionV319 {
             return (state>>>40)/16777216f;
         }
     }
+    void inheritWeightsV354(float[] parent){
+        if(active||decisions!=0||parent==null||parent.length!=weights.length)throw new IllegalStateException("V354 fresh grip neurons");
+        for(float f:parent)if(!Float.isFinite(f)||Math.abs(f)>4)throw new IllegalArgumentException("V354 inherited grip weight");
+        System.arraycopy(parent,0,weights,0,weights.length);
+    }
     void appendGraphV354(Zero3NeuralGraphV354.Builder b){
         for(int u=0;u<16;u++){
             int id=b.node(5,u,8,"grip sector "+u,lastCmd[u],weights,u*8,8);
@@ -185,7 +190,11 @@ public final class Zero3ContextAdhesionV319 {
         hasStep=true;
     }
     public void observe(Morphology.Surface skin,UnknownWorld.Entity box,
-                        float actualGelWorkDelta){
+                        float actualGelWorkDelta){observeOwned(skin,box,null,null,actualGelWorkDelta);}
+    void observeWorldV354(Morphology.Surface skin,java.util.List<UnknownWorld.Entity> objects,ScarcityLab room,float actualCost){
+        observeOwned(skin,null,objects,room,actualCost);
+    }
+    private void observeOwned(Morphology.Surface skin,UnknownWorld.Entity box,java.util.List<UnknownWorld.Entity> objects,ScarcityLab room,float actualGelWorkDelta){
         if(!active||!hasStep||!Float.isFinite(actualGelWorkDelta)||
            actualGelWorkDelta<0)
             throw new IllegalStateException("missing physical outcome or cost");
@@ -198,10 +207,13 @@ public final class Zero3ContextAdhesionV319 {
             for(int j=0;j<SITES_PER;j++){
                 int i=first+j;
                 if(skin.gripHold[i]>=Morphology.GRIP_HOLD){
-                    if(box==null||!box.isBilateralBox()||
-                       box.boxGripHold[i]<Morphology.GRIP_HOLD||
-                       skin.gripCommand[i]<=Morphology.GRIP_THRESHOLD)
-                        throw new IllegalStateException("non-world grip signal");
+                    boolean legal=box!=null&&box.isBilateralBox()&&box.boxGripHold[i]>=Morphology.GRIP_HOLD;
+                    if(objects!=null){
+                        legal=room!=null&&room.gateGripHold[i]>=Morphology.GRIP_HOLD&&GripSurfaceComposition.gateFace(room,skin.x[i],skin.y[i]);
+                        for(UnknownWorld.Entity owner:objects)if((owner.isBilateralBox()&&owner.boxGripHold[i]>=Morphology.GRIP_HOLD&&GripSurfaceComposition.boxFace(owner,skin.x[i],skin.y[i]))||
+                            (owner.isConstruction()&&PanelPhysics.held(owner,i,skin)))legal=true;
+                    }
+                    if(!legal||skin.gripCommand[i]<=Morphology.GRIP_THRESHOLD)throw new IllegalStateException("non-world grip signal");
                     trueHeld=true;
                 }
             }
