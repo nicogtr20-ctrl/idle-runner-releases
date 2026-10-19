@@ -2,11 +2,11 @@
   "schemaVersion": 1,
   "available": true,
   "applicationId": "com.overmind.zero.ota",
-  "versionCode": 1181,
-  "versionName": "3.0-ota.363",
-  "apkUrl": "https://overmind-zero-updates.vercel.app/apk/overmind-zero-1181-89e1ac9cf77b.apk",
-  "sha256": "89e1ac9cf77bec3d7d40aedfa9877ca4c15018f7b2949d50d4e86b358757966e",
-  "sizeBytes": 922288,
-  "notes": "ZERO 3.0 OTA363: migliore mobilit\u00e0 fisica del simbionte, attrito calibrato, prese volontarie ammesse all\u2019apprendimento; pesi conservati",
-  "publishedAt": "2026-10-19T17:16:06.298411+00:00"
+  "versionCode": 1183,
+  "versionName": "3.0-ota.368-test.1",
+  "apkUrl": "https://overmind-zero-updates.vercel.app/apk/overmind-zero-1183-test-9108a99bbfbe.apk",
+  "sha256": "9108a99bbfbe488c1b23d555b06d43167d89e4cacae87984845757e420d7ba8e",
+  "sizeBytes": 925592,
+  "notes": "OTA368 TEST RICHIESTA: danni terminali, vista verticale e prudenza del planner. VERSIONE SPERIMENTALE: blu/rossi e locomozione NON ancora validati.",
+  "publishedAt": "2026-10-19T21:58:44.738238+00:00"
 }
