@@ -37,7 +37,7 @@ jobs:
             adb shell am instrument -w -r -e class com.overmind.zero.Zero366VisionMemoryAndPlannerTest com.overmind.zero.ota.test/androidx.test.runner.AndroidJUnitRunner | tee /tmp/zero368-legacy.txt
             grep -q 'OK (5 tests)' /tmp/zero368-legacy.txt
             adb shell am instrument -w -r -e class com.overmind.zero.Zero368CausalIntegrationTest com.overmind.zero.ota.test/androidx.test.runner.AndroidJUnitRunner | tee /tmp/zero368-new.txt
-            grep -q 'OK (3 tests)' /tmp/zero368-new.txt
+            grep -q 'OK (4 tests)' /tmp/zero368-new.txt
       - name: Upload technical test evidence even on failure
         if: always()
         uses: actions/upload-artifact@v4
