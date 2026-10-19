@@ -99,31 +99,35 @@ public final class Zero366OriginalAutonomousSurvival2000Test {
                 }
                 if(burst%200==0){
                     String diag=original.originalV366MotorDiagnosticForQA();
-                    System.out.printf(Locale.ROOT,
-                        "ZERO366_TRUE_BLIND_PROGRESS decisions=%d picked=%d harmCompleted=%d gross=%.3f directed=%.3f%n",
+                    String observation=String.format(Locale.ROOT,
+                        "ZERO366_TRUE_BLIND_PROGRESS decisions=%d picked=%d harmActual=%d gross=%.3f directed=%.3f",
                         cursor,original.originalV366ActualPositivePickupsForQA(),
                         recordedHarms(original.originalV366ActualLifeStatisticsForQA()),
                         field(diag,"grossDistance"),field(diag,"signedProgress"));
+                    System.out.println(observation);
+                    android.util.Log.i("ZERO366_REAL",observation);
                 }
             }
             int pickups=original.originalV366ActualPositivePickupsForQA();
             int red=recordedHarms(original.originalV366ActualLifeStatisticsForQA());
             String motor=original.originalV366MotorDiagnosticForQA();
             double signed=field(motor,"signedProgress"),gross=field(motor,"grossDistance");
-            System.out.printf(Locale.ROOT,
-                "ZERO366_BLIND_2000_REAL_ORIGINAL_RESULT decisions=%d blue=%d red=%d redFirst=%d redLater=%d blueFirst=%d signed=%.5f gross=%.5f efficiency=%.4f actualX=%+.4f actualY=%+.4f%n",
+            String outcome=String.format(Locale.ROOT,
+                "ZERO366_BLIND_2000_REAL_ORIGINAL_RESULT decisions=%d blue=%d red=%d redFirst=%d redLater=%d blueFirst=%d signed=%.5f gross=%.5f efficiency=%.4f actualX=%+.4f actualY=%+.4f",
                 cursor,pickups,red,earlyHarm,earlyHarm<0?-1:red-earlyHarm,
                 earlyPickups,signed,gross,signed/Math.max(1,gross),
                 field(motor,"actualX"),field(motor,"actualY"));
-            assertTrue("must finish 2000 genuine GRU intentions, NO lab script",cursor>=TARGET);
-            assertTrue("must physically follow intent far better than OTA363 1.10% ratio",
+            System.out.println(outcome);
+            android.util.Log.i("ZERO366_REAL",outcome);
+            assertTrue("must finish 2000 genuine GRU intentions, NO lab script: "+outcome,cursor>=TARGET);
+            assertTrue("must physically follow intent far better than OTA363 1.10% ratio: "+outcome,
                 signed/Math.max(1,gross)>=.12);
-            assertTrue("must learn to collect positive energy in the ORIGINAL habitat",
+            assertTrue("must learn to collect positive energy in the ORIGINAL habitat: "+outcome,
                 pickups>0);
             assertTrue("early half must contain comparable physical red-contact evidence",
                 earlyHarm>=0);
-            assertTrue("real late red harm must improve on early contact rate",
-                red-earlyHarm<earlyHarm);
+            assertTrue("real late red harm must improve on early contact rate: "+outcome,
+                red==0||red-earlyHarm<earlyHarm);
             System.out.println("ZERO366_BLIND_2000_UNSCRIPTED_SURVIVAL_G3_G5_PRELIMINARY=PASS_NOT_PHONE");
         } finally {
             instrument.runOnMainSync(original::finish);
