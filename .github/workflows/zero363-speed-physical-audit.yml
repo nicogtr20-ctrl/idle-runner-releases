@@ -15,3 +15,5 @@ jobs:
         with: {distribution: temurin, java-version: '17'}
       - name: Gain 2.4 versus 3.0, actual 170-mass organism, learned and frozen
         run: python3 tools/zero363_speed_audit.py
+      - name: Test symmetric lateral power x1 versus x1.5 at original gain
+        run: python3 tools/zero363_lateral_audit.py
