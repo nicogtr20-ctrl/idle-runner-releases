@@ -235,29 +235,33 @@ public final class Zero3ExecutiveV354 {
      * saving a normal game or named brain.
      */
     byte[] encodePriorV361ForQA()throws IOException{return encodeVersionV366(361);}
+    byte[] encodePriorV354ForQA()throws IOException{return encodeVersionV366(354);}
     private byte[] encodeVersionV366(int targetSchema)throws IOException{
-        if(targetSchema!=361&&targetSchema!=366)throw new IOException("V366 unsupported target schema");
-        if(targetSchema==361)
-            for(Option o:options)if(o.visionSchemaV366==366)
-                throw new IOException("Cannot downconvert new V366 visual-memory option");
+        if(targetSchema!=354&&targetSchema!=361&&targetSchema!=366)
+            throw new IOException("V366 unsupported target schema");
+        if(targetSchema!=366)
+            for(Option o:options)if(o.visionSchemaV366==366||
+                (targetSchema==354&&o.visionSchemaV366!=354))
+                throw new IOException("Cannot downconvert a visual-memory option to an earlier learned schema");
         if(pending)throw new IOException("V354 pending option");
         ByteArrayOutputStream b=new ByteArrayOutputStream();DataOutputStream d=new DataOutputStream(b);d.writeInt(targetSchema);
         for(long v:new long[]{decisions,train,validation,observations,nextId,goalId,goalSince,goalInterruptions,lastPredictionValidation})d.writeLong(v);
         for(long h:new long[]{historicalDecisions,historicalTrain,historicalValidation,historicalObservations,parentEpisode,repairs[0],repairs[1],repairs[2]})d.writeLong(h);
         d.writeInt(goalAge);for(float f:new float[]{lastEnergy,lastHarm,lastValue,informationProgress,previousPredictionError})d.writeFloat(f);
         d.writeUTF(reason);d.writeUTF(ecology);d.writeFloat(nextRoom);
-        if(targetSchema==361){
+        if(targetSchema!=366){
             for(int i=0;i<PRIOR_CONTEXT;i++)d.writeFloat(valueWeights[i]);
             d.writeFloat(valueWeights[CONTEXT]); // previous scalar bias
         }else for(float f:valueWeights)d.writeFloat(f);
         d.writeInt(options.size());
         for(Option o:options){d.writeLong(o.id);d.writeLong(o.born);d.writeLong(o.blocks);
             for(int v:new int[]{o.state,o.train,o.optionN,o.controlN,o.recalls,o.reverts,o.probationN})d.writeInt(v);
-            for(int j=0;j<(targetSchema==361?PRIOR_CONTEXT:CONTEXT);j++)d.writeFloat(o.context[j]);
+            for(int j=0;j<(targetSchema==366?CONTEXT:PRIOR_CONTEXT);j++)d.writeFloat(o.context[j]);
             for(float f:o.policy)d.writeFloat(f);
             for(double v:new double[]{o.optionSum,o.controlSum,o.optionSq,o.controlSq,o.optionEnergy,o.controlEnergy,o.optionHarm,o.controlHarm})d.writeDouble(v);
             if(targetSchema==361)d.writeBoolean(o.visionSchemaV366==354);
-            else d.writeInt(o.visionSchemaV366);
+            else if(targetSchema==366)d.writeInt(o.visionSchemaV366);
+            // Real V354 had no option-provenance byte.
         }
         d.writeInt(retiredHistory.size());for(long[] history:retiredHistory)for(long f:history)d.writeLong(f);
         d.flush();return b.toByteArray();
