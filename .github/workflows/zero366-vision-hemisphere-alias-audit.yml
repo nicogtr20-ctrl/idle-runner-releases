@@ -1,0 +1,20 @@
+name: V366 reproduce right-drift optical alias using original production V361 source (NO OTA)
+on:
+  push:
+    branches: [fix/zero364-block-regressed-ota-and-forensic-20261019]
+  workflow_dispatch:
+permissions: {contents: read}
+jobs:
+  production-vision-alias-proof:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with: {distribution: temurin, java-version: '17'}
+      - name: Compare two truly different visual scenes through original V354 executive input
+        run: |
+          mkdir -p /tmp/zero366-audit
+          javac -d /tmp/zero366-audit app/src/main/java/com/overmind/zero/Zero3VisionContextV361.java tools/qa/Zero366LeftRightVisionAliasAudit.java
+          java -cp /tmp/zero366-audit com.overmind.zero.Zero366LeftRightVisionAliasAudit | tee /tmp/zero366-alias-result.txt
+          grep -F ZERO366_REPRODUCED_DISTINCT_194D_RED_BLUE_MIRRORS_SAME_V354_12D_CONTEXT=PASS /tmp/zero366-alias-result.txt
