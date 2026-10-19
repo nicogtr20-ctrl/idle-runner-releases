@@ -34,12 +34,15 @@ public final class GameActivity extends Activity {
     // live-world test-max path, with all original collisions, energy,
     // 194-dimensional sensory inputs, decisions and persistent neural state.
     // Never asks for a direction, injects an outcome or adds food.
-    long originalV366AdvanceActualWorldForQA(Canvas drawingSurface){
-        if(lab==null||lab.brain3==null||drawingSurface==null)
+    void originalV366EnableRealTestMaxForQA(){
+        if(lab==null||lab.brain3==null)
             throw new IllegalStateException("Original V3 app world unavailable");
+        // Use EXISTING real GameActivity onDraw+physics loop; NEVER call onDraw
+        // recursively from an instrumentation callback, which can starve
+        // real Android lifecycle/UI processing and invalidate the evidence.
         lab.testMax=true;
-        lab.onDraw(drawingSurface);
-        return lab.brain3.decisions();
+        lab.testMaxStartedNs=System.nanoTime();
+        lab.invalidate();
     }
     String originalV366MotorDiagnosticForQA(){
         return lab==null||lab.brain3==null?"":lab.brain3.motorDiagnosticV361();
