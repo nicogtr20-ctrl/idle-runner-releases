@@ -37,8 +37,8 @@ public final class Zero3RecurrentBrain {
     private final float[] gatedZ=new float[HIDDEN],gatedR=new float[HIDDEN],
         candidate=new float[HIDDEN],decisionState=new float[HIDDEN];
     private final float[] lastNoise=new float[MOTOR],
-    private final float[] selectedNoiseScaleV369={1f,1f,1f,1f,1f};
         action=new float[ACTION],worldInput=new float[HIDDEN+ACTION+1];
+    private final float[] selectedNoiseScaleV369={1f,1f,1f,1f,1f};
     private long rng=0x34EA7CA51DA1L,trainCount,validationCount,recurrentUpdates;
     private boolean pending;
     private float heldoutModelError=Float.NaN,heldoutBaselineError=Float.NaN;
