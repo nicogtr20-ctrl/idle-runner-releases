@@ -59,6 +59,10 @@ jobs:
           PY
               fi
           done
+      # V364: hard hold signed OTA while original V3 moves AGAINST its own
+      # requested left/south headings. Compilation is not behavioral success.
+      - name: HARD STOP incorrect direction in true V3 material motor
+        run: python3 tools/zero364_g3_physical_ota_gate.py
       - name: Android compile and original existing test suite
         run: gradle --no-daemon assembleDebug assembleDebugAndroidTest
       - name: No V355 dashboard as launcher / no signed publisher
