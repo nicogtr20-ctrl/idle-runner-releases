@@ -70,7 +70,7 @@ public final class Zero3ExecutiveV354 {
         if(expanded==null||(expanded.length!=PREVIOUS_CONTEXT&&expanded.length!=CONTEXT))
             throw new IllegalArgumentException("V366 context size");
         boolean east=false,west=false;
-        for(int channel=PRIOR_CONTEXT;channel<CONTEXT;channel++){
+        for(int channel=PRIOR_CONTEXT;channel<PREVIOUS_CONTEXT;channel++){
             if(expanded[channel]>.015f)east=true;
             if(expanded[channel]<-.015f)west=true;
         }
