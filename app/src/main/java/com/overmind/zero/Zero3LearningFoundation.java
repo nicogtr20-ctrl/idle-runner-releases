@@ -68,7 +68,7 @@ public final class Zero3LearningFoundation {
         private final float[] output=new float[OUTPUTS];
         private final float[] features=new float[INPUTS];
         private int samples;
-        private boolean probing,pendingDecision;
+        private boolean probing,pendingDecision,externalGripOwnerV361;
         private long randomState=0x61C8864680B583EBL,revision,updates;
         private final float[] contextBaseline=new float[8];
         private final long[] contextSamples=new long[8];
@@ -83,7 +83,10 @@ public final class Zero3LearningFoundation {
         private final float activationGain;
         /** No prescribed gait: a spatially correlated noise field in one muscle channel. */
         private void sampleProbe(){
-            activeChannel=(int)(perturbationEpisodes++%CHANNELS);
+            // Original-game grip replaces channel 2 after cortex.command().
+            // Do not train a channel whose command did not reach the solver.
+            int selected=(int)(perturbationEpisodes++%(externalGripOwnerV361?CHANNELS-1:CHANNELS));
+            activeChannel=externalGripOwnerV361&&selected>=2?selected+1:selected;
             float[] anchors=new float[4];
             for(int i=0;i<4;i++)anchors[i]=random()*2f-1f;
             for(int sector=0;sector<SECTORS;sector++){
@@ -350,10 +353,14 @@ public final class Zero3LearningFoundation {
         public float[] lastCommands(){return output.clone();}
         public void begin(boolean explore){begin(explore,null);}
         public void begin(boolean explore,MotorIntent intent){
+            begin(explore,intent,false);
+        }
+        void begin(boolean explore,MotorIntent intent,boolean gripExternallyOwned){
             if(pendingDecision)throw new IllegalStateException("unfinished cortex decision");
             pendingDecision=true;
             Arrays.fill(noise,0f);Arrays.fill(accumulated,0f);samples=0;
-            probing=explore;activeChannel=-1;lastAcceptedGradientNorm=0f;
+            probing=explore;externalGripOwnerV361=gripExternallyOwned;
+            activeChannel=-1;lastAcceptedGradientNorm=0f;
             if(intent!=null){
                 float angle=(float)Math.atan2(intent.y,intent.x);
                 contextBucket=((int)Math.floor((angle+Math.PI)/(Math.PI/4)))&7;
@@ -363,7 +370,7 @@ public final class Zero3LearningFoundation {
         void discard(){
             pendingDecision=false;
             Arrays.fill(noise,0);Arrays.fill(accumulated,0);samples=0;probing=false;
-            activeChannel=-1;
+            activeChannel=-1;externalGripOwnerV361=false;
         }
         /**
          * Actual geometry is read every physical substep. OUTPUTS are the
@@ -469,6 +476,10 @@ public final class Zero3LearningFoundation {
         /** Optional matched heldout experiment uses exploration but NEVER gradients. */
         public void begin(MotorIntent intent,MotorBrain.Body b,boolean train,boolean heldout,
                           boolean exploration){
+            begin(intent,b,train,heldout,exploration,false);
+        }
+        public void begin(MotorIntent intent,MotorBrain.Body b,boolean train,boolean heldout,
+                          boolean exploration,boolean externallyOwnedGripV361){
             if(intent==null||b==null||active!=null)throw new IllegalStateException("pending or null");
             if(train==heldout)throw new IllegalArgumentException("must choose train XOR heldout");
             if(intent.decisionId<=lastDecision&&intent.episodeId==episode)
@@ -478,7 +489,7 @@ public final class Zero3LearningFoundation {
             lastDecision=intent.decisionId;episode=intent.episodeId;startedRevision=cortex.revision();
             startX=lastX=endX=b.cx;startY=lastY=endY=b.cy;
             frames=0;gross=work=impulse=seconds=0;
-            cortex.begin(exploration,intent);
+            cortex.begin(exploration,intent,externallyOwnedGripV361);
         }
         public float[] actuate(MotorBrain.Body body,Morphology.Surface skin,float dt){
             if(active==null)throw new IllegalStateException("no decision");

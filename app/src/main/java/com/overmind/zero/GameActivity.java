@@ -532,6 +532,7 @@ public final class GameActivity extends Activity {
                 if(brain3!=null){
                     brain3.interrupt(); // Partial actions earn no fake reward.
                     sceneEditor.putString(Zero3OriginalBrainV356.KEY,brain3.checkpoint());
+                    sceneEditor.putString("zero3_motor_diagnostic_v361",brain3.motorDiagnosticV361());
                 }
                 if(!sceneEditor.commit())
                     throw new IllegalStateException("Impossibile salvare la scena fisica");
@@ -2171,9 +2172,12 @@ public final class GameActivity extends Activity {
             neonFrame(c,158,278,471,bottom,16);
             c.save();c.clipRect(164,283,465,bottom-8);
             text(c,"DATI TECNICI",174,303,12,TEAL,false);
-            text(c,"AZIONE 2.2 "+(sensorMind.action+1)+"/16 • DIREZ "+
-                (sensorMind.action%8+1)+"/8"+
-                " • ADESIONE "+((brain3!=null?brain3.adhesion():sensorMind.adhesion())>0?"ON":"OFF"),
+            text(c,brain3!=null?
+                String.format(java.util.Locale.US,"INTENZIONE 3.0 X %.2f Y %.2f • ADESIONE %.2f",
+                    brain3.directionX(),brain3.directionY(),brain3.adhesion()):
+                "AZIONE 2.2 "+(sensorMind.action+1)+"/16 • DIREZ "+
+                    (sensorMind.action%8+1)+"/8"+
+                    " • ADESIONE "+(sensorMind.adhesion()>0?"ON":"OFF"),
                 174,324,9,0xffc3dee2,false);
             text(c,"URTI "+physicalContacts+" • DIST MAX "+(int)biggestDisplacement+
                 " U • ESPERIENZE 2.2 "+recurrentCore.transitions(),174,341,9,MUTED,false);

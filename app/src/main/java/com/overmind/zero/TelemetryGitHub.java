@@ -144,7 +144,7 @@ final class TelemetryGitHub {
             "NO_VALID_V3_CHECKPOINT_YET; historical working profile only":
             "ZERO 3.0 GRU64 sole original-game motor actor; V2.2 legacy data archival only");
         android.content.pm.PackageInfo installed=c.getPackageManager().getPackageInfo(c.getPackageName(),0);
-        result.put("runtimeRevision","zero3-original-game-ota360");
+        result.put("runtimeRevision","zero3-original-game-neural-v361");
         result.put("installedVersionName",installed.versionName);
         result.put("installedVersionCode",android.os.Build.VERSION.SDK_INT>=28?
             installed.getLongVersionCode():installed.versionCode);
@@ -176,11 +176,27 @@ final class TelemetryGitHub {
                 v3.put("observationDecisions",neural.observations);
                 v3.put("cortexUpdates",neural.motorUpdates);
                 v3.put("previousPhysicalDamage",neural.previousDamageV359);
+                Object measured=all.get("zero3_motor_diagnostic_v361");
+                if(measured instanceof String&&((String)measured).startsWith("m361|"))
+                    v3.put("motorPhysicalDiagnosticV361",measured);
                 if(neural.cognition!=null){
                     v3.put("predictiveUnits",neural.cognition.predictiveUnits);
                     v3.put("shadowUnits",neural.cognition.shadowUnits);
                     v3.put("growthAccepted",neural.cognition.growthAccepted);
                     v3.put("growthRejected",neural.cognition.growthRejected);
+                    v3.put("predictivePlannerUses",neural.cognition.plannerUses);
+                    org.json.JSONArray reliable=new org.json.JSONArray();
+                    org.json.JSONArray mse=new org.json.JSONArray();
+                    org.json.JSONArray baselineMse=new org.json.JSONArray();
+                    for(int i=0;i<neural.cognition.reliable.length;i++){
+                        reliable.put(neural.cognition.reliable[i]);
+                        mse.put(Float.isFinite(neural.cognition.mse[i])?neural.cognition.mse[i]:JSONObject.NULL);
+                        baselineMse.put(Float.isFinite(neural.cognition.baselineMse[i])?
+                            neural.cognition.baselineMse[i]:JSONObject.NULL);
+                    }
+                    v3.put("predictiveTrustedHeads",reliable);
+                    v3.put("predictiveMseByHead",mse);
+                    v3.put("predictiveBaselineMseByHead",baselineMse);
                 }
                 if(neural.executive!=null){
                     v3.put("candidateOptions",neural.executive.skills.length);

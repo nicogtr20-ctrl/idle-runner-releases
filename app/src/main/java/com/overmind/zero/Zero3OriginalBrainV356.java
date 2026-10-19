@@ -33,6 +33,13 @@ final class Zero3OriginalBrainV356 {
     private long damagedDecisionsV359;
     private float maxVerifiedDecisionDamageV359;
     private boolean pending,heldout,disturbed;
+    // V361: read-only measured motor execution since this app session began.
+    // These are not rewards, goals, authored directions, or neural input.
+    private long measuredMotorDecisionsV361,measuredPhysicalV361,externalMotorDecisionsV361;
+    private long alignedV361,opposedV361,almostStaticV361,solidContactStepsV361,heldContactStepsV361;
+    private double sumIntentXV361,sumIntentYV361,sumActualXV361,sumActualYV361;
+    private double sumForwardV361,sumGrossV361,sumWorkV361;
+    private final long[] intentSectorsV361=new long[8];
     private int lastLife=-1;
 
     private Zero3OriginalBrainV356(){
@@ -92,6 +99,16 @@ final class Zero3OriginalBrainV356 {
     float directionY(){return choice==null?0:choice.y;}
     float adhesion(){return choice==null?0:choice.adhesion;}
     boolean pending(){return pending;}
+    /** Session-only factual PRE intention versus POST physical displacement. */
+    String motorDiagnosticV361(){
+        return String.format(java.util.Locale.US,
+            "m361|decisions=%d|physical=%d|externallyCorrected=%d|aligned=%d|opposed=%d|almostStatic=%d|solidSteps=%d|heldSteps=%d|intentX=%.5f|intentY=%.5f|actualX=%.5f|actualY=%.5f|signedProgress=%.5f|grossDistance=%.5f|materialWork=%.6f|azimuth=%s",
+            measuredMotorDecisionsV361,measuredPhysicalV361,externalMotorDecisionsV361,
+            alignedV361,opposedV361,almostStaticV361,solidContactStepsV361,heldContactStepsV361,
+            sumIntentXV361,sumIntentYV361,sumActualXV361,sumActualYV361,
+            sumForwardV361,sumGrossV361,sumWorkV361,
+            java.util.Arrays.toString(intentSectorsV361));
+    }
     float[] commands(){return executed64;}
     Zero3NeuralGraphV354 graph(){
         if(pending)throw new IllegalStateException("Atlante disponibile solo su decisione chiusa");
@@ -160,7 +177,7 @@ final class Zero3OriginalBrainV356 {
                 issued=authority.issue(OWNER,cursor,(int)Math.min(Integer.MAX_VALUE,cortex.revision()),
                     356,choice.x,choice.y,choice.effort,choice.adhesion,choice.duration,
                     brain.measuredConfidenceV354());
-                motor.begin(choice,body,!heldout,heldout,true);
+                motor.begin(choice,body,!heldout,heldout,true,true);
                 grip.begin(heldout);
                 pending=true;lastLife=realLife;
             }
@@ -196,11 +213,28 @@ final class Zero3OriginalBrainV356 {
                !Float.isFinite(motorReserveSpentDuringDecisionV359))
                 throw new IllegalStateException("Danno interocettivo cumulato non finito");
             motor.observe(body,dt,Math.max(0,work),Math.max(0,impulse),external,false);
+            for(float sensed:skin.touchSense)if(sensed>.2f){solidContactStepsV361++;break;}
+            for(float held:skin.gripHold)if(held>=Morphology.GRIP_HOLD){heldContactStepsV361++;break;}
             grip.observeWorldV354(skin,objects,chamber,Math.max(0,work));
             workAccum+=Math.max(0,work);elapsed+=dt;disturbed|=external;
             if(elapsed+0.0001f<choice.duration&&reserve>0)return;
             if(elapsed<.0249f){interrupt();return;}
             Zero3LearningFoundation.Experience outcome=motor.finish(false);
+            // Physical measurements only: no reward or decisions are altered.
+            measuredMotorDecisionsV361++;
+            if(outcome.physicalEvidence)measuredPhysicalV361++;
+            if(outcome.externalCorrection)externalMotorDecisionsV361++;
+            float projection=outcome.deltaX*choice.x+outcome.deltaY*choice.y;
+            float motionNet=(float)Math.hypot(outcome.deltaX,outcome.deltaY);
+            if(motionNet<.2f)almostStaticV361++;
+            else if(projection>.2f)alignedV361++;
+            else if(projection<-.2f)opposedV361++;
+            sumIntentXV361+=choice.x;sumIntentYV361+=choice.y;
+            sumActualXV361+=outcome.deltaX;sumActualYV361+=outcome.deltaY;
+            sumForwardV361+=projection;sumGrossV361+=outcome.gross;sumWorkV361+=outcome.work;
+            int sector=((int)Math.floor((Math.atan2(choice.y,choice.x)+Math.PI/8)/
+                (Math.PI/4))+8)%8;
+            intentSectorsV361[sector]++;
             grip.end();pending=false;
             // POST and the next PRE now see the preceding decision's REAL pain.
             // Persist this exact measurement across a normal app restart.

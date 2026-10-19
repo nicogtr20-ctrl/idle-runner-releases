@@ -1,0 +1,76 @@
+name: ZERO3 V361 visual and motor reality checks (NO OTA)
+on:
+  push:
+    branches: [fix/zero361-live-vision-motor-causality-20261019]
+  pull_request:
+    branches: [release/zero30-ota]
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  exact-vision-jvm:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with: {distribution: temurin, java-version: '17'}
+      - name: Run 24-channel REAL vision regression (pure JVM, no mocks)
+        run: |
+          mkdir -p /tmp/zero361-jvm
+          javac -d /tmp/zero361-jvm             app/src/main/java/com/overmind/zero/Zero3VisionContextV361.java             app/src/main/java/com/overmind/zero/Zero361VisionContextRegression.java
+          java -cp /tmp/zero361-jvm com.overmind.zero.Zero361VisionContextRegression
+      - name: Confirm actual original-game V3 actor ownership and unchanged checkpoint schema
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          a=Path('app/src/main/java/com/overmind/zero/Zero3OriginalBrainV356.java').read_text()
+          c=Path('app/src/main/java/com/overmind/zero/Zero3LearningFoundation.java').read_text()
+          g=Path('app/src/main/java/com/overmind/zero/GameActivity.java').read_text()
+          assert 'motor.begin(choice,body,!heldout,heldout,true,true);' in a
+          assert 'externalGripOwnerV361&&selected>=2?selected+1:selected' in c
+          assert 'grip.actuate(out,issued,body,skin,objects);' in a
+          assert 'brain3.commands():symMotor.commands()' in g
+          assert 'private static final int MAGIC=0x5A333536,VERSION=356' in a
+          assert 'brain3.motorDiagnosticV361()' in g
+          assert 'sensorMind.setLearning(brain3==null)' in g
+          print('V361_LIVE_GRP_OWNER_AND_V356_CRC_FORMAT_UNCHANGED=PASS')
+          PY
+  android-real-game:
+    needs: [exact-vision-jvm]
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with: {distribution: temurin, java-version: '17'}
+      - name: Compile original Android game and tests
+        run: gradle --no-daemon assembleDebug assembleDebugAndroidTest
+      - name: Enable emulator KVM
+        run: |
+          echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' | sudo tee /etc/udev/rules.d/99-kvm4all.rules
+          sudo udevadm control --reload-rules
+          sudo udevadm trigger --name-match=kvm
+      - name: Instrumented motor ownership, raw vision, and original 3.0 life/restart
+        uses: reactivecircus/android-emulator-runner@v2
+        with:
+          api-level: 35
+          arch: x86_64
+          profile: pixel_6
+          disable-animations: true
+          script: |
+            set -eu
+            adb install -r app/build/outputs/apk/debug/app-debug.apk
+            adb install -r app/build/outputs/apk/androidTest/debug/app-debug-androidTest.apk
+            adb shell pm clear com.overmind.zero.ota
+            adb shell am instrument -w -r -e class com.overmind.zero.Zero361MotorOwnershipTest com.overmind.zero.ota.test/androidx.test.runner.AndroidJUnitRunner > /tmp/v361-motor-instrumentation.txt 2>&1
+            cat /tmp/v361-motor-instrumentation.txt
+            grep -q 'OK (4 tests)' /tmp/v361-motor-instrumentation.txt
+            bash tools/zero356_android_ui.sh
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: V361-real-body-vision-motor-tests
+          path: |
+            /tmp/v361-motor-instrumentation.txt
+            /tmp/zero356-ui/
