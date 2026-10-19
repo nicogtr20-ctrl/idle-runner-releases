@@ -1,0 +1,26 @@
+# ZERO 3.0 V361 — Real phone observation / vision / motor contract
+
+Date: 2026-10-19. Candidate source branch `fix/zero361-live-vision-motor-causality-20261019`. This is NOT a signed OTA.
+
+## Ground truth
+The user observed ZERO moves only a little, approaches ONE side of the gate, NEVER touched BOX in the current observation, and never picked up a gem. Do not mistake previous saved observer sessions for active V3 contacts.
+
+The full OTA360 Android checkpoint (43018 completed decisions, 34416 TRAIN, 8602 heldout, 25663 cortical updates) was recovered as 19 chunks from explicit GPT share and passed V356 CRC. The live brain contained 16 existing executive options, 0 predictive planner uses, 0 accepted and 66 rejected predictive neuron growth trials. Physical world snapshot was valid (64 fluid parcels, 96 membrane patches, invalid=0). Cortical recent 64-command mean |command| ~0.104. Cumulative 81 previous lives have no recorded blue pickup, BOX, gate opening; their provenance spans upgrades, so no V3-only success statistic can be inferred. Prev25 versus last25 net maximum mean ~48.4 to ~90.0 U is observational, NOT causal A/B proof.
+
+## Two concrete code defects found
+1. `SensorimotorMind.Senses.spectral8` emits grouped `[frequency*8 + azimuth]`, but `Zero3ExecutiveV354.context` consumed `[azimuth*3 + frequency]`. Thus the 12-dimensional executive scene feature mixed independently learned colors/directions. V361 corrects the mapping using `Zero3VisionContextV361` (24 inputs from REAL membrane vision, no coordinates/reward).
+2. In the ORIGINAL V356 actor, `AdaptiveCortex` explored 4 muscle channels including CH2. V319's authorized adhesive neuron overrides the CH2 command AFTER cortex.command() and BEFORE SymbioteMatterV1.step(). Cortex gradients therefore credited a motor command never physically executed in 1/4 of nominal intervention slots. V361 marks CH2 externally owned ONLY at the live original-game controller call; motor exploration samples CH0, CH1, CH3, preserving normal four-channel independent LAB behavior and grip physics unchanged.
+
+## Preserving already trained brain and memories
+V356 top-level checkpoint magic, version 356, CRC, GRU, 64 output cortex weights, and 128 adhesive weights are unchanged. Original action flow and physics solver remain original, with one V3 brain; 2.2 never takes over in 3.0. The 16 existing executive options cannot be blindly remapped because their old 12-dimensional context averages lost per-ray information. V361's executive serialized nested schema becomes 361, accepts BOTH 354 and 361, marks each restored old option as legacy, evaluates that option against its genuinely observed 354 context, and learns new options from corrected V361 context. Do not discard old options or recode their memories. An Android instrumentation regression reconstructs the 354 wire format with a real learned option and checks full decode/re-encode survival.
+
+## New direct physical measurements
+At the end of each **completed** physical decision V361 separately records intended x/y, actually observed delta x/y, projected progress along decision, gross travel, raw material work, actual physical evidence, externally corrected movement, near-static, direction-aligned/opposed, 8 actual-intention heading bins, tactile and held substeps. It does not turn this into a reward, scripted gait, gate target, training signal or extra neural input. The session diagnostic `zero3_motor_diagnostic_v361` is written atomically with the scene and full V356 checkpoint, included in explicit user-initiated GPT export; predictive 12-head MSE/baselines/reliability are exported with source provenance. It is session-scoped; no claim that pre-V361 life had such measurements.
+
+## Verification and release gate
+Pure JVM checks that all 24 visual channels map correctly, including frequency and azimuth separation, and rejects incorrect widths. Android test checks CH2 NEVER probed by original actuator, the four-channel LAB remains unchanged, and a genuine previous serialized V354 option survives V361 migration. Existing original-game real Android instrumented test checks V3 neural single actor, zone streaming/life/reset, V359 RED physical pain, old CRC restoration, GPT share card/report and APK UI. Compile debug + AndroidTest before release. None of these is an unbiased fresh on-phone physical learning A/B proving ZERO can now walk or collect resources.
+
+Remaining open: movement x20 subjectively slow, possible motor force cancellation/weakness, contact on only one gate face, no gem pickups, vision-conditioned decisions unproven, predictive planner gated until energy/harm/motor cost predictions reliably outperform baseline. Never bypass the measured reliability gate, award fictional progress to the reward, teleport resources, script trajectories, or claim emergent locomotion without new paired physics evidence.
+
+## Next real-phone acceptance
+After candidate QA and separately authorized/signed OTA, preserve the currently trained brain, play **fresh** life episodes, share data, compare directions/physical displacements and held contacts and actual ENERGY, and test with independent blind seeds and matched baseline. No phone result is claimed in this document.
