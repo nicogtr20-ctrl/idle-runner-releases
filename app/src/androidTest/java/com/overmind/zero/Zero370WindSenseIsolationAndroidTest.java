@@ -35,8 +35,8 @@ public final class Zero370WindSenseIsolationAndroidTest {
     @Test public void actualSolidContactIsPreservedUnderSameGust(){
         assertEquals(.76f,FastSomaticCircuitV167.solidContactFeatureV370(.76f,.24f,.24f),1e-6f);
         assertEquals(.81f,FastSomaticCircuitV167.solidContactFeatureV370(.2f,.81f,.24f),1e-6f);
-        assertEquals(.24f,"2.2 historic controller still sees the unaltered real pressure",
-            Math.max(0f,.24f),1e-6f);
+        assertEquals("2.2 historic controller still sees the unaltered real pressure",
+            .24f,Math.max(0f,.24f),1e-6f);
     }
     @Test public void biologicallyFeltGustDecaysWithoutArtificialPersistentCollision(){
         MotorBrain.Body b=new MotorBrain.Body();
