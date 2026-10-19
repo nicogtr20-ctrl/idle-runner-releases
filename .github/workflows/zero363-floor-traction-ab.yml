@@ -14,3 +14,4 @@ jobs:
         with: {distribution: temurin, java-version: '17'}
       - run: python3 tools/zero363_floor_traction_audit.py
       - run: python3 tools/zero363_blind_directions_audit.py
+      - run: python3 tools/zero363_symmetric_birth_audit.py
