@@ -5,8 +5,6 @@ import android.app.Instrumentation;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
-import android.graphics.Bitmap;
-import android.graphics.Canvas;
 import androidx.test.ext.junit.runners.AndroidJUnit4;
 import androidx.test.platform.app.InstrumentationRegistry;
 import org.junit.Test;
@@ -75,19 +73,22 @@ public final class Zero366OriginalAutonomousSurvival2000Test {
             assertTrue(created instanceof GameActivity);
             original=(GameActivity)created;
         }finally{instrument.removeMonitor(monitor);}
-        Bitmap surface=Bitmap.createBitmap(720,1080,Bitmap.Config.ARGB_8888);
-        Canvas canvas=new Canvas(surface);
         try {
-            // Original organism is intentionally continuously repainting.
+            // The original Activity draws continuously; do not block its
+            // main looper with forced onDraw() calls from the test!
             assertTrue("only real V3 GRU may drive body",original.originalV356NeuralOwnerForQA());
             assertEquals("must be a virgin causal actor",0,original.originalV356DecisionsForQA());
-            final int TARGET=2000, MAX_BURSTS=9500;
+            instrument.runOnMainSync(original::originalV366EnableRealTestMaxForQA);
+            final int TARGET=2000, MAX_BURSTS=3000;
             int earlyHarm=-1,earlyPickups=-1;
             long cursor=0;
             for(int burst=0;burst<MAX_BURSTS && cursor<TARGET;burst++){
                 AtomicLong result=new AtomicLong(-1);
+                // The game advances autonomously on its normal UI clock.
+                // Test thread only observes a sampled decision cursor.
+                android.os.SystemClock.sleep(260);
                 instrument.runOnMainSync(()->result.set(
-                    original.originalV366AdvanceActualWorldForQA(canvas)));
+                    original.originalV356DecisionsForQA()));
                 cursor=result.get();
                 String error=original.originalV356BrainErrorForQA();
                 assertTrue("real world must not stop due to neural or physics error: "+error,
@@ -126,7 +127,7 @@ public final class Zero366OriginalAutonomousSurvival2000Test {
             System.out.println("ZERO366_BLIND_2000_UNSCRIPTED_SURVIVAL_G3_G5_PRELIMINARY=PASS_NOT_PHONE");
         } finally {
             instrument.runOnMainSync(original::finish);
-            surface.recycle();
+            // No artificial Canvas or detached physics owner to recycle.
         }
     }
 }
