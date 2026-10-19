@@ -77,6 +77,10 @@ public final class Morphology {
         public final float[] touchSense=new float[POINTS];
         /** Real mechanical disk contact, sensor only: never creates a grip. */
         public final float[] touchPulse=new float[POINTS];
+        /** Ephemeral PHYSICAL provenance for the air-pressure portion of
+         * touchPulse. Never actuates, trains or erases actual wind sensation.
+         * Not serialized or supplied as privileged source label to GRU3. */
+        public final float[] weatherPulseV370=new float[POINTS];
         /** Contact must be accompanied by sustained intentional actuation. */
         public final float[] gripHold=new float[POINTS];
         public int intentionalPoints=0;
@@ -144,6 +148,7 @@ public final class Morphology {
                 x[i]=ax[i];y[i]=ay[i];
                 vx[i]=vy[i]=extension[i]=0;
             gripCommand[i]=touchSense[i]=gripHold[i]=touchPulse[i]=0;
+                weatherPulseV370[i]=0;
             }
         }
         public void step(MotorBrain.Body body,float[] brain,float targetX,float targetY,float dt){

@@ -253,6 +253,12 @@ public final class SymbioteMotorHeadV1 {
     public void fastTick(MotorBrain.Body body,Morphology.Surface skin,float dt){
         somatic.advance(body,skin,decisionCommands,commands,dt);
     }
+    /** V370: GRU3 sole-owner path. The historical 2.2 peripheral fastTick
+     * remains byte-semantically identical; only V3 input classification
+     * separates wind pressure from solid mechanical contact. */
+    void fastTickOriginalV370(MotorBrain.Body body,Morphology.Surface skin,float dt){
+        somatic.advance(body,skin,decisionCommands,commands,dt,true);
+    }
     public String encodeFast(){return somatic.encode();}
     public boolean restoreFast(String raw){return somatic.restore(raw);}
     public FastSomaticCircuitV167 fastCircuit(){return somatic;}
