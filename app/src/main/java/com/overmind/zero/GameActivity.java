@@ -30,7 +30,25 @@ public final class GameActivity extends Activity {
     float originalV359PreviousDamageForQA(){return lab==null||lab.brain3==null?-1:lab.brain3.previousDamageV359();}
     float originalV359MaxDamageForQA(){return lab==null||lab.brain3==null?-1:lab.brain3.maxVerifiedDecisionDamageV359();}
     float originalV359ReserveForQA(){return lab==null?-1:lab.reserve;}
-    boolean originalV359SpawnPhysicalRedForQA(){
+    // V366 forensic ONLY. Executes the exact GameActivity.Lab.onDraw()
+    // live-world test-max path, with all original collisions, energy,
+    // 194-dimensional sensory inputs, decisions and persistent neural state.
+    // Never asks for a direction, injects an outcome or adds food.
+    long originalV366AdvanceActualWorldForQA(Canvas drawingSurface){
+        if(lab==null||lab.brain3==null||drawingSurface==null)
+            throw new IllegalStateException("Original V3 app world unavailable");
+        lab.testMax=true;
+        lab.onDraw(drawingSurface);
+        return lab.brain3.decisions();
+    }
+    String originalV366MotorDiagnosticForQA(){
+        return lab==null||lab.brain3==null?"":lab.brain3.motorDiagnosticV361();
+    }
+    int originalV366ActualPositivePickupsForQA(){return lab==null?-1:lab.energyEaten;}
+    String originalV366ActualLifeStatisticsForQA(){
+        return lab==null?"":lab.lifeStats.encode();
+    }
+        boolean originalV359SpawnPhysicalRedForQA(){
         if(lab==null||lab.brain3==null||lab.reserve<16f)return false;
         // The unchanged original resolveObjects().touch() computes -7 energy.
         lab.environment.add(new UnknownWorld.Entity(lab.surface.x[0],lab.surface.y[0],1,1));
