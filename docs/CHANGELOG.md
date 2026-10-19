@@ -743,3 +743,8 @@ Richiesta utente: APK pronta con centro decisionale rivisto attivo, conservazion
 - Danno reale rosso/ambiente nel cervello V3, distinto da consumo motorio e fame; proprio gioco/fisica invariati.
 - Test Android: rosso reale, salvataggi 358 compatibili, rinascita e altre regressioni; gain motorio 2.4 invariato.
 - APK firmato con il certificato originale, versione 1177, SHA-256 `e53cb4ba423e6e4d1c1c240e686b6e3de60d2f22f165bdf94a43f988893131f6`.
+
+## ZERO 3.0 OTA360 — 2026-10-19T00:05:16.794379+00:00
+- Ripristinato Condividi dati con GPT in Analisi cervello 3.0; report GitHub privato del GRU64 completo e riepilogo V3, senza modificare la fisica.
+- Test Android: V3 condivisione, report multipart JSON, checkpoint, vita, rinascita e danno reale invariati.
+- APK firmato con il certificato originale, versione 1178, SHA-256 `76859a541d4144fcc1241d6b391ad3ea0c846aa072b4b947986effe6d256851d`.
