@@ -1,0 +1,17 @@
+name: V363 original physics speed and muscle causal gain audit (NO OTA)
+on:
+  push:
+    branches: [audit/zero363-gait-speed-physical-proof-20261019]
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  true-motor-physics:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with: {distribution: temurin, java-version: '17'}
+      - name: Gain 2.4 versus 3.0, actual 170-mass organism, learned and frozen
+        run: python3 tools/zero363_speed_audit.py
