@@ -1,0 +1,66 @@
+name: ZERO3 V362 full-energy virgin brain and old-save protection (NO OTA)
+on:
+  push:
+    branches: [fix/zero362-virgin-brain-full-energy-20261019]
+  pull_request:
+    branches: [release/zero30-ota]
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  exact-source:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - name: V362 brand-new profile never sees archived V355 weights
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          root=Path('app/src/main/java/com/overmind/zero')
+          brain=(root/'Zero3OriginalBrainV356.java').read_text()
+          game=(root/'GameActivity.java').read_text()
+          slots=(root/'SaveSlotStore.java').read_text()
+          assert 'if(!allowHistoricalImport)' in brain
+          assert 'return b; // true cursor=0' in brain
+          assert 'FRESH_ZERO3_BIRTH' in slots
+          assert 'current.remove(FRESH_ZERO3_BIRTH)' in slots
+          assert 'edit.putBoolean(SaveSlotStore.FRESH_ZERO3_BIRTH,true);' in game
+          assert '!virginBirthV362&&!wasReset' in game
+          assert 'brain3.decisions()!=0' in game
+          assert '.putString(Zero3OriginalBrainV356.KEY,brain3.checkpoint())' in game
+          assert 'reserve=100f;' in game
+          assert 'Math.round(reserve)' in game
+          assert 'brain3.actuate(brain3LifeSerial' in game
+          print('V362_NO_HIDDEN_INHERITANCE_ATOMIC_VIRGIN_BIRTH_100_PHYSICAL_RESERVE=PASS')
+          PY
+  android-original-physics:
+    needs: [exact-source]
+    runs-on: ubuntu-latest
+    timeout-minutes: 50
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with: {distribution: temurin, java-version: '17'}
+      - name: Compile original game + instrumentation
+        run: gradle --no-daemon assembleDebug assembleDebugAndroidTest
+      - name: Enable emulator acceleration
+        run: |
+          echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' | sudo tee /etc/udev/rules.d/99-kvm4all.rules
+          sudo udevadm control --reload-rules
+          sudo udevadm trigger --name-match=kvm
+      - name: Inherited V361 tests and genuinely new ZERO at 100 fuel 0 experiences
+        uses: reactivecircus/android-emulator-runner@v2
+        with:
+          api-level: 35
+          arch: x86_64
+          profile: pixel_6
+          disable-animations: true
+          script: bash tools/zero362_android_ui.sh
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: V362-neural-newborn-and-living-physics
+          path: |
+            /tmp/zero362-qa
+            /tmp/zero356-ui
