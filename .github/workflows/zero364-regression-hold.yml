@@ -29,6 +29,8 @@ jobs:
           echo 'ZERO364_KNOWN_BAD_RELEASE_BLOCKED_BY_ACTUAL_ORIGINAL_PHYSICS=PASS'
       - name: Physical speed comparison — actual older 2.2 muscle peripheral
         run: python3 tools/zero364_old_motor_peripheral_compare.py
+      - name: V3 GRU sole chooser — old actuator blend restores four axes?
+        run: python3 tools/zero364_motor_blend_compare.py
       - name: Verify hard gate precedes Android signing and release
         run: |
           python3 - <<'PY'
