@@ -53,8 +53,20 @@ final class Zero3OriginalBrainV356 {
         authority=new Zero3MotorIntentV316.Authority(epoch,OWNER);
     }
     static Zero3OriginalBrainV356 load(Context context,String saved)throws IOException {
+        return load(context,saved,true);
+    }
+    /** False for explicit newborn/reset. A new organism must not inherit
+     * an archived experimental V354/V355 brain that lives in OTHER preferences.
+     * Existing saved V356 brains still restore unchanged when allowed. */
+    static Zero3OriginalBrainV356 load(Context context,String saved,
+                                       boolean allowHistoricalImport)throws IOException {
         Zero3OriginalBrainV356 b=new Zero3OriginalBrainV356();
         try{
+            if(!allowHistoricalImport){
+                if(saved!=null&&!saved.isEmpty())
+                    throw new IOException("Nuovo cervello V362 con checkpoint preesistente");
+                return b; // true cursor=0, virgin weights, independent random seed
+            }
             if(saved!=null&&!saved.isEmpty())b.restore(saved);
             else{
                 // Reuse ONLY approved neurons of the previously installed V355,
