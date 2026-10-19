@@ -1,0 +1,27 @@
+# ZERO 3.0 OTA363 — slower-than-capable original body: causal A/B speed, grip eligibility and limits
+
+19 October 2026; original game only, Galaxy S21 report from `zero-telemetry/reports/20261019-150810-26013e12bab2d`, app `3.0-ota.362` build1180. Reference source `AGENTS.md`, V356 original game contract, 3.0 master and retained V362 checkpoint.
+
+## Lived 3.0 newborn evidence — NOT a script or simulation fixture
+- 9,793 completed valid V3 decisions, 7,836 train, 1,957 heldout, 4,591 physical motor synapse updates, 16 lives, 100/100 born, zero positive energy contacts. Valid live GRU64 194 sensations and 64 motor muscle channels.
+- V361 real PRE→POST diagnostic: 3,639 aligned, 2,621 opposed, 1,088 almost static, 4,051 decisions previously externally vetoed; gross 5,927.7U, signed movement toward chosen direction only 595.7U. Physical net body drift ≠ intent vector; 56,573 steps with legitimate physical holds and 62,329 solid-contact substeps. Never misrepresent held-contact frames as resource pickups.
+- On-phone gait still slow despite ×20 correct physics clock scaling. The multiplier changes the number of 1/60s steps per rendered wall second, **not force per physical second**.
+
+## Before changing forces — original 170-material-mass solver A/B (real physical impulse/work)
+- Gain 2.4→3.0 (same original body, 1,200 real choices each, trained+frozen): TRAIN gross ratio 1.133, directional net 1.004, material work 1.234. NO meaningful directional acceleration, too costly; REJECTED.
+- Lateral muscle 1→1.5 at gain2.4: TRAIN gross 1.003, signed east 0.925, work 1.096; REJECTED.
+- Original V3 at baseline passive floor traction 0.12 vs candidate 0.08 (unchanged power, matched original gel, 1,200 choices, trained+frozen): TRAIN gross 1.306, signed east 1.335, material work 1.045; frozen gross 1.238, signed east 1.152, work 1.010. Candidate 0.04 provides larger gross but unacceptable extra sideways drift and reduced anchoring, REJECTED.
+- Additional blind direction train+frozen A/B, 240 real decisions per arm. **Direction 0**: signed desired +69.41→+94.05; **direction 1** +38.35→+59.40; **direction 2** −34.20→−32.94 (still moves against intended direction); **direction 3** −29.41→−40.93 (WORSE). TRAIN directional wins 3/4, frozen 2/4, work increase under 10% 4/4. This is a partial physical speed gain, **NOT full four-way controllability**.
+- Initial local motor weight tying was tested (random seed only, no gait). It made all 4 compass directions far worse, including gross movement wrong direction; 0/4 wins. REJECTED; original neural weight topology and initialization unchanged.
+- Scientific warning: matched probe intentionally holds a fixed directional intent to measure physical motor transfer, **NOT autonomous navigation**. It cannot establish improved gem search, door opening, or lifelong learning. Continue 25+ new phone lives and compare 3.0 stats; do not fabricate results.
+
+## Code changes staged as V363
+1. Original live V3 body only: `SymbioteMatterV1.enableOriginalZero3TractionV363()` sets passive substrate baseline `0.08` (previous `0.12`), keeping compression footholds `1.45*compression`, local cortical stiffness loading, 96-site free membrane, viscosity, force reciprocity and all collision/grip constraints intact. Explicit in BOTH on-load/saved-scene restore and physical new-life reset; V2.2 new instance defaults `0.12`. NO force/velocity pump, autonomy overrides, scripted gait or fabricated energy.
+2. `MotorResponseJournalV172.externalMotorInterferenceV363` for V3 excludes the self-caused **genuine neural object hold alone** from external correction. In a voluntary hold, the world may offer a natural reaction for learned crawling. Still excludes actually measured solver center correction over 0.08U, genuinely moved external objects/effects over 0.03U, storms and nonfinite data. V2.2 legacy method unchanged. No automatic adhesion or forced decisions.
+3. Keeps **checkpoint V356 magic, version, CRC, 194 input GRU64 neural state and all 3.0 saved trainable weights byte compatible**. No brain reset. No new slots; no rendering, world, physical resources, 2.2 controller or UI changes.
+4. Android QA: `Zero363TrueSpeedAndGripTest` three real Android tests plus inherited V361 and V362 original game tests; V3-only .08 on live birth, persistence through cold reopen, 2.2 .12, self-grip true physical credit, real forced movement vetoes, original application package. `tools/zero363_android_ui.sh`, CI `zero363-original-android-qa.yml`.
+5. Original JVM physical A/B `zero363-floor-traction-ab.yml`, .08 vs .12 vs .04 with 1,200 decisions and 4-direction ablation; REJECT symmetric random initialization.
+6. Signed OTA monotonic publisher build181/version1181 `3.0-ota.363` only after Android QA pass, signed by original historical certificate, in-app updater via GitHub release+main Vercel manifest. Publishing status needs real workflow success, not PR merge alone.
+
+## Limitations / next phone gate
+This is a **measured capacity improvement**, not a fixed four-direction walking brain. If ZERO remains unable to travel left/south or collect blue resources, the next research target is learning a motor inverse/coordination from real per-sector action-effect, rather than arbitrarily increasing muscle force. Do NOT prescribe a trajectory, gait, hidden resource vector or fictional locomotion reward. Track actual changes in target progress, body speed, grip credit, physical work, multi-life survivability. Honest failure remains possible.
