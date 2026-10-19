@@ -227,8 +227,17 @@ public final class Zero3RecurrentBrain {
         int selected=cognition==null?0:cognition.select(x,options);
         if(plannerV354!=null){
             plannerV354.topology(cognition.snapshot().predictiveUnits);
-            boolean ready=validationCount>=64&&heldoutModelError<heldoutBaselineError*.9f&&cognition.trusted(0)&&cognition.trusted(1)&&cognition.trusted(2);
-            int planned=plannerV354.select(x,decisionState,options,modelV354(),ready);if(planned>=0)selected=planned;
+            // The real S21 reserve-cost head can have a nearly constant
+            // baseline, while energy and damage remain independently trusted.
+            // Reuse V353's empirical cost error; require the V354 heldout
+            // horizon to beat BOTH energy and harm baselines before influence.
+            float costMargin=cognition.costSafetyMarginV368();
+            boolean costTrusted=cognition.trusted(2);
+            boolean ready=validationCount>=64&&heldoutModelError<heldoutBaselineError*.9f&&
+                cognition.trusted(0)&&cognition.trusted(1)&&Float.isFinite(costMargin);
+            int planned=plannerV354.select(x,decisionState,options,modelV354(),
+                ready,costTrusted,costMargin);
+            if(planned>=0)selected=planned;
         }
         System.arraycopy(noise[selected],0,lastNoise,0,MOTOR);
         float[] authorized=options[selected];
