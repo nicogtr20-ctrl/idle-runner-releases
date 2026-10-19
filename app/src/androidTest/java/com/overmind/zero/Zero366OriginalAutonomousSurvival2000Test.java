@@ -38,10 +38,18 @@ public final class Zero366OriginalAutonomousSurvival2000Test {
     private static int recordedHarms(String serialized){
         if(!serialized.startsWith("ls2|"))throw new AssertionError("Not original life statistics");
         String[] pieces=serialized.split("\\|");
-        int finished=Integer.parseInt(pieces[1]),harms=0;
-        for(int i=0;i<finished;i++){
-            String[] life=pieces[2+i].split(",");
-            harms+=(int)Float.parseFloat(life[2]);
+        int completed=Integer.parseInt(pieces[1]);
+        int historyCount=Integer.parseInt(pieces[3]);
+        assertTrue("recorded life count is bounded by actual death events",
+            completed>=0&&historyCount>=0&&historyCount<=50&&completed>=historyCount);
+        int harms=0;
+        // ls2 wire: count|CURRENT|HISTORY_COUNT|life0|life1..., not
+        // count|life0|life1...! Include ongoing-life harm too, because
+        // source contacts are real even if ZERO has not died yet.
+        for(int i=0;i<=historyCount;i++){
+            int index=i==historyCount?2:4+i;
+            String[] life=pieces[index].split(",");
+            harms+=Integer.parseInt(life[2]);
         }
         return harms;
     }
@@ -54,11 +62,23 @@ public final class Zero366OriginalAutonomousSurvival2000Test {
             .putBoolean(SaveSlotStore.FRESH_ZERO3_BIRTH,true).commit());
         Intent intent=new Intent(c,GameActivity.class);
         intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK|Intent.FLAG_ACTIVITY_CLEAR_TASK);
-        GameActivity original=(GameActivity)instrument.startActivitySync(intent);
+        // The real original game repaints continuously. startActivitySync()
+        // incorrectly waits for a permanently idle UI and times out. The
+        // already approved V362 tests use the activity monitor protocol.
+        Instrumentation.ActivityMonitor monitor=instrument.addMonitor(
+            GameActivity.class.getName(),null,false);
+        GameActivity original;
+        try {
+            c.startActivity(intent);
+            Activity created=instrument.waitForMonitorWithTimeout(monitor,30000);
+            assertNotNull("original repainting organism actually launched",created);
+            assertTrue(created instanceof GameActivity);
+            original=(GameActivity)created;
+        }finally{instrument.removeMonitor(monitor);}
         Bitmap surface=Bitmap.createBitmap(720,1080,Bitmap.Config.ARGB_8888);
         Canvas canvas=new Canvas(surface);
         try {
-            instrument.waitForIdleSync();
+            // Original organism is intentionally continuously repainting.
             assertTrue("only real V3 GRU may drive body",original.originalV356NeuralOwnerForQA());
             assertEquals("must be a virgin causal actor",0,original.originalV356DecisionsForQA());
             final int TARGET=2000, MAX_BURSTS=9500;
