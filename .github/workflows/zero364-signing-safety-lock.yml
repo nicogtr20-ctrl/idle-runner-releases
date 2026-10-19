@@ -1,0 +1,37 @@
+name: V364 SIGNED OTA SAFETY LOCK / reproduce bad four-way motor (NO OTA)
+on:
+  push:
+    branches: [fix/zero364-signed-ota-safety-lock-20261019]
+  pull_request:
+    branches: [release/zero30-ota]
+permissions: {contents: read}
+jobs:
+  reject-bad-motion:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with: {distribution: temurin, java-version: '17'}
+      - name: Assert bad old V363 production physically fails before signed OTA
+        run: |
+          set -euo pipefail
+          if python3 tools/zero364_g3_physical_ota_gate.py > /tmp/zero364-rejected.txt 2>&1; then
+            cat /tmp/zero364-rejected.txt
+            echo 'ERROR: regression gate unexpectedly ALLOWED known unsafe app' >&2
+            exit 1
+          fi
+          cat /tmp/zero364-rejected.txt
+          grep -F 'ZERO364 REAL-MOTOR FAILURE, OTA BLOCKED' /tmp/zero364-rejected.txt
+          grep -F 'direction 2 cannot advance on chosen heading' /tmp/zero364-rejected.txt
+          grep -F 'direction 3 cannot advance on chosen heading' /tmp/zero364-rejected.txt
+          echo 'ZERO364_ORIGINAL_BAD_MOTION_BLOCKED_FROM_OTA=PASS'
+      - name: Gate is a signed release prerequisite
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          s=Path('.github/workflows/zero30-stable-ota-channel.yml').read_text()
+          assert 'python3 tools/zero364_g3_physical_ota_gate.py' in s
+          assert s.index('python3 tools/zero364_g3_physical_ota_gate.py')<s.index('signed-ota-release:')
+          print('ORIGINAL_GAME_V364_OTA_SAFETY_INTERLOCK=PASS')
+          PY
