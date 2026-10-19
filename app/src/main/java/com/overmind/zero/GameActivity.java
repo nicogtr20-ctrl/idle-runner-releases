@@ -470,6 +470,13 @@ public final class GameActivity extends Activity {
                 brain3=Zero3OriginalBrainV356.load(GameActivity.this,
                     prefs.getString(Zero3OriginalBrainV356.KEY,""),
                     !virginBirthV362&&!wasReset);
+                // Previous original-world biography came ONLY from authentic
+                // material contacts, but lacks the photon image at contact.
+                // Explicitly import as a weak archival prior once; it never
+                // pretends to be new paired optical evidence or a brain policy.
+                if(!virginBirthV362&&!wasReset)
+                    brain3.inheritedPhysicalContactPriorV369(
+                        mind.estimated.clone(),mind.contacts.clone());
                 // Sole original-game V3 body gets the controlled passive
                 // drag improvement on every saved-scene restore. The dormant
                 // V2.2 fluid code/physics does NOT receive this calibration.
