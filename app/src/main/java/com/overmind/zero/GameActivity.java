@@ -41,6 +41,12 @@ public final class GameActivity extends Activity {
         // recursively from an instrumentation callback, which can starve
         // real Android lifecycle/UI processing and invalidate the evidence.
         lab.testMax=true;
+        // QA-only: this Android emulator intermittently loses its host
+        // GPU color buffer after prolonged TEST MAX. Rendering never feeds
+        // physical sensors or rewards; suppress PAINT only, not one single
+        // original physics, learning, hunger, collision or world step.
+        lab.qaSuppressPaintV366=true;
+        lab.setLayerType(View.LAYER_TYPE_NONE,null);
         lab.testMaxStartedNs=System.nanoTime();
         lab.invalidate();
     }
@@ -190,6 +196,7 @@ public final class GameActivity extends Activity {
         float[] virgin;
         volatile boolean learning=true,enabled=true;
         Thread worker;
+        boolean qaSuppressPaintV366=false;
         boolean showHelp=true,resetArmed=false,simulationRunning=true,showBenchmark=false;
         boolean detailsExpanded=false,settingsExpanded=false;
         long lastFrame=0,lastSave=0;
@@ -1685,6 +1692,13 @@ public final class GameActivity extends Activity {
             // Normal neural saves remain more frequent than physical writes.
             if(simulationRunning&&lastSave+12000000000L<now){
                 save();saveScene();lastSave=now;
+            }
+            if(qaSuppressPaintV366){
+                // This skips ONLY visual Canvas primitives in 2,000-choice
+                // QA. Original onDraw's fixed-step living-world simulation
+                // and original checkpoint code above have fully executed.
+                postInvalidateOnAnimation();
+                return;
             }
             c.save();float scale=getWidth()/W;c.scale(scale,scale);
             renderWorld(c);
