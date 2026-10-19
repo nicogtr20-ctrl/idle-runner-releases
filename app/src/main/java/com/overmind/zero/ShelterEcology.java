@@ -138,7 +138,12 @@ public final class ShelterEcology {
             float e=exposed(skin.x[i],skin.y[i],wd,objects,room);
             sum+=e;
             // Membrane feel, not tactile contact with a fake obstacle.
-            skin.touchPulse[i]=Math.max(skin.touchPulse[i],e*.24f);
+            float weatherPressure=e*.24f;
+            skin.touchPulse[i]=Math.max(skin.touchPulse[i],weatherPressure);
+            // Sensor-only provenance: downstream GRU3 and original HUD still
+            // feel the full actual gust; its motor peripheral must not mistake
+            // a gust for a contacted solid surface.
+            skin.weatherPulseV370[i]=Math.max(skin.weatherPulseV370[i],weatherPressure);
             skin.vx[i]+=wd*e*4f*dt;
         }
         float exposedFraction=sum/Morphology.POINTS;
