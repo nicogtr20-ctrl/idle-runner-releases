@@ -224,13 +224,13 @@ final class Zero3OriginalBrainV356 {
             measuredMotorDecisionsV361++;
             if(outcome.physicalEvidence)measuredPhysicalV361++;
             if(outcome.externalCorrection)externalMotorDecisionsV361++;
-            float projection=outcome.dx*choice.x+outcome.dy*choice.y;
-            float net=(float)Math.hypot(outcome.dx,outcome.dy);
-            if(net<.2f)almostStaticV361++;
+            float projection=outcome.deltaX*choice.x+outcome.deltaY*choice.y;
+            float motionNet=(float)Math.hypot(outcome.deltaX,outcome.deltaY);
+            if(motionNet<.2f)almostStaticV361++;
             else if(projection>.2f)alignedV361++;
             else if(projection<-.2f)opposedV361++;
             sumIntentXV361+=choice.x;sumIntentYV361+=choice.y;
-            sumActualXV361+=outcome.dx;sumActualYV361+=outcome.dy;
+            sumActualXV361+=outcome.deltaX;sumActualYV361+=outcome.deltaY;
             sumForwardV361+=projection;sumGrossV361+=outcome.gross;sumWorkV361+=outcome.work;
             int sector=((int)Math.floor((Math.atan2(choice.y,choice.x)+Math.PI/8)/
                 (Math.PI/4))+8)%8;
