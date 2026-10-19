@@ -45,6 +45,7 @@ public final class GameActivity extends Activity {
         lab.extendHabitat();return true;
     }
     void originalV356ForceDeathForQA(){if(lab!=null)lab.reserve=0f;}
+    float originalV362LifeStartFuelForQA(){return lab==null?-1f:lab.liveStartEnergy;}
     @Override public void onCreate(Bundle b){
         super.onCreate(b);
         getWindow().setFlags(1024,1024);
