@@ -27,6 +27,8 @@ jobs:
           grep -F 'direction 2 cannot advance on chosen heading' /tmp/zero364-g3.txt
           grep -F 'direction 3 cannot advance on chosen heading' /tmp/zero364-g3.txt
           echo 'ZERO364_KNOWN_BAD_RELEASE_BLOCKED_BY_ACTUAL_ORIGINAL_PHYSICS=PASS'
+      - name: Physical speed comparison — actual older 2.2 muscle peripheral
+        run: python3 tools/zero364_old_motor_peripheral_compare.py
       - name: Verify hard gate precedes Android signing and release
         run: |
           python3 - <<'PY'
