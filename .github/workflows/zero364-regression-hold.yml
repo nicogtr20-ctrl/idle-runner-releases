@@ -1,0 +1,39 @@
+name: ZERO3 V364 verify release hold catches real rightward regression (NO OTA)
+on:
+  push:
+    branches: [fix/zero364-block-regressed-ota-and-forensic-20261019]
+  pull_request:
+    branches: [release/zero30-ota]
+  workflow_dispatch:
+permissions: {contents: read}
+jobs:
+  assert-release-stops-on-current-regression:
+    runs-on: ubuntu-latest
+    timeout-minutes: 18
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with: {distribution: temurin, java-version: '17'}
+      - name: V363 known bad actor-motor four-way physics MUST BE REJECTED
+        run: |
+          set -euo pipefail
+          if python3 tools/zero364_g3_physical_ota_gate.py > /tmp/zero364-g3.txt 2>&1; then
+            cat /tmp/zero364-g3.txt
+            echo 'V364 SAFETY GATE FAILED TO CATCH KNOWN REGRESSION' >&2
+            exit 1
+          fi
+          cat /tmp/zero364-g3.txt
+          grep -F 'ZERO364 REAL-MOTOR FAILURE, OTA BLOCKED' /tmp/zero364-g3.txt
+          grep -F 'direction 2 cannot advance on chosen heading' /tmp/zero364-g3.txt
+          grep -F 'direction 3 cannot advance on chosen heading' /tmp/zero364-g3.txt
+          echo 'ZERO364_KNOWN_BAD_RELEASE_BLOCKED_BY_ACTUAL_ORIGINAL_PHYSICS=PASS'
+      - name: Verify hard gate precedes Android signing and release
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          f=Path('.github/workflows/zero30-stable-ota-channel.yml').read_text()
+          assert f.index('python3 tools/zero364_g3_physical_ota_gate.py')<f.index('gradle --no-daemon assembleDebug assembleDebugAndroidTest')
+          assert f.index('python3 tools/zero364_g3_physical_ota_gate.py')<f.index('signed-ota-release:')
+          assert 'signed-ota-release:' in f
+          print('V364_HARD_OTA_BLOCK_BEFORE_SIGNING=PASS')
+          PY
