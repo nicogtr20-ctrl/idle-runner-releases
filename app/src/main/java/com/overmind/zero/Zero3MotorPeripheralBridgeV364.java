@@ -51,7 +51,7 @@ final class Zero3MotorPeripheralBridgeV364 {
            peripheral==null||body==null||skin==null||
            !Float.isFinite(dt)||dt<=0f||dt>.04f)
             throw new IllegalArgumentException("Invalid V364 physical motor timestep");
-        peripheral.fastTick(body,skin,dt);
+        peripheral.fastTickOriginalV370(body,skin,dt);
         float[] old=peripheral.commands();
         for(int sector=0;sector<S;sector++)for(int channel=0;channel<CHANNELS;channel++){
             int k=sector*CHANNELS+channel;
