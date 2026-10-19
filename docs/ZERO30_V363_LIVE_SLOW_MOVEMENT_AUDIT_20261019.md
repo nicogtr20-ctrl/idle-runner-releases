@@ -1,0 +1,23 @@
+# ZERO 3.0 — V363 original physics speed diagnostic and causal A/B
+
+Date: 2026-10-19. **NO prod muscle changes. NO OTA.** This is the user's explicit report that V362 virgin GRU "is too slow", not permission to script movement.
+
+## Live evidence exactly reported from phone
+- Latest explicitly shared index (branch `zero-telemetry`): `20261019-150810-26013e12bab2d`, version `3.0-ota.362`, real V356 checkpoint valid, 9,793 decisions (7,836 TRAIN / 1,957 heldout), 4,591 motor synapse updates, 16 completed lives, 0 real blue pickups, 0 gate success, 0 room success. Initial physical live fuel=100, saved=84.64.
+- V361 read-only motor evidence: `grossDistance=5927.72028`, `signedProgress=595.72106`, `aligned=3639`, `opposed=2621`, `almostStatic=1088`, `externallyCorrected=4051`. These are diagnostic *decision bins*, not objective locomotion speed per wall second. Overall gross ~0.6053 units/decision, signed projection ~0.06083 units/decision (~10.05% of gross). External =41.37%, aligned37.16%, opposed26.76%, near-static11.11%; bins leave lateral/ambiguous 24.97%.
+- LifeStats 1–8 max-net mean153.85 U and lives9–16 mean162.69 U; only ~5.7% change, non-random starts, neither motor learning improvement nor invariance proven. Strong grip/touch sessions are from current profile, not necessarily resource pickup. The original critical problem remains 0 actual blue resources and no successful gate.
+- Latest physical scene world snapshot had material actuation surface.effort ~0.103, peakExtension3.95 U, body velocity components about +0.80/-0.79 U per simulated second, symbiote.invalid=0.
+
+## Actual source physics
+- `PhysicsClockV171.steps` accumulates `wallDelta*speed` (1/5/20); original `GameActivity` advances every physical fixed step at 1/60 sec. **x20 cannot multiply individual muscle power; this is not the physical-body speed**. Renderer FPS/wall clock should be separately measured if user reports x20 itself malfunctioning.
+- `Zero3LearningFoundation.AdaptiveCortex.command` is 16 sectors * 4 neural channels. With V358 gain2.4 it uses tanh(weights * locally perceived action + one-channel exploratory probe). No built-in gait. `SymbioteMatterV1.step` consumes real 64 efferents; per-site active radial force `extend*680`, lateral `lateral*210` (3.24x force asymmetry), tangential/substrate drag `exp(-(1.8+66*traction)*dt)`. Grip commands are V319-owned.
+- Prior 2026-10-19 production CI (job118098381202) runs the exact original Java solver `Zero3MuscleStrengthAuditV358`: first-decision virgin V22 body gross/frame0.029329 and lateral command0.154170; virgin V3 @gain2.4 0.004438 gross/frame and lateral0.050673 (different controllers so NOT same-policy causal evidence). V3 after 1200 matched directional decisions TRAIN gross/frame0.018490, FROZEN0.020213; mean cortical actor progress TRAIN~0.06319, frozen~0.06980. Thus **training did NOT improve speed in this fixture**, and cortex efficacy is a blocker independent of increasing force.
+- `MotorResponseJournalV172.externalMotionContaminated(...held)` treats any real own grip hold as external; V3 `Coordinator.finish` vetoes motor gradients whenever `external` is true. This likely sacrifices learning on legitimate self-initiated anchors. Must separate endogenous adhesion from *externally forced* world displacement, remain strict on collision correction, storm/force, teleports.
+
+## Calibrations now staged on audit-only branch
+- `tools/qa/Zero363GainPhysiologyAudit.java` and `tools/zero363_speed_audit.py`: same real 170-mass body, same seed/noise/intention, 1200 decisions x24 substeps, 2.4 versus 3.0 gain, TRAIN and frozen. Measures gross, signed-X, work, muscle impulse, surface extension and unphysical states.
+- `tools/qa/Zero363LateralPhysiologyAudit.java` and companion script compare untouched cortical2.4 with the SAME neural outputs but a symmetric x1.5 lateral actuator transfer, never an authored target/gait. Measure same physical signs and work.
+- `.github/workflows/zero363-speed-physical-audit.yml` runs both. **A green build is NOT a G3 mobility improvement.** Do not promote a candidate merely because gross movement increased. Require improvement in projected displacement vs honest frozen baseline, not worse interoception, no loss of valid grip/square/door, stable physics, zero scripted resource finding and actual Android test once candidate selected. No blind certification using already consumed test seeds.
+
+## Status and next decision
+Tests queued in GitHub Actions as of writing; do NOT claim any numeric result for gain3.0 or lateral1.5 before logs. Active OTA remains362. No app, user saved brains, force constants, passive drag, neural reward or OTA modified by these read-only physics audits.
