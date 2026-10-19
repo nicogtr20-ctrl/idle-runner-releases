@@ -180,6 +180,9 @@ public final class GameActivity extends Activity {
         // Reset each real simulation substep, not once per GRU decision.
         float brain3HarmThisPhysicalFrameV359=0f;
         float brain3MotorSpentThisPhysicalFrameV359=0f;
+        // Measured current physical substep, BEFORE contacts can terminate a life.
+        float brain3WorkThisPhysicalFrameV368=0f;
+        float brain3ImpulseThisPhysicalFrameV368=0f;
         // Frame-start physical positions for continuous collision detection.
         // These scratch arrays are NEVER part of ZERO's neural state/save.
         final float[] squarePrevSkinX=new float[Morphology.POINTS];
@@ -1052,6 +1055,26 @@ public final class GameActivity extends Activity {
             }
             eventTime=Math.max(0,eventTime-dt);
             if(reserve<=0){
+                // Previously resetEpisode() aborted the live V3 action here;
+                // every lethal contact disappeared from neural training.
+                // Complete it once using REAL POST body/reserve/contact values.
+                // The incomplete planned duration is censored, so no false
+                // duration or muscle-performance reward reaches the cortex.
+                if(brain3!=null&&brain3.pending()){
+                    try{
+                        brain3.observed(creature,surface,symMatter,environment,
+                            chamber,reserve,worldTime,dt,
+                            brain3WorkThisPhysicalFrameV368,
+                            brain3ImpulseThisPhysicalFrameV368,
+                            brain3MotorSpentThisPhysicalFrameV359,
+                            brain3HarmThisPhysicalFrameV359,false,true);
+                    }catch(java.io.IOException failure){
+                        simulationRunning=false;
+                        brain3Error="V368 esperienza terminale non salvata: "+
+                            failure.getMessage();
+                        return; // fail closed: do not erase the uncredited life.
+                    }
+                }
                 // Terminal supervision is the genuine end of a physical life,
                 // NEVER a negative label on the gate, squares or last action.
                 mortality.terminal(reserve/100f);
@@ -1440,6 +1463,12 @@ public final class GameActivity extends Activity {
                     // This cannot command a hold or modify physical forces.
                     if(slice>0f)sensorMind.sampleGripPhysicsFrame(surface);
                     gripObserver.pruneBoxes(environment);
+                    // Fatal red contact occurs inside resolveObjects(), before the
+                    // ordinary POST callback below. Preserve the real muscle
+                    // work and impulse of this already-executed physics frame.
+                    brain3WorkThisPhysicalFrameV368=
+                        Math.max(0f,symMatter==null?0f:symMatter.work-brain3WorkBefore);
+                    brain3ImpulseThisPhysicalFrameV368=witnessedMuscleImpulse;
                     resolveObjects(slice);
                     // Weather reaches the actual deformable tissue AFTER
                     // solid collisions. Physical shadows protect only the
