@@ -116,6 +116,55 @@ public final class Zero366VisionMemoryAndPlannerTest {
         assertEquals(converted.snapshot().skills[0].train,after.snapshot().skills[0].train);
         assertArrayEquals(newData,after.encode());
     }
+    @Test public void trustedEnergyAndHarmCanImproveActorProposalWithoutBlindCostGuess()throws Exception{
+        Zero3CognitionV353 model=new Zero3CognitionV353();
+        // Only this test instrument fixes measured validation statistics and
+        // trained-value readout. Production model still learns ONLY from
+        // original physical PRE/POST measurements and actual heldout errors.
+        Field count=Zero3CognitionV353.class.getDeclaredField("validations");
+        count.setAccessible(true);count.setLong(model,80L);
+        for(String k:new String[]{"baseline","error","spread"}){
+            Field f=Zero3CognitionV353.class.getDeclaredField(k);f.setAccessible(true);
+            double[] a=(double[])f.get(model);
+            Arrays.fill(a,0);
+            if(k.equals("baseline")){a[0]=100;a[1]=100;a[2]=1e-9;}
+            if(k.equals("error")){a[0]=1;a[1]=1;a[2]=5.6178385e-7*80;}
+        }
+        assertTrue(model.trusted(0));assertTrue(model.trusted(1));
+        assertFalse("physical cost head remains demonstrably untrusted",model.trusted(2));
+        Field championField=Zero3CognitionV353.class.getDeclaredField("champion");
+        championField.setAccessible(true);Object champion=championField.get(model);
+        Field inputsField=champion.getClass().getDeclaredField("in");
+        Field outputsField=champion.getClass().getDeclaredField("out");
+        Field unitsField=champion.getClass().getDeclaredField("units");
+        inputsField.setAccessible(true);outputsField.setAccessible(true);unitsField.setAccessible(true);
+        float[][] in=(float[][])inputsField.get(champion);
+        float[][] out=(float[][])outputsField.get(champion);
+        int units=unitsField.getInt(champion);
+        for(int e=0;e<3;e++){
+            Arrays.fill(in[e],0);Arrays.fill(out[e],0);
+            in[e][194]=1.5f; // outcome learned from own ACTION X (not food colour)
+            out[e][0*(units+1)]=1f; // measured reserve outcome head
+        }
+        float[] observation=new float[194];
+        float[][] realActorProposals={
+            {-1f,0f,.5f,.5f,.3f},
+            {1f,0f,.5f,.5f,.3f},
+            {0f,1f,.5f,.5f,.3f}
+        };
+        assertEquals("energy and harm are reliable and beat verified cost uncertainty",
+            1,model.select(observation,realActorProposals));
+        Field costError=Zero3CognitionV353.class.getDeclaredField("error");
+        costError.setAccessible(true);
+        ((double[])costError.get(model))[2]=40;
+        assertEquals("real cost uncertainty is large, so KEEP ORIGINAL GRU SAMPLE",
+            0,model.select(observation,realActorProposals));
+        Field baselineField=Zero3CognitionV353.class.getDeclaredField("baseline");
+        baselineField.setAccessible(true);
+        ((double[])baselineField.get(model))[0]=0;
+        assertEquals("without reliable energy evidence never override GRU",
+            0,model.select(observation,realActorProposals));
+    }
     @Test public void costUncertaintyCannotBeIgnoredOrRelabelledAsZero(){
         assertEquals(Float.POSITIVE_INFINITY,
             Zero3CognitionV353.conservativeCostMarginV366(0,63),0);
