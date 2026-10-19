@@ -261,7 +261,7 @@ final class Zero3OriginalBrainV356 {
             grip.observeWorldV354(skin,objects,chamber,Math.max(0,work));
             workAccum+=Math.max(0,work);elapsed+=dt;disturbed|=external;
             if(!terminal&&elapsed+0.0001f<choice.duration&&reserve>0)return;
-            if(!terminal&&elapsed<.0249f){interrupt();return;}
+            if(!terminal&&reserve>0f&&elapsed<.0249f){interrupt();return;}
             // The original weather step may exhaust the reserve AFTER resolveObjects.
             // Such a normal POST callback is also terminal, and must never
             // train an unexecuted motor duration as if it completed.
