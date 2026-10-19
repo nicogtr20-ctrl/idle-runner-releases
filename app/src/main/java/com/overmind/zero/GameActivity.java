@@ -20,6 +20,7 @@ public final class GameActivity extends Activity {
     // Android integration checks: the ACTUAL original physics owner (not V355 lab).
     boolean originalV356NeuralOwnerForQA(){return lab!=null&&lab.brain3!=null&&lab.useSymbiote;}
     long originalV356DecisionsForQA(){return lab==null||lab.brain3==null?-1:lab.brain3.decisions();}
+    float originalV363OriginalBodyTractionForQA(){return lab==null||lab.symMatter==null?-1f:lab.symMatter.passiveFloorBaselineV363();}
     int originalV356LifeForQA(){return lab==null?-1:lab.brain3LifeSerial;}
     int originalV356WorldZoneForQA(){return lab==null?-1:lab.episode;}
     String originalV356BrainErrorForQA(){return lab==null?"no game":lab.brain3Error;}
@@ -438,6 +439,10 @@ public final class GameActivity extends Activity {
                 brain3=Zero3OriginalBrainV356.load(GameActivity.this,
                     prefs.getString(Zero3OriginalBrainV356.KEY,""),
                     !virginBirthV362&&!wasReset);
+                // Sole original-game V3 body gets the controlled passive
+                // drag improvement on every saved-scene restore. The dormant
+                // V2.2 fluid code/physics does NOT receive this calibration.
+                symMatter.enableOriginalZero3TractionV363();
                 // Crash-safe atomic birth: the explicit newborn has zero
                 // decisions, and only the SAME commit publishes its initial
                 // valid brain checkpoint and clears the one-time fresh flag.
@@ -788,6 +793,7 @@ public final class GameActivity extends Activity {
             if(useSymbiote){
                 symMatter=new SymbioteMatterV1();
                 symMatter.reset(creature,surface);
+                if(brain3!=null)symMatter.enableOriginalZero3TractionV363();
                 sensorMind.setActualFluid(symMatter);
             }else{
                 symMatter=null;
@@ -1528,13 +1534,15 @@ public final class GameActivity extends Activity {
                     // only the live 3.0 neuron's completed action receives credit.
                     if(brain3!=null&&lifeStamp==episode){
                         try{
-                            boolean holding=false;
-                            for(float hold:surface.gripHold)
-                                if(hold>=Morphology.GRIP_HOLD){holding=true;break;}
-                            boolean external=MotorResponseJournalV172.externalMotionContaminated(
+                            // V363: a self-selected V319 physical grip is a
+                            // valid locomotor foothold, not a foreign motor.
+                            // Actual solver displacement, moving objects and
+                            // storms are STILL excluded. The V2.2 path above
+                            // keeps its original stricter contamination rule.
+                            boolean external=MotorResponseJournalV172.externalMotorInterferenceV363(
                                 creature.cx-uncorrectedX,creature.cy-uncorrectedY,
                                 environmentEffectSinceAction-worldEffectAtFrameStart,
-                                shelter.storm(worldTime),holding);
+                                shelter.storm(worldTime));
                             brain3.observed(creature,surface,symMatter,environment,
                                 chamber,reserve,worldTime,slice,
                                 Math.max(0f,symMatter.work-brain3WorkBefore),

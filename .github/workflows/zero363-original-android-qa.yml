@@ -1,0 +1,60 @@
+name: ZERO3 V363 Android verified traction and truthful voluntary grip (NO OTA)
+on:
+  push:
+    branches: [fix/zero363-motor-speed-traction-causal-20261019]
+  pull_request:
+    branches: [release/zero30-ota]
+  workflow_dispatch:
+permissions: {contents: read}
+jobs:
+  original-v3-compile-and-emulator:
+    runs-on: ubuntu-latest
+    timeout-minutes: 50
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with: {distribution: temurin, java-version: '17'}
+      - name: Compile original living game and all instrumented tests
+        run: gradle --no-daemon assembleDebug assembleDebugAndroidTest
+      - name: Verify original game and retained checkpoint architecture
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          p=Path('app/src/main/java/com/overmind/zero')
+          physics=(p/'SymbioteMatterV1.java').read_text()
+          game=(p/'GameActivity.java').read_text()
+          log=(p/'MotorResponseJournalV172.java').read_text()
+          brain=(p/'Zero3OriginalBrainV356.java').read_text()
+          assert 'private float passiveFloorBaselineV363=.12f;' in physics
+          assert 'passiveFloorBaselineV363=.08f;' in physics
+          assert 'if(brain3!=null)symMatter.enableOriginalZero3TractionV363();' in game
+          assert 'symMatter.enableOriginalZero3TractionV363();' in game
+          assert 'externalMotorInterferenceV363(' in game
+          assert 'externalMotionContaminated(' in game
+          assert 'brain3.actuate(brain3LifeSerial' in game
+          assert 'return externalMotionContaminated(correctionX,correctionY,' in log
+          assert 'VERSION=356' in brain or 'private static final int VERSION=356' in brain
+          assert 'zero3_original_brain_only_v356' in brain
+          print('V363_NO_HARDCODED_GAIT_V2_LEGACY_PRESERVED_V356_NEURONS_INTACT=PASS')
+          PY
+      - name: Enable KVM
+        run: |
+          echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' | sudo tee /etc/udev/rules.d/99-kvm4all.rules
+          sudo udevadm control --reload-rules
+          sudo udevadm trigger --name-match=kvm
+      - name: Real original Android app, all V361/362/363 tests
+        uses: reactivecircus/android-emulator-runner@v2
+        with:
+          api-level: 35
+          arch: x86_64
+          profile: pixel_6
+          disable-animations: true
+          script: bash tools/zero363_android_ui.sh
+      - name: Save Android QA evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: ZERO363-original-game-speed-traction-3-tests
+          path: |
+            /tmp/zero363-speed-and-real-grip.txt
+            /tmp/zero362-qa
