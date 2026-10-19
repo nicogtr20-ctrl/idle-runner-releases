@@ -18,6 +18,11 @@ public final class SaveSlotStore {
     public static final String WORKING="zero_motorbrain_001";
     public static final String SAVES="zero_save_slots_v100";
     public static final String PENDING_RELOAD="pending_profile_reload_v100";
+    /** One-time V362 protection: explicit NEW GAME must NEVER import a
+     * trained V354/V355 experimental brain from a separate preference file.
+     * This marker survives process death until a fresh ZERO3 checkpoint and
+     * the marker removal are committed together in GameActivity.load(). */
+    public static final String FRESH_ZERO3_BIRTH="zero3_explicit_virgin_birth_v362";
     private static final String RECOVERY="emergency_previous_v100";
     private static final String PREFIX="slot_v100_";
     public final SharedPreferences working,slots;
@@ -86,6 +91,7 @@ public final class SaveSlotStore {
         Map<String,Object> current=new HashMap<>(working.getAll());
         current.remove(ResetDomains.REQUEST);
         current.remove(PENDING_RELOAD);
+        current.remove(FRESH_ZERO3_BIRTH);
         validate(current);
         return current;
     }
@@ -138,7 +144,8 @@ public final class SaveSlotStore {
         SharedPreferences.Editor e=working.edit().clear();
         for(Map.Entry<String,Object> item:next.entrySet()){
             String k=item.getKey();Object v=item.getValue();
-            if(k.equals(ResetDomains.REQUEST)||k.equals(PENDING_RELOAD))continue;
+            if(k.equals(ResetDomains.REQUEST)||k.equals(PENDING_RELOAD)||
+                k.equals(FRESH_ZERO3_BIRTH))continue;
             if(v instanceof String)e.putString(k,(String)v);
             else if(v instanceof Integer)e.putInt(k,(Integer)v);
             else if(v instanceof Long)e.putLong(k,(Long)v);
@@ -177,7 +184,8 @@ public final class SaveSlotStore {
         // survives. Start with absolutely no inherited weights/stats.
         if(!working.edit().clear()
             .putBoolean(SymbioteMatterV1.ENABLED,true)
-            .putBoolean(PENDING_RELOAD,true).commit())
+            .putBoolean(PENDING_RELOAD,true)
+            .putBoolean(FRESH_ZERO3_BIRTH,true).commit())
             throw new IllegalStateException("Nuova partita non avviata");
     }
 }
