@@ -52,7 +52,7 @@ public final class Zero369LearnedContactValenceAndroidTest {
         byte[] full=model.encode();
         // V369 persistence is a genuinely OPTIONAL tail after all prior
         // V353 matrix/evidence bytes. Old bytes are not reinterpreted.
-        int appended=4+8+8+3*(4+8);
+        int appended=4+8+8+3*(4+8)+1+3*(4+4); // appended V369 optical plus optional historical counters
         byte[] old=Arrays.copyOf(full,full.length-appended);
         Zero3CognitionV353 restored=Zero3CognitionV353.decode(old);
         assertEquals(0,restored.snapshot().contactAccepted);
