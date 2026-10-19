@@ -115,6 +115,10 @@ final class Zero3OriginalBrainV356 {
      * No object signature, object type or body-world target is revealed here.
      * This is part of the one GRU's V353 cognition, not the old controller.
      */
+    void inheritedPhysicalContactPriorV369(float[] physicalMeans,int[] counts){
+        if(pending)throw new IllegalStateException("V369 no archival learning mid decision");
+        brain.inheritedPhysicalContactPriorV369(physicalMeans,counts);
+    }
     void realEnergyContactV369(float[] perceivedSpectral24,float actualContactDelta){
         if(!pending)throw new IllegalStateException("V369 no actual GRU movement at contact");
         brain.realEnergyContactV369(perceivedSpectral24,actualContactDelta,heldout);
