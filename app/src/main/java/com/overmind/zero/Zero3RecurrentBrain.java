@@ -151,6 +151,10 @@ public final class Zero3RecurrentBrain {
     float nextRoomV354(){return executive.nextRoom();}
     void ecologyStateV354(String state,float next){executive.ecology(state,next);}
     long selectedOptionV354(){return executive==null?0:executive.selectedId();}
+    void inheritedPhysicalContactPriorV369(float[] means,int[] counts){
+        if(pending||cognition==null)throw new IllegalStateException("V369 archive import only at boundary");
+        cognition.adoptOldContactEvidenceV369(means,counts);
+    }
     void realEnergyContactV369(float[] retina24,float physicalDelta,boolean heldout){
         if(!pending||cognition==null)throw new IllegalStateException("V369 contact without live GRU choice");
         cognition.genuineContactV369(retina24,physicalDelta,heldout);
