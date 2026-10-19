@@ -59,6 +59,15 @@ public final class Zero3ExecutiveV354 {
     private static float[] contextForOptionV366(Option o,float[] current,float[] legacy,float[] old361){
         return o.visionSchemaV366==354?legacy:o.visionSchemaV366==361?old361:current;
     }
+    private static float distanceOptionV366(float[] observed,Option option){
+        int matched=option.visionSchemaV366==366?CONTEXT:PRIOR_CONTEXT;
+        float error=0;
+        for(int i=0;i<matched;i++){
+            float d=observed[i]-option.context[i];
+            error+=d*d;
+        }
+        return error/matched; // preserve original V354/361 match thresholds
+    }
     private static float distance(float[] a,float[] b){float d=0;for(int i=0;i<CONTEXT;i++){float v=a[i]-b[i];d+=v*v;}return d/CONTEXT;}
     private float value(float[] c){float a=valueWeights[CONTEXT];for(int i=0;i<CONTEXT;i++)a+=c[i]*valueWeights[i];return clamp(a);}
     /** Called by the sole actor after its own proposal. Returned option must be authorized there. */
@@ -73,7 +82,7 @@ public final class Zero3ExecutiveV354 {
         float nearest=.12f;
         for(int i=0;i<options.size();i++){
             Option o=options.get(i);
-            float d=distance(contextForOptionV366(o,c,legacy,old361),o.context);
+            float d=distanceOptionV366(contextForOptionV366(o,c,legacy,old361),o);
             if(o.state==RETIRED||o.train<4||d>=nearest)continue;
             boolean probe=Zero3ConfigurationV354.heldout(decision)&&((decision/15)&1)==1;
             boolean recall=!Zero3ConfigurationV354.heldout(decision)&&lastHarm==0&&(o.state==CHAMPION||o.state==PROBATION)&&o.optionN>0&&
@@ -130,7 +139,7 @@ public final class Zero3ExecutiveV354 {
             validation++;
             for(int i=0;i<options.size();i++){
                 Option o=options.get(i);if(!motorEvidence||o.state==RETIRED||
-                    distance(contextForOptionV366(o,pendingContext,pendingLegacyContextV354,pendingV361ContextV366),o.context)>.12f)continue;
+                    distanceOptionV366(contextForOptionV366(o,pendingContext,pendingLegacyContextV354,pendingV361ContextV366),o)>.12f)continue;
                 if(i==active){o.optionN++;o.optionSum+=motorScore;o.optionSq+=motorScore*motorScore;o.optionEnergy+=realEnergy;o.optionHarm+=harm;}
                 else if(active==-1){o.controlN++;o.controlSum+=motorScore;o.controlSq+=motorScore*motorScore;o.controlEnergy+=realEnergy;o.controlHarm+=harm;}
                 else continue;
@@ -148,7 +157,7 @@ public final class Zero3ExecutiveV354 {
             for(int i=0;i<CONTEXT;i++)valueWeights[i]=clamp(valueWeights[i]+.005f*err*pendingContext[i]);
             valueWeights[CONTEXT]=clamp(valueWeights[CONTEXT]+.005f*err);
             for(Option o:options)if(motorEvidence&&o.state!=RETIRED&&
-                distance(contextForOptionV366(o,pendingContext,pendingLegacyContextV354,pendingV361ContextV366),o.context)<.12f&&
+                distanceOptionV366(contextForOptionV366(o,pendingContext,pendingLegacyContextV354,pendingV361ContextV366),o)<.12f&&
                 o.policy[0]*pendingPolicy[0]+o.policy[1]*pendingPolicy[1]>.8f)o.train++;
             if(motorEvidence&&train%32==0&&(options.size()<LIMIT||hasRetired())&&motorScore>0&&harm==0){
                 if(options.size()==LIMIT)for(int i=0;i<options.size();i++)if(options.get(i).state==RETIRED){
