@@ -45,6 +45,7 @@ public final class GameActivity extends Activity {
         lab.extendHabitat();return true;
     }
     void originalV356ForceDeathForQA(){if(lab!=null)lab.reserve=0f;}
+    float originalV362LifeStartFuelForQA(){return lab==null?-1f:lab.liveStartEnergy;}
     @Override public void onCreate(Bundle b){
         super.onCreate(b);
         getWindow().setFlags(1024,1024);
@@ -220,7 +221,13 @@ public final class GameActivity extends Activity {
             String scope=prefs.getString(ResetDomains.REQUEST,"");
             if(!ResetDomains.valid(scope))return false;
             SharedPreferences.Editor edit=prefs.edit();
-            if(ResetDomains.ALL.equals(scope))edit.clear();
+            if(ResetDomains.ALL.equals(scope)){
+                // RESET ALL is a fresh organism, not permission to silently
+                // resurrect a previously trained V355 experimental brain.
+                edit.clear();
+                edit.putBoolean(SymbioteMatterV1.ENABLED,true);
+                edit.putBoolean(SaveSlotStore.FRESH_ZERO3_BIRTH,true);
+            }
             else for(String key:ResetDomains.keys(scope))edit.remove(key);
             edit.remove(ResetDomains.REQUEST);
             // Synchronous commit prevents a delayed save from resurrecting
@@ -253,6 +260,8 @@ public final class GameActivity extends Activity {
                !prefs.edit().remove(SaveSlotStore.PENDING_RELOAD).commit())
                 throw new IllegalStateException("Unable to apply save-slot switch");
             boolean wasReset=consumeResetRequest();
+            final boolean virginBirthV362=prefs.getBoolean(
+                SaveSlotStore.FRESH_ZERO3_BIRTH,false);
             // Old named profiles stay physically unchanged. Only the
             // explicitly created newborn profile gets fluid-body version 1.
             useSymbiote=prefs.getBoolean(SymbioteMatterV1.ENABLED,false);
@@ -427,7 +436,19 @@ public final class GameActivity extends Activity {
                 if(!useSymbiote||symMatter==null)throw new java.io.IOException(
                     "Profilo originale privo del simbionte: nessuna conversione automatica");
                 brain3=Zero3OriginalBrainV356.load(GameActivity.this,
-                    prefs.getString(Zero3OriginalBrainV356.KEY,""));
+                    prefs.getString(Zero3OriginalBrainV356.KEY,""),
+                    !virginBirthV362&&!wasReset);
+                // Crash-safe atomic birth: the explicit newborn has zero
+                // decisions, and only the SAME commit publishes its initial
+                // valid brain checkpoint and clears the one-time fresh flag.
+                if(virginBirthV362||wasReset){
+                    if(brain3.decisions()!=0)
+                        throw new java.io.IOException("V362 nuova vita ha importato esperienza");
+                    if(!prefs.edit()
+                        .putString(Zero3OriginalBrainV356.KEY,brain3.checkpoint())
+                        .remove(SaveSlotStore.FRESH_ZERO3_BIRTH).commit())
+                        throw new java.io.IOException("V362 nascita neuronale non salvata");
+                }
                 brain3Error="";
                 sensorMind.setLearning(false);
                 if(symMotor!=null)symMotor.setAdaptationEnabled(false);
@@ -786,7 +807,10 @@ public final class GameActivity extends Activity {
                 scarcity,null,environment,surface));
             chosenObject=null;
             goalTimer=0;contactsThisLife=0;worldTime=0;
-            reserve=Math.max(70,Math.min(92,reserve));
+            // A newborn life starts with a FULL physical reserve. This is
+            // real fuel, not a reward, free energy during a learned action or
+            // a navigation/locomotion command. Normal hunger/muscle costs apply.
+            reserve=100f;
             liveStartX=creature.cx;liveStartY=creature.cy;
             liveStartEnergy=reserve;liveStartContacts=physicalContacts;
             if(brain3==null)sensorMind.resetEpisode(SensorimotorMind.Senses.read(
@@ -1032,7 +1056,7 @@ public final class GameActivity extends Activity {
                 lifeStats.death();
                 competenceMemoryV21.newLife();
                 skillExecution.resetLife();
-                reserve=70;lastEvent="CORPO ESAUSTO • MEMORIA CONSERVATA";eventTime=6;
+                reserve=100;lastEvent="CORPO ESAUSTO • MEMORIA CONSERVATA";eventTime=6;
                 resetEpisode();
                 nextChamber=elapsedLife+12f;
                 save();
@@ -1984,7 +2008,9 @@ public final class GameActivity extends Activity {
                 172,62,10,GOLD,false);
             neonOrb(c,438,48,20,0xff83eaff,simulationRunning);
             text(c,simulationRunning?"Ⅱ":"▶",438,55,15,0xffe8fdff,true);
-            text(c,"ENERGIA "+(int)reserve+"/100",172,88,11,0xffc0fff3,false);
+            // Floor truncated 99.999 to 99 on the VERY first substep.
+            // Display a rounded reading while preserving the precise fuel.
+            text(c,"ENERGIA "+Math.round(reserve)+"/100",172,88,11,0xffc0fff3,false);
             neonBar(c,173,96,456,108,reserve,0xff63fff0,0xff28cbbb);
             String wind=shelter.storm(worldTime)?"TEMPESTA":
                 shelter.warning(worldTime)?"VENTO VICINO":

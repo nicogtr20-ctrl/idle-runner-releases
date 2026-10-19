@@ -80,25 +80,25 @@ jobs:
       - uses: actions/checkout@v4
       - uses: actions/setup-java@v4
         with: {distribution: temurin, java-version: '17'}
-      - name: 'V361 qualification: same physical V3 motor A/B plus actual GPT share screen and telemetry in emulator'
+      - name: 'V362 qualification: same physical V3 motor A/B plus actual GPT share screen and telemetry in emulator'
         run: python3 tools/zero358_motor_audit.py
       - name: Enable emulator acceleration
         run: |
           echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' | sudo tee /etc/udev/rules.d/99-kvm4all.rules
           sudo udevadm control --reload-rules
           sudo udevadm trigger --name-match=kvm
-      - name: V361 original game, red harm, legacy saves, real V3 GPT share UI, report/index and restarts
+      - name: V362 original game, red harm, legacy saves, real V3 GPT share UI, report/index and restarts
         uses: reactivecircus/android-emulator-runner@v2
         with:
           api-level: 35
           arch: x86_64
           profile: pixel_6
           disable-animations: true
-          script: bash tools/zero361_android_ui.sh
+          script: bash tools/zero362_android_ui.sh
       - uses: actions/upload-artifact@v4
         if: always()
         with:
-          name: V361-GPT-sharing-real-V3-neural-index-original-game-QA
+          name: V362-GPT-sharing-real-V3-neural-index-original-game-QA
           path: /tmp/zero356-ui
 
 
@@ -108,8 +108,8 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 25
     env:
-      OVERMIND_BUILD_NUMBER: '179'
-      OVERMIND_CANDIDATE_NAME: '3.0-ota.361'
+      OVERMIND_BUILD_NUMBER: '180'
+      OVERMIND_CANDIDATE_NAME: '3.0-ota.362'
     steps:
       - uses: actions/checkout@v4
         with:
@@ -124,10 +124,10 @@ jobs:
           import json,subprocess
           old=json.loads(subprocess.check_output(['git','show','origin/main:updater/public/latest.json'],text=True))
           assert old['applicationId']=='com.overmind.zero.ota'
-          assert int(old['versionCode'])<1179, 'OTA already published or newer! Stop rather than downgrade'
+          assert int(old['versionCode'])<1180, 'OTA already published or newer! Stop rather than downgrade'
           assert old['available'] is True
-          assert int(old['versionCode'])>=1178, 'V360 OTA must be the previous published baseline'
-          print('V361 OTA safe upgrade: old code',old['versionCode'],'new code 1179; previous public V360=1178')
+          assert int(old['versionCode'])>=1179, 'V361 OTA must be the previous published baseline'
+          print('V361 OTA safe upgrade: old code',old['versionCode'],'new code 1180; previous public V361=1179')
           PY
       - name: Restore stable Android signing identity
         env:
@@ -138,7 +138,7 @@ jobs:
           bundle=os.environ.get('SIGNING_BUNDLE','')
           if not bundle:raise RuntimeError('Stable signing credentials unavailable')
           obj=json.loads(base64.b64decode(bundle,validate=True))
-          key=pathlib.Path(os.environ['RUNNER_TEMP'])/'zero361-stable-ota.p12'
+          key=pathlib.Path(os.environ['RUNNER_TEMP'])/'zero362-stable-ota.p12'
           key.write_bytes(base64.b64decode(obj['keyStoreBase64'],validate=True));key.chmod(0o600)
           for value in [obj['password'],obj['alias']]:print('::add-mask::'+value)
           with open(os.environ['GITHUB_ENV'],'a') as env:
@@ -147,7 +147,7 @@ jobs:
               env.write('OVERMIND_KEY_PASSWORD='+obj['password']+'\n')
               env.write('OVERMIND_KEY_ALIAS='+obj['alias']+'\n')
           PY
-      - name: Assemble OTA361 Android signed APK
+      - name: Assemble OTA362 Android signed APK
         run: gradle --no-daemon assembleRelease
       - name: Verify package, version, original stable certificate and updater rights
         run: |
@@ -167,19 +167,19 @@ jobs:
           assert 'certificate SHA-256 digest: 45010684b4fd74de00f87fb81ca89e1e79b58409cf9fefc497b445b0fe19f583' in c
           badging=(Path(os.environ['RUNNER_TEMP'])/'package.txt').read_text()
           assert "package: name='com.overmind.zero.ota'" in badging
-          assert "versionCode='1179'" in badging and "versionName='3.0-ota.361'" in badging
+          assert "versionCode='1180'" in badging and "versionName='3.0-ota.362'" in badging
           perms=(Path(os.environ['RUNNER_TEMP'])/'permissions.txt').read_text()
           for p in ('android.permission.INTERNET','android.permission.REQUEST_INSTALL_PACKAGES'):
               assert p in perms
           assert 'com.overmind.zero.UpdateFileProvider' in (Path(os.environ['RUNNER_TEMP'])/'manifest.txt').read_text()
           m=json.loads(Path('app/build/outputs/apk/release/output-metadata.json').read_text())['elements'][0]
-          assert m['versionCode']==1179 and m['versionName']=='3.0-ota.361'
+          assert m['versionCode']==1180 and m['versionName']=='3.0-ota.362'
           print('V361 STABLE_PACKAGE_SIGNING_VERSION_UPDATER=PASS')
           PY
-      - name: Preserve signed OTA361 APK before publication
+      - name: Preserve signed OTA362 APK before publication
         uses: actions/upload-artifact@v4
         with:
-          name: ZERO3-stable-OTA361-signed-APK
+          name: ZERO3-stable-OTA362-signed-APK
           path: app/build/outputs/apk/release/app-release.apk
           if-no-files-found: error
           retention-days: 30
@@ -191,35 +191,35 @@ jobs:
           apk=app/build/outputs/apk/release/app-release.apk
           sha=$(sha256sum "$apk" | awk '{print $1}')
           bytes=$(wc -c < "$apk" | tr -d ' ')
-          tag=overmind-zero-v3.0-ota.361
-          mkdir -p "$RUNNER_TEMP/ota361"
-          cp "$apk" "$RUNNER_TEMP/ota361/OVERMIND-ZERO.apk"
-          cat > "$RUNNER_TEMP/ota361/notes.md" <<'NOTES'
-          OVERMIND ZERO 3.0 OTA361 — correzioni neuro-sensoriali e apprendimento muscolare per test sul telefono.
-          Vista 3.0: risolto l'ordine reale frequenza/direzione dei 24 ingressi nell'esecutivo.
-          Addestramento della corteccia motoria: escluso dai probe il canale presa, gia gestito dall'adesione neurale indipendente.
-          Salvaguardia delle 16 opzioni apprese con il vecchio schema visivo tramite migrazione senza cancellazione.
-          Nuovi dati diagnostici reali: intenzione, movimento fisico, contatti, correzioni esterne e predizioni affidabili.
-          Nessun obiettivo o andatura preimpostata, nessun premio fittizio. Efficacia locomotoria e raccolta gemme da verificare dal telefono.
-          Stesso gioco originale, stessa fisica, stesse vite e profili, checkpoint V356 e firma storica invariati.
-          APK firmato con il medesimo certificato storico, versionCode 1179; aggiorna senza disinstallare.
+          tag=overmind-zero-v3.0-ota.362
+          mkdir -p "$RUNNER_TEMP/ota362"
+          cp "$apk" "$RUNNER_TEMP/ota362/OVERMIND-ZERO.apk"
+          cat > "$RUNNER_TEMP/ota362/notes.md" <<'NOTES'
+          OVERMIND ZERO 3.0 OTA362 — nascita reale 100/100 e cervello davvero vergine.
+          La nuova partita non importa più automaticamente il cervello già addestrato degli archivi V354/V355: zero decisioni e neuroni nuovi.
+          Inizio di OGNI vera vita a riserva fisica 100/100, normale consumo successivo, lettura HUD arrotondata senza cambiare il valore reale.
+          RESET COMPLETO crea un simbionte 3.0 vergine e conserva separatamente gli slot nominati.
+          I cervelli V356 delle partite esistenti riprendono esattamente dal checkpoint senza azzerare pesi/esperienze; migration storica valida solo per vecchi profili realmente caricati.
+          Nessun aumento muscolare arbitrario; locomozione, raggiungimento delle gemme e cancello NON ancora verificati migliorati.
+          Fisica del mondo, muscoli, sensi, premi reali, original game e firma APK originali invariati.
+          APK firmato per aggiornamento senza disinstallazione, versionCode 1180.
           NOTES
           if gh release view "$tag" --repo "${{ github.repository }}" >/dev/null 2>&1;then
-            mkdir -p "$RUNNER_TEMP/ota361/existing"
-            gh release download "$tag" --repo "${{ github.repository }}" -p OVERMIND-ZERO.apk -D "$RUNNER_TEMP/ota361/existing"
-            cmp "$apk" "$RUNNER_TEMP/ota361/existing/OVERMIND-ZERO.apk" || { echo "Existing OTA361 release differs";exit 1; }
+            mkdir -p "$RUNNER_TEMP/ota362/existing"
+            gh release download "$tag" --repo "${{ github.repository }}" -p OVERMIND-ZERO.apk -D "$RUNNER_TEMP/ota362/existing"
+            cmp "$apk" "$RUNNER_TEMP/ota362/existing/OVERMIND-ZERO.apk" || { echo "Existing OTA362 release differs";exit 1; }
           else
-            gh release create "$tag" "$RUNNER_TEMP/ota361/OVERMIND-ZERO.apk" \
+            gh release create "$tag" "$RUNNER_TEMP/ota362/OVERMIND-ZERO.apk" \
               --repo "${{ github.repository }}" \
               --target "${{ github.sha }}" \
-              --title 'OVERMIND ZERO 3.0 OTA361' \
-              --notes-file "$RUNNER_TEMP/ota361/notes.md"
+              --title 'OVERMIND ZERO 3.0 OTA362' \
+              --notes-file "$RUNNER_TEMP/ota362/notes.md"
           fi
           git fetch --no-tags origin main
           git checkout -B main origin/main
           mkdir -p updater/public/apk
-          filename="overmind-zero-1179-${sha:0:12}.apk"
-          cp "$RUNNER_TEMP/ota361/OVERMIND-ZERO.apk" "updater/public/apk/$filename"
+          filename="overmind-zero-1180-${sha:0:12}.apk"
+          cp "$RUNNER_TEMP/ota362/OVERMIND-ZERO.apk" "updater/public/apk/$filename"
           python3 - "$filename" "$sha" "$bytes" <<'PY'
           import json,sys
           from pathlib import Path
@@ -227,30 +227,30 @@ jobs:
           filename,sha,size=sys.argv[1:]
           target=Path('updater/public/latest.json')
           current=json.loads(target.read_text())
-          if int(current['versionCode'])>=1179:
+          if int(current['versionCode'])>=1180:
               raise RuntimeError('Newer OTA published concurrently; never overwrite')
           data={
             'schemaVersion':1,'available':True,
             'applicationId':'com.overmind.zero.ota',
-            'versionCode':1179,'versionName':'3.0-ota.361',
+            'versionCode':1180,'versionName':'3.0-ota.362',
             'apkUrl':'https://overmind-zero-updates.vercel.app/apk/'+filename,
             'sha256':sha,'sizeBytes':int(size),
-            'notes':'ZERO 3.0 OTA361: corretta vista frequenza/direzione e training dei muscoli eseguiti; memoria 3.0 preservata, diagnostica reale ampliata',
+            'notes':'ZERO 3.0 OTA362: energia reale 100 a ogni nuova vita; nuovo cervello 3.0 veramente vergine senza migliaia di esperienze importate',
             'publishedAt':datetime.now(timezone.utc).isoformat()}
           target.write_text(json.dumps(data,indent=2)+'\n')
           with open('docs/CHANGELOG.md','a') as out:
-              out.write('\n## ZERO 3.0 OTA361 — '+data['publishedAt']+'\n')
-              out.write('- Corretto il mapping vista V3 e i muscoli realmente eseguiti; opzioni e neuroni precedenti conservati.\n')
-              out.write('- QA Android: canali visivi, canali muscolari, compatibilita executive V354 e V356, vita/rinascita/danno e condivisione GPT.\n')
-              out.write('- APK firmato con il certificato originale, versione 1179, SHA-256 `'+sha+'`.\n')
-          print('OTA361 manifest ready:',data)
+              out.write('\n## ZERO 3.0 OTA362 — '+data['publishedAt']+'\n')
+              out.write('- Nuovo ZERO: zero decisioni/nessun import invisibile da V355. Nascita energia 100/100 senza cambiare ricompense.\n')
+              out.write('- QA Android: partita nuova, reset completo, ripresa dopo riavvio, cervello originale, vista V361, vita e condivisione GPT.\n')
+              out.write('- APK firmato con il certificato originale, versione 1180, SHA-256 `'+sha+'`.\n')
+          print('OTA362 manifest ready:',data)
           PY
           git config user.name 'github-actions[bot]'
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
           git add updater/public/latest.json "updater/public/apk/$filename" docs/CHANGELOG.md
-          git commit -m 'Publish original-game ZERO 3.0 OTA361 repaired vision and motor ownership without neural reset'
+          git commit -m 'Publish ZERO3 OTA362 true virgin brain and full birth energy with old slots preserved'
           git push origin HEAD:main
-          echo "OTA361_PUBLISHED_MAIN_MANIFEST=PASS SHA256=$sha"
+          echo "OTA362_PUBLISHED_MAIN_MANIFEST=PASS SHA256=$sha"
       - name: Remove ephemeral signing material
         if: always()
-        run: rm -f "$RUNNER_TEMP/zero361-stable-ota.p12"
+        run: rm -f "$RUNNER_TEMP/zero362-stable-ota.p12"
