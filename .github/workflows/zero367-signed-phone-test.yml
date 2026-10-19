@@ -1,0 +1,151 @@
+name: ZERO367 SIGNED USER PHONE TEST APK (not stable OTA)
+on:
+  push:
+    branches: [fix/zero364-block-regressed-ota-and-forensic-20261019]
+  workflow_dispatch:
+permissions:
+  contents: write
+concurrency:
+  group: zero367-signed-user-test
+  cancel-in-progress: false
+jobs:
+  signed-user-test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    env:
+      OVERMIND_BUILD_NUMBER: '182'
+      OVERMIND_CANDIDATE_NAME: '3.0-ota.367-test.1'
+    steps:
+      - uses: actions/checkout@v4
+        with: {fetch-depth: 0}
+      - uses: actions/setup-java@v4
+        with: {distribution: temurin, java-version: '17'}
+      - name: Freeze approved unmerged experimental owner and preserve public stable OTA
+        run: |
+          set -euo pipefail
+          test "${GITHUB_REF_NAME}" = 'fix/zero364-block-regressed-ota-and-forensic-20261019'
+          git fetch origin main
+          python3 - <<'PY'
+          import json, subprocess
+          from pathlib import Path
+          main=json.loads(subprocess.check_output(['git','show','origin/main:updater/public/latest.json'],text=True))
+          assert main['applicationId']=='com.overmind.zero.ota'
+          assert int(main['versionCode'])==1181 and main['versionName']=='3.0-ota.363', 'Public stable channel changed; do not accidentally downgrade'
+          a=Path('app/src/main/java/com/overmind/zero/Zero3OriginalBrainV356.java').read_text()
+          b=Path('app/src/main/java/com/overmind/zero/GameActivity.java').read_text()
+          c=Path('app/src/main/java/com/overmind/zero/Zero3MotorPeripheralBridgeV364.java').read_text()
+          v=Path('app/src/main/java/com/overmind/zero/Zero3VisionContextV366.java').read_text()
+          assert 'Zero3MotorPeripheralBridgeV364' in a
+          assert 'symMotor,environment,chamber' in b
+          assert 'if(channel==2)continue' in c
+          assert 'Zero3VisionContextV361.fromSensory194' in v
+          assert Path('docs/ZERO30_V366_BLIND_2003_REAL_ANDROID_NEGATIVE_20261019.md').exists()
+          print('ZERO367_BETA_ONLY_RETAIN_STABLE_363_AND_V356_LEARNED_WEIGHTS=PASS')
+          PY
+      - name: Compile original unchanged Android package and regression tests
+        run: gradle --no-daemon assembleDebug assembleDebugAndroidTest
+      - name: Restore THE SAME stable OTA signing identity (never expose credentials)
+        env:
+          SIGNING_BUNDLE: ${{ secrets.OVERMIND_SIGNING_BUNDLE }}
+        run: |
+          python3 - <<'PY'
+          import os,json,base64,pathlib
+          bundle=os.environ.get('SIGNING_BUNDLE','')
+          if not bundle:raise RuntimeError('Original stable certificate unavailable; cannot ship a compatible test APK')
+          obj=json.loads(base64.b64decode(bundle,validate=True))
+          key=pathlib.Path(os.environ['RUNNER_TEMP'])/'zero367-original-signing.p12'
+          key.write_bytes(base64.b64decode(obj['keyStoreBase64'],validate=True));key.chmod(0o600)
+          for value in (obj['password'],obj['alias']):print('::add-mask::'+value)
+          with open(os.environ['GITHUB_ENV'],'a') as env:
+              env.write('OVERMIND_KEYSTORE_FILE='+str(key)+'\n')
+              env.write('OVERMIND_KEYSTORE_PASSWORD='+obj['password']+'\n')
+              env.write('OVERMIND_KEY_PASSWORD='+obj['password']+'\n')
+              env.write('OVERMIND_KEY_ALIAS='+obj['alias']+'\n')
+          PY
+      - name: Build REAL signed original application as install-over-existing phone test
+        run: gradle --no-daemon assembleRelease
+      - name: Verify EXACT Android application identity, build 1182, OTA original certificate
+        run: |
+          set -euo pipefail
+          apk=app/build/outputs/apk/release/app-release.apk
+          bt=$(find "$ANDROID_HOME/build-tools" -mindepth 1 -maxdepth 1 -type d | sort -V | tail -n 1)
+          "$bt/apksigner" verify --print-certs --verbose "$apk" > "$RUNNER_TEMP/zero367-cert.txt"
+          "$bt/aapt" dump badging "$apk" > "$RUNNER_TEMP/zero367-package.txt"
+          python3 - <<'PY'
+          from pathlib import Path
+          import os,json
+          cert=(Path(os.environ['RUNNER_TEMP'])/'zero367-cert.txt').read_text()
+          assert 'Number of signers: 1' in cert
+          assert 'certificate SHA-256 digest: 45010684b4fd74de00f87fb81ca89e1e79b58409cf9fefc497b445b0fe19f583' in cert, 'SIGNER CHANGED; WOULD DELETE USER DATA'
+          pkg=(Path(os.environ['RUNNER_TEMP'])/'zero367-package.txt').read_text()
+          assert "package: name='com.overmind.zero.ota'" in pkg
+          assert "versionCode='1182'" in pkg and "versionName='3.0-ota.367-test.1'" in pkg
+          m=json.loads(Path('app/build/outputs/apk/release/output-metadata.json').read_text())['elements'][0]
+          assert m['versionCode']==1182 and m['versionName']=='3.0-ota.367-test.1'
+          print('ZERO367_COMPATIBLE_SAME_SIGNER_SAME_PACKAGE_MONOTONIC_CODE=PASS')
+          PY
+          sha256sum "$apk"
+      - name: Upload signed phone test APK with verifiable binary
+        uses: actions/upload-artifact@v4
+        with:
+          name: OVERMIND-ZERO-3.0-367-TEST-SIGNED-APK
+          path: app/build/outputs/apk/release/app-release.apk
+          if-no-files-found: error
+          retention-days: 30
+      - name: Publish IMMUTABLE GitHub pre-release — does NOT change latest OTA manifest
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          tag=overmind-zero-v3.0-ota.367-test.1
+          apk=app/build/outputs/apk/release/app-release.apk
+          mkdir -p "$RUNNER_TEMP/zero367"
+          cp "$apk" "$RUNNER_TEMP/zero367/OVERMIND-ZERO-TEST-367.apk"
+          cat > "$RUNNER_TEMP/zero367/notes.md" <<'NOTES'
+          ZERO 3.0 — V367 TEST SPERIMENTALE PER IL TELEFONO (NON OTA STABILE)
+          
+          App originale, applicationId com.overmind.zero.ota, versionCode 1182, firmato con LO STESSO certificato della OTA 363: installare SOPRA la versione presente, NON disinstallare, NON cancellare i dati.
+          
+          Incluso: periferica motoria legacy come attuatore (GRU3 unico decisore), recupero direzioni est/ovest/nord/sud, contesto visivo executive distinto per firma e lato, conversione ricordi storici V354/361 a V366, selettore predittivo energia/danno con margine prudente del costo.
+          
+          ATTENZIONE: 17/17 test Android funzionali verdi, ma la prova completamente AUTONOMA 2000 decisioni NON ha superato il gate di sopravvivenza: 0-1 gemme blu in prove diverse, 0 rossi e movimento utile 9.7-10.1%, soglia 12%. Nessuna garanzia che il problema sia risolto; il proprietario ha chiesto espressamente di provare sul telefono.
+          
+          Versione per test individuale; updater stabile su https://overmind-zero-updates.vercel.app rimane alla OTA 363, nessuna nuova pubblicazione automatica stabile. Non usare Nuova partita o Reset per installare; salvare preventivamente uno slot del cervello dall'app. Se il test va male, non disinstallare: per ripristinare servirà una successiva versione con versionCode >1182.
+          NOTES
+          if gh release view "$tag" --repo "${{ github.repository }}" >/dev/null 2>&1;then
+            gh release download "$tag" --repo "${{ github.repository }}" -p OVERMIND-ZERO-TEST-367.apk -D "$RUNNER_TEMP/zero367"
+            cmp "$apk" "$RUNNER_TEMP/zero367/OVERMIND-ZERO-TEST-367.apk"
+          else
+            gh release create "$tag" "$RUNNER_TEMP/zero367/OVERMIND-ZERO-TEST-367.apk" \
+              --repo "${{ github.repository }}" --target "${{ github.sha }}" \
+              --title 'OVERMIND ZERO 3.0 — V367 TEST per telefono' \
+              --notes-file "$RUNNER_TEMP/zero367/notes.md" --prerelease
+          fi
+      - name: Publish public signed APK for direct phone download WITHOUT changing OTA latest.json
+        run: |
+          set -euo pipefail
+          apk=app/build/outputs/apk/release/app-release.apk
+          sha=$(sha256sum "$apk"|awk '{print $1}')
+          dest="updater/public/apk/overmind-zero-1182-test-${sha:0:12}.apk"
+          git fetch origin main
+          git checkout -B main origin/main
+          python3 - <<'PY'
+          import json
+          from pathlib import Path
+          j=json.loads(Path('updater/public/latest.json').read_text())
+          assert int(j['versionCode'])==1181,'NEVER override newer production OTA!'
+          assert j['versionName']=='3.0-ota.363'
+          print('STABLE_LATEST_JSON_UNTOUCHED=PASS')
+          PY
+          mkdir -p updater/public/apk
+          cp "$GITHUB_WORKSPACE/app/build/outputs/apk/release/app-release.apk" "$dest"
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add "$dest"
+          git commit -m "Host user-requested signed ZERO3 V367 experimental APK (no latest OTA change)" || true
+          git push origin HEAD:main
+          echo "ZERO367_PUBLIC_TEST_APK=https://overmind-zero-updates.vercel.app/apk/$(basename "$dest")"
+          echo "ZERO367_SIGNED_SHA256=$sha"
+      - name: Remove temporary signing material
+        if: always()
+        run: rm -f "$RUNNER_TEMP/zero367-original-signing.p12"
