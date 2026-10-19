@@ -41,6 +41,19 @@ public final class MotorResponseJournalV172 {
             Math.hypot(correctionX,correctionY)>.08f||
             worldEffectDelta>.03f||storm||held;
     }
+    /**
+     * V363 original V3 locomotor learning: ZERO's OWN adhesion to a contacted
+     * obstacle is an ACTUATION, not exogenous motion. Do not discard the
+     * entire learned motor decision merely because the V319 neural grip
+     * successfully latched. All ACTUAL scene corrections, displaced objects
+     * and storms remain vetoes. This method cannot turn on or release a grip,
+     * issue commands, invent outcomes, or change V2.2 journal semantics.
+     */
+    public static boolean externalMotorInterferenceV363(float correctionX,
+            float correctionY,float actualWorldEffectDelta,boolean storm){
+        return externalMotionContaminated(correctionX,correctionY,
+            actualWorldEffectDelta,storm,false);
+    }
     public long completed(){return completed;}
     public String encode(){StringBuilder s=new StringBuilder("mr172|").append(completed).append('\n');for(String r:records)s.append(r).append('\n');return s.toString();}
     public boolean restore(String raw){
