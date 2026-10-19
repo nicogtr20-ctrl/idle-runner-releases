@@ -35,13 +35,9 @@ public final class Zero3ExecutiveV354 {
     private String reason="Nessuna intenzione osservata";
     private static float clamp(float x){return Math.max(-1,Math.min(1,x));}
     private static float[] context(float[] x){
-        if(x==null||x.length!=194)throw new IllegalArgumentException("V354 sensory shape");
-        float[] c=new float[CONTEXT];
-        for(int channel=0;channel<3;channel++)for(int ray=0;ray<8;ray++)c[channel]+=x[20+ray*3+channel]/8;
-        for(int ray=0;ray<8;ray++)for(int channel=0;channel<3;channel++)c[3]+=(ray<4?1:-1)*x[20+ray*3+channel]/24;
-        for(int i=0;i<4;i++)c[4+i]=(x[i*2]+x[i*2+1])*.5f;
-        c[8]=x[188];c[9]=x[189];c[10]=x[190];c[11]=(x[191]+x[192])*.5f;
-        for(float f:c)if(!Float.isFinite(f))throw new IllegalArgumentException("V354 invalid context");return c;
+        // Physical spectral8 is grouped [frequency][azimuth], not interleaved.
+        // Keep the 12-slot executive context/checkpoint shape unchanged.
+        return Zero3VisionContextV361.fromSensory194(x);
     }
     private static float distance(float[] a,float[] b){float d=0;for(int i=0;i<CONTEXT;i++){float v=a[i]-b[i];d+=v*v;}return d/CONTEXT;}
     private float value(float[] c){float a=valueWeights[CONTEXT];for(int i=0;i<CONTEXT;i++)a+=c[i]*valueWeights[i];return clamp(a);}
