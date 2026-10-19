@@ -63,8 +63,8 @@ jobs:
             adb install -r app/build/outputs/apk/debug/app-debug.apk
             adb install -r app/build/outputs/apk/androidTest/debug/app-debug-androidTest.apk
             adb shell pm clear com.overmind.zero.ota
-            adb shell am instrument -w -r -e class com.overmind.zero.Zero361MotorOwnershipTest \
-              com.overmind.zero.ota.test/androidx.test.runner.AndroidJUnitRunner | tee /tmp/v361-motor-instrumentation.txt
+            adb shell am instrument -w -r -e class com.overmind.zero.Zero361MotorOwnershipTest com.overmind.zero.ota.test/androidx.test.runner.AndroidJUnitRunner > /tmp/v361-motor-instrumentation.txt 2>&1
+            cat /tmp/v361-motor-instrumentation.txt
             grep -q 'OK (4 tests)' /tmp/v361-motor-instrumentation.txt
             bash tools/zero356_android_ui.sh
       - uses: actions/upload-artifact@v4
