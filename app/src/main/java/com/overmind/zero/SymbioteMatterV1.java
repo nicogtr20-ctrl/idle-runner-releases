@@ -188,14 +188,27 @@ public final class SymbioteMatterV1 {
         return clip((radius-(R+9f))/8f,0f,1f)*
             clip((-extend-.83f)/.13f,0f,1f);
     }
+    // V363 matched lab A/B knob. The original physical law remains 0.12
+    // in every production organism until net motor gains are independently
+    // proven across learned/frozen and virgin/resumed worlds.
+    private float passiveFloorBaselineV363=.12f;
+    void setPassiveFloorBaselineForLabV363(float value){
+        if(!Float.isFinite(value)||value<.02f||value>.12f)
+            throw new IllegalArgumentException("outside passive floor calibration");
+        passiveFloorBaselineV363=value;
+    }
     static float substrateTraction(float extend,float tension,float meanTension){
+        return substrateTractionWithBaselineV363(extend,tension,meanTension,.12f);
+    }
+    static float substrateTractionWithBaselineV363(float extend,float tension,
+                                                  float meanTension,float passiveBase){
         float compression=Math.max(0f,-extend);
         // Material cortex tension, NOT the separate object-grip command,
         // changes the local ground's normal loading. Uniform extra tension
         // cannot secretly pin the entire symbiote to the substrate.
         float delta=tension-meanTension;
         if(Math.abs(delta)<.0001f)delta=0f;
-        return clip(.12f+1.45f*compression+
+        return clip(passiveBase+1.45f*compression+
             .72f*clip(delta,-1f,1f),0f,.95f);
     }
     static float radialRetractionDrag(float traction,float release,float dt){
@@ -568,7 +581,7 @@ public final class SymbioteMatterV1 {
             // A stiffer-than-average cortex patch bears more substrate
             // loading; a softer patch can slip. This control is independent
             // of the radial contraction and never uses object-grip intent.
-            float traction=substrateTraction(extend,stiffness,meanTension);
+            float traction=substrateTractionWithBaselineV363(extend,stiffness,meanTension,passiveFloorBaselineV363);
             float drag=(float)Math.exp(-(1.8f+66f*traction)*dt);
             float preX=skin.x[i],preY=skin.y[i];
             float appliedVx=skin.vx[i]+fx[i]*dt;
