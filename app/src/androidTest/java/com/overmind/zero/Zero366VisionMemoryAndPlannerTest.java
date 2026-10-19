@@ -39,6 +39,15 @@ public final class Zero366VisionMemoryAndPlannerTest {
         assertTrue("spectrum1 EAST must remain EAST for context",va[13]>0);
         assertTrue("spectrum0 mirrored EAST",vb[12]>0);
         assertTrue("spectrum1 mirrored WEST",vb[13]<0);
+        assertTrue("old 12D option has mirror-risk in A",
+            Zero3ExecutiveV354.mirroredOldContextRiskV366(va));
+        assertTrue("old 12D option has mirror-risk in B",
+            Zero3ExecutiveV354.mirroredOldContextRiskV366(vb));
+        float[] onlyOne=sight(true);
+        onlyOne[28]=0f;
+        assertFalse("single observed wavelength not falsely quarantined",
+            Zero3ExecutiveV354.mirroredOldContextRiskV366(
+                Zero3VisionContextV366.fromSensory194(onlyOne)));
     }
     @Test public void legacyV361CheckpointMigratesWithoutForgettingLearnedValue()throws Exception {
         Zero3ExecutiveV354 original=new Zero3ExecutiveV354();
