@@ -85,6 +85,49 @@ public final class Zero368CausalIntegrationTest {
         assertEquals(1,again.snapshot().skills.length);
         assertEquals(original.snapshot().skills[0].id,again.snapshot().skills[0].id);
     }
+    @Test public void firstPhysicalRedSubstepBeforeDeathIsLearnedNotAborted()throws Exception {
+        android.content.Context ctx=
+            androidx.test.platform.app.InstrumentationRegistry.getInstrumentation().getTargetContext();
+        Zero3OriginalBrainV356 brain=Zero3OriginalBrainV356.load(ctx,null,false);
+        try{
+            MotorBrain.Body body=new MotorBrain.Body();
+            Morphology.Surface skin=new Morphology.Surface(body);
+            SymbioteMatterV1 gel=new SymbioteMatterV1();
+            gel.reset(body,skin);gel.enableOriginalZero3TractionV363();
+            ArrayList<UnknownWorld.Entity> resources=new ArrayList<>();
+            UnknownWorld.Entity red=new UnknownWorld.Entity(skin.x[0],skin.y[0],1,1);
+            resources.add(red);
+            float dt=1f/60f,initialReserve=6f;
+            float[] command=brain.actuate(1,body,skin,gel,
+                resources,null,initialReserve,0f,dt);
+            float workBefore=gel.work;
+            gel.step(body,skin,command,dt);
+            assertTrue("physically present source is touched by REAL body",
+                MaterialGeometry.touches(body,skin,red.x,red.y,red.radius+2f));
+            float actualDelta=red.touch(0f,0f);
+            assertTrue("original red has genuine negative energy law",actualDelta<0f);
+            float reserve=Math.max(0f,Math.min(100f,initialReserve+actualDelta));
+            float actualHarm=initialReserve-reserve;
+            assertEquals("real lethal contact, not test-given fake label",0f,reserve,0f);
+            // Same original PRE/gel/POST/energy system, death after just
+            // 1/60s: do NOT round up elapsed or call incomplete-action abort.
+            brain.observed(body,skin,gel,resources,null,
+                reserve,dt,dt,Math.max(0,gel.work-workBefore),
+                gel.lastMuscleReactionImpulse,0f,actualHarm,false,true);
+            assertEquals("fatal decision is a REAL completed experience",1,brain.decisions());
+            assertEquals(1,brain.damagedDecisionsV359());
+            assertEquals(actualHarm,brain.previousDamageV359(),0f);
+            assertEquals(1,brain.trained()+brain.validated()+brain.observed());
+            Zero3OriginalBrainV356.Readout saved=Zero3OriginalBrainV356.inspectSaved(
+                brain.checkpoint());
+            assertEquals(1,saved.decisions);
+            assertEquals(actualHarm,saved.previousDamageV359,0f);
+            brain.newLife();
+            assertEquals("after reincarnation transient pain clears",0f,
+                brain.previousDamageV359(),0f);
+            assertEquals("learned GRU experience survives original rebirth",1,brain.decisions());
+        }finally{brain.close();}
+    }
     @Test public void unsafeOrUnvalidatedFutureCostCannotOverrideActor() {
         Zero3PlannerV354 planner=new Zero3PlannerV354();
         float[] observation=new float[194],hidden=new float[64];
