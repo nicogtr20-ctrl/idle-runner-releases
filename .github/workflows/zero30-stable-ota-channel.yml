@@ -59,6 +59,13 @@ jobs:
           PY
               fi
           done
+      # V364 G3 release hold: the living V363 phone organism demonstrably
+      # moves opposite its own intent on TWO axes; do NOT sign another build
+      # merely because a prior one compiled or its gross distance increased.
+      # Full blind resource avoidance / survival must additionally be tested
+      # before anyone describes the brain as behaviorally restored.
+      - name: V364 enforce signed OTA physical directional competence
+        run: python3 tools/zero364_g3_physical_ota_gate.py
       - name: Android compile and original existing test suite
         run: gradle --no-daemon assembleDebug assembleDebugAndroidTest
       - name: No V355 dashboard as launcher / no signed publisher
