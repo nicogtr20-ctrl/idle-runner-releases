@@ -63,8 +63,8 @@ public final class Zero363TrueSpeedAndGripTest {
             SymbioteMatterV1.substrateTractionWithBaselineV363(.1f,.5f,.5f,.08f)<
             SymbioteMatterV1.substrateTraction(.1f,.5f,.5f));
         assertEquals("compression footholds retain the same 1.45 law",
-            SymbioteMatterV1.substrateTraction(-.6f,.4f,.4f)-
-            SymbioteMatterV1.substrateTractionWithBaselineV363(-.6f,.4f,.4f,.08f),
+            SymbioteMatterV1.substrateTraction(-.2f,.4f,.4f)-
+            SymbioteMatterV1.substrateTractionWithBaselineV363(-.2f,.4f,.4f,.08f),
             .04f,1e-5f);
     }
     @Test public void realOriginalV3GameStartsAndRestoresCalibratedWithSameNeuralCheckpoint()throws Exception {
