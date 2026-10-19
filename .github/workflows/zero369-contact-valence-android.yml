@@ -1,0 +1,46 @@
+name: ZERO369 original Android contact valence QA (research, no OTA)
+on:
+  push:
+    branches: [fix/zero369-learned-contact-valence-20261020]
+  workflow_dispatch:
+permissions: {contents: read}
+jobs:
+  original-android:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with: {distribution: temurin, java-version: '17'}
+      - name: Compile actual Android application and tests
+        run: gradle --no-daemon assembleDebug assembleDebugAndroidTest
+      - name: Emulator accelerator
+        run: |
+          echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' | sudo tee /etc/udev/rules.d/99-kvm4all.rules
+          sudo udevadm control --reload-rules
+          sudo udevadm trigger --name-match=kvm
+      - name: Run V368 compatibility and V369 contact-valence regressions
+        uses: reactivecircus/android-emulator-runner@v2
+        with:
+          api-level: 35
+          arch: x86_64
+          profile: pixel_6
+          disable-animations: true
+          script: |
+            adb install -r app/build/outputs/apk/debug/app-debug.apk
+            adb install -r app/build/outputs/apk/androidTest/debug/app-debug-androidTest.apk
+            adb shell am instrument -w -r -e class com.overmind.zero.Zero369LearnedContactValenceAndroidTest com.overmind.zero.ota.test/androidx.test.runner.AndroidJUnitRunner 2>&1 | tee /tmp/zero369-contact.txt
+            grep -q 'OK (4 tests)' /tmp/zero369-contact.txt
+            adb shell am instrument -w -r -e class com.overmind.zero.Zero368CausalIntegrationTest com.overmind.zero.ota.test/androidx.test.runner.AndroidJUnitRunner 2>&1 | tee /tmp/zero369-v368-backcompat.txt
+            grep -q 'OK (4 tests)' /tmp/zero369-v368-backcompat.txt
+            adb shell am instrument -w -r -e class com.overmind.zero.Zero366VisionMemoryAndPlannerTest com.overmind.zero.ota.test/androidx.test.runner.AndroidJUnitRunner 2>&1 | tee /tmp/zero369-v366-compat.txt
+            grep -q 'OK (5 tests)' /tmp/zero369-v366-compat.txt
+      - name: Save proof and failures, no signing
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: ZERO369-contact-no-OTA-evidence
+          path: |
+            /tmp/zero369-contact.txt
+            /tmp/zero369-v368-backcompat.txt
+            /tmp/zero369-v366-compat.txt
