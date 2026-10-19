@@ -1,0 +1,41 @@
+name: ZERO366 blind original game 2000 autonomous choices — survival evidence (NO OTA)
+on:
+  push:
+    branches: [fix/zero364-block-regressed-ota-and-forensic-20261019]
+  workflow_dispatch:
+permissions: {contents: read}
+jobs:
+  original-autonomous-red-blue-2000:
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with: {distribution: temurin, java-version: '17'}
+      - name: Real original Android game and neuroscience instrumentation
+        run: gradle --no-daemon assembleDebug assembleDebugAndroidTest
+      - name: KVM original emulator
+        run: |
+          echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' | sudo tee /etc/udev/rules.d/99-kvm4all.rules
+          sudo udevadm control --reload-rules
+          sudo udevadm trigger --name-match=kvm
+      - name: 2000 WHOLE self-chosen actions in original world, no test-only destination or rewards
+        uses: reactivecircus/android-emulator-runner@v2
+        with:
+          api-level: 35
+          arch: x86_64
+          profile: pixel_6
+          disable-animations: true
+          script: |
+            set -euo pipefail
+            adb install -r app/build/outputs/apk/debug/app-debug.apk
+            adb install -r app/build/outputs/apk/androidTest/debug/app-debug-androidTest.apk
+            timeout --signal=TERM --kill-after=10s 1000s adb shell am instrument -w -r -e class com.overmind.zero.Zero366OriginalAutonomousSurvival2000Test com.overmind.zero.ota.test/androidx.test.runner.AndroidJUnitRunner 2>&1 | tee /tmp/zero366-blind-2000-original.txt
+            grep -F 'ZERO366_BLIND_2000_UNSCRIPTED_SURVIVAL_G3_G5_PRELIMINARY=PASS_NOT_PHONE' /tmp/zero366-blind-2000-original.txt
+            grep -q 'OK (1 test)' /tmp/zero366-blind-2000-original.txt
+      - name: Save positive OR negative original autonomously observed outcome
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: ZERO366-autonomous-2000-physical-red-blue-evidence
+          path: /tmp/zero366-blind-2000-original.txt
