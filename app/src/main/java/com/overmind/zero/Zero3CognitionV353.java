@@ -116,20 +116,42 @@ public final class Zero3CognitionV353 {
     /** Select only among supplied actor proposals, with a confidence-gated one-step comparison.
      * The selected proposal's noise remains the actor's on-policy sample.
      */
+    /**
+     * V366: cost-uncertainty is a physical risk, NOT an invented free
+     * action. When cost is uninformative/near-constant, require a predicted
+     * energy-and-harm improvement large enough to exceed BOTH alternatives'
+     * measured held-out cost error bounds. No confidence => old actor choice.
+     */
+    static float conservativeCostMarginV366(double heldoutError,long validations){
+        if(validations<64||!Double.isFinite(heldoutError)||heldoutError<0)
+            return Float.POSITIVE_INFINITY;
+        return (float)(4.0*Math.sqrt(heldoutError/validations));
+    }
     int select(float[] observation,float[][] proposals){
-        if(!trusted(0)||!trusted(1)||!trusted(2))return 0;
-        int best=0;float bestScore=-Float.MAX_VALUE;
+        if(!trusted(0)||!trusted(1))return 0;
+        boolean costTrusted=trusted(2);
+        long n=validations-reliabilityValidations;
+        float costSafety=costTrusted?0f:conservativeCostMarginV366(error[2],n);
+        if(!Float.isFinite(costSafety))return 0;
+        int best=0;float bestScore=-Float.MAX_VALUE,original=Float.NaN;
         for(int i=0;i<proposals.length;i++){
             float[][] p=champion.predict(input(observation,proposals[i]),false,null);
             float energy=mean(p,0),damage=mean(p,1),cost=mean(p,2),uncertainty=0;
-            for(int e=0;e<ENSEMBLE;e++)for(int h=0;h<3;h++){
+            int trustedHeads=costTrusted?3:2;
+            for(int e=0;e<ENSEMBLE;e++)for(int h=0;h<trustedHeads;h++){
                 float delta=p[e][h]-mean(p,h);uncertainty+=delta*delta;
             }
-            // All three heads normalized by physical reserve capacity=100.
-            float score=energy-damage-cost-2*(float)Math.sqrt(uncertainty/9);
+            // Even an untrusted cost prediction is NOT treated as free.
+            // Its empirical heldout RMSE is the conservative selection margin.
+            float score=energy-damage-cost-2*(float)Math.sqrt(uncertainty/(3f*trustedHeads));
+            if(i==0)original=score;
             if(score>bestScore){bestScore=score;best=i;}
         }
-        plannerUses++;return best;
+        plannerUses++;
+        // Previously validated three-head selector retains its behavior.
+        // On the two-head recovery path, do not override the GRU's own
+        // sampled action without a material advantage above cost uncertainty.
+        return costTrusted||bestScore>original+costSafety?best:0;
     }
     void begin(float[] observation,float[] actualProposal){
         if(pendingInput!=null)throw new IllegalStateException("V353 pending physical experience");
