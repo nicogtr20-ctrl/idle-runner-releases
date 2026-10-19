@@ -9,7 +9,7 @@ permissions: {contents: read}
 jobs:
   android-original:
     runs-on: ubuntu-latest
-    timeout-minutes: 50
+    timeout-minutes: 60
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-java@v4
@@ -31,10 +31,12 @@ jobs:
           script: |
             adb install -r app/build/outputs/apk/debug/app-debug.apk
             adb install -r app/build/outputs/apk/androidTest/debug/app-debug-androidTest.apk
+            bash tools/zero362_android_ui.sh
+            adb shell pm clear com.overmind.zero.ota
             adb shell am instrument -w -r -e class com.overmind.zero.Zero364MotorBridgeAndroidTest com.overmind.zero.ota.test/androidx.test.runner.AndroidJUnitRunner | tee /tmp/zero364-bridge-android.txt
             grep -q 'OK (3 tests)' /tmp/zero364-bridge-android.txt
             adb shell am instrument -w -r -e class com.overmind.zero.Zero366VisionMemoryAndPlannerTest com.overmind.zero.ota.test/androidx.test.runner.AndroidJUnitRunner | tee /tmp/zero366-cognition-android.txt
-            grep -q 'OK (4 tests)' /tmp/zero366-cognition-android.txt
+            grep -q 'OK (5 tests)' /tmp/zero366-cognition-android.txt
       - name: Capture Android real original gel proof
         if: always()
         uses: actions/upload-artifact@v4
@@ -43,3 +45,4 @@ jobs:
           path: |
             /tmp/zero364-bridge-android.txt
             /tmp/zero366-cognition-android.txt
+            /tmp/zero362-qa
