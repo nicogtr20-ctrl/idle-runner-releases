@@ -2,11 +2,11 @@
   "schemaVersion": 1,
   "available": true,
   "applicationId": "com.overmind.zero.ota",
-  "versionCode": 1178,
-  "versionName": "3.0-ota.360",
-  "apkUrl": "https://overmind-zero-updates.vercel.app/apk/overmind-zero-1178-76859a541d41.apk",
-  "sha256": "76859a541d4144fcc1241d6b391ad3ea0c846aa072b4b947986effe6d256851d",
-  "sizeBytes": 918648,
-  "notes": "ZERO 3.0 OTA360: ripristinato Condividi dati con GPT e rapporto del cervello GRU64; gioco e salvataggi invariati",
-  "publishedAt": "2026-10-19T00:05:16.794379+00:00"
+  "versionCode": 1179,
+  "versionName": "3.0-ota.361",
+  "apkUrl": "https://overmind-zero-updates.vercel.app/apk/overmind-zero-1179-2938945d837b.apk",
+  "sha256": "2938945d837b1298a96e18c6e1ecd31d720d46c46c7e5f69268f5b0878203bac",
+  "sizeBytes": 921572,
+  "notes": "ZERO 3.0 OTA361: corretta vista frequenza/direzione e training dei muscoli eseguiti; memoria 3.0 preservata, diagnostica reale ampliata",
+  "publishedAt": "2026-10-19T10:50:08.634648+00:00"
 }

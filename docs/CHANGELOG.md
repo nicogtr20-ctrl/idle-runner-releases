@@ -748,3 +748,8 @@ Richiesta utente: APK pronta con centro decisionale rivisto attivo, conservazion
 - Ripristinato Condividi dati con GPT in Analisi cervello 3.0; report GitHub privato del GRU64 completo e riepilogo V3, senza modificare la fisica.
 - Test Android: V3 condivisione, report multipart JSON, checkpoint, vita, rinascita e danno reale invariati.
 - APK firmato con il certificato originale, versione 1178, SHA-256 `76859a541d4144fcc1241d6b391ad3ea0c846aa072b4b947986effe6d256851d`.
+
+## ZERO 3.0 OTA361 — 2026-10-19T10:50:08.634648+00:00
+- Corretto il mapping vista V3 e i muscoli realmente eseguiti; opzioni e neuroni precedenti conservati.
+- QA Android: canali visivi, canali muscolari, compatibilita executive V354 e V356, vita/rinascita/danno e condivisione GPT.
+- APK firmato con il certificato originale, versione 1179, SHA-256 `2938945d837b1298a96e18c6e1ecd31d720d46c46c7e5f69268f5b0878203bac`.
