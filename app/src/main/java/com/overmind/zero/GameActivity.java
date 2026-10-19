@@ -1528,13 +1528,15 @@ public final class GameActivity extends Activity {
                     // only the live 3.0 neuron's completed action receives credit.
                     if(brain3!=null&&lifeStamp==episode){
                         try{
-                            boolean holding=false;
-                            for(float hold:surface.gripHold)
-                                if(hold>=Morphology.GRIP_HOLD){holding=true;break;}
-                            boolean external=MotorResponseJournalV172.externalMotionContaminated(
+                            // V363: a self-selected V319 physical grip is a
+                            // valid locomotor foothold, not a foreign motor.
+                            // Actual solver displacement, moving objects and
+                            // storms are STILL excluded. The V2.2 path above
+                            // keeps its original stricter contamination rule.
+                            boolean external=MotorResponseJournalV172.externalMotorInterferenceV363(
                                 creature.cx-uncorrectedX,creature.cy-uncorrectedY,
                                 environmentEffectSinceAction-worldEffectAtFrameStart,
-                                shelter.storm(worldTime),holding);
+                                shelter.storm(worldTime));
                             brain3.observed(creature,surface,symMatter,environment,
                                 chamber,reserve,worldTime,slice,
                                 Math.max(0f,symMatter.work-brain3WorkBefore),
