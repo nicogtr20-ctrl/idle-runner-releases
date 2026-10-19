@@ -52,13 +52,21 @@ public final class Zero361MotorOwnershipTest {
             learned.complete(.15f,-.01f,0f,.01f,false,false,null,true);
         }
         assertEquals(1,learned.snapshot().skills.length);
-        byte[] modern=learned.encode();
-        // Reconstruct the wire layout of the immediately preceding V354
-        // version: without the ONE per-option provenance flag.
-        byte[] old=new byte[modern.length-1];
-        System.arraycopy(modern,0,old,0,modern.length-5);
-        System.arraycopy(modern,modern.length-4,old,old.length-4,4);
-        java.nio.ByteBuffer.wrap(old).putInt(0,354);
+        // This inherited V361 regression continues to protect V354 saves.
+        // The older fixture originally stripped one byte from V361 wire:
+        // with V366's correctly versioned new dimensions, that is NOT a
+        // V354 binary. Recreate exactly the 354 historical option and its
+        // native 12D layout, then encode with the genuine 354 wire schema.
+        // Sensor is all zeros here, so its original V354/V361/V366 visual
+        // context is identical and no learned feature is silently relabeled.
+        java.lang.reflect.Field optionsField=Zero3ExecutiveV354.class.getDeclaredField("options");
+        optionsField.setAccessible(true);
+        java.util.ArrayList<?> options=(java.util.ArrayList<?>)optionsField.get(learned);
+        assertEquals(1,options.size());
+        java.lang.reflect.Field origin=options.get(0).getClass().getDeclaredField("visionSchemaV366");
+        origin.setAccessible(true);origin.setInt(options.get(0),354);
+        byte[] old=learned.encodePriorV354ForQA();
+        assertEquals(354,java.nio.ByteBuffer.wrap(old).getInt());
         Zero3ExecutiveV354 migrated=Zero3ExecutiveV354.decode(old);
         assertEquals(32,migrated.snapshot().decisions);
         assertEquals(1,migrated.snapshot().skills.length);
