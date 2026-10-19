@@ -22,17 +22,41 @@ public final class Zero3PlannerV354 {
         for(int h=0;h<3;h++)if(baselineError[i][h]<1e-7||error[i][h]>=baselineError[i][h]*.9)return false;
         return true;
     }
+    /** V368: a nearly constant real muscle cost cannot indefinitely veto
+     * verified energy/damage planning. Require measured 2/3-step heldout
+     * improvement on BOTH heads and an explicit V353 cost-risk margin.
+     * Old five-argument interface remains strict for historical QA. */
+    private boolean trustedWithCostBoundV368(int horizon,boolean costTrusted){
+        int i=horizon-2;
+        if(i<0||i>1||count[i]<64)return false;
+        for(int h=0;h<(costTrusted?3:2);h++)
+            if(baselineError[i][h]<1e-7||
+               error[i][h]>=baselineError[i][h]*.9)return false;
+        return true;
+    }
     int select(float[] observed,float[] latent,float[][] options,Predictor model,boolean prerequisite){
-        if(!prerequisite||!trusted(2))return -1;
-        int horizon=trusted(3)?3:2,best=0;float scoreBest=-Float.MAX_VALUE;
+        return select(observed,latent,options,model,prerequisite,true,0f);
+    }
+    int select(float[] observed,float[] latent,float[][] options,Predictor model,
+               boolean prerequisite,boolean costTrusted,float costMargin){
+        if(!prerequisite||!Float.isFinite(costMargin)||costMargin<0||
+           !trustedWithCostBoundV368(2,costTrusted))return -1;
+        int horizon=trustedWithCostBoundV368(3,costTrusted)?3:2,best=0;
+        float scoreBest=-Float.MAX_VALUE,original=Float.NaN;
         for(int a=0;a<options.length;a++){
             float[] o=observed,z=latent,action=options[a];float score=0,discount=1;
             for(int step=0;step<horizon;step++){
                 Step p=model.step(o,z,action);score+=discount*(p.physical[0]-p.physical[1]-p.physical[2]-2*p.uncertainty);
                 discount*=.98f;o=p.observation;z=p.hidden;action=model.meanAction(z);
             }
+            if(a==0)original=score;
             if(score>scoreBest){scoreBest=score;best=a;}
         }
+        // Never override a self-sampled GRU action when accumulated future
+        // gain is below the empirically measured error on cost predictions.
+        // Apply the bound once PER simulated step, not once per entire plan.
+        if(!costTrusted&&!(scoreBest>original+horizon*costMargin))
+            return -1;
         uses++;return best;
     }
     void begin(long decision,float[] observed,float[] latent,float[] actualAction,Predictor model,boolean heldout,boolean observe,float[] baselineTarget){
