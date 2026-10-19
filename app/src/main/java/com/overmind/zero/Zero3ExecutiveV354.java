@@ -205,18 +205,36 @@ public final class Zero3ExecutiveV354 {
         for(int i=0;i<valueWeights.length;i++)b.edge(-2200-i,id,0,valueWeights[i]);
     }
     public Snapshot snapshot(){return new Snapshot(this);}
-    byte[] encode()throws IOException{
+    byte[] encode()throws IOException{return encodeVersionV366(366);}
+    /** QA ONLY: generate an actual prior V361-compatible binary with old
+     * 12D context, 12 old weights + preserved historic bias. The legacy
+     * format cannot express newly created V366 memories. Never used when
+     * saving a normal game or named brain.
+     */
+    byte[] encodePriorV361ForQA()throws IOException{return encodeVersionV366(361);}
+    private byte[] encodeVersionV366(int targetSchema)throws IOException{
+        if(targetSchema!=361&&targetSchema!=366)throw new IOException("V366 unsupported target schema");
+        if(targetSchema==361)
+            for(Option o:options)if(o.visionSchemaV366==366)
+                throw new IOException("Cannot downconvert new V366 visual-memory option");
         if(pending)throw new IOException("V354 pending option");
-        ByteArrayOutputStream b=new ByteArrayOutputStream();DataOutputStream d=new DataOutputStream(b);d.writeInt(366);
+        ByteArrayOutputStream b=new ByteArrayOutputStream();DataOutputStream d=new DataOutputStream(b);d.writeInt(targetSchema);
         for(long v:new long[]{decisions,train,validation,observations,nextId,goalId,goalSince,goalInterruptions,lastPredictionValidation})d.writeLong(v);
         for(long h:new long[]{historicalDecisions,historicalTrain,historicalValidation,historicalObservations,parentEpisode,repairs[0],repairs[1],repairs[2]})d.writeLong(h);
         d.writeInt(goalAge);for(float f:new float[]{lastEnergy,lastHarm,lastValue,informationProgress,previousPredictionError})d.writeFloat(f);
-        d.writeUTF(reason);d.writeUTF(ecology);d.writeFloat(nextRoom);for(float f:valueWeights)d.writeFloat(f);d.writeInt(options.size());
+        d.writeUTF(reason);d.writeUTF(ecology);d.writeFloat(nextRoom);
+        if(targetSchema==361){
+            for(int i=0;i<PRIOR_CONTEXT;i++)d.writeFloat(valueWeights[i]);
+            d.writeFloat(valueWeights[CONTEXT]); // previous scalar bias
+        }else for(float f:valueWeights)d.writeFloat(f);
+        d.writeInt(options.size());
         for(Option o:options){d.writeLong(o.id);d.writeLong(o.born);d.writeLong(o.blocks);
             for(int v:new int[]{o.state,o.train,o.optionN,o.controlN,o.recalls,o.reverts,o.probationN})d.writeInt(v);
-            for(float f:o.context)d.writeFloat(f);for(float f:o.policy)d.writeFloat(f);
+            for(int j=0;j<(targetSchema==361?PRIOR_CONTEXT:CONTEXT);j++)d.writeFloat(o.context[j]);
+            for(float f:o.policy)d.writeFloat(f);
             for(double v:new double[]{o.optionSum,o.controlSum,o.optionSq,o.controlSq,o.optionEnergy,o.controlEnergy,o.optionHarm,o.controlHarm})d.writeDouble(v);
-            d.writeInt(o.visionSchemaV366);
+            if(targetSchema==361)d.writeBoolean(o.visionSchemaV366==354);
+            else d.writeInt(o.visionSchemaV366);
         }
         d.writeInt(retiredHistory.size());for(long[] history:retiredHistory)for(long f:history)d.writeLong(f);
         d.flush();return b.toByteArray();
