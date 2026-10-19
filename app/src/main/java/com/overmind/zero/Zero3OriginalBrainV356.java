@@ -229,7 +229,21 @@ final class Zero3OriginalBrainV356 {
             float reserve,float time,float dt,float work,float impulse,
             float actualMotorReserveSpentThisFrame,float actualHarmThisPhysicalFrame,
             boolean external)throws IOException{
+        observed(body,skin,gel,objects,chamber,reserve,time,dt,work,impulse,
+            actualMotorReserveSpentThisFrame,actualHarmThisPhysicalFrame,external,false);
+    }
+    /** The original game's true fatal contact is a completed terminal event,
+     * not a fabricated full-duration motor success. Keep all existing V353
+     * predictors/GRU actor/critics and V354 options; censor only motor credit.
+     * Call exactly once at death, before resetEpisode() erases the body. */
+    void observed(MotorBrain.Body body,Morphology.Surface skin,SymbioteMatterV1 gel,
+            ArrayList<UnknownWorld.Entity> objects,ScarcityLab chamber,
+            float reserve,float time,float dt,float work,float impulse,
+            float actualMotorReserveSpentThisFrame,float actualHarmThisPhysicalFrame,
+            boolean external,boolean terminal)throws IOException{
         if(!pending)throw new IOException("V356 risultato senza un comando vero");
+        if(terminal&&reserve>0f)
+            throw new IOException("V368 terminal requires genuine zero reserve");
         // A damage reading is measured by the original world only. This value
         // NEVER includes ordinary hunger or fuel spent contracting muscles.
         if(!Float.isFinite(actualMotorReserveSpentThisFrame)||actualMotorReserveSpentThisFrame<0f||
@@ -246,9 +260,13 @@ final class Zero3OriginalBrainV356 {
             for(float held:skin.gripHold)if(held>=Morphology.GRIP_HOLD){heldContactStepsV361++;break;}
             grip.observeWorldV354(skin,objects,chamber,Math.max(0,work));
             workAccum+=Math.max(0,work);elapsed+=dt;disturbed|=external;
-            if(elapsed+0.0001f<choice.duration&&reserve>0)return;
-            if(elapsed<.0249f){interrupt();return;}
-            Zero3LearningFoundation.Experience outcome=motor.finish(false);
+            if(!terminal&&elapsed+0.0001f<choice.duration&&reserve>0)return;
+            if(!terminal&&reserve>0f&&elapsed<.0249f){interrupt();return;}
+            // The original weather step may exhaust the reserve AFTER resolveObjects.
+            // Such a normal POST callback is also terminal, and must never
+            // train an unexecuted motor duration as if it completed.
+            boolean genuineTerminal=terminal||reserve<=0f;
+            Zero3LearningFoundation.Experience outcome=motor.finish(genuineTerminal);
             // Physical measurements only: no reward or decisions are altered.
             measuredMotorDecisionsV361++;
             if(outcome.physicalEvidence)measuredPhysicalV361++;
@@ -280,7 +298,7 @@ final class Zero3OriginalBrainV356 {
                 after[191],after[192],clip(touch),clip(held),after[190],clip(optical),
                 reserve<=0?1f:0f,clip(Math.max(0,net)/100f),clip(elapsed/.65f)};
             brain.physicalTargetsV353(targets,heldout);
-            brain.consequenceObservedV352(after,net,heldout,elapsed,reserve<=0,false);
+            brain.consequenceObservedV352(after,net,heldout,elapsed,reserve<=0,genuineTerminal);
             brain.completeExecutiveV354(outcome.score,net,harm,
                 motorReserveSpentDuringDecisionV359,heldout,
                 outcome.physicalEvidence&&!disturbed&&!outcome.censored);

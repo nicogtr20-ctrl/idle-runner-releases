@@ -227,8 +227,17 @@ public final class Zero3RecurrentBrain {
         int selected=cognition==null?0:cognition.select(x,options);
         if(plannerV354!=null){
             plannerV354.topology(cognition.snapshot().predictiveUnits);
-            boolean ready=validationCount>=64&&heldoutModelError<heldoutBaselineError*.9f&&cognition.trusted(0)&&cognition.trusted(1)&&cognition.trusted(2);
-            int planned=plannerV354.select(x,decisionState,options,modelV354(),ready);if(planned>=0)selected=planned;
+            // The real S21 reserve-cost head can have a nearly constant
+            // baseline, while energy and damage remain independently trusted.
+            // Reuse V353's empirical cost error; require the V354 heldout
+            // horizon to beat BOTH energy and harm baselines before influence.
+            float costMargin=cognition.costSafetyMarginV368();
+            boolean costTrusted=cognition.trusted(2);
+            boolean ready=validationCount>=64&&heldoutModelError<heldoutBaselineError*.9f&&
+                cognition.trusted(0)&&cognition.trusted(1)&&Float.isFinite(costMargin);
+            int planned=plannerV354.select(x,decisionState,options,modelV354(),
+                ready,costTrusted,costMargin);
+            if(planned>=0)selected=planned;
         }
         System.arraycopy(noise[selected],0,lastNoise,0,MOTOR);
         float[] authorized=options[selected];
@@ -326,7 +335,13 @@ public final class Zero3RecurrentBrain {
     }
     public void consequenceObservedV352(float[] next,float reward,boolean heldout,
             float elapsed,boolean terminal,boolean interrupted){
-        if(!variableClock||!Float.isFinite(elapsed)||elapsed<.0249f||elapsed>.6501f)
+        // V368: a physically fatal red/weather contact may arrive in the
+        // first 1/60s substep of a new 0.25-0.65s decision. Its actual elapsed
+        // time MUST be credited as a terminal truncated action, never thrown
+        // away or inflated to a fabricated completed 0.025s motor interval.
+        boolean genuineShortTerminal=terminal&&interrupted&&elapsed>0f;
+        if(!variableClock||!Float.isFinite(elapsed)||elapsed>.6501f||
+           (elapsed<.0249f&&!genuineShortTerminal))
             throw new IllegalArgumentException("V352 requires real physical elapsed time");
         completeConsequence(next,reward,heldout,!interrupted,terminal,elapsed);
     }

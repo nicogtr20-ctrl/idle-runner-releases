@@ -63,26 +63,26 @@ public final class Zero366VisionMemoryAndPlannerTest {
         assertArrayEquals("V361 untouched fields stay byte-identical",
             old,upgraded.encodePriorV361ForQA());
         // Authentic V361 weight format contains twelve projection weights
-        // plus ONE scalar bias; it never had the three V366 spectral axes.
+        // plus ONE scalar bias; it never had V366 horizontal or V367 vertical axes.
         Field weightsField=Zero3ExecutiveV354.class.getDeclaredField("valueWeights");
         weightsField.setAccessible(true);
         float[] previous=(float[])weightsField.get(original);
         float[] migrated=(float[])weightsField.get(upgraded);
         for(int i=0;i<12;i++)
             assertEquals("historic V361 weight "+i,previous[i],migrated[i],0f);
-        assertEquals("historic scalar bias preserved",previous[15],migrated[15],0f);
-        for(int i=12;i<15;i++)
+        assertEquals("historic scalar bias preserved",previous[18],migrated[18],0f);
+        for(int i=12;i<18;i++)
             assertEquals("new channels must start neutral on V361 import",0f,migrated[i],0f);
         upgraded.propose(before,action(),31,false);
         float[] originalTwelve=Zero3VisionContextV366.originalV361Padded(before);
-        float predicted=migrated[15];
+        float predicted=migrated[18];
         for(int i=0;i<12;i++)predicted+=originalTwelve[i]*migrated[i];
         predicted=Math.max(-1f,Math.min(1f,predicted));
         assertEquals("prior-context learned value is unchanged on V361 migration",
             predicted,upgraded.snapshot().value,1e-7f);
         upgraded.abort();
         byte[] modern=upgraded.encode();
-        assertEquals(366,java.nio.ByteBuffer.wrap(modern).getInt());
+        assertEquals(367,java.nio.ByteBuffer.wrap(modern).getInt());
         Zero3ExecutiveV354 reloaded=Zero3ExecutiveV354.decode(modern);
         assertEquals(31,reloaded.snapshot().decisions);
         assertArrayEquals(modern,reloaded.encode());
