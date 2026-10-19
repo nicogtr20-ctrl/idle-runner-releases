@@ -262,7 +262,11 @@ final class Zero3OriginalBrainV356 {
             workAccum+=Math.max(0,work);elapsed+=dt;disturbed|=external;
             if(!terminal&&elapsed+0.0001f<choice.duration&&reserve>0)return;
             if(!terminal&&elapsed<.0249f){interrupt();return;}
-            Zero3LearningFoundation.Experience outcome=motor.finish(terminal);
+            // The original weather step may exhaust the reserve AFTER resolveObjects.
+            // Such a normal POST callback is also terminal, and must never
+            // train an unexecuted motor duration as if it completed.
+            boolean genuineTerminal=terminal||reserve<=0f;
+            Zero3LearningFoundation.Experience outcome=motor.finish(genuineTerminal);
             // Physical measurements only: no reward or decisions are altered.
             measuredMotorDecisionsV361++;
             if(outcome.physicalEvidence)measuredPhysicalV361++;
@@ -294,7 +298,7 @@ final class Zero3OriginalBrainV356 {
                 after[191],after[192],clip(touch),clip(held),after[190],clip(optical),
                 reserve<=0?1f:0f,clip(Math.max(0,net)/100f),clip(elapsed/.65f)};
             brain.physicalTargetsV353(targets,heldout);
-            brain.consequenceObservedV352(after,net,heldout,elapsed,reserve<=0,terminal);
+            brain.consequenceObservedV352(after,net,heldout,elapsed,reserve<=0,genuineTerminal);
             brain.completeExecutiveV354(outcome.score,net,harm,
                 motorReserveSpentDuringDecisionV359,heldout,
                 outcome.physicalEvidence&&!disturbed&&!outcome.censored);
