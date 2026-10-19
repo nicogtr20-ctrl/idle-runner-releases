@@ -1012,6 +1012,11 @@ public final class GameActivity extends Activity {
                     // exactly what ZERO could sense at contact, not object law.
                     float[] sightAtTouch=SensorimotorMind.Senses.read(
                         creature,surface,chamber,environment,reserve);
+                    // Record ONLY photons actually visible before this material
+                    // contact, never the object's hidden wavelength label.
+                    float[] contactPhotonsV369=brain3!=null&&brain3.pending()?
+                        SensorimotorMind.Senses.spectral8(
+                            creature,surface,chamber,environment):null;
                     float delta=object.touch(dx/Math.max(1,dist),dy/Math.max(1,dist));
                     reserve=Math.max(0,Math.min(100,reserve+delta));
                     lifeStats.contact(reserve-before); // actual clamped contact outcome
@@ -1023,6 +1028,8 @@ public final class GameActivity extends Activity {
                     // Only actual physical contact, never passive hunger,
                     // determines positive/negative autobiographical valence.
                     eventEnergyDeltaSinceAction+=reserve-before;
+                    if(contactPhotonsV369!=null&&reserve!=before)
+                        brain3.realEnergyContactV369(contactPhotonsV369,reserve-before);
                     // Actual feedback trains the self-selected motor-action
                     // history; no color, target angle or food flag passed.
                     if(brain3==null)sensorMind.contactOutcome(reserve-before,object.signature,sightAtTouch);
@@ -1511,6 +1518,9 @@ public final class GameActivity extends Activity {
                     if(chamber!=null&&!chamber.reachedEnergy&&
                         chamber.foodTouchedByBody(creature,surface)){
                         float prior=reserve;
+                        float[] roomPhotonsV369=brain3!=null&&brain3.pending()?
+                            SensorimotorMind.Senses.spectral8(
+                                creature,surface,chamber,environment):null;
                         reserve=Math.min(100,reserve+UnknownWorld.RARE_ENERGY);
                         lifeStats.contact(reserve-prior);
                         energyTotals.record(reserve-prior,true);
@@ -1521,6 +1531,8 @@ public final class GameActivity extends Activity {
                                 creature,surface,chamber.food,reserve-prior,
                                 trailX,trailY,trailCount,"room");
                         eventEnergyDeltaSinceAction+=reserve-prior;
+                        if(roomPhotonsV369!=null&&reserve!=prior)
+                            brain3.realEnergyContactV369(roomPhotonsV369,reserve-prior);
                         if(brain3==null)sensorMind.contactOutcome(reserve-prior,chamber.food.signature);
                         energySinceAction[chamber.food.signature]+=reserve-prior;
                         int gained=(int)(reserve-prior);
