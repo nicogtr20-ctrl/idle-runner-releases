@@ -516,7 +516,10 @@ public final class SymbioteMatterV1 {
         // contacts and storm impulses are added later in this frame.
         skin.t+=dt;
         float pulseDecay=(float)Math.exp(-2.5f*dt);
-        for(int i=0;i<SURFACE;i++)skin.touchPulse[i]*=pulseDecay;
+        for(int i=0;i<SURFACE;i++){
+            skin.touchPulse[i]*=pulseDecay;
+            skin.weatherPulseV370[i]*=pulseDecay;
+        }
         // A proprioceptive sensor must describe THIS frame, never a stale
         // maximum recorded across previous extensions in the same life.
         skin.maxExtension=0f;skin.peakExtension=0f;
