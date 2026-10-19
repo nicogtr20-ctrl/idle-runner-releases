@@ -1,6 +1,6 @@
 # ZERO 3.0 V361 — Real phone observation / vision / motor contract
 
-Date: 2026-10-19. Candidate source branch `fix/zero361-live-vision-motor-causality-20261019`. This is NOT a signed OTA.
+Date: 2026-10-19. Candidate source branch `fix/zero361-live-vision-motor-causality-20261019`. This source candidate is not itself a signed OTA; OTA361 is staged with monotonic code 1179 for in-app phone testing after Android QA.
 
 ## Ground truth
 The user observed ZERO moves only a little, approaches ONE side of the gate, NEVER touched BOX in the current observation, and never picked up a gem. Do not mistake previous saved observer sessions for active V3 contacts.
@@ -17,10 +17,16 @@ V356 top-level checkpoint magic, version 356, CRC, GRU, 64 output cortex weights
 ## New direct physical measurements
 At the end of each **completed** physical decision V361 separately records intended x/y, actually observed delta x/y, projected progress along decision, gross travel, raw material work, actual physical evidence, externally corrected movement, near-static, direction-aligned/opposed, 8 actual-intention heading bins, tactile and held substeps. It does not turn this into a reward, scripted gait, gate target, training signal or extra neural input. The session diagnostic `zero3_motor_diagnostic_v361` is written atomically with the scene and full V356 checkpoint, included in explicit user-initiated GPT export; predictive 12-head MSE/baselines/reliability are exported with source provenance. It is session-scoped; no claim that pre-V361 life had such measurements.
 
+## Verified technical QA — 19 October 2026
+- Pure JVM 24 visual-channel mapping PASS.
+- Android app compiled, 4 new V361 instrumented tests PASS (motor authority, LAB isolation, optical mapping, nested old V354 option migration), all 3 previous original V356 gameplay Android tests PASS (lifecycles, signed checkpoint CRC compat, original red pain and GPT share), in [CI #39238687873](https://github.com/nicogtr20-ctrl/idle-runner-releases/actions/runs/39238687873) and independently [CI #39238681621](https://github.com/nicogtr20-ctrl/idle-runner-releases/actions/runs/39238681621).
+- OTA361 publisher configured with versionName `3.0-ota.361`, versionCode `1179`, signing identity unchanged, prior `1178` monotonic gate, original+new Android QA prerequisite. **NOT yet published at audit time**.
+- Scientific efficacy of locomotion, GEM or GATE on actual Galaxy S21 is still NOT TESTED.
+
 ## Verification and release gate
 Pure JVM checks that all 24 visual channels map correctly, including frequency and azimuth separation, and rejects incorrect widths. Android test checks CH2 NEVER probed by original actuator, the four-channel LAB remains unchanged, and a genuine previous serialized V354 option survives V361 migration. Existing original-game real Android instrumented test checks V3 neural single actor, zone streaming/life/reset, V359 RED physical pain, old CRC restoration, GPT share card/report and APK UI. Compile debug + AndroidTest before release. None of these is an unbiased fresh on-phone physical learning A/B proving ZERO can now walk or collect resources.
 
 Remaining open: movement x20 subjectively slow, possible motor force cancellation/weakness, contact on only one gate face, no gem pickups, vision-conditioned decisions unproven, predictive planner gated until energy/harm/motor cost predictions reliably outperform baseline. Never bypass the measured reliability gate, award fictional progress to the reward, teleport resources, script trajectories, or claim emergent locomotion without new paired physics evidence.
 
 ## Next real-phone acceptance
-After candidate QA and separately authorized/signed OTA, preserve the currently trained brain, play **fresh** life episodes, share data, compare directions/physical displacements and held contacts and actual ENERGY, and test with independent blind seeds and matched baseline. No phone result is claimed in this document.
+After candidate QA and a separately verified signed OTA361 for actual phone testing, preserve the currently trained brain, play **fresh** life episodes, share data, compare directions/physical displacements and held contacts and actual ENERGY, and test with independent blind seeds and matched baseline. No phone result is claimed in this document.
