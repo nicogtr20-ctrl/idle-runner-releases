@@ -197,6 +197,17 @@ public final class SymbioteMatterV1 {
             throw new IllegalArgumentException("outside passive floor calibration");
         passiveFloorBaselineV363=value;
     }
+    /** V363 verified targeted calibration for the ORIGINAL game's sole V3
+     * neural owner. Restore/new-life only. Legacy V2.2 and bench baseline
+     * remain at 0.12, so their physical behavior is not silently changed.
+     *
+     * Actual material, viscosity and local compression-dependent footholds
+     * still govern every step. Not a velocity boost, energy or gait script.
+     */
+    void enableOriginalZero3TractionV363(){
+        passiveFloorBaselineV363=.08f;
+    }
+    float passiveFloorBaselineV363(){return passiveFloorBaselineV363;}
     static float substrateTraction(float extend,float tension,float meanTension){
         return substrateTractionWithBaselineV363(extend,tension,meanTension,.12f);
     }
