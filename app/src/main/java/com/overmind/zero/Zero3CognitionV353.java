@@ -127,6 +127,14 @@ public final class Zero3CognitionV353 {
             return Float.POSITIVE_INFINITY;
         return (float)(4.0*Math.sqrt(heldoutError/validations));
     }
+    /** Same measured heldout bound already used by V366's conservative
+     * one-step comparison. V368 multi-step planner may use it, but never
+     * relabel an uncertain cost predictor as trustworthy or zero cost. */
+    float costSafetyMarginV368(){
+        if(trusted(2))return 0f;
+        return conservativeCostMarginV366(error[2],
+            validations-reliabilityValidations);
+    }
     int select(float[] observation,float[][] proposals){
         if(!trusted(0)||!trusted(1))return 0;
         boolean costTrusted=trusted(2);
