@@ -37,6 +37,7 @@ public final class Zero3RecurrentBrain {
     private final float[] gatedZ=new float[HIDDEN],gatedR=new float[HIDDEN],
         candidate=new float[HIDDEN],decisionState=new float[HIDDEN];
     private final float[] lastNoise=new float[MOTOR],
+    private final float[] selectedNoiseScaleV369={1f,1f,1f,1f,1f};
         action=new float[ACTION],worldInput=new float[HIDDEN+ACTION+1];
     private long rng=0x34EA7CA51DA1L,trainCount,validationCount,recurrentUpdates;
     private boolean pending;
@@ -150,6 +151,10 @@ public final class Zero3RecurrentBrain {
     float nextRoomV354(){return executive.nextRoom();}
     void ecologyStateV354(String state,float next){executive.ecology(state,next);}
     long selectedOptionV354(){return executive==null?0:executive.selectedId();}
+    void realEnergyContactV369(float[] retina24,float physicalDelta,boolean heldout){
+        if(!pending||cognition==null)throw new IllegalStateException("V369 contact without live GRU choice");
+        cognition.genuineContactV369(retina24,physicalDelta,heldout);
+    }
     void physicalTargetsV353(float[] targets,boolean heldout){
         if(cognition==null||!pending||physicalTargetsReadyV353)throw new IllegalStateException("V353 missing/duplicate physical transition");
         if(heldout!=(executive!=null?Zero3ConfigurationV354.heldout(trainCount+validationCount+observationCount):Zero3CognitionV353.heldout(trainCount+validationCount+observationCount)))throw new IllegalArgumentException("V353 partition mismatch");
@@ -213,10 +218,19 @@ public final class Zero3RecurrentBrain {
             proposal[out]=dot(actor,at,state,HIDDEN);
             lastNoise[out]=sample();
         }
-        float[][] options=new float[cognition==null?1:3][5];
+        // Wide unbiased exploratory actor samples only after the brain has
+        // physically learned a visible wavelength's valence. No forced
+        // direction, object location, scripted reflex or V2 decision issuer.
+        boolean learnedBearing=cognition!=null&&cognition.hasVisibleContactKnowledgeV369(x);
+        float[][] options=new float[cognition==null?1:learnedBearing?7:3][5];
         float[][] noise=new float[options.length][MOTOR];
+        float[][] noiseScale=new float[options.length][MOTOR];
         for(int k=0;k<options.length;k++){
-            for(int j=0;j<MOTOR;j++)noise[k][j]=k==0?lastNoise[j]:sample();
+            for(int j=0;j<MOTOR;j++){
+                float scale=learnedBearing&&k>0&&j<2?(k>=3?4f:2.5f):1f;
+                noiseScale[k][j]=scale;
+                noise[k][j]=k==0?lastNoise[j]:sample()*scale;
+            }
             float sx=clip(proposal[0]+noise[k][0],-1,1),sy=clip(proposal[1]+noise[k][1],-1,1);
             float len=(float)Math.hypot(sx,sy);if(len<.00001f){sx=1;sy=0;len=1;}
             options[k][0]=sx/len;options[k][1]=sy/len;
@@ -240,6 +254,7 @@ public final class Zero3RecurrentBrain {
             if(planned>=0)selected=planned;
         }
         System.arraycopy(noise[selected],0,lastNoise,0,MOTOR);
+        System.arraycopy(noiseScale[selected],0,selectedNoiseScaleV369,0,MOTOR);
         float[] authorized=options[selected];
         optionReplayV354=false;
         if(executive!=null){authorized=executive.propose(x,authorized,decision,observeV354);optionReplayV354=executive.usedMemory();}
@@ -426,7 +441,10 @@ public final class Zero3RecurrentBrain {
         for(int k=0;k<MOTOR;k++){
             if(optionReplayV354)continue; // recalled action did not execute this sampled noise
             if(k==MOTOR-1&&!durationExecuted)continue; // V350 no fictitious duration credit
-            float explorationGradient=clip(lastNoise[k]/(.2f*.2f),-3f,3f);
+            // Candidate noise can have physically learned exploratory width.
+            // Credit the true sampling distribution, NOT a fictitious .2 std.
+            float sigma=.2f*selectedNoiseScaleV369[k];
+            float explorationGradient=clip(lastNoise[k]/(sigma*sigma),-3f,3f);
             int at=k*(HIDDEN+1);
             for(int j=0;j<HIDDEN;j++)
                 actor[at+j]=clip(actor[at+j]+ACTOR_LR*advantage*explorationGradient*decisionState[j],-1.5f,1.5f);
