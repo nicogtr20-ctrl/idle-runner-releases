@@ -138,6 +138,9 @@ public final class Zero3CognitionV353 {
         return conservativeCostMarginV366(error[2],
             validations-reliabilityValidations);
     }
+    void adoptOldContactEvidenceV369(float[] physicalMean,int[] contactCount){
+        contactValence.adoptArchivedRealContacts(physicalMean,contactCount);
+    }
     void genuineContactV369(float[] spectral24,float physicalEnergyDelta,boolean heldout){
         if(!heldout)contactValence.contact(spectral24,physicalEnergyDelta);
     }
@@ -254,12 +257,14 @@ public final class Zero3CognitionV353 {
         public final float[] mse,baselineMse,uncertainty;
         public final boolean[] reliable;
         public final int[] contactSamples=new int[3];
+        public final int[] archivedContactSamples=new int[3];
         public final float[] contactValues=new float[3];
         public final long contactAccepted,contactAmbiguous;
         Snapshot(Zero3CognitionV353 c){
             train=c.trains;heldout=c.validations;plannerUses=c.plannerUses;
             for(int i=0;i<3;i++){
                 contactSamples[i]=c.contactValence.evidence(i);
+                archivedContactSamples[i]=c.contactValence.archivedEvidence(i);
                 contactValues[i]=c.contactValence.learnedValue(i);
             }
             contactAccepted=c.contactValence.accepted();
