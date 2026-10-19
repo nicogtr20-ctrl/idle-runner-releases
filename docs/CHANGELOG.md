@@ -758,3 +758,8 @@ Richiesta utente: APK pronta con centro decisionale rivisto attivo, conservazion
 - Nuovo ZERO: zero decisioni/nessun import invisibile da V355. Nascita energia 100/100 senza cambiare ricompense.
 - QA Android: partita nuova, reset completo, ripresa dopo riavvio, cervello originale, vista V361, vita e condivisione GPT.
 - APK firmato con il certificato originale, versione 1180, SHA-256 `11f112b2d4ed1eb477602b4736ed03c990d21a2854433a48cc7f6f0a83ffb9aa`.
+
+## ZERO 3.0 OTA363 — 2026-10-19T17:16:06.298411+00:00
+- V363: attrito passivo V3 0.12→0.08 solo nel simbionte originale, 2.2 invariato; no aumento muscolare.
+- Apprendimento include prese autonome reali, non urti forzati; nuova prova A/B originale train/frozen, 4 direzioni, emulator V361–363.
+- APK firmato con il certificato originale, versione 1181, SHA-256 `89e1ac9cf77bec3d7d40aedfa9877ca4c15018f7b2949d50d4e86b358757966e`.
