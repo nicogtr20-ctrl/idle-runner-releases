@@ -65,7 +65,7 @@ jobs:
             adb shell pm clear com.overmind.zero.ota
             adb shell am instrument -w -r -e class com.overmind.zero.Zero361MotorOwnershipTest \
               com.overmind.zero.ota.test/androidx.test.runner.AndroidJUnitRunner | tee /tmp/v361-motor-instrumentation.txt
-            grep -q 'OK (3 tests)' /tmp/v361-motor-instrumentation.txt
+            grep -q 'OK (4 tests)' /tmp/v361-motor-instrumentation.txt
             bash tools/zero356_android_ui.sh
       - uses: actions/upload-artifact@v4
         if: always()
