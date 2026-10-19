@@ -59,6 +59,23 @@ public final class Zero3ExecutiveV354 {
     private static float[] contextForOptionV366(Option o,float[] current,float[] legacy,float[] old361){
         return o.visionSchemaV366==354?legacy:o.visionSchemaV366==361?old361:current;
     }
+    /** Previously archived 12D options have NO evidence about which
+     * of two different wavelengths lay on which opposite horizontal side.
+     * In such scenes automatic old-option recall could replay the opposite
+     * policy. Quarantine only this genuine information-loss situation:
+     * nothing is deleted, same-colour scenes and new 15D options are valid.
+     * This is NOT a rule about blue or red being good or bad.
+     */
+    static boolean mirroredOldContextRiskV366(float[] expanded){
+        if(expanded==null||expanded.length!=CONTEXT)
+            throw new IllegalArgumentException("V366 context size");
+        boolean east=false,west=false;
+        for(int channel=PRIOR_CONTEXT;channel<CONTEXT;channel++){
+            if(expanded[channel]>.015f)east=true;
+            if(expanded[channel]<-.015f)west=true;
+        }
+        return east&&west;
+    }
     private static float distanceOptionV366(float[] observed,Option option){
         int matched=option.visionSchemaV366==366?CONTEXT:PRIOR_CONTEXT;
         float error=0;
@@ -82,6 +99,10 @@ public final class Zero3ExecutiveV354 {
         float nearest=.12f;
         for(int i=0;i<options.size();i++){
             Option o=options.get(i);
+            // Historical V354/361 12D contexts conflate different source
+            // signatures on opposite sides. The original learned memory
+            // remains intact, but cannot authorize ambiguous mirror recall.
+            if(o.visionSchemaV366!=366&&mirroredOldContextRiskV366(c))continue;
             float d=distanceOptionV366(contextForOptionV366(o,c,legacy,old361),o);
             if(o.state==RETIRED||o.train<4||d>=nearest)continue;
             boolean probe=Zero3ConfigurationV354.heldout(decision)&&((decision/15)&1)==1;
@@ -139,6 +160,7 @@ public final class Zero3ExecutiveV354 {
             validation++;
             for(int i=0;i<options.size();i++){
                 Option o=options.get(i);if(!motorEvidence||o.state==RETIRED||
+                    (o.visionSchemaV366!=366&&mirroredOldContextRiskV366(pendingContext))||
                     distanceOptionV366(contextForOptionV366(o,pendingContext,pendingLegacyContextV354,pendingV361ContextV366),o)>.12f)continue;
                 if(i==active){o.optionN++;o.optionSum+=motorScore;o.optionSq+=motorScore*motorScore;o.optionEnergy+=realEnergy;o.optionHarm+=harm;}
                 else if(active==-1){o.controlN++;o.controlSum+=motorScore;o.controlSq+=motorScore*motorScore;o.controlEnergy+=realEnergy;o.controlHarm+=harm;}
@@ -157,6 +179,7 @@ public final class Zero3ExecutiveV354 {
             for(int i=0;i<CONTEXT;i++)valueWeights[i]=clamp(valueWeights[i]+.005f*err*pendingContext[i]);
             valueWeights[CONTEXT]=clamp(valueWeights[CONTEXT]+.005f*err);
             for(Option o:options)if(motorEvidence&&o.state!=RETIRED&&
+                (o.visionSchemaV366==366||!mirroredOldContextRiskV366(pendingContext))&&
                 distanceOptionV366(contextForOptionV366(o,pendingContext,pendingLegacyContextV354,pendingV361ContextV366),o)<.12f&&
                 o.policy[0]*pendingPolicy[0]+o.policy[1]*pendingPolicy[1]>.8f)o.train++;
             if(motorEvidence&&train%32==0&&(options.size()<LIMIT||hasRetired())&&motorScore>0&&harm==0){
