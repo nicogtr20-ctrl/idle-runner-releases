@@ -160,7 +160,7 @@ final class Zero3OriginalBrainV356 {
                 issued=authority.issue(OWNER,cursor,(int)Math.min(Integer.MAX_VALUE,cortex.revision()),
                     356,choice.x,choice.y,choice.effort,choice.adhesion,choice.duration,
                     brain.measuredConfidenceV354());
-                motor.begin(choice,body,!heldout,heldout,true);
+                motor.begin(choice,body,!heldout,heldout,true,true);
                 grip.begin(heldout);
                 pending=true;lastLife=realLife;
             }
