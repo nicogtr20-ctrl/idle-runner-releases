@@ -175,8 +175,17 @@ final class Zero3OriginalBrainV356 {
      * Called BEFORE the original symbiotic physics step: exclusively chooses
      * an intention and returns the 64 neural commands consumed by the solver.
      */
+    /** Existing lab/legacy caller retains its original contract. */
     float[] actuate(int realLife,MotorBrain.Body body,Morphology.Surface skin,
             SymbioteMatterV1 matter,ArrayList<UnknownWorld.Entity> objects,
+            ScarcityLab chamber,float reserve,float time,float dt)throws IOException{
+        return actuate(realLife,body,skin,matter,null,objects,chamber,reserve,time,dt);
+    }
+    /** Sole V3 neural choice, with physically proven motor readout as an
+     * entirely downstream peripheral in the original Android organism. */
+    float[] actuate(int realLife,MotorBrain.Body body,Morphology.Surface skin,
+            SymbioteMatterV1 matter,SymbioteMotorHeadV1 physicalPeripheralV364,
+            ArrayList<UnknownWorld.Entity> objects,
             ScarcityLab chamber,float reserve,float time,float dt)throws IOException{
         try{
             if(!pending){
@@ -191,12 +200,20 @@ final class Zero3OriginalBrainV356 {
                     brain.measuredConfidenceV354());
                 motor.begin(choice,body,!heldout,heldout,true,true);
                 grip.begin(heldout);
+                if(physicalPeripheralV364!=null)
+                    Zero3MotorPeripheralBridgeV364.begin(physicalPeripheralV364,
+                        body,skin,chamber,objects,choice.x,choice.y);
                 pending=true;lastLife=realLife;
             }
             if(realLife!=lastLife)throw new IOException("Vita cambiata durante la decisione");
             float[] out=motor.actuate(body,skin,dt);
             grip.originalTimestepV356(dt);
             grip.actuate(out,issued,body,skin,objects);
+            if(physicalPeripheralV364!=null)
+                Zero3MotorPeripheralBridgeV364.fastPhysicalRefine(
+                    out,physicalPeripheralV364,body,skin,dt);
+            // The proprioceptive efference matches EXACT post-blend channels
+            // actually submitted to the original original-body solver.
             System.arraycopy(out,0,executed64,0,64);
             return out;
         }catch(RuntimeException failure){

@@ -1178,8 +1178,10 @@ public final class GameActivity extends Activity {
                     // Record efference from EXACTLY what physics receives.
                     if(useSymbiote&&symMatter!=null&&brain3!=null){
                         try{
+                            // One neural GRU3 chooser; 2.2 motor is an
+                            // actuating peripheral only (NO 2.2 policy).
                             brain3.actuate(brain3LifeSerial,creature,surface,symMatter,
-                                environment,chamber,reserve,worldTime,slice);
+                                symMotor,environment,chamber,reserve,worldTime,slice);
                             mx=brain3.directionX();my=brain3.directionY();
                         }catch(java.io.IOException failure){
                             simulationRunning=false;
