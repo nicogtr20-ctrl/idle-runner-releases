@@ -18,7 +18,10 @@ final class Zero3ContactValenceV369 {
     static final int BANDS=3, BEAMS=8, PERSISTENCE=369;
     private final double[] outcomes=new double[BANDS];
     private final int[] evidence=new int[BANDS];
+    private final int[] archivedEvidence=new int[BANDS];
+    private final float[] archivedValue=new float[BANDS];
     private long accepted,ambiguous;
+    private boolean archiveImported;
     private static void senses(float[] x,int at,int len){
         if(x==null||x.length<at+len)throw new IllegalArgumentException("V369 sensory shape");
         for(int i=at;i<at+len;i++)if(!Float.isFinite(x[i])||x[i]<0f||x[i]>1f)
@@ -49,6 +52,37 @@ final class Zero3ContactValenceV369 {
         evidence[index]++;
         accepted++;
     }
+    /** Historical source memory from the exact ORIGINAL working game.
+     * It was learned by genuine UnknownWorld.Mind.observe() calls at touch.
+     * Its wavelength index is the same observed optical signature group,
+     * but it LACKS paired contact photons: explicitly mark this as a weak
+     * archival prior and do not count it as direct V369 optical evidence.
+     * Never import for newborn/reset or overwrite already acquired V369 data.
+     */
+    void adoptArchivedRealContacts(float[] measuredMean,int[] counts){
+        if(measuredMean==null||counts==null||
+           measuredMean.length!=BANDS||counts.length!=BANDS)
+            throw new IllegalArgumentException("V369 archived physical evidence shape");
+        if(archiveImported||accepted>0)return;
+        for(int i=0;i<BANDS;i++){
+            if(!Float.isFinite(measuredMean[i])||Math.abs(measuredMean[i])>100||
+                counts[i]<0||counts[i]>100000000)
+                throw new IllegalArgumentException("V369 corrupt archived real contacts");
+        }
+        for(int i=0;i<BANDS;i++){
+            archivedEvidence[i]=counts[i];
+            archivedValue[i]=Math.max(-1f,Math.min(1f,measuredMean[i]/7f));
+        }
+        archiveImported=true;
+    }
+    private float effectiveValue(int band){
+        if(evidence[band]>=2)return learnedValue(band);
+        if(archiveImported&&archivedEvidence[band]>=2)
+            return .35f*archivedValue[band]; // weak prior; no photons at touch
+        return 0f;
+    }
+    int archivedEvidence(int band){return archivedEvidence[band];}
+    boolean archiveImported(){return archiveImported;}
     /** Directional utility for actor PROPOSALS, not a preselected heading.
      * V369 is inactive until two distinct real contacts establish a band.
      * It consults ONLY current physical photons and learned outcome signs. */
@@ -58,8 +92,7 @@ final class Zero3ContactValenceV369 {
             throw new IllegalArgumentException("V369 actor proposal");
         float total=0f;
         for(int c=0;c<BANDS;c++){
-            if(evidence[c]<2)continue;
-            float value=(float)(outcomes[c]/evidence[c]);
+            float value=effectiveValue(c);
             if(Math.abs(value)<.1f)continue;
             for(int ray=0;ray<BEAMS;ray++){
                 double angle=ray*Math.PI/4d;
@@ -71,7 +104,7 @@ final class Zero3ContactValenceV369 {
     }
     boolean hasReliableVisibleEvidence(float[] observation194){
         senses(observation194,20,BANDS*BEAMS);
-        for(int c=0;c<BANDS;c++)if(evidence[c]>=2&&Math.abs(outcomes[c]/evidence[c])>.1)
+        for(int c=0;c<BANDS;c++)if(Math.abs(effectiveValue(c))>.1)
             for(int ray=0;ray<BEAMS;ray++)
                 if(observation194[20+c*BEAMS+ray]>.15f)return true;
         return false;
@@ -85,11 +118,18 @@ final class Zero3ContactValenceV369 {
     void copyTo(Zero3ContactValenceV369 other){
         System.arraycopy(outcomes,0,other.outcomes,0,BANDS);
         System.arraycopy(evidence,0,other.evidence,0,BANDS);
+        System.arraycopy(archivedEvidence,0,other.archivedEvidence,0,BANDS);
+        System.arraycopy(archivedValue,0,other.archivedValue,0,BANDS);
+        other.archiveImported=archiveImported;
         other.accepted=accepted;other.ambiguous=ambiguous;
     }
     void write(DataOutputStream d)throws IOException{
         d.writeInt(PERSISTENCE);d.writeLong(accepted);d.writeLong(ambiguous);
         for(int c=0;c<BANDS;c++){d.writeInt(evidence[c]);d.writeDouble(outcomes[c]);}
+        d.writeBoolean(archiveImported);
+        for(int c=0;c<BANDS;c++){
+            d.writeInt(archivedEvidence[c]);d.writeFloat(archivedValue[c]);
+        }
     }
     static Zero3ContactValenceV369 read(DataInputStream d)throws IOException {
         if(d.readInt()!=PERSISTENCE)throw new IOException("V369 contact memory schema");
@@ -106,6 +146,14 @@ final class Zero3ContactValenceV369 {
                 throw new IOException("V369 invalid sensory consequence evidence");
         }
         if(total!=v.accepted)throw new IOException("V369 contact evidence mismatch");
+        v.archiveImported=d.readBoolean();
+        for(int i=0;i<BANDS;i++){
+            v.archivedEvidence[i]=d.readInt();v.archivedValue[i]=d.readFloat();
+            if(v.archivedEvidence[i]<0||v.archivedEvidence[i]>100000000||
+                !Float.isFinite(v.archivedValue[i])||Math.abs(v.archivedValue[i])>1||
+                (!v.archiveImported&&(v.archivedEvidence[i]!=0||v.archivedValue[i]!=0)))
+                throw new IOException("V369 invalid historical attribution");
+        }
         return v;
     }
 }
