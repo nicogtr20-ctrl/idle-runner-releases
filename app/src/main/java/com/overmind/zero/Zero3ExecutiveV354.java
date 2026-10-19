@@ -7,13 +7,13 @@ import java.util.*;
  * Online validation is explicitly separate from final independent capability certification.
  */
 public final class Zero3ExecutiveV354 {
-    static final int CONTEXT=12,LIMIT=16;
+    static final int CONTEXT=15,PRIOR_CONTEXT=12,LIMIT=16;
     static final int CANDIDATE=0,CHAMPION=1,PROBATION=2,RETIRED=3;
     private static final class Option {
         long id,born,blocks;int state,train,optionN,controlN,recalls,reverts,probationN;
         // Checkpoint 354 memories were trained on the OLD, interleaved
         // sensory layout. Compare them only in the layout they actually saw.
-        boolean legacyVisionV354;
+        int visionSchemaV366=366;
         final float[] context=new float[CONTEXT],policy=new float[5];
         double optionSum,controlSum,optionSq,controlSq,optionEnergy,controlEnergy,optionHarm,controlHarm;
     }
@@ -34,13 +34,14 @@ public final class Zero3ExecutiveV354 {
     private long abortGoalId,abortGoalSince;
     private int abortGoalAge,abortRecallIndex=-1,abortRecallCount;
     private String abortReason;
-    private float[] pendingContext,pendingLegacyContextV354,pendingPolicy;
+    private float[] pendingContext,pendingLegacyContextV354,pendingV361ContextV366,pendingPolicy;
     private String reason="Nessuna intenzione osservata";
     private static float clamp(float x){return Math.max(-1,Math.min(1,x));}
     private static float[] context(float[] x){
         // Physical spectral8 is grouped [frequency][azimuth], not interleaved.
-        // Keep the 12-slot executive context/checkpoint shape unchanged.
-        return Zero3VisionContextV361.fromSensory194(x);
+        // Keep OLD 12 features IDENTICAL; append frequency-specific horizontal
+        // bearings without reinterpreting old weights or old saved options.
+        return Zero3VisionContextV366.fromSensory194(x);
     }
     private static float[] legacyContextV354(float[] x){
         float[] c=new float[CONTEXT];
@@ -55,6 +56,9 @@ public final class Zero3ExecutiveV354 {
         c[11]=(x[191]+x[192])*.5f;
         return c;
     }
+    private static float[] contextForOptionV366(Option o,float[] current,float[] legacy,float[] old361){
+        return o.visionSchemaV366==354?legacy:o.visionSchemaV366==361?old361:current;
+    }
     private static float distance(float[] a,float[] b){float d=0;for(int i=0;i<CONTEXT;i++){float v=a[i]-b[i];d+=v*v;}return d/CONTEXT;}
     private float value(float[] c){float a=valueWeights[CONTEXT];for(int i=0;i<CONTEXT;i++)a+=c[i]*valueWeights[i];return clamp(a);}
     /** Called by the sole actor after its own proposal. Returned option must be authorized there. */
@@ -64,11 +68,12 @@ public final class Zero3ExecutiveV354 {
         abortGoalAge=goalAge;abortReason=reason;abortRecallIndex=-1;
         float[] c=context(observation);
         float[] legacy=legacyContextV354(observation);
+        float[] old361=Zero3VisionContextV366.originalV361Padded(observation);
         active=-1;usedMemory=false;lastValue=value(c);
         float nearest=.12f;
         for(int i=0;i<options.size();i++){
             Option o=options.get(i);
-            float d=distance(o.legacyVisionV354?legacy:c,o.context);
+            float d=distance(contextForOptionV366(o,c,legacy,old361),o.context);
             if(o.state==RETIRED||o.train<4||d>=nearest)continue;
             boolean probe=Zero3ConfigurationV354.heldout(decision)&&((decision/15)&1)==1;
             boolean recall=!Zero3ConfigurationV354.heldout(decision)&&lastHarm==0&&(o.state==CHAMPION||o.state==PROBATION)&&o.optionN>0&&
@@ -82,7 +87,7 @@ public final class Zero3ExecutiveV354 {
             o.recalls++;if(goalId==o.id){goalAge++;reason=observe?"Richiamo osservato; apprendimento congelato":"Richiamo contestuale: vantaggio misurato";}
             else{goalId=o.id;goalSince=decision;goalAge=1;reason=o.state==CANDIDATE?"Prova candidata su dati riservati":"Opzione convalidata richiamata";}
         }else{goalId=0;goalSince=decision;goalAge=1;reason="Nuova intenzione della politica GRU";}
-        pending=true;pendingContext=c;pendingLegacyContextV354=legacy;
+        pending=true;pendingContext=c;pendingLegacyContextV354=legacy;pendingV361ContextV366=old361;
         pendingPolicy=chosen.clone();return chosen;
     }
     /** No reward, no decision, no chosen option on an interrupted physics frame. */
@@ -92,7 +97,7 @@ public final class Zero3ExecutiveV354 {
             options.get(abortRecallIndex).recalls=abortRecallCount;
         goalId=abortGoalId;goalSince=abortGoalSince;
         goalAge=abortGoalAge;reason=abortReason;
-        pending=false;pendingContext=null;pendingLegacyContextV354=null;pendingPolicy=null;
+        pending=false;pendingContext=null;pendingLegacyContextV354=null;pendingV361ContextV366=null;pendingPolicy=null;
         active=-1;usedMemory=false;abortRecallIndex=-1;
     }
     Zero3ExecutiveV354 inherited(long parent)throws IOException{
@@ -125,7 +130,7 @@ public final class Zero3ExecutiveV354 {
             validation++;
             for(int i=0;i<options.size();i++){
                 Option o=options.get(i);if(!motorEvidence||o.state==RETIRED||
-                    distance(o.legacyVisionV354?pendingLegacyContextV354:pendingContext,o.context)>.12f)continue;
+                    distance(contextForOptionV366(o,pendingContext,pendingLegacyContextV354,pendingV361ContextV366),o.context)>.12f)continue;
                 if(i==active){o.optionN++;o.optionSum+=motorScore;o.optionSq+=motorScore*motorScore;o.optionEnergy+=realEnergy;o.optionHarm+=harm;}
                 else if(active==-1){o.controlN++;o.controlSum+=motorScore;o.controlSq+=motorScore*motorScore;o.controlEnergy+=realEnergy;o.controlHarm+=harm;}
                 else continue;
@@ -143,14 +148,14 @@ public final class Zero3ExecutiveV354 {
             for(int i=0;i<CONTEXT;i++)valueWeights[i]=clamp(valueWeights[i]+.005f*err*pendingContext[i]);
             valueWeights[CONTEXT]=clamp(valueWeights[CONTEXT]+.005f*err);
             for(Option o:options)if(motorEvidence&&o.state!=RETIRED&&
-                distance(o.legacyVisionV354?pendingLegacyContextV354:pendingContext,o.context)<.12f&&
+                distance(contextForOptionV366(o,pendingContext,pendingLegacyContextV354,pendingV361ContextV366),o.context)<.12f&&
                 o.policy[0]*pendingPolicy[0]+o.policy[1]*pendingPolicy[1]>.8f)o.train++;
             if(motorEvidence&&train%32==0&&(options.size()<LIMIT||hasRetired())&&motorScore>0&&harm==0){
                 if(options.size()==LIMIT)for(int i=0;i<options.size();i++)if(options.get(i).state==RETIRED){
                     Option old=options.remove(i);retiredHistory.add(new long[]{old.id,old.born,old.train,old.optionN,old.controlN,old.reverts});
                     if(retiredHistory.size()>64)retiredHistory.remove(0);break;
                 }
-                Option o=new Option();o.id=nextId++;o.born=historicalDecisions+decisions;o.train=1;
+                Option o=new Option();o.id=nextId++;o.born=historicalDecisions+decisions;o.train=1;o.visionSchemaV366=366;
                 System.arraycopy(pendingContext,0,o.context,0,CONTEXT);System.arraycopy(pendingPolicy,0,o.policy,0,5);options.add(o);
             }
             // Lifecycle changes occur only on TRAIN boundaries, never on validation/observe.
@@ -193,7 +198,7 @@ public final class Zero3ExecutiveV354 {
     public Snapshot snapshot(){return new Snapshot(this);}
     byte[] encode()throws IOException{
         if(pending)throw new IOException("V354 pending option");
-        ByteArrayOutputStream b=new ByteArrayOutputStream();DataOutputStream d=new DataOutputStream(b);d.writeInt(361);
+        ByteArrayOutputStream b=new ByteArrayOutputStream();DataOutputStream d=new DataOutputStream(b);d.writeInt(366);
         for(long v:new long[]{decisions,train,validation,observations,nextId,goalId,goalSince,goalInterruptions,lastPredictionValidation})d.writeLong(v);
         for(long h:new long[]{historicalDecisions,historicalTrain,historicalValidation,historicalObservations,parentEpisode,repairs[0],repairs[1],repairs[2]})d.writeLong(h);
         d.writeInt(goalAge);for(float f:new float[]{lastEnergy,lastHarm,lastValue,informationProgress,previousPredictionError})d.writeFloat(f);
@@ -202,7 +207,7 @@ public final class Zero3ExecutiveV354 {
             for(int v:new int[]{o.state,o.train,o.optionN,o.controlN,o.recalls,o.reverts,o.probationN})d.writeInt(v);
             for(float f:o.context)d.writeFloat(f);for(float f:o.policy)d.writeFloat(f);
             for(double v:new double[]{o.optionSum,o.controlSum,o.optionSq,o.controlSq,o.optionEnergy,o.controlEnergy,o.optionHarm,o.controlHarm})d.writeDouble(v);
-            d.writeBoolean(o.legacyVisionV354);
+            d.writeInt(o.visionSchemaV366);
         }
         d.writeInt(retiredHistory.size());for(long[] history:retiredHistory)for(long f:history)d.writeLong(f);
         d.flush();return b.toByteArray();
@@ -212,7 +217,7 @@ public final class Zero3ExecutiveV354 {
         if(raw==null||raw.length<100||raw.length>120000)throw new IOException("V354 executive size");
         DataInputStream d=new DataInputStream(new ByteArrayInputStream(raw));
         int schema=d.readInt();
-        if(schema!=354&&schema!=361)throw new IOException("V361 executive schema");
+        if(schema!=354&&schema!=361&&schema!=366)throw new IOException("V366 executive schema");
         Zero3ExecutiveV354 e=new Zero3ExecutiveV354();long[] v=new long[9];for(int i=0;i<v.length;i++){v[i]=d.readLong();if(v[i]<0||v[i]>100000000)throw new IOException("V354 counter");}
         e.decisions=v[0];e.train=v[1];e.validation=v[2];e.observations=v[3];e.nextId=v[4];e.goalId=v[5];e.goalSince=v[6];e.goalInterruptions=v[7];e.lastPredictionValidation=v[8];
         if(e.decisions!=e.train+e.validation+e.observations||e.nextId<1||e.goalSince>e.decisions)throw new IOException("V354 counters disagree");
@@ -224,7 +229,9 @@ public final class Zero3ExecutiveV354 {
         if((!Float.isNaN(e.previousPredictionError)&&!Float.isFinite(e.previousPredictionError))||e.lastHarm<0||e.informationProgress<0)throw new IOException("V354 value evidence");
         e.reason=d.readUTF();if(e.reason.length()>180)throw new IOException("V354 reason size");
         e.ecology=d.readUTF();e.nextRoom=finite(d);if(e.nextRoom<0||!new ShelterEcology().restore(e.ecology))throw new IOException("V354 invalid ecology");
-        for(int i=0;i<e.valueWeights.length;i++)e.valueWeights[i]=finite(d);
+        int oldWidth=schema==366?CONTEXT:PRIOR_CONTEXT;
+        for(int i=0;i<oldWidth;i++)e.valueWeights[i]=finite(d);
+        e.valueWeights[CONTEXT]=finite(d); // historic bias was index 12, now index 15.
         int n=d.readInt();if(n<0||n>LIMIT)throw new IOException("V354 option capacity");
         long last=0;
         for(int i=0;i<n;i++){
@@ -232,11 +239,15 @@ public final class Zero3ExecutiveV354 {
             if(o.id<=last||o.id>=e.nextId||o.born<0||o.born>=e.historicalDecisions+e.decisions)throw new IOException("V354 option identity");last=o.id;
             o.state=d.readInt();o.train=d.readInt();o.optionN=d.readInt();o.controlN=d.readInt();o.recalls=d.readInt();o.reverts=d.readInt();o.probationN=d.readInt();
             if(o.state<0||o.state>3||o.train<1||o.optionN<0||o.controlN<0||o.recalls<0||o.reverts<0||o.probationN<0||o.optionN>e.validation+e.historicalValidation||o.controlN>e.validation+e.historicalValidation)throw new IOException("V354 option evidence");
-            for(int j=0;j<CONTEXT;j++)o.context[j]=finite(d);for(int j=0;j<5;j++)o.policy[j]=finite(d);
+            for(int j=0;j<oldWidth;j++)o.context[j]=finite(d);for(int j=0;j<5;j++)o.policy[j]=finite(d);
             double[] a=new double[8];for(int j=0;j<a.length;j++){a[j]=d.readDouble();if(!Double.isFinite(a[j]))throw new IOException("V354 option moments");}
             o.optionSum=a[0];o.controlSum=a[1];o.optionSq=a[2];o.controlSq=a[3];o.optionEnergy=a[4];o.controlEnergy=a[5];o.optionHarm=a[6];o.controlHarm=a[7];
             if(o.optionSq<0||o.controlSq<0||o.optionHarm<0||o.controlHarm<0)throw new IOException("V354 option signs");
-            o.legacyVisionV354=schema==354||d.readBoolean();
+            if(schema==354)o.visionSchemaV366=354;
+            else if(schema==361)o.visionSchemaV366=d.readBoolean()?354:361;
+            else {o.visionSchemaV366=d.readInt();
+                if(o.visionSchemaV366!=354&&o.visionSchemaV366!=361&&o.visionSchemaV366!=366)
+                    throw new IOException("V366 option vision provenance");}
             e.options.add(o);
         }
         int history=d.readInt();if(history<0||history>64)throw new IOException("V354 history size");
