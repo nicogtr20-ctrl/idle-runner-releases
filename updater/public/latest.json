@@ -2,11 +2,11 @@
   "schemaVersion": 1,
   "available": true,
   "applicationId": "com.overmind.zero.ota",
-  "versionCode": 1179,
-  "versionName": "3.0-ota.361",
-  "apkUrl": "https://overmind-zero-updates.vercel.app/apk/overmind-zero-1179-2938945d837b.apk",
-  "sha256": "2938945d837b1298a96e18c6e1ecd31d720d46c46c7e5f69268f5b0878203bac",
-  "sizeBytes": 921572,
-  "notes": "ZERO 3.0 OTA361: corretta vista frequenza/direzione e training dei muscoli eseguiti; memoria 3.0 preservata, diagnostica reale ampliata",
-  "publishedAt": "2026-10-19T10:50:08.634648+00:00"
+  "versionCode": 1180,
+  "versionName": "3.0-ota.362",
+  "apkUrl": "https://overmind-zero-updates.vercel.app/apk/overmind-zero-1180-11f112b2d4ed.apk",
+  "sha256": "11f112b2d4ed1eb477602b4736ed03c990d21a2854433a48cc7f6f0a83ffb9aa",
+  "sizeBytes": 921888,
+  "notes": "ZERO 3.0 OTA362: energia reale 100 a ogni nuova vita; nuovo cervello 3.0 veramente vergine senza migliaia di esperienze importate",
+  "publishedAt": "2026-10-19T13:58:14.831938+00:00"
 }

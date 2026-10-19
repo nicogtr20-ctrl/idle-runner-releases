@@ -753,3 +753,8 @@ Richiesta utente: APK pronta con centro decisionale rivisto attivo, conservazion
 - Corretto il mapping vista V3 e i muscoli realmente eseguiti; opzioni e neuroni precedenti conservati.
 - QA Android: canali visivi, canali muscolari, compatibilita executive V354 e V356, vita/rinascita/danno e condivisione GPT.
 - APK firmato con il certificato originale, versione 1179, SHA-256 `2938945d837b1298a96e18c6e1ecd31d720d46c46c7e5f69268f5b0878203bac`.
+
+## ZERO 3.0 OTA362 — 2026-10-19T13:58:14.831938+00:00
+- Nuovo ZERO: zero decisioni/nessun import invisibile da V355. Nascita energia 100/100 senza cambiare ricompense.
+- QA Android: partita nuova, reset completo, ripresa dopo riavvio, cervello originale, vista V361, vita e condivisione GPT.
+- APK firmato con il certificato originale, versione 1180, SHA-256 `11f112b2d4ed1eb477602b4736ed03c990d21a2854433a48cc7f6f0a83ffb9aa`.
