@@ -73,8 +73,31 @@ public final class FastSomaticCircuitV167 {
      * Only radial and tangential commands can adapt. Adhesion and stiffness
      * are byte-for-byte those of the original trained cortex.
      */
+    /** A gust can yield 0.24 proprioceptive pressure without any solid.
+     * Preserve that pressure in the neural touch sensor, never reward it as
+     * actual adhesion/obstacle support inside the V3 motor peripheral. The
+     * recorded weather component decays with the raw pulse each physics tick.
+     * If a solid independently generated stronger pressure, preserve it.
+     */
+    static float solidContactFeatureV370(float solidTouch,float rawPulse,float weatherPulse){
+        if(!Float.isFinite(solidTouch)||!Float.isFinite(rawPulse)||
+           !Float.isFinite(weatherPulse)||solidTouch<0||rawPulse<0||
+           weatherPulse<0)
+            throw new IllegalArgumentException("V370 invalid real pressure");
+        float mechanical=rawPulse>weatherPulse+.005f?rawPulse:0f;
+        return clip(Math.max(solidTouch,mechanical),0f,1f);
+    }
     public void advance(MotorBrain.Body body,Morphology.Surface skin,
                         float[] base,float[] commands,float dt){
+        advance(body,skin,base,commands,dt,false);
+    }
+    /**
+     * V370 is ONLY selected by GRU3's downstream 75% V364 peripheral.
+     * It never affects legacy V2.2 which retains the precise original
+     * touch-pulse feature. Weather remains felt by the brain through 194D.
+     */
+    void advance(MotorBrain.Body body,Morphology.Surface skin,
+                 float[] base,float[] commands,float dt,boolean separateWeatherV370){
         if(body==null||skin==null||base==null||commands==null||
            base.length!=S*SymbioteMatterV1.OUTPUTS||
            commands.length!=base.length||!Float.isFinite(dt)||dt<=0||dt>.04f)
@@ -97,8 +120,10 @@ public final class FastSomaticCircuitV167 {
                      (skin.vy[patch]-body.cvy)*ry;
             float tv=-(skin.vx[patch]-body.cvx)*ry+
                       (skin.vy[patch]-body.cvy)*rx;
-            float contact=clip(Math.max(skin.touchSense[patch],
-                skin.touchPulse[patch]),0f,1f);
+            float contact=separateWeatherV370?
+                solidContactFeatureV370(skin.touchSense[patch],
+                    skin.touchPulse[patch],skin.weatherPulseV370[patch]):
+                clip(Math.max(skin.touchSense[patch],skin.touchPulse[patch]),0f,1f);
             for(int ch=0;ch<CHANNELS;ch++){
                 int i=sector*CHANNELS+ch,other=sector*CHANNELS+(1-ch);
                 int left=((sector+S-1)%S)*CHANNELS+ch;
