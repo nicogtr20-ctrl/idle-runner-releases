@@ -185,6 +185,16 @@ final class TelemetryGitHub {
                     v3.put("growthAccepted",neural.cognition.growthAccepted);
                     v3.put("growthRejected",neural.cognition.growthRejected);
                     v3.put("predictivePlannerUses",neural.cognition.plannerUses);
+                    // Actual unlabelled contact-photon/energy evidence.
+                    // Never infer successful avoidance from counters alone.
+                    v3.put("contactValenceEvidenceV369",
+                        new org.json.JSONArray(neural.cognition.contactSamples));
+                    org.json.JSONArray observedValences=new org.json.JSONArray();
+                    for(float value:neural.cognition.contactValues)
+                        observedValences.put(value);
+                    v3.put("contactValenceMeansV369",observedValences);
+                    v3.put("contactValenceAcceptedV369",neural.cognition.contactAccepted);
+                    v3.put("contactValenceAmbiguousV369",neural.cognition.contactAmbiguous);
                     org.json.JSONArray reliable=new org.json.JSONArray();
                     org.json.JSONArray mse=new org.json.JSONArray();
                     org.json.JSONArray baselineMse=new org.json.JSONArray();

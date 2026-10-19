@@ -111,6 +111,19 @@ final class Zero3OriginalBrainV356 {
     float directionY(){return choice==null?0:choice.y;}
     float adhesion(){return choice==null?0:choice.adhesion;}
     boolean pending(){return pending;}
+    /** The existing material collision records the photons visible AT TOUCH.
+     * No object signature, object type or body-world target is revealed here.
+     * This is part of the one GRU's V353 cognition, not the old controller.
+     */
+    void inheritedPhysicalContactPriorV369(float[] physicalMeans,int[] counts){
+        if(pending)throw new IllegalStateException("V369 no archival learning mid decision");
+        brain.inheritedPhysicalContactPriorV369(physicalMeans,counts);
+    }
+    void realEnergyContactV369(float[] perceivedSpectral24,float actualContactDelta){
+        if(!pending)throw new IllegalStateException("V369 no actual GRU movement at contact");
+        brain.realEnergyContactV369(perceivedSpectral24,actualContactDelta,heldout);
+    }
+
     /** Session-only factual PRE intention versus POST physical displacement. */
     String motorDiagnosticV361(){
         return String.format(java.util.Locale.US,
