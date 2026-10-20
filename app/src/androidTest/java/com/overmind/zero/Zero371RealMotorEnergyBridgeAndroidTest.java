@@ -88,6 +88,30 @@ public final class Zero371RealMotorEnergyBridgeAndroidTest {
         motor.complete(50f,0,.3f,false,false);
         assertEquals("wind displacement must not be interpreted as voluntary",verified,motor.verifiedDirections());
     }
+    @Test public void soleV353DecisionUsesActualMotorDirectionBeforeModelTrusted(){
+        Zero3CognitionV353 brain=new Zero3CognitionV353();
+        // These are REAL signed physical-contact values, with no body-world
+        // target, no hardcoded blue/red or fabricated one-step outcomes.
+        brain.genuineContactV369(light(0,0),-7f,false);
+        brain.genuineContactV369(light(0,0),-7f,false);
+        brain.genuineContactV369(light(1,4),22f,false);
+        brain.genuineContactV369(light(1,4),22f,false);
+        for(int k=0;k<9;k++){
+            boolean hold=k>=5;
+            brain.begin(sense(false),proposal(1,0),hold);
+            brain.physicalMotorV371(-10f,0f,.3f,true,false,hold);
+            brain.abort();
+            brain.begin(sense(false),proposal(-1,0),hold);
+            brain.physicalMotorV371(10f,0f,.3f,true,false,hold);
+            brain.abort();
+        }
+        assertEquals(2,brain.snapshot().verifiedMotorDirectionsV371);
+        assertFalse("V353 model must still have ZERO artificial evidence",brain.trusted(0));
+        float[][] proposals={proposal(-1,0),proposal(1,0)};
+        assertEquals("The sole trained V353 chooser must act on PHYSICAL motor evidence, not wanted heading",1,brain.select(sense(false),proposals));
+        assertEquals("Mirrored world reverses its physical causal choice",
+                0,brain.select(sense(true),proposals));
+    }
     @Test public void coldResumeKeepsRecentVisualApproachForSubsequentRealContact()throws Exception{
         Zero3InstrumentalCreditV371 brain=new Zero3InstrumentalCreditV371();
         for(int i=0;i<6;i++){
