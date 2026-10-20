@@ -155,6 +155,11 @@ public final class Zero3RecurrentBrain {
         if(pending||cognition==null)throw new IllegalStateException("V369 archive import only at boundary");
         cognition.adoptOldContactEvidenceV369(means,counts);
     }
+    void witnessedMaterialMotionV371(float dx,float dy,float elapsed,
+                                       boolean physicallyValid,boolean disturbed,boolean heldout){
+        if(!pending||cognition==null)throw new IllegalStateException("V371 cannot train unsampled movement");
+        cognition.physicalMotorV371(dx,dy,elapsed,physicallyValid,disturbed,heldout);
+    }
     void realEnergyContactV369(float[] retina24,float physicalDelta,boolean heldout){
         if(!pending||cognition==null)throw new IllegalStateException("V369 contact without live GRU choice");
         cognition.genuineContactV369(retina24,physicalDelta,heldout);
@@ -195,6 +200,7 @@ public final class Zero3RecurrentBrain {
     public float heldoutBaselineError(){return heldoutBaselineError;}
     public void resetLife(){
         if(pending)throw new IllegalStateException("censor unfinished experience first");
+        if(cognition!=null)cognition.resetTransientV371();
         Arrays.fill(state,0f);
     }
     public void abort(){
@@ -264,7 +270,8 @@ public final class Zero3RecurrentBrain {
         if(executive!=null){authorized=executive.propose(x,authorized,decision,observeV354);optionReplayV354=executive.usedMemory();}
         float dx=authorized[0],dy=authorized[1],effort=authorized[2],
             adhesion=authorized[3],duration=authorized[4];
-        if(cognition!=null)cognition.begin(x,authorized);
+        if(cognition!=null)cognition.begin(x,authorized,
+            executive!=null?Zero3ConfigurationV354.heldout(decision):Zero3CognitionV353.heldout(decision));
         if(plannerV354!=null)plannerV354.begin(decision,x,decisionState,authorized,modelV354(),Zero3ConfigurationV354.heldout(decision),observeV354,cognition.baselineV354());
         action[0]=dx;action[1]=dy;action[2]=effort;action[3]=adhesion;
         Arrays.fill(worldInput,0);
