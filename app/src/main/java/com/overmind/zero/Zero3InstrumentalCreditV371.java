@@ -109,6 +109,23 @@ final class Zero3InstrumentalCreditV371 {
             else runner=Math.max(runner,x);
         }
         if(found<0||peak<.25f||peak<runner*1.15f){ambiguousContacts++;return;}
+        linkTrueContactToPriorMotor(found,actualDelta);
+    }
+    /** Material-contact evidence has already identified the touched surface
+     * wavelength. Never let a brighter NEIGHBOUR steal causal attribution. */
+    void materialContactV374(float[] observedPhotons,int touchedBand,
+                             float actualDelta,boolean heldout){
+        if(pendingSight==null||observedPhotons==null||observedPhotons.length!=24||
+           touchedBand<0||touchedBand>=BANDS||
+           !Float.isFinite(actualDelta)||Math.abs(actualDelta)>100f)
+            throw new IllegalArgumentException("V374 invalid touched surface");
+        for(float p:observedPhotons)
+            if(!Float.isFinite(p)||p<0||p>1)
+                throw new IllegalArgumentException("V374 invalid observed photons");
+        if(heldout||actualDelta==0f)return;
+        linkTrueContactToPriorMotor(touchedBand,actualDelta);
+    }
+    private void linkTrueContactToPriorMotor(int found,float actualDelta){
         // A temporary risk emphasis is permitted ONLY after a real negative
         // energy observation with a non-ambiguous visible wavelength.
         if(actualDelta<0f){recentHarmBand=found;recentHarmTime=4.5f;}
