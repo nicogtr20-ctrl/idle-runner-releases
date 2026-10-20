@@ -58,6 +58,7 @@ public final class FastSomaticCircuitV167 {
     public long physicalFrames(){return frames;}
     public float lastDirectionalAgreement(){return lastAgreement;}
     public int activeAction(){return action;}
+    boolean activelyExploringV372(){return exploratoryTrial;}
     /** Resets the experimental trial, not learned synaptic parameters. */
     public void chosen(int selected){chosen(selected,true);}
     /** Genuine causal motor experiments: one actuator layer explores at a time. */

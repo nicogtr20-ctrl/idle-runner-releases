@@ -155,6 +155,11 @@ public final class Zero3RecurrentBrain {
         if(pending||cognition==null)throw new IllegalStateException("V369 archive import only at boundary");
         cognition.adoptOldContactEvidenceV369(means,counts);
     }
+    void witnessedMaterialMotionV371(float dx,float dy,float elapsed,
+                                       boolean physicallyValid,boolean disturbed,boolean heldout){
+        if(!pending||cognition==null)throw new IllegalStateException("V371 cannot train unsampled movement");
+        cognition.physicalMotorV371(dx,dy,elapsed,physicallyValid&&!observeV354,disturbed,heldout);
+    }
     void realEnergyContactV369(float[] retina24,float physicalDelta,boolean heldout){
         if(!pending||cognition==null)throw new IllegalStateException("V369 contact without live GRU choice");
         cognition.genuineContactV369(retina24,physicalDelta,heldout);
@@ -195,6 +200,7 @@ public final class Zero3RecurrentBrain {
     public float heldoutBaselineError(){return heldoutBaselineError;}
     public void resetLife(){
         if(pending)throw new IllegalStateException("censor unfinished experience first");
+        if(cognition!=null)cognition.resetTransientV371();
         Arrays.fill(state,0f);
     }
     public void abort(){
@@ -226,12 +232,20 @@ public final class Zero3RecurrentBrain {
         // physically learned a visible wavelength's valence. No forced
         // direction, object location, scripted reflex or V2 decision issuer.
         boolean learnedBearing=cognition!=null&&cognition.hasVisibleContactKnowledgeV369(x);
-        float[][] options=new float[cognition==null?1:learnedBearing?7:3][5];
+        boolean verifiedMotor=cognition!=null&&cognition.verifiedDirectionalV371(x);
+        // V371 blind 2003 real choices: forcing wide exploration before
+        // actual motor stall REGRESSED signed travel to 6.81% vs ~10%
+        // previously. Restore normal 3 actor candidates unless real
+        // physically repeated failure or learned wavelength exists.
+        boolean realStall=cognition!=null&&cognition.repeatedRealMotorStallV371();
+        float[][] options=new float[cognition==null?1:realStall?9:learnedBearing?7:3][5];
         float[][] noise=new float[options.length][MOTOR];
         float[][] noiseScale=new float[options.length][MOTOR];
         for(int k=0;k<options.length;k++){
             for(int j=0;j<MOTOR;j++){
-                float scale=learnedBearing&&k>0&&j<2?(k>=3?4f:2.5f):1f;
+                float scale=k>0&&j<2?
+                    (realStall?(k>=4?7f:k>=2?3f:1.5f):
+                     learnedBearing?(k>=3?4f:2.5f):1f):1f;
                 noiseScale[k][j]=scale;
                 noise[k][j]=k==0?lastNoise[j]:sample()*scale;
             }
@@ -243,6 +257,15 @@ public final class Zero3RecurrentBrain {
             if(cognition!=null)options[k][4]=Math.round(options[k][4]/.025f)*.025f;
         }
         int selected=cognition==null?0:cognition.select(x,options);
+        // Undirected physical exploration is essential BEFORE the GRU has
+        // proven a body-response map. Probability decays with lived real
+        // decisions and never overrides an independently verified learned
+        // energy/motor relation.
+        if(cognition!=null&&realStall&&!verifiedMotor){
+            float exploration=.20f/(1f+(trainCount+validationCount)/1500f);
+            if(random()<exploration)selected=Math.min(options.length-1,
+                (int)(random()*options.length));
+        }
         if(plannerV354!=null){
             plannerV354.topology(cognition.snapshot().predictiveUnits);
             // The real S21 reserve-cost head can have a nearly constant
@@ -261,10 +284,11 @@ public final class Zero3RecurrentBrain {
         System.arraycopy(noiseScale[selected],0,selectedNoiseScaleV369,0,MOTOR);
         float[] authorized=options[selected];
         optionReplayV354=false;
-        if(executive!=null){authorized=executive.propose(x,authorized,decision,observeV354);optionReplayV354=executive.usedMemory();}
+        if(executive!=null){authorized=executive.propose(x,authorized,decision,observeV354,cognition);optionReplayV354=executive.usedMemory();}
         float dx=authorized[0],dy=authorized[1],effort=authorized[2],
             adhesion=authorized[3],duration=authorized[4];
-        if(cognition!=null)cognition.begin(x,authorized);
+        if(cognition!=null)cognition.begin(x,authorized,
+            executive!=null?Zero3ConfigurationV354.heldout(decision):Zero3CognitionV353.heldout(decision));
         if(plannerV354!=null)plannerV354.begin(decision,x,decisionState,authorized,modelV354(),Zero3ConfigurationV354.heldout(decision),observeV354,cognition.baselineV354());
         action[0]=dx;action[1]=dy;action[2]=effort;action[3]=adhesion;
         Arrays.fill(worldInput,0);

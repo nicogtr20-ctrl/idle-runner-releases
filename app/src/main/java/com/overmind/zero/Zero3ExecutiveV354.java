@@ -108,6 +108,13 @@ public final class Zero3ExecutiveV354 {
     private float value(float[] c){float a=valueWeights[CONTEXT];for(int i=0;i<CONTEXT;i++)a+=c[i]*valueWeights[i];return clamp(a);}
     /** Called by the sole actor after its own proposal. Returned option must be authorized there. */
     float[] propose(float[] observation,float[] actorProposal,long decision,boolean observe){
+        return propose(observation,actorProposal,decision,observe,null);
+    }
+    /** Reuse the existing option bank but never let an old motor-only
+     * memory override newly VALIDATED material danger/survival evidence.
+     * This is a veto on memory recall, NOT a new action issuer. */
+    float[] propose(float[] observation,float[] actorProposal,long decision,
+                    boolean observe,Zero3CognitionV353 cognition){
         if(pending||decision!=decisions)throw new IllegalStateException("V354 decision cursor");
         abortGoalId=goalId;abortGoalSince=goalSince;
         abortGoalAge=goalAge;abortReason=reason;abortRecallIndex=-1;
@@ -124,6 +131,12 @@ public final class Zero3ExecutiveV354 {
             if(incompatibleOldContextV367(o,c))continue;
             float d=distanceOptionV366(contextForOptionV366(o,c,legacy,old361),o);
             if(o.state==RETIRED||o.train<4||d>=nearest)continue;
+            // V371: an old option cannot ignore a verified external-body
+            // movement consequence toward a physically learned harmful light.
+            if(cognition!=null&&
+               cognition.instrumentalScoreV371(observation,o.policy)+.09f<
+               cognition.instrumentalScoreV371(observation,actorProposal))
+                continue;
             boolean probe=Zero3ConfigurationV354.heldout(decision)&&((decision/15)&1)==1;
             boolean recall=!Zero3ConfigurationV354.heldout(decision)&&lastHarm==0&&(o.state==CHAMPION||o.state==PROBATION)&&o.optionN>0&&
                 o.optionEnergy/o.optionN>=0&&o.optionSum/o.optionN>o.controlSum/Math.max(1,o.controlN);
@@ -172,7 +185,7 @@ public final class Zero3ExecutiveV354 {
         motorScore=clamp(motorScore);pending=false;
         lastEnergy=realEnergy;lastHarm=harm;
         if(observe){
-            observations++;if(harm>0||goalAge>=4){goalInterruptions++;goalId=0;goalAge=0;reason=harm>0?"Interruzione osservata: danno fisico":"Nuova valutazione in osservazione";}
+            observations++;if(harm>0||(goalAge>=4&&motorScore<=.015f&&realEnergy<=0f)||goalAge>=24){goalInterruptions++;goalId=0;goalAge=0;reason=harm>0?"Interruzione osservata: danno fisico":"Nuova valutazione in osservazione";}
             decisions++;active=-1;return;
         }
         if(heldout){
@@ -223,7 +236,7 @@ public final class Zero3ExecutiveV354 {
                 }else if(o.state==CHAMPION&&a<b-.02){o.state=RETIRED;o.reverts++;}
             }
         }
-        if(harm>0||goalAge>=4){goalInterruptions++;goalId=0;goalAge=0;reason=harm>0?"Interruzione: danno fisico osservato":"Nuova valutazione dell'opzione temporale";}
+        if(harm>0||(goalAge>=4&&motorScore<=.015f&&realEnergy<=0f)||goalAge>=24){goalInterruptions++;goalId=0;goalAge=0;reason=harm>0?"Interruzione: danno fisico osservato":"Nuova valutazione dell'opzione temporale";}
         decisions++;active=-1;
     }
     private boolean hasRetired(){for(Option o:options)if(o.state==RETIRED)return true;return false;}
