@@ -15,6 +15,8 @@ public final class Zero3CognitionV353 {
     private Model champion=new Model(BASE_UNITS,353);
     // V369: associative neuron memory, not a second action issuer.
     private Zero3ContactValenceV369 contactValence=new Zero3ContactValenceV369();
+    // V371 is an evidence cache INSIDE this same predictive cognition.
+    private Zero3InstrumentalCreditV371 instrumental=new Zero3InstrumentalCreditV371();
     private Model shadow;
     private long trains,validations,plannerUses,growthAccepted,growthRejected,shadowTrains,shadowValidations;
     private final double[] error=new double[HEADS],baseline=new double[HEADS],spread=new double[HEADS],
@@ -106,7 +108,8 @@ public final class Zero3CognitionV353 {
             System.arraycopy(champion.out[e],0,child.champion.out[e],0,champion.out[e].length);
         }
         child.growthAccepted=growthAccepted;child.growthRejected=growthRejected;
-        contactValence.copyTo(child.contactValence);return child;
+        contactValence.copyTo(child.contactValence);
+        instrumental.copyTo(child.instrumental);return child;
     }
     float[] baselineV354(){return previousTarget.clone();}
     float[] predictionV354(float[] observation,float[] action){
@@ -142,6 +145,7 @@ public final class Zero3CognitionV353 {
         contactValence.adoptArchivedRealContacts(physicalMean,contactCount);
     }
     void genuineContactV369(float[] spectral24,float physicalEnergyDelta,boolean heldout){
+        instrumental.contact(spectral24,physicalEnergyDelta,heldout);
         if(!heldout)contactValence.contact(spectral24,physicalEnergyDelta);
     }
     boolean hasVisibleContactKnowledgeV369(float[] observation){
@@ -151,39 +155,57 @@ public final class Zero3CognitionV353 {
         return contactValence.utility(observation,dx,dy);
     }
     int select(float[] observation,float[][] proposals){
-        if(!trusted(0)||!trusted(1))return 0;
+        // A trusted one-step model is ONE source of evidence. The original
+        // controller also demanded REAL, independently heldout movement
+        // estimates before allowing light valence to bias a heading. The V3
+        // path now does so without spawning a second decision-making brain.
+        boolean reliableEnergy=trusted(0)&&trusted(1);
         boolean costTrusted=trusted(2);
-        long n=validations-reliabilityValidations;
-        float costSafety=costTrusted?0f:conservativeCostMarginV366(error[2],n);
-        if(!Float.isFinite(costSafety))return 0;
+        float costSafety=reliableEnergy&&!costTrusted?
+            conservativeCostMarginV366(error[2],validations-reliabilityValidations):0f;
+        boolean canPredict=reliableEnergy&&(costTrusted||Float.isFinite(costSafety));
         int best=0;float bestScore=-Float.MAX_VALUE,original=Float.NaN;
         for(int i=0;i<proposals.length;i++){
-            float[][] p=champion.predict(input(observation,proposals[i]),false,null);
-            float energy=mean(p,0),damage=mean(p,1),cost=mean(p,2),uncertainty=0;
-            int trustedHeads=costTrusted?3:2;
-            for(int e=0;e<ENSEMBLE;e++)for(int h=0;h<trustedHeads;h++){
-                float delta=p[e][h]-mean(p,h);uncertainty+=delta*delta;
+            float movementScore=instrumental.score(observation,proposals[i],contactValence);
+            float score=movementScore;
+            if(canPredict){
+                float[][] p=champion.predict(input(observation,proposals[i]),false,null);
+                float energy=mean(p,0),damage=mean(p,1),cost=mean(p,2),uncertainty=0;
+                int heads=costTrusted?3:2;
+                for(int e=0;e<ENSEMBLE;e++)for(int h=0;h<heads;h++){
+                    float delta=p[e][h]-mean(p,h);uncertainty+=delta*delta;
+                }
+                score+=energy-damage-cost-2*(float)Math.sqrt(uncertainty/(3f*heads));
             }
-            // Even an untrusted cost prediction is NOT treated as free.
-            // Its empirical heldout RMSE is the conservative selection margin.
-            float score=energy-damage-cost-2*(float)Math.sqrt(uncertainty/(3f*trustedHeads));
-            // New discrimination requires physical contact evidence, not
-            // pre-labelled red/blue nor fabricated metabolism rewards.
-            score+=contactValence.utility(observation,proposals[i][0],proposals[i][1]);
             if(i==0)original=score;
             if(score>bestScore){bestScore=score;best=i;}
         }
+        // No model = retain actor unless a motor direction is genuinely
+        // verified AND visible experienced energy is large enough to matter.
+        if(!canPredict)return bestScore>original+.025f?best:0;
         plannerUses++;
-        // Previously validated three-head selector retains its behavior.
-        // On the two-head recovery path, do not override the GRU's own
-        // sampled action without a material advantage above cost uncertainty.
-        return costTrusted||bestScore>original+costSafety?best:0;
+        return bestScore>original+Math.max(.025f,costSafety)?best:0;
+    }
+    float instrumentalScoreV371(float[] observation,float[] action){
+        return instrumental.score(observation,action,contactValence);
+    }
+    boolean verifiedDirectionalV371(float[] observation){
+        return instrumental.hasVerifiedDirectionalEvidence(observation,contactValence);
+    }
+    void physicalMotorV371(float dx,float dy,float elapsed,boolean physical,
+                            boolean disturbed,boolean heldout){
+        instrumental.complete(dx,dy,elapsed,physical&&!disturbed,heldout);
     }
     void begin(float[] observation,float[] actualProposal){
+        begin(observation,actualProposal,heldout(trains+validations));
+    }
+    void begin(float[] observation,float[] actualProposal,boolean heldout){
         if(pendingInput!=null)throw new IllegalStateException("V353 pending physical experience");
         pendingInput=input(observation,actualProposal);
+        instrumental.begin(observation,actualProposal,heldout);
     }
-    void abort(){pendingInput=null;}
+    void abort(){pendingInput=null;instrumental.abort();}
+    void resetTransientV371(){instrumental.newLife();}
     /** Construct targets from committed physical sensors/metabolism, never labels/coordinates. */
     static float[] targets(float[] before,float[] after,Zero3CausalVitalBoundaryV344.After vital,float elapsed){
         finite(before,INPUTS);finite(after,INPUTS);
@@ -260,6 +282,8 @@ public final class Zero3CognitionV353 {
         public final int[] archivedContactSamples=new int[3];
         public final float[] contactValues=new float[3];
         public final long contactAccepted,contactAmbiguous;
+        public final int verifiedMotorDirectionsV371;
+        public final long linkedRealContactsV371,ambiguousMotorContactsV371,stalledActionsV371;
         Snapshot(Zero3CognitionV353 c){
             train=c.trains;heldout=c.validations;plannerUses=c.plannerUses;
             for(int i=0;i<3;i++){
@@ -269,6 +293,10 @@ public final class Zero3CognitionV353 {
             }
             contactAccepted=c.contactValence.accepted();
             contactAmbiguous=c.contactValence.ambiguous();
+            verifiedMotorDirectionsV371=c.instrumental.verifiedDirections();
+            linkedRealContactsV371=c.instrumental.linkedContacts();
+            ambiguousMotorContactsV371=c.instrumental.ambiguousContacts();
+            stalledActionsV371=c.instrumental.stalledActions();
             growthAccepted=c.growthAccepted;growthRejected=c.growthRejected;
             predictiveUnits=c.champion.units*ENSEMBLE;shadowUnits=c.shadow==null?0:c.shadow.units*ENSEMBLE;
             episodicRecords=(int)Math.min(EPISODES,c.episodesSeen);
@@ -292,6 +320,7 @@ public final class Zero3CognitionV353 {
             for(double[] a:new double[][]{error,baseline,spread,pairedOld,pairedNew})for(double v:a)d.writeDouble(v);
             writeModel(d,champion);d.writeBoolean(shadow!=null);if(shadow!=null)writeModel(d,shadow);
             contactValence.write(d); // Optional V369 extension after legacy 353.
+            instrumental.write(d); // Optional V371 extension after V369.
             d.flush();return b.toByteArray();
         }catch(IOException impossible){throw new IllegalStateException(impossible);}
     }
@@ -325,6 +354,7 @@ public final class Zero3CognitionV353 {
         // Old V353 checkpoints end here. Only genuinely new checkpoints
         // contain this optional fixed binary; learned old matrices remain.
         if(d.available()>0)c.contactValence=Zero3ContactValenceV369.read(d);
+        if(d.available()>0)c.instrumental=Zero3InstrumentalCreditV371.read(d);
         if(c.champion.units!=BASE_UNITS+2*c.growthAccepted||
            (c.shadow!=null&&c.shadow.units!=c.champion.units+2)||
            (c.shadow==null&&(c.shadowTrains!=0||c.shadowValidations!=0))||d.available()!=0)
