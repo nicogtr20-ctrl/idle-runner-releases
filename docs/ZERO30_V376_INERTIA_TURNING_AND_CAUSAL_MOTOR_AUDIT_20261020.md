@@ -25,6 +25,21 @@ In signed OTA375 the biological gel turns and deforms but its mass drifts onward
 
 First run failed solely on test's Java `String.format` placeholder mismatch **after physics step**, not from motor runtime; corrected without touching production code and rerun on exact research branch. Do not claim original A/B result until CI log prints `ZERO376_TRUE_PHYSICAL_TURN`.
 
+## RESULT: definitive original Android A/B with measured velocities (CI 39429255810 SUCCESS)
+**Physical turning CAN work, but immediate steering is delayed by inertia even in this clean motor test.** This fully instrumented run used three IDENTICAL warm-ups: EAST commanded for 45 decisions × 24 genuine physics frames at 60Hz; exact same initial measured X displacement **+61.74731U**, pre-switch COM velocity **(+3.96383, −2.03260)U/s**. The only independent variable after warm-up was EAST, WEST or NORTH for 28 genuine additional decisions (11.2 simulated seconds).
+
+| Requested direction after east | FIRST 0.4 seconds, real X | FIRST 0.4 seconds, real Y | 11.2 seconds net X | 11.2 seconds net Y |
+|---|---:|---:|---:|---:|
+| Continue EAST | +1.59773 | −0.73211 | +42.22464 | −30.07537 |
+| Reverse WEST | **+0.84956** | −0.79015 | **−33.56071** | +16.03445 |
+| Turn NORTH | **+0.89500** | −0.68638 | +25.69326 | **+30.92417** |
+
+**Interpretation:** For the FIRST 0.4s AFTER A TURN, physical body continues EAST regardless of the WEST or NORTH intention; even an EAST-to-NORTH command initially moves negative Y despite later positive Y. But after sufficient same-heading decisions the **unmodified material solver can** reverse East to net West, and turn to net North: no absolute impossibility to turn, no need for fake COM steering. The 2.2 frozen peripheral plus V3 cortex can actively change physical results compared with keeping east. This does **not** establish the user-trained phone checkpoint can choose the correct corrective actuation, or that a red touching radius affords 11s to brake.
+
+**Scientific causal failure in active V371:** it stores 8 unconditional action→net displacement means; its heldout baseline is **ZERO motion**, not continuation of measured current COM velocity and local resistance. It never conditions its predicted motion or uncertainty on PRE-decision `body.cvx/cvy`, rotational/inertial state, or friction. Hence its apparent `motorVerified(3/8)` on phone can be wrong for turning and stopping. A controller needs a learned inertial transition (PRE velocity / tissue state / chosen action → POST velocity or velocity CHANGE), genuine matched passive-coast heldout baseline, and an action selection that accounts for braking TIME, not only instantaneous preferred photon direction. No scripted anti-red or energy-teleport force. 
+
+**QA trace:** [GitHub Actions 39429255810](https://github.com/nicogtr20-ctrl/idle-runner-releases/actions/runs/39429255810) confirms the numbers above plus **all historical real Android regressions**. The first V376 run had ONLY a QA logger `String.format` placeholder error, fixed without altering production code. Signed OTA375 remains unchanged; no unverified OTA376.
+
 ## Next repair, ONLY after cause is established
 1. Determine steering capacity with physical-body momentum already present, not from rest. Separate typical passive carry from weak or opposing motor response.
 2. Preserve material force conservation, 96-site cortex, 64 interior particles and V319 grip. Never add a teleported COM target, goal force, scripted turning or second actor.
