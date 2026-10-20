@@ -23,7 +23,7 @@ public final class Zero376DynamicTurnOriginalGelAndroidTest {
         Result(String n){name=n;}
         void show(){
             String msg=String.format(Locale.US,
-                "ZERO376_TRUE_PHYSICAL_TURN mode=%s warmEast=%.5f velBefore=(%.5f,%.5f) post0p4s=(%.5f,%.5f) turnAfter1s=(%.5f,%.5f) turnAfter10s=(%.5f,%.5f) postVel=(%.5f,%.5f) muscle=%.5f work=%.5f",
+                "ZERO376_TRUE_PHYSICAL_TURN mode=%s warmEast=%.5f velBefore=(%.5f,%.5f) post0p4s=(%.5f,%.5f) turnAfter11s=(%.5f,%.5f) postVel=(%.5f,%.5f) muscle=%.5f work=%.5f",
                 name,eastWarmup,preVx,preVy,afterShortX,afterShortY,
                 secondX,secondY,afterEarlyVx,afterEarlyVy,netMuscle,totalWork);
             System.out.println(msg);
