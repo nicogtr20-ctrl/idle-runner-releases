@@ -186,7 +186,7 @@ public final class Zero3CognitionV353 {
             // accumulated enough clean motor trials to pass V371's gait
             // confidence threshold. V371 verified motion adds evidence.
             float score=movementScore+
-                contactValence.utility(observation,proposals[i][0],proposals[i][1]);
+                instrumental.opticalPreferenceV374(observation,proposals[i],contactValence);
             if(canPredict){
                 float[][] p=champion.predict(input(observation,proposals[i]),false,null);
                 float energy=mean(p,0),damage=mean(p,1),cost=mean(p,2),uncertainty=0;
@@ -210,7 +210,7 @@ public final class Zero3CognitionV353 {
     }
     float realContactPreferenceV374(float[] observation,float[] action){
         return instrumental.score(observation,action,contactValence)+
-            contactValence.utility(observation,action[0],action[1]);
+            instrumental.opticalPreferenceV374(observation,action,contactValence);
     }
     boolean verifiedDirectionalV371(float[] observation){
         return instrumental.hasVerifiedDirectionalEvidence(observation,contactValence);
