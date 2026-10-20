@@ -259,6 +259,17 @@ public final class SymbioteMotorHeadV1 {
     void fastTickOriginalV370(MotorBrain.Body body,Morphology.Surface skin,float dt){
         somatic.advance(body,skin,decisionCommands,commands,dt,true);
     }
+    /** V372: freeze means freeze BOTH weights and random motor probes.
+     * The historical 2.2 path is completely unchanged; this is called ONLY
+     * by V3's downstream frozen 75% physical peripheral. It cannot become
+     * an alternative brain or an authored movement.
+     */
+    void silenceFrozenV3MotorProbeV372(){
+        if(adaptationEnabled||lastAction<0)
+            throw new IllegalStateException("V372 only frozen actively selected peripheral");
+        fastProbe=false;
+        somatic.chosen(lastAction,false); // clears uncredited random drift
+    }
     public String encodeFast(){return somatic.encode();}
     public boolean restoreFast(String raw){return somatic.restore(raw);}
     public FastSomaticCircuitV167 fastCircuit(){return somatic;}
