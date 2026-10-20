@@ -81,6 +81,7 @@ final class Zero3ContactValenceV369 {
             return .35f*archivedValue[band]; // weak prior; no photons at touch
         return 0f;
     }
+    float valueForInstrumentalV371(int band){return effectiveValue(band);}
     int archivedEvidence(int band){return archivedEvidence[band];}
     boolean archiveImported(){return archiveImported;}
     /** Directional utility for actor PROPOSALS, not a preselected heading.
