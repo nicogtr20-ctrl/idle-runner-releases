@@ -1,7 +1,7 @@
 name: ZERO378 experimental signed physical-motor credit, 43 Android regressions
 on:
   push:
-    branches: [fix/zero378-inertial-command-credit-phone-20261020]
+    branches: [fix/zero378-physical-inertial-credit-20261020]
   workflow_dispatch:
 permissions:
   contents: write
@@ -23,7 +23,7 @@ jobs:
       - name: Freeze approved unmerged experimental owner and preserve public stable OTA
         run: |
           set -euo pipefail
-          test "${GITHUB_REF_NAME}" = 'fix/zero378-inertial-command-credit-phone-20261020'
+          test "${GITHUB_REF_NAME}" = 'fix/zero378-physical-inertial-credit-20261020'
           git fetch origin main
           python3 - <<'PY'
           import json, subprocess
