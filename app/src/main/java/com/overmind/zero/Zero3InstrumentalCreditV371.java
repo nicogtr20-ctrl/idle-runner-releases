@@ -224,6 +224,7 @@ final class Zero3InstrumentalCreditV371 {
     long linkedContacts(){return linkedContacts;}
     long ambiguousContacts(){return ambiguousContacts;}
     long stalledActions(){return stalledActions;}
+    boolean repeatedRealMotorStall(){return stalledStreak>=3;}
     float delayedValue(int band,int bank){return delayedContactValue[band][bank];}
     int delayedCount(int band,int bank){return delayedContactCount[band][bank];}
     long delayedCredits(){long n=0;for(int[] a:delayedContactCount)
