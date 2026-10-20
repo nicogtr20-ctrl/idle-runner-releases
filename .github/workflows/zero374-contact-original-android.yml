@@ -30,7 +30,7 @@ jobs:
             adb install -r app/build/outputs/apk/debug/app-debug.apk
             adb install -r app/build/outputs/apk/androidTest/debug/app-debug-androidTest.apk
             adb shell am instrument -w -r -e class com.overmind.zero.Zero374RealTouchOpticalIdentityAndroidTest com.overmind.zero.ota.test/androidx.test.runner.AndroidJUnitRunner 2>&1 | tee /tmp/zero374-contact.txt
-            grep -q 'OK (4 tests)' /tmp/zero374-contact.txt
+            grep -q 'OK (5 tests)' /tmp/zero374-contact.txt
             adb shell am instrument -w -r -e class com.overmind.zero.Zero371RealMotorEnergyBridgeAndroidTest com.overmind.zero.ota.test/androidx.test.runner.AndroidJUnitRunner 2>&1 | tee /tmp/zero371-causal.txt
             grep -q 'OK (6 tests)' /tmp/zero371-causal.txt
             adb shell am instrument -w -r -e class com.overmind.zero.Zero372FrozenPeripheralProbeAndroidTest com.overmind.zero.ota.test/androidx.test.runner.AndroidJUnitRunner 2>&1 | tee /tmp/zero372-frozen-probe.txt
@@ -49,7 +49,7 @@ jobs:
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: ZERO374-all-31-real-contact-and-motor-tests
+          name: ZERO374-all-32-real-contact-and-motor-tests
           path: |
             /tmp/zero374-contact.txt
             /tmp/zero372-frozen-probe.txt
