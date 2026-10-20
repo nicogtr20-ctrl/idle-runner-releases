@@ -1,0 +1,39 @@
+# ZERO 3.0 V371 — RIPRISTINO DELLE CAPACITÀ FUNZIONALI PRE-2.2
+20/10/2026 · **Ramo di ricerca, NON installato, NON OTA, NON verifica di sopravvivenza riuscita.**
+
+## Prima di modificare
+Leggere `ZERO30_MASTER_BLUEPRINT.md`, `ZERO30_IMPLEMENTATION_CONTRACT.md`, `ZERO30_VERIFIED_CAPABILITY_LEDGER_20261018.md` e audit V370 `ZERO30_V370_PRE22_TO_30_FULL_BRAIN_SENSOR_WIRING_AUDIT_20261020.md`. I dispositivi approvati V319/V345/V353/V354/V356, fisica originale e dodici slot sono da mantenere. NON attivare il vecchio `SensorimotorMind.choose`, `UnifiedArbiterV21` né attuazioni concorrenti.
+
+## Cosa ci ha mostrato il telefono
+La OTA368 aveva 30.081 scelte GRU, 58 vite, 199 rossi e 7 blu. Gli ultimi 10 decessi 38 rossi/0 blu; l'avanzamento proiettato lungo intenzioni era 37,68% del viaggio materiale lordo, NON una percentuale di efficienza nel raggiungere energia. Distinguere la bontà della scelta neurale dalla forza/attuazione fisica. La V369 in PR102 ha ricostruito soltanto il contatto energetico sensoriale; la V370 in PR103 ha separato nella periferica GRU la raffica meteo da collisione solida, 16 test Android storici PASS.
+
+## Legame funzionale ricostruito nell'UNICO cervello V353/GRU64
+1. `Zero3InstrumentalCreditV371` è una **memoria appresa DENTRO la V353**, non un nuovo policy-owner. Campiona le 8 banche motorie dalle DIREZIONI REALMENTE AUTORIZZATE dal GRU3 e salva il movimento fisico del nucleo per 0.3 s comparabile, su durate fisiche effettive. Scarta ogni dato di motore contaminato da vento, correzioni del solver, azioni incomplete, prese censurate. Tiene TRAIN e HOLDOUT separati, valida una banca dopo >=4 train e >=3 test e MSE migliore di predire zero spostamento. Se il GRU chiede EAST e il corpo va WEST, la politica energetica usa WEST REALMENTE MISURATO. La rete GRU continua a emettere l'unico comando.
+2. Memorizza **le ultime sei scelte reali**: spettro fotografico PRE e spostamento materiale POST, non la geometria nascosta di oggetti. Quando un contatto energetico reale espone una frequenza non ambigua, verifica le scelte passate che vedevano proprio quella frequenza e che effettivamente si sono avvicinate. Registra un credito temporale con discount ^età .76 e delta fisico positivo o negativo. **Non modifica le target one-step V353** con premi futuri fittizi. Non premia il moto come fine.
+3. La V369 rimane unica memoria di valenza per frequenza: nasci neutro, impari solo da reale guadagno/perdita. La V371 combina valenza V369 + movimento fisicamente attendibile + credito temporale eseguito nella comparazione delle proposte *campionate dal GRU3*, non genera bersagli obbligatori, non impone scelte.
+4. **Esplorazione senza bias di destra**: nove candidati neurali casuali e campionamento stocastico decrescente quando nessuna direzione è materialmente validata, sette dopo che una direzione utile lo è. Tutti i candidati sono sottoposti al vero attuatore, non teleport/forze nascoste. La perturbazione gaussiana utilizzata nella policy gradient conserva la scala reale.
+5. **Valutazione omeostatica e cautela causale**: il reale sensore di riserva PRE (canale188) fa pesare maggiormente un guadagno energetico quando l'energia scarseggia; una frequenza diventa nociva esclusivamente se ha causato vera perdita. Dopo tale contatto resta un richiamo temporaneo (4.5 s) solo se la frequenza è stata osservata senza ambiguità. Nessun nome 'rosso', 'blu', pericolo o alimentazione pre-programmati.
+6. **Memoria dell'obiettivo**: l'esecutivo V354 non interrompe più incondizionatamente una skill al quarto richiamo: danno reale, progressi inesistenti o limite comunque finito guidano l'interruzione. Una vecchia opzione a contesto identico non può sostituire una proposta GRU chiaramente migliore sulla base delle vere prove motorie valenza. Nessun secondo arbiter e 16 vecchie opzioni mantenute.
+7. **Stallo fisico**: tre risposte eseguite consecutive e prive di vero avanzamento riducono lievemente l'utilità di ripetere la stessa banca, senza forzare un'altra direzione. Non si inventano rewarded distance o skilled gait.
+8. **Pausa e ritorno**: il codec V353 rimane schema 353 e dopo le precedenti code V369 accetta una nuova **coda opzionale** V371. Conserva mappe di risposta, prove heldout, credito ritardato e le ultime sei coppie PRE/POST della vita corrente; rispetta checkpoint GRU345/354, firma CRC V356, persistenza V319 e 12 slot. Un'antecedente V353 pura o V369 pura non viene reinterpretata, azzerata né retro-etichettata. Nuova morte cancella solo le tracce transitorie (non i pesi e modelli vissuti). Decoder valida finitezza, soglie e lunghezze, rifiuta corruzione.
+
+## Cablaggio vero, non modulo morto
+`GameActivity` (originale, NON nuovo habitat) → `Zero3OriginalBrainV356.actuate` → `Zero3RecurrentBrain.choose` con V353 e V354 → vecchio attuatore 75% + corteccia V3 25% e presa V319 → fisica `SymbioteMatterV1` → collisioni/materiale/meteo → `Zero3OriginalBrainV356.observed` → `brain.witnessedMaterialMotionV371` (dx/dy, tempo, train/holdout, disturbo) → `Zero3CognitionV353.physicalMotorV371` → V353 one-step classica → actor/critics/GRU classici. Sul vero materiale `resolveObjects` invia photons/delta a V369 + V371 via `brain.realEnergyContactV369`. V371 è già calcolata quando `V353.select` confronta le proposte successive.
+
+## Cosa NON è stato ricreato, deliberatamente
+- Secondo motore cervello 2.1/2.2, opt-in `UnifiedArbiter`, modellatori shadow V20 che **non guidavano neppure la vecchia policy**.
+- V319/grip, V353 3×12, V354 16 opzioni e V345 GRU64 **già implementati e testati**.
+- SensorimotorMind 26D, reti 96×10D di impedenza o vecchia memoria Q 16 azioni come **attori paralleli**: i dati meccanici originali sono già percepiti dal 194D e il nuovo canale impara su segnali PRE194 e vera conseguenza muscolare. Senza una prova A/B che servano ulteriori canali, non cambiare la dimensione della GRU e danneggiare i pesi esistenti.
+- Corpo/fisica originale, stimoli energetici ambientali, 12 slot, obbligo di colore, rotta, cancello, presa o partenza.
+- **Non promuovere** il 75/25 V364 alla piena efficacia: dimostrava 4 direzioni in laboratorio ma resta un limite apprendimento/autorità; ogni ulteriore modifica richiede A/B same-body.
+
+## Prove e condizioni non negoziabili
+Test original Android `Zero371RealMotorEnergyBridgeAndroidTest` (caso EAST richiesto→WEST eseguito, scena specchio, sei esperienze positive/negative, heldout, vento, checkpoint e cold restore), più regressioni V370 vento, V369 valenza, V368 morte, V366 ottica, V364 attuatore 4 direzioni. CI `zero371-full-original-android.yml` richiede tutte 24, senza pubblicazione. Confermare solo quando l'ULTIMO HEAD passa.
+
+CI scientifica separata `zero371-autonomous-original-android-2000.yml`: test Android originale `Zero366OriginalAutonomousSurvival2000Test` con corpo/sorgenti/danni REALI, scelta libera e 2000 decisioni, requisiti fissati in precedenza: rapporto signed/gross >=12%, almeno una raccolta, minor danno rosso nella seconda metà. Fallimento blocca firma, NON autorizza falsificazioni o tuning su quella scena. Poi 10k distinte / scene specchiate / 12 slot cold / S21 phone, non prima. **OTA368 dell'utente rimane invariata.**
+
+## Lacune ancora scientificamente aperte
+- Proporzione 75:25 fra vecchio attuatore fisico congelato e corteccia V3: efficacia motoricità autonoma e capacità di cambiare fisicamente forma non validate.
+- L'avversione emergente ai rossi e l'avvicinamento ai blu sono **ipotesi testabili** del nuovo circuito, non risultati; prima fonte blu rarissima, continuità sul mondo inedito, confusione multipli fotoni e modelli ottici non garantiti.
+- Non equiparare 64 episodi V353 a capacità episodica *identica* al sistema pre2.2. Le sei tracce temporali ridanno il ponte mancante ma richiedono confronto.
+- Differenze del vecchio modello corpo (senza simbionte) vs nuovo fluido, parità fisica non controllata; riferire questo limite in ogni confronto.
