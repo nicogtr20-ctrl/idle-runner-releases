@@ -2,11 +2,11 @@
   "schemaVersion": 1,
   "available": true,
   "applicationId": "com.overmind.zero.ota",
-  "versionCode": 1184,
-  "versionName": "3.0-ota.373-test.1",
-  "apkUrl": "https://overmind-zero-updates.vercel.app/apk/overmind-zero-1184-test-cc061f6aa28a.apk",
-  "sha256": "cc061f6aa28ac57a9dbe7a1f80ee3209dd3df97190b0bb674fa71a520b46923a",
-  "sizeBytes": 935076,
-  "notes": "OTA373 TEST V372: luce-energia, motore fisico, memoria 6 azioni, vento e stop rumore muscolare. 27 test Android PASS. Autonomia NON CERTIFICATA.",
-  "publishedAt": "2026-10-20T09:36:38.661080+00:00"
+  "versionCode": 1185,
+  "versionName": "3.0-ota.374-test.1",
+  "apkUrl": "https://overmind-zero-updates.vercel.app/apk/overmind-zero-1185-test-444826feb9a4.apk",
+  "sha256": "444826feb9a4c4f351f0f57639231ac9aaaefba825b48b9423edab3e16adea9f",
+  "sizeBytes": 936080,
+  "notes": "OTA374 TEST: causa energetica da sorgente effettivamente toccata, corpo vero e gestione rischio. 32 Android PASS, autonomia NON CERTIFICATA.",
+  "publishedAt": "2026-10-20T10:27:50.202998+00:00"
 }
