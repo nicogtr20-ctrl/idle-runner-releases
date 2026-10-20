@@ -1036,7 +1036,8 @@ public final class GameActivity extends Activity {
                     // determines positive/negative autobiographical valence.
                     eventEnergyDeltaSinceAction+=reserve-before;
                     if(contactPhotonsV369!=null&&reserve!=before)
-                        brain3.realEnergyContactV369(contactPhotonsV369,reserve-before);
+                        brain3.realMaterialContactV374(
+                            object.signature,contactPhotonsV369,reserve-before);
                     // Actual feedback trains the self-selected motor-action
                     // history; no color, target angle or food flag passed.
                     if(brain3==null)sensorMind.contactOutcome(reserve-before,object.signature,sightAtTouch);
