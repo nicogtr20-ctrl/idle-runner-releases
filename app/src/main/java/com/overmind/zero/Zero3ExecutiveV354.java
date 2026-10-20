@@ -137,6 +137,16 @@ public final class Zero3ExecutiveV354 {
                cognition.realContactPreferenceV374(observation,o.policy)+.035f<
                cognition.realContactPreferenceV374(observation,actorProposal))
                 continue;
+            // A previously successful straight-line option must NOT be
+            // blindly recalled once this very body's real contacts have
+            // taught it that the currently visible path carries net harm.
+            // This does not assign fixed colours, target bearings, rewards
+            // or any new action: it simply leaves the sole GRU actor's
+            // existing proposal in control.
+            if(cognition!=null&&
+               cognition.hasVisibleContactKnowledgeV369(observation)&&
+               cognition.realContactPreferenceV374(observation,o.policy)<-.025f)
+                continue;
             boolean probe=Zero3ConfigurationV354.heldout(decision)&&((decision/15)&1)==1;
             boolean recall=!Zero3ConfigurationV354.heldout(decision)&&lastHarm==0&&(o.state==CHAMPION||o.state==PROBATION)&&o.optionN>0&&
                 o.optionEnergy/o.optionN>=0&&o.optionSum/o.optionN>o.controlSum/Math.max(1,o.controlN);
