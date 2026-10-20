@@ -31,6 +31,8 @@ jobs:
             adb install -r app/build/outputs/apk/androidTest/debug/app-debug-androidTest.apk
             adb shell am instrument -w -r -e class com.overmind.zero.Zero371RealMotorEnergyBridgeAndroidTest com.overmind.zero.ota.test/androidx.test.runner.AndroidJUnitRunner 2>&1 | tee /tmp/zero371-causal.txt
             grep -q 'OK (6 tests)' /tmp/zero371-causal.txt
+            adb shell am instrument -w -r -e class com.overmind.zero.Zero372FrozenPeripheralProbeAndroidTest com.overmind.zero.ota.test/androidx.test.runner.AndroidJUnitRunner 2>&1 | tee /tmp/zero372-frozen-probe.txt
+            grep -q 'OK (2 tests)' /tmp/zero372-frozen-probe.txt
             adb shell am instrument -w -r -e class com.overmind.zero.Zero364MotorBridgeAndroidTest com.overmind.zero.ota.test/androidx.test.runner.AndroidJUnitRunner 2>&1 | tee /tmp/zero371-4direction.txt
             grep -q 'OK (3 tests)' /tmp/zero371-4direction.txt
             adb shell am instrument -w -r -e class com.overmind.zero.Zero370WindSenseIsolationAndroidTest com.overmind.zero.ota.test/androidx.test.runner.AndroidJUnitRunner 2>&1 | tee /tmp/zero370-wind.txt
@@ -47,6 +49,7 @@ jobs:
         with:
           name: ZERO371-all-neural-and-wind-no-OTA-evidence
           path: |
+            /tmp/zero372-frozen-probe.txt
             /tmp/zero371-4direction.txt
             /tmp/zero371-causal.txt
             /tmp/zero370-wind.txt
