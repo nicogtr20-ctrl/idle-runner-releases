@@ -17,6 +17,7 @@ final class Zero3InstrumentalCreditV371 {
     private final float[] learnedX=new float[BINS],learnedY=new float[BINS];
     private final int[] trained=new int[BINS],validated=new int[BINS];
     private final double[] error=new double[BINS],baseline=new double[BINS];
+    private Zero3InertialResponseV377 inertia=new Zero3InertialResponseV377();
     // Real energy contact can retrospectively credit up to six physically
     // verified approaches without falsifying the V353 ONE-STEP predictor.
     private final float[][] delayedContactValue=new float[BANDS][BINS];
@@ -50,6 +51,7 @@ final class Zero3InstrumentalCreditV371 {
             throw new IllegalArgumentException("V371 invalid photons");
         pendingSight=Arrays.copyOfRange(observation194,20,44);
         pendingBank=heading(action[0],action[1]);pendingHeldout=heldout;
+        inertia.begin(observation194,action,heldout);
     }
     void complete(float dx,float dy,float seconds,boolean clean,boolean heldout){
         if(pendingSight==null||pendingHeldout!=heldout||
@@ -59,6 +61,7 @@ final class Zero3InstrumentalCreditV371 {
         recentHarmTime=Math.max(0f,recentHarmTime-seconds);
         if(recentHarmTime==0f)recentHarmBand=-1;
         if(clean){
+            inertia.finish(dx,dy,seconds,heldout);
             // Normalized to a physical 0.30s decision for comparable trials.
             // This is a measured displacement, NOT an authored motion target.
             float scale=.30f/seconds;
@@ -179,6 +182,16 @@ final class Zero3InstrumentalCreditV371 {
            chosen==null||chosen.length<2||contact==null)
             throw new IllegalArgumentException("V374 physical optical comparison");
         int bank=heading(chosen[0],chosen[1]);
+        float[] predicted=inertia.expected(observation194,chosen);
+        if(predicted!=null){
+            float len=(float)Math.hypot(predicted[0],predicted[1]);
+            return len<.1f?0f:contact.utility(observation194,
+                predicted[0]/len,predicted[1]/len);
+        }
+        // V371's apparent motor skill can be pure balloon coasting.
+        // Do not trust unconditional bank travel when already moving.
+        if(Math.hypot(observation194[191]*130f,observation194[192]*130f)>=2d)
+            return .35f*contact.utility(observation194,chosen[0],chosen[1]);
         if(motorVerified(bank)){
             float dx=learnedX[bank],dy=learnedY[bank];
             float len=(float)Math.hypot(dx,dy);
@@ -193,8 +206,14 @@ final class Zero3InstrumentalCreditV371 {
            chosen==null||chosen.length<2||contact==null)
             throw new IllegalArgumentException("V371 score shape");
         int bank=heading(chosen[0],chosen[1]);
-        if(!motorVerified(bank))return 0f;
-        float mx=learnedX[bank],my=learnedY[bank];
+        float[] predicted=inertia.expected(observation194,chosen);
+        float mx,my;
+        if(predicted!=null){mx=predicted[0];my=predicted[1];}
+        else{
+            if(Math.hypot(observation194[191]*130f,observation194[192]*130f)>=2d||
+               !motorVerified(bank))return 0f;
+            mx=learnedX[bank];my=learnedY[bank];
+        }
         float reward=0f,brightness=0f;
         // Sensor 188 is ACTUAL reserve in [-1,+1], not a food label.
         float currentReserve=limit((observation194[188]+1f)*.5f,0f,1f);
@@ -241,7 +260,7 @@ final class Zero3InstrumentalCreditV371 {
         }
         return false;
     }
-    void abort(){pendingSight=null;pendingBank=-1;pendingHeldout=false;}
+    void abort(){pendingSight=null;pendingBank=-1;pendingHeldout=false;inertia.abort();}
     void newLife(){abort();history=0;stalledStreak=0;lastBank=-1;
         recentHarmBand=-1;recentHarmTime=0f;}
     void copyTo(Zero3InstrumentalCreditV371 c){
@@ -251,6 +270,7 @@ final class Zero3InstrumentalCreditV371 {
         System.arraycopy(validated,0,c.validated,0,BINS);
         System.arraycopy(error,0,c.error,0,BINS);
         System.arraycopy(baseline,0,c.baseline,0,BINS);
+        inertia.copyTo(c.inertia);
         for(int b=0;b<BANDS;b++){
             System.arraycopy(delayedContactValue[b],0,c.delayedContactValue[b],0,BINS);
             System.arraycopy(delayedContactCount[b],0,c.delayedContactCount[b],0,BINS);
@@ -259,6 +279,7 @@ final class Zero3InstrumentalCreditV371 {
         c.stalledActions=stalledActions;
     }
     int verifiedDirections(){int n=0;for(int i=0;i<BINS;i++)if(motorVerified(i))n++;return n;}
+    int verifiedInertialResponseV377(){return inertia.reliableBanks();}
     long linkedContacts(){return linkedContacts;}
     long ambiguousContacts(){return ambiguousContacts;}
     long stalledActions(){return stalledActions;}
@@ -289,7 +310,7 @@ final class Zero3InstrumentalCreditV371 {
             d.writeFloat(recentDX[i]);d.writeFloat(recentDY[i]);
             d.writeInt(recentBank[i]);
         }
-    }
+        inertia.write(d); // Optional V377 suffix after fully preserved V371.
     static Zero3InstrumentalCreditV371 read(DataInputStream d)throws IOException{
         if(d.readInt()!=VERSION)throw new IOException("V371 schema");
         Zero3InstrumentalCreditV371 m=new Zero3InstrumentalCreditV371();
@@ -338,6 +359,7 @@ final class Zero3InstrumentalCreditV371 {
                m.recentBank[i]<0||m.recentBank[i]>=BINS)
                 throw new IOException("V371 impossible physical history");
         }
+        if(d.available()>0)m.inertia=Zero3InertialResponseV377.read(d);
         return m;
     }
 }
