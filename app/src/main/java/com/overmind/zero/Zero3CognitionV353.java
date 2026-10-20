@@ -307,6 +307,7 @@ public final class Zero3CognitionV353 {
         public final float[] contactValues=new float[3];
         public final long contactAccepted,contactAmbiguous;
         public final int verifiedMotorDirectionsV371;
+        public final int validatedTrueInertialDirectionsV377;
         public final long linkedRealContactsV371,ambiguousMotorContactsV371,stalledActionsV371;
         Snapshot(Zero3CognitionV353 c){
             train=c.trains;heldout=c.validations;plannerUses=c.plannerUses;
@@ -318,6 +319,7 @@ public final class Zero3CognitionV353 {
             contactAccepted=c.contactValence.accepted();
             contactAmbiguous=c.contactValence.ambiguous();
             verifiedMotorDirectionsV371=c.instrumental.verifiedDirections();
+            validatedTrueInertialDirectionsV377=c.instrumental.verifiedInertialResponseV377();
             linkedRealContactsV371=c.instrumental.linkedContacts();
             ambiguousMotorContactsV371=c.instrumental.ambiguousContacts();
             stalledActionsV371=c.instrumental.stalledActions();
