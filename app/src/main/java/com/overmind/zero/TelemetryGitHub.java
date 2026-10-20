@@ -195,6 +195,14 @@ final class TelemetryGitHub {
                     v3.put("contactValenceMeansV369",observedValences);
                     v3.put("contactValenceAcceptedV369",neural.cognition.contactAccepted);
                     v3.put("contactValenceAmbiguousV369",neural.cognition.contactAmbiguous);
+                    v3.put("verifiedPhysicalDirectionsV371",
+                        neural.cognition.verifiedMotorDirectionsV371);
+                    v3.put("linkedHistoricalEnergyContactsV371",
+                        neural.cognition.linkedRealContactsV371);
+                    v3.put("ambiguousHistoricalEnergyContactsV371",
+                        neural.cognition.ambiguousMotorContactsV371);
+                    v3.put("physicallyStalledDecisionsV371",
+                        neural.cognition.stalledActionsV371);
                     org.json.JSONArray reliable=new org.json.JSONArray();
                     org.json.JSONArray mse=new org.json.JSONArray();
                     org.json.JSONArray baselineMse=new org.json.JSONArray();
