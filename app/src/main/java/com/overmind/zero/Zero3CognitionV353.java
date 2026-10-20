@@ -145,7 +145,7 @@ public final class Zero3CognitionV353 {
         contactValence.adoptArchivedRealContacts(physicalMean,contactCount);
     }
     void genuineContactV369(float[] spectral24,float physicalEnergyDelta,boolean heldout){
-        instrumental.contact(spectral24,physicalEnergyDelta,heldout);
+        if(pendingInput!=null)instrumental.contact(spectral24,physicalEnergyDelta,heldout);
         if(!heldout)contactValence.contact(spectral24,physicalEnergyDelta);
     }
     boolean hasVisibleContactKnowledgeV369(float[] observation){
