@@ -207,6 +207,15 @@ final class Zero3InstrumentalCreditV371 {
             d.writeFloat(learnedX[i]);d.writeFloat(learnedY[i]);
             d.writeDouble(error[i]);d.writeDouble(baseline[i]);
         }
+        // A pause/resume inside one real life must NOT destroy six real
+        // approaches that could shortly precede a negative contact.
+        d.writeInt(history);d.writeInt(lastBank);d.writeInt(stalledStreak);
+        d.writeInt(recentHarmBand);d.writeFloat(recentHarmTime);
+        for(int i=0;i<TRACE;i++){
+            for(float photon:recentSight[i])d.writeFloat(photon);
+            d.writeFloat(recentDX[i]);d.writeFloat(recentDY[i]);
+            d.writeInt(recentBank[i]);
+        }
     }
     static Zero3InstrumentalCreditV371 read(DataInputStream d)throws IOException{
         if(d.readInt()!=VERSION)throw new IOException("V371 schema");
@@ -225,6 +234,28 @@ final class Zero3InstrumentalCreditV371 {
                !Double.isFinite(m.error[i])||!Double.isFinite(m.baseline[i])||
                m.error[i]<0||m.baseline[i]<0)
                 throw new IOException("V371 physical response invalid");
+        }
+        m.history=d.readInt();m.lastBank=d.readInt();m.stalledStreak=d.readInt();
+        m.recentHarmBand=d.readInt();m.recentHarmTime=d.readFloat();
+        if(m.history<0||m.history>100000000||
+           m.lastBank < -1||m.lastBank>=BINS||
+           m.stalledStreak<0||m.stalledStreak>100000000||
+           m.recentHarmBand < -1||m.recentHarmBand>=BANDS||
+           !Float.isFinite(m.recentHarmTime)||m.recentHarmTime<0||m.recentHarmTime>4.5f)
+            throw new IOException("V371 invalid recent-life context");
+        for(int i=0;i<TRACE;i++){
+            for(int p=0;p<BANDS*8;p++){
+                m.recentSight[i][p]=d.readFloat();
+                if(!Float.isFinite(m.recentSight[i][p])||
+                   m.recentSight[i][p]<0f||m.recentSight[i][p]>1f)
+                    throw new IOException("V371 impossible visual history");
+            }
+            m.recentDX[i]=d.readFloat();m.recentDY[i]=d.readFloat();
+            m.recentBank[i]=d.readInt();
+            if(!Float.isFinite(m.recentDX[i])||!Float.isFinite(m.recentDY[i])||
+               Math.abs(m.recentDX[i])>120||Math.abs(m.recentDY[i])>120||
+               m.recentBank[i]<0||m.recentBank[i]>=BINS)
+                throw new IOException("V371 impossible physical history");
         }
         return m;
     }
