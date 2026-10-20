@@ -2,11 +2,11 @@
   "schemaVersion": 1,
   "available": true,
   "applicationId": "com.overmind.zero.ota",
-  "versionCode": 1186,
-  "versionName": "3.0-ota.375-test.1",
-  "apkUrl": "https://overmind-zero-updates.vercel.app/apk/overmind-zero-1186-test-410aebc26b23.apk",
-  "sha256": "410aebc26b23580da4072cf36cc2d1b79bbe6969ba43ed22dbd77c114f8e361b",
-  "sizeBytes": 936064,
-  "notes": "OTA375 TEST: recupero checkpoint fino a 24 decisioni e blocco richiamo opzioni pericolose. 37 test Android PASS, autonomia NON CERTIFICATA.",
-  "publishedAt": "2026-10-20T11:15:18.479251+00:00"
+  "versionCode": 1187,
+  "versionName": "3.0-ota.377-test.1",
+  "apkUrl": "https://overmind-zero-updates.vercel.app/apk/overmind-zero-1187-test-98e401773a3d.apk",
+  "sha256": "98e401773a3d3a732f0bbc64609701dae8b1ad3234723da9af75929a67e8373a",
+  "sizeBytes": 937880,
+  "notes": "OTA377 TEST: apprendimento effettivo cambio moto rispetto alla velocita PRE e inerzia, 42 test Android. Autonomia di evitamento NON certificata.",
+  "publishedAt": "2026-10-20T14:38:21.064220+00:00"
 }
