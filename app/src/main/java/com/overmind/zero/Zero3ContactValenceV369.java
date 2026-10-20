@@ -52,6 +52,24 @@ final class Zero3ContactValenceV369 {
         evidence[index]++;
         accepted++;
     }
+    /**
+     * V374: only the source that ACTUALLY touches the membrane can receive
+     * the energy consequence. The contacted object's surface wavelength
+     * is a PHYSICALLY OBSERVABLE material property, unlike its secret
+     * energy law. It is revealed AFTER physical contact and NEVER supplied
+     * to the actor, predictor, or vision before collision. In a mixed
+     * blue/red scene the world's brightest source is NOT the touched one.
+     */
+    void materialContact(int touchedSurfaceWavelength,float actualEnergyDelta){
+        if(touchedSurfaceWavelength<0||touchedSurfaceWavelength>=BANDS||
+           !Float.isFinite(actualEnergyDelta)||Math.abs(actualEnergyDelta)>100f)
+            throw new IllegalArgumentException("V374 impossible real physical contact");
+        if(actualEnergyDelta==0f)return;
+        double realValue=Math.max(-1d,Math.min(1d,actualEnergyDelta/7d));
+        outcomes[touchedSurfaceWavelength]+=realValue;
+        evidence[touchedSurfaceWavelength]++;
+        accepted++;
+    }
     /** Historical source memory from the exact ORIGINAL working game.
      * It was learned by genuine UnknownWorld.Mind.observe() calls at touch.
      * Its wavelength index is the same observed optical signature group,
