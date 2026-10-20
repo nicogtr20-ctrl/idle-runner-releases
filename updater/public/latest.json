@@ -2,11 +2,11 @@
   "schemaVersion": 1,
   "available": true,
   "applicationId": "com.overmind.zero.ota",
-  "versionCode": 1183,
-  "versionName": "3.0-ota.368-test.1",
-  "apkUrl": "https://overmind-zero-updates.vercel.app/apk/overmind-zero-1183-test-9108a99bbfbe.apk",
-  "sha256": "9108a99bbfbe488c1b23d555b06d43167d89e4cacae87984845757e420d7ba8e",
-  "sizeBytes": 925592,
-  "notes": "OTA368 TEST RICHIESTA: danni terminali, vista verticale e prudenza del planner. VERSIONE SPERIMENTALE: blu/rossi e locomozione NON ancora validati.",
-  "publishedAt": "2026-10-19T21:58:44.738238+00:00"
+  "versionCode": 1184,
+  "versionName": "3.0-ota.373-test.1",
+  "apkUrl": "https://overmind-zero-updates.vercel.app/apk/overmind-zero-1184-test-cc061f6aa28a.apk",
+  "sha256": "cc061f6aa28ac57a9dbe7a1f80ee3209dd3df97190b0bb674fa71a520b46923a",
+  "sizeBytes": 935076,
+  "notes": "OTA373 TEST V372: luce-energia, motore fisico, memoria 6 azioni, vento e stop rumore muscolare. 27 test Android PASS. Autonomia NON CERTIFICATA.",
+  "publishedAt": "2026-10-20T09:36:38.661080+00:00"
 }
