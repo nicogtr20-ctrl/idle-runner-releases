@@ -88,6 +88,32 @@ public final class Zero374RealTouchOpticalIdentityAndroidTest {
         }
     }
 
+    @Test public void learnedValenceFollowsActualBodyEvenWhenActorCommandIsReversed(){
+        Zero3InstrumentalCreditV371 movement=new Zero3InstrumentalCreditV371();
+        Zero3ContactValenceV369 contact=new Zero3ContactValenceV369();
+        for(int i=0;i<9;i++){
+            boolean heldout=i>=5;
+            movement.begin(full194(),action(1f),heldout);
+            movement.complete(-12f,0f,.3f,true,heldout);
+            movement.begin(full194(),action(-1f),heldout);
+            movement.complete(+12f,0f,.3f,true,heldout);
+        }
+        contact.materialContact(0,+22f);
+        contact.materialContact(0,+22f);
+        contact.materialContact(1,-7f);
+        contact.materialContact(1,-7f);
+        assertTrue(movement.motorVerified(0));
+        assertTrue(movement.motorVerified(4));
+        // Real phone often executes command contrary to choice. The OLD
+        // optic utility of intended EAST is negative but the proven body's
+        // EAST-command makes WEST displacement toward positive photons.
+        assertTrue(contact.utility(full194(),+1,0)<0);
+        assertTrue(movement.opticalPreferenceV374(full194(),action(+1),contact)>0);
+        assertTrue(movement.opticalPreferenceV374(full194(),action(-1),contact)<0);
+        assertTrue(movement.opticalPreferenceV374(full194(),action(+1),contact)>
+                   movement.opticalPreferenceV374(full194(),action(-1),contact)+.10f);
+    }
+
     @Test public void mixedSignalsCreditTruePriorApproachesButNotNearbySource(){
         Zero3InstrumentalCreditV371 m=new Zero3InstrumentalCreditV371();
         float[] scene=full194();
