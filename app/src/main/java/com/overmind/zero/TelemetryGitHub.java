@@ -197,6 +197,8 @@ final class TelemetryGitHub {
                     v3.put("contactValenceAmbiguousV369",neural.cognition.contactAmbiguous);
                     v3.put("verifiedPhysicalDirectionsV371",
                         neural.cognition.verifiedMotorDirectionsV371);
+                    v3.put("independentlyValidatedInertialDirectionsV377",
+                        neural.cognition.validatedTrueInertialDirectionsV377);
                     v3.put("linkedHistoricalEnergyContactsV371",
                         neural.cognition.linkedRealContactsV371);
                     v3.put("ambiguousHistoricalEnergyContactsV371",
