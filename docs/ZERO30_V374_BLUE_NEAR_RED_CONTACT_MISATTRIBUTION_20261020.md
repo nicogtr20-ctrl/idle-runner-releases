@@ -1,0 +1,30 @@
+# ZERO3 V374 — BLUE NEAR RED: FORENSIC ROOTS AND TARGETED, NON-OTA FIX
+
+**20 ottobre 2026.** User field failure on signed OTA373 V372. The actual phone report is `zero-telemetry/history/20261020-100211-2876e7c7f52c9.json` (`zero-telemetry/reports/20261020-100211-2876e7c7f52c9/`). The user reports that ZERO approaches red even when blue is near.
+
+## Independent evidence: phone, NOT an invented success
+* Version `3.0-ota.373-test.1`, code1184, checkpoint valid and GRU3 only.
+* 9748 decisions (7800 training, 1948 heldout), 18 completed lives, 57 negative source contacts and 3 positive pickups.
+* V369 signed optical association `contactValenceEvidenceV369=[0,26,0]`, `contactValenceMeansV369=[0,-0.95462048,0]`, `contactValenceAcceptedV369=26`, `contactValenceAmbiguousV369=23`. **Not one positive physically-paired optical outcome was assigned despite three positive pickups.**
+* Motor 4867 aligned and 2920 opposed choices, 344 almost-static, 2177 external corrections; physical direction validation covers only 3/8 bank headings; V371 reports 4035 physically stalled decisions. Physical motor mismatch remains independent and is NOT resolved by V374.
+* V353 model trusted energy/damage heads, but these MSE trust flags cannot establish risk-sensitive source-conditioned decisions. Do not claim improved avoidance from 27 successful Android unit tests.
+
+## THREE distinct actual code-path failures
+
+1. **Wrong CAUSE at touch.** OTA373 `GameActivity.resolveObjects` calls `SensorimotorMind.Senses.spectral8(...environment)` for the WHOLE scene; `Zero3ContactValenceV369.contact(retina24,energyDelta)` chose ONLY the globally brightest wavelength, requiring >15% contrast. If touched blue is less luminous than an adjacent red, positive event is either discarded as ambiguous or assigned to RED; therefore single `materialTouch` was confused with `visible scene maximum`. Exactly reproduces the user's “blue close, touches red” risk. In the old controller `sensorMind.contactOutcome(...object.signature,...)` passed the contacted object's observed visual signature after genuine collision, but that pathway was gated off with V3. The surface's optical wavelength is NOT the hidden energy law; it is the very wavelength available through retina, revealed only after touch.
+2. **Experience ignored during scoring.** V371 `Zero3CognitionV353.select()` dropped the direct V369 learned photon-valence term, retaining only `instrumental.score(...)`. This returned ZERO for the 5/8 unverified physical direction banks. Thus even correctly learned RED harm could leave no influence on choosing most sampled headings. V374 restores experienced sign to **every sampled proposal**, adding independently verified physical motor outcomes when available.
+3. **Overruled by secondary planners.** `Zero3RecurrentBrain.choose` previously let multistep `plannerV354.select` override the V353 preference when a numerical model passed RMSE validation; old V354 option recalls could likewise override direction. V374 makes both consult the SAME REAL contact-conditioned valence (not a second decision brain), rejecting direction switches that markedly contradict acquired harm evidence. Doesn't prescribe a heading, colour goal or locomotion.
+
+## Strict fix in experimental branch (NOT OTA)
+- `GameActivity` passes `object.signature` only after `MaterialGeometry.touches` proves actual material collision. This signature is the optically observable surface wavelength (as in the retina encoding and old V2.x feedback), never `physicalLaw()`, energy sign, future target, scripted reward, world coordinate or object ID. `reserve-before` remains the ONLY actual reward/damage.
+- `Zero3ContactValenceV369.materialContact` links that contact wavelength to the physically measured delta, while retaining existing `contact` for historical QA/other material contexts. `Zero3InstrumentalCreditV371.materialContactV374` credits the actual touched band to earlier observed physical approaches, never unrelated brighter wavelengths; heldout remains no-training.
+- V353 selection adds learned V369 directional utility directly, not requiring gait learning to classify real observed source effects. Motor-outcome skill is still used where independently validated. V354 planner and executive memories cannot erase a substantially better physical contact preference in the final decision.
+- Existing V353/V369/V371 binary checkpoint formats, 12 slots, established GRU weights, cortex, V319 grip, V370 wind, V372 frozen motor probe, original physical world are unchanged.
+- `Zero374RealTouchOpticalIdentityAndroidTest`: two subcases demonstrate old ambiguous and wrong-attribution behavior and new correct material outcome, learned preference reversal on mirrored scenes, heldout-safe new touch, six-action causal consistency.
+- Workflow `zero374-contact-original-android.yml`: 4 new plus 27 historical real Android tests (31 tests); first run exposed a new TEST EXPECTATION mistake (legacy returned ambiguous instead of wrong band for 0.90/0.99 — correct, a *different* original bug). Test corrected to assert both original ambiguous and actual false-valence scenario (0.65/0.99), no production logic was altered as a workaround.
+
+## DO NOT CLAIM (OPEN GATES)
+- These are root causes demonstrable in source code, but not yet proof of full recovery of voluntary survival.
+- The physical body still moves contrary to intended direction in thousands of decisions. Must compare matched phone and blind real world, and examine actual intentions vs real displacements in scenes with simultaneous visible different optical wavelengths.
+- Existing blind autonomous 2000-decision V372 benchmark FAILED, and no normal-world V374 behavior data is available until tests run. An OTA may be a user-requested experimental trial, never a certified repair.
+- No neural reset, backup required, do not merge/ship without signing and checkpoint test.
