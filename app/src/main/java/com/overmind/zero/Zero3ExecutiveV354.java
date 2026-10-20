@@ -137,6 +137,16 @@ public final class Zero3ExecutiveV354 {
                cognition.realContactPreferenceV374(observation,o.policy)+.035f<
                cognition.realContactPreferenceV374(observation,actorProposal))
                 continue;
+            // A previously successful straight-line option must NOT be
+            // blindly recalled once this very body's real contacts have
+            // taught it that the currently visible path carries net harm.
+            // This does not assign fixed colours, target bearings, rewards
+            // or any new action: it simply leaves the sole GRU actor's
+            // existing proposal in control.
+            if(cognition!=null&&
+               cognition.hasVisibleContactKnowledgeV369(observation)&&
+               cognition.realContactPreferenceV374(observation,o.policy)<-.025f)
+                continue;
             boolean probe=Zero3ConfigurationV354.heldout(decision)&&((decision/15)&1)==1;
             boolean recall=!Zero3ConfigurationV354.heldout(decision)&&lastHarm==0&&(o.state==CHAMPION||o.state==PROBATION)&&o.optionN>0&&
                 o.optionEnergy/o.optionN>=0&&o.optionSum/o.optionN>o.controlSum/Math.max(1,o.controlN);
@@ -315,7 +325,12 @@ public final class Zero3ExecutiveV354 {
         long[] historical=new long[8];for(int i=0;i<historical.length;i++){historical[i]=d.readLong();if(historical[i]<0)throw new IOException("V354 historical counter");}
         e.historicalDecisions=historical[0];e.historicalTrain=historical[1];e.historicalValidation=historical[2];e.historicalObservations=historical[3];e.parentEpisode=historical[4];System.arraycopy(historical,5,e.repairs,0,3);
         if(e.historicalDecisions!=e.historicalTrain+e.historicalValidation+e.historicalObservations||e.repairs[1]+e.repairs[2]>e.repairs[0])throw new IOException("V354 heritage/repair evidence");
-        e.goalAge=d.readInt();if(e.goalAge<0||e.goalAge>4)throw new IOException("V354 goal age");
+        e.goalAge=d.readInt();
+        // V371 legitimately retains an empirically productive learned goal
+        // for as many as 24 completed decisions. The original V354 decoder
+        // accepted only 4 and rejected valid later-life checkpoints even
+        // though the writer emitted these values. Preserve both schemas.
+        if(e.goalAge<0||e.goalAge>24)throw new IOException("V375 goal age");
         e.lastEnergy=finite(d);e.lastHarm=finite(d);e.lastValue=finite(d);e.informationProgress=finite(d);e.previousPredictionError=d.readFloat();
         if((!Float.isNaN(e.previousPredictionError)&&!Float.isFinite(e.previousPredictionError))||e.lastHarm<0||e.informationProgress<0)throw new IOException("V354 value evidence");
         e.reason=d.readUTF();if(e.reason.length()>180)throw new IOException("V354 reason size");
