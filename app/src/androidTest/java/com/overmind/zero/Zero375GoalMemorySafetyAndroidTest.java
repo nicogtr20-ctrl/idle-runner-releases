@@ -57,6 +57,11 @@ public final class Zero375GoalMemorySafetyAndroidTest {
         field(t,"optionSum").setDouble(o,7.0);
         field(t,"controlSum").setDouble(o,0.5);
         field(t,"optionEnergy").setDouble(o,15.0);
+        // QA fixture simulates a legitimately heldout-validated champion:
+        // 8 option + 8 control observations must fit the saved executive
+        // validation counter. Preserve the original 32 total choices.
+        field(Zero3ExecutiveV354.class,"validation").setLong(e,16L);
+        field(Zero3ExecutiveV354.class,"train").setLong(e,16L);
         // Phase 1: old unmodified executive WOULD recall.
         long d=32;
         float[] old=e.propose(scene,straight,d,false);
