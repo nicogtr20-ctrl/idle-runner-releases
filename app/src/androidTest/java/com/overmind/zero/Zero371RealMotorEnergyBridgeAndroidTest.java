@@ -86,6 +86,26 @@ public final class Zero371RealMotorEnergyBridgeAndroidTest {
         motor.complete(50f,0,.3f,false,false);
         assertEquals("wind displacement must not be interpreted as voluntary",verified,motor.verifiedDirections());
     }
+    @Test public void coldResumeKeepsRecentVisualApproachForSubsequentRealContact()throws Exception{
+        Zero3InstrumentalCreditV371 brain=new Zero3InstrumentalCreditV371();
+        for(int i=0;i<6;i++){
+            brain.begin(sense(false),proposal(1,0),false);
+            brain.complete(9f,0f,.30f,true,false);
+        }
+        ByteArrayOutputStream bytes=new ByteArrayOutputStream();
+        brain.write(new DataOutputStream(bytes));
+        Zero3InstrumentalCreditV371 resumed=Zero3InstrumentalCreditV371.read(
+            new DataInputStream(new ByteArrayInputStream(bytes.toByteArray())));
+        resumed.begin(sense(false),proposal(1,0),false);
+        resumed.contact(light(0,0),-7f,false);
+        assertEquals("recent PRE→POST history survives cold app restart",
+            1L,resumed.linkedContacts());
+        resumed.abort();resumed.newLife();
+        resumed.begin(sense(false),proposal(1,0),false);
+        resumed.contact(light(0,0),-7f,false);
+        assertEquals("new life cannot fake past body approach",
+            1L,resumed.linkedContacts());
+    }
     @Test public void coldCheckpointAndLifeResetRetainEvidenceNotPhantomMotorAction()throws Exception{
         Zero3InstrumentalCreditV371 original=new Zero3InstrumentalCreditV371();
         learnDirection(original,1,0,10,0);
