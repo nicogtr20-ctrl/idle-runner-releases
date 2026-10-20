@@ -166,6 +166,27 @@ final class Zero3InstrumentalCreditV371 {
         return trained[bank]>=4&&validated[bank]>=3&&baseline[bank]>1.0&&
             error[bank]<baseline[bank]*.90;
     }
+    /** V374: once this body's REAL response for an intended heading has
+     * been heldout-validated, use the measured physical bearing when judging
+     * optical consequences. Otherwise the actor may select a commanded
+     * heading toward safety that literally MOVES INTO the dangerous light.
+     * Unverified headings retain only a weak visual hypothesis until real
+     * material movement establishes a reliable action→body map.
+     */
+    float opticalPreferenceV374(float[] observation194,float[] chosen,
+                               Zero3ContactValenceV369 contact){
+        if(observation194==null||observation194.length!=194||
+           chosen==null||chosen.length<2||contact==null)
+            throw new IllegalArgumentException("V374 physical optical comparison");
+        int bank=heading(chosen[0],chosen[1]);
+        if(motorVerified(bank)){
+            float dx=learnedX[bank],dy=learnedY[bank];
+            float len=(float)Math.hypot(dx,dy);
+            if(len<.35f)return 0f;
+            return contact.utility(observation194,dx/len,dy/len);
+        }
+        return .35f*contact.utility(observation194,chosen[0],chosen[1]);
+    }
     float score(float[] observation194,float[] chosen,
                 Zero3ContactValenceV369 contact){
         if(observation194==null||observation194.length!=194||
