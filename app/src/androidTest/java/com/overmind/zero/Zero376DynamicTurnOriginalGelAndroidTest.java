@@ -28,6 +28,10 @@ public final class Zero376DynamicTurnOriginalGelAndroidTest {
                 secondX,secondY,afterEarlyVx,afterEarlyVy,netMuscle,totalWork);
             System.out.println(msg);
             android.util.Log.i("ZERO376_REAL_GEL",msg);
+            android.os.Bundle result=new android.os.Bundle();
+            result.putString("stream",msg+"\\n");
+            androidx.test.platform.app.InstrumentationRegistry.getInstrumentation()
+                .sendStatus(0,result);
         }
     }
     static Result trial(String name,int headingIndex,int warmup,int second){
