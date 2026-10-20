@@ -29,12 +29,7 @@ jobs:
           script: |
             adb install -r app/build/outputs/apk/debug/app-debug.apk
             adb install -r app/build/outputs/apk/androidTest/debug/app-debug-androidTest.apk
-            for fixture in Zero378PhysicalMotorCreditAndroidTest Zero376DynamicTurnOriginalGelAndroidTest Zero377TrueInertialMotorAndroidTest Zero375GoalMemorySafetyAndroidTest Zero374RealTouchOpticalIdentityAndroidTest Zero372FrozenPeripheralProbeAndroidTest Zero371RealMotorEnergyBridgeAndroidTest Zero364MotorBridgeAndroidTest; do
-              echo "RUN_REAL_GEL $fixture"
-              adb shell am instrument -w -r -e class "com.overmind.zero.$fixture" com.overmind.zero.ota.test/androidx.test.runner.AndroidJUnitRunner 2>&1 | tee "/tmp/${fixture}.txt"
-              grep -q 'OK (' "/tmp/${fixture}.txt"
-              ! grep -qE 'FAILURES!!!|INSTRUMENTATION_FAILED|Process crashed' "/tmp/${fixture}.txt"
-            done
+            bash -c 'set -euo pipefail; for fixture in Zero378PhysicalMotorCreditAndroidTest Zero376DynamicTurnOriginalGelAndroidTest Zero377TrueInertialMotorAndroidTest Zero375GoalMemorySafetyAndroidTest Zero374RealTouchOpticalIdentityAndroidTest Zero372FrozenPeripheralProbeAndroidTest Zero371RealMotorEnergyBridgeAndroidTest Zero364MotorBridgeAndroidTest; do echo "RUN_REAL_GEL $fixture"; adb shell am instrument -w -r -e class "com.overmind.zero.$fixture" com.overmind.zero.ota.test/androidx.test.runner.AndroidJUnitRunner 2>&1 | tee "/tmp/${fixture}.txt"; grep -q "OK (" "/tmp/${fixture}.txt"; ! grep -qE "FAILURES!!!|INSTRUMENTATION_FAILED|Process crashed" "/tmp/${fixture}.txt"; done'
       - name: Preserve QA observations (never an OTA)
         if: always()
         uses: actions/upload-artifact@v4
