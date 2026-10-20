@@ -100,7 +100,7 @@ public final class Zero371RealMotorEnergyBridgeAndroidTest {
         assertArrayEquals(snapshot,again.toByteArray());
         assertTrue(restored.motorVerified(0));
         byte[] bad=Arrays.copyOf(snapshot,snapshot.length);
-        bad[0]=0;
+        bad[3]^=0x7f; // mutate nonzero schema byte, not leading zero
         try {
             Zero3InstrumentalCreditV371.read(new DataInputStream(new ByteArrayInputStream(bad)));
             fail("corrupt V371 motor evidence accepted");
