@@ -2,11 +2,11 @@
   "schemaVersion": 1,
   "available": true,
   "applicationId": "com.overmind.zero.ota",
-  "versionCode": 1185,
-  "versionName": "3.0-ota.374-test.1",
-  "apkUrl": "https://overmind-zero-updates.vercel.app/apk/overmind-zero-1185-test-444826feb9a4.apk",
-  "sha256": "444826feb9a4c4f351f0f57639231ac9aaaefba825b48b9423edab3e16adea9f",
-  "sizeBytes": 936080,
-  "notes": "OTA374 TEST: causa energetica da sorgente effettivamente toccata, corpo vero e gestione rischio. 32 Android PASS, autonomia NON CERTIFICATA.",
-  "publishedAt": "2026-10-20T10:27:50.202998+00:00"
+  "versionCode": 1186,
+  "versionName": "3.0-ota.375-test.1",
+  "apkUrl": "https://overmind-zero-updates.vercel.app/apk/overmind-zero-1186-test-410aebc26b23.apk",
+  "sha256": "410aebc26b23580da4072cf36cc2d1b79bbe6969ba43ed22dbd77c114f8e361b",
+  "sizeBytes": 936064,
+  "notes": "OTA375 TEST: recupero checkpoint fino a 24 decisioni e blocco richiamo opzioni pericolose. 37 test Android PASS, autonomia NON CERTIFICATA.",
+  "publishedAt": "2026-10-20T11:15:18.479251+00:00"
 }
