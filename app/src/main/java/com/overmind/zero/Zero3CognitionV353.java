@@ -144,6 +144,20 @@ public final class Zero3CognitionV353 {
     void adoptOldContactEvidenceV369(float[] physicalMean,int[] contactCount){
         contactValence.adoptArchivedRealContacts(physicalMean,contactCount);
     }
+    /** V374: contacted material's observable optical surface, not global brightest scene. */
+    void materialContactV374(int touchedOpticalBand,float[] spectral24,
+                              float physicalEnergyDelta,boolean heldout){
+        if(pendingInput!=null)instrumental.materialContactV374(
+            spectral24,touchedOpticalBand,physicalEnergyDelta,heldout);
+        if(!heldout)contactValence.materialContact(touchedOpticalBand,physicalEnergyDelta);
+    }
+    /** V374 physically experienced colour must inform ALL actor candidates
+     * even before a particular motor bank has accumulated 3 heldout trials.
+     * Verified-motor response gives ADDITIONAL benefit, never a prerequisite
+     * to knowing an experienced wound is harmful. */
+    float physicalSpectralPreferenceV374(float[] observation,float dx,float dy){
+        return contactValence.utility(observation,dx,dy);
+    }
     void genuineContactV369(float[] spectral24,float physicalEnergyDelta,boolean heldout){
         if(pendingInput!=null)instrumental.contact(spectral24,physicalEnergyDelta,heldout);
         if(!heldout)contactValence.contact(spectral24,physicalEnergyDelta);
