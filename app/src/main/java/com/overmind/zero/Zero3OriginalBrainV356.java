@@ -310,6 +310,13 @@ final class Zero3OriginalBrainV356 {
                 clip(motorReserveSpentDuringDecisionV359/100f),
                 after[191],after[192],clip(touch),clip(held),after[190],clip(optical),
                 reserve<=0?1f:0f,clip(Math.max(0,net)/100f),clip(elapsed/.65f)};
+            // Same REAL completed motor event feeds a single physical
+            // action-to-response memory. Never use intended direction as
+            // proof of moving in that direction; storms and solver impulses
+            // are excluded from clean instrumentality.
+            brain.witnessedMaterialMotionV371(outcome.deltaX,outcome.deltaY,
+                elapsed,outcome.physicalEvidence,disturbed||outcome.externalCorrection||
+                outcome.censored,heldout);
             brain.physicalTargetsV353(targets,heldout);
             brain.consequenceObservedV352(after,net,heldout,elapsed,reserve<=0,genuineTerminal);
             brain.completeExecutiveV354(outcome.score,net,harm,
