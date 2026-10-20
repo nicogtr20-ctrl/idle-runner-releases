@@ -185,7 +185,7 @@ public final class Zero3ExecutiveV354 {
         motorScore=clamp(motorScore);pending=false;
         lastEnergy=realEnergy;lastHarm=harm;
         if(observe){
-            observations++;if(harm>0||goalAge>=4){goalInterruptions++;goalId=0;goalAge=0;reason=harm>0?"Interruzione osservata: danno fisico":"Nuova valutazione in osservazione";}
+            observations++;if(harm>0||(goalAge>=4&&motorScore<=.015f&&realEnergy<=0f)||goalAge>=24){goalInterruptions++;goalId=0;goalAge=0;reason=harm>0?"Interruzione osservata: danno fisico":"Nuova valutazione in osservazione";}
             decisions++;active=-1;return;
         }
         if(heldout){
@@ -236,7 +236,7 @@ public final class Zero3ExecutiveV354 {
                 }else if(o.state==CHAMPION&&a<b-.02){o.state=RETIRED;o.reverts++;}
             }
         }
-        if(harm>0||goalAge>=4){goalInterruptions++;goalId=0;goalAge=0;reason=harm>0?"Interruzione: danno fisico osservato":"Nuova valutazione dell'opzione temporale";}
+        if(harm>0||(goalAge>=4&&motorScore<=.015f&&realEnergy<=0f)||goalAge>=24){goalInterruptions++;goalId=0;goalAge=0;reason=harm>0?"Interruzione: danno fisico osservato":"Nuova valutazione dell'opzione temporale";}
         decisions++;active=-1;
     }
     private boolean hasRetired(){for(Option o:options)if(o.state==RETIRED)return true;return false;}
