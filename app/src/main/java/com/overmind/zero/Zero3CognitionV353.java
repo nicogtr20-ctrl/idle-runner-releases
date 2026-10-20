@@ -144,6 +144,20 @@ public final class Zero3CognitionV353 {
     void adoptOldContactEvidenceV369(float[] physicalMean,int[] contactCount){
         contactValence.adoptArchivedRealContacts(physicalMean,contactCount);
     }
+    /** V374: contacted material's observable optical surface, not global brightest scene. */
+    void materialContactV374(int touchedOpticalBand,float[] spectral24,
+                              float physicalEnergyDelta,boolean heldout){
+        if(pendingInput!=null)instrumental.materialContactV374(
+            spectral24,touchedOpticalBand,physicalEnergyDelta,heldout);
+        if(!heldout)contactValence.materialContact(touchedOpticalBand,physicalEnergyDelta);
+    }
+    /** V374 physically experienced colour must inform ALL actor candidates
+     * even before a particular motor bank has accumulated 3 heldout trials.
+     * Verified-motor response gives ADDITIONAL benefit, never a prerequisite
+     * to knowing an experienced wound is harmful. */
+    float physicalSpectralPreferenceV374(float[] observation,float dx,float dy){
+        return contactValence.utility(observation,dx,dy);
+    }
     void genuineContactV369(float[] spectral24,float physicalEnergyDelta,boolean heldout){
         if(pendingInput!=null)instrumental.contact(spectral24,physicalEnergyDelta,heldout);
         if(!heldout)contactValence.contact(spectral24,physicalEnergyDelta);
@@ -167,7 +181,12 @@ public final class Zero3CognitionV353 {
         int best=0;float bestScore=-Float.MAX_VALUE,original=Float.NaN;
         for(int i=0;i<proposals.length;i++){
             float movementScore=instrumental.score(observation,proposals[i],contactValence);
-            float score=movementScore;
+            // V374: actual material injury is already learned in V369,
+            // so it must affect selection even for headings that have not
+            // accumulated enough clean motor trials to pass V371's gait
+            // confidence threshold. V371 verified motion adds evidence.
+            float score=movementScore+
+                instrumental.opticalPreferenceV374(observation,proposals[i],contactValence);
             if(canPredict){
                 float[][] p=champion.predict(input(observation,proposals[i]),false,null);
                 float energy=mean(p,0),damage=mean(p,1),cost=mean(p,2),uncertainty=0;
@@ -188,6 +207,10 @@ public final class Zero3CognitionV353 {
     }
     float instrumentalScoreV371(float[] observation,float[] action){
         return instrumental.score(observation,action,contactValence);
+    }
+    float realContactPreferenceV374(float[] observation,float[] action){
+        return instrumental.score(observation,action,contactValence)+
+            instrumental.opticalPreferenceV374(observation,action,contactValence);
     }
     boolean verifiedDirectionalV371(float[] observation){
         return instrumental.hasVerifiedDirectionalEvidence(observation,contactValence);

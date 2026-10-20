@@ -134,8 +134,8 @@ public final class Zero3ExecutiveV354 {
             // V371: an old option cannot ignore a verified external-body
             // movement consequence toward a physically learned harmful light.
             if(cognition!=null&&
-               cognition.instrumentalScoreV371(observation,o.policy)+.09f<
-               cognition.instrumentalScoreV371(observation,actorProposal))
+               cognition.realContactPreferenceV374(observation,o.policy)+.035f<
+               cognition.realContactPreferenceV374(observation,actorProposal))
                 continue;
             boolean probe=Zero3ConfigurationV354.heldout(decision)&&((decision/15)&1)==1;
             boolean recall=!Zero3ConfigurationV354.heldout(decision)&&lastHarm==0&&(o.state==CHAMPION||o.state==PROBATION)&&o.optionN>0&&

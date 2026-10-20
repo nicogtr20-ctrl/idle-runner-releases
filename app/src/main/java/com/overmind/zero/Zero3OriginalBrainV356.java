@@ -119,6 +119,14 @@ final class Zero3OriginalBrainV356 {
         if(pending)throw new IllegalStateException("V369 no archival learning mid decision");
         brain.inheritedPhysicalContactPriorV369(physicalMeans,counts);
     }
+    /** A physical touch gives the local surface's observed wavelength only
+     * AFTER collision. This is not an energy label or future target. */
+    void realMaterialContactV374(int tactileOpticalBand,float[] allSeenPhotons,
+                                  float actualContactDelta){
+        if(!pending)throw new IllegalStateException("V374 no live original-world choice");
+        brain.observedMaterialContactV374(
+            tactileOpticalBand,allSeenPhotons,actualContactDelta,heldout);
+    }
     void realEnergyContactV369(float[] perceivedSpectral24,float actualContactDelta){
         if(!pending)throw new IllegalStateException("V369 no actual GRU movement at contact");
         brain.realEnergyContactV369(perceivedSpectral24,actualContactDelta,heldout);
