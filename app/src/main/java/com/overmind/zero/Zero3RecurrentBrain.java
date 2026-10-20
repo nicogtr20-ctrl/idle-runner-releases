@@ -232,12 +232,17 @@ public final class Zero3RecurrentBrain {
         // physically learned a visible wavelength's valence. No forced
         // direction, object location, scripted reflex or V2 decision issuer.
         boolean learnedBearing=cognition!=null&&cognition.hasVisibleContactKnowledgeV369(x);
-        float[][] options=new float[cognition==null?1:learnedBearing?7:3][5];
+        boolean verifiedMotor=cognition!=null&&cognition.verifiedDirectionalV371(x);
+        // Old 3-candidate near-actor sampler couldn't cover opposite
+        // directions before a useful predictor existed. These remain PURE
+        // random actor samples: no scripted destination, colored preference,
+        // compass policy or second brain.
+        float[][] options=new float[cognition==null?1:verifiedMotor?7:9][5];
         float[][] noise=new float[options.length][MOTOR];
         float[][] noiseScale=new float[options.length][MOTOR];
         for(int k=0;k<options.length;k++){
             for(int j=0;j<MOTOR;j++){
-                float scale=learnedBearing&&k>0&&j<2?(k>=3?4f:2.5f):1f;
+                float scale=k>0&&j<2?(k>=4?7f:k>=2?3f:1.5f):1f;
                 noiseScale[k][j]=scale;
                 noise[k][j]=k==0?lastNoise[j]:sample()*scale;
             }
@@ -249,6 +254,15 @@ public final class Zero3RecurrentBrain {
             if(cognition!=null)options[k][4]=Math.round(options[k][4]/.025f)*.025f;
         }
         int selected=cognition==null?0:cognition.select(x,options);
+        // Undirected physical exploration is essential BEFORE the GRU has
+        // proven a body-response map. Probability decays with lived real
+        // decisions and never overrides an independently verified learned
+        // energy/motor relation.
+        if(cognition!=null&&!verifiedMotor){
+            float exploration=.20f/(1f+(trainCount+validationCount)/1500f);
+            if(random()<exploration)selected=Math.min(options.length-1,
+                (int)(random()*options.length));
+        }
         if(plannerV354!=null){
             plannerV354.topology(cognition.snapshot().predictiveUnits);
             // The real S21 reserve-cost head can have a nearly constant
