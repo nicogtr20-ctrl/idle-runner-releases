@@ -62,6 +62,8 @@ public final class Zero371RealMotorEnergyBridgeAndroidTest {
         motor.begin(sense(false),proposal(1,0),false);
         motor.contact(light(0,0),-7f,false);
         assertEquals(1L,motor.linkedContacts());
+        assertTrue("delayed real red credit assigned to physically approaching action",motor.delayedValue(0,0)<0);
+        assertTrue(motor.delayedCount(0,0)>0);
         motor.abort();
         motor.begin(sense(false),proposal(1,0),true);
         motor.contact(light(0,0),-7f,true);
