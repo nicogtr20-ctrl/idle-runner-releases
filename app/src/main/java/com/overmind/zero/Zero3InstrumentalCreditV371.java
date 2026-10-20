@@ -17,6 +17,10 @@ final class Zero3InstrumentalCreditV371 {
     private final float[] learnedX=new float[BINS],learnedY=new float[BINS];
     private final int[] trained=new int[BINS],validated=new int[BINS];
     private final double[] error=new double[BINS],baseline=new double[BINS];
+    // Real energy contact can retrospectively credit up to six physically
+    // verified approaches without falsifying the V353 ONE-STEP predictor.
+    private final float[][] delayedContactValue=new float[BANDS][BINS];
+    private final int[][] delayedContactCount=new int[BANDS][BINS];
     // Real PRE visual evidence and POST movement of the last six completed
     // physically clean intentions. NEVER persist a pending/unexecuted event.
     private final float[][] recentSight=new float[TRACE][BANDS*8];
@@ -125,7 +129,17 @@ final class Zero3InstrumentalCreditV371 {
                     projection=toward;best=seen*toward;
                 }
             }
-            if(projection>.35f){matched=true;break;}
+            if(projection>.35f){
+                matched=true;
+                int bank=recentBank[slot];
+                float actualValue=limit(actualDelta/(actualDelta>0f?22f:7f),-1.5f,1.5f);
+                float discounted=(float)(actualValue*Math.pow(.76,age));
+                float alpha=delayedContactCount[found][bank]==0?1f:.14f;
+                delayedContactValue[found][bank]+=alpha*
+                    (discounted-delayedContactValue[found][bank]);
+                if(delayedContactCount[found][bank]<100000000)
+                    delayedContactCount[found][bank]++;
+            }
         }
         if(matched)linkedContacts++;else ambiguousContacts++;
     }
@@ -154,8 +168,10 @@ final class Zero3InstrumentalCreditV371 {
             // Real injury remains costly at full reserve; actual positive
             // energy becomes more important as measured reserve decreases.
             value*=value>0f?positiveNeed:1.35f*urgency;
+            float observedBand=0f;
             for(int ray=0;ray<8;ray++){
                 float seen=observation194[20+b*8+ray];
+                observedBand=Math.max(observedBand,seen);
                 if(!Float.isFinite(seen)||seen<0||seen>1)
                     throw new IllegalArgumentException("V371 nonphysical rays");
                 if(seen<.08f)continue;
@@ -166,6 +182,12 @@ final class Zero3InstrumentalCreditV371 {
                 reward+=value*strength*toward;
                 brightness+=strength;
             }
+            // An independent delayed outcome from TRUE previously
+            // executed approaches; never label a one-step V353 prediction
+            // with future energy or grant an imagined pickup.
+            if(delayedContactCount[b][bank]>=2&&observedBand>.08f)
+                reward+=.22f*delayedContactValue[b][bank]*observedBand*
+                    (value>0?positiveNeed:1.35f);
         }
         float utility=brightness>.015f?limit(reward/(.35f+brightness),-.5f,.5f):0f;
         // If a real action has repeated produced no forward material motion,
@@ -191,6 +213,10 @@ final class Zero3InstrumentalCreditV371 {
         System.arraycopy(validated,0,c.validated,0,BINS);
         System.arraycopy(error,0,c.error,0,BINS);
         System.arraycopy(baseline,0,c.baseline,0,BINS);
+        for(int b=0;b<BANDS;b++){
+            System.arraycopy(delayedContactValue[b],0,c.delayedContactValue[b],0,BINS);
+            System.arraycopy(delayedContactCount[b],0,c.delayedContactCount[b],0,BINS);
+        }
         c.linkedContacts=linkedContacts;c.ambiguousContacts=ambiguousContacts;
         c.stalledActions=stalledActions;
     }
@@ -198,6 +224,10 @@ final class Zero3InstrumentalCreditV371 {
     long linkedContacts(){return linkedContacts;}
     long ambiguousContacts(){return ambiguousContacts;}
     long stalledActions(){return stalledActions;}
+    float delayedValue(int band,int bank){return delayedContactValue[band][bank];}
+    int delayedCount(int band,int bank){return delayedContactCount[band][bank];}
+    long delayedCredits(){long n=0;for(int[] a:delayedContactCount)
+        for(int v:a)n+=v;return n;}
     void write(DataOutputStream d)throws IOException{
         if(pendingSight!=null)throw new IOException("V371 pending checkpoint");
         d.writeInt(VERSION);d.writeLong(linkedContacts);d.writeLong(ambiguousContacts);
@@ -206,6 +236,10 @@ final class Zero3InstrumentalCreditV371 {
             d.writeInt(trained[i]);d.writeInt(validated[i]);
             d.writeFloat(learnedX[i]);d.writeFloat(learnedY[i]);
             d.writeDouble(error[i]);d.writeDouble(baseline[i]);
+        }
+        for(int b=0;b<BANDS;b++)for(int a=0;a<BINS;a++){
+            d.writeInt(delayedContactCount[b][a]);
+            d.writeFloat(delayedContactValue[b][a]);
         }
         // A pause/resume inside one real life must NOT destroy six real
         // approaches that could shortly precede a negative contact.
@@ -234,6 +268,14 @@ final class Zero3InstrumentalCreditV371 {
                !Double.isFinite(m.error[i])||!Double.isFinite(m.baseline[i])||
                m.error[i]<0||m.baseline[i]<0)
                 throw new IOException("V371 physical response invalid");
+        }
+        for(int b=0;b<BANDS;b++)for(int a=0;a<BINS;a++){
+            m.delayedContactCount[b][a]=d.readInt();
+            m.delayedContactValue[b][a]=d.readFloat();
+            if(m.delayedContactCount[b][a]<0||m.delayedContactCount[b][a]>100000000||
+               !Float.isFinite(m.delayedContactValue[b][a])||
+               Math.abs(m.delayedContactValue[b][a])>1.5f)
+                throw new IOException("V371 invalid delayed causal consequence");
         }
         m.history=d.readInt();m.lastBank=d.readInt();m.stalledStreak=d.readInt();
         m.recentHarmBand=d.readInt();m.recentHarmTime=d.readFloat();
