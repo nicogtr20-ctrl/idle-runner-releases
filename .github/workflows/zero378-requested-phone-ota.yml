@@ -1,0 +1,266 @@
+name: ZERO378 experimental signed physical-motor credit, 43 Android regressions
+on:
+  push:
+    branches: [fix/zero378-inertial-command-credit-phone-20261020]
+  workflow_dispatch:
+permissions:
+  contents: write
+concurrency:
+  group: zero378-signed-user-test
+  cancel-in-progress: false
+jobs:
+  signed-user-test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    env:
+      OVERMIND_BUILD_NUMBER: '188'
+      OVERMIND_CANDIDATE_NAME: '3.0-ota.378-test.1'
+    steps:
+      - uses: actions/checkout@v4
+        with: {fetch-depth: 0}
+      - uses: actions/setup-java@v4
+        with: {distribution: temurin, java-version: '17'}
+      - name: Freeze approved unmerged experimental owner and preserve public stable OTA
+        run: |
+          set -euo pipefail
+          test "${GITHUB_REF_NAME}" = 'fix/zero378-inertial-command-credit-phone-20261020'
+          git fetch origin main
+          python3 - <<'PY'
+          import json, subprocess
+          from pathlib import Path
+          main=json.loads(subprocess.check_output(['git','show','origin/main:updater/public/latest.json'],text=True))
+          assert main['applicationId']=='com.overmind.zero.ota'
+          assert int(main['versionCode'])==1187 and main['versionName']=='3.0-ota.377-test.1', 'Public stable channel changed; do not accidentally downgrade'
+          a=Path('app/src/main/java/com/overmind/zero/Zero3OriginalBrainV356.java').read_text()
+          b=Path('app/src/main/java/com/overmind/zero/GameActivity.java').read_text()
+          c=Path('app/src/main/java/com/overmind/zero/Zero3MotorPeripheralBridgeV364.java').read_text()
+          v=Path('app/src/main/java/com/overmind/zero/Zero3VisionContextV366.java').read_text()
+          assert 'Zero3MotorPeripheralBridgeV364' in a
+          assert 'symMotor,environment,chamber' in b
+          assert 'if(channel==2)continue' in c
+          assert 'Zero3VisionContextV361.fromSensory194' in v
+          assert Path('app/src/main/java/com/overmind/zero/Zero3VisionContextV367.java').exists()
+          assert 'verticalOldContextRiskV367' in Path('app/src/main/java/com/overmind/zero/Zero3ExecutiveV354.java').read_text()
+          assert 'genuineTerminal' in a
+          assert 'witnessedMaterialMotionV371' in a
+          neural=Path('app/src/main/java/com/overmind/zero/Zero3RecurrentBrain.java').read_text()
+          cognition=Path('app/src/main/java/com/overmind/zero/Zero3CognitionV353.java').read_text()
+          motor=Path('app/src/main/java/com/overmind/zero/SymbioteMotorHeadV1.java').read_text()
+          assert 'witnessedMaterialMotionV371' in neural
+          assert 'instrumental.contact(' in cognition and 'instrumental.complete(' in cognition
+          assert 'Zero3InstrumentalCreditV371.read(d)' in cognition
+          assert 'silenceFrozenV3MotorProbeV372' in c
+          assert 'fastTickOriginalV370' in motor
+          assert 'realMaterialContactV374(' in a and 'realMaterialContactV374(' in b
+          assert 'contactValence.materialContact(' in cognition
+          assert 'opticalPreferenceV374(' in cognition
+          assert 'realContactPreferenceV374(' in neural
+          assert 'materialContactV374(' in Path('app/src/main/java/com/overmind/zero/Zero3InstrumentalCreditV371.java').read_text()
+          assert Path('app/src/androidTest/java/com/overmind/zero/Zero374RealTouchOpticalIdentityAndroidTest.java').exists()
+          assert Path('docs/ZERO30_V366_BLIND_2003_REAL_ANDROID_NEGATIVE_20261019.md').exists()
+          executive=Path('app/src/main/java/com/overmind/zero/Zero3ExecutiveV354.java').read_text()
+          assert 'if(e.goalAge<0||e.goalAge>24)' in executive
+          assert 'cognition.hasVisibleContactKnowledgeV369(observation)' in executive
+          assert 'cognition.realContactPreferenceV374(observation,o.policy)<-.025f' in executive
+          assert Path('app/src/androidTest/java/com/overmind/zero/Zero375GoalMemoryRiskAndroidTest.java').exists()
+          assert Path('app/src/androidTest/java/com/overmind/zero/Zero375GoalMemorySafetyAndroidTest.java').exists()
+          old=Path('app/src/main/java/com/overmind/zero/Zero3InstrumentalCreditV371.java').read_text()
+          new=Path('app/src/main/java/com/overmind/zero/Zero3InertialResponseV377.java').read_text()
+          assert 'inertia.finish(dx,dy,seconds,heldout)' in old
+          assert 'inertia.write(d)' in old and 'Zero3InertialResponseV377.read(d)' in old
+          assert 'initialVx' in new and 'coastLoss[i]' in new
+          assert 'validatedTrueInertialDirectionsV377' in Path('app/src/main/java/com/overmind/zero/TelemetryGitHub.java').read_text()
+          assert Path('app/src/androidTest/java/com/overmind/zero/Zero377TrueInertialMotorAndroidTest.java').exists()
+          assert Path('app/src/androidTest/java/com/overmind/zero/Zero376DynamicTurnOriginalGelAndroidTest.java').exists()
+          live=Path('app/src/main/java/com/overmind/zero/Zero3OriginalBrainV356.java').read_text()
+          cortex=Path('app/src/main/java/com/overmind/zero/Zero3LearningFoundation.java').read_text()
+          assert 'motor.begin(choice,body,!heldout,heldout,true,true,true)' in live
+          assert 'momentumCreditV378' in cortex and 'float inertialDx=startVxV378*seconds' in cortex
+          assert Path('app/src/androidTest/java/com/overmind/zero/Zero378PhysicalMotorCreditAndroidTest.java').exists()
+          print('ZERO378_ORIGINAL_170_NODE_MOTOR_CREDIT_AND_PRE_VELOCITY=PASS')
+          PY
+      - name: Compile original unchanged Android package and regression tests
+        run: gradle --no-daemon assembleDebug assembleDebugAndroidTest
+      - name: Enable KVM
+        run: |
+          echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' | sudo tee /etc/udev/rules.d/99-kvm4all.rules
+          sudo udevadm control --reload-rules
+          sudo udevadm trigger --name-match=kvm
+      - name: Require all 43 original Android technical tests before signing
+        uses: reactivecircus/android-emulator-runner@v2
+        with:
+          api-level: 35
+          arch: x86_64
+          profile: pixel_6
+          disable-animations: true
+          script: |
+            set -e
+            adb install -r app/build/outputs/apk/debug/app-debug.apk
+            adb install -r app/build/outputs/apk/androidTest/debug/app-debug-androidTest.apk
+            adb shell am instrument -w -r -e class com.overmind.zero.Zero378PhysicalMotorCreditAndroidTest com.overmind.zero.ota.test/androidx.test.runner.AndroidJUnitRunner 2>&1 | tee /tmp/zero378-physical-credit.txt
+            grep -q 'OK (1 test)' /tmp/zero378-physical-credit.txt
+            adb shell am instrument -w -r -e class com.overmind.zero.Zero377TrueInertialMotorAndroidTest com.overmind.zero.ota.test/androidx.test.runner.AndroidJUnitRunner 2>&1 | tee /tmp/zero378-inertial.txt
+            grep -q 'OK (4 tests)' /tmp/zero378-inertial.txt
+            adb shell am instrument -w -r -e class com.overmind.zero.Zero376DynamicTurnOriginalGelAndroidTest com.overmind.zero.ota.test/androidx.test.runner.AndroidJUnitRunner 2>&1 | tee /tmp/zero378-turn.txt
+            grep -q 'OK (1 test)' /tmp/zero378-turn.txt
+            adb shell am instrument -w -r -e class com.overmind.zero.Zero375GoalMemoryRiskAndroidTest com.overmind.zero.ota.test/androidx.test.runner.AndroidJUnitRunner 2>&1 | tee /tmp/zero378-risk.txt
+            grep -q 'OK (3 tests)' /tmp/zero378-risk.txt
+            adb shell am instrument -w -r -e class com.overmind.zero.Zero375GoalMemorySafetyAndroidTest com.overmind.zero.ota.test/androidx.test.runner.AndroidJUnitRunner 2>&1 | tee /tmp/zero378-safety.txt
+            grep -q 'OK (2 tests)' /tmp/zero378-safety.txt
+            adb shell am instrument -w -r -e class com.overmind.zero.Zero374RealTouchOpticalIdentityAndroidTest com.overmind.zero.ota.test/androidx.test.runner.AndroidJUnitRunner 2>&1 | tee /tmp/zero378-contact-source.txt
+            grep -q 'OK (5 tests)' /tmp/zero378-contact-source.txt
+            adb shell am instrument -w -r -e class com.overmind.zero.Zero371RealMotorEnergyBridgeAndroidTest com.overmind.zero.ota.test/androidx.test.runner.AndroidJUnitRunner 2>&1 | tee /tmp/zero378-0.txt
+            grep -q 'OK (6 tests)' /tmp/zero378-0.txt
+            adb shell am instrument -w -r -e class com.overmind.zero.Zero372FrozenPeripheralProbeAndroidTest com.overmind.zero.ota.test/androidx.test.runner.AndroidJUnitRunner 2>&1 | tee /tmp/zero378-1.txt
+            grep -q 'OK (2 tests)' /tmp/zero378-1.txt
+            adb shell am instrument -w -r -e class com.overmind.zero.Zero364MotorBridgeAndroidTest com.overmind.zero.ota.test/androidx.test.runner.AndroidJUnitRunner 2>&1 | tee /tmp/zero378-2.txt
+            grep -q 'OK (3 tests)' /tmp/zero378-2.txt
+            adb shell am instrument -w -r -e class com.overmind.zero.Zero370WindSenseIsolationAndroidTest com.overmind.zero.ota.test/androidx.test.runner.AndroidJUnitRunner 2>&1 | tee /tmp/zero378-3.txt
+            grep -q 'OK (3 tests)' /tmp/zero378-3.txt
+            adb shell am instrument -w -r -e class com.overmind.zero.Zero369LearnedContactValenceAndroidTest com.overmind.zero.ota.test/androidx.test.runner.AndroidJUnitRunner 2>&1 | tee /tmp/zero378-4.txt
+            grep -q 'OK (4 tests)' /tmp/zero378-4.txt
+            adb shell am instrument -w -r -e class com.overmind.zero.Zero368CausalIntegrationTest com.overmind.zero.ota.test/androidx.test.runner.AndroidJUnitRunner 2>&1 | tee /tmp/zero378-5.txt
+            grep -q 'OK (4 tests)' /tmp/zero378-5.txt
+            adb shell am instrument -w -r -e class com.overmind.zero.Zero366VisionMemoryAndPlannerTest com.overmind.zero.ota.test/androidx.test.runner.AndroidJUnitRunner 2>&1 | tee /tmp/zero378-6.txt
+            grep -q 'OK (5 tests)' /tmp/zero378-6.txt
+            echo V377_ALL_43_ANDROID_REGRESSIONS_PASS
+      - name: Save test evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: ZERO378-43-original-android-tests
+          path: /tmp/zero378-*.txt
+      - name: Restore THE SAME stable OTA signing identity (never expose credentials)
+        env:
+          SIGNING_BUNDLE: ${{ secrets.OVERMIND_SIGNING_BUNDLE }}
+        run: |
+          python3 - <<'PY'
+          import os,json,base64,pathlib
+          bundle=os.environ.get('SIGNING_BUNDLE','')
+          if not bundle:raise RuntimeError('Original stable certificate unavailable; cannot ship a compatible test APK')
+          obj=json.loads(base64.b64decode(bundle,validate=True))
+          key=pathlib.Path(os.environ['RUNNER_TEMP'])/'zero378-original-signing.p12'
+          key.write_bytes(base64.b64decode(obj['keyStoreBase64'],validate=True));key.chmod(0o600)
+          for value in (obj['password'],obj['alias']):print('::add-mask::'+value)
+          with open(os.environ['GITHUB_ENV'],'a') as env:
+              env.write('OVERMIND_KEYSTORE_FILE='+str(key)+'\n')
+              env.write('OVERMIND_KEYSTORE_PASSWORD='+obj['password']+'\n')
+              env.write('OVERMIND_KEY_PASSWORD='+obj['password']+'\n')
+              env.write('OVERMIND_KEY_ALIAS='+obj['alias']+'\n')
+          PY
+      - name: Build REAL signed original application as install-over-existing phone test
+        run: gradle --no-daemon assembleRelease
+      - name: Verify EXACT Android application identity, build 1188, OTA original certificate
+        run: |
+          set -euo pipefail
+          apk=app/build/outputs/apk/release/app-release.apk
+          bt=$(find "$ANDROID_HOME/build-tools" -mindepth 1 -maxdepth 1 -type d | sort -V | tail -n 1)
+          "$bt/apksigner" verify --print-certs --verbose "$apk" > "$RUNNER_TEMP/zero378-cert.txt"
+          "$bt/aapt" dump badging "$apk" > "$RUNNER_TEMP/zero378-package.txt"
+          python3 - <<'PY'
+          from pathlib import Path
+          import os,json
+          cert=(Path(os.environ['RUNNER_TEMP'])/'zero378-cert.txt').read_text()
+          assert 'Number of signers: 1' in cert
+          assert 'certificate SHA-256 digest: 45010684b4fd74de00f87fb81ca89e1e79b58409cf9fefc497b445b0fe19f583' in cert, 'SIGNER CHANGED; WOULD DELETE USER DATA'
+          pkg=(Path(os.environ['RUNNER_TEMP'])/'zero378-package.txt').read_text()
+          assert "package: name='com.overmind.zero.ota'" in pkg
+          assert "versionCode='1188'" in pkg and "versionName='3.0-ota.378-test.1'" in pkg
+          m=json.loads(Path('app/build/outputs/apk/release/output-metadata.json').read_text())['elements'][0]
+          assert m['versionCode']==1188 and m['versionName']=='3.0-ota.378-test.1'
+          print('ZERO378_COMPATIBLE_SAME_SIGNER_SAME_PACKAGE_MONOTONIC_CODE=PASS')
+          PY
+          sha256sum "$apk"
+      - name: Upload signed phone test APK with verifiable binary
+        uses: actions/upload-artifact@v4
+        with:
+          name: OVERMIND-ZERO-3.0-377-TEST-SIGNED-APK
+          path: app/build/outputs/apk/release/app-release.apk
+          if-no-files-found: error
+          retention-days: 30
+      - name: Publish IMMUTABLE GitHub pre-release — does NOT change latest OTA manifest
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          tag=overmind-zero-v3.0-ota.378-test.1
+          apk=app/build/outputs/apk/release/app-release.apk
+          mkdir -p "$RUNNER_TEMP/zero378"
+          cp "$apk" "$RUNNER_TEMP/zero378/OVERMIND-ZERO-TEST-377.apk"
+          cat > "$RUNNER_TEMP/zero378/notes.md" <<'NOTES'
+          ZERO 3.0 OTA377 TEST — build 1188, original Android identity.
+          Signed experimental update over OTA377. Never uninstall or erase learned
+          brain; save a named neural slot before installing.
+          User phone OTA375 had 14,066 decisions, 3590 opposite motor
+          outcomes and 35.16% directed physical progress vs travel.
+          V376 real original gel A/B proved turn after sustained direction
+          but inertia keeps moving old heading for the first 0.4 seconds.
+          V377 fixes the false ZERO-motion motor-competence baseline.
+          V378 additionally fixes original 170-node gel motor/skill credit:
+          a physically useful brake is no longer punished because the body
+          retains its previous momentum during the first 0.4 seconds.
+          The GRU chooses direction; no artificial COM force or fixed gait.
+          Physical action consequence is measured against REAL PRE COM
+          velocity, with independent heldout skill compared to coasting.
+          Old GRU64, V353, V354, V371 memories and 12 slots remain.
+          43 original Android tests required, including original gel causal score, brake
+          and real physical changing direction at speed.
+          User-requested EXPERIMENT: seeking blue and avoiding red still
+          NOT certified by autonomous phone/world behavior.
+                    NOTES
+          if gh release view "$tag" --repo "${{ github.repository }}" >/dev/null 2>&1;then
+            gh release download "$tag" --repo "${{ github.repository }}" -p OVERMIND-ZERO-TEST-377.apk -D "$RUNNER_TEMP/zero378"
+            cmp "$apk" "$RUNNER_TEMP/zero378/OVERMIND-ZERO-TEST-377.apk"
+          else
+            gh release create "$tag" "$RUNNER_TEMP/zero378/OVERMIND-ZERO-TEST-377.apk" \
+              --repo "${{ github.repository }}" --target "${{ github.sha }}" \
+              --title 'OVERMIND ZERO 3.0 — V377 TEST per telefono' \
+              --notes-file "$RUNNER_TEMP/zero378/notes.md" --prerelease
+          fi
+      - name: Publish user requested experimental OTA to in-app manifest
+        run: |
+          set -euo pipefail
+          apk=app/build/outputs/apk/release/app-release.apk
+          sha=$(sha256sum "$apk"|awk '{print $1}')
+          bytes=$(wc -c < "$apk" | tr -d ' ')
+          dest="updater/public/apk/overmind-zero-1188-test-${sha:0:12}.apk"
+          cp "$apk" "$RUNNER_TEMP/zero378-original-release.apk"
+          git fetch origin main
+          git checkout -B main origin/main
+          python3 - <<'PY'
+          import json
+          from pathlib import Path
+          j=json.loads(Path('updater/public/latest.json').read_text())
+          assert j['applicationId']=='com.overmind.zero.ota'
+          assert int(j['versionCode'])==1187 and j['versionName']=='3.0-ota.377-test.1', 'Refuse to overwrite newer public OTA'
+          PY
+          mkdir -p updater/public/apk
+          cp "$RUNNER_TEMP/zero378-original-release.apk" "$dest"
+          python3 - "$dest" "$sha" "$bytes" <<'PY'
+          import json,sys
+          from pathlib import Path
+          from datetime import datetime,timezone
+          dest,sha,size=sys.argv[1:]
+          data={
+              'schemaVersion':1,'available':True,
+              'applicationId':'com.overmind.zero.ota',
+              'versionCode':1188,'versionName':'3.0-ota.378-test.1',
+              'apkUrl':'https://overmind-zero-updates.vercel.app/apk/'+Path(dest).name,
+              'sha256':sha,'sizeBytes':int(size),
+              'notes':'OTA377 TEST: apprendimento effettivo cambio moto rispetto alla velocita PRE e inerzia, 42 test Android. Autonomia di evitamento NON certificata.',
+              'publishedAt':datetime.now(timezone.utc).isoformat()
+          }
+          Path('updater/public/latest.json').write_text(json.dumps(data,indent=2,ensure_ascii=False)+'\n')
+          assert Path(dest).stat().st_size==int(size)
+          print('OTA377_EXPERIMENTAL_MANIFEST',json.dumps(data,ensure_ascii=False))
+          PY
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add "$dest" updater/public/latest.json
+          git commit -m "Publish user-requested ZERO3 V377 signed inertial learning experimental OTA"
+          git push origin HEAD:main
+          echo "ZERO378_OTA_PUBLIC_APK=https://overmind-zero-updates.vercel.app/apk/$(basename "$dest")"
+          echo "ZERO378_OTA_SIGNED_SHA256=$sha"
+      - name: Remove temporary signing material
+        if: always()
+        run: rm -f "$RUNNER_TEMP/zero378-original-signing.p12"
