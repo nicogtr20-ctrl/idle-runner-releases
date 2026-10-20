@@ -35,6 +35,12 @@ public final class Zero374RealTouchOpticalIdentityAndroidTest {
         Zero3ContactValenceV369 legacy=new Zero3ContactValenceV369();
         legacy.contact(scene,+22f);
         assertEquals(0,legacy.evidence(0));
+        assertEquals("two neighbouring bright wavelengths made the old classifier discard the positive contact altogether",
+            1L,legacy.ambiguous());
+        // With a stronger unrelated lamp it was even worse: positive
+        // energy was wrongly credited to the red neighbour's wavelength.
+        legacy.contact(mixed(.65f,.99f),+22f);
+        assertEquals(0,legacy.evidence(0));
         assertEquals(1,legacy.evidence(1));
         c.materialContact(0,+22f);
         c.materialContact(0,+22f);
