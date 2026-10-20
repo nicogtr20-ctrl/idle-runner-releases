@@ -155,6 +155,11 @@ public final class Zero3RecurrentBrain {
         if(pending||cognition==null)throw new IllegalStateException("V369 archive import only at boundary");
         cognition.adoptOldContactEvidenceV369(means,counts);
     }
+    void witnessedInertialTurnV377(float dx,float dy,float elapsed,
+                                    boolean clean,boolean heldout){
+        if(!pending||cognition==null)throw new IllegalStateException("V377 no GRU event");
+        cognition.physicalInertialV377(dx,dy,elapsed,clean,heldout);
+    }
     void witnessedMaterialMotionV371(float dx,float dy,float elapsed,
                                        boolean physicallyValid,boolean disturbed,boolean heldout){
         if(!pending||cognition==null)throw new IllegalStateException("V371 cannot train unsampled movement");

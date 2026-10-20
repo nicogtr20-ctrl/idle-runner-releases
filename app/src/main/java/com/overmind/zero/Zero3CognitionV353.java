@@ -17,6 +17,8 @@ public final class Zero3CognitionV353 {
     private Zero3ContactValenceV369 contactValence=new Zero3ContactValenceV369();
     // V371 is an evidence cache INSIDE this same predictive cognition.
     private Zero3InstrumentalCreditV371 instrumental=new Zero3InstrumentalCreditV371();
+    // V377: motion depends on PRE velocity. Passive coast is the comparison.
+    private Zero3InertialMotorV377 inertial=new Zero3InertialMotorV377();
     private Model shadow;
     private long trains,validations,plannerUses,growthAccepted,growthRejected,shadowTrains,shadowValidations;
     private final double[] error=new double[HEADS],baseline=new double[HEADS],spread=new double[HEADS],
@@ -109,7 +111,8 @@ public final class Zero3CognitionV353 {
         }
         child.growthAccepted=growthAccepted;child.growthRejected=growthRejected;
         contactValence.copyTo(child.contactValence);
-        instrumental.copyTo(child.instrumental);return child;
+        instrumental.copyTo(child.instrumental);
+        inertial.copyTo(child.inertial);return child;
     }
     float[] baselineV354(){return previousTarget.clone();}
     float[] predictionV354(float[] observation,float[] action){
@@ -168,6 +171,22 @@ public final class Zero3CognitionV353 {
     float contactValenceScoreV369(float[] observation,float dx,float dy){
         return contactValence.utility(observation,dx,dy);
     }
+    /** The original physical motor model's zero-motion baseline is valid
+     * ONLY if PRE measured COM speed is near zero. Preserve those previously
+     * approved rest-start learned skills. For moving body, replace them with
+     * V377 inertia-conditional heldout physical evidence.
+     */
+    private static boolean nearlyStillV377(float[] observation){
+        return observation!=null&&observation.length==INPUTS&&
+            Math.hypot(observation[191]*130f,observation[192]*130f)<.50d;
+    }
+    private float liveMotorPreferenceV377(float[] observation,float[] action){
+        if(nearlyStillV377(observation)&&
+           instrumental.hasVerifiedDirectionalEvidence(observation,contactValence))
+            return instrumental.score(observation,action,contactValence)+
+                instrumental.opticalPreferenceV374(observation,action,contactValence);
+        return inertial.opticalScore(observation,action,contactValence);
+    }
     int select(float[] observation,float[][] proposals){
         // A trusted one-step model is ONE source of evidence. The original
         // controller also demanded REAL, independently heldout movement
@@ -180,13 +199,16 @@ public final class Zero3CognitionV353 {
         boolean canPredict=reliableEnergy&&(costTrusted||Float.isFinite(costSafety));
         int best=0;float bestScore=-Float.MAX_VALUE,original=Float.NaN;
         for(int i=0;i<proposals.length;i++){
-            float movementScore=instrumental.score(observation,proposals[i],contactValence);
+            // V371's unconditional displacement map was validated against
+            // STOPPED motion: this could reward passive drift. Do not let it
+            // own the next heading. V377 is measured against PRE momentum.
+            float movementScore=0f;
             // V374: actual material injury is already learned in V369,
             // so it must affect selection even for headings that have not
             // accumulated enough clean motor trials to pass V371's gait
             // confidence threshold. V371 verified motion adds evidence.
             float score=movementScore+
-                instrumental.opticalPreferenceV374(observation,proposals[i],contactValence);
+                liveMotorPreferenceV377(observation,proposals[i]);
             if(canPredict){
                 float[][] p=champion.predict(input(observation,proposals[i]),false,null);
                 float energy=mean(p,0),damage=mean(p,1),cost=mean(p,2),uncertainty=0;
@@ -209,16 +231,27 @@ public final class Zero3CognitionV353 {
         return instrumental.score(observation,action,contactValence);
     }
     float realContactPreferenceV374(float[] observation,float[] action){
-        return instrumental.score(observation,action,contactValence)+
-            instrumental.opticalPreferenceV374(observation,action,contactValence);
+        return liveMotorPreferenceV377(observation,action);
     }
     boolean verifiedDirectionalV371(float[] observation){
-        return instrumental.hasVerifiedDirectionalEvidence(observation,contactValence);
+        return (nearlyStillV377(observation)&&
+            instrumental.hasVerifiedDirectionalEvidence(observation,contactValence))||
+            inertial.hasVerifiedVisible(observation,contactValence);
     }
     boolean repeatedRealMotorStallV371(){return instrumental.repeatedRealMotorStall();}
     void physicalMotorV371(float dx,float dy,float elapsed,boolean physical,
                             boolean disturbed,boolean heldout){
         instrumental.complete(dx,dy,elapsed,physical&&!disturbed,heldout);
+    }
+    void physicalInertialV377(float dx,float dy,float elapsed,
+                             boolean clean,boolean heldout){
+        inertial.complete(dx,dy,elapsed,clean,heldout);
+    }
+    boolean inertiaVerifiedV377(float[] observation,float[] action){
+        return inertial.verified(observation,action);
+    }
+    float inertiaOpticalV377(float[] observation,float[] action){
+        return inertial.opticalScore(observation,action,contactValence);
     }
     void begin(float[] observation,float[] actualProposal){
         begin(observation,actualProposal,heldout(trains+validations));
@@ -227,9 +260,10 @@ public final class Zero3CognitionV353 {
         if(pendingInput!=null)throw new IllegalStateException("V353 pending physical experience");
         pendingInput=input(observation,actualProposal);
         instrumental.begin(observation,actualProposal,heldout);
+        inertial.begin(observation,actualProposal,heldout);
     }
-    void abort(){pendingInput=null;instrumental.abort();}
-    void resetTransientV371(){instrumental.newLife();}
+    void abort(){pendingInput=null;instrumental.abort();inertial.abort();}
+    void resetTransientV371(){instrumental.newLife();inertial.abort();}
     /** Construct targets from committed physical sensors/metabolism, never labels/coordinates. */
     static float[] targets(float[] before,float[] after,Zero3CausalVitalBoundaryV344.After vital,float elapsed){
         finite(before,INPUTS);finite(after,INPUTS);
@@ -307,6 +341,8 @@ public final class Zero3CognitionV353 {
         public final float[] contactValues=new float[3];
         public final long contactAccepted,contactAmbiguous;
         public final int verifiedMotorDirectionsV371;
+        public final int inertiaVerifiedContextsV377;
+        public final long inertiaCleanV377,inertiaContaminatedV377;
         public final long linkedRealContactsV371,ambiguousMotorContactsV371,stalledActionsV371;
         Snapshot(Zero3CognitionV353 c){
             train=c.trains;heldout=c.validations;plannerUses=c.plannerUses;
@@ -318,6 +354,9 @@ public final class Zero3CognitionV353 {
             contactAccepted=c.contactValence.accepted();
             contactAmbiguous=c.contactValence.ambiguous();
             verifiedMotorDirectionsV371=c.instrumental.verifiedDirections();
+            inertiaVerifiedContextsV377=c.inertial.verifiedContexts();
+            inertiaCleanV377=c.inertial.validActions();
+            inertiaContaminatedV377=c.inertial.contaminatedActions();
             linkedRealContactsV371=c.instrumental.linkedContacts();
             ambiguousMotorContactsV371=c.instrumental.ambiguousContacts();
             stalledActionsV371=c.instrumental.stalledActions();
@@ -345,6 +384,7 @@ public final class Zero3CognitionV353 {
             writeModel(d,champion);d.writeBoolean(shadow!=null);if(shadow!=null)writeModel(d,shadow);
             contactValence.write(d); // Optional V369 extension after legacy 353.
             instrumental.write(d); // Optional V371 extension after V369.
+            inertial.write(d); // Optional V377: PRE velocity vs actual COM turn.
             d.flush();return b.toByteArray();
         }catch(IOException impossible){throw new IllegalStateException(impossible);}
     }
@@ -379,6 +419,7 @@ public final class Zero3CognitionV353 {
         // contain this optional fixed binary; learned old matrices remain.
         if(d.available()>0)c.contactValence=Zero3ContactValenceV369.read(d);
         if(d.available()>0)c.instrumental=Zero3InstrumentalCreditV371.read(d);
+        if(d.available()>0)c.inertial=Zero3InertialMotorV377.read(d);
         if(c.champion.units!=BASE_UNITS+2*c.growthAccepted||
            (c.shadow!=null&&c.shadow.units!=c.champion.units+2)||
            (c.shadow==null&&(c.shadowTrains!=0||c.shadowValidations!=0))||d.available()!=0)

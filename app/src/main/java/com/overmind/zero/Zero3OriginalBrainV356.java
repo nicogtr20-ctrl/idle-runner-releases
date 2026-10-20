@@ -325,6 +325,12 @@ final class Zero3OriginalBrainV356 {
             brain.witnessedMaterialMotionV371(outcome.deltaX,outcome.deltaY,
                 elapsed,outcome.physicalEvidence,disturbed||outcome.externalCorrection||
                 outcome.censored,heldout);
+            // Genuine ORIGINAL material displacement relative to the COM
+            // velocity at PRE sensing. Censor storm, contacts, terminal,
+            // solver interventions; never fabricate a STOP/turn reward.
+            brain.witnessedInertialTurnV377(outcome.deltaX,outcome.deltaY,
+                elapsed,outcome.physicalEvidence&&!disturbed&&
+                !outcome.externalCorrection&&!outcome.censored,heldout);
             brain.physicalTargetsV353(targets,heldout);
             brain.consequenceObservedV352(after,net,heldout,elapsed,reserve<=0,genuineTerminal);
             brain.completeExecutiveV354(outcome.score,net,harm,

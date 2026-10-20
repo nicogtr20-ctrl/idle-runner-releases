@@ -197,6 +197,15 @@ final class TelemetryGitHub {
                     v3.put("contactValenceAmbiguousV369",neural.cognition.contactAmbiguous);
                     v3.put("verifiedPhysicalDirectionsV371",
                         neural.cognition.verifiedMotorDirectionsV371);
+                    // V377 physically meaningful motor confidence: PRE
+                    // velocity-conditioned against continued inertial travel,
+                    // not V371's zero-velocity historical test.
+                    v3.put("verifiedInertialContextsV377",
+                        neural.cognition.inertiaVerifiedContextsV377);
+                    v3.put("cleanPhysicalTurnsV377",
+                        neural.cognition.inertiaCleanV377);
+                    v3.put("disturbedPhysicalTurnsV377",
+                        neural.cognition.inertiaContaminatedV377);
                     v3.put("linkedHistoricalEnergyContactsV371",
                         neural.cognition.linkedRealContactsV371);
                     v3.put("ambiguousHistoricalEnergyContactsV371",
