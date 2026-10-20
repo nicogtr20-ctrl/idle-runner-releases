@@ -171,6 +171,22 @@ public final class Zero3CognitionV353 {
     float contactValenceScoreV369(float[] observation,float dx,float dy){
         return contactValence.utility(observation,dx,dy);
     }
+    /** The original physical motor model's zero-motion baseline is valid
+     * ONLY if PRE measured COM speed is near zero. Preserve those previously
+     * approved rest-start learned skills. For moving body, replace them with
+     * V377 inertia-conditional heldout physical evidence.
+     */
+    private static boolean nearlyStillV377(float[] observation){
+        return observation!=null&&observation.length==INPUTS&&
+            Math.hypot(observation[191]*130f,observation[192]*130f)<.50d;
+    }
+    private float liveMotorPreferenceV377(float[] observation,float[] action){
+        if(nearlyStillV377(observation)&&
+           instrumental.hasVerifiedDirectionalEvidence(observation,contactValence))
+            return instrumental.score(observation,action,contactValence)+
+                instrumental.opticalPreferenceV374(observation,action,contactValence);
+        return inertial.opticalScore(observation,action,contactValence);
+    }
     int select(float[] observation,float[][] proposals){
         // A trusted one-step model is ONE source of evidence. The original
         // controller also demanded REAL, independently heldout movement
@@ -192,7 +208,7 @@ public final class Zero3CognitionV353 {
             // accumulated enough clean motor trials to pass V371's gait
             // confidence threshold. V371 verified motion adds evidence.
             float score=movementScore+
-                inertial.opticalScore(observation,proposals[i],contactValence);
+                liveMotorPreferenceV377(observation,proposals[i]);
             if(canPredict){
                 float[][] p=champion.predict(input(observation,proposals[i]),false,null);
                 float energy=mean(p,0),damage=mean(p,1),cost=mean(p,2),uncertainty=0;
@@ -215,10 +231,12 @@ public final class Zero3CognitionV353 {
         return instrumental.score(observation,action,contactValence);
     }
     float realContactPreferenceV374(float[] observation,float[] action){
-        return inertial.opticalScore(observation,action,contactValence);
+        return liveMotorPreferenceV377(observation,action);
     }
     boolean verifiedDirectionalV371(float[] observation){
-        return inertial.hasVerifiedVisible(observation,contactValence);
+        return (nearlyStillV377(observation)&&
+            instrumental.hasVerifiedDirectionalEvidence(observation,contactValence))||
+            inertial.hasVerifiedVisible(observation,contactValence);
     }
     boolean repeatedRealMotorStallV371(){return instrumental.repeatedRealMotorStall();}
     void physicalMotorV371(float dx,float dy,float elapsed,boolean physical,
