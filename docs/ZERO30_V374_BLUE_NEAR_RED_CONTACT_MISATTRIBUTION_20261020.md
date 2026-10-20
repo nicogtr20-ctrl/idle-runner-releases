@@ -1,3 +1,5 @@
+> **AGGIORNAMENTO V374 MUSCOLI REALI:** anche la correzione visiva non deve giudicare il rischio dalla direzione INTESA. Il telefono ha 2920 decisioni a moto contrario; `Zero3InstrumentalCreditV371.opticalPreferenceV374` usa l'orientamento dello spostamento MATERIALE realmente misurato solo per le direzioni con convalida motoria heldout, e considera le altre come ipotesi ottiche a peso .35. Il nuovo quinto test verifica comando EAST→movimento fisico WEST e predilige la direzione col miglior effetto MATERIALE, non l'intento. Workflow V374 ora **32 test** (5 nuovi + 27 storici), mai segnalare come PASS prima del run del nuovo HEAD.
+
 # ZERO3 V374 — BLUE NEAR RED: FORENSIC ROOTS AND TARGETED, NON-OTA FIX
 
 **20 ottobre 2026.** User field failure on signed OTA373 V372. The actual phone report is `zero-telemetry/history/20261020-100211-2876e7c7f52c9.json` (`zero-telemetry/reports/20261020-100211-2876e7c7f52c9/`). The user reports that ZERO approaches red even when blue is near.
@@ -21,7 +23,7 @@
 - V353 selection adds learned V369 directional utility directly, not requiring gait learning to classify real observed source effects. Motor-outcome skill is still used where independently validated. V354 planner and executive memories cannot erase a substantially better physical contact preference in the final decision.
 - Existing V353/V369/V371 binary checkpoint formats, 12 slots, established GRU weights, cortex, V319 grip, V370 wind, V372 frozen motor probe, original physical world are unchanged.
 - `Zero374RealTouchOpticalIdentityAndroidTest`: two subcases demonstrate old ambiguous and wrong-attribution behavior and new correct material outcome, learned preference reversal on mirrored scenes, heldout-safe new touch, six-action causal consistency.
-- Workflow `zero374-contact-original-android.yml`: 4 new plus 27 historical real Android tests (31 tests); first run exposed a new TEST EXPECTATION mistake (legacy returned ambiguous instead of wrong band for 0.90/0.99 — correct, a *different* original bug). Test corrected to assert both original ambiguous and actual false-valence scenario (0.65/0.99), no production logic was altered as a workaround.
+- Workflow `zero374-contact-original-android.yml`: 5 new plus 27 historical real Android tests (32 tests); first run exposed a new TEST EXPECTATION mistake (legacy returned ambiguous instead of wrong band for 0.90/0.99 — correct, a *different* original bug). Test corrected to assert both original ambiguous and actual false-valence scenario (0.65/0.99), no production logic was altered as a workaround.
 
 ## DO NOT CLAIM (OPEN GATES)
 - These are root causes demonstrable in source code, but not yet proof of full recovery of voluntary survival.
