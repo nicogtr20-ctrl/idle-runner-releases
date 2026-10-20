@@ -181,7 +181,12 @@ public final class Zero3CognitionV353 {
         int best=0;float bestScore=-Float.MAX_VALUE,original=Float.NaN;
         for(int i=0;i<proposals.length;i++){
             float movementScore=instrumental.score(observation,proposals[i],contactValence);
-            float score=movementScore;
+            // V374: actual material injury is already learned in V369,
+            // so it must affect selection even for headings that have not
+            // accumulated enough clean motor trials to pass V371's gait
+            // confidence threshold. V371 verified motion adds evidence.
+            float score=movementScore+
+                contactValence.utility(observation,proposals[i][0],proposals[i][1]);
             if(canPredict){
                 float[][] p=champion.predict(input(observation,proposals[i]),false,null);
                 float energy=mean(p,0),damage=mean(p,1),cost=mean(p,2),uncertainty=0;
@@ -202,6 +207,10 @@ public final class Zero3CognitionV353 {
     }
     float instrumentalScoreV371(float[] observation,float[] action){
         return instrumental.score(observation,action,contactValence);
+    }
+    float realContactPreferenceV374(float[] observation,float[] action){
+        return instrumental.score(observation,action,contactValence)+
+            contactValence.utility(observation,action[0],action[1]);
     }
     boolean verifiedDirectionalV371(float[] observation){
         return instrumental.hasVerifiedDirectionalEvidence(observation,contactValence);
