@@ -460,6 +460,10 @@ public final class Zero3LearningFoundation {
         private long lastDecision=-1,episode=-1,startedRevision;
         private boolean train,heldout,external,censored;
         private float startX,startY,lastX,lastY,endX,endY,gross,work,impulse,seconds;
+        // V378 ORIGINAL V3 ONLY: measured momentum at the PRE decision boundary.
+        // This is not a force, target position, reward for distance, or schema field.
+        private float startVxV378,startVyV378;
+        private boolean momentumCreditV378;
         private int frames;
         private long trained,validated,discarded;
         public Coordinator(AdaptiveCortex cortex){
@@ -476,10 +480,16 @@ public final class Zero3LearningFoundation {
         /** Optional matched heldout experiment uses exploration but NEVER gradients. */
         public void begin(MotorIntent intent,MotorBrain.Body b,boolean train,boolean heldout,
                           boolean exploration){
-            begin(intent,b,train,heldout,exploration,false);
+            begin(intent,b,train,heldout,exploration,false,false);
         }
         public void begin(MotorIntent intent,MotorBrain.Body b,boolean train,boolean heldout,
                           boolean exploration,boolean externallyOwnedGripV361){
+            begin(intent,b,train,heldout,exploration,externallyOwnedGripV361,false);
+        }
+        /** V378: opt-in ONLY on original ZERO3 S21. Other V3 lab/legacy scores remain identical. */
+        public void begin(MotorIntent intent,MotorBrain.Body b,boolean train,boolean heldout,
+                          boolean exploration,boolean externallyOwnedGripV361,
+                          boolean momentumCreditV378){
             if(intent==null||b==null||active!=null)throw new IllegalStateException("pending or null");
             if(train==heldout)throw new IllegalArgumentException("must choose train XOR heldout");
             if(intent.decisionId<=lastDecision&&intent.episodeId==episode)
@@ -489,6 +499,10 @@ public final class Zero3LearningFoundation {
             lastDecision=intent.decisionId;episode=intent.episodeId;startedRevision=cortex.revision();
             startX=lastX=endX=b.cx;startY=lastY=endY=b.cy;
             frames=0;gross=work=impulse=seconds=0;
+            this.momentumCreditV378=momentumCreditV378;
+            startVxV378=b.cvx;startVyV378=b.cvy;
+            if(momentumCreditV378&&(!Float.isFinite(startVxV378)||!Float.isFinite(startVyV378)))
+                throw new IllegalArgumentException("V378 nonfinite physical PRE momentum");
             cortex.begin(exploration,intent,externallyOwnedGripV361);
         }
         public float[] actuate(MotorBrain.Body body,Morphology.Surface skin,float dt){
@@ -519,6 +533,22 @@ public final class Zero3LearningFoundation {
             float dx=endX-startX,dy=endY-startY;
             float projection=dx*active.x+dy*active.y;
             float progress=projection/(4f+Math.max(gross,projection));
+            if(momentumCreditV378){
+                // A body already sliding EAST may physically brake toward WEST
+                // yet keep moving EAST briefly. Absolute displacement called
+                // that useful response negative (OTA377 failure).
+                // Compare against unchanged PRE linear momentum over the SAME
+                // real duration. It is an inertial reference, NOT a simulated
+                // world, passive-drag estimate or proof of causal actuator work.
+                // Valid cortex training still requires real muscle impulse,
+                // zero world correction and an uncensored outcome below.
+                float inertialDx=startVxV378*seconds,inertialDy=startVyV378*seconds;
+                float correctionX=dx-inertialDx,correctionY=dy-inertialDy;
+                float correction=correctionX*active.x+correctionY*active.y;
+                float referenceDistance=(float)Math.hypot(inertialDx,inertialDy);
+                progress=limit(correction/
+                    (4f+Math.max(gross,referenceDistance)),-1f,1f);
+            }
             float idlePenalty=.01f*work;
             float score=limit(progress-idlePenalty,-1f,1f);
             boolean physical=frames>=4&&impulse>.5f&&!censored;
