@@ -28,6 +28,9 @@ final class Zero3InstrumentalCreditV371 {
     private int pendingBank=-1;
     private boolean pendingHeldout;
     private int lastBank=-1,stalledStreak;
+    // Short-lived physically experienced damage: urgency, not innate hue.
+    private int recentHarmBand=-1;
+    private float recentHarmTime;
     private static float limit(float x,float a,float b){return Math.max(a,Math.min(b,x));}
     private static int heading(float x,float y){
         if(!Float.isFinite(x)||!Float.isFinite(y)||Math.hypot(x,y)<.1)
@@ -49,6 +52,8 @@ final class Zero3InstrumentalCreditV371 {
            !Float.isFinite(dx)||!Float.isFinite(dy)||
            !Float.isFinite(seconds)||seconds<=0||seconds>.651f)
             throw new IllegalStateException("V371 incomplete physical evidence");
+        recentHarmTime=Math.max(0f,recentHarmTime-seconds);
+        if(recentHarmTime==0f)recentHarmBand=-1;
         if(clean){
             // Normalized to a physical 0.30s decision for comparable trials.
             // This is a measured displacement, NOT an authored motion target.
@@ -100,6 +105,9 @@ final class Zero3InstrumentalCreditV371 {
             else runner=Math.max(runner,x);
         }
         if(found<0||peak<.25f||peak<runner*1.15f){ambiguousContacts++;return;}
+        // A temporary risk emphasis is permitted ONLY after a real negative
+        // energy observation with a non-ambiguous visible wavelength.
+        if(actualDelta<0f){recentHarmBand=found;recentHarmTime=4.5f;}
         // Verify that PREVIOUS motor choices actually approached a visible
         // frequency that later caused real energy gain/loss. The signed
         // contact outcome itself is handled by V369, once, separately.
@@ -136,9 +144,16 @@ final class Zero3InstrumentalCreditV371 {
         if(!motorVerified(bank))return 0f;
         float mx=learnedX[bank],my=learnedY[bank];
         float reward=0f,brightness=0f;
+        // Sensor 188 is ACTUAL reserve in [-1,+1], not a food label.
+        float currentReserve=limit((observation194[188]+1f)*.5f,0f,1f);
+        float positiveNeed=.35f+1.25f*(1f-currentReserve);
         for(int b=0;b<BANDS;b++){
             float value=contact.valueForInstrumentalV371(b);
             if(Math.abs(value)<.10f)continue;
+            float urgency=recentHarmBand==b&&recentHarmTime>0f?1.35f:1f;
+            // Real injury remains costly at full reserve; actual positive
+            // energy becomes more important as measured reserve decreases.
+            value*=value>0f?positiveNeed:1.35f*urgency;
             for(int ray=0;ray<8;ray++){
                 float seen=observation194[20+b*8+ray];
                 if(!Float.isFinite(seen)||seen<0||seen>1)
@@ -167,7 +182,8 @@ final class Zero3InstrumentalCreditV371 {
         return false;
     }
     void abort(){pendingSight=null;pendingBank=-1;pendingHeldout=false;}
-    void newLife(){abort();history=0;stalledStreak=0;lastBank=-1;}
+    void newLife(){abort();history=0;stalledStreak=0;lastBank=-1;
+        recentHarmBand=-1;recentHarmTime=0f;}
     void copyTo(Zero3InstrumentalCreditV371 c){
         System.arraycopy(learnedX,0,c.learnedX,0,BINS);
         System.arraycopy(learnedY,0,c.learnedY,0,BINS);
