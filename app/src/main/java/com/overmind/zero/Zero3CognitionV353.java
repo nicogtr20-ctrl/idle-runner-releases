@@ -192,6 +192,7 @@ public final class Zero3CognitionV353 {
     boolean verifiedDirectionalV371(float[] observation){
         return instrumental.hasVerifiedDirectionalEvidence(observation,contactValence);
     }
+    boolean repeatedRealMotorStallV371(){return instrumental.repeatedRealMotorStall();}
     void physicalMotorV371(float dx,float dy,float elapsed,boolean physical,
                             boolean disturbed,boolean heldout){
         instrumental.complete(dx,dy,elapsed,physical&&!disturbed,heldout);
