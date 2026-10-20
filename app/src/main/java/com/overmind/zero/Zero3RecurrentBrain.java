@@ -243,7 +243,9 @@ public final class Zero3RecurrentBrain {
         float[][] noiseScale=new float[options.length][MOTOR];
         for(int k=0;k<options.length;k++){
             for(int j=0;j<MOTOR;j++){
-                float scale=k>0&&j<2?(k>=4?7f:k>=2?3f:1.5f):1f;
+                float scale=k>0&&j<2?
+                    (realStall?(k>=4?7f:k>=2?3f:1.5f):
+                     learnedBearing?(k>=3?4f:2.5f):1f):1f;
                 noiseScale[k][j]=scale;
                 noise[k][j]=k==0?lastNoise[j]:sample()*scale;
             }
