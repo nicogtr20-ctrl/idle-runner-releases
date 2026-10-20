@@ -267,7 +267,7 @@ public final class Zero3RecurrentBrain {
         System.arraycopy(noiseScale[selected],0,selectedNoiseScaleV369,0,MOTOR);
         float[] authorized=options[selected];
         optionReplayV354=false;
-        if(executive!=null){authorized=executive.propose(x,authorized,decision,observeV354);optionReplayV354=executive.usedMemory();}
+        if(executive!=null){authorized=executive.propose(x,authorized,decision,observeV354,cognition);optionReplayV354=executive.usedMemory();}
         float dx=authorized[0],dy=authorized[1],effort=authorized[2],
             adhesion=authorized[3],duration=authorized[4];
         if(cognition!=null)cognition.begin(x,authorized,
