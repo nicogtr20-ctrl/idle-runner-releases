@@ -7,6 +7,6 @@
   "apkUrl": "https://overmind-zero-updates.vercel.app/apk/overmind-zero-1188-test-ca5671d7a1b0.apk",
   "sha256": "ca5671d7a1b0f0aa74c325756951985d03fe20df326929ec831136164e1c40ba",
   "sizeBytes": 938072,
-  "notes": "OTA377 TEST: apprendimento effettivo cambio moto rispetto alla velocita PRE e inerzia, 42 test Android. Autonomia di evitamento NON certificata.",
+  "notes": "OTA378 TEST: corretto credito muscolare di frenata e sterzata rispetto all'inerzia PRE; 43 test Android superati. Evitamento autonomo non ancora certificato.",
   "publishedAt": "2026-10-20T17:17:12.669505+00:00"
 }
