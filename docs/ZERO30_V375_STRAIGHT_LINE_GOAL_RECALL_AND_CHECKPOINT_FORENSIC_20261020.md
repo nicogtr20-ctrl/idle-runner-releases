@@ -1,0 +1,22 @@
+# ZERO3 V375 — apparent improvement then straight-line red collisions, forensic and minimal repair
+**20 Oct 2026, experimental branch only.** Source OTA374 S21 report `zero-telemetry/history/20261020-104433-289b88664d905.json` remains actual phone evidence, not automatic approval of a fix.
+
+## Observations actually in last OTA374 snapshot
+- GRU completed 13,588 decisions (10,872 train / 2,716 heldout); learned contact light frequencies `[22,30,0]` with means `[+0.9982,-0.9307,0]`. Unlike OTA373, direct positive and negative optical learning both function.
+- `m361` physical diagnostics: 8,377 aligned vs 2,919 opposed, 3,926 externally corrected, 446 almost-static. Signed material progress 7,107 / gross 17,224 ≈ 41.3%; motor competence remains inadequate.
+- Motor direction azimuth histogram `[1169,1006,1448,4706,2044,1461,892,862]`: one bucket ≈35% (4,706/13,588). A high heading concentration is NOT by itself evidence of continuous physical straight-line motion. The phone's report is consistent with persistent heading, repeated steering, or external disturbance; telemeter intent, final action and actual turn to discriminate.
+- Life history 18 completed; first nine lives have 15 blue pickups and 5 harmful contacts, last eight lives have only 8 blue and 29 reds (one life boundary excluded in this quick split). Subjective early improvement, late regression is SUPPORTED, but not causal identification of memory. Overall life journal lists 25 blue, 34 red over 18 completed; the current live episode separately reports 1 blue and 4 red. These totals are NOT the same as GRU 22/30 learned associations.
+
+## Verified source inconsistency corrected by V375
+- `Zero3ExecutiveV354.complete` V371 allowed goal continuity up to 24 completed decisions, while `Zero3ExecutiveV354.decode` still threw IOException on `goalAge>4`. Thus a valid saver could emit age5...24 that its own decoder refused. **Code corrected to accept <=24**, with unchanged binary schema367, options, old GRU, 12 named slots, existing checksums and signed app unchanged.
+- The V354 16 learned options can recall an entire motor policy without comparing absolute risk; V374 guarded only when another GRU action looked meaningfully better by >.035. V375 adds a bounded **veto of optically and physically learned negative risk** on one memorized option, even if the GRU also happens to propose a risky action. This does NOT synthesize a turn or force a safe direction, does NOT delete prior skill memory or rewrite learned valence; it prevents a dangerous old-memory override and leaves the sole GRU's sampled proposal.
+- Important LIMITATION: since this veto does not author a new turn, a GRU proposal already pointing straight into danger can STILL do so. No claim of solved avoidance. Need PRE/POST and visual risk score logging on real scene as a later step, not yet coded in V375. Likewise source code does not confirm that old option recall explains actual S21 trajectory.
+
+## Correct test/ship gates
+- `Zero375GoalMemorySafetyAndroidTest` checks real encoded goal ages 0/4/5/12/23/24, preservation of bytes and rejection age25; separately makes a historically learnable option eligible for recall and verifies that same memory is NOT recalled when real train-world material contacts demonstrate net harm along that path. Also verifies option retained in checkpoint.
+- Workflow `zero375-goal-memory-original-android.yml` runs the two new tests **and all 32 earlier Android regressions** (34 total), unsigned research only. Green tests prove schema/logic coherence, NOT free-world red avoidance.
+- Because `Zero3ConfigurationV354` includes `GOAL_MAX_DECISIONS=4` in a historic signed fingerprint, DO NOT silently rewrite schema354 hash or compatibility when changing runtime decoding; resolve old metadata in a versioned/migration-safe future change, not by breaking loaded saves.
+- No new OTA until request/test; current publicly available OTA374 remains `versionCode=1185`. Any OTA375 must use code >1185, same original certificate and NO forced neuron reset.
+
+## Problem not fully resolved
+- After 13,588 decisions, one heading bucket dominates and real-world motor avoidance remains very poor. A next acceptance test must record the exact alternative actions seen by V353 and final V354 choice, source-specific optical bearings in perceived retina, cognitive risk scores and true movement response as aligned/opposed; and independently quantify reduction of harmful exposures in blinded mixed blue/red worlds before calling it fixed.
