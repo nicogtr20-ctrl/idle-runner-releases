@@ -43,6 +43,10 @@ final class Zero3MotorPeripheralBridgeV364 {
         peripheral.chosen(bank,DistributedBodySense.sense(body,skin,chamber,objects),
             QUIET_RECURRENCE,0f,null,
             SymbioteMotorHeadV1.measuredSectorAngles(body,skin),body,skin);
+        // Previously adaptationEnabled(false) prevented weight updates
+        // but left fastProbe true every third decision. That jitter was
+        // part of the old 2.2 training motor, NOT a valid V3 command.
+        peripheral.silenceFrozenV3MotorProbeV372();
     }
     static void fastPhysicalRefine(float[] executing,SymbioteMotorHeadV1 peripheral,
                                    MotorBrain.Body body,Morphology.Surface skin,
