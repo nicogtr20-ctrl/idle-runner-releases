@@ -233,11 +233,12 @@ public final class Zero3RecurrentBrain {
         // direction, object location, scripted reflex or V2 decision issuer.
         boolean learnedBearing=cognition!=null&&cognition.hasVisibleContactKnowledgeV369(x);
         boolean verifiedMotor=cognition!=null&&cognition.verifiedDirectionalV371(x);
-        // Old 3-candidate near-actor sampler couldn't cover opposite
-        // directions before a useful predictor existed. These remain PURE
-        // random actor samples: no scripted destination, colored preference,
-        // compass policy or second brain.
-        float[][] options=new float[cognition==null?1:verifiedMotor?7:9][5];
+        // V371 blind 2003 real choices: forcing wide exploration before
+        // actual motor stall REGRESSED signed travel to 6.81% vs ~10%
+        // previously. Restore normal 3 actor candidates unless real
+        // physically repeated failure or learned wavelength exists.
+        boolean realStall=cognition!=null&&cognition.repeatedRealMotorStallV371();
+        float[][] options=new float[cognition==null?1:realStall?9:learnedBearing?7:3][5];
         float[][] noise=new float[options.length][MOTOR];
         float[][] noiseScale=new float[options.length][MOTOR];
         for(int k=0;k<options.length;k++){
