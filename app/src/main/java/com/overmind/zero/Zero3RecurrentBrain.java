@@ -283,7 +283,15 @@ public final class Zero3RecurrentBrain {
                 cognition.trusted(0)&&cognition.trusted(1)&&Float.isFinite(costMargin);
             int planned=plannerV354.select(x,decisionState,options,modelV354(),
                 ready,costTrusted,costMargin);
-            if(planned>=0)selected=planned;
+            if(planned>=0){
+                // A long-horizon forecast may be statistically trustworthy
+                // on MSE while contradicting ACTUAL experienced local harm.
+                // It must not override a safer sampled GRU action without
+                // enough independent real-contact evidence.
+                float selectedReal=cognition.realContactPreferenceV374(x,options[selected]);
+                float proposedReal=cognition.realContactPreferenceV374(x,options[planned]);
+                if(proposedReal+.035f>=selectedReal)selected=planned;
+            }
         }
         System.arraycopy(noise[selected],0,lastNoise,0,MOTOR);
         System.arraycopy(noiseScale[selected],0,selectedNoiseScaleV369,0,MOTOR);
