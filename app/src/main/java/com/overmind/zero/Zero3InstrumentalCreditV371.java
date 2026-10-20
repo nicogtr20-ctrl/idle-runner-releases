@@ -311,6 +311,7 @@ final class Zero3InstrumentalCreditV371 {
             d.writeInt(recentBank[i]);
         }
         inertia.write(d); // Optional V377 suffix after fully preserved V371.
+    }
     static Zero3InstrumentalCreditV371 read(DataInputStream d)throws IOException{
         if(d.readInt()!=VERSION)throw new IOException("V371 schema");
         Zero3InstrumentalCreditV371 m=new Zero3InstrumentalCreditV371();
