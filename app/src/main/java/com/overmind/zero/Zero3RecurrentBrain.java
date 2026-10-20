@@ -261,7 +261,7 @@ public final class Zero3RecurrentBrain {
         // proven a body-response map. Probability decays with lived real
         // decisions and never overrides an independently verified learned
         // energy/motor relation.
-        if(cognition!=null&&!verifiedMotor){
+        if(cognition!=null&&realStall&&!verifiedMotor){
             float exploration=.20f/(1f+(trainCount+validationCount)/1500f);
             if(random()<exploration)selected=Math.min(options.length-1,
                 (int)(random()*options.length));
