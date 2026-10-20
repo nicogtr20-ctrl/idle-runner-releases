@@ -219,7 +219,10 @@ final class Zero3OriginalBrainV356 {
                 issued=authority.issue(OWNER,cursor,(int)Math.min(Integer.MAX_VALUE,cortex.revision()),
                     356,choice.x,choice.y,choice.effort,choice.adhesion,choice.duration,
                     brain.measuredConfidenceV354());
-                motor.begin(choice,body,!heldout,heldout,true,true);
+                // Original 170-node gel only: physical motor credit is evaluated
+                // against measured PRE momentum. No change to GRU action,
+                // muscles, world forces, profile, or original 2.2 runtime.
+                motor.begin(choice,body,!heldout,heldout,true,true,true);
                 grip.begin(heldout);
                 if(physicalPeripheralV364!=null)
                     Zero3MotorPeripheralBridgeV364.begin(physicalPeripheralV364,
