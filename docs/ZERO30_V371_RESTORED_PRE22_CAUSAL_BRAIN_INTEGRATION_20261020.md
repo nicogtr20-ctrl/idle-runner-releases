@@ -1,3 +1,5 @@
+> **ESITO SCIENTIFICO NEGATIVO FONDAMENTALE (20/10/2026).** La prima revisione V371 [Android blind run 39347186614](https://github.com/nicogtr20-ctrl/idle-runner-releases/actions/runs/39347186614) ha completato **2.003 decisioni nel gioco originale, 0 BLU, 0 ROSSI (evitamento NON verificabile), progresso signed143.01018 U / distanza gross2100.05141 U = 6,81%**, sotto il gate 12%. La V371 non è stata promossa e **non è una riparazione locomotoria dimostrata**. La variante aveva 9 proposte rumorose e scelta esplorativa frequente, possibile regressione motoria ma NON causalmente isolata da un A/B matched. Successivo codice corregge l'esplorazione ampia: viene permessa SOLO dopo stallo ripetuto fisicamente misurato; mantenute 3 proposte normali e 7 con luce già appresa. Nuovo blind 2k avviato nel workflow `zero371-autonomous-original-android-2000.yml`, ancora non considerato riuscito senza risultato. Ricerca energia e protezione danni ancora aperte. NON pubblicare OTA.
+
 # ZERO 3.0 V371 — RIPRISTINO DELLE CAPACITÀ FUNZIONALI PRE-2.2
 20/10/2026 · **Ramo di ricerca, NON installato, NON OTA, NON verifica di sopravvivenza riuscita.**
 
