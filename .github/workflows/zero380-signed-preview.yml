@@ -1,0 +1,113 @@
+name: ZERO380 corrected physics and learned gems signed phone preview (stable OTA unchanged)
+on:
+  push:
+    branches: [fix/zero380-training-physical-spectral-recovery]
+    paths: ['.github/workflows/zero380-signed-preview.yml']
+  workflow_dispatch:
+permissions: {contents: write}
+jobs:
+  signed-preview:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    env:
+      OVERMIND_BUILD_NUMBER: '190'
+      OVERMIND_CANDIDATE_NAME: '3.0-ota.380-training.1'
+    steps:
+      - uses: actions/checkout@v4
+        with: {fetch-depth: 0}
+      - uses: actions/setup-java@v4
+        with: {distribution: temurin, java-version: '17'}
+      - name: Require successful same-source emulator QA and unchanged public update
+        run: |
+          set -euo pipefail
+          git diff --quiet a0b57b919de034173d09f6e3d390b1c60caeb818 HEAD -- app/src app/build.gradle
+          test -f app/src/main/java/com/overmind/zero/TrainingRoomV379.java
+          test -f app/src/androidTest/java/com/overmind/zero/Zero380FailureReproductionAndroidTest.java
+          python3 - <<'PY'
+          import json,urllib.request
+          url='https://api.github.com/repos/nicogtr20-ctrl/idle-runner-releases/actions/runs/39853229909'
+          with urllib.request.urlopen(urllib.request.Request(url,headers={'Accept':'application/vnd.github+json','User-Agent':'ZERO380-QA'}),timeout=20) as response:
+              run=json.load(response)
+          assert run['head_sha']=='34004ab059f2018d5ce5923d864f00839f3a334b'
+          assert run['conclusion']=='success' and run['status']=='completed'
+          print('ZERO380_SAME_SOURCE_ANDROID_EMULATOR_QA=PASS')
+          PY
+          git fetch origin main
+          python3 - <<'PY'
+          import json,subprocess
+          manifest=json.loads(subprocess.check_output(['git','show','origin/main:updater/public/latest.json'],text=True))
+          assert manifest['applicationId']=='com.overmind.zero.ota'
+          assert manifest['versionCode']==1188 and manifest['versionName']=='3.0-ota.378-test.1'
+          print('STABLE_OTA_IS_UNCHANGED_AND_COMPATIBLE=PASS')
+          PY
+      - name: Restore same production signing certificate privately
+        env:
+          SIGNING_BUNDLE: ${{ secrets.OVERMIND_SIGNING_BUNDLE }}
+        run: |
+          python3 - <<'PY'
+          import os,base64,json,pathlib
+          raw=os.environ.get('SIGNING_BUNDLE','')
+          if not raw:raise RuntimeError('Stable signing bundle is unavailable')
+          data=json.loads(base64.b64decode(raw,validate=True))
+          target=pathlib.Path(os.environ['RUNNER_TEMP'])/'zero380-stable-signing.p12'
+          target.write_bytes(base64.b64decode(data['keyStoreBase64'],validate=True))
+          target.chmod(0o600)
+          for secret in (data['password'],data['alias']):print('::add-mask::'+secret)
+          with open(os.environ['GITHUB_ENV'],'a') as e:
+              e.write('OVERMIND_KEYSTORE_FILE='+str(target)+'\n')
+              e.write('OVERMIND_KEYSTORE_PASSWORD='+data['password']+'\n')
+              e.write('OVERMIND_KEY_PASSWORD='+data['password']+'\n')
+              e.write('OVERMIND_KEY_ALIAS='+data['alias']+'\n')
+          PY
+      - name: Build signed install-over-existing experimental APK
+        run: gradle --no-daemon assembleRelease
+      - name: Verify original certificate and Android versionCode 1190 before distribution
+        run: |
+          set -euo pipefail
+          apk=app/build/outputs/apk/release/app-release.apk
+          bt=$(find "$ANDROID_HOME/build-tools" -mindepth 1 -maxdepth 1 -type d | sort -V | tail -n 1)
+          "$bt/apksigner" verify --print-certs --verbose "$apk" > "$RUNNER_TEMP/zero380-cert.txt"
+          "$bt/aapt" dump badging "$apk" > "$RUNNER_TEMP/zero380-package.txt"
+          python3 - <<'PY'
+          from pathlib import Path
+          import os,json,hashlib
+          root=Path(os.environ['RUNNER_TEMP'])
+          cert=(root/'zero380-cert.txt').read_text()
+          expected='45010684b4fd74de00f87fb81ca89e1e79b58409cf9fefc497b445b0fe19f583'
+          assert 'certificate SHA-256 digest: '+expected in cert,'Signing identity mismatch'
+          pkg=(root/'zero380-package.txt').read_text()
+          assert "package: name='com.overmind.zero.ota'" in pkg
+          assert "versionCode='1190'" in pkg and "versionName='3.0-ota.380-training.1'" in pkg
+          meta=json.loads(Path('app/build/outputs/apk/release/output-metadata.json').read_text())
+          assert meta['elements'][0]['versionCode']==1190
+          apk=Path('app/build/outputs/apk/release/app-release.apk').read_bytes()
+          print('SIGNATURE_PACKAGE_VERSION_ALL_PASS sha256='+hashlib.sha256(apk).hexdigest())
+          PY
+          mkdir -p "$RUNNER_TEMP/zero380-release"
+          cp "$apk" "$RUNNER_TEMP/zero380-release/OVERMIND-ZERO-TRAINING1-CORRECTED-380.apk"
+          sha256sum "$RUNNER_TEMP/zero380-release/OVERMIND-ZERO-TRAINING1-CORRECTED-380.apk" > "$RUNNER_TEMP/zero380-release/SHA256.txt"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: ZERO380-signed-installable-preview
+          path: |
+            ${{ runner.temp }}/zero380-release/OVERMIND-ZERO-TRAINING1-CORRECTED-380.apk
+            ${{ runner.temp }}/zero380-release/SHA256.txt
+          if-no-files-found: error
+      - name: Publish standalone signed prerelease; do not change Vercel or latest.json
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          tag=overmind-zero-v3.0-ota.380-corrective-preview
+          asset="$RUNNER_TEMP/zero380-release/OVERMIND-ZERO-TRAINING1-CORRECTED-380.apk"
+          if gh release view "$tag" --repo "${{ github.repository }}" >/dev/null 2>&1;then
+            echo "Immutable tag already exists: refusing to overwrite signed artifact"
+            exit 1
+          fi
+          gh release create "$tag" "$asset" "$RUNNER_TEMP/zero380-release/SHA256.txt" \
+            --repo "${{ github.repository }}" --target "${{ github.sha }}" \
+            --title 'OVERMIND ZERO 3.0 — Correzioni Training 1 e gemme (preview firmata)' --prerelease \
+            --notes 'ZERO380: 22 test Android verificati (8 nuovi casi e 14 regressioni). Blu/rosse influenzano la scelta solo dopo conseguenze fisiche realmente apprese; pareti Training collidono con 170 masse, stalli registrati senza credito motorio artificiale. VersionCode1190, medesimo certificato e package, aggiornamento su 1188/1189 senza disinstallare. OTA pubblica invariata. Risultato su Galaxy S21 ancora da verificare.'
+      - name: Remove private signing material
+        if: always()
+        run: rm -f "$RUNNER_TEMP/zero380-stable-signing.p12"
