@@ -175,6 +175,11 @@ public final class GameActivity extends Activity {
         SymbioteMotorHeadV1 symMotor=null;
         // Exactly one actor: the V3 neural transplant; original game remains the physics owner.
         Zero3OriginalBrainV356 brain3;
+        // The SAME live neural owner drives both exploration and Training 1.
+        TrainingRoomV379 trainingRoom=new TrainingRoomV379();
+        boolean trainingActive=false,trainingEditing=false;
+        int trainingTool=TrainingRoomV379.BLUE;
+        float trainingLastX=Float.NaN,trainingLastY=Float.NaN;
         String brain3Error="";
         // Measured ONLY from the original world's red contact and weather.
         // Reset each real simulation substep, not once per GRU decision.
@@ -453,16 +458,23 @@ public final class GameActivity extends Activity {
                 prefs.getFloat("record_net_v094",0),
                 prefs.getFloat("energy_spent_v094",0));
             speed=1;learning=true;simulationRunning=true;
+            trainingActive=prefs.getBoolean(TrainingRoomV379.ACTIVE_KEY,false);
+            trainingRoom=TrainingRoomV379.decode(
+                prefs.getString(TrainingRoomV379.LAYOUT_KEY,""));
+            trainingEditing=trainingActive;
             // A fresh install/explicit reset has no saved world. Regular
             // restarts and named slot loads rebuild exactly the stored scene.
-            if(wasReset||!restoreScene(prefs.getString("physical_scene_v100",""))){
+            if(wasReset||!restoreScene(prefs.getString(trainingActive?
+                TrainingRoomV379.SCENE_KEY:"physical_scene_v100",""))){
                 resetEpisode();
-                prefs.edit().remove("physical_scene_v100").apply();
+                prefs.edit().remove(trainingActive?
+                    TrainingRoomV379.SCENE_KEY:"physical_scene_v100").apply();
             }else if(!restoredLifeStats){
                 // Pre-0.10.4 scene: do not pretend we measured the full life.
                 // The next real death starts the first complete statistics sample.
                 lifeStats.markPartial();
             }
+            if(trainingActive)simulationRunning=false;
             save();
             try{
                 if(!useSymbiote||symMatter==null)throw new java.io.IOException(
@@ -589,7 +601,9 @@ public final class GameActivity extends Activity {
                 // Original scene bytes + completed V3 neural weights in ONE
                 // old working profile. Named saves copy the unchanged profile map.
                 android.content.SharedPreferences.Editor sceneEditor=prefs.edit()
-                    .putString("physical_scene_v100",snapshot.toString())
+                    .putString(trainingActive?
+                        TrainingRoomV379.SCENE_KEY:"physical_scene_v100",snapshot.toString())
+                    .putBoolean(TrainingRoomV379.ACTIVE_KEY,trainingActive)
                     .putString(DecisionBlackbox.CURRENT,decisionBlackbox.encodeCurrent())
                     .putString(GateLifeJournal.CURRENT,gateJournal.encode())
                     .putString(ContactGeometryForensics.KEY,contactGeometry.encode());
@@ -846,9 +860,12 @@ public final class GameActivity extends Activity {
             chamber=null;
             // Existing placed materials have priority over newly generated props.
             environment=new ArrayList<UnknownWorld.Entity>();
-            shelter.rehydrate(environment,creature.cx,creature.cy,null);
-            environment.addAll(WorldPlacement.spawn(episode,creature.cx,creature.cy,
-                scarcity,null,environment,surface));
+            if(trainingActive)environment.addAll(trainingRoom.newEntities());
+            else {
+                shelter.rehydrate(environment,creature.cx,creature.cy,null);
+                environment.addAll(WorldPlacement.spawn(episode,creature.cx,creature.cy,
+                    scarcity,null,environment,surface));
+            }
             chosenObject=null;
             goalTimer=0;contactsThisLife=0;worldTime=0;
             // A newborn life starts with a FULL physical reserve. This is
@@ -870,6 +887,7 @@ public final class GameActivity extends Activity {
                 (float)Math.atan2(sensorMind.motorY(),sensorMind.motorX());
         }
         void extendHabitat(){
+            if(trainingActive){phase=0;return;}
             shelter.capture(environment);
             // Keep the same physical body, velocity, memories and camera.
             // Place additional objects outside the immediate viewport.
@@ -939,7 +957,7 @@ public final class GameActivity extends Activity {
             float energyBeforeDrain=reserve;
             reserve=Math.max(0,reserve-(scarcity?.30f:.09f)*dt);
             mortality.energyFlows(dt,energyBeforeDrain-reserve,0,0);
-            if(scarcity&&elapsedLife>=nextChamber&&
+            if(!trainingActive&&scarcity&&elapsedLife>=nextChamber&&
                 (chamber==null||chamber.reachedEnergy)&&
                 // A completed room stays physical while ZERO or even one
                 // piece of its deformable membrane remains inside. It may
@@ -959,7 +977,7 @@ public final class GameActivity extends Activity {
             // Real AABB barrier/barrier contacts. No displacement bonus.
             ShelterEcology.separateBoxes(environment);
             // Scarcity must not spawn new entities every rendered frame.
-            if(environment.size()<3&&phase>=4f)extendHabitat();
+            if(!trainingActive&&environment.size()<3&&phase>=4f)extendHabitat();
             excludeOrdinaryRoomObjects();
             // No object selector or precomputed destination heading.
             chosenObject=null;
@@ -968,7 +986,7 @@ public final class GameActivity extends Activity {
             // Called AFTER the deformable body moves, so contact impulses
             // are consequences of its simulated physical movement.
             for(UnknownWorld.Entity object:environment){
-                if(object.isBox()||object.concealed)continue;
+                if(object.isBox()||object.isTrainingWall()||object.concealed)continue;
                 if(chamber!=null&&object==chamber.food)continue;
                 if(object.isMovable()){
                     float impulse=Morphology.collide(surface,object,dt)
@@ -1456,6 +1474,8 @@ public final class GameActivity extends Activity {
                     // artificially releases a valid separate-patch grip.
                     MaterialContactConstraints.reconcile(creature,surface,
                         environment,slice);
+                    if(trainingActive)
+                        TrainingRoomV379.constrain(creature,surface,environment);
                     // Read centroid from ACTUAL muscle material, not a
                     // simulated nucleus. Collision projection may move it.
                     if(useSymbiote&&symMatter!=null){
@@ -1488,9 +1508,9 @@ public final class GameActivity extends Activity {
                     // Weather reaches the actual deformable tissue AFTER
                     // solid collisions. Physical shadows protect only the
                     // points behind genuinely placed/solid blockers.
-                    ShelterEcology.Exposure weather=shelter.step(
+                    ShelterEcology.Exposure weather=trainingActive?null:shelter.step(
                         creature,surface,environment,chamber,worldTime,slice);
-                    if(weather.energyLoss>0){
+                    if(weather!=null&&weather.energyLoss>0){
                         float actual=Math.min(reserve,weather.energyLoss);
                         reserve-=actual;
                         brain3HarmThisPhysicalFrameV359+=actual;
@@ -1753,7 +1773,11 @@ public final class GameActivity extends Activity {
             renderWorld(c);
             renderBody(c);
             renderHud(c);
-            if(!brain3Error.isEmpty()){
+            if(trainingEditing)renderTrainingEditor(c);
+            else if(!testMax&&!settingsExpanded){
+                button(c,12,218,149,259,trainingActive?"MODIFICA":"TRAINING",TEAL);
+            }
+            if(!brain3Error.isEmpty()&&!trainingEditing){
                 rounded(c,20,H-208,460,H-160,0xe82a1726,12);
                 text(c,brain3Error.length()>72?brain3Error.substring(0,72):brain3Error,
                     240,H-178,10,0xffffd0ce,true);
@@ -1870,6 +1894,17 @@ public final class GameActivity extends Activity {
                             text(c,(int)shifted+" U",x,y-object.radius-10,9,GOLD,true);
                         }
                     }
+                }
+                if(object.isTrainingWall()){
+                    paint.setShader(null);paint.setColor(0xff496879);
+                    c.drawRect(x-object.radius,y-object.radius,
+                        x+object.radius,y+object.radius,paint);
+                    paint.setColor(0xff8ba8b3);paint.setStyle(Paint.Style.STROKE);
+                    paint.setStrokeWidth(1.2f);
+                    c.drawRect(x-object.radius,y-object.radius,
+                        x+object.radius,y+object.radius,paint);
+                    paint.setStyle(Paint.Style.FILL);
+                    continue;
                 }
                 if(object.isConstruction()){
                     // Thin rigid metal plate, visually AND physically rotated.
@@ -2465,11 +2500,17 @@ public final class GameActivity extends Activity {
             showBenchmark=true;
         }
         @Override public boolean onTouchEvent(MotionEvent ev){
+            if(trainingEditing)return trainingEditorTouch(ev);
             if(ev.getActionMasked()!=MotionEvent.ACTION_UP)return true;
             float scale=getWidth()/W;
             float x=ev.getX()/scale,y=ev.getY()/scale;
             if(showBenchmark){
                 showBenchmark=false;invalidate();return true;
+            }
+            if(!testMax&&!settingsExpanded&&x>=12&&x<=149&&y>=218&&y<=259){
+                if(trainingActive){trainingEditing=true;simulationRunning=false;}
+                else enterTraining();
+                invalidate();return true;
             }
             // One-tap emergency stop, deliberately separated from x1/x5/x20.
             if(testMax&&!settingsExpanded&&x>=12&&x<=160&&y>=208&&y<=268){
