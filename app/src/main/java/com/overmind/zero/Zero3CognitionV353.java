@@ -201,9 +201,16 @@ public final class Zero3CognitionV353 {
         }
         // No model = retain actor unless a motor direction is genuinely
         // verified AND visible experienced energy is large enough to matter.
-        if(!canPredict)return bestScore>original+.025f?best:0;
+        // V380: TWO real band contacts + visible photons are evidence, not
+        // a motor illusion. Keep the normal .025 caution for unexplained
+        // scenes, but never discard a verified contact's .0245 advantage
+        // solely because its photons were divided by eight and downweighted
+        // while the action-to-body mapping is still uncertain.
+        boolean materialValenceObserved=contactValence.hasReliableVisibleEvidence(observation);
+        float margin=materialValenceObserved?.005f:.025f;
+        if(!canPredict)return bestScore>original+margin?best:0;
         plannerUses++;
-        return bestScore>original+Math.max(.025f,costSafety)?best:0;
+        return bestScore>original+Math.max(margin,costSafety)?best:0;
     }
     float instrumentalScoreV371(float[] observation,float[] action){
         return instrumental.score(observation,action,contactValence);
@@ -218,7 +225,13 @@ public final class Zero3CognitionV353 {
     boolean repeatedRealMotorStallV371(){return instrumental.repeatedRealMotorStall();}
     void physicalMotorV371(float dx,float dy,float elapsed,boolean physical,
                             boolean disturbed,boolean heldout){
-        instrumental.complete(dx,dy,elapsed,physical&&!disturbed,heldout);
+        physicalMotorV371(dx,dy,elapsed,physical,disturbed,heldout,false);
+    }
+    void physicalMotorV371(float dx,float dy,float elapsed,boolean physical,
+                            boolean disturbed,boolean heldout,boolean blocked){
+        // Physical blockage is NOT clean motor skill evidence. Record a
+        // witnessed inability to advance, never a positive force/reward.
+        instrumental.complete(dx,dy,elapsed,physical&&!disturbed,heldout,blocked);
     }
     void begin(float[] observation,float[] actualProposal){
         begin(observation,actualProposal,heldout(trains+validations));
