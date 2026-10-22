@@ -33,6 +33,7 @@ final class Zero3OriginalBrainV356 {
     private long damagedDecisionsV359;
     private float maxVerifiedDecisionDamageV359;
     private boolean pending,heldout,disturbed;
+    private boolean physicallyTouchedSolidDuringDecisionV380;
     // V361: read-only measured motor execution since this app session began.
     // These are not rewards, goals, authored directions, or neural input.
     private long measuredMotorDecisionsV361,measuredPhysicalV361,externalMotorDecisionsV361;
@@ -214,6 +215,7 @@ final class Zero3OriginalBrainV356 {
                 beforeFuel=reserve;workAccum=0f;
                 actualDamageDuringDecisionV359=0f;
                 motorReserveSpentDuringDecisionV359=0f;elapsed=0;disturbed=false;
+                physicallyTouchedSolidDuringDecisionV380=false;
                 heldout=Zero3ConfigurationV354.heldout(cursor);
                 choice=brain.choose(prior194,epoch,cursor,cortex.revision());
                 issued=authority.issue(OWNER,cursor,(int)Math.min(Integer.MAX_VALUE,cortex.revision()),
@@ -280,7 +282,10 @@ final class Zero3OriginalBrainV356 {
                !Float.isFinite(motorReserveSpentDuringDecisionV359))
                 throw new IllegalStateException("Danno interocettivo cumulato non finito");
             motor.observe(body,dt,Math.max(0,work),Math.max(0,impulse),external,false);
-            for(float sensed:skin.touchSense)if(sensed>.2f){solidContactStepsV361++;break;}
+            for(float sensed:skin.touchSense)if(sensed>.2f){
+                solidContactStepsV361++;
+                physicallyTouchedSolidDuringDecisionV380=true;break;
+            }
             for(float held:skin.gripHold)if(held>=Morphology.GRIP_HOLD){heldContactStepsV361++;break;}
             grip.observeWorldV354(skin,objects,chamber,Math.max(0,work));
             workAccum+=Math.max(0,work);elapsed+=dt;disturbed|=external;
@@ -327,7 +332,8 @@ final class Zero3OriginalBrainV356 {
             // are excluded from clean instrumentality.
             brain.witnessedMaterialMotionV371(outcome.deltaX,outcome.deltaY,
                 elapsed,outcome.physicalEvidence,disturbed||outcome.externalCorrection||
-                outcome.censored,heldout);
+                outcome.censored,heldout,
+                physicallyTouchedSolidDuringDecisionV380);
             brain.physicalTargetsV353(targets,heldout);
             brain.consequenceObservedV352(after,net,heldout,elapsed,reserve<=0,genuineTerminal);
             brain.completeExecutiveV354(outcome.score,net,harm,
@@ -345,6 +351,7 @@ final class Zero3OriginalBrainV356 {
         pending=false;choice=null;issued=null;elapsed=0;prior194=null;
         actualDamageDuringDecisionV359=0f;
         motorReserveSpentDuringDecisionV359=0f;
+        physicallyTouchedSolidDuringDecisionV380=false;
         // issued authority count is ahead one. New authority starts exactly at
         // completed cursor without contaminating or reusing an incomplete ID.
         rearmAuthority();
