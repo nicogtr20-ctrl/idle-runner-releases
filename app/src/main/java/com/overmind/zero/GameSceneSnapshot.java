@@ -65,7 +65,7 @@ public final class GameSceneSnapshot {
     private static UnknownWorld.Entity loadEntity(JSONObject x,ScarcityLab room)throws Exception{
         boolean isFood=x.getBoolean("food");
         int law=x.getInt("law"),signature=x.getInt("signature");
-        if(law<0||law>6||signature<0||signature>=UnknownWorld.SIGNATURES)
+        if(law<0||law>7||signature<0||signature>=UnknownWorld.SIGNATURES)
             throw new IllegalArgumentException("Invalid physical signature");
         float sx=(float)x.getDouble("sx"),sy=(float)x.getDouble("sy");
         UnknownWorld.Entity e;
