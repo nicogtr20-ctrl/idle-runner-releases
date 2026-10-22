@@ -1,0 +1,77 @@
+name: ZERO381 1200-real-decisions user checkpoint motor validation
+on:
+  push:
+    branches: [feature/zero381-physical-motor-adaptation-flight-recorder]
+    paths: ['.github/workflows/zero381-user-checkpoint-closed-loop.yml']
+  workflow_dispatch:
+permissions: {contents: read}
+jobs:
+  motor-readout:
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v4
+        with: {fetch-depth: 0}
+      - uses: actions/setup-java@v4
+        with: {distribution: temurin, java-version: '17'}
+      - name: Read user's explicit latest ZERO380 upload into ephemeral test data
+        run: |
+          set -euo pipefail
+          git fetch origin zero-telemetry
+          python3 - <<'PY'
+          import subprocess,json,hashlib,os,pathlib
+          base="zero-telemetry/reports/20261022-212619-2fdb10b7a9743"
+          def fetch(path):
+              return subprocess.check_output(
+                  ["git","show","origin/zero-telemetry:"+path])
+          index=json.loads(fetch("zero-telemetry/current.json"))
+          assert index["reportId"]==base.rsplit("/",1)[-1], "Telemetry index points elsewhere"
+          assert index["installedVersionCode"]==1190
+          assert index["zero3Summary"]["completedDecisions"]==16246
+          fragments=[]
+          for i in range(3,22):
+              name=f"{base}/part-{i:03d}.json"
+              raw=fetch(name)
+              expected=next(part for part in index["parts"] if part["path"]==name)
+              assert hashlib.sha256(raw).hexdigest()==expected["sha256"]
+              p=json.loads(raw)
+              assert p["fragmentIndex"]==i-3 and p["fragmentCount"]==19
+              assert p["key"]=="zero3_original_brain_only_v356"
+              fragments.append(p["jsonFragment"])
+          recovered=json.loads("".join(fragments))
+          checkpoint=recovered["zero3_original_brain_only_v356"]
+          assert len(checkpoint)>500000
+          motorPart=json.loads(fetch(f"{base}/part-002.json"))
+          old=motorPart["currentZero"]["symbiote_motor_head_v1"]
+          assert old.startswith("smh1|")
+          out=pathlib.Path(os.environ["RUNNER_TEMP"])/"zero381-readonly-profile.json"
+          out.write_text(json.dumps({"brain":checkpoint,"motorHead":old}),encoding="utf-8")
+          out.chmod(0o600)
+          print("EXPLICIT_ZERO380_PROFILE_LOADED_READ_ONLY; decisions=16246; no sensitive contents logged")
+          PY
+      - name: Compile actual original physical body and test
+        run: gradle --no-daemon assembleDebug assembleDebugAndroidTest
+      - name: Enable KVM
+        run: |
+          echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' | sudo tee /etc/udev/rules.d/99-kvm4all.rules
+          sudo udevadm control --reload-rules
+          sudo udevadm trigger --name-match=kvm
+      - name: Matched V3 saved cortex / frozen V2 motor four-share controls
+        uses: reactivecircus/android-emulator-runner@v2
+        with:
+          api-level: 35
+          arch: x86_64
+          profile: pixel_6
+          disable-animations: true
+          script: |
+            bash -c 'set -euo pipefail; adb install -r app/build/outputs/apk/debug/app-debug.apk; adb install -r app/build/outputs/apk/androidTest/debug/app-debug-androidTest.apk; adb shell mkdir -p /sdcard/Android/data/com.overmind.zero.ota/files; adb push "$RUNNER_TEMP/zero381-readonly-profile.json" /sdcard/Android/data/com.overmind.zero.ota/files/zero381-readonly-profile.json >/dev/null; adb shell am instrument -w -r -e class com.overmind.zero.Zero381UserCheckpointClosedLoopAndroidTest com.overmind.zero.ota.test/androidx.test.runner.AndroidJUnitRunner 2>&1 | tee "$RUNNER_TEMP/zero381-motor-summary.txt"; grep -q "OK (1 test)" "$RUNNER_TEMP/zero381-motor-summary.txt"; ! grep -qE "FAILURES!!!|INSTRUMENTATION_FAILED|Process crashed" "$RUNNER_TEMP/zero381-motor-summary.txt"'
+      - name: Upload ONLY aggregate motor A/B response, never personal brain
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: ZERO381-user-checkpoint-1200-physical-decisions
+          path: ${{ runner.temp }}/zero381-motor-summary.txt
+          if-no-files-found: warn
+      - name: Delete temporary checkpoint bytes
+        if: always()
+        run: rm -f "$RUNNER_TEMP/zero381-readonly-profile.json"
