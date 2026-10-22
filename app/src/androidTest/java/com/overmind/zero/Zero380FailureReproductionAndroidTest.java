@@ -89,6 +89,43 @@ public final class Zero380FailureReproductionAndroidTest {
             s.x[0]<=108.05f);
         assertTrue("Physical velocity is not injected",s.vx[0]<=0f);
     }
+    @Test public void oppositeAndDiagonalLightsUseLearnedContactNotGlobalEastBias(){
+        for(int band=0;band<2;band++){
+            for(int azimuth=0;azimuth<8;azimuth++){
+                Zero3CognitionV353 cognition=new Zero3CognitionV353();
+                float[] atTouch=new float[24];
+                atTouch[band*8+azimuth]=1f;
+                float physicalEnergy=band==0?22f:-7f;
+                cognition.genuineContactV369(atTouch,physicalEnergy,false);
+                cognition.genuineContactV369(atTouch,physicalEnergy,false);
+                float theta=(float)(azimuth*Math.PI/4f);
+                float towardsX=(float)Math.cos(theta);
+                float towardsY=(float)Math.sin(theta);
+                float[] retina=new float[194];retina[20+band*8+azimuth]=.56f;
+                float[][] options=band==0?
+                    new float[][]{{-towardsX,-towardsY,.5f,.5f,.3f},
+                                  {towardsX,towardsY,.5f,.5f,.3f}}:
+                    new float[][]{{towardsX,towardsY,.5f,.5f,.3f},
+                                  {-towardsX,-towardsY,.5f,.5f,.3f}};
+                assertEquals("Learned optical preference must work in all 8 bearings, band="+band+", azimuth="+azimuth,
+                    1,cognition.select(retina,options));
+            }
+        }
+    }
+    @Test public void internalGelCannotTunnelAcrossWallAtHighVelocity(){
+        MotorBrain.Body body=new MotorBrain.Body();
+        Morphology.Surface skin=new Morphology.Surface(body);
+        SymbioteMatterV1 gel=new SymbioteMatterV1();
+        gel.reset(body,skin);
+        UnknownWorld.Entity wall=TrainingRoomV379.wall(120f,0f);
+        float dt=1f/60f;
+        gel.x[0]=170f;gel.y[0]=0f;
+        gel.vx[0]=6000f;gel.vy[0]=0f; // PRE=70, POST=170: crossed full tile
+        TrainingRoomV379.constrainInner(gel,wall,dt);
+        assertTrue("Fluid may not tunnel to the far side of solid tile",
+            gel.x[0]<=wall.x-wall.radius-1.45f);
+        assertTrue("Wall cannot supply positive motor velocity",gel.vx[0]<=0f);
+    }
     private static float[] oneRedAtEast(float brightness){
         float[] sight=new float[194];
         sight[20+8]=brightness;
