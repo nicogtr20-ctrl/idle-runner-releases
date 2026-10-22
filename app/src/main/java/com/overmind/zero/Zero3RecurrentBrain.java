@@ -157,8 +157,14 @@ public final class Zero3RecurrentBrain {
     }
     void witnessedMaterialMotionV371(float dx,float dy,float elapsed,
                                        boolean physicallyValid,boolean disturbed,boolean heldout){
+        witnessedMaterialMotionV371(dx,dy,elapsed,physicallyValid,disturbed,heldout,false);
+    }
+    void witnessedMaterialMotionV371(float dx,float dy,float elapsed,
+                                       boolean physicallyValid,boolean disturbed,boolean heldout,
+                                       boolean physicalObstruction){
         if(!pending||cognition==null)throw new IllegalStateException("V371 cannot train unsampled movement");
-        cognition.physicalMotorV371(dx,dy,elapsed,physicallyValid&&!observeV354,disturbed,heldout);
+        cognition.physicalMotorV371(dx,dy,elapsed,physicallyValid&&!observeV354,
+            disturbed,heldout,physicalObstruction);
     }
     void observedMaterialContactV374(int touchedOpticalBand,float[] retina24,
                                       float physicalDelta,boolean heldout){
