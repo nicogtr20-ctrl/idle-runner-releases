@@ -54,6 +54,10 @@ final class Zero3InstrumentalCreditV371 {
         inertia.begin(observation194,action,heldout);
     }
     void complete(float dx,float dy,float seconds,boolean clean,boolean heldout){
+        complete(dx,dy,seconds,clean,heldout,false);
+    }
+    void complete(float dx,float dy,float seconds,boolean clean,boolean heldout,
+                  boolean physicallyBlocked){
         if(pendingSight==null||pendingHeldout!=heldout||
            !Float.isFinite(dx)||!Float.isFinite(dy)||
            !Float.isFinite(seconds)||seconds<=0||seconds>.651f)
@@ -92,6 +96,20 @@ final class Zero3InstrumentalCreditV371 {
                 else stalledStreak=0;
                 lastBank=bank;
             }
+        }
+        // Real obstacle contact can censor the motor model, not the
+        // observation that the self-issued action failed to advance.
+        // Never store a fake response, assign positive motor credit,
+        // or directly command an escape turn.
+        if(!clean&&!heldout&&physicallyBlocked){
+            int bank=pendingBank;
+            float along=(dx*(float)Math.cos(bank*Math.PI/4)+
+                         dy*(float)Math.sin(bank*Math.PI/4))*.30f/seconds;
+            if(along<.35f){
+                stalledStreak=lastBank==bank?stalledStreak+1:1;
+                stalledActions++;
+            }else stalledStreak=0;
+            lastBank=bank;
         }
         abort();
     }
