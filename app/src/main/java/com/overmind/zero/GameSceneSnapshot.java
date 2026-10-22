@@ -65,7 +65,7 @@ public final class GameSceneSnapshot {
     private static UnknownWorld.Entity loadEntity(JSONObject x,ScarcityLab room)throws Exception{
         boolean isFood=x.getBoolean("food");
         int law=x.getInt("law"),signature=x.getInt("signature");
-        if(law<0||law>6||signature<0||signature>=UnknownWorld.SIGNATURES)
+        if(law<0||law>7||signature<0||signature>=UnknownWorld.SIGNATURES)
             throw new IllegalArgumentException("Invalid physical signature");
         float sx=(float)x.getDouble("sx"),sy=(float)x.getDouble("sy");
         UnknownWorld.Entity e;
@@ -248,7 +248,7 @@ public final class GameSceneSnapshot {
             }
             out.objects=new ArrayList<>();
             JSONArray a=root.getJSONArray("objects");
-            if(a.length()>64)return null;
+            // A bounded Training 1 room needs perimeter tiles plus edited objects.\n            if(a.length()>256)return null;
             int foodCount=0;
             for(int i=0;i<a.length();i++){
                 JSONObject obj=a.getJSONObject(i);

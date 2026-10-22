@@ -35,7 +35,7 @@ public final class UnknownWorld {
             this.x=x;this.y=y;this.spawnX=x;this.spawnY=y;
             this.signature=signature;this.law=physicalLaw;
             radius=physicalLaw==2?19:physicalLaw==5?SquareGripPuzzle.DIAGONAL:
-                   physicalLaw==6?PanelPhysics.halfLength(x,y)+2f:15;
+                   physicalLaw==6?PanelPhysics.halfLength(x,y)+2f:physicalLaw==7?12f:15;
         }
         /** Serialization uses physical identity without exposing it to policy. */
         int physicalLaw(){return law;}
@@ -61,6 +61,7 @@ public final class UnknownWorld {
         public float displacementFromSpawn(){
             return (float)Math.hypot(x-spawnX,y-spawnY);
         }
+        boolean isTrainingWall(){return law==7;}
         boolean isMovable(){return law==2;}
         boolean isBox(){return law==5||law==6;}
         /** Blank, physically graspable material; never covers hidden energy. */

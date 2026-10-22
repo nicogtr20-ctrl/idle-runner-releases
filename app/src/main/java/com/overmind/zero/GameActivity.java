@@ -17,6 +17,19 @@ import java.util.Locale;
  */
 public final class GameActivity extends Activity {
     private Lab lab;
+    // Read-only QA and explicit editor navigation for Android instrumentation.
+    boolean originalV379TrainingActiveForQA(){return lab!=null&&lab.trainingActive;}
+    int originalV379LayoutSizeForQA(){return lab==null?-1:lab.trainingRoom.size();}
+    void originalV379EnterTrainingForQA(){if(lab!=null)lab.enterTraining();}
+    void originalV379ExitTrainingForQA(){if(lab!=null)lab.exitTraining();}
+    boolean originalV379PlaceForQA(int type,float worldX,float worldY){
+        if(lab==null||!lab.trainingEditing)return false;
+        lab.trainingTool=type;
+        int before=lab.trainingRoom.size();
+        float sc=lab.trainingScale();
+        lab.trainingPlaceAt(240f+worldX*sc,lab.trainingCenterY()+worldY*sc);
+        return lab.trainingRoom.size()!=before;
+    }
     // Android integration checks: the ACTUAL original physics owner (not V355 lab).
     boolean originalV356NeuralOwnerForQA(){return lab!=null&&lab.brain3!=null&&lab.useSymbiote;}
     long originalV356DecisionsForQA(){return lab==null||lab.brain3==null?-1:lab.brain3.decisions();}
@@ -175,6 +188,12 @@ public final class GameActivity extends Activity {
         SymbioteMotorHeadV1 symMotor=null;
         // Exactly one actor: the V3 neural transplant; original game remains the physics owner.
         Zero3OriginalBrainV356 brain3;
+        // The SAME live neural owner drives both exploration and Training 1.
+        TrainingRoomV379 trainingRoom=new TrainingRoomV379();
+        boolean trainingActive=false,trainingEditing=false;
+        int trainingTool=TrainingRoomV379.BLUE;
+        boolean trainingLayoutDirty=false;
+        float trainingLastX=Float.NaN,trainingLastY=Float.NaN;
         String brain3Error="";
         // Measured ONLY from the original world's red contact and weather.
         // Reset each real simulation substep, not once per GRU decision.
@@ -453,16 +472,23 @@ public final class GameActivity extends Activity {
                 prefs.getFloat("record_net_v094",0),
                 prefs.getFloat("energy_spent_v094",0));
             speed=1;learning=true;simulationRunning=true;
+            trainingActive=prefs.getBoolean(TrainingRoomV379.ACTIVE_KEY,false);
+            trainingRoom=TrainingRoomV379.decode(
+                prefs.getString(TrainingRoomV379.LAYOUT_KEY,""));
+            trainingEditing=trainingActive;
             // A fresh install/explicit reset has no saved world. Regular
             // restarts and named slot loads rebuild exactly the stored scene.
-            if(wasReset||!restoreScene(prefs.getString("physical_scene_v100",""))){
+            if(wasReset||!restoreScene(prefs.getString(trainingActive?
+                TrainingRoomV379.SCENE_KEY:"physical_scene_v100",""))){
                 resetEpisode();
-                prefs.edit().remove("physical_scene_v100").apply();
+                prefs.edit().remove(trainingActive?
+                    TrainingRoomV379.SCENE_KEY:"physical_scene_v100").apply();
             }else if(!restoredLifeStats){
                 // Pre-0.10.4 scene: do not pretend we measured the full life.
                 // The next real death starts the first complete statistics sample.
                 lifeStats.markPartial();
             }
+            if(trainingActive)simulationRunning=false;
             save();
             try{
                 if(!useSymbiote||symMatter==null)throw new java.io.IOException(
@@ -589,7 +615,9 @@ public final class GameActivity extends Activity {
                 // Original scene bytes + completed V3 neural weights in ONE
                 // old working profile. Named saves copy the unchanged profile map.
                 android.content.SharedPreferences.Editor sceneEditor=prefs.edit()
-                    .putString("physical_scene_v100",snapshot.toString())
+                    .putString(trainingActive?
+                        TrainingRoomV379.SCENE_KEY:"physical_scene_v100",snapshot.toString())
+                    .putBoolean(TrainingRoomV379.ACTIVE_KEY,trainingActive)
                     .putString(DecisionBlackbox.CURRENT,decisionBlackbox.encodeCurrent())
                     .putString(GateLifeJournal.CURRENT,gateJournal.encode())
                     .putString(ContactGeometryForensics.KEY,contactGeometry.encode());
@@ -846,9 +874,12 @@ public final class GameActivity extends Activity {
             chamber=null;
             // Existing placed materials have priority over newly generated props.
             environment=new ArrayList<UnknownWorld.Entity>();
-            shelter.rehydrate(environment,creature.cx,creature.cy,null);
-            environment.addAll(WorldPlacement.spawn(episode,creature.cx,creature.cy,
-                scarcity,null,environment,surface));
+            if(trainingActive)environment.addAll(trainingRoom.newEntities());
+            else {
+                shelter.rehydrate(environment,creature.cx,creature.cy,null);
+                environment.addAll(WorldPlacement.spawn(episode,creature.cx,creature.cy,
+                    scarcity,null,environment,surface));
+            }
             chosenObject=null;
             goalTimer=0;contactsThisLife=0;worldTime=0;
             // A newborn life starts with a FULL physical reserve. This is
@@ -870,6 +901,7 @@ public final class GameActivity extends Activity {
                 (float)Math.atan2(sensorMind.motorY(),sensorMind.motorX());
         }
         void extendHabitat(){
+            if(trainingActive){phase=0;return;}
             shelter.capture(environment);
             // Keep the same physical body, velocity, memories and camera.
             // Place additional objects outside the immediate viewport.
@@ -933,13 +965,13 @@ public final class GameActivity extends Activity {
         void updateHabitat(float dt){
             worldTime+=dt;elapsedLife+=dt;
             lifeStats.tick(dt); // physics time, multiplied naturally by x1/x5/x20
-            if(!scarcity&&elapsedLife>=70f)scarcity=true;
+            if(!trainingActive&&!scarcity&&elapsedLife>=70f)scarcity=true;
             // Physiological requirement is part of the organism, NOT a
             // scripted plan for solving the current room.
             float energyBeforeDrain=reserve;
-            reserve=Math.max(0,reserve-(scarcity?.30f:.09f)*dt);
+            reserve=Math.max(0,reserve-(trainingActive?.09f:(scarcity?.30f:.09f))*dt);
             mortality.energyFlows(dt,energyBeforeDrain-reserve,0,0);
-            if(scarcity&&elapsedLife>=nextChamber&&
+            if(!trainingActive&&scarcity&&elapsedLife>=nextChamber&&
                 (chamber==null||chamber.reachedEnergy)&&
                 // A completed room stays physical while ZERO or even one
                 // piece of its deformable membrane remains inside. It may
@@ -959,7 +991,7 @@ public final class GameActivity extends Activity {
             // Real AABB barrier/barrier contacts. No displacement bonus.
             ShelterEcology.separateBoxes(environment);
             // Scarcity must not spawn new entities every rendered frame.
-            if(environment.size()<3&&phase>=4f)extendHabitat();
+            if(!trainingActive&&environment.size()<3&&phase>=4f)extendHabitat();
             excludeOrdinaryRoomObjects();
             // No object selector or precomputed destination heading.
             chosenObject=null;
@@ -968,7 +1000,7 @@ public final class GameActivity extends Activity {
             // Called AFTER the deformable body moves, so contact impulses
             // are consequences of its simulated physical movement.
             for(UnknownWorld.Entity object:environment){
-                if(object.isBox()||object.concealed)continue;
+                if(object.isBox()||object.isTrainingWall()||object.concealed)continue;
                 if(chamber!=null&&object==chamber.food)continue;
                 if(object.isMovable()){
                     float impulse=Morphology.collide(surface,object,dt)
@@ -1456,6 +1488,8 @@ public final class GameActivity extends Activity {
                     // artificially releases a valid separate-patch grip.
                     MaterialContactConstraints.reconcile(creature,surface,
                         environment,slice);
+                    if(trainingActive)
+                        TrainingRoomV379.constrain(creature,surface,environment);
                     // Read centroid from ACTUAL muscle material, not a
                     // simulated nucleus. Collision projection may move it.
                     if(useSymbiote&&symMatter!=null){
@@ -1488,9 +1522,9 @@ public final class GameActivity extends Activity {
                     // Weather reaches the actual deformable tissue AFTER
                     // solid collisions. Physical shadows protect only the
                     // points behind genuinely placed/solid blockers.
-                    ShelterEcology.Exposure weather=shelter.step(
+                    ShelterEcology.Exposure weather=trainingActive?null:shelter.step(
                         creature,surface,environment,chamber,worldTime,slice);
-                    if(weather.energyLoss>0){
+                    if(weather!=null&&weather.energyLoss>0){
                         float actual=Math.min(reserve,weather.energyLoss);
                         reserve-=actual;
                         brain3HarmThisPhysicalFrameV359+=actual;
@@ -1753,7 +1787,11 @@ public final class GameActivity extends Activity {
             renderWorld(c);
             renderBody(c);
             renderHud(c);
-            if(!brain3Error.isEmpty()){
+            if(trainingEditing)renderTrainingEditor(c);
+            else if(!testMax&&!settingsExpanded){
+                button(c,12,218,149,259,trainingActive?"MODIFICA":"TRAINING",TEAL);
+            }
+            if(!brain3Error.isEmpty()&&!trainingEditing){
                 rounded(c,20,H-208,460,H-160,0xe82a1726,12);
                 text(c,brain3Error.length()>72?brain3Error.substring(0,72):brain3Error,
                     240,H-178,10,0xffffd0ce,true);
@@ -1870,6 +1908,17 @@ public final class GameActivity extends Activity {
                             text(c,(int)shifted+" U",x,y-object.radius-10,9,GOLD,true);
                         }
                     }
+                }
+                if(object.isTrainingWall()){
+                    paint.setShader(null);paint.setColor(0xff496879);
+                    c.drawRect(x-object.radius,y-object.radius,
+                        x+object.radius,y+object.radius,paint);
+                    paint.setColor(0xff8ba8b3);paint.setStyle(Paint.Style.STROKE);
+                    paint.setStrokeWidth(1.2f);
+                    c.drawRect(x-object.radius,y-object.radius,
+                        x+object.radius,y+object.radius,paint);
+                    paint.setStyle(Paint.Style.FILL);
+                    continue;
                 }
                 if(object.isConstruction()){
                     // Thin rigid metal plate, visually AND physically rotated.
@@ -2464,12 +2513,198 @@ public final class GameActivity extends Activity {
             // Legacy off-screen target-driven benchmark was misleading.
             showBenchmark=true;
         }
+
+        /** Exploration's full physical checkpoint is kept separate. Learning
+         * ALWAYS belongs to the same Zero3OriginalBrainV356 object. */
+        void enterTraining(){
+            if(trainingActive||brain3==null)return;
+            testMax=false;simulationRunning=false;physicsClock.reset();
+            try{
+                save();saveScene();
+                String free=prefs.getString("physical_scene_v100","");
+                if(free.isEmpty())throw new IllegalStateException("Scena libera mancante");
+                if(!prefs.edit()
+                    .putString(TrainingRoomV379.FREE_SCENE_KEY,free)
+                    .putBoolean(TrainingRoomV379.ACTIVE_KEY,true).commit())
+                    throw new IllegalStateException("Impossibile conservare l'esplorazione");
+                trainingActive=true;settingsExpanded=false;
+                resetEpisode(); // new physical life, same learned V3 weights
+                trainingEditing=true;simulationRunning=false;
+                saveScene();
+            }catch(Exception problem){
+                simulationRunning=false;
+                brain3Error="Training: "+problem.getMessage();
+            }
+            lastFrame=0;invalidate();
+        }
+        void exitTraining(){
+            if(!trainingActive)return;
+            simulationRunning=false;testMax=false;
+            try{
+                save();saveScene();
+                String free=prefs.getString(TrainingRoomV379.FREE_SCENE_KEY,"");
+                if(!restoreScene(free))
+                    throw new IllegalStateException("Scena libera non ripristinabile");
+                if(brain3!=null)brain3.newLife(); // reset short-lived context only
+                trainingActive=false;trainingEditing=false;
+                if(!prefs.edit().putBoolean(TrainingRoomV379.ACTIVE_KEY,false)
+                    .remove(TrainingRoomV379.FREE_SCENE_KEY).commit())
+                    throw new IllegalStateException("Uscita Training non salvata");
+                simulationRunning=false; // user resumes exploration explicitly
+                saveScene();
+            }catch(Exception failure){
+                simulationRunning=false;
+                brain3Error="Uscita Training: "+failure.getMessage();
+            }
+            lastFrame=0;physicsClock.reset();invalidate();
+        }
+        float trainingScale(){
+            return Math.max(.12f,Math.min(428f/(TrainingRoomV379.HALF_W*2f),
+                (H-460f)/(TrainingRoomV379.HALF_H*2f)));
+        }
+        float trainingCenterY(){return 219f+TrainingRoomV379.HALF_H*trainingScale();}
+        void renderTrainingEditor(Canvas c){
+            paint.setShader(null);paint.setColor(0xf0061421);c.drawRect(0,0,W,H,paint);
+            text(c,"TRAINING 1  /  EDITOR",240,52,23,TEAL,true);
+            text(c,"STESSO CERVELLO 3.0 • STANZA PERSONALIZZATA",240,81,11,GOLD,true);
+            text(c,"Seleziona un oggetto e tocca la mappa",240,116,13,0xffdceef2,true);
+            text(c,"Trascina per disegnare muri • Gomma per eliminare",240,140,10,MUTED,true);
+            float sc=trainingScale(),cy=trainingCenterY();
+            float left=240-TrainingRoomV379.HALF_W*sc,right=240+TrainingRoomV379.HALF_W*sc;
+            float top=cy-TrainingRoomV379.HALF_H*sc,bottom=cy+TrainingRoomV379.HALF_H*sc;
+            paint.setColor(0xff101f2b);c.drawRect(left,top,right,bottom,paint);
+            paint.setColor(0x2232b6bd);paint.setStrokeWidth(1f);
+            for(int i=-9;i<=9;i++)c.drawLine(240+i*24*sc,top,240+i*24*sc,bottom,paint);
+            for(int j=-13;j<=13;j++)c.drawLine(left,cy+j*24*sc,right,cy+j*24*sc,paint);
+            paint.setColor(0xff80b6c6);paint.setStrokeWidth(6f);
+            paint.setStyle(Paint.Style.STROKE);c.drawRect(left,top,right,bottom,paint);
+            paint.setStyle(Paint.Style.FILL);
+            for(TrainingRoomV379.Item item:trainingRoom.items()){
+                float xx=240+item.x*sc,yy=cy+item.y*sc;
+                if(item.type==TrainingRoomV379.WALL){
+                    paint.setColor(0xff5f8899);
+                    c.drawRect(xx-12*sc,yy-12*sc,xx+12*sc,yy+12*sc,paint);
+                }else if(item.type==TrainingRoomV379.BOX){
+                    paint.setColor(0xffc5ab7a);
+                    c.drawRect(xx-20*sc,yy-20*sc,xx+20*sc,yy+20*sc,paint);
+                    paint.setColor(0xff594832);paint.setStrokeWidth(2f);
+                    c.drawLine(xx-18*sc,yy-18*sc,xx+18*sc,yy+18*sc,paint);
+                }else{
+                    paint.setColor(item.type==TrainingRoomV379.BLUE?0xff65dfda:
+                        item.type==TrainingRoomV379.RED?0xffff5f83:0xffb989ff);
+                    c.drawCircle(xx,yy,Math.max(3f,11*sc),paint);
+                }
+            }
+            if(Math.abs(creature.cx)<TrainingRoomV379.HALF_W&&
+               Math.abs(creature.cy)<TrainingRoomV379.HALF_H){
+                paint.setColor(0xffd5fff6);
+                c.drawCircle(240+creature.cx*sc,cy+creature.cy*sc,7f,paint);
+            }
+            text(c,"OGGETTI "+trainingRoom.size()+" / "+TrainingRoomV379.MAX_ITEMS,240,H-213,11,GOLD,true);
+            String[] labels={"BLU","ROSSA","VIOLA","CASSA","MURO","GOMMA"};
+            int[] colors={0xff65dfda,0xffff5f83,0xffb989ff,0xffc5ab7a,0xff80b6c6,0xffdceef2};
+            for(int i=0;i<labels.length;i++){
+                float l=7+i*78f;
+                button(c,l,H-196,l+75,H-146,labels[i],i==trainingTool?TEAL:colors[i]);
+                if(i==trainingTool){
+                    paint.setColor(0x557cfff0);paint.setStyle(Paint.Style.STROKE);
+                    paint.setStrokeWidth(2f);c.drawRoundRect(l,H-196,l+75,H-146,13,13,paint);
+                    paint.setStyle(Paint.Style.FILL);
+                }
+            }
+            button(c,10,H-125,156,H-68,"AVVIA",TEAL);
+            button(c,167,H-125,313,H-68,"PULISCI",GOLD);
+            button(c,324,H-125,470,H-68,"ESCI",0xffffa1b1);
+            text(c,"Il cervello non viene azzerato",240,H-34,12,MUTED,true);
+        }
+        void trainingPlaceAt(float screenX,float screenY){
+            float sc=trainingScale(),cy=trainingCenterY();
+            float xx=(screenX-240f)/sc,yy=(screenY-cy)/sc;
+            if(Math.abs(xx)>TrainingRoomV379.HALF_W-20||
+               Math.abs(yy)>TrainingRoomV379.HALF_H-20)return;
+            // A wall placed onto living tissue would be an artificial impact.
+            if(trainingTool!=TrainingRoomV379.ERASER &&
+               Math.hypot(xx-creature.cx,yy-creature.cy)<58f){
+                updaterStatus="Troppo vicino al corpo";
+                updaterStatusUntil=uiTime+3f;return;
+            }
+            if(!trainingRoom.place(trainingTool,xx,yy))return;
+            if(!prefs.edit().putString(TrainingRoomV379.LAYOUT_KEY,
+                trainingRoom.encode()).commit()){
+                trainingRoom=TrainingRoomV379.decode(
+                    prefs.getString(TrainingRoomV379.LAYOUT_KEY,""));
+                return;
+            }
+            if(brain3!=null)brain3.interrupt(); // no fake experience on map edits
+            environment=trainingRoom.newEntities();
+            trainingLayoutDirty=true;
+            boxLastPositions.clear();chosenObject=null;
+            invalidate();
+        }
+        boolean trainingEditorTouch(MotionEvent ev){
+            int action=ev.getActionMasked();
+            float sc=getWidth()/W;
+            float x=ev.getX()/sc,y=ev.getY()/sc;
+            float scale=trainingScale(),mid=trainingCenterY();
+            float left=240-TrainingRoomV379.HALF_W*scale;
+            float right=240+TrainingRoomV379.HALF_W*scale;
+            float top=mid-TrainingRoomV379.HALF_H*scale;
+            float bottom=mid+TrainingRoomV379.HALF_H*scale;
+            boolean onMap=x>=left&&x<=right&&y>=top&&y<=bottom;
+            if((action==MotionEvent.ACTION_DOWN||
+                 action==MotionEvent.ACTION_MOVE)&&onMap){
+                if(action==MotionEvent.ACTION_DOWN||
+                   (trainingTool==TrainingRoomV379.WALL||
+                    trainingTool==TrainingRoomV379.ERASER)&&
+                   (Float.isNaN(trainingLastX)||
+                    Math.hypot(x-trainingLastX,y-trainingLastY)>6f)){
+                    trainingLastX=x;trainingLastY=y;
+                    trainingPlaceAt(x,y);
+                }
+                return true;
+            }
+            if(action!=MotionEvent.ACTION_UP)return true;
+            trainingLastX=trainingLastY=Float.NaN;
+            if(trainingLayoutDirty){saveScene();trainingLayoutDirty=false;}
+            if(y>=H-196&&y<=H-146){
+                int index=(int)((x-7f)/78f);
+                if(index>=0&&index<=TrainingRoomV379.ERASER)trainingTool=index;
+            }else if(y>=H-125&&y<=H-68){
+                if(x<157){
+                    trainingEditing=false;simulationRunning=brain3!=null;
+                    physicsClock.reset();lastFrame=0;saveScene();
+                }else if(x<314){
+                    new android.app.AlertDialog.Builder(GameActivity.this)
+                        .setTitle("Svuotare Training 1?")
+                        .setMessage("Elimina tutti gli oggetti creati, ma conserva il cervello e le esperienze.")
+                        .setNegativeButton("ANNULLA",null)
+                        .setPositiveButton("PULISCI",(d,w)->{
+                            trainingRoom.clear();
+                            if(prefs.edit().putString(TrainingRoomV379.LAYOUT_KEY,
+                                trainingRoom.encode()).commit()){
+                                if(brain3!=null)brain3.interrupt();
+                                environment=trainingRoom.newEntities();
+                                boxLastPositions.clear();saveScene();
+                            }
+                            invalidate();
+                        }).show();
+                }else exitTraining();
+            }
+            invalidate();return true;
+        }
+
         @Override public boolean onTouchEvent(MotionEvent ev){
+            if(trainingEditing)return trainingEditorTouch(ev);
             if(ev.getActionMasked()!=MotionEvent.ACTION_UP)return true;
             float scale=getWidth()/W;
             float x=ev.getX()/scale,y=ev.getY()/scale;
             if(showBenchmark){
                 showBenchmark=false;invalidate();return true;
+            }
+            if(!testMax&&!settingsExpanded&&x>=12&&x<=149&&y>=218&&y<=259){
+                if(trainingActive){trainingEditing=true;simulationRunning=false;}
+                else enterTraining();
+                invalidate();return true;
             }
             // One-tap emergency stop, deliberately separated from x1/x5/x20.
             if(testMax&&!settingsExpanded&&x>=12&&x<=160&&y>=208&&y<=268){
