@@ -27,14 +27,7 @@ jobs:
           profile: pixel_6
           disable-animations: true
           script: |
-            set -euo pipefail
-            adb install -r app/build/outputs/apk/debug/app-debug.apk
-            adb install -r app/build/outputs/apk/androidTest/debug/app-debug-androidTest.apk
-            for fixture in Zero379SingleTrainingRoomAndroidTest Zero378PhysicalMotorCreditAndroidTest; do
-              adb shell am instrument -w -r -e class "com.overmind.zero.$fixture" com.overmind.zero.ota.test/androidx.test.runner.AndroidJUnitRunner 2>&1 | tee "/tmp/$fixture.txt"
-              grep -q "OK (" "/tmp/$fixture.txt"
-              ! grep -qE "FAILURES!!!|INSTRUMENTATION_FAILED|Process crashed" "/tmp/$fixture.txt"
-            done
+            bash -c 'set -euo pipefail; adb install -r app/build/outputs/apk/debug/app-debug.apk; adb install -r app/build/outputs/apk/androidTest/debug/app-debug-androidTest.apk; for fixture in Zero379SingleTrainingRoomAndroidTest Zero378PhysicalMotorCreditAndroidTest; do adb shell am instrument -w -r -e class "com.overmind.zero.$fixture" com.overmind.zero.ota.test/androidx.test.runner.AndroidJUnitRunner 2>&1 | tee "/tmp/$fixture.txt"; grep -q "OK (" "/tmp/$fixture.txt"; ! grep -qE "FAILURES!!!|INSTRUMENTATION_FAILED|Process crashed" "/tmp/$fixture.txt"; done'
       - name: Store test logs and unsigned candidate (never OTA)
         if: always()
         uses: actions/upload-artifact@v4
