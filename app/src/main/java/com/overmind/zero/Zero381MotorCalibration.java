@@ -58,6 +58,10 @@ final class Zero381MotorCalibration {
         double cross=c[0]*c[3]-c[1]*c[2];
         // Exclude ill-conditioned, mirrored and unidentifiable motors.
         double v0=Math.hypot(c[0],c[2]),v1=Math.hypot(c[1],c[3]);
+        // A model predicting that stronger EAST commands cause WEST acceleration
+        // may fit passive drag perfectly; that is NOT reliable motor authority.
+        // Require forward actuation response on both independent axes.
+        if(c[0]<.15||c[3]<.15)return false;
         if(!finite(cross)||cross<.035||v0<.15||v1<.15||
            v0>25||v1>25||v0/v1>4||v1/v0>4)return false;
         // Prediction really must beat predicting NO active response.
