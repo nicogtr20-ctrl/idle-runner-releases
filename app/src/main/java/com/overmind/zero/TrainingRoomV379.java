@@ -92,34 +92,60 @@ final class TrainingRoomV379 {
     static UnknownWorld.Entity wall(float x,float y){
         return new UnknownWorld.Entity(x,y,2,7);
     }
-    /** Solid wall contact, with actual particle projection and tactile pressure.
-     * No motor command, goal reward, velocity injection, or neural labels.
-     * The outer perimeter is represented by the same opaque fixed tiles.
+    /**
+     * V380: every Training tile shares the existing physical AABB CCD, not
+     * a different weak overlap-only rule. Wall contact is an observable
+     * material constraint, never an issued heading, neural reward or impulse.
      */
     static void constrain(MotorBrain.Body body,Morphology.Surface skin,
                           ArrayList<UnknownWorld.Entity> world){
+        constrain(body,skin,world,null,null,null,null);
+    }
+    static void constrain(MotorBrain.Body body,Morphology.Surface skin,
+                          ArrayList<UnknownWorld.Entity> world,
+                          float[] oldSkinX,float[] oldSkinY,
+                          float[] oldBodyX,float[] oldBodyY){
         for(UnknownWorld.Entity e:world){
-            if(!e.isTrainingWall())continue;
-            float x=e.x,y=e.y,reach=e.radius+145f;
-            if(Math.abs(body.cx-x)>reach||Math.abs(body.cy-y)>reach)continue;
+            if(!e.isTrainingWall()||e.consumed)continue;
+            float x=e.x,y=e.y,r=e.radius;
+            // Body centroid bounds are only an acceleration; nothing is
+            // projected from the centroid or pushed toward room center.
+            if(Math.abs(body.cx-x)>r+170f||Math.abs(body.cy-y)>r+170f)continue;
+            float l=x-r,t=y-r,right=x+r,bottom=y+r;
             for(int i=0;i<Morphology.POINTS;i++){
-                float penetration=project(skin.x,skin.y,skin.vx,skin.vy,i,x,y,e.radius);
-                if(penetration>0){
-                    float pressure=Math.min(1f,penetration/7f);
-                    skin.touchSense[i]=Math.max(skin.touchSense[i],pressure);
-                    skin.touchPulse[i]=Math.max(skin.touchPulse[i],pressure);
+                float px=skin.x[i],py=skin.y[i];
+                boolean hit=SquareCollisionSolver.project(
+                    skin.x,skin.y,skin.vx,skin.vy,i,
+                    oldSkinX==null?px:oldSkinX[i],
+                    oldSkinY==null?py:oldSkinY[i],
+                    l,t,right,bottom,0f);
+                if(hit){
+                    skin.touchSense[i]=Math.max(skin.touchSense[i],1f);
+                    skin.touchPulse[i]=Math.max(skin.touchPulse[i],.9f);
+                    skin.gripHold[i]=0f;
                 }
             }
-            for(int i=0;i<MotorBrain.N;i++)
-                project(body.x,body.y,body.vx,body.vy,i,x,y,e.radius);
-            // The same stationary tile blocks actual boxes/disks; it never
-            // applies grip, locomotion or reward to the neural controller.
+            for(int i=0;i<MotorBrain.N;i++){
+                float px=body.x[i],py=body.y[i];
+                SquareCollisionSolver.project(body.x,body.y,body.vx,body.vy,i,
+                    oldBodyX==null?px:oldBodyX[i],
+                    oldBodyY==null?py:oldBodyY[i],
+                    l,t,right,bottom,1.5f);
+            }
+            // Prevent a membrane/body connection from passing through a tile
+            // even when both real endpoints lie beyond its opposite faces.
+            repairLinks(skin.x,skin.y,skin.vx,skin.vy,
+                        Morphology.POINTS,e,skin);
+            repairLinks(body.x,body.y,body.vx,body.vy,MotorBrain.N,e,null);
+            // Existing material disks and covers cannot tunnel through walls.
             for(UnknownWorld.Entity item:world){
-                if(item==e||item.consumed||(!item.isBox()&&!item.isMovable()))continue;
-                float r=item.isMovable()?item.radius:
-                    item.isConstruction()?PanelPhysics.halfLength(item):SquareGripPuzzle.HALF;
+                if(item==e||item.consumed||
+                   (!item.isBox()&&!item.isMovable()))continue;
+                float size=item.isMovable()?item.radius:
+                    item.isConstruction()?PanelPhysics.halfLength(item):
+                    SquareGripPuzzle.HALF;
                 float dx=item.x-x,dy=item.y-y;
-                float overlapX=e.radius+r-Math.abs(dx),overlapY=e.radius+r-Math.abs(dy);
+                float overlapX=r+size-Math.abs(dx),overlapY=r+size-Math.abs(dy);
                 if(overlapX<=0f||overlapY<=0f)continue;
                 if(overlapX<overlapY){
                     float direction=dx>=0?1f:-1f;
@@ -129,6 +155,50 @@ final class TrainingRoomV379 {
                     float direction=dy>=0?1f:-1f;
                     item.y+=direction*overlapY;
                     if(item.vy*direction<0f)item.vy=0f;
+                }
+            }
+        }
+    }
+    static void constrainInner(SymbioteMatterV1 gel,
+                               UnknownWorld.Entity tile,float dt){
+        if(gel==null||tile==null||!tile.isTrainingWall()||dt<=0)return;
+        float r=tile.radius;
+        for(int i=0;i<SymbioteMatterV1.INNER;i++){
+            float x=gel.x[i],y=gel.y[i],oldX=x-gel.vx[i]*dt,oldY=y-gel.vy[i]*dt;
+            if(Math.abs(x-tile.x)>r+4f&&Math.abs(oldX-tile.x)>r+4f||
+               Math.abs(y-tile.y)>r+4f&&Math.abs(oldY-tile.y)>r+4f)
+                continue;
+            SquareCollisionSolver.project(gel.x,gel.y,gel.vx,gel.vy,i,
+                oldX,oldY,tile.x-r,tile.y-r,tile.x+r,tile.y+r,1.5f);
+        }
+    }
+    private static void repairLinks(float[] xs,float[] ys,float[] vx,float[] vy,
+                                    int length,UnknownWorld.Entity tile,
+                                    Morphology.Surface skin){
+        float r=tile.radius;
+        float l=tile.x-r,t=tile.y-r,right=tile.x+r,bottom=tile.y+r;
+        for(int i=0;i<length;i++){
+            int j=(i+1)%length;
+            if(!ScarcityLab.crossesInterior(xs[i],ys[i],xs[j],ys[j],
+                                            l,t,right,bottom))continue;
+            // Shared supporting face with least actual displacement.
+            float leftCost=Math.max(0,xs[i]-l)+Math.max(0,xs[j]-l);
+            float rightCost=Math.max(0,right-xs[i])+Math.max(0,right-xs[j]);
+            float topCost=Math.max(0,ys[i]-t)+Math.max(0,ys[j]-t);
+            float bottomCost=Math.max(0,bottom-ys[i])+Math.max(0,bottom-ys[j]);
+            int side=0;float shortest=leftCost;
+            if(rightCost<shortest){side=1;shortest=rightCost;}
+            if(topCost<shortest){side=2;shortest=topCost;}
+            if(bottomCost<shortest)side=3;
+            for(int k=0;k<2;k++){
+                int n=k==0?i:j;
+                if(side==0&&xs[n]>l){xs[n]=l;vx[n]=Math.min(vx[n],0);}
+                else if(side==1&&xs[n]<right){xs[n]=right;vx[n]=Math.max(vx[n],0);}
+                else if(side==2&&ys[n]>t){ys[n]=t;vy[n]=Math.min(vy[n],0);}
+                else if(side==3&&ys[n]<bottom){ys[n]=bottom;vy[n]=Math.max(vy[n],0);}
+                if(skin!=null){
+                    skin.gripHold[n]=0f;skin.touchSense[n]=1f;
+                    skin.touchPulse[n]=Math.max(skin.touchPulse[n],.9f);
                 }
             }
         }
