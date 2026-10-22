@@ -2,7 +2,13 @@ name: ZERO381 1200-real-decisions user checkpoint motor validation
 on:
   push:
     branches: [feature/zero381-physical-motor-adaptation-flight-recorder]
-    paths: ['.github/workflows/zero381-user-checkpoint-closed-loop.yml']
+    paths:
+      - '.github/workflows/zero381-user-checkpoint-closed-loop.yml'
+      - 'app/src/main/java/com/overmind/zero/Zero381MotorCalibration.java'
+      - 'app/src/main/java/com/overmind/zero/Zero3MotorPeripheralBridgeV364.java'
+      - 'app/src/main/java/com/overmind/zero/SymbioteMotorHeadV1.java'
+      - 'app/src/main/java/com/overmind/zero/FastSomaticCircuitV167.java'
+      - 'app/src/androidTest/java/com/overmind/zero/Zero381UserCheckpointClosedLoopAndroidTest.java'
   workflow_dispatch:
 permissions: {contents: read}
 jobs:
