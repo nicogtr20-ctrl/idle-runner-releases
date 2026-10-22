@@ -951,11 +951,11 @@ public final class GameActivity extends Activity {
         void updateHabitat(float dt){
             worldTime+=dt;elapsedLife+=dt;
             lifeStats.tick(dt); // physics time, multiplied naturally by x1/x5/x20
-            if(!scarcity&&elapsedLife>=70f)scarcity=true;
+            if(!trainingActive&&!scarcity&&elapsedLife>=70f)scarcity=true;
             // Physiological requirement is part of the organism, NOT a
             // scripted plan for solving the current room.
             float energyBeforeDrain=reserve;
-            reserve=Math.max(0,reserve-(scarcity?.30f:.09f)*dt);
+            reserve=Math.max(0,reserve-(trainingActive?.09f:(scarcity?.30f:.09f))*dt);
             mortality.energyFlows(dt,energyBeforeDrain-reserve,0,0);
             if(!trainingActive&&scarcity&&elapsedLife>=nextChamber&&
                 (chamber==null||chamber.reachedEnergy)&&
@@ -2499,6 +2499,184 @@ public final class GameActivity extends Activity {
             // Legacy off-screen target-driven benchmark was misleading.
             showBenchmark=true;
         }
+
+        /** Exploration's full physical checkpoint is kept separate. Learning
+         * ALWAYS belongs to the same Zero3OriginalBrainV356 object. */
+        void enterTraining(){
+            if(trainingActive||brain3==null)return;
+            testMax=false;simulationRunning=false;physicsClock.reset();
+            try{
+                save();saveScene();
+                String free=prefs.getString("physical_scene_v100","");
+                if(free.isEmpty())throw new IllegalStateException("Scena libera mancante");
+                if(!prefs.edit()
+                    .putString(TrainingRoomV379.FREE_SCENE_KEY,free)
+                    .putBoolean(TrainingRoomV379.ACTIVE_KEY,true).commit())
+                    throw new IllegalStateException("Impossibile conservare l'esplorazione");
+                trainingActive=true;settingsExpanded=false;
+                resetEpisode(); // new physical life, same learned V3 weights
+                trainingEditing=true;simulationRunning=false;
+                saveScene();
+            }catch(Exception problem){
+                simulationRunning=false;
+                brain3Error="Training: "+problem.getMessage();
+            }
+            lastFrame=0;invalidate();
+        }
+        void exitTraining(){
+            if(!trainingActive)return;
+            simulationRunning=false;testMax=false;
+            try{
+                save();saveScene();
+                String free=prefs.getString(TrainingRoomV379.FREE_SCENE_KEY,"");
+                if(!restoreScene(free))
+                    throw new IllegalStateException("Scena libera non ripristinabile");
+                if(brain3!=null)brain3.newLife(); // reset short-lived context only
+                trainingActive=false;trainingEditing=false;
+                if(!prefs.edit().putBoolean(TrainingRoomV379.ACTIVE_KEY,false)
+                    .remove(TrainingRoomV379.FREE_SCENE_KEY).commit())
+                    throw new IllegalStateException("Uscita Training non salvata");
+                simulationRunning=false; // user resumes exploration explicitly
+                saveScene();
+            }catch(Exception failure){
+                simulationRunning=false;
+                brain3Error="Uscita Training: "+failure.getMessage();
+            }
+            lastFrame=0;physicsClock.reset();invalidate();
+        }
+        float trainingScale(){
+            return Math.max(.12f,Math.min(428f/(TrainingRoomV379.HALF_W*2f),
+                (H-460f)/(TrainingRoomV379.HALF_H*2f)));
+        }
+        float trainingCenterY(){return 219f+TrainingRoomV379.HALF_H*trainingScale();}
+        void renderTrainingEditor(Canvas c){
+            paint.setShader(null);paint.setColor(0xf0061421);c.drawRect(0,0,W,H,paint);
+            text(c,"TRAINING 1  /  EDITOR",240,52,23,TEAL,true);
+            text(c,"STESSO CERVELLO 3.0 • STANZA PERSONALIZZATA",240,81,11,GOLD,true);
+            text(c,"Seleziona un oggetto e tocca la mappa",240,116,13,0xffdceef2,true);
+            text(c,"Trascina per disegnare muri • Gomma per eliminare",240,140,10,MUTED,true);
+            float sc=trainingScale(),cy=trainingCenterY();
+            float left=240-TrainingRoomV379.HALF_W*sc,right=240+TrainingRoomV379.HALF_W*sc;
+            float top=cy-TrainingRoomV379.HALF_H*sc,bottom=cy+TrainingRoomV379.HALF_H*sc;
+            paint.setColor(0xff101f2b);c.drawRect(left,top,right,bottom,paint);
+            paint.setColor(0x2232b6bd);paint.setStrokeWidth(1f);
+            for(int i=-9;i<=9;i++)c.drawLine(240+i*24*sc,top,240+i*24*sc,bottom,paint);
+            for(int j=-13;j<=13;j++)c.drawLine(left,cy+j*24*sc,right,cy+j*24*sc,paint);
+            paint.setColor(0xff80b6c6);paint.setStrokeWidth(6f);
+            paint.setStyle(Paint.Style.STROKE);c.drawRect(left,top,right,bottom,paint);
+            paint.setStyle(Paint.Style.FILL);
+            for(TrainingRoomV379.Item item:trainingRoom.items()){
+                float xx=240+item.x*sc,yy=cy+item.y*sc;
+                if(item.type==TrainingRoomV379.WALL){
+                    paint.setColor(0xff5f8899);
+                    c.drawRect(xx-12*sc,yy-12*sc,xx+12*sc,yy+12*sc,paint);
+                }else if(item.type==TrainingRoomV379.BOX){
+                    paint.setColor(0xffc5ab7a);
+                    c.drawRect(xx-20*sc,yy-20*sc,xx+20*sc,yy+20*sc,paint);
+                    paint.setColor(0xff594832);paint.setStrokeWidth(2f);
+                    c.drawLine(xx-18*sc,yy-18*sc,xx+18*sc,yy+18*sc,paint);
+                }else{
+                    paint.setColor(item.type==TrainingRoomV379.BLUE?0xff65dfda:
+                        item.type==TrainingRoomV379.RED?0xffff5f83:0xffb989ff);
+                    c.drawCircle(xx,yy,Math.max(3f,11*sc),paint);
+                }
+            }
+            if(Math.abs(creature.cx)<TrainingRoomV379.HALF_W&&
+               Math.abs(creature.cy)<TrainingRoomV379.HALF_H){
+                paint.setColor(0xffd5fff6);
+                c.drawCircle(240+creature.cx*sc,cy+creature.cy*sc,7f,paint);
+            }
+            text(c,"OGGETTI "+trainingRoom.size()+" / "+TrainingRoomV379.MAX_ITEMS,240,H-213,11,GOLD,true);
+            String[] labels={"BLU","ROSSA","VIOLA","CASSA","MURO","GOMMA"};
+            int[] colors={0xff65dfda,0xffff5f83,0xffb989ff,0xffc5ab7a,0xff80b6c6,0xffdceef2};
+            for(int i=0;i<labels.length;i++){
+                float l=7+i*78f;
+                button(c,l,H-196,l+75,H-146,labels[i],i==trainingTool?TEAL:colors[i]);
+                if(i==trainingTool){
+                    paint.setColor(0x557cfff0);paint.setStyle(Paint.Style.STROKE);
+                    paint.setStrokeWidth(2f);c.drawRoundRect(l,H-196,l+75,H-146,13,13,paint);
+                    paint.setStyle(Paint.Style.FILL);
+                }
+            }
+            button(c,10,H-125,156,H-68,"AVVIA",TEAL);
+            button(c,167,H-125,313,H-68,"PULISCI",GOLD);
+            button(c,324,H-125,470,H-68,"ESCI",0xffffa1b1);
+            text(c,"Il cervello non viene azzerato",240,H-34,12,MUTED,true);
+        }
+        void trainingPlaceAt(float screenX,float screenY){
+            float sc=trainingScale(),cy=trainingCenterY();
+            float xx=(screenX-240f)/sc,yy=(screenY-cy)/sc;
+            if(Math.abs(xx)>TrainingRoomV379.HALF_W-20||
+               Math.abs(yy)>TrainingRoomV379.HALF_H-20)return;
+            // A wall placed onto living tissue would be an artificial impact.
+            if(trainingTool!=TrainingRoomV379.ERASER &&
+               Math.hypot(xx-creature.cx,yy-creature.cy)<58f){
+                updaterStatus="Troppo vicino al corpo";
+                updaterStatusUntil=uiTime+3f;return;
+            }
+            if(!trainingRoom.place(trainingTool,xx,yy))return;
+            if(!prefs.edit().putString(TrainingRoomV379.LAYOUT_KEY,
+                trainingRoom.encode()).commit()){
+                trainingRoom=TrainingRoomV379.decode(
+                    prefs.getString(TrainingRoomV379.LAYOUT_KEY,""));
+                return;
+            }
+            if(brain3!=null)brain3.interrupt(); // no fake experience on map edits
+            environment=trainingRoom.newEntities();
+            boxLastPositions.clear();chosenObject=null;
+            invalidate();
+        }
+        boolean trainingEditorTouch(MotionEvent ev){
+            int action=ev.getActionMasked();
+            float sc=getWidth()/W;
+            float x=ev.getX()/sc,y=ev.getY()/sc;
+            float scale=trainingScale(),mid=trainingCenterY();
+            float left=240-TrainingRoomV379.HALF_W*scale;
+            float right=240+TrainingRoomV379.HALF_W*scale;
+            float top=mid-TrainingRoomV379.HALF_H*scale;
+            float bottom=mid+TrainingRoomV379.HALF_H*scale;
+            boolean onMap=x>=left&&x<=right&&y>=top&&y<=bottom;
+            if((action==MotionEvent.ACTION_DOWN||
+                 action==MotionEvent.ACTION_MOVE)&&onMap){
+                if(action==MotionEvent.ACTION_DOWN||
+                   (trainingTool==TrainingRoomV379.WALL||
+                    trainingTool==TrainingRoomV379.ERASER)&&
+                   (Float.isNaN(trainingLastX)||
+                    Math.hypot(x-trainingLastX,y-trainingLastY)>6f)){
+                    trainingLastX=x;trainingLastY=y;
+                    trainingPlaceAt(x,y);
+                }
+                return true;
+            }
+            if(action!=MotionEvent.ACTION_UP)return true;
+            trainingLastX=trainingLastY=Float.NaN;
+            if(y>=H-196&&y<=H-146){
+                int index=(int)((x-7f)/78f);
+                if(index>=0&&index<=TrainingRoomV379.ERASER)trainingTool=index;
+            }else if(y>=H-125&&y<=H-68){
+                if(x<157){
+                    trainingEditing=false;simulationRunning=brain3!=null;
+                    physicsClock.reset();lastFrame=0;saveScene();
+                }else if(x<314){
+                    new android.app.AlertDialog.Builder(GameActivity.this)
+                        .setTitle("Svuotare Training 1?")
+                        .setMessage("Elimina tutti gli oggetti creati, ma conserva il cervello e le esperienze.")
+                        .setNegativeButton("ANNULLA",null)
+                        .setPositiveButton("PULISCI",(d,w)->{
+                            trainingRoom.clear();
+                            if(prefs.edit().putString(TrainingRoomV379.LAYOUT_KEY,
+                                trainingRoom.encode()).commit()){
+                                if(brain3!=null)brain3.interrupt();
+                                environment=trainingRoom.newEntities();
+                                boxLastPositions.clear();
+                            }
+                            invalidate();
+                        }).show();
+                }else exitTraining();
+            }
+            invalidate();return true;
+        }
+
         @Override public boolean onTouchEvent(MotionEvent ev){
             if(trainingEditing)return trainingEditorTouch(ev);
             if(ev.getActionMasked()!=MotionEvent.ACTION_UP)return true;
