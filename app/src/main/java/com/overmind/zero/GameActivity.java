@@ -192,6 +192,7 @@ public final class GameActivity extends Activity {
         TrainingRoomV379 trainingRoom=new TrainingRoomV379();
         boolean trainingActive=false,trainingEditing=false;
         int trainingTool=TrainingRoomV379.BLUE;
+        boolean trainingLayoutDirty=false;
         float trainingLastX=Float.NaN,trainingLastY=Float.NaN;
         String brain3Error="";
         // Measured ONLY from the original world's red contact and weather.
@@ -2636,6 +2637,7 @@ public final class GameActivity extends Activity {
             }
             if(brain3!=null)brain3.interrupt(); // no fake experience on map edits
             environment=trainingRoom.newEntities();
+            trainingLayoutDirty=true;
             boxLastPositions.clear();chosenObject=null;
             invalidate();
         }
@@ -2663,6 +2665,7 @@ public final class GameActivity extends Activity {
             }
             if(action!=MotionEvent.ACTION_UP)return true;
             trainingLastX=trainingLastY=Float.NaN;
+            if(trainingLayoutDirty){saveScene();trainingLayoutDirty=false;}
             if(y>=H-196&&y<=H-146){
                 int index=(int)((x-7f)/78f);
                 if(index>=0&&index<=TrainingRoomV379.ERASER)trainingTool=index;
@@ -2681,7 +2684,7 @@ public final class GameActivity extends Activity {
                                 trainingRoom.encode()).commit()){
                                 if(brain3!=null)brain3.interrupt();
                                 environment=trainingRoom.newEntities();
-                                boxLastPositions.clear();
+                                boxLastPositions.clear();saveScene();
                             }
                             invalidate();
                         }).show();
