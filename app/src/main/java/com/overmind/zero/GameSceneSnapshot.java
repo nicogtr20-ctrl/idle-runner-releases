@@ -248,7 +248,7 @@ public final class GameSceneSnapshot {
             }
             out.objects=new ArrayList<>();
             JSONArray a=root.getJSONArray("objects");
-            if(a.length()>64)return null;
+            // A bounded Training 1 room needs perimeter tiles plus edited objects.\n            if(a.length()>256)return null;
             int foodCount=0;
             for(int i=0;i<a.length();i++){
                 JSONObject obj=a.getJSONObject(i);
