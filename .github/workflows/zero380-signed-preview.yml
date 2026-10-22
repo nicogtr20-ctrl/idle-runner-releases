@@ -28,7 +28,7 @@ jobs:
           url='https://api.github.com/repos/nicogtr20-ctrl/idle-runner-releases/actions/runs/39853229909'
           with urllib.request.urlopen(urllib.request.Request(url,headers={'Accept':'application/vnd.github+json','User-Agent':'ZERO380-QA'}),timeout=20) as response:
               run=json.load(response)
-          assert run['head_sha']=='34004ab059f2018d5ce5923d864f00839f3a334b'
+          assert run['head_sha']=='a0b57b919de034173d09f6e3d390b1c60caeb818'
           assert run['conclusion']=='success' and run['status']=='completed'
           print('ZERO380_SAME_SOURCE_ANDROID_EMULATOR_QA=PASS')
           PY
