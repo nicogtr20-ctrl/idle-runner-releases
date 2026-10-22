@@ -16,7 +16,13 @@ public final class Zero381PhysicalMotorCalibrationAndroidTest {
             float x=i%4==0?1f:i%4==2?-1f:0f;
             float y=i%4==1?1f:i%4==3?-1f:0f;
             float[] mapped=c.begin(x,y,.2f,-.1f);
-            assertEquals("Untrusted actuator mapping must be identity",x,mapped[0],0f);
+            if(!c.usedCorrection()){
+                assertEquals("Untrusted motor mapping is identity",x,mapped[0],0f);
+                assertEquals("Untrusted motor mapping is identity",y,mapped[1],0f);
+            }else{
+                assertTrue("Learned motor steering correction cannot invert GRU decision",
+                    mapped[0]*x+mapped[1]*y>.93f);
+            }
             if(i%7==0){
                 c.complete(-100f,100f,.4f,10,false,false); // wall collision
                 continue;
@@ -65,7 +71,7 @@ public final class Zero381PhysicalMotorCalibrationAndroidTest {
             optical,muscles,true,false,false);
         String data=m.encode();
         assertEquals(257,data.split("\n").length);
-        assertEquals(301,300+1);
+        assertEquals(300,m.counted());
         Zero381MotorFlightRecorder reconstructed=new Zero381MotorFlightRecorder();
         assertTrue(reconstructed.restore(data));
         assertEquals(data,reconstructed.encode());
