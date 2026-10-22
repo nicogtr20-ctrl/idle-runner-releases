@@ -17,6 +17,19 @@ import java.util.Locale;
  */
 public final class GameActivity extends Activity {
     private Lab lab;
+    // Read-only QA and explicit editor navigation for Android instrumentation.
+    boolean originalV379TrainingActiveForQA(){return lab!=null&&lab.trainingActive;}
+    int originalV379LayoutSizeForQA(){return lab==null?-1:lab.trainingRoom.size();}
+    void originalV379EnterTrainingForQA(){if(lab!=null)lab.enterTraining();}
+    void originalV379ExitTrainingForQA(){if(lab!=null)lab.exitTraining();}
+    boolean originalV379PlaceForQA(int type,float worldX,float worldY){
+        if(lab==null||!lab.trainingEditing)return false;
+        lab.trainingTool=type;
+        int before=lab.trainingRoom.size();
+        float sc=lab.trainingScale();
+        lab.trainingPlaceAt(240f+worldX*sc,lab.trainingCenterY()+worldY*sc);
+        return lab.trainingRoom.size()!=before;
+    }
     // Android integration checks: the ACTUAL original physics owner (not V355 lab).
     boolean originalV356NeuralOwnerForQA(){return lab!=null&&lab.brain3!=null&&lab.useSymbiote;}
     long originalV356DecisionsForQA(){return lab==null||lab.brain3==null?-1:lab.brain3.decisions();}
