@@ -10,6 +10,7 @@ public final class SymbioteWorldStepV171 {
             if(e.consumed)continue;
             if(e.isConstruction())PanelPhysics.constrainInterior(gel,e,dt);
             else if(e.isBilateralBox())SquareCollisionSolver.constrainInterior(gel,e,dt);
+            else if(e.isTrainingWall())TrainingRoomV379.constrainInner(gel,e,dt);
         }
         gel.observeBody(body,skin);
     }
