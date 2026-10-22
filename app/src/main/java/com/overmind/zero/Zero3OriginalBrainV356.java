@@ -339,13 +339,13 @@ final class Zero3OriginalBrainV356 {
             // Retain read-only physical command/outcome evidence. The V3
             // chooser, reinforcement and existing V378 credit are untouched.
             motorResponseV381.complete(outcome.deltaX,outcome.deltaY,elapsed,
-                outcome.impulse,outcome.physicalEvidence&&!disturbed&&
+                outcome.activeImpulse,outcome.physicalEvidence&&!disturbed&&
                 !outcome.externalCorrection&&!outcome.censored&&
                 !physicallyTouchedSolidDuringDecisionV380&&!genuineTerminal,heldout);
             flightV381.completed(cursor,choice.x,choice.y,
                 motorResponseV381.lastPeripheralX(),motorResponseV381.lastPeripheralY(),
                 preVxV381,preVyV381,body.cvx,body.cvy,
-                outcome.deltaX,outcome.deltaY,elapsed,outcome.impulse,
+                outcome.deltaX,outcome.deltaY,elapsed,outcome.activeImpulse,
                 Math.max(0f,net),harm,prior194,executed64,
                 outcome.physicalEvidence,outcome.externalCorrection,
                 physicallyTouchedSolidDuringDecisionV380);
