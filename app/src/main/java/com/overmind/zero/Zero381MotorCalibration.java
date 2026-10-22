@@ -88,12 +88,23 @@ final class Zero381MotorCalibration {
                     // Never invert, aim somewhere else, or impose a new
                     // policy. Limit adjustment to empirically learned
                     // physical actuator cross-axis error.
-                    if(cos>Math.cos(Math.PI/9)){
-                        newX=.72f*x+.28f*(float)wantedX;
-                        newY=.72f*y+.28f*(float)wantedY;
-                        float n=(float)Math.hypot(newX,newY);
-                        newX/=n;newY/=n;
-                        corrected=true;
+                    if(cos>.30){
+                        // V380's eight-way motor rounding meant tiny angles
+                        // were physically discarded. V381 transduces a
+                        // continuous original-V3 heading; interpolate the
+                        // measured inverse response with at most 12 degrees,
+                        // even when raw inverse is farther away. Never allow
+                        // the inverse to redirect to the opposite hemisphere.
+                        double cross=x*wantedY-y*wantedX;
+                        double rawAngle=Math.atan2(cross,cos);
+                        double appliedAngle=Math.max(-Math.PI/15,
+                            Math.min(Math.PI/15,rawAngle*.35));
+                        if(Math.abs(appliedAngle)>.0001){
+                            double cs=Math.cos(appliedAngle),sn=Math.sin(appliedAngle);
+                            newX=(float)(x*cs-y*sn);
+                            newY=(float)(x*sn+y*cs);
+                            corrected=true;
+                        }
                     }
                 }
             }
