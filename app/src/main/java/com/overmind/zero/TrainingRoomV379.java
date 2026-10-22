@@ -27,7 +27,8 @@ final class TrainingRoomV379 {
     int size(){return items.size();}
     boolean place(int tool,float px,float py){
         if(!Float.isFinite(px)||!Float.isFinite(py))return false;
-        float x=Math.round(px/12f)*12f,y=Math.round(py/12f)*12f;
+        float step=tool==WALL?TILE:12f;
+        float x=Math.round(px/step)*step,y=Math.round(py/step)*step;
         if(Math.abs(x)>HALF_W-30||Math.abs(y)>HALF_H-30)return false;
         int near=-1;
         for(int i=items.size()-1;i>=0;i--){
@@ -38,7 +39,7 @@ final class TrainingRoomV379 {
         if(tool<BLUE||tool>WALL||Math.hypot(x,y)<54f)return false;
         if(near>=0){
             Item old=items.get(near);
-            if(old.type==tool&&old.x==x&&old.y==y)return false;
+            if(old.type==tool&&(tool==WALL||old.x==x&&old.y==y))return false;
             items.remove(near);
         }
         if(items.size()>=MAX_ITEMS)return false;
@@ -99,7 +100,7 @@ final class TrainingRoomV379 {
                           ArrayList<UnknownWorld.Entity> world){
         for(UnknownWorld.Entity e:world){
             if(!e.isTrainingWall())continue;
-            float x=e.x,y=e.y,reach=e.radius+48f;
+            float x=e.x,y=e.y,reach=e.radius+145f;
             if(Math.abs(body.cx-x)>reach||Math.abs(body.cy-y)>reach)continue;
             for(int i=0;i<Morphology.POINTS;i++){
                 float penetration=project(skin.x,skin.y,skin.vx,skin.vy,i,x,y,e.radius);
@@ -111,6 +112,25 @@ final class TrainingRoomV379 {
             }
             for(int i=0;i<MotorBrain.N;i++)
                 project(body.x,body.y,body.vx,body.vy,i,x,y,e.radius);
+            // The same stationary tile blocks actual boxes/disks; it never
+            // applies grip, locomotion or reward to the neural controller.
+            for(UnknownWorld.Entity item:world){
+                if(item==e||item.consumed||(!item.isBox()&&!item.isMovable()))continue;
+                float r=item.isMovable()?item.radius:
+                    item.isConstruction()?PanelPhysics.halfLength(item):SquareGripPuzzle.HALF;
+                float dx=item.x-x,dy=item.y-y;
+                float overlapX=e.radius+r-Math.abs(dx),overlapY=e.radius+r-Math.abs(dy);
+                if(overlapX<=0f||overlapY<=0f)continue;
+                if(overlapX<overlapY){
+                    float direction=dx>=0?1f:-1f;
+                    item.x+=direction*overlapX;
+                    if(item.vx*direction<0f)item.vx=0f;
+                }else{
+                    float direction=dy>=0?1f:-1f;
+                    item.y+=direction*overlapY;
+                    if(item.vy*direction<0f)item.vy=0f;
+                }
+            }
         }
     }
     private static float project(float[] xs,float[] ys,float[] vx,float[] vy,int i,
