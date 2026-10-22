@@ -165,9 +165,12 @@ final class TrainingRoomV379 {
         float r=tile.radius;
         for(int i=0;i<SymbioteMatterV1.INNER;i++){
             float x=gel.x[i],y=gel.y[i],oldX=x-gel.vx[i]*dt,oldY=y-gel.vy[i]*dt;
-            if(Math.abs(x-tile.x)>r+4f&&Math.abs(oldX-tile.x)>r+4f||
-               Math.abs(y-tile.y)>r+4f&&Math.abs(oldY-tile.y)>r+4f)
-                continue;
+            // Swept bounding segment test. Absolute distances at BOTH ends
+            // cannot exclude a crossing (one mass may tunnel wall-to-wall).
+            if(Math.max(x,oldX)<tile.x-r-4f||
+               Math.min(x,oldX)>tile.x+r+4f||
+               Math.max(y,oldY)<tile.y-r-4f||
+               Math.min(y,oldY)>tile.y+r+4f)continue;
             SquareCollisionSolver.project(gel.x,gel.y,gel.vx,gel.vy,i,
                 oldX,oldY,tile.x-r,tile.y-r,tile.x+r,tile.y+r,1.5f);
         }
