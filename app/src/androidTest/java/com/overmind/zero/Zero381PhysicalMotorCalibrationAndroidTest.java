@@ -48,6 +48,39 @@ public final class Zero381PhysicalMotorCalibrationAndroidTest {
         assertFalse("Invalid actuator checkpoint must never silently overwrite weights",
             restored.restore("zmr381|1|0|0|NaN"));
     }
+    @Test public void sameEightWayBankMustStillHonorDifferentContinuousV3Angles(){
+        MotorBrain.Body b0=new MotorBrain.Body();
+        Morphology.Surface s0=new Morphology.Surface(b0);
+        MotorBrain.Body b1=new MotorBrain.Body();
+        Morphology.Surface s1=new Morphology.Surface(b1);
+        SymbioteMotorHeadV1 p0=new SymbioteMotorHeadV1();
+        SymbioteMotorHeadV1 p1=new SymbioteMotorHeadV1();
+        java.util.ArrayList<UnknownWorld.Entity> none=new java.util.ArrayList<>();
+        float theta=10f*(float)Math.PI/180f;
+        assertEquals(0,Zero3MotorPeripheralBridgeV364.actionBankFromV3(1,0));
+        assertEquals(0,Zero3MotorPeripheralBridgeV364.actionBankFromV3(
+            (float)Math.cos(theta),(float)Math.sin(theta)));
+        Zero3MotorPeripheralBridgeV364.begin(p0,b0,s0,null,none,1,0);
+        Zero3MotorPeripheralBridgeV364.begin(p1,b1,s1,null,none,
+            (float)Math.cos(theta),(float)Math.sin(theta));
+        float[] commands0=p0.commands(),commands1=p1.commands();
+        float total=0f;
+        for(int i=0;i<64;i++)if(i%4!=2)
+            total+=Math.abs(commands0[i]-commands1[i]);
+        assertTrue("381 original V3 motor MUST NOT lose 10-degree information to eight-way rounding",
+            total>.00001f);
+        assertFalse("The historical frozen motor may never retrain its weights",
+            p0.trainedOutcomes()>0);
+        float[] out0=new float[64],out1=new float[64];
+        p0.fastTickOriginalV370(b0,s0,1f/60f);
+        p1.fastTickOriginalV370(b1,s1,1f/60f);
+        System.arraycopy(p0.commands(),0,out0,0,64);
+        System.arraycopy(p1.commands(),0,out1,0,64);
+        float fastDifference=0f;
+        for(int i=0;i<64;i++)if(i%4<2)
+            fastDifference+=Math.abs(out0[i]-out1[i]);
+        assertTrue("381 fast somatic V3 must also preserve continuous heading",fastDifference>.00001f);
+    }
     @Test public void neutralCortexHasNoPrewiredMotorCorrection(){
         Zero381MotorCalibration c=new Zero381MotorCalibration();
         for(int i=0;i<8;i++){
