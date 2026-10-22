@@ -1396,6 +1396,9 @@ public final class SensorimotorMind {
             }
             for(UnknownWorld.Entity e:obj){
                 if(e==ignore||e.concealed||e.consumed)continue;
+                if(e.isTrainingWall()&&
+                   Math.abs(x-e.x)<=e.radius&&Math.abs(y-e.y)<=e.radius)
+                    return true;
                 if(e.isConstruction()){
                     float[] local=PanelPhysics.local(e,x,y);
                     if(Math.abs(local[0])<=PanelPhysics.halfLength(e)&&
