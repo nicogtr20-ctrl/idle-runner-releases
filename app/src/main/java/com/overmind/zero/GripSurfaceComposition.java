@@ -34,6 +34,14 @@ final class GripSurfaceComposition {
                 if(box.isBilateralBox()&&boxFace(box,skin.x[i],skin.y[i])){
                     touch=true;
                     if(local)hold=Math.max(hold,box.boxGripHold[i]);
+                }else if(box.isTrainingWall()&&
+                    Math.abs(skin.x[i]-box.x)<=box.radius+2.5f&&
+                    Math.abs(skin.y[i]-box.y)<=box.radius+2.5f&&
+                    (Math.abs(Math.abs(skin.x[i]-box.x)-box.radius)<=2.5f||
+                     Math.abs(Math.abs(skin.y[i]-box.y)-box.radius)<=2.5f)){
+                    // A physically contacted wall must remain sensed after
+                    // the grip composer replaces the current touch buffer.
+                    touch=true;
                 }else if(box.isConstruction()&&
                          PanelPhysics.touching(box,skin.x[i],skin.y[i])){
                     touch=true;

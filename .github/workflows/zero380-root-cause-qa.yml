@@ -1,0 +1,35 @@
+name: ZERO380 root-cause reproduction (no OTA)
+on:
+  push:
+    branches: [audit/zero380-training-stall-spectral-causality]
+  workflow_dispatch:
+permissions: {contents: read}
+jobs:
+  reproduce:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with: {distribution: temurin, java-version: '17'}
+      - name: Compile original organism and diagnostics
+        run: gradle --no-daemon assembleDebug assembleDebugAndroidTest
+      - name: Allow KVM
+        run: |
+          echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' | sudo tee /etc/udev/rules.d/99-kvm4all.rules
+          sudo udevadm control --reload-rules
+          sudo udevadm trigger --name-match=kvm
+      - name: Evaluate concrete unchanged ZERO379 failures
+        uses: reactivecircus/android-emulator-runner@v2
+        with:
+          api-level: 35
+          arch: x86_64
+          profile: pixel_6
+          disable-animations: true
+          script: |
+            bash -c 'set -euo pipefail; adb install -r app/build/outputs/apk/debug/app-debug.apk; adb install -r app/build/outputs/apk/androidTest/debug/app-debug-androidTest.apk; adb shell am instrument -w -r -e class com.overmind.zero.Zero380FailureReproductionAndroidTest com.overmind.zero.ota.test/androidx.test.runner.AndroidJUnitRunner 2>&1 | tee /tmp/zero380-reproduction.txt; grep -q "OK (3 tests)" /tmp/zero380-reproduction.txt; ! grep -qE "FAILURES!!!|INSTRUMENTATION_FAILED|Process crashed" /tmp/zero380-reproduction.txt'
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: zero380-root-cause-evidence-no-ota
+          path: /tmp/zero380-reproduction.txt

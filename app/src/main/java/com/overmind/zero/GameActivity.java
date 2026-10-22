@@ -1489,7 +1489,9 @@ public final class GameActivity extends Activity {
                     MaterialContactConstraints.reconcile(creature,surface,
                         environment,slice);
                     if(trainingActive)
-                        TrainingRoomV379.constrain(creature,surface,environment);
+                        TrainingRoomV379.constrain(creature,surface,environment,
+                            squarePrevSkinX,squarePrevSkinY,
+                            squarePrevBodyX,squarePrevBodyY);
                     // Read centroid from ACTUAL muscle material, not a
                     // simulated nucleus. Collision projection may move it.
                     if(useSymbiote&&symMatter!=null){
