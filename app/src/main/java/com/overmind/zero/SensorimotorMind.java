@@ -1198,7 +1198,7 @@ public final class SensorimotorMind {
             float[] v=new float[UnknownWorld.SIGNATURES*8];
             if(b==null||objects==null)return v;
             for(UnknownWorld.Entity e:objects){
-                if(e.consumed||e.concealed)continue;
+                if(e.consumed||e.concealed||e.isTrainingWall())continue;
                 float[] eye=MaterialGeometry.eye(skin,b.cx,b.cy,e.x-b.cx,e.y-b.cy);
                 float dx=e.x-eye[0],dy=e.y-eye[1];
                 float d=(float)Math.hypot(dx,dy);
@@ -1265,7 +1265,7 @@ public final class SensorimotorMind {
             // Raw channel identities are VISUAL frequencies, not "food",
             // "danger" or action values. Occluded objects are invisible.
             for(UnknownWorld.Entity e:objects){
-                if(e.consumed||e.concealed)continue;
+                if(e.consumed||e.concealed||e.isTrainingWall())continue;
                 float[] sight=MaterialGeometry.eye(skin,b.cx,b.cy,e.x-b.cx,e.y-b.cy);
                 float dx=e.x-sight[0],dy=e.y-sight[1];
                 float d=(float)Math.hypot(dx,dy);
@@ -1337,6 +1337,8 @@ public final class SensorimotorMind {
                         halfX=PanelPhysics.halfLength(e);halfY=PanelPhysics.HALF_THICKNESS;
                     }
                     best=Math.min(best,rayRectangle(ox,oy,ux,uy,halfX,halfY,range));
+                }else if(e.isTrainingWall()){
+                    best=Math.min(best,rayRectangle(x-e.x,y-e.y,dx,dy,e.radius,e.radius,range));
                 }else if(e.isMovable()){
                     float ox=x-e.x,oy=y-e.y,b=ox*dx+oy*dy;
                     float c=ox*ox+oy*oy-e.radius*e.radius;
