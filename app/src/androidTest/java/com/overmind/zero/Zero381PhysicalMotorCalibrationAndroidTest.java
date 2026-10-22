@@ -81,6 +81,25 @@ public final class Zero381PhysicalMotorCalibrationAndroidTest {
             fastDifference+=Math.abs(out0[i]-out1[i]);
         assertTrue("381 fast somatic V3 must also preserve continuous heading",fastDifference>.00001f);
     }
+    @Test public void predictivePassiveDriftCanNeverBeMistakenForDirectionAuthority(){
+        Zero381MotorCalibration c=new Zero381MotorCalibration();
+        for(int n=0;n<800;n++){
+            float x=n%4==0?1:n%4==2?-1:0;
+            float y=n%4==1?1:n%4==3?-1:0;
+            c.begin(x,y,0f,0f);
+            // Momentum-subtracted movement is strictly opposite to the
+            // chosen direction, even when it is statistically predictable.
+            c.complete(-x*.20f,-y*.20f,.4f,12f,true,n%5==0);
+        }
+        assertTrue(c.samples()>256);
+        assertTrue(c.validations()>64);
+        assertFalse("Predicting drift is not proof of controllable muscle authority",
+            c.trusted());
+        float[] a=c.begin(0f,1f,2f,0f);
+        assertEquals(0f,a[0],0f);
+        assertEquals(1f,a[1],0f);
+        assertFalse(c.usedCorrection());
+    }
     @Test public void neutralCortexHasNoPrewiredMotorCorrection(){
         Zero381MotorCalibration c=new Zero381MotorCalibration();
         for(int i=0;i<8;i++){
