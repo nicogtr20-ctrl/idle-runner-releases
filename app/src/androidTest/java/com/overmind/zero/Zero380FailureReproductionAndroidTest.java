@@ -10,7 +10,7 @@ import static org.junit.Assert.*;
  * in ZERO379. No weights, goals, actions, or persisted histories are altered. */
 @RunWith(AndroidJUnit4.class)
 public final class Zero380FailureReproductionAndroidTest {
-    @Test public void realWallDoesNotConstrain64InternalLiquidMasses(){
+    @Test public void realWallDoesConstrainAll64InternalLiquidMasses(){
         MotorBrain.Body b=new MotorBrain.Body();
         Morphology.Surface skin=new Morphology.Surface(b);
         SymbioteMatterV1 gel=new SymbioteMatterV1();
@@ -22,13 +22,13 @@ public final class Zero380FailureReproductionAndroidTest {
         assertTrue(Math.abs(gel.y[0]-wall.y)<wall.radius);
         TrainingRoomV379.constrain(b,skin,objects);
         SymbioteWorldStepV171.interior(gel,b,skin,null,objects,1f/60f);
-        assertTrue("ZERO379 BUG: physical tile leaves liquid inside solid wall",
+        assertFalse("V380: no interior liquid mass inside a solid wall",
             Math.abs(gel.x[0]-wall.x)<wall.radius &&
             Math.abs(gel.y[0]-wall.y)<wall.radius);
         assertTrue("ZERO379 wall deflection is treated as EXTERNAL disturbance",
             MotorResponseJournalV172.externalMotorInterferenceV363(.09f,0f,0f,false));
     }
-    @Test public void learnedPhysicalRedIsIgnoredAt100UnitsWhenCandidateIsRight(){
+    @Test public void learnedPhysicalRedChangesSelectionAwayFromKnownHarm(){
         Zero3CognitionV353 cognition=new Zero3CognitionV353();
         float[] redContact=new float[24];redContact[8]=1f;
         cognition.genuineContactV369(redContact,-7f,false);
@@ -39,10 +39,10 @@ public final class Zero380FailureReproductionAndroidTest {
             {1f,0f,.5f,.5f,.3f}, // current actor walks towards red
             {0f,1f,.5f,.5f,.3f}  // equally attainable orthogonal escape
         };
-        assertEquals("ZERO379 BUG: 0.35/8 weakens red enough to trigger 0.025 dead zone",
-            0,cognition.select(sight,proposals));
+        assertEquals("V380: once real red harm has been learned, select the safer available option",
+            1,cognition.select(sight,proposals));
     }
-    @Test public void learnedBlueAt100UnitsDoesNotSteerOrthogonalProposal(){
+    @Test public void learnedBlueMakesPhysicallyRecognizedLightRelevant(){
         Zero3CognitionV353 cognition=new Zero3CognitionV353();
         float[] blueContact=new float[24];blueContact[0]=1f;
         cognition.genuineContactV369(blueContact,22f,false);
@@ -53,8 +53,41 @@ public final class Zero380FailureReproductionAndroidTest {
             {0f,1f,.5f,.5f,.3f}, // actor's original irrelevant direction
             {1f,0f,.5f,.5f,.3f}  // toward learned blue
         };
-        assertEquals("ZERO379 BUG: 0.025 deadzone prevents observed-blue correction",
-            0,cognition.select(sight,proposals));
+        assertEquals("V380: real blue intake makes physically better offered direction selectable",
+            1,cognition.select(sight,proposals));
+    }
+    @Test public void censoredWallBlockCausesStallWithoutFalseMotorTraining(){
+        Zero3InstrumentalCreditV371 m=new Zero3InstrumentalCreditV371();
+        float[] pre=new float[194],right={1f,0f,.5f,.5f,.3f};
+        for(int i=0;i<3;i++){
+            m.begin(pre,right,false);
+            // Contact / external wall correction remains censored for
+            // motor response model, yet witnesses ZERO's actual impasse.
+            m.complete(0f,0f,.3f,false,false,true);
+        }
+        assertTrue("V380 measured physically blocked repeats open exploration",
+            m.repeatedRealMotorStall());
+        assertEquals("No false training on collisions",0,m.verifiedDirections());
+        assertEquals("No fake inertia training",0,m.verifiedInertialResponseV377());
+    }
+    @Test public void unlearnedColorsStillHaveNoInnatePreference(){
+        Zero3CognitionV353 c=new Zero3CognitionV353();
+        float[] retina=new float[194];retina[20]=.56f;retina[28]=.56f;
+        float[][] a={{1f,0f,.5f,.5f,.3f},{-1f,0f,.5f,.5f,.3f}};
+        assertEquals("Colors have no built-in reward sign",0,c.select(retina,a));
+    }
+    @Test public void physicalWallUsesSweptCollisionNoTeleportation(){
+        MotorBrain.Body b=new MotorBrain.Body();Morphology.Surface s=new Morphology.Surface(b);
+        ArrayList<UnknownWorld.Entity> wall=new ArrayList<>();
+        wall.add(TrainingRoomV379.wall(120f,0f));
+        float[] oldSX=s.x.clone(),oldSY=s.y.clone();
+        float[] oldBX=b.x.clone(),oldBY=b.y.clone();
+        s.x[0]=190f;s.y[0]=0f;s.vx[0]=9000f;
+        oldSX[0]=50f;oldSY[0]=0f;
+        TrainingRoomV379.constrain(b,s,wall,oldSX,oldSY,oldBX,oldBY);
+        assertTrue("V380 swept skin cannot cross a complete wall tile",
+            s.x[0]<=108.05f);
+        assertTrue("Physical velocity is not injected",s.vx[0]<=0f);
     }
     private static float[] oneRedAtEast(float brightness){
         float[] sight=new float[194];
