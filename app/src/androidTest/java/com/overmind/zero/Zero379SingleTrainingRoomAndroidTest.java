@@ -70,7 +70,9 @@ public final class Zero379SingleTrainingRoomAndroidTest {
             GameActivity current=game;
             AtomicLong before=new AtomicLong();
             android.runOnMainSync(()->{
-                assertTrue(current.originalV356NeuralOwnerForQA());
+                assertTrue("Neural owner failed to load: "+
+                    current.originalV356BrainErrorForQA(),
+                    current.originalV356NeuralOwnerForQA());
                 before.set(current.originalV356DecisionsForQA());
                 current.originalV379EnterTrainingForQA();
             });
