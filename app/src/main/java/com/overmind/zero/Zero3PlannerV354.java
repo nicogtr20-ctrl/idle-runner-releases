@@ -46,7 +46,12 @@ public final class Zero3PlannerV354 {
         for(int a=0;a<options.length;a++){
             float[] o=observed,z=latent,action=options[a];float score=0,discount=1;
             for(int step=0;step<horizon;step++){
-                Step p=model.step(o,z,action);score+=discount*(p.physical[0]-p.physical[1]-p.physical[2]-2*p.uncertainty);
+                Step p=model.step(o,z,action);// Use the raw predicted motor cost only when its own heldout
+                // validation passed. When untrusted, the externally
+                // validated V353 costSafetyMargin remains the conservative
+                // bound for an actual option override below.
+                score+=discount*(p.physical[0]-p.physical[1]-
+                    (costTrusted?p.physical[2]:0f)-2*p.uncertainty);
                 discount*=.98f;o=p.observation;z=p.hidden;action=model.meanAction(z);
             }
             if(a==0)original=score;
