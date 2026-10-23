@@ -66,7 +66,7 @@ public final class Zero382BrakePhysicalABAndroidTest {
     }
     @Test public void observeMatchedOriginalGelBrakingAcrossActualFloorCoefficients(){
         StringBuilder out=new StringBuilder("ZERO382_REAL_MATERIAL_A_B\n");
-        for(float gain:new float[]{0f,.02f,.04f,.06f}){
+        for(float gain:new float[]{0f,-.02f,-.04f,-.06f,.02f,.04f,.06f}){
             Trial east=run(gain,0),west=run(gain,4),north=run(gain,2);
             out.append(String.format(Locale.US,
                 "gain=%.3f eastWarm=%.4f continueEast=%.4f WESTfirst=%.4f WEST8=%.4f WESTY=%.4f NORTHfirstY=%.4f NORTH8Y=%.4f work=%.7f%n",
