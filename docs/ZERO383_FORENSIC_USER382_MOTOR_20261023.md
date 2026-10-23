@@ -15,3 +15,21 @@ Questo è un meccanismo di possibile regressione: una regolazione progettata per
 Workflow `.github/workflows/zero383-user-382-physical-replay.yml`. Ricostruisce su runner temporaneo da frammenti SHA256 convalidati il cervello originale 382 (10294 decisioni), frozen motor weights e la traccia 256; **nessuna pubblicazione o stampa dei pesi neurali**. Confronta 4 livelli di rilascio attrito [0,-.02,-.04,-.06] facendo eseguire al vero organismo di 170 nodi tutti e 256 i comandi e tempi registrati. Misura efficienza, direzioni effettive e cambio netto dopo svolta. Replay fisico controllato senza tempeste/ostacoli né ricampionamento autonomo; misura il transduttore materiale NON garantisce comportamento autonomo nella partita.
 ## Gate prossimi interventi
 Non pubblicare OTA383 né variare ulteriormente i muscoli finché A/B non dimostra vantaggio motorio. Non riavviare cervello. Se l'attrito indebolito peggiora efficacia delle sterzate, ritirare SOLO il rilascio V382 preservando la cold-start fix V382, i pesi e l'angolo continuo V381. Instrumentare la ragione di cambi ripetuti di heading all'interno dello stesso brain, senza secondo actor o preferenze hardcoded su colori.
+
+## Risultato verificato: replay A/B reale COMPLETATO
+GitHub Android emulator run `39995703029` **SUCCESS**: https://github.com/nicogtr20-ctrl/idle-runner-releases/actions/runs/39995703029 .
+A/B con tutti i 256 comandi realmente salvati dalla V382, stesso checkpoint GRU64 (10294 decisioni) e identici pesi motori congelati; un transiente di vita conclusa di durata 0.117s viene fedelmente mantenuto. 170 nodi veri, solo fisica del mondo libero senza tempeste, senza forze aggiunte, senza nuove esperienze negli stessi pesi.
+
+| delta attrito dopo svolta | Decisioni in avanti | Direzioni opposte | Net signed U | U gross | signed/gross | Hard turn signed U |
+| ---:|---:|---:|---:|---:|---:|---:|
+| 0.00 (legge di trazione V381) | 181 | 42 | 208.93 | 367.12 | 56.91% | 5.18 |
+| -0.02 | 188 | 38 | 222.95 | 378.78 | 58.86% | 6.49 |
+| **-0.04 (V382 effettiva)** | **195** | **35** | **232.46** | 384.47 | **60.46%** | **9.96** |
+| -0.06 (solo laboratorio) | 198 | 37 | 253.85 | 401.87 | 63.17% | 11.58 |
+
+**CONCLUSIONE CRITICA**: la pista iniziale che il rilascio di attrito -0.04 di V382 peggiorasse intrinsecamente la locomozione è **smentita** da questo replay matched. In questa prova semplificata, la V382 supera la fisica precedente V381 in progress reale e anche nei turn (>90). Non eliminare -0.04 per intuito e non applicare -0.06 in produzione senza prove nel mondo reale (tempeste, oggetti, spazi stretti), perché replay isolato non include tali condizioni e cambia lavoro/material strain. 
+La cattiva performance recente della V382 nel campo osservato è coerente soprattutto con doppio numero di bruschi cambi dell'intenzione, stato ambientale diverso, e sistema motorio comunque incapace di invertire istantaneamente per 0.44s. **La causalità del churn neurale NON è verificabile dalla V381 flight attuale**, che non memorizza per-proposta lo stato di selezione. Non asserire che `plannerUses` sia il motivo senza traccia della decisione. 
+Test non manipola l'app sul Galaxy S21, non aggiorna OTA, non azzera cervello, non fornisce una nuova versione firmata.
+
+## Ulteriore necessità diagnostica prima di intervento brain
+Il checkpoint V382 mostra `predictivePlannerUses=216` vs 0 nel precedente V381 (+216 nei 297 ulteriori decisioni). Questo indica che il V353 predictor ha ora una via potenzialmente attiva; non indica **quante** volte l'esito cambia effettivamente azione né prova che sia la causa del raddoppio dei grandi turn. Per dimostrare quale componente cambia un'intenzione fisicamente intraducibile, la futura scatola nera V3 deve tracciare le direzioni a ogni selezione: proposta originale GRU, selezione V353, proposta V354 planner, eventuale richiamo executive, scelta effettiva e prev-momentum; il tutto SENZA creare una seconda IA o forzare una policy di mantenimento della direzione. Verificare su upload reale che gli override si associno a turn >90 non necessari e mancato reale progresso/energia. Se la causa è dimostrata, correggere la condizione di fiducia sul controllo motorio per gli override cognitivi mantenendo tutte le funzioni apprese.
