@@ -1,0 +1,123 @@
+name: ZERO381 continuous GRU3 motor and forensic recorder signed experimental preview
+on:
+  push:
+    branches: [feature/zero381-physical-motor-adaptation-flight-recorder]
+    paths: ['.github/workflows/zero381-signed-preview.yml']
+  workflow_dispatch:
+permissions: {contents: write}
+jobs:
+  signed-preview:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    env:
+      OVERMIND_BUILD_NUMBER: '191'
+      OVERMIND_CANDIDATE_NAME: '3.0-ota.381-motor.1'
+    steps:
+      - uses: actions/checkout@v4
+        with: {fetch-depth: 0}
+      - uses: actions/setup-java@v4
+        with: {distribution: temurin, java-version: '17'}
+      - name: Require successful same-source emulator QA and unchanged public update
+        run: |
+          set -euo pipefail
+          git diff --quiet f78dc46c775a082b8cdc457f76a40529cec14eb4 HEAD -- app/src app/build.gradle
+          test -f app/src/main/java/com/overmind/zero/TrainingRoomV379.java
+          test -f app/src/androidTest/java/com/overmind/zero/Zero381PhysicalMotorCalibrationAndroidTest.java
+          python3 - <<'PY'
+          import json,urllib.request
+          url='https://api.github.com/repos/nicogtr20-ctrl/idle-runner-releases/actions/runs/39863535845'
+          with urllib.request.urlopen(urllib.request.Request(url,headers={'Accept':'application/vnd.github+json','User-Agent':'ZERO381-QA'}),timeout=20) as response:
+              run=json.load(response)
+          assert run['head_sha']=='f78dc46c775a082b8cdc457f76a40529cec14eb4'
+          assert run['conclusion']=='success' and run['status']=='completed'
+          print('ZERO381_SAME_SOURCE_ANDROID_EMULATOR_QA=PASS')
+          # This is NOT success-proof of steering. Require the exact user's
+          # original trained V380 checkpoint test to have completed, and keep
+          # inverse calibration gated off when it cannot prove real authority.
+          with urllib.request.urlopen(urllib.request.Request(
+              'https://api.github.com/repos/nicogtr20-ctrl/idle-runner-releases/actions/runs/39863501935',
+              headers={'Accept':'application/vnd.github+json','User-Agent':'ZERO381-PHYSICAL-CHECK'}),timeout=20) as response:
+              user_trial=json.load(response)
+          assert user_trial['head_sha']=='76cb830c22d99c67d8fd06567da87e52fd1d3e83'
+          assert user_trial['conclusion']=='success' and user_trial['status']=='completed'
+          print('REAL_SAVED_USER_CHECKPOINT_PHYSICS_VALIDATED=PASS_NOT_A_CLAIM_OF_MOTOR_IMPROVEMENT')
+          PY
+          git fetch origin main
+          python3 - <<'PY'
+          import json,subprocess
+          manifest=json.loads(subprocess.check_output(['git','show','origin/main:updater/public/latest.json'],text=True))
+          assert manifest['applicationId']=='com.overmind.zero.ota'
+          assert manifest['versionCode']==1188 and manifest['versionName']=='3.0-ota.378-test.1'
+          print('STABLE_OTA_IS_UNCHANGED_AND_COMPATIBLE=PASS')
+          PY
+      - name: Restore same production signing certificate privately
+        env:
+          SIGNING_BUNDLE: ${{ secrets.OVERMIND_SIGNING_BUNDLE }}
+        run: |
+          python3 - <<'PY'
+          import os,base64,json,pathlib
+          raw=os.environ.get('SIGNING_BUNDLE','')
+          if not raw:raise RuntimeError('Stable signing bundle is unavailable')
+          data=json.loads(base64.b64decode(raw,validate=True))
+          target=pathlib.Path(os.environ['RUNNER_TEMP'])/'zero381-stable-signing.p12'
+          target.write_bytes(base64.b64decode(data['keyStoreBase64'],validate=True))
+          target.chmod(0o600)
+          for secret in (data['password'],data['alias']):print('::add-mask::'+secret)
+          with open(os.environ['GITHUB_ENV'],'a') as e:
+              e.write('OVERMIND_KEYSTORE_FILE='+str(target)+'\n')
+              e.write('OVERMIND_KEYSTORE_PASSWORD='+data['password']+'\n')
+              e.write('OVERMIND_KEY_PASSWORD='+data['password']+'\n')
+              e.write('OVERMIND_KEY_ALIAS='+data['alias']+'\n')
+          PY
+      - name: Build signed install-over-existing experimental APK
+        run: gradle --no-daemon assembleRelease
+      - name: Verify original certificate and Android versionCode 1191 before distribution
+        run: |
+          set -euo pipefail
+          apk=app/build/outputs/apk/release/app-release.apk
+          bt=$(find "$ANDROID_HOME/build-tools" -mindepth 1 -maxdepth 1 -type d | sort -V | tail -n 1)
+          "$bt/apksigner" verify --print-certs --verbose "$apk" > "$RUNNER_TEMP/zero381-cert.txt"
+          "$bt/aapt" dump badging "$apk" > "$RUNNER_TEMP/zero381-package.txt"
+          python3 - <<'PY'
+          from pathlib import Path
+          import os,json,hashlib
+          root=Path(os.environ['RUNNER_TEMP'])
+          cert=(root/'zero381-cert.txt').read_text()
+          expected='45010684b4fd74de00f87fb81ca89e1e79b58409cf9fefc497b445b0fe19f583'
+          assert 'certificate SHA-256 digest: '+expected in cert,'Signing identity mismatch'
+          pkg=(root/'zero381-package.txt').read_text()
+          assert "package: name='com.overmind.zero.ota'" in pkg
+          assert "versionCode='1191'" in pkg and "versionName='3.0-ota.381-motor.1'" in pkg
+          meta=json.loads(Path('app/build/outputs/apk/release/output-metadata.json').read_text())
+          assert meta['elements'][0]['versionCode']==1191
+          apk=Path('app/build/outputs/apk/release/app-release.apk').read_bytes()
+          print('SIGNATURE_PACKAGE_VERSION_ALL_PASS sha256='+hashlib.sha256(apk).hexdigest())
+          PY
+          mkdir -p "$RUNNER_TEMP/zero381-release"
+          cp "$apk" "$RUNNER_TEMP/zero381-release/OVERMIND-ZERO-MOTOR381-EXPERIMENTAL.apk"
+          sha256sum "$RUNNER_TEMP/zero381-release/OVERMIND-ZERO-MOTOR381-EXPERIMENTAL.apk" > "$RUNNER_TEMP/zero381-release/SHA256.txt"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: ZERO381-signed-installable-preview
+          path: |
+            ${{ runner.temp }}/zero381-release/OVERMIND-ZERO-MOTOR381-EXPERIMENTAL.apk
+            ${{ runner.temp }}/zero381-release/SHA256.txt
+          if-no-files-found: error
+      - name: Publish standalone signed prerelease; do not change Vercel or latest.json
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          tag=overmind-zero-v3.0-ota.381-motor-preview
+          asset="$RUNNER_TEMP/zero381-release/OVERMIND-ZERO-MOTOR381-EXPERIMENTAL.apk"
+          if gh release view "$tag" --repo "${{ github.repository }}" >/dev/null 2>&1;then
+            echo "Immutable tag already exists: refusing to overwrite signed artifact"
+            exit 1
+          fi
+          gh release create "$tag" "$asset" "$RUNNER_TEMP/zero381-release/SHA256.txt" \
+            --repo "${{ github.repository }}" --target "${{ github.sha }}" \
+            --title 'OVERMIND ZERO 3.0 — Motore 381 e scatola nera V3 (preview firmata)' --prerelease \
+            --notes 'ZERO381 SPERIMENTALE: 24 test Android superati e simulazione read-only su cervello reale V380. Corregge la quantizzazione a 45 gradi nella periferica congelata di ZERO3, aggiunge scatola nera bounded delle ultime 256 decisioni e una mappatura risposta motoria che si attiva SOLO se convalidata; sul test attuale resta inattiva perché non dimostra progresso motorio. VersionCode1191, certificato originale e package invariati. Installare senza disinstallare per preservare il cervello, poi condividere nuovi dati dal Galaxy S21. Nessun risultato locomotorio garantito. OTA pubblica invariata.'
+      - name: Remove private signing material
+        if: always()
+        run: rm -f "$RUNNER_TEMP/zero381-stable-signing.p12"

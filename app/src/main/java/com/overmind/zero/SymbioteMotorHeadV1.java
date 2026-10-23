@@ -42,6 +42,7 @@ public final class SymbioteMotorHeadV1 {
     private final float[] noise=new float[OUTPUTS],pending=new float[OUTPUTS];
     private float[] previousState;
     private int lastAction=-1;
+    private float preciseOriginalHeadingV381=Float.NaN;
     // Exactly one motor learner probes per live decision. The two controllers
     // must not both attribute the same perturbation to themselves.
     private boolean fastProbe=false;
@@ -157,6 +158,28 @@ public final class SymbioteMotorHeadV1 {
         chosen(action,bodySensors,recurrent,exploration,internal,sectorAngles,
             null,null);
     }
+    /**
+     * V381: the frozen historical motor is a physical TRANSDUCER for one
+     * continuously specified GRU3 heading, not an independent agent.
+     * Its internal 8-bank memory/probe labels remain unchanged but 96-site
+     * force features are evaluated against the actual angular heading.
+     */
+    void chosenOriginalV381(int bank,float headingX,float headingY,
+                            float[] bodySensors,float[] recurrent,
+                            float[] sectorAngles,MotorBrain.Body body,
+                            Morphology.Surface skin){
+        if(adaptationEnabled||!Float.isFinite(headingX)||!Float.isFinite(headingY)||
+           Math.hypot(headingX,headingY)<.9)
+            throw new IllegalStateException("Only frozen original V3 physical peripheral");
+        preciseOriginalHeadingV381=(float)Math.atan2(headingY,headingX);
+        try{
+            chosen(bank,bodySensors,recurrent,0f,null,sectorAngles,body,skin);
+        }finally{preciseOriginalHeadingV381=Float.NaN;}
+    }
+    void fastOriginalHeadingV381(float headingX,float headingY){
+        if(adaptationEnabled)throw new IllegalStateException("Original V3 only");
+        somatic.originalV3PreciseMotorHeadingV381(headingX,headingY);
+    }
     /** The skill archive reads only REAL pre-decision body posture. */
     public void chosen(int action,float[] bodySensors,float[] recurrent,
                        float exploration,float[] internal,float[] sectorAngles,
@@ -179,7 +202,8 @@ public final class SymbioteMotorHeadV1 {
         priorPhysicalAction=action;
         lastAction=action;
         previousState=recurrent.clone();
-        float goal=action%8*(float)Math.PI/4f;
+        float goal=Float.isFinite(preciseOriginalHeadingV381)?
+            preciseOriginalHeadingV381:action%8*(float)Math.PI/4f;
         for(int sector=0;sector<N;sector++){
             float a=sectorAngles!=null&&sectorAngles.length==N&&
                 Float.isFinite(sectorAngles[sector])

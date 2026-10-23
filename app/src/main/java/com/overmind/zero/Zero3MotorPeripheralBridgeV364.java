@@ -40,13 +40,17 @@ final class Zero3MotorPeripheralBridgeV364 {
         // a heading, train on credited commands it didn't alone execute,
         // or recover another agent's stored actions.
         peripheral.setAdaptationEnabled(false);
-        peripheral.chosen(bank,DistributedBodySense.sense(body,skin,chamber,objects),
-            QUIET_RECURRENCE,0f,null,
+        peripheral.chosenOriginalV381(bank,chosenX,chosenY,
+            DistributedBodySense.sense(body,skin,chamber,objects),
+            QUIET_RECURRENCE,
             SymbioteMotorHeadV1.measuredSectorAngles(body,skin),body,skin);
         // Previously adaptationEnabled(false) prevented weight updates
         // but left fastProbe true every third decision. That jitter was
         // part of the old 2.2 training motor, NOT a valid V3 command.
         peripheral.silenceFrozenV3MotorProbeV372();
+        // The GRU3 intent is continuous: never round it to a 45-degree
+        // motor direction in the 75% frozen fast circuit (V380 loss).
+        peripheral.fastOriginalHeadingV381(chosenX,chosenY);
     }
     static void fastPhysicalRefine(float[] executing,SymbioteMotorHeadV1 peripheral,
                                    MotorBrain.Body body,Morphology.Surface skin,

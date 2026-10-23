@@ -30,6 +30,9 @@ public final class FastSomaticCircuitV167 {
     private int action=-1,intervalFrames;
     private boolean exploratoryTrial=true;
     private float netX,netY,gross,lastAgreement;
+    // V381: optional continuous V3 motor target, not a new action chooser.
+    // Historical V2.2 path remains EXACT eight discrete headings.
+    private float originalV3HeadingV381=Float.NaN;
     private static float clip(float x,float a,float b){return Math.max(a,Math.min(b,x));}
     private float random(){
         seed^=seed<<13;seed^=seed>>>7;seed^=seed<<17;
@@ -62,9 +65,16 @@ public final class FastSomaticCircuitV167 {
     /** Resets the experimental trial, not learned synaptic parameters. */
     public void chosen(int selected){chosen(selected,true);}
     /** Genuine causal motor experiments: one actuator layer explores at a time. */
+    void originalV3PreciseMotorHeadingV381(float x,float y){
+        if(action<0||!Float.isFinite(x)||!Float.isFinite(y)||
+           Math.hypot(x,y)<.9)
+            throw new IllegalArgumentException("No physical V3 intent to transduce");
+        originalV3HeadingV381=(float)Math.atan2(y,x);
+    }
     public void chosen(int selected,boolean allowExploration){
         if(selected<0||selected>=RecurrentCoreV22.A)return;
         action=selected;exploratoryTrial=allowExploration;
+        originalV3HeadingV381=Float.NaN;
         intervalFrames=0;netX=netY=gross=0f;
         Arrays.fill(eligibility,0f);
         if(!allowExploration)Arrays.fill(drift,0f);
@@ -105,7 +115,10 @@ public final class FastSomaticCircuitV167 {
             throw new IllegalArgumentException("Invalid ZERO167 physics tick");
         System.arraycopy(base,0,commands,0,base.length);
         if(action<0)return;
-        float theta=(action%8)*(float)Math.PI/4f;
+        // Only the V3 original-body call with the independently typed
+        // heading may use continuous geometry. V2.2/legacy remains quantized.
+        float theta=separateWeatherV370&&Float.isFinite(originalV3HeadingV381)?
+            originalV3HeadingV381:(action%8)*(float)Math.PI/4f;
         float goalX=(float)Math.cos(theta),goalY=(float)Math.sin(theta);
         float alpha=1f-(float)Math.exp(-5.2f*dt);
         // Reuse arrays on every ~25ms physics step; no per-frame GC.

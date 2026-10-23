@@ -34,6 +34,11 @@ final class Zero3OriginalBrainV356 {
     private float maxVerifiedDecisionDamageV359;
     private boolean pending,heldout,disturbed;
     private boolean physicallyTouchedSolidDuringDecisionV380;
+    // Empirically verified downstream actuator mapping, never an alternative brain.
+    private final Zero381MotorCalibration motorResponseV381=new Zero381MotorCalibration();
+    private final Zero381MotorFlightRecorder flightV381=new Zero381MotorFlightRecorder();
+    private float preVxV381,preVyV381;
+
     // V361: read-only measured motor execution since this app session began.
     // These are not rewards, goals, authored directions, or neural input.
     private long measuredMotorDecisionsV361,measuredPhysicalV361,externalMotorDecisionsV361;
@@ -108,6 +113,14 @@ final class Zero3OriginalBrainV356 {
     float previousDamageV359(){return priorDamage;}
     long damagedDecisionsV359(){return damagedDecisionsV359;}
     float maxVerifiedDecisionDamageV359(){return maxVerifiedDecisionDamageV359;}
+    void restoreMotorObservationsV381(String response,String flight)throws IOException{
+        if(!motorResponseV381.restore(response)||!flightV381.restore(flight))
+            throw new IOException("Dati motori V381 corrotti: nessun salvataggio sovrascritto");
+    }
+    String motorResponseCheckpointV381(){return motorResponseV381.encode();}
+    String flightCheckpointV381(){return flightV381.encode();}
+    boolean motorResponseTrustedV381(){return motorResponseV381.trusted();}
+    int motorResponseSamplesV381(){return motorResponseV381.samples();}
     float directionX(){return choice==null?0:choice.x;}
     float directionY(){return choice==null?0:choice.y;}
     float adhesion(){return choice==null?0:choice.adhesion;}
@@ -216,6 +229,7 @@ final class Zero3OriginalBrainV356 {
                 actualDamageDuringDecisionV359=0f;
                 motorReserveSpentDuringDecisionV359=0f;elapsed=0;disturbed=false;
                 physicallyTouchedSolidDuringDecisionV380=false;
+                preVxV381=body.cvx;preVyV381=body.cvy;
                 heldout=Zero3ConfigurationV354.heldout(cursor);
                 choice=brain.choose(prior194,epoch,cursor,cortex.revision());
                 issued=authority.issue(OWNER,cursor,(int)Math.min(Integer.MAX_VALUE,cortex.revision()),
@@ -226,9 +240,12 @@ final class Zero3OriginalBrainV356 {
                 // muscles, world forces, profile, or original 2.2 runtime.
                 motor.begin(choice,body,!heldout,heldout,true,true,true);
                 grip.begin(heldout);
-                if(physicalPeripheralV364!=null)
+                if(physicalPeripheralV364!=null){
+                    float[] physicalHeading=motorResponseV381.begin(
+                        choice.x,choice.y,body.cvx,body.cvy);
                     Zero3MotorPeripheralBridgeV364.begin(physicalPeripheralV364,
-                        body,skin,chamber,objects,choice.x,choice.y);
+                        body,skin,chamber,objects,physicalHeading[0],physicalHeading[1]);
+                }
                 pending=true;lastLife=realLife;
             }
             if(realLife!=lastLife)throw new IOException("Vita cambiata durante la decisione");
@@ -319,6 +336,19 @@ final class Zero3OriginalBrainV356 {
             if(harm>0f){damagedDecisionsV359++;maxVerifiedDecisionDamageV359=Math.max(maxVerifiedDecisionDamageV359,harm);}
             float[] after=sense(body,skin,gel,objects,chamber,reserve,time,false);
             float net=reserve-beforeFuel;
+            // Retain read-only physical command/outcome evidence. The V3
+            // chooser, reinforcement and existing V378 credit are untouched.
+            motorResponseV381.complete(outcome.deltaX,outcome.deltaY,elapsed,
+                outcome.activeImpulse,outcome.physicalEvidence&&!disturbed&&
+                !outcome.externalCorrection&&!outcome.censored&&
+                !physicallyTouchedSolidDuringDecisionV380&&!genuineTerminal,heldout);
+            flightV381.completed(cursor,choice.x,choice.y,
+                motorResponseV381.lastPeripheralX(),motorResponseV381.lastPeripheralY(),
+                preVxV381,preVyV381,body.cvx,body.cvy,
+                outcome.deltaX,outcome.deltaY,elapsed,outcome.activeImpulse,
+                Math.max(0f,net),harm,prior194,executed64,
+                outcome.physicalEvidence,outcome.externalCorrection,
+                physicallyTouchedSolidDuringDecisionV380);
             float touch=0,held=0,optical=0;
             for(int i=0;i<16;i++){touch+=after[60+i]/16f;held+=after[92+i]/16f;}
             for(int i=20;i<44;i++)optical+=Math.abs(after[i]-prior194[i])/48f;
@@ -352,6 +382,7 @@ final class Zero3OriginalBrainV356 {
         actualDamageDuringDecisionV359=0f;
         motorReserveSpentDuringDecisionV359=0f;
         physicallyTouchedSolidDuringDecisionV380=false;
+        motorResponseV381.abort();
         // issued authority count is ahead one. New authority starts exactly at
         // completed cursor without contaminating or reusing an incomplete ID.
         rearmAuthority();
