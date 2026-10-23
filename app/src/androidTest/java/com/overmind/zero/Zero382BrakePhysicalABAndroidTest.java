@@ -19,12 +19,17 @@ public final class Zero382BrakePhysicalABAndroidTest {
         float firstX,firstY,fullX,fullY,warmX,work,endVx,endVy;
     }
     static Trial run(float gain,int terminalDirection){
+        return run(gain,terminalDirection,0f);
+    }
+    static Trial run(float gain,int terminalDirection,float neuralResponseRate){
         MotorBrain.Body b=new MotorBrain.Body();
         Morphology.Surface s=new Morphology.Surface(b);
         SymbioteMatterV1 gel=new SymbioteMatterV1();
         gel.reset(b,s);gel.enableOriginalZero3TractionV363();
         gel.configurePhysicalTurnBrakeV382(gain);
         SymbioteMotorHeadV1 old=new SymbioteMotorHeadV1();
+        old.setAdaptationEnabled(false);
+        old.configureOriginalMotorTempoForLabV382(neuralResponseRate);
         Zero3LearningFoundation.AdaptiveCortex cortex=
             new Zero3LearningFoundation.AdaptiveCortex();
         Zero3LearningFoundation.Coordinator coordinator=
@@ -63,6 +68,22 @@ public final class Zero382BrakePhysicalABAndroidTest {
         assertEquals("Same original learning disabled in science A/B",
             0,cortex.updates());
         return trial;
+    }
+    @Test public void compareFastSomaticPhysicalTurnResponseWithoutBodyForceShortcut(){
+        StringBuilder out=new StringBuilder("ZERO382_PHYSICAL_MOTOR_RESPONSE_TEMPO_AB\n");
+        for(float response:new float[]{0f,8f,16f,24f}){
+            Trial east=run(0f,0,response),west=run(0f,4,response),
+                  north=run(0f,2,response);
+            out.append(String.format(Locale.US,
+                "responseGain=%.1f warmEast=%.4f EAST8=%.4f WESTfirst=%.4f WEST8=%.4f NORTHfirstY=%.4f NORTH8Y=%.4f work=%.7f%n",
+                response,east.warmX,east.fullX,west.firstX,
+                west.fullX,north.firstY,north.fullY,west.work));
+            assertTrue(west.work>0&&Double.isFinite(west.fullX));
+            assertEquals("No muscle change before the initial turn",east.warmX,west.warmX,.01f);
+        }
+        Bundle b=new Bundle();b.putString("stream",out.toString());
+        InstrumentationRegistry.getInstrumentation().sendStatus(0,b);
+        System.out.print(out);
     }
     @Test public void observeMatchedOriginalGelBrakingAcrossActualFloorCoefficients(){
         StringBuilder out=new StringBuilder("ZERO382_REAL_MATERIAL_A_B\n");
