@@ -239,24 +239,32 @@ public final class Zero3RecurrentBrain {
             proposal[out]=dot(actor,at,state,HIDDEN);
             lastNoise[out]=sample();
         }
-        // Wide unbiased exploratory actor samples only after the brain has
-        // physically learned a visible wavelength's valence. No forced
-        // direction, object location, scripted reflex or V2 decision issuer.
-        boolean learnedBearing=cognition!=null&&cognition.hasVisibleContactKnowledgeV369(x);
+        // V383 ROOT FIX. A *learned wavelength outcome* proves only that
+        // the environment contains reward/harm, NOT that this body's
+        // muscle-to-motion map supports arbitrary large angle changes.
+        // V382 generated up to seven 4x-noise candidates merely on colour
+        // recognition, allowing repeated 90+ degree GRU reversals faster
+        // than the body can brake. Trust the CURRENT real velocity regime's
+        // independently heldout motor response before WIDENING samples.
+        // Even before that proof, the GRU retains three ordinary unbiased
+        // candidates, learns normally, and may choose any physical heading.
         boolean verifiedMotor=cognition!=null&&cognition.verifiedDirectionalV371(x);
-        // V371 blind 2003 real choices: forcing wide exploration before
-        // actual motor stall REGRESSED signed travel to 6.81% vs ~10%
-        // previously. Restore normal 3 actor candidates unless real
-        // physically repeated failure or learned wavelength exists.
+        boolean motorCanSteer=cognition!=null&&cognition.motorExplorationReadyV383(x);
         boolean realStall=cognition!=null&&cognition.repeatedRealMotorStallV371();
-        float[][] options=new float[cognition==null?1:realStall?9:learnedBearing?7:3][5];
+        float[][] options=new float[cognition==null?1:motorCanSteer?
+            (realStall?7:5):3][5];
         float[][] noise=new float[options.length][MOTOR];
         float[][] noiseScale=new float[options.length][MOTOR];
         for(int k=0;k<options.length;k++){
             for(int j=0;j<MOTOR;j++){
-                float scale=k>0&&j<2?
-                    (realStall?(k>=4?7f:k>=2?3f:1.5f):
-                     learnedBearing?(k>=3?4f:2.5f):1f):1f;
+                // Exploration width is grounded in actual material
+                // steering authority; it is NOT raised by light colour.
+                // Once independently verified, preserve diverse choices
+                // at modest scale. Stalls still permit exploration rather
+                // than forcing a hand-authored escape heading.
+                float scale=k>0&&j<2&&motorCanSteer?
+                    (realStall?(k>=4?2.5f:k>=2?1.7f:1.2f):
+                     k>=3?2f:1.5f):1f;
                 noiseScale[k][j]=scale;
                 noise[k][j]=k==0?lastNoise[j]:sample()*scale;
             }
