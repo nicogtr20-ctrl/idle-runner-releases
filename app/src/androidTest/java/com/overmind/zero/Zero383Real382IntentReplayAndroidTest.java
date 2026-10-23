@@ -54,7 +54,12 @@ public final class Zero383Real382IntentReplayAndroidTest {
             assertEquals("unmodified flight column schema",28,values.length);
             float x=Float.parseFloat(values[1]),y=Float.parseFloat(values[2]);
             float duration=Float.parseFloat(values[11]);
-            assertTrue("saved GRU choice must be physical",Math.hypot(x,y)>.97);
+            // The read-only flight logs angles rounded to 3 decimals.
+            // Normalize quantized logger coordinates back to a unit vector;
+            // the genuine GRU owner issued normalized headings originally.
+            float norm=(float)Math.hypot(x,y);
+            assertTrue("saved GRU choice must be physical",norm>.97&&norm<1.03);
+            x/=norm;y/=norm;
             int steps=Math.round(duration/DT);
             assertTrue(steps>=14&&steps<=40);
             boolean hard=Float.isFinite(px)&&Math.atan2(
