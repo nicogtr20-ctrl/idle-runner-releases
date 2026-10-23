@@ -53,6 +53,7 @@ public final class Zero381UserCheckpointClosedLoopAndroidTest {
                 1L,decisions++,cortex.revision(),headingX,headingY,.5f,.5f,STEPS*DT);
             motor.begin(choice,body,false,true,true,true,true);
             Zero3MotorPeripheralBridgeV364.begin(old,body,skin,null,NONE,x,y);
+            gel.observedOriginalMotorChangeV382(headingX,headingY);
             float dx=0,dy=0,impulse=0;
             for(int f=0;f<STEPS;f++){
                 float[] executed=motor.actuate(body,skin,DT);
