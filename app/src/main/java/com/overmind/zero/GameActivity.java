@@ -63,6 +63,10 @@ public final class GameActivity extends Activity {
         lab.testMaxStartedNs=System.nanoTime();
         lab.invalidate();
     }
+    float originalV382PhysicalTurnBrakeForQA(){
+        return lab==null||lab.symMatter==null?Float.NaN:
+            lab.symMatter.configuredTurnBrakeLimitV382();
+    }
     String originalV366MotorDiagnosticForQA(){
         return lab==null||lab.brain3==null?"":lab.brain3.motorDiagnosticV361();
     }
