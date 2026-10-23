@@ -180,6 +180,12 @@ public final class SymbioteMotorHeadV1 {
         if(adaptationEnabled)throw new IllegalStateException("Original V3 only");
         somatic.originalV3PreciseMotorHeadingV381(headingX,headingY);
     }
+    void configureOriginalMotorTempoForLabV382(float extraRate){
+        if(adaptationEnabled)
+            throw new IllegalStateException("Only frozen original V3 muscle stage");
+        somatic.configureOriginalV3TurnResponseForLabV382(extraRate);
+    }
+
     /** The skill archive reads only REAL pre-decision body posture. */
     public void chosen(int action,float[] bodySensors,float[] recurrent,
                        float exploration,float[] internal,float[] sectorAngles,

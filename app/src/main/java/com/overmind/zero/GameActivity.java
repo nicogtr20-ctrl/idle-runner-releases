@@ -63,6 +63,10 @@ public final class GameActivity extends Activity {
         lab.testMaxStartedNs=System.nanoTime();
         lab.invalidate();
     }
+    float originalV382PhysicalTurnBrakeForQA(){
+        return lab==null||lab.symMatter==null?Float.NaN:
+            lab.symMatter.configuredTurnBrakeLimitV382();
+    }
     String originalV366MotorDiagnosticForQA(){
         return lab==null||lab.brain3==null?"":lab.brain3.motorDiagnosticV361();
     }
@@ -510,6 +514,9 @@ public final class GameActivity extends Activity {
                 // drag improvement on every saved-scene restore. The dormant
                 // V2.2 fluid code/physics does NOT receive this calibration.
                 symMatter.enableOriginalZero3TractionV363();
+                // V382 physically measured: on a sharp *self-chosen* turn,
+                // briefly release part of substrate drag; never add speed or force.
+                symMatter.configurePhysicalTurnBrakeV382(-.04f);
                 // Crash-safe atomic birth: the explicit newborn has zero
                 // decisions, and only the SAME commit publishes its initial
                 // valid brain checkpoint and clears the one-time fresh flag.
@@ -864,7 +871,10 @@ public final class GameActivity extends Activity {
             if(useSymbiote){
                 symMatter=new SymbioteMatterV1();
                 symMatter.reset(creature,surface);
-                if(brain3!=null)symMatter.enableOriginalZero3TractionV363();
+                if(brain3!=null){
+                    symMatter.enableOriginalZero3TractionV363();
+                    symMatter.configurePhysicalTurnBrakeV382(-.04f);
+                }
                 sensorMind.setActualFluid(symMatter);
             }else{
                 symMatter=null;

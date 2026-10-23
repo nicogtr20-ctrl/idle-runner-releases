@@ -109,6 +109,7 @@ public final class SymbioteMatterV1 {
             skin.gripCommand[i]=skin.touchSense[i]=skin.gripHold[i]=0;
         }
         restArea=absArea(skin);
+        transientGroundBrakeV382=0f;lastChosenHeadingV382=Float.NaN;
         areaError=work=maxReach=time=0;
         ticks=invalid=topologyRepairs=selfContactPairs=longTipReactionFallbacks=0;
         observeBody(body,skin);
@@ -192,6 +193,36 @@ public final class SymbioteMatterV1 {
     // in every production organism until net motor gains are independently
     // proven across learned/frozen and virgin/resumed worlds.
     private float passiveFloorBaselineV363=.12f;
+    // V382 lab-only: real substrate damping on an abrupt GRU motor change,
+    // never a force, velocity or heading injected to a destination.
+    private float transientGroundBrakeV382=0f;
+    private float experimentalTurnBrakeCeilingV382=0f;
+    private float lastChosenHeadingV382=Float.NaN;
+    /** 0 = exact original V381 physics, allow A/B on the same saved cortex. */
+    void configurePhysicalTurnBrakeV382(float extraTraction){
+        if(!Float.isFinite(extraTraction)||extraTraction<-.06f||extraTraction>.07f)
+            throw new IllegalArgumentException("V382 unsafe physical brake");
+        experimentalTurnBrakeCeilingV382=extraTraction;
+        transientGroundBrakeV382=0f;lastChosenHeadingV382=Float.NaN;
+    }
+    void observedOriginalMotorChangeV382(float goalX,float goalY){
+        if(!Float.isFinite(goalX)||!Float.isFinite(goalY)||
+           Math.hypot(goalX,goalY)<.90)return;
+        float angle=(float)Math.atan2(goalY,goalX);
+        if(Float.isFinite(lastChosenHeadingV382)&&
+           Math.abs(experimentalTurnBrakeCeilingV382)>.0001f){
+            float change=(float)Math.atan2(Math.sin(angle-lastChosenHeadingV382),
+                                           Math.cos(angle-lastChosenHeadingV382));
+            float strength=clip((Math.abs(change)-.48f)/1.5f,0f,1f);
+            float requested=strength*experimentalTurnBrakeCeilingV382;
+            if(Math.abs(requested)>Math.abs(transientGroundBrakeV382))
+                transientGroundBrakeV382=requested;
+        }
+        lastChosenHeadingV382=angle;
+    }
+    float transientBrakeV382(){return transientGroundBrakeV382;}
+    float configuredTurnBrakeLimitV382(){return experimentalTurnBrakeCeilingV382;}
+
     void setPassiveFloorBaselineForLabV363(float value){
         if(!Float.isFinite(value)||value<.02f||value>.12f)
             throw new IllegalArgumentException("outside passive floor calibration");
@@ -511,6 +542,8 @@ public final class SymbioteMatterV1 {
         float previousCumulativeEffort=work;
         lastMuscleReactionImpulse=lastElasticForceMagnitude=0f;
         time+=dt;body.time+=dt;ticks++;
+        if(Math.abs(transientGroundBrakeV382)>.000001f)
+            transientGroundBrakeV382*=(float)Math.exp(-1.8f*dt);
         // This living tissue, not the inactive legacy membrane motor,
         // owns simulated-time pulse decay in Symbiote mode. New real
         // contacts and storm impulses are added later in this frame.
@@ -595,7 +628,8 @@ public final class SymbioteMatterV1 {
             // A stiffer-than-average cortex patch bears more substrate
             // loading; a softer patch can slip. This control is independent
             // of the radial contraction and never uses object-grip intent.
-            float traction=substrateTractionWithBaselineV363(extend,stiffness,meanTension,passiveFloorBaselineV363);
+            float traction=substrateTractionWithBaselineV363(extend,stiffness,meanTension,
+                passiveFloorBaselineV363+transientGroundBrakeV382);
             float drag=(float)Math.exp(-(1.8f+66f*traction)*dt);
             float preX=skin.x[i],preY=skin.y[i];
             float appliedVx=skin.vx[i]+fx[i]*dt;

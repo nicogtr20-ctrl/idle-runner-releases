@@ -113,10 +113,28 @@ final class Zero3OriginalBrainV356 {
     float previousDamageV359(){return priorDamage;}
     long damagedDecisionsV359(){return damagedDecisionsV359;}
     float maxVerifiedDecisionDamageV359(){return maxVerifiedDecisionDamageV359;}
-    void restoreMotorObservationsV381(String response,String flight)throws IOException{
-        if(!motorResponseV381.restore(response)||!flightV381.restore(flight))
-            throw new IOException("Dati motori V381 corrotti: nessun salvataggio sovrascritto");
+    /**
+     * V382 CRITICAL COLD-START REPAIR.
+     * The independently persisted read-only recorder and optional motor
+     * calibration MUST NEVER gate the validated original GRU64 checkpoint.
+     * Malformed / older-format auxiliaries start fresh in isolation while
+     * every byte of the authentic main brain, cortex and live world survives.
+     */
+    private String auxiliaryRestoreWarningV382="";
+    void restoreMotorObservationsV381(String response,String flight){
+        boolean responseOk=motorResponseV381.restore(response);
+        boolean flightOk=flightV381.restore(flight);
+        if(!responseOk||!flightOk){
+            auxiliaryRestoreWarningV382="V382: archivio ausiliario V381 "+
+                (!responseOk&&!flightOk?"motorio e volo":
+                    !responseOk?"motorio":"volo")+
+                " non valido; cervello originale conservato";
+            android.util.Log.w("ZERO382_Resume",auxiliaryRestoreWarningV382);
+        }else auxiliaryRestoreWarningV382="";
     }
+    String auxiliaryRestoreWarningV382(){return auxiliaryRestoreWarningV382;}
+    long flightCountV381(){return flightV381.counted();}
+
     String motorResponseCheckpointV381(){return motorResponseV381.encode();}
     String flightCheckpointV381(){return flightV381.encode();}
     boolean motorResponseTrustedV381(){return motorResponseV381.trusted();}
@@ -232,6 +250,10 @@ final class Zero3OriginalBrainV356 {
                 preVxV381=body.cvx;preVyV381=body.cvy;
                 heldout=Zero3ConfigurationV354.heldout(cursor);
                 choice=brain.choose(prior194,epoch,cursor,cortex.revision());
+                // V382: the body's physical floor contact sees only the
+                // change in ZERO's OWN issued neural motor angle. It cannot
+                // steer, choose an action, inject velocity or target gems.
+                matter.observedOriginalMotorChangeV382(choice.x,choice.y);
                 issued=authority.issue(OWNER,cursor,(int)Math.min(Integer.MAX_VALUE,cortex.revision()),
                     356,choice.x,choice.y,choice.effort,choice.adhesion,choice.duration,
                     brain.measuredConfidenceV354());
