@@ -2,7 +2,12 @@ name: ZERO382 real user 381 saved motor & resume + braking A/B
 on:
   push:
     branches: [fix/zero382-resume-and-physical-turn-braking]
-    paths: ['.github/workflows/zero382-user-saved-brake.yml']
+    paths:
+      - '.github/workflows/zero382-user-saved-brake.yml'
+      - 'app/src/main/java/com/overmind/zero/Zero3OriginalBrainV356.java'
+      - 'app/src/main/java/com/overmind/zero/SymbioteMatterV1.java'
+      - 'app/src/main/java/com/overmind/zero/GameActivity.java'
+      - 'app/src/androidTest/java/com/overmind/zero/Zero382UserSavedBodyBrakeAndroidTest.java'
   workflow_dispatch:
 permissions: {contents: read}
 jobs:
