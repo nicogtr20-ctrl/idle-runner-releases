@@ -270,6 +270,15 @@ final class Zero3InstrumentalCreditV371 {
         if(bank==lastBank&&stalledStreak>=3)utility-=.04f;
         return limit(utility,-.5f,.5f);
     }
+    /** Physical motor control, not a visually recognized gem, is the
+     * evidence gate for the GRU's wide-angular exploration distribution.
+     * Two distinct trusted steering headings are needed in the current
+     * measured PRE-momentum regime. Previous/stored 371+377 evidence remains
+     * byte-for-byte compatible across named neural checkpoints.
+     */
+    boolean wideMotorExplorationSupportedV383(float[] pre194){
+        return inertia.reliableSteeringDirectionsV383(pre194)>=2;
+    }
     boolean hasVerifiedDirectionalEvidence(float[] photons194,Zero3ContactValenceV369 v){
         if(photons194==null||v==null)return false;
         for(int i=0;i<BINS;i++)if(motorVerified(i)){
