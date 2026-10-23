@@ -75,6 +75,34 @@ final class Zero3InertialResponseV377 {
         return new float[]{clip(.30f*vx+meanX[i],120f),
             clip(.30f*vy+meanY[i],120f)};
     }
+    /**
+     * V383 independent real-material steering authority. A positive causal
+     * acceleration along at least TWO different commanded headings must
+     * beat inertial coasting on heldout episodes in the body's CURRENT speed
+     * regime. Vision/learned hue alone cannot enable wide motor exploration.
+     * This only authorizes the existing GRU's wider sampling distribution;
+     * no heading or motor impulse is manufactured by the estimator.
+     */
+    int reliableSteeringDirectionsV383(float[] observation){
+        if(observation==null||observation.length!=194)return 0;
+        float vx=observation[191]*130f,vy=observation[192]*130f;
+        if(!Float.isFinite(vx)||!Float.isFinite(vy))return 0;
+        int speedBank=Math.hypot(vx,vy)>=2d?DIRS:0;
+        int count=0;
+        for(int k=0;k<DIRS;k++){
+            int index=k+speedBank;
+            if(trains[index]<4||validations[index]<3||
+               coastLoss[index]<=.10d||loss[index]>=coastLoss[index]*.90d)
+                continue;
+            double angle=k*Math.PI/4d;
+            double activeForward=meanX[index]*Math.cos(angle)+
+                                 meanY[index]*Math.sin(angle);
+            // Must actually propel in the commanded direction, not merely
+            // predict passive coasting or a statistically predictable brake.
+            if(activeForward>.10d)count++;
+        }
+        return count;
+    }
     int reliableBanks(){
         int n=0;for(int i=0;i<N;i++)
             if(trains[i]>=4&&validations[i]>=3&&coastLoss[i]>.10d&&
