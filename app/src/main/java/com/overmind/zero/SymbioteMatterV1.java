@@ -200,7 +200,7 @@ public final class SymbioteMatterV1 {
     private float lastChosenHeadingV382=Float.NaN;
     /** 0 = exact original V381 physics, allow A/B on the same saved cortex. */
     void configurePhysicalTurnBrakeV382(float extraTraction){
-        if(!Float.isFinite(extraTraction)||extraTraction<0||extraTraction>.07f)
+        if(!Float.isFinite(extraTraction)||extraTraction<-.06f||extraTraction>.07f)
             throw new IllegalArgumentException("V382 unsafe physical brake");
         experimentalTurnBrakeCeilingV382=extraTraction;
         transientGroundBrakeV382=0f;lastChosenHeadingV382=Float.NaN;
@@ -210,12 +210,13 @@ public final class SymbioteMatterV1 {
            Math.hypot(goalX,goalY)<.90)return;
         float angle=(float)Math.atan2(goalY,goalX);
         if(Float.isFinite(lastChosenHeadingV382)&&
-           experimentalTurnBrakeCeilingV382>0){
+           Math.abs(experimentalTurnBrakeCeilingV382)>.0001f){
             float change=(float)Math.atan2(Math.sin(angle-lastChosenHeadingV382),
                                            Math.cos(angle-lastChosenHeadingV382));
             float strength=clip((Math.abs(change)-.48f)/1.5f,0f,1f);
-            transientGroundBrakeV382=Math.max(transientGroundBrakeV382,
-                strength*experimentalTurnBrakeCeilingV382);
+            float requested=strength*experimentalTurnBrakeCeilingV382;
+            if(Math.abs(requested)>Math.abs(transientGroundBrakeV382))
+                transientGroundBrakeV382=requested;
         }
         lastChosenHeadingV382=angle;
     }
@@ -540,7 +541,7 @@ public final class SymbioteMatterV1 {
         float previousCumulativeEffort=work;
         lastMuscleReactionImpulse=lastElasticForceMagnitude=0f;
         time+=dt;body.time+=dt;ticks++;
-        if(transientGroundBrakeV382>0f)
+        if(Math.abs(transientGroundBrakeV382)>.000001f)
             transientGroundBrakeV382*=(float)Math.exp(-1.8f*dt);
         // This living tissue, not the inactive legacy membrane motor,
         // owns simulated-time pulse decay in Symbiote mode. New real
