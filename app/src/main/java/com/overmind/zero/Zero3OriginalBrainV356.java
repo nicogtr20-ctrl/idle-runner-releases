@@ -250,6 +250,10 @@ final class Zero3OriginalBrainV356 {
                 preVxV381=body.cvx;preVyV381=body.cvy;
                 heldout=Zero3ConfigurationV354.heldout(cursor);
                 choice=brain.choose(prior194,epoch,cursor,cortex.revision());
+                // V382: the body's physical floor contact sees only the
+                // change in ZERO's OWN issued neural motor angle. It cannot
+                // steer, choose an action, inject velocity or target gems.
+                matter.observedOriginalMotorChangeV382(choice.x,choice.y);
                 issued=authority.issue(OWNER,cursor,(int)Math.min(Integer.MAX_VALUE,cortex.revision()),
                     356,choice.x,choice.y,choice.effort,choice.adhesion,choice.duration,
                     brain.measuredConfidenceV354());
