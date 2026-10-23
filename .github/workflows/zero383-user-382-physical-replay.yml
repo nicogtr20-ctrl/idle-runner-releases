@@ -2,7 +2,9 @@ name: ZERO383 actual 382 GRU decision trace physical traction A/B (no publish)
 on:
   push:
     branches: [audit/zero383-382-real-intent-physics-replay]
-    paths: [.github/workflows/zero383-user-382-physical-replay.yml]
+    paths:
+      - '.github/workflows/zero383-user-382-physical-replay.yml'
+      - 'app/src/androidTest/java/com/overmind/zero/Zero383Real382IntentReplayAndroidTest.java'
   workflow_dispatch:
 permissions: {contents: read}
 jobs:
