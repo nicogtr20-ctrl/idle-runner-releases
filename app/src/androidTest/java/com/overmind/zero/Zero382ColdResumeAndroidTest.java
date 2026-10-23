@@ -56,6 +56,8 @@ public final class Zero382ColdResumeAndroidTest {
                         game.originalV356NeuralOwnerForQA());
                     assertEquals("Original brain was silently replaced",decisions,
                         game.originalV356DecisionsForQA());
+                    assertEquals("V382 actual living original game must enable ONLY tested real material turn drag",
+                        -.04f,game.originalV382PhysicalTurnBrakeForQA(),.00001f);
                 });
             }finally{
                 if(activity!=null){
