@@ -96,4 +96,60 @@ public final class Zero383UntrustedCostSavedBrainAndroidTest {
         InstrumentationRegistry.getInstrumentation().sendStatus(0,status);
         System.out.print(result);
     }
+    @Test public void measureReal382ActorAuthorityVsExplorationNoise()throws Exception{
+        Context ctx=InstrumentationRegistry.getInstrumentation().getTargetContext();
+        File file=new File(ctx.getExternalFilesDir(null),"zero383-user382-readonly.json");
+        JSONObject input=new JSONObject(new String(
+            Files.readAllBytes(file.toPath()),StandardCharsets.UTF_8));
+        Zero3OriginalBrainV356.Readout readout=
+            Zero3OriginalBrainV356.inspectSaved(input.getString("brain"));
+        Field cf=Zero3OriginalBrainV356.Readout.class.getDeclaredField("core");
+        cf.setAccessible(true);
+        Zero3RecurrentBrain saved=(Zero3RecurrentBrain)cf.get(readout);
+        byte[] snapshot=saved.checkpointAtBoundaryV345();
+        Field rng=Zero3RecurrentBrain.class.getDeclaredField("rng");
+        Field proposal=Zero3RecurrentBrain.class.getDeclaredField("proposal");
+        Field noise=Zero3RecurrentBrain.class.getDeclaredField("lastNoise");
+        Field scale=Zero3RecurrentBrain.class.getDeclaredField("selectedNoiseScaleV369");
+        rng.setAccessible(true);proposal.setAccessible(true);
+        noise.setAccessible(true);scale.setAccessible(true);
+        String[] rows=input.getString("flight").trim().split("\n");
+        int measured=0,noiseDominant=0,bigExploration=0,veryBig=0,wideFlip=0;
+        double actorTotal=0,selectedNoiseTotal=0,scaleTotal=0;
+        for(int i=1;i<=64;i++){
+            Zero3RecurrentBrain b=Zero3RecurrentBrain.fromCheckpoint(snapshot);
+            rng.setLong(b,rng.getLong(b)^(-7046029254386353131L*i));
+            String[] parts=rows[1+(i*3)%256].split(",");
+            float[] input194=new float[194];input194[193]=1;input194[188]=.45f;
+            int blue=Integer.parseInt(parts[18]),red=Integer.parseInt(parts[20]);
+            if(blue>=0)input194[20+blue]=Float.parseFloat(parts[19]);
+            if(red>=0)input194[28+red]=Float.parseFloat(parts[21]);
+            input194[191]=Float.parseFloat(parts[5])/130f;
+            input194[192]=Float.parseFloat(parts[6])/130f;
+            Zero3LearningFoundation.MotorIntent chosen=
+                b.choose(input194,1,10294,0);
+            float[] a=(float[])proposal.get(b);
+            float[] n=(float[])noise.get(b);
+            float[] scales=(float[])scale.get(b);
+            double actor=Math.hypot(a[0],a[1]);
+            double perturb=Math.hypot(n[0],n[1]);
+            double selectedScale=Math.max(scales[0],scales[1]);
+            actorTotal+=actor;selectedNoiseTotal+=perturb;scaleTotal+=selectedScale;
+            if(perturb>actor)noiseDominant++;
+            if(selectedScale>=2.5)bigExploration++;
+            if(selectedScale>=4.0)veryBig++;
+            if(actor>.01&&(a[0]*chosen.x+a[1]*chosen.y)/actor<0)
+                wideFlip++;
+            measured++;
+        }
+        String report=String.format(Locale.US,
+            "REAL_V382_ACTOR_VS_SAMPLER n=%d actorMagnitudeMean=%.6f actualChosenNoiseMagnitudeMean=%.6f noiseExceedsLearnedActor=%d selectedWideScaleAtLeast2_5=%d selectedVeryWideScaleAtLeast4=%d chosenOpposesRawActor=%d selectedScaleMean=%.3f%n",
+            measured,actorTotal/measured,selectedNoiseTotal/measured,
+            noiseDominant,bigExploration,veryBig,wideFlip,scaleTotal/measured);
+        Bundle out=new Bundle();out.putString("stream",report);
+        InstrumentationRegistry.getInstrumentation().sendStatus(0,out);
+        System.out.println(report);
+        assertEquals(64,measured);
+    }
+
 }
