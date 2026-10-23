@@ -1,0 +1,80 @@
+name: ZERO383 real saved brain cognitive motor-cost trust diagnosis (no publish)
+on:
+  push:
+    branches: [audit/zero383-cognitive-untrusted-cost-root-cause]
+    paths:
+      - '.github/workflows/zero383-cognitive-cost-audit.yml'
+      - 'app/src/androidTest/java/com/overmind/zero/Zero383UntrustedCostSavedBrainAndroidTest.java'
+  workflow_dispatch:
+permissions: {contents: read}
+jobs:
+  replay-user382-motor:
+    runs-on: ubuntu-latest
+    timeout-minutes: 65
+    steps:
+      - uses: actions/checkout@v4
+        with: {fetch-depth: 0}
+      - uses: actions/setup-java@v4
+        with: {distribution: temurin, java-version: '17'}
+      - name: Verify and reconstruct user explicitly shared original 382 checkpoint without committing private neural state
+        run: |
+          set -euo pipefail
+          git fetch origin zero-telemetry
+          python3 - <<'PY'
+          import subprocess,json,hashlib,os,pathlib
+          base="zero-telemetry/reports/20261023-171621-32434c07e66f0"
+          def fetch(path):
+              return subprocess.check_output(
+                  ["git","show","origin/zero-telemetry:"+path])
+          index=json.loads(fetch("zero-telemetry/current.json"))
+          assert index["reportId"]==base.rsplit("/",1)[-1]
+          assert index["installedVersionCode"]==1192
+          assert index["zero3Summary"]["completedDecisions"]==10294
+          allparts={part["path"]:part for part in index["parts"]}
+          def verified(path):
+              raw=fetch(path)
+              assert hashlib.sha256(raw).hexdigest()==allparts[path]["sha256"]
+              return json.loads(raw)
+          frozen=verified(base+"/part-001.json")["currentZero"]["symbiote_motor_head_v1"]
+          flight=verified(base+"/part-002.json")["currentZero"]["zero3_motor_flight_recorder_v381"]
+          fragments=[]
+          for i in range(3,22):
+              path=base+f"/part-{i:03d}.json"
+              v=verified(path)
+              assert v["key"]=="zero3_original_brain_only_v356"
+              assert v["fragmentCount"]==19 and v["fragmentIndex"]==i-3
+              fragments.append(v["jsonFragment"])
+          checkpoint=json.loads("".join(fragments))["zero3_original_brain_only_v356"]
+          assert len(checkpoint)>500000 and frozen.startswith("smh1|")
+          assert flight.startswith("zmf381|1|10294")
+          assert len(flight.splitlines())==257
+          dest=pathlib.Path(os.environ["RUNNER_TEMP"])/"zero383-user382-readonly.json"
+          dest.write_text(json.dumps({"brain":checkpoint,"motorHead":frozen,"flight":flight}),encoding="utf-8")
+          dest.chmod(0o600)
+          print("VALID_REAL_USER_382_SAVED_BRAIN_10294_DECISIONS_REPLAYING_ONLY_AGGREGATE_PHYSICS")
+          PY
+      - name: Compile original unified GRU3 cognition and read-only cost-trust instrumentation
+        run: gradle --no-daemon assembleDebug assembleDebugAndroidTest
+      - name: Enable Android KVM
+        run: |
+          echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' | sudo tee /etc/udev/rules.d/99-kvm4all.rules
+          sudo udevadm control --reload-rules
+          sudo udevadm trigger --name-match=kvm
+      - name: Evaluate actual 382 saved cost-head reliability and eight-heading neural preference counterfactuals
+        uses: reactivecircus/android-emulator-runner@v2
+        with:
+          api-level: 35
+          arch: x86_64
+          profile: pixel_6
+          disable-animations: true
+          script: |
+            bash -c 'set -euo pipefail; adb install -r app/build/outputs/apk/debug/app-debug.apk; adb install -r app/build/outputs/apk/androidTest/debug/app-debug-androidTest.apk; adb shell mkdir -p /sdcard/Android/data/com.overmind.zero.ota/files; adb push "$RUNNER_TEMP/zero383-user382-readonly.json" /sdcard/Android/data/com.overmind.zero.ota/files/zero383-user382-readonly.json >/dev/null; adb shell am instrument -w -r -e class com.overmind.zero.Zero383UntrustedCostSavedBrainAndroidTest com.overmind.zero.ota.test/androidx.test.runner.AndroidJUnitRunner 2>&1 | tee "$RUNNER_TEMP/zero383-cognitive-cost-results.txt"; grep -q "OK (1 test)" "$RUNNER_TEMP/zero383-cognitive-cost-results.txt"; ! grep -qE "FAILURES!!!|INSTRUMENTATION_FAILED|Process crashed" "$RUNNER_TEMP/zero383-cognitive-cost-results.txt"'
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: ZERO383-untrusted-cost-predictor-original-neural-evidence
+          path: ${{ runner.temp }}/zero383-cognitive-cost-results.txt
+          if-no-files-found: warn
+      - name: Wipe ephemeral original user neural data
+        if: always()
+        run: rm -f "$RUNNER_TEMP/zero383-user382-readonly.json"
