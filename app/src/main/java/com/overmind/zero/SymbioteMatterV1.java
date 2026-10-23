@@ -221,6 +221,7 @@ public final class SymbioteMatterV1 {
         lastChosenHeadingV382=angle;
     }
     float transientBrakeV382(){return transientGroundBrakeV382;}
+    float configuredTurnBrakeLimitV382(){return experimentalTurnBrakeCeilingV382;}
 
     void setPassiveFloorBaselineForLabV363(float value){
         if(!Float.isFinite(value)||value<.02f||value>.12f)
