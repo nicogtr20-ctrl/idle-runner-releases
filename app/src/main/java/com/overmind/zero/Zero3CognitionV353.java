@@ -168,6 +168,14 @@ public final class Zero3CognitionV353 {
     float contactValenceScoreV369(float[] observation,float dx,float dy){
         return contactValence.utility(observation,dx,dy);
     }
+    /** V383: the sampled motor exploration WIDTH may grow only from
+     * physically measured, heldout-validated active steerability. Knowing
+     * the consequence of a coloured gem is cognitive evidence, not proof
+     * that the body can rapidly steer in a new direction.
+     */
+    boolean motorExplorationReadyV383(float[] sensed194){
+        return instrumental.wideMotorExplorationSupportedV383(sensed194);
+    }
     int select(float[] observation,float[][] proposals){
         // A trusted one-step model is ONE source of evidence. The original
         // controller also demanded REAL, independently heldout movement
@@ -189,7 +197,13 @@ public final class Zero3CognitionV353 {
                 instrumental.opticalPreferenceV374(observation,proposals[i],contactValence);
             if(canPredict){
                 float[][] p=champion.predict(input(observation,proposals[i]),false,null);
-                float energy=mean(p,0),damage=mean(p,1),cost=mean(p,2),uncertainty=0;
+                // The V382 cost predictor may have MSE >2000x its own
+                // heldout zero-motion baseline. Never subtract that raw
+                // cost to RANK choices while trusted(2) is false; the
+                // independently measured conservative safety margin below
+                // remains in force. No claim of zero metabolic cost.
+                float energy=mean(p,0),damage=mean(p,1),
+                    cost=costTrusted?mean(p,2):0f,uncertainty=0;
                 int heads=costTrusted?3:2;
                 for(int e=0;e<ENSEMBLE;e++)for(int h=0;h<heads;h++){
                     float delta=p[e][h]-mean(p,h);uncertainty+=delta*delta;
