@@ -33,6 +33,8 @@ public final class FastSomaticCircuitV167 {
     // V381: optional continuous V3 motor target, not a new action chooser.
     // Historical V2.2 path remains EXACT eight discrete headings.
     private float originalV3HeadingV381=Float.NaN;
+    private float previousOriginalV3HeadingV382=Float.NaN;
+    private float turnMotorResponseGainV382=0f,remainingTurnResponseBoostV382=0f;
     private static float clip(float x,float a,float b){return Math.max(a,Math.min(b,x));}
     private float random(){
         seed^=seed<<13;seed^=seed>>>7;seed^=seed<<17;
@@ -65,11 +67,31 @@ public final class FastSomaticCircuitV167 {
     /** Resets the experimental trial, not learned synaptic parameters. */
     public void chosen(int selected){chosen(selected,true);}
     /** Genuine causal motor experiments: one actuator layer explores at a time. */
+    void configureOriginalV3TurnResponseForLabV382(float extraRate){
+        if(!Float.isFinite(extraRate)||extraRate<0f||extraRate>24f)
+            throw new IllegalArgumentException("V382 invalid physical motor temporal rate");
+        turnMotorResponseGainV382=extraRate;
+        remainingTurnResponseBoostV382=0f;
+        previousOriginalV3HeadingV382=Float.NaN;
+    }
     void originalV3PreciseMotorHeadingV381(float x,float y){
         if(action<0||!Float.isFinite(x)||!Float.isFinite(y)||
            Math.hypot(x,y)<.9)
             throw new IllegalArgumentException("No physical V3 intent to transduce");
         originalV3HeadingV381=(float)Math.atan2(y,x);
+        if(Float.isFinite(previousOriginalV3HeadingV382)&&
+           turnMotorResponseGainV382>0f){
+            float delta=(float)Math.atan2(
+                Math.sin(originalV3HeadingV381-previousOriginalV3HeadingV382),
+                Math.cos(originalV3HeadingV381-previousOriginalV3HeadingV382));
+            float severity=clip((Math.abs(delta)-.40f)/1.70f,0f,1f);
+            // A shorter neural actuator time constant is NOT an impulse to
+            // the body, a new motor target, or a hand-scripted gait.
+            remainingTurnResponseBoostV382=Math.max(
+                remainingTurnResponseBoostV382,
+                turnMotorResponseGainV382*severity);
+        }
+        previousOriginalV3HeadingV382=originalV3HeadingV381;
     }
     public void chosen(int selected,boolean allowExploration){
         if(selected<0||selected>=RecurrentCoreV22.A)return;
@@ -120,7 +142,12 @@ public final class FastSomaticCircuitV167 {
         float theta=separateWeatherV370&&Float.isFinite(originalV3HeadingV381)?
             originalV3HeadingV381:(action%8)*(float)Math.PI/4f;
         float goalX=(float)Math.cos(theta),goalY=(float)Math.sin(theta);
-        float alpha=1f-(float)Math.exp(-5.2f*dt);
+        float activeTemporalBoost=separateWeatherV370&&
+            Float.isFinite(originalV3HeadingV381)?
+                remainingTurnResponseBoostV382:0f;
+        float alpha=1f-(float)Math.exp(-(5.2f+activeTemporalBoost)*dt);
+        if(activeTemporalBoost>0f)
+            remainingTurnResponseBoostV382*=(float)Math.exp(-4f*dt);
         // Reuse arrays on every ~25ms physics step; no per-frame GC.
         for(int sector=0;sector<S;sector++){
             // Local membrane patch is TRUE material; no fixed birth-angle,
