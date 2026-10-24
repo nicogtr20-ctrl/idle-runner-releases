@@ -22,6 +22,12 @@ import static org.junit.Assert.*;
 @RunWith(AndroidJUnit4.class)
 public final class Zero385MotorAuthorityABAndroidTest {
     private static final float DT=1f/60f;
+    private static void report(String message){
+        System.out.println(message);
+        android.os.Bundle b=new android.os.Bundle();
+        b.putString("stream",message);
+        InstrumentationRegistry.getInstrumentation().sendStatus(0,b);
+    }
     static final class Result {
         final String scene;final int mode,angle;
         float dx,dy,along,perp,deltaAgainstCoast,reach,work,impulse;
@@ -75,10 +81,10 @@ public final class Zero385MotorAuthorityABAndroidTest {
             Zero3LearningFoundation.MotorIntent intent=new Zero3LearningFoundation.MotorIntent(
                 1,decision,cortex.revision(),x,y,.5f,.5f,.4f);
             controller.begin(intent,body,false,true,false,true,true);
-            if(mode!=3)Zero3MotorPeripheralBridgeV364.begin(old,body,skin,null,world,x,y);
+            if(mode==0||mode==2)Zero3MotorPeripheralBridgeV364.begin(old,body,skin,null,world,x,y);
             for(int frame=0;frame<24;frame++){
                 float[] commands=controller.actuate(body,skin,DT);
-                if(mode!=3){
+                if(mode==0||mode==2){
                     Zero3MotorPeripheralBridgeV364.fastPhysicalRefine(commands,old,body,skin,DT);
                     if(mode==2){ // OLD motor only: no actor ownership, diagnostic only.
                         float[] fromOld=old.commands();
@@ -133,15 +139,15 @@ public final class Zero385MotorAuthorityABAndroidTest {
         for(String s:local.split("\\|"))if(!s.equals("cl161")){
             assertEquals("No learned local motor weights",0f,Float.parseFloat(s),0f);
         }
-        System.out.println("ZERO385_AUTHENTIC_S21_TRIAL,scene,mode(0=75%,1=cortex-only,2=old-only,3=coast),intent-90deg,dx,dy,along,perp,along-pre-velocity-2s,reach,work,muscle-impulse,invalid,heavy-wall-contact-frames");
+        report("ZERO385_AUTHENTIC_S21_TRIAL,scene,mode(0=75%,1=cortex-only,2=old-only,3=coast),intent-90deg,dx,dy,along,perp,along-pre-velocity-2s,reach,work,muscle-impulse,invalid,heavy-wall-contact-frames");
         for(String scene:new String[]{"physical_scene_v100","training_room_1_scene_v379"}){
             for(int mode=0;mode<4;mode++){
                 for(int angle=0;angle<(mode==3?1:4);angle++){
                     Result r=trial(user,scene,mode,angle);
-                    System.out.println("ZERO385_AUTHENTIC_S21_TRIAL,"+r.csv());
+                    report("ZERO385_AUTHENTIC_S21_TRIAL,"+r.csv());
                 }
             }
         }
-        System.out.println("ZERO385_NO_BEHAVIOR_PATCH_NO_USER_PROFILE_CHANGE_COMPLETE");
+        report("ZERO385_NO_BEHAVIOR_PATCH_NO_USER_PROFILE_CHANGE_COMPLETE");
     }
 }
