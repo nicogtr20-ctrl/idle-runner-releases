@@ -503,6 +503,8 @@ public final class GameActivity extends Activity {
                 brain3.restoreMotorObservationsV381(
                     virginBirthV362||wasReset?"":prefs.getString(Zero381MotorCalibration.KEY,""),
                     virginBirthV362||wasReset?"":prefs.getString(Zero381MotorFlightRecorder.KEY,""));
+                brain3.restoreEmbodiedV384(virginBirthV362||wasReset?""
+                    :prefs.getString(Zero384BodyAffordance.KEY,""));
                 // Previous original-world biography came ONLY from authentic
                 // material contacts, but lacks the photon image at contact.
                 // Explicitly import as a weak archival prior once; it never
@@ -636,7 +638,8 @@ public final class GameActivity extends Activity {
                     sceneEditor.putString(Zero3OriginalBrainV356.KEY,brain3.checkpoint());
                     sceneEditor.putString("zero3_motor_diagnostic_v361",brain3.motorDiagnosticV361())
                         .putString(Zero381MotorCalibration.KEY,brain3.motorResponseCheckpointV381())
-                        .putString(Zero381MotorFlightRecorder.KEY,brain3.flightCheckpointV381());
+                        .putString(Zero381MotorFlightRecorder.KEY,brain3.flightCheckpointV381())
+                        .putString(Zero384BodyAffordance.KEY,brain3.embodiedCheckpointV384());
                 }
                 if(!sceneEditor.commit())
                     throw new IllegalStateException("Impossibile salvare la scena fisica");
