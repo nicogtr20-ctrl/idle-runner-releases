@@ -4,6 +4,7 @@ on:
     branches: [fix/zero386-physical-traction-topology]
     paths:
       - 'app/src/main/java/com/overmind/zero/GameActivity.java'
+      - 'app/src/androidTest/java/com/overmind/zero/Zero366OriginalAutonomousSurvival2000Test.java'
       - 'app/src/main/java/com/overmind/zero/SymbioteMatterV1.java'
       - 'app/src/main/java/com/overmind/zero/SymbioteWorldStepV171.java'
       - '.github/workflows/zero386-true-neural-survival-2000.yml'
