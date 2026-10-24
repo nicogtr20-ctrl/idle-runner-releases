@@ -25,6 +25,7 @@ public final class Zero3RecurrentBrain {
     private Zero3PlannerV354 plannerV354;
     private long observationCount;
     private boolean observeV354,optionReplayV354;
+    private boolean offPolicyDirectionV384;
     private boolean physicalTargetsReadyV353,physicalHeldoutV353;
     private final float[] wz,wr,wn,world,before;
 
@@ -117,6 +118,9 @@ public final class Zero3RecurrentBrain {
     public boolean variableClock(){return variableClock;}
     public boolean cognitiveMode(){return cognition!=null;}
     public Zero3CognitionV353.Snapshot cognitionSnapshot(){return cognition==null?null:cognition.snapshot();}
+    void attachEmbodiedV384(Zero384BodyAffordance body){
+        if(cognition!=null)cognition.attachEmbodiedV384(body);
+    }
     public void enableCognitionV353(){
         if(!variableClock||pending||trainCount+validationCount!=0||cognition!=null)throw new IllegalStateException("V353 fresh variable core required");
         cognition=new Zero3CognitionV353();
@@ -251,8 +255,11 @@ public final class Zero3RecurrentBrain {
         boolean verifiedMotor=cognition!=null&&cognition.verifiedDirectionalV371(x);
         boolean motorCanSteer=cognition!=null&&cognition.motorExplorationReadyV383(x);
         boolean realStall=cognition!=null&&cognition.repeatedRealMotorStallV371();
-        float[][] options=new float[cognition==null?1:motorCanSteer?
-            (realStall?7:5):3][5];
+        // Only previously observed, heldout-confirmed physical impasse
+        // authorizes unbiased physical experiments in additional directions.
+        boolean embodiedImpass=cognition!=null&&cognition.learnedImpassV384();
+        float[][] options=new float[cognition==null?1:embodiedImpass?7:
+            motorCanSteer?(realStall?7:5):3][5];
         float[][] noise=new float[options.length][MOTOR];
         float[][] noiseScale=new float[options.length][MOTOR];
         for(int k=0;k<options.length;k++){
@@ -269,6 +276,11 @@ public final class Zero3RecurrentBrain {
                 noise[k][j]=k==0?lastNoise[j]:sample()*scale;
             }
             float sx=clip(proposal[0]+noise[k][0],-1,1),sy=clip(proposal[1]+noise[k][1],-1,1);
+            // Random directions, never an authored escape/reflection/food vector.
+            if(embodiedImpass&&k>=3){
+                float angle=(float)(random()*2d*Math.PI);
+                sx=(float)Math.cos(angle);sy=(float)Math.sin(angle);
+            }
             float len=(float)Math.hypot(sx,sy);if(len<.00001f){sx=1;sy=0;len=1;}
             options[k][0]=sx/len;options[k][1]=sy/len;
             options[k][2]=sigmoid(proposal[2]+noise[k][2]);options[k][3]=sigmoid(proposal[3]+noise[k][3]);
@@ -307,6 +319,7 @@ public final class Zero3RecurrentBrain {
                 if(proposedReal+.035f>=selectedReal)selected=planned;
             }
         }
+        offPolicyDirectionV384=embodiedImpass&&selected>=3;
         System.arraycopy(noise[selected],0,lastNoise,0,MOTOR);
         System.arraycopy(noiseScale[selected],0,selectedNoiseScaleV369,0,MOTOR);
         float[] authorized=options[selected];
@@ -495,6 +508,7 @@ public final class Zero3RecurrentBrain {
         }
         for(int k=0;k<MOTOR;k++){
             if(optionReplayV354)continue; // recalled action did not execute this sampled noise
+            if(offPolicyDirectionV384&&k<2)continue; // unbiased probe is NOT sampled from the actor distribution
             if(k==MOTOR-1&&!durationExecuted)continue; // V350 no fictitious duration credit
             // Candidate noise can have physically learned exploratory width.
             // Credit the true sampling distribution, NOT a fictitious .2 std.

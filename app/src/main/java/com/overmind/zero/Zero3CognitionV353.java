@@ -17,6 +17,9 @@ public final class Zero3CognitionV353 {
     private Zero3ContactValenceV369 contactValence=new Zero3ContactValenceV369();
     // V371 is an evidence cache INSIDE this same predictive cognition.
     private Zero3InstrumentalCreditV371 instrumental=new Zero3InstrumentalCreditV371();
+    private transient Zero384BodyAffordance embodiedV384;
+    void attachEmbodiedV384(Zero384BodyAffordance model){embodiedV384=model;}
+    boolean learnedImpassV384(){return embodiedV384!=null&&embodiedV384.verifiedImpass();}
     private Model shadow;
     private long trains,validations,plannerUses,growthAccepted,growthRejected,shadowTrains,shadowValidations;
     private final double[] error=new double[HEADS],baseline=new double[HEADS],spread=new double[HEADS],
@@ -194,7 +197,8 @@ public final class Zero3CognitionV353 {
             // accumulated enough clean motor trials to pass V371's gait
             // confidence threshold. V371 verified motion adds evidence.
             float score=movementScore+
-                instrumental.opticalPreferenceV374(observation,proposals[i],contactValence);
+                instrumental.opticalPreferenceV374(observation,proposals[i],contactValence)+
+                (embodiedV384==null?0f:embodiedV384.learnedCost(proposals[i][0],proposals[i][1]));
             if(canPredict){
                 float[][] p=champion.predict(input(observation,proposals[i]),false,null);
                 // The V382 cost predictor may have MSE >2000x its own
