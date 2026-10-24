@@ -122,6 +122,58 @@ public final class Zero385MotorAuthorityABAndroidTest {
             Float.isFinite(r.dy)&&Float.isFinite(r.along)&&Float.isFinite(r.reach));
         return r;
     }
+    static String reversalTrial(JSONObject user,String sceneKey,float brake)
+        throws Exception{
+        GameSceneSnapshot.Scene scene=GameSceneSnapshot.workingPosture(user.getString(sceneKey));
+        assertNotNull(scene);assertNotNull(scene.matter);
+        SymbioteMatterV1 gel=scene.matter;
+        gel.enableOriginalZero3TractionV363();
+        gel.configurePhysicalTurnBrakeV382(brake);
+        Zero3LearningFoundation.AdaptiveCortex cortex=savedCortex(user.getString("brain"));
+        Zero3LearningFoundation.Coordinator owner=
+            new Zero3LearningFoundation.Coordinator(cortex);
+        float startX=scene.body.cx,startY=scene.body.cy;
+        float[] segments=new float[6];
+        float totalImpulse=0f;
+        int crossingFrames=0;
+        final float[] commands={1f,1f,-1f,-1f,1f,1f};
+        for(int d=0;d<commands.length;d++){
+            float heading=commands[d];
+            gel.observedOriginalMotorChangeV382(heading,0f);
+            Zero3LearningFoundation.MotorIntent intent=
+                new Zero3LearningFoundation.MotorIntent(1,d,cortex.revision(),
+                    heading,0,.5f,.5f,.4f);
+            owner.begin(intent,scene.body,false,true,false,true,true);
+            float x0=scene.body.cx;
+            for(int step=0;step<24;step++){
+                float[] motor=owner.actuate(scene.body,scene.skin,DT);
+                float w=gel.work;
+                gel.step(scene.body,scene.skin,motor,DT);
+                totalImpulse+=gel.lastMuscleReactionImpulse;
+                if(MaterialGeometry.selfCrossings(scene.skin)>0)crossingFrames++;
+                owner.observe(scene.body,DT,Math.max(0,gel.work-w),
+                    gel.lastMuscleReactionImpulse,false,false);
+            }
+            owner.finish();
+            segments[d]=scene.body.cx-x0;
+        }
+        return "scene="+sceneKey+",brake="+brake+
+            ",comX="+(scene.body.cx-startX)+",comY="+(scene.body.cy-startY)+
+            ",phaseX="+java.util.Arrays.toString(segments)+
+            ",impulse="+totalImpulse+",crossedFrames="+crossingFrames;
+    }
+
+    @Test(timeout=900000)
+    public void actualS21VelocityReversalComparesPassivePhysicalBraking() throws Exception{
+        JSONObject user=new JSONObject(new String(Files.readAllBytes(
+            new File(inputFile()).toPath()),StandardCharsets.UTF_8));
+        for(String scene:new String[]{"physical_scene_v100",
+                                      "training_room_1_scene_v379"}){
+            for(float brake:new float[]{-.04f,0f,.025f,.05f})
+                report("ZERO386_TRUE_REVERSAL_AB,"+reversalTrial(user,scene,brake));
+        }
+    }
+
     @Test(timeout=900000)
     public void savedRealS21TrainingSceneCrossingMustRecoverAfterWorldContact()
         throws Exception{
