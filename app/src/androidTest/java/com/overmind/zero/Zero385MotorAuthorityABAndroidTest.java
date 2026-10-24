@@ -252,12 +252,13 @@ public final class Zero385MotorAuthorityABAndroidTest {
         // by 0.00007 area units: this is NOT a certified real crossing.
         // A 0.25 U plausible wall correction exposes the actual failure
         // mode without fabricating a free-form body or actor commands.
+        float[] actualPreX=scene.skin.x.clone(),actualPreY=scene.skin.y.clone();
         scene.skin.y[40]-=.25f;
         assertTrue("Physical contact projection can genuinely cross those edges",
             MaterialGeometry.selfCrossings(scene.skin)>0);
         float beforeX=scene.body.cx,beforeY=scene.body.cy;
-        int remaining=scene.matter.reconcileExternalContourV386(
-            scene.body,scene.skin,1f/60f);
+        int remaining=scene.matter.rejectNewWorldCrossingsV386(
+            scene.body,scene.skin,actualPreX,actualPreY,1f/60f);
         report("ZERO386_S21_CROSSING_FIX,remaining="+remaining+
             ",areaError="+scene.matter.areaRelativeError(scene.skin)+
             ",move="+Math.hypot(scene.body.cx-beforeX,scene.body.cy-beforeY));
