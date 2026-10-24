@@ -356,6 +356,26 @@ public final class SymbioteMatterV1 {
             crossingCount=MaterialGeometry.selfCrossings(skin);
         }
     }
+    /**
+     * Handle collisions applied after the gel's integration/topology pass.
+     * Never take neural authority or add a force towards a goal.
+     */
+    int reconcileExternalContourV386(MotorBrain.Body body,Morphology.Surface skin,float dt){
+        if(body==null||skin==null||!Float.isFinite(dt)||dt<=0f||dt>.04f)
+            throw new IllegalArgumentException("Invalid V386 world contour");
+        if(MaterialGeometry.selfCrossings(skin)==0)return 0;
+        float[] px=skin.x.clone(),py=skin.y.clone();
+        recoverPersistedCrossings(skin);
+        for(int i=0;i<SURFACE;i++){
+            float dx=skin.x[i]-px[i],dy=skin.y[i]-py[i];
+            if(Math.abs(dx)+Math.abs(dy)<.000001f)continue;
+            skin.vx[i]=clip(skin.vx[i]+dx/dt,-180f,180f);
+            skin.vy[i]=clip(skin.vy[i]+dy/dt,-180f,180f);
+        }
+        observeBody(body,skin);
+        areaError=areaRelativeError(skin);
+        return MaterialGeometry.selfCrossings(skin);
+    }
     /** Continuous material self-collision guard. The previous contour is a
      * real known non-intersecting configuration. A proposed pair of crossed
      * segments yields, with the more displaced material patch returning to
