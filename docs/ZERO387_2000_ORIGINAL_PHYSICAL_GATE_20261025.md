@@ -1,3 +1,6 @@
+## Signed experimental preview available — NOT behavior-certified
+On 2026-10-25 the authentic-signature 3.0-ota.387-body.1, versionCode **1195**, exact APK `OVERMIND-ZERO-V387-ORIGINAL-GRU3-MOTOR-AND-CONTACT.apk` was verified and published [GitHub experimental prerelase](https://github.com/nicogtr20-ctrl/idle-runner-releases/releases/tag/overmind-zero-v3.0-ota.387-body-preview), [sign/build run 40144657487](https://github.com/nicogtr20-ctrl/idle-runner-releases/actions/runs/40144657487). Expected certificate matched stable signing cert; exact APK SHA256 `581c5c576d455fbc60b836f8dfe8ce6589584e44001a76f835e68697c06f1b77`. Reinstall over existing 384, DO NOT uninstall or wipe preferences. Stable Vercel manifest unchanged. Release is for real-device investigation, **not** claimed to repair GRU-to-matter steering; repeat the long autonomous gate and real S21 restored brain acceptance before merging into stable.
+
 # ZERO387 originale Android 2.000 decisioni — esito SCIENTIFICO (25 ottobre 2026)
 
 **Verdetto: locomozione NON CONVALIDATA.** Non trattare test unitari verdi come prova di corpo funzionante. Non azzerare checkpoint, alterare ricompense o introdurre direzioni innate per nascondere questo esito.
