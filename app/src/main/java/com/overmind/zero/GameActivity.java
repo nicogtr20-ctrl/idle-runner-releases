@@ -1294,10 +1294,15 @@ public final class GameActivity extends Activity {
                     // Record efference from EXACTLY what physics receives.
                     if(useSymbiote&&symMatter!=null&&brain3!=null){
                         try{
-                            // One neural GRU3 chooser; 2.2 motor is an
-                            // actuating peripheral only (NO 2.2 policy).
+                            // ZERO385: the original 3.0 GRU64 owns 100% of
+                            // physical CH0/CH1/CH3 motor output. CH2 remains
+                            // fully owned by the original V319 grip module
+                            // integrated into ZERO3. The frozen untrained
+                            // V2.2 75% actuation bridge MUST NOT execute.
+                            // Pass null to bypass begin() and fastPhysicalRefine()
+                            // without changing the preserved 2.2 legacy path.
                             brain3.actuate(brain3LifeSerial,creature,surface,symMatter,
-                                symMotor,environment,chamber,reserve,worldTime,slice);
+                                null,environment,chamber,reserve,worldTime,slice);
                             mx=brain3.directionX();my=brain3.directionY();
                         }catch(java.io.IOException failure){
                             simulationRunning=false;
