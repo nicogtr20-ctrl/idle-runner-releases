@@ -197,6 +197,12 @@ public final class SymbioteMatterV1 {
     // voluntarily contracts. Never an external directional force, position
     // actuator, auto-grip or goal-conditional command.
     private boolean testCompressionStanceV386=false;
+    private float relativeStanceGainLabV386=.72f;
+    void configureRelativeStanceGainLabV386(float value){
+        if(!Float.isFinite(value)||value<.72f||value>4f)
+            throw new IllegalArgumentException("V386 invalid motor stance contrast");
+        relativeStanceGainLabV386=value;
+    }
     void configureCompressionStanceLabV386(boolean enabled){
         testCompressionStanceV386=enabled;
     }
@@ -691,8 +697,11 @@ public final class SymbioteMatterV1 {
             // A stiffer-than-average cortex patch bears more substrate
             // loading; a softer patch can slip. This control is independent
             // of the radial contraction and never uses object-grip intent.
-            float traction=substrateTractionWithBaselineV363(extend,stiffness,meanTension,
-                passiveFloorBaselineV363+transientGroundBrakeV382);
+            float traction=clip(
+                passiveFloorBaselineV363+transientGroundBrakeV382+
+                1.45f*Math.max(0f,-extend)+
+                relativeStanceGainLabV386*clip(stiffness-meanTension,-1f,1f),
+                0f,.95f);
             float drag=(float)Math.exp(-(1.8f+66f*traction)*dt);
             if(testCompressionStanceV386)
                 drag*=compressionStanceDragV386(extend,dt);
