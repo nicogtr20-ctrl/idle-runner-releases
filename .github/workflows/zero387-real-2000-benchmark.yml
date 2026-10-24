@@ -3,6 +3,7 @@ on:
   push:
     branches: [fix/zero387-contact-freshness-audit]
     paths:
+      - 'app/src/**'
       - 'app/src/main/java/com/overmind/zero/Zero387TactileFrame.java'
       - 'app/src/main/java/com/overmind/zero/SquareCollisionSolver.java'
       - 'app/src/main/java/com/overmind/zero/TrainingRoomV379.java'
