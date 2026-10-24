@@ -1,0 +1,70 @@
+name: ZERO385 authentic S21 motor authority forensic A/B (no release)
+on:
+  push:
+    branches: [fix/zero384-embodied-proprio-obstacle-learning]
+    paths:
+      - 'app/src/androidTest/java/com/overmind/zero/Zero385MotorAuthorityABAndroidTest.java'
+      - '.github/workflows/zero385-s21-physical-authority-audit.yml'
+  workflow_dispatch:
+permissions: {contents: read}
+jobs:
+  actual-s21-forensic:
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with: {distribution: temurin, java-version: '17'}
+      - name: Android app + forensic instrument compilation
+        run: gradle --no-daemon assembleDebug assembleDebugAndroidTest
+      - name: Reconstruct S21 user's 2026-10-24 exact uploaded data read-only
+        run: |
+          python3 - <<'PY'
+          import json,urllib.request,pathlib
+          base='https://raw.githubusercontent.com/nicogtr20-ctrl/idle-runner-releases/zero-telemetry/zero-telemetry/reports/20261024-103000-33e93646acead/'
+          def get(i):
+              u=base+'part-%03d.json'%i
+              with urllib.request.urlopen(urllib.request.Request(u,headers={'User-Agent':'ZERO385-Physical-Forensic'}),timeout=40) as h:return json.load(h)
+          a,b=get(1)['currentZero'],get(2)['currentZero']
+          fragments=[]
+          for i in range(3,21):
+              part=get(i)
+              assert part['fragmentIndex']==i-3 and part['fragmentCount']==18
+              fragments.append(part['jsonFragment'])
+          brain=json.loads(''.join(fragments))['zero3_original_brain_only_v356']
+          assert len(brain)>300000 and a['symbiote_motor_head_v1'].split('|')[3]=='0'
+          fixture=dict(brain=brain,motor=a['symbiote_motor_head_v1'],
+              local=a['symbiote_cortex_local_v161'],fast=a['somatic_fast_v167'],
+              physical_scene_v100=a['physical_scene_v100'],
+              training_room_1_scene_v379=b['training_room_1_scene_v379'])
+          pathlib.Path('/tmp/zero385-user-readonly.json').write_text(json.dumps(fixture))
+          print('ZERO385_PUBLIC_S21_REAL_RECONSTRUCTION_OK savedCortexBase64Size='+str(len(brain)))
+          PY
+      - name: Enable KVM
+        run: |
+          echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' | sudo tee /etc/udev/rules.d/99-kvm4all.rules
+          sudo udevadm control --reload-rules
+          sudo udevadm trigger --name-match=kvm
+      - name: Run paired frozen motor A/B on exact physical S21 save
+        uses: reactivecircus/android-emulator-runner@v2
+        with:
+          api-level: 35
+          arch: x86_64
+          profile: pixel_6
+          disable-animations: true
+          script: |
+            bash -c 'set -euo pipefail
+            adb install -r app/build/outputs/apk/debug/app-debug.apk
+            adb install -r app/build/outputs/apk/androidTest/debug/app-debug-androidTest.apk
+            adb shell mkdir -p /sdcard/Android/data/com.overmind.zero.ota/files
+            adb push /tmp/zero385-user-readonly.json /sdcard/Android/data/com.overmind.zero.ota/files/zero385-user-readonly.json
+            adb shell am instrument -w -r -e class com.overmind.zero.Zero385MotorAuthorityABAndroidTest com.overmind.zero.ota.test/androidx.test.runner.AndroidJUnitRunner 2>&1 | tee "$RUNNER_TEMP/ZERO385_USER_FORENSIC.txt"
+            grep -q "OK (" "$RUNNER_TEMP/ZERO385_USER_FORENSIC.txt"
+            grep -q "ZERO385_NO_BEHAVIOR_PATCH_NO_USER_PROFILE_CHANGE_COMPLETE" "$RUNNER_TEMP/ZERO385_USER_FORENSIC.txt"
+            ! grep -qE "FAILURES!!!|INSTRUMENTATION_FAILED|Process crashed" "$RUNNER_TEMP/ZERO385_USER_FORENSIC.txt"'
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: ZERO385-authentic-S21-material-motor-AB-measurements
+          path: ${{ runner.temp }}/ZERO385_USER_FORENSIC.txt
+          if-no-files-found: warn
