@@ -1,0 +1,58 @@
+name: ZERO385 sole original GRU3 100 percent muscle authority — isolated QA
+on:
+  push:
+    branches: [fix/zero385-full-gru3-muscle-authority]
+    paths:
+      - 'app/src/**'
+      - '.github/workflows/zero385-gru3-only-motor-qa.yml'
+  workflow_dispatch:
+permissions: {contents: read}
+jobs:
+  sole-motor-qa:
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with: {distribution: temurin, java-version: '17'}
+      - name: Original GameActivity routes sole GRU3 -> cortex -> real gel
+        shell: bash
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          s=Path('app/src/main/java/com/overmind/zero/GameActivity.java').read_text()
+          start=s.index('if(useSymbiote&&symMatter!=null&&brain3!=null){')
+          end=s.index('}else if(useSymbiote&&symMatter!=null&&symMotor!=null){',start)
+          block=s[start:end]
+          assert 'brain3.actuate' in block
+          assert 'null,environment,chamber,reserve,worldTime,slice)' in block, block
+          assert 'symMotor,environment,chamber,reserve,worldTime,slice)' not in block
+          assert 'symMatter.step(creature,surface,' in s
+          assert 'brain3!=null?brain3.commands():symMotor.commands()' in s
+          bridge=Path('app/src/main/java/com/overmind/zero/Zero3OriginalBrainV356.java').read_text()
+          assert 'if(physicalPeripheralV364!=null)' in bridge
+          assert 'Zero3MotorPeripheralBridgeV364.fastPhysicalRefine(' in bridge
+          print('ZERO385_100_PERCENT_ORIGINAL_GRU3_MOTOR_ROUTE=PASS; old V2.2 bridge not invoked')
+          PY
+      - name: Android debug build and Android instrumentation build
+        run: gradle --no-daemon assembleDebug assembleDebugAndroidTest
+      - name: Enable hardware emulator acceleration
+        run: |
+          echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' | sudo tee /etc/udev/rules.d/99-kvm4all.rules
+          sudo udevadm control --reload-rules
+          sudo udevadm trigger --name-match=kvm
+      - name: Old save+CRC, 3.0 sensimotor, collisions, neuron schema
+        uses: reactivecircus/android-emulator-runner@v2
+        with:
+          api-level: 35
+          arch: x86_64
+          profile: pixel_6
+          disable-animations: true
+          script: |
+            bash -c 'set -euo pipefail; adb install -r app/build/outputs/apk/debug/app-debug.apk; adb install -r app/build/outputs/apk/androidTest/debug/app-debug-androidTest.apk; for fixture in Zero384EmbodiedProprioAndroidTest Zero382ColdResumeAndroidTest Zero381PhysicalMotorCalibrationAndroidTest Zero380FailureReproductionAndroidTest Zero379SingleTrainingRoomAndroidTest Zero378PhysicalMotorCreditAndroidTest Zero377TrueInertialMotorAndroidTest; do adb shell am instrument -w -r -e class "com.overmind.zero.$fixture" com.overmind.zero.ota.test/androidx.test.runner.AndroidJUnitRunner 2>&1 | tee "$RUNNER_TEMP/$fixture.txt"; grep -q "OK (" "$RUNNER_TEMP/$fixture.txt"; ! grep -qE "FAILURES!!!|INSTRUMENTATION_FAILED|Process crashed" "$RUNNER_TEMP/$fixture.txt"; done'
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: zero385-gru3-only-original-safe
+          path: ${{ runner.temp }}/Zero*.txt
+          if-no-files-found: warn
