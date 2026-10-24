@@ -1,7 +1,6 @@
 package com.overmind.zero;
 
 import java.util.Arrays;
-import java.util.Locale;
 
 /**
  * V384: optional, checkpoint-independent embodied affordance memory.
