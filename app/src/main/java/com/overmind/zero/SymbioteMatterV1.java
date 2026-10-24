@@ -193,6 +193,17 @@ public final class SymbioteMatterV1 {
     // in every production organism until net motor gains are independently
     // proven across learned/frozen and virgin/resumed worlds.
     private float passiveFloorBaselineV363=.12f;
+    // V386 isolated A/B only: local extra resistance when real tissue
+    // voluntarily contracts. Never an external directional force, position
+    // actuator, auto-grip or goal-conditional command.
+    private boolean testCompressionStanceV386=false;
+    void configureCompressionStanceLabV386(boolean enabled){
+        testCompressionStanceV386=enabled;
+    }
+    static float compressionStanceDragV386(float extend,float dt){
+        float active=clip((-extend-.10f)/.45f,0f,1f);
+        return (float)Math.exp(-35f*active*dt);
+    }
     // V382 lab-only: real substrate damping on an abrupt GRU motor change,
     // never a force, velocity or heading injected to a destination.
     private float transientGroundBrakeV382=0f;
@@ -662,6 +673,8 @@ public final class SymbioteMatterV1 {
             float traction=substrateTractionWithBaselineV363(extend,stiffness,meanTension,
                 passiveFloorBaselineV363+transientGroundBrakeV382);
             float drag=(float)Math.exp(-(1.8f+66f*traction)*dt);
+            if(testCompressionStanceV386)
+                drag*=compressionStanceDragV386(extend,dt);
             float preX=skin.x[i],preY=skin.y[i];
             float appliedVx=skin.vx[i]+fx[i]*dt;
             float appliedVy=skin.vy[i]+fy[i]*dt;
