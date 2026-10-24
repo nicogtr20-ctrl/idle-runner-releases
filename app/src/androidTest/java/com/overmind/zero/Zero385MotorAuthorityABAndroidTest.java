@@ -91,7 +91,7 @@ public final class Zero385MotorAuthorityABAndroidTest {
                         for(int k=0;k<16;k++)for(int ch:new int[]{0,1,3})
                             commands[k*4+ch]=fromOld[k*4+ch];
                     }
-                }else Arrays.fill(commands,0f);
+                }else if(mode==3)Arrays.fill(commands,0f);
                 float[] prevX=skin.x.clone(),prevY=skin.y.clone();
                 float[] prevBx=body.x.clone(),prevBy=body.y.clone();
                 float before=gel.work;
