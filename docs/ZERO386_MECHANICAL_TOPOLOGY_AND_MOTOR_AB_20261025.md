@@ -1,0 +1,23 @@
+# ZERO386 | 25 ottobre 2026 | Problemi meccanici, A/B reali, punti respinti
+
+**Stato: sviluppo sperimentale, NO APK firmata, NO OTA, NON approvata per merge.** Branch `fix/zero386-physical-traction-topology`, successivo al source-only ZERO385 100% GRU3. L'architettura continua a essere unico GRU64, 194 sensi originali, 64 muscoli originali al 100% V3, presa V319, 170 particelle reali, salvataggi V356 originali e 12 slot. Mai cancellare memoria.
+
+## Scena reale e riconoscimento tolleranza
+Report Galaxy S21 `zero-telemetry/reports/20261024-103000-33e93646acead` app V383, 22.081 decisioni; **questo NON è ancora il log della V384 a 26k**. Scena Training S21, punti 15–16 e 39–40 di membrana sono quasi tangenti. In geometria doppia precisione si intersecano con cross minore di 0.0001; nella vera implementazione Java MaterialGeometry.selfCrossings restituisce **zero**: pertanto la collisione nel checkpoint non è una prova di incrocio materialmente grave. Uno spostamento plausibile di appena **0,25 U** della massa di contatto 40 crea, invece, una vera intersezione robusta con selfCrossings >0. L'algoritmo precedente (`recoverPersistedCrossings`, 24 passi di smoothing verso i punti vicini) è stato misurato fallire: **1 intersezione dopo tutti i passi**. Questo è un difetto numerico riproducibile, oltre al fatto che la riconciliazione avveniva prima delle collisioni esterne.
+  
+## Modifiche V386
+- Un nuovo recupero geometrico sceglie tra quattro endpoint, separa segmenti **perpendicolarmente** di quanto serve, e accetta solo correzioni che riducono strettamente il numero di incroci rilevato su tutti i 96 punti. Non sposta verso il cibo, non sceglie comandi motori, non aggiunge impulsi.
+- `SymbioteWorldStepV171.interior` invoca `reconcileExternalContourV386` alla fine delle vere collisioni con pareti/casse, ricostruisce localmente velocità dopo la correzione e ricalcola il centro materiale.
+- Un test Android usa la vera scena S21, induce soltanto la minima sovrapposizione plausibile e deve dimostrare 0 incroci residui, errore area <15%, COM spostato meno di 6U.
+- Sono ancora **LAB-ONLY** due parametri passivi da confrontare in A/B sul vero stato fisico: un'ulteriore resistenza di stance dopo contrazione e un maggiore guadagno differenziale della CH3 di rigidità. Di default sono rispettivamente **SPENTI** e **guadagno originario 0,72**. Nessuna delle prove è autorizzata ad alterare la fisica di produzione senza risultati positivi.
+
+## Esperimenti reali già falsificati
+- Run [40137154713](https://github.com/nicogtr20-ctrl/idle-runner-releases/actions/runs/40137154713), prima del cambio a 100% GRU3: stessa corteccia reale salvata, quattro comandi direzionali da 2 s su due scene, vecchia periferica 75/25 vs nuovo 100% vs vecchia soltanto vs senza muscoli. La corteccia 3.0 dà lavoro muscolare reale >0 ma non controlla bene tutte le direzioni. Es. su scena libera intento Est muove X di -1,184 U rispetto a -0,327 U del coast passivo. Quindi togliere il 75% è corretto per proprietà del sistema, ma non prova da solo locomozione efficace.
+- Run [40140900413](https://github.com/nicogtr20-ctrl/idle-runner-releases/actions/runs/40140900413): inversioni Est↔Ovest realmente eseguite con cortex-only in scena fisica esistente. Il freno transient V382 `-0.04` (rilascio transitorio di attrito) batte globalmente `0`, `+0.025`, `+0.05` nel recupero per il successivo Est e nella liberazione lungo parete su queste prove. Non sostituire ingenuamente con freno positivo che blocchi ulteriormente il tessuto.
+- Run [40141274537](https://github.com/nicogtr20-ctrl/idle-runner-releases/actions/runs/40141274537): un surplus di attrito passivo sulle membrane in contrazione peggiora il movimento attivo complessivo: free da 1,315 a 1,188; wall da 0,212 a 0,156 (somme proiezioni attive rispetto al coast delle quattro direzioni). **Non abilitare** la resistenza sperimentale.
+- L'output sensoriale/propriocettivo distingue ora pressione, vera forma e comando, ma non ha ancora dimostrato un controllo fluido del corpo a 20×; non attribuire mancati progressi a scarso training soltanto.
+
+## Criteri prima di una vera V386
+- GitHub Actions compile e prova S21 V386+ tutti verde, test postcollisione selfCrossings=0 da scena realmente interferita.
+- Miglioramento direzione, frenata e trasferimento forza quando il 100% dei muscoli appartiene a GRU3; confronti a parità di checkpoint e mondo, no falsi premi/gait; 2.000+ decisioni originali su scena specchiata e contatti blu/rosso.
+- Salvataggio e cold restart Android S21 senza reset 22k+ esperienze e slot, distribuzione firmata separata solo dopo.
