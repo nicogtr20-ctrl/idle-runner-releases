@@ -33,7 +33,7 @@ final class Zero384BodyAffordance {
     private static float dot(int a,int b){
         return (float)Math.cos((a-b)*Math.PI/4);
     }
-    /** The six-sector old muscle readout is NOT an achieved body pose. */
+    /** Commanded extension is NOT an achieved body pose. */
     void perceive(MotorBrain.Body b,Morphology.Surface skin){
         if(b==null||skin==null)throw new IllegalArgumentException("missing physical body");
         float[] sensed=new float[BINS], radial=new float[BINS], efference=new float[BINS];
