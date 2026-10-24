@@ -107,4 +107,24 @@ public final class Zero384EmbodiedProprioAndroidTest {
             0f,model.learnedCost(-1,0),0f);
         assertFalse(model.verifiedImpass());
     }
+    @Test public void independentlyLearnedPhysicalImpassInfluencesSoleV353Chooser(){
+        Zero384BodyAffordance body=new Zero384BodyAffordance();
+        Zero3CognitionV353 cognition=new Zero3CognitionV353();
+        cognition.attachEmbodiedV384(body);
+        float[] observations=new float[194];
+        observations[193]=1f;
+        float[][] proposals={{-1f,0f,.5f,.5f,.4f},{1f,0f,.5f,.5f,.4f}};
+        body.measured(westTouch(),all(.32f),all(.35f));
+        assertEquals("A virgin body has no innate escape",0,
+            cognition.select(observations,proposals));
+        train(body,30,true);
+        assertTrue("Genuinely repeated and heldout-confirmed impasse",
+            cognition.learnedImpassV384());
+        assertEquals("Only the existing neural candidate scorer receives learned physics",
+            1,cognition.select(observations,proposals));
+        body.measured(all(0),all(.32f),all(.35f));
+        assertFalse("Physical memory must be conditioned on actual current contact",
+            cognition.learnedImpassV384());
+        assertEquals(0,cognition.select(observations,proposals));
+    }
 }
