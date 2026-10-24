@@ -507,6 +507,8 @@ public final class GameActivity extends Activity {
                 brain3.restoreMotorObservationsV381(
                     virginBirthV362||wasReset?"":prefs.getString(Zero381MotorCalibration.KEY,""),
                     virginBirthV362||wasReset?"":prefs.getString(Zero381MotorFlightRecorder.KEY,""));
+                brain3.restoreDirectResponseV387(virginBirthV362||wasReset?""
+                    :prefs.getString(Zero381MotorCalibration.DIRECT_KEY_V387,""));
                 brain3.restoreEmbodiedV384(virginBirthV362||wasReset?""
                     :prefs.getString(Zero384BodyAffordance.KEY,""));
                 // Previous original-world biography came ONLY from authentic
@@ -642,6 +644,7 @@ public final class GameActivity extends Activity {
                     sceneEditor.putString(Zero3OriginalBrainV356.KEY,brain3.checkpoint());
                     sceneEditor.putString("zero3_motor_diagnostic_v361",brain3.motorDiagnosticV361())
                         .putString(Zero381MotorCalibration.KEY,brain3.motorResponseCheckpointV381())
+                        .putString(Zero381MotorCalibration.DIRECT_KEY_V387,brain3.directResponseCheckpointV387())
                         .putString(Zero381MotorFlightRecorder.KEY,brain3.flightCheckpointV381())
                         .putString(Zero384BodyAffordance.KEY,brain3.embodiedCheckpointV384());
                 }
