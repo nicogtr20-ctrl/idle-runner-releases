@@ -43,7 +43,7 @@ public final class ResetDomains {
                  "scarcity_active_v08"};
             case EPISODES:return new String[]{"episodic_memory_v095","physical_replays_v097"};
             case TEMPORAL_SKILLS:return new String[]{"temporal_skills_v107",TransferSkillsV20.KEY};
-            case PROPRIOCEPTION:return new String[]{BodyProprioception.KEY,DistributedBodySense.KEY,LocalImpedanceSense.KEY,FluidInteroceptionV1.KEY};
+            case PROPRIOCEPTION:return new String[]{BodyProprioception.KEY,DistributedBodySense.KEY,LocalImpedanceSense.KEY,FluidInteroceptionV1.KEY,Zero384BodyAffordance.KEY};
             case SPATIAL:return new String[]{SpatialPerception.KEY,PerceptualAssociationsV20.KEY,ObjectExperienceV20.KEY,ObjectContinuityV21.KEY};
             case CAUSAL:return new String[]{CausalExperiments.KEY,PhysicalConsequenceV20.KEY,CausalSequenceV23.KEY};
             case NAVIGATION:return new String[]{InstrumentalNavigation.KEY,ContextualNavigationV171.KEY,ContextualNavigationV172.KEY};
