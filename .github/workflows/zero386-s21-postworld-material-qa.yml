@@ -55,7 +55,7 @@ jobs:
           adb shell mkdir -p /sdcard/Android/data/com.overmind.zero.ota/files
           adb push /tmp/zero385-user-readonly.json /sdcard/Android/data/com.overmind.zero.ota/files/zero385-user-readonly.json
           adb shell am instrument -w -r -e class com.overmind.zero.Zero385MotorAuthorityABAndroidTest com.overmind.zero.ota.test/androidx.test.runner.AndroidJUnitRunner 2>&1 | tee "$RUNNER_TEMP/ZERO386_USER_FORENSIC.txt"
-          grep -q "OK (4 tests)" "$RUNNER_TEMP/ZERO386_USER_FORENSIC.txt"
+          grep -q "OK (5 tests)" "$RUNNER_TEMP/ZERO386_USER_FORENSIC.txt"
           grep -q "ZERO386_S21_CROSSING_FIX,remaining=0" "$RUNNER_TEMP/ZERO386_USER_FORENSIC.txt"
           grep -q "ZERO385_NO_BEHAVIOR_PATCH_NO_USER_PROFILE_CHANGE_COMPLETE" "$RUNNER_TEMP/ZERO386_USER_FORENSIC.txt"
           ! grep -qE "FAILURES!!!|INSTRUMENTATION_FAILED|Process crashed" "$RUNNER_TEMP/ZERO386_USER_FORENSIC.txt"
