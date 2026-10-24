@@ -135,6 +135,11 @@ public final class Zero366OriginalAutonomousSurvival2000Test {
             assertTrue("real late red harm must improve on early contact rate: "+outcome,
                 red==0||red-earlyHarm<earlyHarm);
             System.out.println("ZERO366_BLIND_2000_UNSCRIPTED_SURVIVAL_G3_G5_PRELIMINARY=PASS_NOT_PHONE");
+            // AndroidJUnitRunner prints only the one-dot instrument protocol.
+            // Emit the same completed scientific gate in Android's actual
+            // logcat, so CI cannot mistake a PASS for a FAIL.
+            android.util.Log.i("ZERO366_REAL",
+                "ZERO366_BLIND_2000_UNSCRIPTED_SURVIVAL_G3_G5_PRELIMINARY=PASS_NOT_PHONE");
         } finally {
             instrument.runOnMainSync(original::finish);
             // No artificial Canvas or detached physics owner to recycle.
