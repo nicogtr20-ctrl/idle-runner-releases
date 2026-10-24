@@ -45,6 +45,20 @@ jobs:
           echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' | sudo tee /etc/udev/rules.d/99-kvm4all.rules
           sudo udevadm control --reload-rules
           sudo udevadm trigger --name-match=kvm
+      - name: Create deterministic single-file emulator analysis runner
+        run: |
+          cat > /tmp/zero385-runner.sh <<'SHELL'
+          #!/usr/bin/env bash
+          set -euo pipefail
+          adb install -r app/build/outputs/apk/debug/app-debug.apk
+          adb install -r app/build/outputs/apk/androidTest/debug/app-debug-androidTest.apk
+          adb shell mkdir -p /sdcard/Android/data/com.overmind.zero.ota/files
+          adb push /tmp/zero385-user-readonly.json /sdcard/Android/data/com.overmind.zero.ota/files/zero385-user-readonly.json
+          adb shell am instrument -w -r -e class com.overmind.zero.Zero385MotorAuthorityABAndroidTest com.overmind.zero.ota.test/androidx.test.runner.AndroidJUnitRunner 2>&1 | tee "$RUNNER_TEMP/ZERO385_USER_FORENSIC.txt"
+          grep -q "OK (" "$RUNNER_TEMP/ZERO385_USER_FORENSIC.txt"
+          grep -q "ZERO385_NO_BEHAVIOR_PATCH_NO_USER_PROFILE_CHANGE_COMPLETE" "$RUNNER_TEMP/ZERO385_USER_FORENSIC.txt"
+          ! grep -qE "FAILURES!!!|INSTRUMENTATION_FAILED|Process crashed" "$RUNNER_TEMP/ZERO385_USER_FORENSIC.txt"
+          SHELL
       - name: Run paired frozen motor A/B on exact physical S21 save
         uses: reactivecircus/android-emulator-runner@v2
         with:
@@ -52,16 +66,7 @@ jobs:
           arch: x86_64
           profile: pixel_6
           disable-animations: true
-          script: |
-            bash -c 'set -euo pipefail
-            adb install -r app/build/outputs/apk/debug/app-debug.apk
-            adb install -r app/build/outputs/apk/androidTest/debug/app-debug-androidTest.apk
-            adb shell mkdir -p /sdcard/Android/data/com.overmind.zero.ota/files
-            adb push /tmp/zero385-user-readonly.json /sdcard/Android/data/com.overmind.zero.ota/files/zero385-user-readonly.json
-            adb shell am instrument -w -r -e class com.overmind.zero.Zero385MotorAuthorityABAndroidTest com.overmind.zero.ota.test/androidx.test.runner.AndroidJUnitRunner 2>&1 | tee "$RUNNER_TEMP/ZERO385_USER_FORENSIC.txt"
-            grep -q "OK (" "$RUNNER_TEMP/ZERO385_USER_FORENSIC.txt"
-            grep -q "ZERO385_NO_BEHAVIOR_PATCH_NO_USER_PROFILE_CHANGE_COMPLETE" "$RUNNER_TEMP/ZERO385_USER_FORENSIC.txt"
-            ! grep -qE "FAILURES!!!|INSTRUMENTATION_FAILED|Process crashed" "$RUNNER_TEMP/ZERO385_USER_FORENSIC.txt"'
+          script: bash /tmp/zero385-runner.sh
       - uses: actions/upload-artifact@v4
         if: always()
         with:
