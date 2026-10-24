@@ -1339,6 +1339,12 @@ public final class GameActivity extends Activity {
                         symMatter.step(creature,surface,
                             brain3!=null?brain3.commands():symMotor.commands(),slice);
                         if(brain3!=null){
+                            // V387: the cortex has already read the authentic
+                            // PRE contact in actuate(). Now CLEAR last frame
+                            // before this frame's physical collision solvers.
+                            // Previously an old wall contact remained =1 forever
+                            // in rooms without boxes or door, poisoning V384.
+                            Zero387TactileFrame.begin(surface);
                             System.arraycopy(surface.x,0,zero386PreWorldSkinX,0,Morphology.POINTS);
                             System.arraycopy(surface.y,0,zero386PreWorldSkinY,0,Morphology.POINTS);
                         }
@@ -1425,7 +1431,7 @@ public final class GameActivity extends Activity {
                     // Unlike round disks, pressing a box cannot translate it.
                     boolean anyBox=false;
                     for(UnknownWorld.Entity e:environment)if(e.isBox()){anyBox=true;break;}
-                    if(anyBox&&chamber==null)
+                    if(anyBox&&chamber==null&&brain3==null)
                         java.util.Arrays.fill(surface.touchSense,0f);
                     boolean boxTouchedThisFrame=false,boxOpposedThisFrame=false,boxAnyHeldThisFrame=false;
                     for(UnknownWorld.Entity e:environment){
