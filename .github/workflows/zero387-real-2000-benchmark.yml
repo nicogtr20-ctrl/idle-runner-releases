@@ -1,0 +1,45 @@
+name: ZERO387 real original Android GRU3 2000 unscripted behaviour validation
+on:
+  push:
+    branches: [fix/zero387-physical-traction-topology]
+    paths:
+      - 'app/src/main/java/com/overmind/zero/Zero387TactileFrame.java'
+      - 'app/src/main/java/com/overmind/zero/SquareCollisionSolver.java'
+      - 'app/src/main/java/com/overmind/zero/TrainingRoomV379.java'
+      - 'app/src/main/java/com/overmind/zero/GameActivity.java'
+      - 'app/src/androidTest/java/com/overmind/zero/Zero366OriginalAutonomousSurvival2000Test.java'
+      - 'app/src/main/java/com/overmind/zero/SymbioteMatterV1.java'
+      - 'app/src/main/java/com/overmind/zero/SymbioteWorldStepV171.java'
+      - '.github/workflows/zero387-real-2000-benchmark.yml'
+  workflow_dispatch:
+permissions: {contents: read}
+jobs:
+  original-unseen-2000:
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with: {distribution: temurin, java-version: '17'}
+      - name: Build native original game and Android instrumentation
+        run: gradle --no-daemon assembleDebug assembleDebugAndroidTest
+      - name: Enable KVM
+        run: |
+          echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' | sudo tee /etc/udev/rules.d/99-kvm4all.rules
+          sudo udevadm control --reload-rules
+          sudo udevadm trigger --name-match=kvm
+      - name: Newborn sole original GRU3 2000 unscripted neural decisions in real Android gameplay
+        uses: reactivecircus/android-emulator-runner@v2
+        with:
+          api-level: 35
+          arch: x86_64
+          profile: pixel_6
+          disable-animations: true
+          script: |
+            bash -c 'set -euo pipefail; adb install -r app/build/outputs/apk/debug/app-debug.apk; adb install -r app/build/outputs/apk/androidTest/debug/app-debug-androidTest.apk; adb logcat -c; adb shell am instrument -w -r -e class com.overmind.zero.Zero366OriginalAutonomousSurvival2000Test com.overmind.zero.ota.test/androidx.test.runner.AndroidJUnitRunner 2>&1 | tee "$RUNNER_TEMP/ZERO387_LIVE_2000.txt"; adb logcat -d -s ZERO366_REAL:I > "$RUNNER_TEMP/ZERO387_LIVE_2000_metrics.txt"; grep -q "OK (1 test)" "$RUNNER_TEMP/ZERO387_LIVE_2000.txt"; grep -q "ZERO366_BLIND_2000_UNSCRIPTED_SURVIVAL_G3_G5_PRELIMINARY=PASS_NOT_PHONE" "$RUNNER_TEMP/ZERO387_LIVE_2000_metrics.txt"; grep -q "ZERO366_BLIND_2000_REAL_ORIGINAL_RESULT" "$RUNNER_TEMP/ZERO387_LIVE_2000_metrics.txt"; ! grep -qE "FAILURES!!!|INSTRUMENTATION_FAILED|Process crashed" "$RUNNER_TEMP/ZERO387_LIVE_2000.txt"'
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: ZERO387-actual-original-gru64-2000-not-scripted
+          path: ${{ runner.temp }}/ZERO387_LIVE_2000*.txt
+          if-no-files-found: warn
