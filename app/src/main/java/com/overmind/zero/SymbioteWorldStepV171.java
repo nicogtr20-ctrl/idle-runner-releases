@@ -12,6 +12,11 @@ public final class SymbioteWorldStepV171 {
             else if(e.isBilateralBox())SquareCollisionSolver.constrainInterior(gel,e,dt);
             else if(e.isTrainingWall())TrainingRoomV379.constrainInner(gel,e,dt);
         }
+        // World obstacles can fold the 96-point contour AFTER gel.step has
+        // already completed its own topology pass. Repair at the actual
+        // post-collision boundary, before sight, touch and proprioception read.
+        if(MaterialGeometry.selfCrossings(skin)>0)
+            gel.reconcileExternalContourV386(body,skin,dt);
         gel.observeBody(body,skin);
     }
 }
