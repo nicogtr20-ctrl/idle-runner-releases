@@ -411,7 +411,18 @@ public final class Zero3LearningFoundation {
                     float z=0f;
                     for(int f=0;f<INPUTS;f++)z+=weights[at*INPUTS+f]*features[f];
                     // Exploration is an intervention, not a scripted gait.
-                    output[at]=limit((float)Math.tanh(activationGain*(z+noise[at])),-1f,1f);
+                    float learned=(float)Math.tanh(activationGain*(z+noise[at]));
+                    // ZERO386: physical voluntary effort MUST have real
+                    // actuator authority. Previously effort existed only as
+                    // an input feature: even effort=0 could produce full
+                    // radial/tangential muscle power. This is a passive gain
+                    // on the SOLE GRU3 cortex, not a heading, force or gait
+                    // injected by another controller. 0.5 retains the exact
+                    // prior motor amplitude, 0 silences CH0/1/3, 1 permits
+                    // double learned amplitude within the existing [-1,1]
+                    // physical solver envelope. CH2 is V319 grip-owned.
+                    float gain=ch==2?1f:2f*intention.effort;
+                    output[at]=limit(learned*gain,-1f,1f);
                     if(probing)for(int f=0;f<INPUTS;f++)
                         accumulated[at*INPUTS+f]+=features[f];
                     // Slow local state supports future recurrent evolution;
