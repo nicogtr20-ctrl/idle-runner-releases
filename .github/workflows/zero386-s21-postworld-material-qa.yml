@@ -58,6 +58,9 @@ jobs:
           grep -q "OK (5 tests)" "$RUNNER_TEMP/ZERO386_USER_FORENSIC.txt"
           grep -q "ZERO386_S21_CROSSING_FIX,remaining=0" "$RUNNER_TEMP/ZERO386_USER_FORENSIC.txt"
           grep -q "ZERO385_NO_BEHAVIOR_PATCH_NO_USER_PROFILE_CHANGE_COMPLETE" "$RUNNER_TEMP/ZERO386_USER_FORENSIC.txt"
+          adb shell am instrument -w -r -e class com.overmind.zero.Zero386EffortAuthorityAndroidTest com.overmind.zero.ota.test/androidx.test.runner.AndroidJUnitRunner 2>&1 | tee "$RUNNER_TEMP/ZERO386_EFFORT_QA.txt"
+          grep -q "OK (2 tests)" "$RUNNER_TEMP/ZERO386_EFFORT_QA.txt"
+          ! grep -qE "FAILURES!!!|INSTRUMENTATION_FAILED|Process crashed" "$RUNNER_TEMP/ZERO386_EFFORT_QA.txt"
           ! grep -qE "FAILURES!!!|INSTRUMENTATION_FAILED|Process crashed" "$RUNNER_TEMP/ZERO386_USER_FORENSIC.txt"
           SHELL
       - name: Run paired frozen motor A/B on exact physical S21 save
@@ -72,5 +75,5 @@ jobs:
         if: always()
         with:
           name: ZERO386-authentic-S21-material-motor-AB-measurements
-          path: ${{ runner.temp }}/ZERO386_USER_FORENSIC.txt
+          path: ${{ runner.temp }}/ZERO386_*.txt
           if-no-files-found: warn
