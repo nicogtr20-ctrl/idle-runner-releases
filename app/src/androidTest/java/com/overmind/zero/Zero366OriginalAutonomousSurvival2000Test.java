@@ -99,6 +99,12 @@ public final class Zero366OriginalAutonomousSurvival2000Test {
                 }
                 if(burst%200==0){
                     String diag=original.originalV366MotorDiagnosticForQA();
+                    System.out.println("ZERO386_LIVE_QA_LIFECYCLE cursor="+cursor+
+                        " neuralOwner="+original.originalV356NeuralOwnerForQA()+
+                        " activityDestroyed="+original.isDestroyed()+
+                        " activityFinishing="+original.isFinishing()+
+                        " brainError="+original.originalV356BrainErrorForQA()+
+                        " diagnostic="+diag);
                     String observation=String.format(Locale.ROOT,
                         "ZERO366_TRUE_BLIND_PROGRESS decisions=%d picked=%d harmActual=%d gross=%.3f directed=%.3f",
                         cursor,original.originalV366ActualPositivePickupsForQA(),
