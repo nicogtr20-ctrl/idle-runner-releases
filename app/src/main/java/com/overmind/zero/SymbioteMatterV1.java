@@ -313,6 +313,37 @@ public final class SymbioteMatterV1 {
             if(!touched||MaterialGeometry.selfCrossings(skin)==0)return;
         }
     }
+    /**
+     * V386 - reconcile crossings created AFTER gel.step by external square,
+     * tile and box projections. A pre-step-only topology repair misses those
+     * crossings and the next tick may start with a self-intersected gel.
+     * This is a geometric physical constraint, NOT a new movement action.
+     * Substrate/world contacts are resolved again by the world when needed.
+     *
+     * Return crossing count so the caller can retain trustworthy QA rather
+     * than silently claiming a repaired body if the contour remains invalid.
+     */
+    int reconcileExternalContourV386(MotorBrain.Body body,Morphology.Surface skin,float dt){
+        if(body==null||skin==null||!Float.isFinite(dt)||dt<=0f||dt>.04f)
+            throw new IllegalArgumentException("V386 post-world material");
+        int old=MaterialGeometry.selfCrossings(skin);
+        if(old==0)return 0;
+        // A local, bounded physical projection must not create an external
+        // motor impulse or change a voluntary GRU action.
+        float[] ax=skin.x.clone(),ay=skin.y.clone();
+        recoverPersistedCrossings(skin);
+        for(int i=0;i<SURFACE;i++){
+            float dx=skin.x[i]-ax[i],dy=skin.y[i]-ay[i];
+            if(Math.abs(dx)+Math.abs(dy)<.000001f)continue;
+            // Reconstructed velocity reflects actual material correction.
+            // Don't erase tangent motion for patches barely corrected.
+            skin.vx[i]=clip(skin.vx[i]+dx/dt,-180f,180f);
+            skin.vy[i]=clip(skin.vy[i]+dy/dt,-180f,180f);
+        }
+        observeBody(body,skin);
+        areaError=areaRelativeError(skin);
+        return MaterialGeometry.selfCrossings(skin);
+    }
     /** Continuous material self-collision guard. The previous contour is a
      * real known non-intersecting configuration. A proposed pair of crossed
      * segments yields, with the more displaced material patch returning to
