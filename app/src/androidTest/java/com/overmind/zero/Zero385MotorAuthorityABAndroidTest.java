@@ -56,6 +56,11 @@ public final class Zero385MotorAuthorityABAndroidTest {
     }
     private static Result trial(JSONObject user,String sceneKey,int mode,int angle,
                                 boolean compressionStance) throws Exception{
+        return trial(user,sceneKey,mode,angle,compressionStance,.72f);
+    }
+    private static Result trial(JSONObject user,String sceneKey,int mode,int angle,
+                                boolean compressionStance,float differentialGain)
+        throws Exception{
         GameSceneSnapshot.Scene snapshot=GameSceneSnapshot.workingPosture(user.getString(sceneKey));
         assertNotNull("Authentic original user fluid physical scene",snapshot);
         assertNotNull(snapshot.matter);
@@ -66,6 +71,7 @@ public final class Zero385MotorAuthorityABAndroidTest {
         gel.enableOriginalZero3TractionV363();
         gel.configurePhysicalTurnBrakeV382(-.04f);
         gel.configureCompressionStanceLabV386(compressionStance);
+        gel.configureRelativeStanceGainLabV386(differentialGain);
         SymbioteMotorHeadV1 old=new SymbioteMotorHeadV1();
         assertTrue("User's actual archived V2.2 motor loads",old.restore(user.getString("motor")));
         assertTrue("User's zero-valued local motor loads",old.restoreLocal(user.getString("local")));
@@ -166,6 +172,31 @@ public final class Zero385MotorAuthorityABAndroidTest {
             ",comX="+(scene.body.cx-startX)+",comY="+(scene.body.cy-startY)+
             ",phaseX="+java.util.Arrays.toString(segments)+
             ",impulse="+totalImpulse+",crossedFrames="+crossingFrames;
+    }
+
+    @Test(timeout=900000)
+    public void cortexOnlyMeasuredStiffnessStanceAuthorityAB() throws Exception{
+        JSONObject user=new JSONObject(new String(Files.readAllBytes(
+            new File(inputFile()).toPath()),StandardCharsets.UTF_8));
+        for(String scene:new String[]{"physical_scene_v100",
+                                      "training_room_1_scene_v379"}){
+            Result coast=trial(user,scene,3,0,false,.72f);
+            for(float gain:new float[]{.72f,1.4f,2.4f,4f}){
+                float activeProgress=0f,maxReach=0f;
+                for(int i=0;i<4;i++){
+                    Result r=trial(user,scene,1,i,false,gain);
+                    float coastProjection=coast.dx*(i==0?1:i==2?-1:0)+
+                        coast.dy*(i==1?1:i==3?-1:0);
+                    activeProgress+=r.along-coastProjection;
+                    maxReach=Math.max(maxReach,r.reach);
+                    report("ZERO386_TRUE_STIFFNESS_AB,scene="+scene+
+                        ",gain="+gain+",dir="+i+",relative="+
+                        (r.along-coastProjection)+",reach="+r.reach);
+                }
+                report("ZERO386_TRUE_STIFFNESS_SUM,scene="+scene+
+                    ",gain="+gain+",net="+activeProgress+",maxReach="+maxReach);
+            }
+        }
     }
 
     @Test(timeout=900000)
