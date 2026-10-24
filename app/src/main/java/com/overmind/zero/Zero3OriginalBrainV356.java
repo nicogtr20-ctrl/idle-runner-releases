@@ -37,6 +37,7 @@ final class Zero3OriginalBrainV356 {
     // Empirically verified downstream actuator mapping, never an alternative brain.
     private final Zero381MotorCalibration motorResponseV381=new Zero381MotorCalibration();
     private final Zero381MotorFlightRecorder flightV381=new Zero381MotorFlightRecorder();
+    private final Zero384BodyAffordance embodiedV384=new Zero384BodyAffordance();
     private float preVxV381,preVyV381;
 
     // V361: read-only measured motor execution since this app session began.
@@ -52,6 +53,7 @@ final class Zero3OriginalBrainV356 {
         brain=new Zero3RecurrentBrain(194,true);
         brain.enableCognitionV353();
         brain.enableExecutiveV354();
+        brain.attachEmbodiedV384(embodiedV384);
         cortex=new Zero3LearningFoundation.AdaptiveCortex();
         grip=new Zero3ContextAdhesionV319(0x356A33L,true);
         motor=new Zero3LearningFoundation.Coordinator(cortex);
@@ -137,6 +139,13 @@ final class Zero3OriginalBrainV356 {
 
     String motorResponseCheckpointV381(){return motorResponseV381.encode();}
     String flightCheckpointV381(){return flightV381.encode();}
+    String embodiedCheckpointV384(){return embodiedV384.encode();}
+    /** Corrupt optional body-state must not stop the CRC-validated V356 brain. */
+    void restoreEmbodiedV384(String raw){
+        if(!embodiedV384.restore(raw))
+            android.util.Log.w("ZERO384_Body","Invalid optional body state; valid V356 retained");
+        brain.attachEmbodiedV384(embodiedV384);
+    }
     boolean motorResponseTrustedV381(){return motorResponseV381.trusted();}
     int motorResponseSamplesV381(){return motorResponseV381.samples();}
     float directionX(){return choice==null?0:choice.x;}
@@ -249,7 +258,9 @@ final class Zero3OriginalBrainV356 {
                 physicallyTouchedSolidDuringDecisionV380=false;
                 preVxV381=body.cvx;preVyV381=body.cvy;
                 heldout=Zero3ConfigurationV354.heldout(cursor);
+                embodiedV384.perceive(body,skin);
                 choice=brain.choose(prior194,epoch,cursor,cortex.revision());
+                embodiedV384.begin(choice.x,choice.y);
                 // V382: the body's physical floor contact sees only the
                 // change in ZERO's OWN issued neural motor angle. It cannot
                 // steer, choose an action, inject velocity or target gems.
@@ -382,6 +393,9 @@ final class Zero3OriginalBrainV356 {
             // action-to-response memory. Never use intended direction as
             // proof of moving in that direction; storms and solver impulses
             // are excluded from clean instrumentality.
+            embodiedV384.perceive(body,skin);
+            embodiedV384.complete(outcome.deltaX,outcome.deltaY,elapsed,
+                outcome.activeImpulse,physicallyTouchedSolidDuringDecisionV380,heldout);
             brain.witnessedMaterialMotionV371(outcome.deltaX,outcome.deltaY,
                 elapsed,outcome.physicalEvidence,disturbed||outcome.externalCorrection||
                 outcome.censored,heldout,
@@ -398,6 +412,7 @@ final class Zero3OriginalBrainV356 {
     }
     /** Incomplete intentions receive no fictional reward on pause/death/reset. */
     void interrupt(){
+        embodiedV384.abort();
         if(!pending)return;
         motor.abort();grip.abortOriginalV356();brain.abort();
         pending=false;choice=null;issued=null;elapsed=0;prior194=null;
