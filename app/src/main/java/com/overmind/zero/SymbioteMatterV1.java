@@ -193,6 +193,23 @@ public final class SymbioteMatterV1 {
     // in every production organism until net motor gains are independently
     // proven across learned/frozen and virgin/resumed worlds.
     private float passiveFloorBaselineV363=.12f;
+    // V386 isolated A/B only: local extra resistance when real tissue
+    // voluntarily contracts. Never an external directional force, position
+    // actuator, auto-grip or goal-conditional command.
+    private boolean testCompressionStanceV386=false;
+    private float relativeStanceGainLabV386=.72f;
+    void configureRelativeStanceGainLabV386(float value){
+        if(!Float.isFinite(value)||value<.72f||value>4f)
+            throw new IllegalArgumentException("V386 invalid motor stance contrast");
+        relativeStanceGainLabV386=value;
+    }
+    void configureCompressionStanceLabV386(boolean enabled){
+        testCompressionStanceV386=enabled;
+    }
+    static float compressionStanceDragV386(float extend,float dt){
+        float active=clip((-extend-.10f)/.45f,0f,1f);
+        return (float)Math.exp(-35f*active*dt);
+    }
     // V382 lab-only: real substrate damping on an abrupt GRU motor change,
     // never a force, velocity or heading injected to a destination.
     private float transientGroundBrakeV382=0f;
@@ -285,33 +302,169 @@ public final class SymbioteMatterV1 {
      * the centroid, resource, or a target. Fully free sites only; held sites
      * remain owned by their real contacted obstacle.
      */
+    /**
+     * Push ONE endpoint across a crossed nonadjacent edge by the smallest
+     * measured perpendicular distance. This is a positional nonpenetration
+     * constraint, not an external impulse or a commanded direction.
+     * Accept only a STRICT reduction in full contour crossings.
+     */
+    private static boolean separateCrossedEndpointV386(
+            Morphology.Surface skin,int edge0,int edge1,int reference,int moving,
+            int totalCrossings){
+        if(skin.gripHold[moving]>=Morphology.GRIP_HOLD)return false;
+        float dx=skin.x[edge1]-skin.x[edge0],dy=skin.y[edge1]-skin.y[edge0];
+        float span=len(dx,dy);
+        if(span<.0001f)return false;
+        float referenceSide=cross(skin.x[edge0],skin.y[edge0],
+            skin.x[edge1],skin.y[edge1],skin.x[reference],skin.y[reference]);
+        if(Math.abs(referenceSide)<.00001f)return false;
+        float sign=referenceSide>0?1f:-1f;
+        float ownSide=cross(skin.x[edge0],skin.y[edge0],
+            skin.x[edge1],skin.y[edge1],skin.x[moving],skin.y[moving]);
+        float distance=sign*ownSide/span;
+        if(distance>=.09f)return false;
+        float shift=clip(.09f-distance,0f,1.50f);
+        float beforeX=skin.x[moving],beforeY=skin.y[moving];
+        skin.x[moving]+=sign*(-dy/span)*shift;
+        skin.y[moving]+=sign*( dx/span)*shift;
+        boolean improved=MaterialGeometry.selfCrossings(skin)<totalCrossings;
+        if(!improved){skin.x[moving]=beforeX;skin.y[moving]=beforeY;}
+        return improved;
+    }
+    /**
+     * V386: previously existing midpoint smoothing sometimes NEVER untangled
+     * crossed wall-constrained segments; a real S21 near-tangent contact plus
+     * a 0.25U correction produces a robust reproduction. Solve crossed edges
+     * like genuine local material self-contact instead of smoothing *both*
+     * intersecting pairs back into the identical invalid orientation.
+     */
     private void recoverPersistedCrossings(Morphology.Surface skin){
-        if(MaterialGeometry.selfCrossings(skin)==0)return;
-        for(int pass=0;pass<24;pass++){
-            boolean touched=false;
-            for(int i=0;i<SURFACE&&!touched;i++){
+        int crossingCount=MaterialGeometry.selfCrossings(skin);
+        if(crossingCount==0)return;
+        for(int pass=0;pass<32&&crossingCount>0;pass++){
+            boolean corrected=false;
+            for(int i=0;i<SURFACE&&!corrected;i++){
                 int ii=(i+1)%SURFACE;
                 for(int j=i+2;j<SURFACE;j++){
                     int jj=(j+1)%SURFACE;
                     if(jj==i)continue;
                     if(!intersects(skin.x[i],skin.y[i],skin.x[ii],skin.y[ii],
-                                   skin.x[j],skin.y[j],skin.x[jj],skin.y[jj]))continue;
-                    // At most four adjoining cortex particles per repair.
-                    // Midpoint attraction is the existing local membrane
-                    // tension, applied with a per-pass displacement limit.
-                    for(int k:new int[]{i,ii,j,jj}){
-                        if(skin.gripHold[k]>=Morphology.GRIP_HOLD)continue;
-                        int prev=(k+SURFACE-1)%SURFACE,next=(k+1)%SURFACE;
-                        float tx=(skin.x[prev]+skin.x[next])*.5f;
-                        float ty=(skin.y[prev]+skin.y[next])*.5f;
-                        skin.x[k]+=clip((tx-skin.x[k])*.58f,-.65f,.65f);
-                        skin.y[k]+=clip((ty-skin.y[k])*.58f,-.65f,.65f);
-                    }
-                    topologyRepairs++;touched=true;break;
+                            skin.x[j],skin.y[j],skin.x[jj],skin.y[jj]))continue;
+                    corrected=
+                        separateCrossedEndpointV386(skin,i,ii,j,jj,crossingCount)||
+                        separateCrossedEndpointV386(skin,i,ii,jj,j,crossingCount)||
+                        separateCrossedEndpointV386(skin,j,jj,i,ii,crossingCount)||
+                        separateCrossedEndpointV386(skin,j,jj,ii,i,crossingCount);
+                    if(corrected){topologyRepairs++;break;}
                 }
             }
-            if(!touched||MaterialGeometry.selfCrossings(skin)==0)return;
+            if(!corrected)break; // cannot safely change a truly held vertex
+            crossingCount=MaterialGeometry.selfCrossings(skin);
         }
+    }
+    /**
+     * Handle collisions applied after the gel's integration/topology pass.
+     * Never take neural authority or add a force towards a goal.
+     */
+    int reconcileExternalContourV386(MotorBrain.Body body,Morphology.Surface skin,float dt){
+        if(body==null||skin==null||!Float.isFinite(dt)||dt<=0f||dt>.04f)
+            throw new IllegalArgumentException("Invalid V386 world contour");
+        if(MaterialGeometry.selfCrossings(skin)==0)return 0;
+        float[] px=skin.x.clone(),py=skin.y.clone();
+        recoverPersistedCrossings(skin);
+        for(int i=0;i<SURFACE;i++){
+            float dx=skin.x[i]-px[i],dy=skin.y[i]-py[i];
+            if(Math.abs(dx)+Math.abs(dy)<.000001f)continue;
+            skin.vx[i]=clip(skin.vx[i]+dx/dt,-180f,180f);
+            skin.vy[i]=clip(skin.vy[i]+dy/dt,-180f,180f);
+        }
+        observeBody(body,skin);
+        areaError=areaRelativeError(skin);
+        return MaterialGeometry.selfCrossings(skin);
+    }
+    /**
+     * V386: external wall projection must not teleport a free membrane strand
+     * THROUGH another strand AFTER the gel's own verified topology solve.
+     * PRE is the exact simple contour after the muscle/gel tick and BEFORE
+     * any world collision correction. Rewind only the few crossed free
+     * patches to their valid, actual PRE position; never revert all 96
+     * velocities nor move the nucleus or choose a heading.
+     */
+    int rejectNewWorldCrossingsV386(MotorBrain.Body body,Morphology.Surface skin,
+                                  float[] preX,float[] preY,float dt){
+        if(preX==null||preY==null||preX.length!=SURFACE||preY.length!=SURFACE||
+           body==null||skin==null||!Float.isFinite(dt)||dt<=0||dt>.04f)
+            throw new IllegalArgumentException("V386 contact segment PRE");
+        int crossings=MaterialGeometry.selfCrossings(skin);
+        if(crossings==0)return 0;
+        // Do not invent a valid PRE if muscle dynamics itself had already
+        // crossed: that different failure must be handled by gel.step.
+        for(int i=0;i<SURFACE;i++){
+            if(!Float.isFinite(preX[i])||!Float.isFinite(preY[i]))
+                throw new IllegalArgumentException("V386 nonfinite PRE");
+        }
+        for(int pass=0;pass<32&&crossings>0;pass++){
+            boolean corrected=false;
+            for(int i=0;i<SURFACE&&!corrected;i++){
+                int ii=(i+1)%SURFACE;
+                for(int j=i+2;j<SURFACE&&!corrected;j++){
+                    int jj=(j+1)%SURFACE;
+                    if(jj==i||!intersects(skin.x[i],skin.y[i],
+                        skin.x[ii],skin.y[ii],skin.x[j],skin.y[j],
+                        skin.x[jj],skin.y[jj]))continue;
+                    int[] nodes={i,ii,j,jj};
+                    // Larger world-induced projection is the likely offender.
+                    for(int u=0;u<nodes.length-1;u++)
+                        for(int v=u+1;v<nodes.length;v++){
+                            int a=nodes[u],b=nodes[v];
+                            float da=len(skin.x[a]-preX[a],skin.y[a]-preY[a]);
+                            float db=len(skin.x[b]-preX[b],skin.y[b]-preY[b]);
+                            if(db>da){nodes[u]=b;nodes[v]=a;}
+                        }
+                    // First try true minimal one-particle material correction.
+                    for(int k:nodes){
+                        if(skin.gripHold[k]>=Morphology.GRIP_HOLD)continue;
+                        float oldX=skin.x[k],oldY=skin.y[k];
+                        if(Math.abs(oldX-preX[k])+Math.abs(oldY-preY[k])<.000001f)
+                            continue;
+                        skin.x[k]=preX[k];skin.y[k]=preY[k];
+                        if(MaterialGeometry.selfCrossings(skin)<crossings){
+                            skin.vx[k]=clip(skin.vx[k]+(preX[k]-oldX)/dt,-180,180);
+                            skin.vy[k]=clip(skin.vy[k]+(preY[k]-oldY)/dt,-180,180);
+                            topologyRepairs++;corrected=true;break;
+                        }
+                        skin.x[k]=oldX;skin.y[k]=oldY;
+                    }
+                    if(corrected)break;
+                    // A wall may have projected BOTH ends of the same edge.
+                    for(int pair=0;pair<2&&!corrected;pair++){
+                        int k=pair==0?i:j,other=(k+1)%SURFACE;
+                        if(skin.gripHold[k]>=Morphology.GRIP_HOLD||
+                           skin.gripHold[other]>=Morphology.GRIP_HOLD)continue;
+                        float x0=skin.x[k],y0=skin.y[k];
+                        float x1=skin.x[other],y1=skin.y[other];
+                        skin.x[k]=preX[k];skin.y[k]=preY[k];
+                        skin.x[other]=preX[other];skin.y[other]=preY[other];
+                        if(MaterialGeometry.selfCrossings(skin)<crossings){
+                            skin.vx[k]=clip(skin.vx[k]+(preX[k]-x0)/dt,-180,180);
+                            skin.vy[k]=clip(skin.vy[k]+(preY[k]-y0)/dt,-180,180);
+                            skin.vx[other]=clip(skin.vx[other]+
+                                (preX[other]-x1)/dt,-180,180);
+                            skin.vy[other]=clip(skin.vy[other]+
+                                (preY[other]-y1)/dt,-180,180);
+                            topologyRepairs++;corrected=true;break;
+                        }
+                        skin.x[k]=x0;skin.y[k]=y0;
+                        skin.x[other]=x1;skin.y[other]=y1;
+                    }
+                }
+            }
+            if(!corrected)break;
+            crossings=MaterialGeometry.selfCrossings(skin);
+        }
+        observeBody(body,skin);
+        areaError=areaRelativeError(skin);
+        return crossings;
     }
     /** Continuous material self-collision guard. The previous contour is a
      * real known non-intersecting configuration. A proposed pair of crossed
@@ -628,9 +781,14 @@ public final class SymbioteMatterV1 {
             // A stiffer-than-average cortex patch bears more substrate
             // loading; a softer patch can slip. This control is independent
             // of the radial contraction and never uses object-grip intent.
-            float traction=substrateTractionWithBaselineV363(extend,stiffness,meanTension,
-                passiveFloorBaselineV363+transientGroundBrakeV382);
+            float traction=clip(
+                passiveFloorBaselineV363+transientGroundBrakeV382+
+                1.45f*Math.max(0f,-extend)+
+                relativeStanceGainLabV386*clip(stiffness-meanTension,-1f,1f),
+                0f,.95f);
             float drag=(float)Math.exp(-(1.8f+66f*traction)*dt);
+            if(testCompressionStanceV386)
+                drag*=compressionStanceDragV386(extend,dt);
             float preX=skin.x[i],preY=skin.y[i];
             float appliedVx=skin.vx[i]+fx[i]*dt;
             float appliedVy=skin.vy[i]+fy[i]*dt;

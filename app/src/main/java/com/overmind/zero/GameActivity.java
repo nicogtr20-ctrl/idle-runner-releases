@@ -212,6 +212,10 @@ public final class GameActivity extends Activity {
         final float[] squarePrevSkinY=new float[Morphology.POINTS];
         final float[] squarePrevBodyX=new float[MotorBrain.N];
         final float[] squarePrevBodyY=new float[MotorBrain.N];
+        // Captured AFTER gel integration and BEFORE any external world
+        // projection, so a wall can never be allowed to cut across cortex.
+        final float[] zero386PreWorldSkinX=new float[Morphology.POINTS];
+        final float[] zero386PreWorldSkinY=new float[Morphology.POINTS];
         ScarcityLab chamber;
         boolean scarcity=false;
         float elapsedLife=0,nextChamber=70f;
@@ -1334,6 +1338,10 @@ public final class GameActivity extends Activity {
                         float workBefore=symMatter.work;
                         symMatter.step(creature,surface,
                             brain3!=null?brain3.commands():symMotor.commands(),slice);
+                        if(brain3!=null){
+                            System.arraycopy(surface.x,0,zero386PreWorldSkinX,0,Morphology.POINTS);
+                            System.arraycopy(surface.y,0,zero386PreWorldSkinY,0,Morphology.POINTS);
+                        }
                         witnessedMuscleImpulse=symMatter.lastMuscleReactionImpulse;
                         uncorrectedX=creature.cx;uncorrectedY=creature.cy;
                         float freshWork=Math.max(0f,symMatter.work-workBefore);
@@ -1520,7 +1528,11 @@ public final class GameActivity extends Activity {
                     if(useSymbiote&&symMatter!=null){
                         // EXACTLY HERE: contact correction on 96 membrane,
                         // 10 old body masses and 64 liquid parcels of same gel.
-                        SymbioteWorldStepV171.interior(symMatter,creature,surface,
+                        if(brain3!=null)
+                            SymbioteWorldStepV171.interior(symMatter,creature,surface,
+                                chamber,environment,slice,
+                                zero386PreWorldSkinX,zero386PreWorldSkinY);
+                        else SymbioteWorldStepV171.interior(symMatter,creature,surface,
                             chamber,environment,slice);
                     }else MaterialGeometry.observe(creature);
                     // Restore the union of physically valid object-owned holds
