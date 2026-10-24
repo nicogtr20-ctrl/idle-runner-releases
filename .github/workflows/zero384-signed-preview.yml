@@ -89,7 +89,7 @@ jobs:
           assert "package: name='com.overmind.zero.ota'" in pkg
           assert "versionCode='1194'" in pkg and "versionName='3.0-ota.384-body.1'" in pkg
           meta=json.loads(Path('app/build/outputs/apk/release/output-metadata.json').read_text())
-          assert meta['elements'][0]['versionCode']==1193
+          assert meta['elements'][0]['versionCode']==1194
           apk=Path('app/build/outputs/apk/release/app-release.apk').read_bytes()
           print('SIGNATURE_PACKAGE_VERSION_ALL_PASS sha256='+hashlib.sha256(apk).hexdigest())
           PY
