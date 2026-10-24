@@ -3,8 +3,8 @@ on:
   push:
     branches: [fix/zero386-physical-traction-topology]
     paths:
-      - 'app/src/androidTest/java/com/overmind/zero/Zero385MotorAuthorityABAndroidTest.java'
-      - '.github/workflows/zero386-s21-physical-authority-audit.yml'
+      - 'app/src/**'
+      - '.github/workflows/zero386-s21-postworld-material-qa.yml'
   workflow_dispatch:
 permissions: {contents: read}
 jobs:
