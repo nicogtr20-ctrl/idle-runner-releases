@@ -36,6 +36,10 @@ final class Zero3OriginalBrainV356 {
     private boolean physicallyTouchedSolidDuringDecisionV380;
     // Empirically verified downstream actuator mapping, never an alternative brain.
     private final Zero381MotorCalibration motorResponseV381=new Zero381MotorCalibration();
+    // A different actuator since V385: NEVER mix calibrated 2.2 and direct
+    // 3.0 physical-response samples, or reuse historical angle corrections.
+    private final Zero381MotorCalibration directResponseV387=new Zero381MotorCalibration();
+    private boolean directPhysicalOwnerV387;
     private final Zero381MotorFlightRecorder flightV381=new Zero381MotorFlightRecorder();
     private final Zero384BodyAffordance embodiedV384=new Zero384BodyAffordance();
     private float preVxV381,preVyV381;
@@ -138,6 +142,12 @@ final class Zero3OriginalBrainV356 {
     long flightCountV381(){return flightV381.counted();}
 
     String motorResponseCheckpointV381(){return motorResponseV381.encode();}
+    String directResponseCheckpointV387(){return directResponseV387.encode();}
+    void restoreDirectResponseV387(String raw){
+        if(!directResponseV387.restore(raw))
+            android.util.Log.w("ZERO387_Motor","Invalid optional direct V3 motor-response state; GRU preserved");
+    }
+    int directResponseSamplesV387(){return directResponseV387.samples();}
     String flightCheckpointV381(){return flightV381.encode();}
     String embodiedCheckpointV384(){return embodiedV384.encode();}
     /** Corrupt optional body-state must not stop the CRC-validated V356 brain. */
@@ -273,11 +283,18 @@ final class Zero3OriginalBrainV356 {
                 // muscles, world forces, profile, or original 2.2 runtime.
                 motor.begin(choice,body,!heldout,heldout,true,true,true);
                 grip.begin(heldout);
+                directPhysicalOwnerV387=physicalPeripheralV364==null;
                 if(physicalPeripheralV364!=null){
                     float[] physicalHeading=motorResponseV381.begin(
                         choice.x,choice.y,body.cvx,body.cvy);
                     Zero3MotorPeripheralBridgeV364.begin(physicalPeripheralV364,
                         body,skin,chamber,objects,physicalHeading[0],physicalHeading[1]);
+                }else{
+                    // Cortex-only V385 previously skipped physical PRE capture
+                    // entirely; V381.complete() then did nothing for every
+                    // experience. Start an independent DIRECT motor response.
+                    directResponseV387.beginDirectV387(
+                        choice.x,choice.y,body.cvx,body.cvy);
                 }
                 pending=true;lastLife=realLife;
             }
@@ -371,12 +388,15 @@ final class Zero3OriginalBrainV356 {
             float net=reserve-beforeFuel;
             // Retain read-only physical command/outcome evidence. The V3
             // chooser, reinforcement and existing V378 credit are untouched.
-            motorResponseV381.complete(outcome.deltaX,outcome.deltaY,elapsed,
-                outcome.activeImpulse,outcome.physicalEvidence&&!disturbed&&
+            boolean cleanPhysicalMap=outcome.physicalEvidence&&!disturbed&&
                 !outcome.externalCorrection&&!outcome.censored&&
-                !physicallyTouchedSolidDuringDecisionV380&&!genuineTerminal,heldout);
+                !physicallyTouchedSolidDuringDecisionV380&&!genuineTerminal;
+            Zero381MotorCalibration response=directPhysicalOwnerV387?
+                directResponseV387:motorResponseV381;
+            response.complete(outcome.deltaX,outcome.deltaY,elapsed,
+                outcome.activeImpulse,cleanPhysicalMap,heldout);
             flightV381.completed(cursor,choice.x,choice.y,
-                motorResponseV381.lastPeripheralX(),motorResponseV381.lastPeripheralY(),
+                response.lastPeripheralX(),response.lastPeripheralY(),
                 preVxV381,preVyV381,body.cvx,body.cvy,
                 outcome.deltaX,outcome.deltaY,elapsed,outcome.activeImpulse,
                 Math.max(0f,net),harm,prior194,executed64,
@@ -420,6 +440,7 @@ final class Zero3OriginalBrainV356 {
         motorReserveSpentDuringDecisionV359=0f;
         physicallyTouchedSolidDuringDecisionV380=false;
         motorResponseV381.abort();
+        directResponseV387.abort();
         // issued authority count is ahead one. New authority starts exactly at
         // completed cursor without contaminating or reusing an incomplete ID.
         rearmAuthority();

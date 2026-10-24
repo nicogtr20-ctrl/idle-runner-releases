@@ -17,6 +17,7 @@ import java.util.Locale;
  */
 final class Zero381MotorCalibration {
     static final String KEY="zero3_physical_response_calibration_v381";
+    static final String DIRECT_KEY_V387="zero3_direct_cortex_response_calibration_v387";
     private final double[] gram=new double[3],xResponse=new double[2],
                            yResponse=new double[2];
     private int trained,heldout;
@@ -116,6 +117,20 @@ final class Zero381MotorCalibration {
         lastMappedX=newX;lastMappedY=newY;
         answer[0]=newX;answer[1]=newY;
         return answer; // short-lived transient buffer; no neural state
+    }
+    /**
+     * ZERO387: independent calibration of the PURE original 3.0 cortex.
+     * The learned V2.2 inverse motor mapping is not a valid direct V3
+     * actuator transformation and must never rotate the neural intention.
+     * Still measure the PRE direction/velocity and the actual POST motion.
+     */
+    void beginDirectV387(float x,float y,float preVx,float preVy){
+        if(!finite(x)||!finite(y)||!finite(preVx)||!finite(preVy)||
+           Math.hypot(x,y)<.9)throw new IllegalArgumentException("invalid direct V3 command");
+        lastChosenX=lastMappedX=x;
+        lastChosenY=lastMappedY=y;
+        lastBx=preVx;lastBy=preVy;
+        pending=true;corrected=false;lastDuration=0;
     }
     void complete(float dx,float dy,float seconds,float impulse,
                   boolean clean,boolean heldoutTrial){

@@ -136,6 +136,18 @@ final class TrainingRoomV379 {
             // even when both real endpoints lie beyond its opposite faces.
             repairLinks(skin.x,skin.y,skin.vx,skin.vy,
                         Morphology.POINTS,e,skin);
+            // Frame-local touch is rebuilt from true geometric proximity as
+            // well as penetration. A muscle pressing along an exact legal
+            // wall face may generate no new project() event, yet still
+            // physically touches the wall. Never restore stale contact.
+            for(int i=0;i<Morphology.POINTS;i++){
+                float px=skin.x[i],py=skin.y[i],tol=.12f;
+                boolean faceLR=(Math.abs(px-l)<=tol||Math.abs(px-right)<=tol)
+                    &&py>=t-tol&&py<=bottom+tol;
+                boolean faceTB=(Math.abs(py-t)<=tol||Math.abs(py-bottom)<=tol)
+                    &&px>=l-tol&&px<=right+tol;
+                if(faceLR||faceTB)Zero387TactileFrame.contact(skin,i);
+            }
             repairLinks(body.x,body.y,body.vx,body.vy,MotorBrain.N,e,null);
             // Existing material disks and covers cannot tunnel through walls.
             for(UnknownWorld.Entity item:world){

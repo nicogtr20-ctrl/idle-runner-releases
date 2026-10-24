@@ -507,6 +507,8 @@ public final class GameActivity extends Activity {
                 brain3.restoreMotorObservationsV381(
                     virginBirthV362||wasReset?"":prefs.getString(Zero381MotorCalibration.KEY,""),
                     virginBirthV362||wasReset?"":prefs.getString(Zero381MotorFlightRecorder.KEY,""));
+                brain3.restoreDirectResponseV387(virginBirthV362||wasReset?""
+                    :prefs.getString(Zero381MotorCalibration.DIRECT_KEY_V387,""));
                 brain3.restoreEmbodiedV384(virginBirthV362||wasReset?""
                     :prefs.getString(Zero384BodyAffordance.KEY,""));
                 // Previous original-world biography came ONLY from authentic
@@ -642,6 +644,7 @@ public final class GameActivity extends Activity {
                     sceneEditor.putString(Zero3OriginalBrainV356.KEY,brain3.checkpoint());
                     sceneEditor.putString("zero3_motor_diagnostic_v361",brain3.motorDiagnosticV361())
                         .putString(Zero381MotorCalibration.KEY,brain3.motorResponseCheckpointV381())
+                        .putString(Zero381MotorCalibration.DIRECT_KEY_V387,brain3.directResponseCheckpointV387())
                         .putString(Zero381MotorFlightRecorder.KEY,brain3.flightCheckpointV381())
                         .putString(Zero384BodyAffordance.KEY,brain3.embodiedCheckpointV384());
                 }
@@ -1339,6 +1342,12 @@ public final class GameActivity extends Activity {
                         symMatter.step(creature,surface,
                             brain3!=null?brain3.commands():symMotor.commands(),slice);
                         if(brain3!=null){
+                            // V387: the cortex has already read the authentic
+                            // PRE contact in actuate(). Now CLEAR last frame
+                            // before this frame's physical collision solvers.
+                            // Previously an old wall contact remained =1 forever
+                            // in rooms without boxes or door, poisoning V384.
+                            Zero387TactileFrame.begin(surface);
                             System.arraycopy(surface.x,0,zero386PreWorldSkinX,0,Morphology.POINTS);
                             System.arraycopy(surface.y,0,zero386PreWorldSkinY,0,Morphology.POINTS);
                         }
@@ -1425,7 +1434,7 @@ public final class GameActivity extends Activity {
                     // Unlike round disks, pressing a box cannot translate it.
                     boolean anyBox=false;
                     for(UnknownWorld.Entity e:environment)if(e.isBox()){anyBox=true;break;}
-                    if(anyBox&&chamber==null)
+                    if(anyBox&&chamber==null&&brain3==null)
                         java.util.Arrays.fill(surface.touchSense,0f);
                     boolean boxTouchedThisFrame=false,boxOpposedThisFrame=false,boxAnyHeldThisFrame=false;
                     for(UnknownWorld.Entity e:environment){

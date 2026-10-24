@@ -109,7 +109,11 @@ final class SquareCollisionSolver {
             // Only a penetrated link cancels a physically invalid hold.
             if(gripOwner!=null){
                 gripOwner.gripHold[idx]=0f;
-                gripOwner.touchSense[idx]=0f;
+                // This position was just moved ONTO the solid supporting
+                // face. Canceling an invalid grip is correct; deleting the
+                // true solid contact is not. V387 feeds genuine touch back to
+                // ZERO3 (and V384 learned physical impasses).
+                Zero387TactileFrame.contact(gripOwner,idx);
             }
         }
         return true;
