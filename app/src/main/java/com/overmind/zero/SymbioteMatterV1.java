@@ -296,64 +296,65 @@ public final class SymbioteMatterV1 {
      * the centroid, resource, or a target. Fully free sites only; held sites
      * remain owned by their real contacted obstacle.
      */
+    /**
+     * Push ONE endpoint across a crossed nonadjacent edge by the smallest
+     * measured perpendicular distance. This is a positional nonpenetration
+     * constraint, not an external impulse or a commanded direction.
+     * Accept only a STRICT reduction in full contour crossings.
+     */
+    private static boolean separateCrossedEndpointV386(
+            Morphology.Surface skin,int edge0,int edge1,int reference,int moving,
+            int totalCrossings){
+        if(skin.gripHold[moving]>=Morphology.GRIP_HOLD)return false;
+        float dx=skin.x[edge1]-skin.x[edge0],dy=skin.y[edge1]-skin.y[edge0];
+        float span=len(dx,dy);
+        if(span<.0001f)return false;
+        float referenceSide=cross(skin.x[edge0],skin.y[edge0],
+            skin.x[edge1],skin.y[edge1],skin.x[reference],skin.y[reference]);
+        if(Math.abs(referenceSide)<.00001f)return false;
+        float sign=referenceSide>0?1f:-1f;
+        float ownSide=cross(skin.x[edge0],skin.y[edge0],
+            skin.x[edge1],skin.y[edge1],skin.x[moving],skin.y[moving]);
+        float distance=sign*ownSide/span;
+        if(distance>=.09f)return false;
+        float shift=clip(.09f-distance,0f,1.50f);
+        float beforeX=skin.x[moving],beforeY=skin.y[moving];
+        skin.x[moving]+=sign*(-dy/span)*shift;
+        skin.y[moving]+=sign*( dx/span)*shift;
+        boolean improved=MaterialGeometry.selfCrossings(skin)<totalCrossings;
+        if(!improved){skin.x[moving]=beforeX;skin.y[moving]=beforeY;}
+        return improved;
+    }
+    /**
+     * V386: previously existing midpoint smoothing sometimes NEVER untangled
+     * crossed wall-constrained segments; a real S21 near-tangent contact plus
+     * a 0.25U correction produces a robust reproduction. Solve crossed edges
+     * like genuine local material self-contact instead of smoothing *both*
+     * intersecting pairs back into the identical invalid orientation.
+     */
     private void recoverPersistedCrossings(Morphology.Surface skin){
-        if(MaterialGeometry.selfCrossings(skin)==0)return;
-        for(int pass=0;pass<24;pass++){
-            boolean touched=false;
-            for(int i=0;i<SURFACE&&!touched;i++){
+        int crossingCount=MaterialGeometry.selfCrossings(skin);
+        if(crossingCount==0)return;
+        for(int pass=0;pass<32&&crossingCount>0;pass++){
+            boolean corrected=false;
+            for(int i=0;i<SURFACE&&!corrected;i++){
                 int ii=(i+1)%SURFACE;
                 for(int j=i+2;j<SURFACE;j++){
                     int jj=(j+1)%SURFACE;
                     if(jj==i)continue;
                     if(!intersects(skin.x[i],skin.y[i],skin.x[ii],skin.y[ii],
-                                   skin.x[j],skin.y[j],skin.x[jj],skin.y[jj]))continue;
-                    // At most four adjoining cortex particles per repair.
-                    // Midpoint attraction is the existing local membrane
-                    // tension, applied with a per-pass displacement limit.
-                    for(int k:new int[]{i,ii,j,jj}){
-                        if(skin.gripHold[k]>=Morphology.GRIP_HOLD)continue;
-                        int prev=(k+SURFACE-1)%SURFACE,next=(k+1)%SURFACE;
-                        float tx=(skin.x[prev]+skin.x[next])*.5f;
-                        float ty=(skin.y[prev]+skin.y[next])*.5f;
-                        skin.x[k]+=clip((tx-skin.x[k])*.58f,-.65f,.65f);
-                        skin.y[k]+=clip((ty-skin.y[k])*.58f,-.65f,.65f);
-                    }
-                    topologyRepairs++;touched=true;break;
+                            skin.x[j],skin.y[j],skin.x[jj],skin.y[jj]))continue;
+                    corrected=
+                        separateCrossedEndpointV386(skin,i,ii,j,jj,crossingCount)||
+                        separateCrossedEndpointV386(skin,i,ii,jj,j,crossingCount)||
+                        separateCrossedEndpointV386(skin,j,jj,i,ii,crossingCount)||
+                        separateCrossedEndpointV386(skin,j,jj,ii,i,crossingCount);
+                    if(corrected){topologyRepairs++;break;}
                 }
             }
-            if(!touched||MaterialGeometry.selfCrossings(skin)==0)return;
+            if(!corrected)break; // cannot safely change a truly held vertex
+            crossingCount=MaterialGeometry.selfCrossings(skin);
         }
-    }
-    /**
-     * V386 - reconcile crossings created AFTER gel.step by external square,
-     * tile and box projections. A pre-step-only topology repair misses those
-     * crossings and the next tick may start with a self-intersected gel.
-     * This is a geometric physical constraint, NOT a new movement action.
-     * Substrate/world contacts are resolved again by the world when needed.
-     *
-     * Return crossing count so the caller can retain trustworthy QA rather
-     * than silently claiming a repaired body if the contour remains invalid.
-     */
-    int reconcileExternalContourV386(MotorBrain.Body body,Morphology.Surface skin,float dt){
-        if(body==null||skin==null||!Float.isFinite(dt)||dt<=0f||dt>.04f)
-            throw new IllegalArgumentException("V386 post-world material");
-        int old=MaterialGeometry.selfCrossings(skin);
-        if(old==0)return 0;
-        // A local, bounded physical projection must not create an external
-        // motor impulse or change a voluntary GRU action.
-        float[] ax=skin.x.clone(),ay=skin.y.clone();
-        recoverPersistedCrossings(skin);
-        for(int i=0;i<SURFACE;i++){
-            float dx=skin.x[i]-ax[i],dy=skin.y[i]-ay[i];
-            if(Math.abs(dx)+Math.abs(dy)<.000001f)continue;
-            // Reconstructed velocity reflects actual material correction.
-            // Don't erase tangent motion for patches barely corrected.
-            skin.vx[i]=clip(skin.vx[i]+dx/dt,-180f,180f);
-            skin.vy[i]=clip(skin.vy[i]+dy/dt,-180f,180f);
-        }
-        observeBody(body,skin);
-        areaError=areaRelativeError(skin);
-        return MaterialGeometry.selfCrossings(skin);
     }
     /** Continuous material self-collision guard. The previous contour is a
      * real known non-intersecting configuration. A proposed pair of crossed
