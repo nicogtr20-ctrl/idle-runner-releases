@@ -52,6 +52,10 @@ public final class Zero385MotorAuthorityABAndroidTest {
     }
     private static Result trial(JSONObject user,String sceneKey,int mode,int angle)
         throws Exception{
+        return trial(user,sceneKey,mode,angle,false);
+    }
+    private static Result trial(JSONObject user,String sceneKey,int mode,int angle,
+                                boolean compressionStance) throws Exception{
         GameSceneSnapshot.Scene snapshot=GameSceneSnapshot.workingPosture(user.getString(sceneKey));
         assertNotNull("Authentic original user fluid physical scene",snapshot);
         assertNotNull(snapshot.matter);
@@ -61,6 +65,7 @@ public final class Zero385MotorAuthorityABAndroidTest {
             walls?snapshot.objects:new ArrayList<>();
         gel.enableOriginalZero3TractionV363();
         gel.configurePhysicalTurnBrakeV382(-.04f);
+        gel.configureCompressionStanceLabV386(compressionStance);
         SymbioteMotorHeadV1 old=new SymbioteMotorHeadV1();
         assertTrue("User's actual archived V2.2 motor loads",old.restore(user.getString("motor")));
         assertTrue("User's zero-valued local motor loads",old.restoreLocal(user.getString("local")));
@@ -163,6 +168,32 @@ public final class Zero385MotorAuthorityABAndroidTest {
             ",impulse="+totalImpulse+",crossedFrames="+crossingFrames;
     }
 
+    @Test(timeout=900000)
+    public void cortexOnlyOnSameS21MaterialChecksLocalCompressionStanceAB()
+        throws Exception{
+        JSONObject user=new JSONObject(new String(Files.readAllBytes(
+            new File(inputFile()).toPath()),StandardCharsets.UTF_8));
+        for(String scene:new String[]{"physical_scene_v100",
+                "training_room_1_scene_v379"}){
+            Result coast=trial(user,scene,3,0,false);
+            float scoreOff=0f,scoreOn=0f;
+            for(int i=0;i<4;i++){
+                Result original=trial(user,scene,1,i,false);
+                Result candidate=trial(user,scene,1,i,true);
+                float passiveProjection=coast.dx*(i==0?1:i==2?-1:0)+
+                    coast.dy*(i==1?1:i==3?-1:0);
+                float off=original.along-passiveProjection;
+                float on=candidate.along-passiveProjection;
+                scoreOff+=off;scoreOn+=on;
+                report("ZERO386_ACTUAL_TRACTION_AB,scene="+scene+
+                    ",dir="+i+",off="+off+",on="+on+
+                    ",workOff="+original.work+",workOn="+candidate.work+
+                    ",reachOff="+original.reach+",reachOn="+candidate.reach);
+            }
+            report("ZERO386_ACTUAL_TRACTION_SUM,scene="+scene+
+                ",netActiveOff="+scoreOff+",netActiveOn="+scoreOn);
+        }
+    }
     @Test(timeout=900000)
     public void actualS21VelocityReversalComparesPassivePhysicalBraking() throws Exception{
         JSONObject user=new JSONObject(new String(Files.readAllBytes(
