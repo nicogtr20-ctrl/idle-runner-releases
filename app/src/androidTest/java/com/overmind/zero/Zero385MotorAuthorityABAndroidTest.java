@@ -123,6 +123,29 @@ public final class Zero385MotorAuthorityABAndroidTest {
         return r;
     }
     @Test(timeout=900000)
+    public void savedRealS21TrainingSceneCrossingMustRecoverAfterWorldContact()
+        throws Exception{
+        File file=new File(inputFile());
+        assertTrue("Read-only original S21 physical data required",file.isFile());
+        JSONObject user=new JSONObject(new String(Files.readAllBytes(file.toPath()),
+            StandardCharsets.UTF_8));
+        GameSceneSnapshot.Scene scene=GameSceneSnapshot.workingPosture(
+            user.getString("training_room_1_scene_v379"));
+        assertNotNull(scene);assertNotNull(scene.matter);
+        assertEquals("Actual observed crossed membrane segments from S21",
+            1,MaterialGeometry.selfCrossings(scene.skin));
+        float beforeX=scene.body.cx,beforeY=scene.body.cy;
+        int remaining=scene.matter.reconcileExternalContourV386(
+            scene.body,scene.skin,1f/60f);
+        report("ZERO386_S21_CROSSING_FIX,remaining="+remaining+
+            ",areaError="+scene.matter.areaRelativeError(scene.skin)+
+            ",move="+Math.hypot(scene.body.cx-beforeX,scene.body.cy-beforeY));
+        assertEquals("A true self-crossed membrane must not persist",0,remaining);
+        assertTrue("Preserve true cortex area",scene.matter.areaRelativeError(scene.skin)<.15f);
+        assertTrue("Never teleport living center to a world goal",
+            Math.hypot(scene.body.cx-beforeX,scene.body.cy-beforeY)<6f);
+    }
+    @Test(timeout=900000)
     public void testSavedPhysicalMotorAuthorityVsFrozenUntrainedReadout() throws Exception{
         File fixture=new File(inputFile());
         assertTrue("Read-only authentic S21 data must be provided by CI",fixture.isFile());
