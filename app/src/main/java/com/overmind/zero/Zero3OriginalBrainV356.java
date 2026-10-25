@@ -61,6 +61,7 @@ final class Zero3OriginalBrainV356 {
         cortex=new Zero3LearningFoundation.AdaptiveCortex();
         grip=new Zero3ContextAdhesionV319(0x356A33L,true);
         motor=new Zero3LearningFoundation.Coordinator(cortex);
+        motor.enableCausalMotorCreditV390();
         epoch=Math.max(1,System.currentTimeMillis());
         authority=new Zero3MotorIntentV316.Authority(epoch,OWNER);
     }
@@ -348,7 +349,8 @@ final class Zero3OriginalBrainV356 {
             if(!Float.isFinite(actualDamageDuringDecisionV359)||
                !Float.isFinite(motorReserveSpentDuringDecisionV359))
                 throw new IllegalStateException("Danno interocettivo cumulato non finito");
-            motor.observe(body,dt,Math.max(0,work),Math.max(0,impulse),external,false);
+            motor.observeContactV390(body,skin,dt,Math.max(0,work),
+                Math.max(0,impulse),external,false);
             for(float sensed:skin.touchSense)if(sensed>.2f){
                 solidContactStepsV361++;
                 physicallyTouchedSolidDuringDecisionV380=true;break;
@@ -544,6 +546,7 @@ final class Zero3OriginalBrainV356 {
         Readout restored=inspectSaved(saved);
         brain=restored.core;cortex=restored.cortex;
         motor=new Zero3LearningFoundation.Coordinator(cortex);
+        motor.enableCausalMotorCreditV390();
         grip=restored.grip;cursor=restored.decisions;
         priorDamage=restored.previousDamageV359;
         rearmAuthority();
