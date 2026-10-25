@@ -1,3 +1,12 @@
+## Aggiornamento risultati verificati (25 ottobre 2026)
+
+**Scientific live gate V390 FAILED, non pubblicare APK come locomozione corretta.** Run [40235005992](https://github.com/nicogtr20-ctrl/idle-runner-releases/actions/runs/40235005992) sull'app originale Android e vero GRU V390 appena nato: **2.001** decisioni autonome, 2 pickup blu, 1 danno rosso, signed progress **71.09898** su gross **733.67910**, allineamento **9.69%**; la soglia fissata ANTESIGNANA è **12%**. Inoltre early red=0, later red=1, fallisce protezione da danni. Il risultato sembra migliore dello 0.69% V387 in run differente, ma NON è un A/B seed/scene perfettamente identico, quindi non dichiarare improvement causalmente dimostrato su tutto il gioco.
+
+**Authentic FULL-S21 saved motor rehabilitation A/B, 128 laboratory trials per method, NOT autonomous:** run [40235047044](https://github.com/nicogtr20-ctrl/idle-runner-releases/actions/runs/40235047044) **PASS solo esecuzione delle misure**. Exact V388 learned 33.312-decision S21 cortex read-only. Baseline EAST -2.6028442 U; former 16-sector correlated simultaneous probes after 128 trials EAST -2.6222076, WEST +4.7667694; new ONE-sector after 128 EAST -2.6321716, WEST +4.687378. **Entrambi peggiorano EST nelle prime 128 prove**. 18/18 regressioni Android PASS [40234592208](https://github.com/nicogtr20-ctrl/idle-runner-releases/actions/runs/40234592208), ma NON dimostrano riabilitazione rapida cortex già deteriorata. È vietato rilasciare il V390 come corpo funzionante.
+
+**Fisica successiva isolata in laboratorio, mai collegata alla production:** branch `lab/zero391-relative-ground-footing`, confronto presenza muro vs assente, 4 assi, vera cortex V388 con 64 stati ricorrenti, differenziazione compression relativa vs attrito uniforme V388. Run [40235739000](https://github.com/nicogtr20-ctrl/idle-runner-releases/actions/runs/40235739000). Questo è solo A/B, non fare OTA senza miglioramenti certificati e nuova simulazione lunga autonoma.
+
+---
 # ZERO390 — vero controllo causale dei muscoli del cervello 3.0
 
 **25 ottobre 2026. STATO: codice sperimentale REALMENTE MODIFICATO, NO OTA e NO APK V390, locomozione NON ancora convalidata.**
