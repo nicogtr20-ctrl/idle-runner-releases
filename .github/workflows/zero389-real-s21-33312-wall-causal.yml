@@ -1,4 +1,4 @@
-name: ZERO389 REAL V388 S21 33312 trained cortex: wall vs no-wall identical-body motor causal audit
+name: 'ZERO389 REAL V388 S21 33312 trained cortex: wall vs no-wall identical-body motor causal audit'
 on:
   push:
     branches: [audit/zero389-v388-actual-33312-obstacle-motor-causal]
