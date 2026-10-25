@@ -5,6 +5,8 @@ on:
     paths:
       - 'app/src/**'
       - '.github/workflows/zero388-s21-physics-qa.yml'
+  pull_request:
+    branches: [audit/zero388-elastic-impulse-and-local-motion-s21]
   workflow_dispatch:
 permissions: {contents: read}
 jobs:
