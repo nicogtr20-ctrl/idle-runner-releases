@@ -69,6 +69,14 @@ public final class Zero3LearningFoundation {
         private final float[] features=new float[INPUTS];
         private int samples;
         private boolean probing,pendingDecision,externalGripOwnerV361;
+        // V390 original 3.0 only: one independent physical probe per decision.
+        private boolean isolatedMotorCreditV390;
+        private int isolatedSectorV390=-1;
+        void enableIsolatedCreditV390(){isolatedMotorCreditV390=true;}
+        int isolatedSectorV390(){return isolatedSectorV390;}
+        int activeProbeCountV390(){
+            int n=0;for(float v:noise)if(Math.abs(v)>1e-8f)n++;return n;
+        }
         private long randomState=0x61C8864680B583EBL,revision,updates;
         private final float[] contextBaseline=new float[8];
         private final long[] contextSamples=new long[8];
@@ -95,6 +103,18 @@ public final class Zero3LearningFoundation {
                 float v=anchors[group]*(1-t)+anchors[(group+1)%4]*t;
                 noise[sector*CHANNELS+activeChannel]=.14f*v;
             }
+        }
+        private void isolatedProbeV390(){
+            long index=perturbationEpisodes++;
+            int possible=externalGripOwnerV361?3:4;
+            int ch=(int)(index%possible);
+            activeChannel=externalGripOwnerV361&&ch>=2?ch+1:ch;
+            // Exhaustive 16 x 3 spatial/channel exploration. Neither goal
+            // nor direction is authored, only a single physical muscle probe.
+            isolatedSectorV390=(int)((index/possible)%SECTORS);
+            float value=random()*2f-1f;
+            if(Math.abs(value)<.15f)value=value<0f?-.15f:.15f;
+            noise[isolatedSectorV390*CHANNELS+activeChannel]=.14f*value;
         }
         public float lastAcceptedGradientNorm(){return lastAcceptedGradientNorm;}
         public float lastAdvantage(){return lastAdvantage;}
@@ -360,17 +380,17 @@ public final class Zero3LearningFoundation {
             pendingDecision=true;
             Arrays.fill(noise,0f);Arrays.fill(accumulated,0f);samples=0;
             probing=explore;externalGripOwnerV361=gripExternallyOwned;
-            activeChannel=-1;lastAcceptedGradientNorm=0f;
+            activeChannel=-1;isolatedSectorV390=-1;lastAcceptedGradientNorm=0f;
             if(intent!=null){
                 float angle=(float)Math.atan2(intent.y,intent.x);
                 contextBucket=((int)Math.floor((angle+Math.PI)/(Math.PI/4)))&7;
             }
-            if(explore)sampleProbe();
+            if(explore){if(isolatedMotorCreditV390)isolatedProbeV390();else sampleProbe();}
         }
         void discard(){
             pendingDecision=false;
             Arrays.fill(noise,0);Arrays.fill(accumulated,0);samples=0;probing=false;
-            activeChannel=-1;externalGripOwnerV361=false;
+            activeChannel=-1;isolatedSectorV390=-1;externalGripOwnerV361=false;
         }
         /**
          * Actual geometry is read every physical substep. OUTPUTS are the
@@ -489,6 +509,14 @@ public final class Zero3LearningFoundation {
         // This is not a force, target position, reward for distance, or schema field.
         private float startVxV378,startVyV378;
         private boolean momentumCreditV378;
+        private boolean causalMotorCreditV390;
+        private int frontContactFramesV390,rearContactFramesV390,anyContactFramesV390;
+        void enableCausalMotorCreditV390(){
+            if(active!=null)throw new IllegalStateException("V390 pending");
+            causalMotorCreditV390=true;cortex.enableIsolatedCreditV390();
+        }
+        int frontContactFramesV390(){return frontContactFramesV390;}
+        int rearContactFramesV390(){return rearContactFramesV390;}
         private int frames;
         private long trained,validated,discarded;
         public Coordinator(AdaptiveCortex cortex){
@@ -524,6 +552,7 @@ public final class Zero3LearningFoundation {
             lastDecision=intent.decisionId;episode=intent.episodeId;startedRevision=cortex.revision();
             startX=lastX=endX=b.cx;startY=lastY=endY=b.cy;
             frames=0;gross=work=impulse=seconds=0;
+            frontContactFramesV390=rearContactFramesV390=anyContactFramesV390=0;
             this.momentumCreditV378=momentumCreditV378;
             startVxV378=b.cvx;startVyV378=b.cvy;
             if(momentumCreditV378&&(!Float.isFinite(startVxV378)||!Float.isFinite(startVyV378)))
@@ -545,6 +574,26 @@ public final class Zero3LearningFoundation {
             lastX=endX=after.cx;lastY=endY=after.cy;
             work+=physicalWork;impulse+=muscleImpulse;seconds+=dt;frames++;
             external|=solverCorrection;censored|=teleport;
+        }
+        /** Frame-local measured POST surface contact on actual tissue. */
+        void observeContactV390(MotorBrain.Body b,Morphology.Surface skin,float dt,
+                float work,float impulse,boolean correction,boolean teleport){
+            observe(b,dt,work,impulse,correction,teleport);
+            if(!causalMotorCreditV390)return;
+            boolean any=false,front=false,rear=false;
+            for(int i=0;i<Morphology.POINTS;i++){
+                if(skin.touchSense[i]<.23f)continue;
+                any=true;
+                float dx=skin.x[i]-b.cx,dy=skin.y[i]-b.cy;
+                float norm=(float)Math.hypot(dx,dy);
+                if(norm<.01f)continue;
+                float facing=(dx*active.x+dy*active.y)/norm;
+                if(facing>.35f)front=true;
+                if(facing<-.35f)rear=true;
+            }
+            if(any)anyContactFramesV390++;
+            if(front)frontContactFramesV390++;
+            if(rear)rearContactFramesV390++;
         }
         public void observeWithDisturbanceV354(MotorBrain.Body b,float dt,float work,float impulse,int reasons){
             if(reasons<0||reasons>1)throw new IllegalArgumentException("unknown V354 physical disturbance");
@@ -579,6 +628,21 @@ public final class Zero3LearningFoundation {
             boolean physical=frames>=4&&impulse>.5f&&!censored;
             boolean valid=train&&physical&&!external&&active.effort>.01f&&
                           (active.x!=0f||active.y!=0f);
+            if(causalMotorCreditV390){
+                // A wall arresting preexisting inertia can fabricate positive
+                // dx - PRE_vx*dt without a useful muscular contraction.
+                // A rear contact may aid locomotion, but credit only real
+                // forward COM displacement; a front contact is obstructed.
+                if(anyContactFramesV390>0){
+                    float trueForward=dx*active.x+dy*active.y;
+                    boolean rearOnly=rearContactFramesV390>0&&
+                        frontContactFramesV390==0;
+                    valid=valid&&rearOnly&&trueForward>.20f;
+                    score=limit(trueForward/(4f+Math.max(gross,trueForward))-
+                        idlePenalty,-1f,1f);
+                }
+                valid=valid&&cortex.activeProbeCountV390()==1;
+            }
             MotorIntent intent=active;
             Experience e=new Experience(intent,frames,heldout,train,physical,
                 external,censored,dx,dy,gross,work,impulse,seconds,score);
