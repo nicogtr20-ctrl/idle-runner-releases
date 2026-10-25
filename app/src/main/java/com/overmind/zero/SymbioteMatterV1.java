@@ -222,6 +222,13 @@ public final class SymbioteMatterV1 {
     // actuator, auto-grip or goal-conditional command.
     private boolean testCompressionStanceV386=false;
     private float relativeStanceGainLabV386=.72f;
+    // V391 LAB ONLY: compare isotropic global contraction anchor vs actual
+    // *differential* compression. A uniform squeeze of all cortex does not
+    // create a selective foothold and must not clamp every node to the floor.
+    private boolean relativeCompressionLabV391;
+    void configureRelativeCompressionLabV391(boolean enabled){
+        relativeCompressionLabV391=enabled;
+    }
     void configureRelativeStanceGainLabV386(float value){
         if(!Float.isFinite(value)||value<.72f||value>4f)
             throw new IllegalArgumentException("V386 invalid motor stance contrast");
@@ -744,9 +751,11 @@ public final class SymbioteMatterV1 {
         // Local cortical TENSION may vary floor-normal loading without
         // adding a fifth motor channel or hijacking the object-grip command.
         // Object grip MUST stay strictly disconnected from uncontacted floor.
-        float meanTension=0f;
-        for(int sector=0;sector<SECTORS;sector++)
+        float meanTension=0f,meanCompression=0f;
+        for(int sector=0;sector<SECTORS;sector++){
             meanTension+=(clip(cortex[sector*OUTPUTS+3],-1f,1f)*.5f+.5f)/SECTORS;
+            meanCompression+=Math.max(0f,-clip(cortex[sector*OUTPUTS],-1f,1f))/SECTORS;
+        }
         // Snapshot 96 points BEFORE evaluating normals, elastic forces or
         // integrating ANY positions. Previously the in-place loop coupled
         // unequal simulation times and made forces depend on node ordering.
@@ -813,6 +822,8 @@ public final class SymbioteMatterV1 {
             // Local compression increases anchoring; extending cortex can
             // slide past it. Object-grip intention NEVER anchors open floor.
             float compression=Math.max(0f,-extend);
+            float loadV391=relativeCompressionLabV391?
+                Math.max(0f,compression-meanCompression):compression;
             // Original OTA160 floor traction is unchanged. The physics
             // fix is excluded-volume self-contact, not weaker footholds.
             // A stiffer-than-average cortex patch bears more substrate
@@ -820,7 +831,7 @@ public final class SymbioteMatterV1 {
             // of the radial contraction and never uses object-grip intent.
             float traction=clip(
                 passiveFloorBaselineV363+transientGroundBrakeV382+
-                1.45f*Math.max(0f,-extend)+
+                1.45f*loadV391+
                 relativeStanceGainLabV386*clip(stiffness-meanTension,-1f,1f),
                 0f,.95f);
             float drag=(float)Math.exp(-(1.8f+66f*traction)*dt);
