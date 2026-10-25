@@ -12,6 +12,8 @@ on:
       - 'app/src/main/java/com/overmind/zero/SymbioteMatterV1.java'
       - 'app/src/main/java/com/overmind/zero/SymbioteWorldStepV171.java'
       - '.github/workflows/zero388-original-2000-longrun.yml'
+  pull_request:
+    branches: [audit/zero388-elastic-impulse-and-local-motion-s21]
   workflow_dispatch:
 permissions: {contents: read}
 jobs:
