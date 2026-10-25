@@ -1,0 +1,126 @@
+name: ZERO388 true GRU3 96-node conserved physical membrane MANUAL signed preview
+on:
+  push:
+    branches: [fix/zero388-conservative-shell-proprio]
+    paths: ['.github/workflows/zero388-signed-preview.yml']
+  workflow_dispatch:
+permissions: {contents: write}
+jobs:
+  signed-preview:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    env:
+      OVERMIND_BUILD_NUMBER: '196'
+      OVERMIND_CANDIDATE_NAME: '3.0-ota.388-body.1'
+    steps:
+      - uses: actions/checkout@v4
+        with: {fetch-depth: 0}
+      - uses: actions/setup-java@v4
+        with: {distribution: temurin, java-version: '17'}
+      - name: Require successful source-pinned 30/30 Android QA and unchanged public update
+        run: |
+          set -euo pipefail
+          git diff --quiet d3625e62a717064e7db84311a7188e7125b51c22 HEAD -- app/src app/build.gradle
+          test -f app/src/main/java/com/overmind/zero/TrainingRoomV379.java
+          test -f app/src/androidTest/java/com/overmind/zero/Zero388ConservativeMusclesAndroidTest.java
+          test -f app/src/androidTest/java/com/overmind/zero/Zero387TactileContactAndroidTest.java
+          test -f app/src/androidTest/java/com/overmind/zero/Zero387DirectMotorCalibrationAndroidTest.java
+          test -f app/src/androidTest/java/com/overmind/zero/Zero386EffortAuthorityAndroidTest.java
+          python3 - <<'PY'
+          import json,urllib.request
+          url='https://api.github.com/repos/nicogtr20-ctrl/idle-runner-releases/actions/runs/40146399033'
+          with urllib.request.urlopen(urllib.request.Request(url,headers={'Accept':'application/vnd.github+json','User-Agent':'ZERO388-QA'}),timeout=20) as response:
+              run=json.load(response)
+          assert run['head_sha']=='d3625e62a717064e7db84311a7188e7125b51c22'
+          assert run['conclusion']=='success' and run['status']=='completed'
+          print('ZERO388_GENUINE_S21_MATERIAL_AND_SAVE_QA=PASS')
+          # This is NOT success-proof of steering. Require the exact user's
+          # original trained V380 checkpoint test to have completed, and keep
+          # inverse calibration gated off when it cannot prove real authority.
+          with urllib.request.urlopen(urllib.request.Request(
+              'https://api.github.com/repos/nicogtr20-ctrl/idle-runner-releases/actions/runs/40041324641',
+              headers={'Accept':'application/vnd.github+json','User-Agent':'ZERO388-USER-BRAIN-QA'}),timeout=20) as response:
+              user_trial=json.load(response)
+          assert user_trial['head_sha']=='bdb49a2f32bf5c5959c92804f95b5548d76f941a'
+          assert user_trial['conclusion']=='success' and user_trial['status']=='completed'
+          print('BASE_V383_SAVED_USER_CHECKPOINT_VALIDATION=PASS')
+          PY
+          git fetch origin main
+          python3 - <<'PY'
+          import json,subprocess
+          manifest=json.loads(subprocess.check_output(['git','show','origin/main:updater/public/latest.json'],text=True))
+          assert manifest['applicationId']=='com.overmind.zero.ota'
+          assert manifest['versionCode']==1188 and manifest['versionName']=='3.0-ota.378-test.1'
+          print('STABLE_OTA_IS_UNCHANGED_AND_COMPATIBLE=PASS')
+          PY
+      - name: Restore same production signing certificate privately
+        env:
+          SIGNING_BUNDLE: ${{ secrets.OVERMIND_SIGNING_BUNDLE }}
+        run: |
+          python3 - <<'PY'
+          import os,base64,json,pathlib
+          raw=os.environ.get('SIGNING_BUNDLE','')
+          if not raw:raise RuntimeError('Stable signing bundle is unavailable')
+          data=json.loads(base64.b64decode(raw,validate=True))
+          target=pathlib.Path(os.environ['RUNNER_TEMP'])/'zero388-stable-signing.p12'
+          target.write_bytes(base64.b64decode(data['keyStoreBase64'],validate=True))
+          target.chmod(0o600)
+          for secret in (data['password'],data['alias']):print('::add-mask::'+secret)
+          with open(os.environ['GITHUB_ENV'],'a') as e:
+              e.write('OVERMIND_KEYSTORE_FILE='+str(target)+'\n')
+              e.write('OVERMIND_KEYSTORE_PASSWORD='+data['password']+'\n')
+              e.write('OVERMIND_KEY_PASSWORD='+data['password']+'\n')
+              e.write('OVERMIND_KEY_ALIAS='+data['alias']+'\n')
+          PY
+      - name: Build signed install-over-existing experimental APK
+        run: gradle --no-daemon assembleRelease
+      - name: Verify original certificate and Android versionCode 1196 before distribution
+        run: |
+          set -euo pipefail
+          apk=app/build/outputs/apk/release/app-release.apk
+          bt=$(find "$ANDROID_HOME/build-tools" -mindepth 1 -maxdepth 1 -type d | sort -V | tail -n 1)
+          "$bt/apksigner" verify --print-certs --verbose "$apk" > "$RUNNER_TEMP/zero388-cert.txt"
+          "$bt/aapt" dump badging "$apk" > "$RUNNER_TEMP/zero388-package.txt"
+          python3 - <<'PY'
+          from pathlib import Path
+          import os,json,hashlib
+          root=Path(os.environ['RUNNER_TEMP'])
+          cert=(root/'zero388-cert.txt').read_text()
+          expected='45010684b4fd74de00f87fb81ca89e1e79b58409cf9fefc497b445b0fe19f583'
+          assert 'certificate SHA-256 digest: '+expected in cert,'Signing identity mismatch'
+          pkg=(root/'zero388-package.txt').read_text()
+          assert "package: name='com.overmind.zero.ota'" in pkg
+          assert "versionCode='1196'" in pkg and "versionName='3.0-ota.388-body.1'" in pkg
+          meta=json.loads(Path('app/build/outputs/apk/release/output-metadata.json').read_text())
+          assert meta['elements'][0]['versionCode']==1196
+          apk=Path('app/build/outputs/apk/release/app-release.apk').read_bytes()
+          print('SIGNATURE_PACKAGE_VERSION_ALL_PASS sha256='+hashlib.sha256(apk).hexdigest())
+          PY
+          mkdir -p "$RUNNER_TEMP/zero388-release"
+          cp "$apk" "$RUNNER_TEMP/zero388-release/OVERMIND-ZERO-V388-BALANCED-SHELL-GRU3-PREVIEW.apk"
+          sha256sum "$RUNNER_TEMP/zero388-release/OVERMIND-ZERO-V388-BALANCED-SHELL-GRU3-PREVIEW.apk" > "$RUNNER_TEMP/zero388-release/SHA256.txt"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: ZERO388-signed-installable-preview
+          path: |
+            ${{ runner.temp }}/zero388-release/OVERMIND-ZERO-V388-BALANCED-SHELL-GRU3-PREVIEW.apk
+            ${{ runner.temp }}/zero388-release/SHA256.txt
+          if-no-files-found: error
+      - name: Publish standalone signed prerelease; do not change Vercel or latest.json
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          tag=overmind-zero-v3.0-ota.388-body-preview
+          asset="$RUNNER_TEMP/zero388-release/OVERMIND-ZERO-V388-BALANCED-SHELL-GRU3-PREVIEW.apk"
+          if gh release view "$tag" --repo "${{ github.repository }}" >/dev/null 2>&1;then
+            echo "Immutable tag already exists: refusing to overwrite signed artifact"
+            exit 1
+          fi
+          gh release create "$tag" "$asset" "$RUNNER_TEMP/zero388-release/SHA256.txt" \
+            --repo "${{ github.repository }}" --target "${{ github.sha }}" \
+            --title 'OVERMIND ZERO 3.0 — Forze bilanciate e propriocezione V388 (ANTEPRIMA)' --prerelease \
+            --notes 'ZERO388 PREVIEW SPERIMENTALE, versione 3.0-ota.388-body.1 build 1196, certificato ORIGINALE, installabile SOPRA V387 senza disinstallare e senza azzerare gli archivi. Fisica del simbionte corretta: 96 punti membrana calcolano le forze dalla stessa geometria PRE; molle simmetriche con forze interne opposte e rigidita neurale libera. Propriocezione tangenziale locale CH1 senza cambiare pesi o 194 input GRU64. Reset MOTOR limitato alle mappe motorie V381/V387 senza cancellare i 12 slot o il cervello. Test Android della vera scena Galaxy S21, muscoli e salvataggi SUPERATI. IMPORTANTE: la prova di 2000 decisioni autonome NON e passata, non si e dimostrato ancora che ZERO sappia muoversi/frenare/evitare i rossi. Questa APK serve per TEST MANUALE sul telefono. Eseguire backup del cervello prima di aggiornare. OTA stabile, latest.json e main rimangono invariati.'
+      - name: Remove private signing material
+        if: always()
+        run: rm -f "$RUNNER_TEMP/zero388-stable-signing.p12"

@@ -28,6 +28,10 @@ public final class SymbioteMatterV1 {
     // Neighbor elasticity is an INTERNAL shell-to-shell pair force;
     // feeding it to the fluid double counts the reaction and adds torque.
     private final float[] muscleFx=new float[SURFACE],muscleFy=new float[SURFACE];
+    // V388: preserve the SAME pre-step shell geometry for all 96 physical
+    // actuators. No later node can see an earlier node's already-moved pose.
+    private final float[] springKV388=new float[SURFACE];
+    private final float[] normalXV388=new float[SURFACE],normalYV388=new float[SURFACE];
     private final float[] nx=new float[SURFACE],ny=new float[SURFACE];
     private final float[] impulsesX=new float[MotorBrain.N+INNER],impulsesY=new float[MotorBrain.N+INNER];
     private final float[] fluidX=new float[MotorBrain.N+INNER],fluidY=new float[MotorBrain.N+INNER];
@@ -44,6 +48,26 @@ public final class SymbioteMatterV1 {
     public SymbioteMatterV1(){}
     private static float clip(float a,float lo,float hi){return Math.max(lo,Math.min(hi,a));}
     private static float len(float a,float b){return (float)Math.sqrt(a*a+b*b);}
+    /**
+     * One shared initial-time geometry and pairwise equal-and-opposite
+     * elastic forces. Supports learned heterogeneous CH3 stiffness while
+     * protecting the living shell from non-physical net body propulsion.
+     * outX/outY may already contain neural muscle forces.
+     */
+    static void accumulateBalancedElasticV388(float[] px,float[] py,
+            float[] stiffness,float[] outX,float[] outY){
+        if(px==null||py==null||stiffness==null||outX==null||outY==null||
+           px.length!=SURFACE||py.length!=SURFACE||
+           stiffness.length!=SURFACE||outX.length!=SURFACE||outY.length!=SURFACE)
+            throw new IllegalArgumentException("V388 material shell size");
+        for(int i=0;i<SURFACE;i++){
+            int j=(i+1)%SURFACE;
+            float k=.5f*(stiffness[i]+stiffness[j]);
+            float dx=(px[j]-px[i])*k,dy=(py[j]-py[i])*k;
+            outX[i]+=dx;outY[i]+=dy;
+            outX[j]-=dx;outY[j]-=dy;
+        }
+    }
     /** Normal from actual living polygon, NOT radius from the center. */
     static void normalAt(Morphology.Surface skin,int i,float centerX,float centerY,
                          float handedness,float[] out){
@@ -723,15 +747,20 @@ public final class SymbioteMatterV1 {
         float meanTension=0f;
         for(int sector=0;sector<SECTORS;sector++)
             meanTension+=(clip(cortex[sector*OUTPUTS+3],-1f,1f)*.5f+.5f)/SECTORS;
+        // Snapshot 96 points BEFORE evaluating normals, elastic forces or
+        // integrating ANY positions. Previously the in-place loop coupled
+        // unequal simulation times and made forces depend on node ordering.
+        System.arraycopy(skin.x,0,lastSkinX,0,SURFACE);
+        System.arraycopy(skin.y,0,lastSkinY,0,SURFACE);
         for(int i=0;i<SURFACE;i++){
-            lastSkinX[i]=skin.x[i];lastSkinY[i]=skin.y[i];
-            float dx=skin.x[i]-cx,dy=skin.y[i]-cy;
+            float dx=lastSkinX[i]-cx,dy=lastSkinY[i]-cy;
             float rr=len(dx,dy);
             if(rr<.00001f){dx=(float)Math.cos(i*TWO_PI/SURFACE);dy=(float)Math.sin(i*TWO_PI/SURFACE);rr=1;}
             // A centroid ray can point INWARD on the concave bays of a
             // live gel. Apply forces in the actual polygon's outward normal.
             actuatorDirectionAt(skin,i,cx,cy,contourSign,physicalNormal);
             float ux=physicalNormal[0],uy=physicalNormal[1];
+            normalXV388[i]=ux;normalYV388[i]=uy;
             int sector=i*SECTORS/SURFACE;
             float extend=clip(cortex[sector*OUTPUTS],-1,1);
             float lateral=clip(cortex[sector*OUTPUTS+1],-1,1);
@@ -748,13 +777,21 @@ public final class SymbioteMatterV1 {
             muscleFx[i]=ux*extend*680f*extensionCompliance-uy*lateral*210f;
             muscleFy[i]=uy*extend*680f*extensionCompliance+ux*lateral*210f;
             fx[i]=muscleFx[i];fy[i]=muscleFy[i];
-            // Neighbour smoothing = surface tension; stiffness modulates
-            // corticoelastic relaxation without a fixed radial spring.
-            int p=(i+SURFACE-1)%SURFACE,n=(i+1)%SURFACE;
-            fx[i]+=(skin.x[p]+skin.x[n]-2*skin.x[i])*(85f+stiffness*190f);
-            fy[i]+=(skin.y[p]+skin.y[n]-2*skin.y[i])*(85f+stiffness*190f);
-            lastElasticForceMagnitude+=len(fx[i]-muscleFx[i],fy[i]-muscleFy[i]);
+            springKV388[i]=85f+stiffness*190f;
             lastMuscleReactionImpulse+=len(muscleFx[i],muscleFy[i])*dt;
+        }
+        // V388 true instantaneous pairwise elasticity: K_edge is shared by
+        // BOTH ends of a bond. Only muscle forces enter fluid reactions.
+        accumulateBalancedElasticV388(lastSkinX,lastSkinY,springKV388,fx,fy);
+        for(int i=0;i<SURFACE;i++){
+            lastElasticForceMagnitude+=len(fx[i]-muscleFx[i],fy[i]-muscleFy[i]);
+            float ux=normalXV388[i],uy=normalYV388[i];
+            int sector=i*SECTORS/SURFACE;
+            float extend=clip(cortex[sector*OUTPUTS],-1,1);
+            float lateral=clip(cortex[sector*OUTPUTS+1],-1,1);
+            float adhesive=Math.max(0,clip(cortex[sector*OUTPUTS+2],-1,1));
+            float stiffness=clip(cortex[sector*OUTPUTS+3],-1,1)*.5f+.5f;
+            float rr=len(lastSkinX[i]-cx,lastSkinY[i]-cy);
             // Grip command is an INTENTION. Real box/door contact solver owns
             // the hold timer. No compulsory automatic adhesion.
             skin.gripCommand[i]=adhesive;
@@ -789,7 +826,7 @@ public final class SymbioteMatterV1 {
             float drag=(float)Math.exp(-(1.8f+66f*traction)*dt);
             if(testCompressionStanceV386)
                 drag*=compressionStanceDragV386(extend,dt);
-            float preX=skin.x[i],preY=skin.y[i];
+            float preX=lastSkinX[i],preY=lastSkinY[i];
             float appliedVx=skin.vx[i]+fx[i]*dt;
             float appliedVy=skin.vy[i]+fy[i]*dt;
             // OTA164: isolated strong pseudopod retraction needs radial

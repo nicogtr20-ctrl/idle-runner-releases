@@ -27,7 +27,10 @@ public final class ResetDomains {
                                   "explored_cells_v094","record_net_v094","energy_spent_v094",
                                   "online_accepted_motor_v094","online_rejected_motor_v094",
                                   "motor_recoveries_v097","motor_free_choices_v097",
-                                  "motor_skills_v098",MotorDurationV22.KEY};
+                                  "motor_skills_v098",MotorDurationV22.KEY,
+                                  Zero381MotorCalibration.KEY,
+                                  Zero381MotorCalibration.DIRECT_KEY_V387,
+                                  Zero381MotorFlightRecorder.KEY};
             case MANIPULATION:return new String[]{"hand_brain_v04","hand_attempts_v04",
                  "hand_successes_v04","objects_displaced_v041","collisions_v041","max_displacement_v041",
                  "online_accepted_hand_v094","online_rejected_hand_v094",GripAffordanceV20.KEY};

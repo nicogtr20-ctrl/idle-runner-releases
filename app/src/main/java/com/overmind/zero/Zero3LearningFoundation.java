@@ -382,14 +382,22 @@ public final class Zero3LearningFoundation {
             if(dt<=0||dt>.04f)throw new IllegalArgumentException("dt");
             final int per=Morphology.POINTS/SECTORS;
             for(int k=0;k<SECTORS;k++){
-                float dx=0,dy=0,rv=0,held=0,contact=0,r=0;
+                float dx=0,dy=0,rv=0,tv=0,held=0,contact=0,r=0;
                 for(int j=0;j<per;j++){
                     int i=k*per+j;
                     float xx=s.x[i]-b.cx,yy=s.y[i]-b.cy;
                     dx+=xx;dy+=yy;
                     float rr=(float)Math.hypot(xx,yy);
                     r+=rr;
-                    if(rr>.01f)rv+=((s.vx[i]-b.cvx)*xx+(s.vy[i]-b.cvy)*yy)/rr;
+                    if(rr>.01f){
+                        float vrelx=s.vx[i]-b.cvx,vrely=s.vy[i]-b.cvy;
+                        rv+=(vrelx*xx+vrely*yy)/rr;
+                        // CH1 commands an actual tangential force. Old local
+                        // cortex feedback only saw radial speed, so it could
+                        // not distinguish tangential sliding from a stationary
+                        // foothold. Sense true tangent minus material COM.
+                        tv+=(-vrelx*yy+vrely*xx)/rr;
+                    }
                     held+=s.gripHold[i]>Morphology.GRIP_HOLD?1:0;
                     contact+=s.touchSense[i];
                 }
@@ -407,7 +415,13 @@ public final class Zero3LearningFoundation {
                 features[6]=intention.effort;
                 for(int ch=0;ch<CHANNELS;ch++){
                     int at=k*CHANNELS+ch;
-                    features[7]=ch==2?intention.adhesion:state[at];
+                    // Preserve 512 existing learned coefficients and the
+                    // previous CH1 local-state feature. Blend measured
+                    // tangential shear ONLY into CH1's own existing feedback
+                    // channel; zero shear yields bit-identical old input.
+                    features[7]=ch==2?intention.adhesion:
+                        ch==1?limit(state[at]+.35f*limit(tv/per/100f,-1f,1f),
+                                    -1f,1f):state[at];
                     float z=0f;
                     for(int f=0;f<INPUTS;f++)z+=weights[at*INPUTS+f]*features[f];
                     // Exploration is an intervention, not a scripted gait.
