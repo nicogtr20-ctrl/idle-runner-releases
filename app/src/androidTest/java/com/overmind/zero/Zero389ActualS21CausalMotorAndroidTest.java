@@ -28,6 +28,89 @@ public final class Zero389ActualS21CausalMotorAndroidTest {
         b.putString("stream",message);
         InstrumentationRegistry.getInstrumentation().sendStatus(0,b);
     }
+    private static String trainedVsVirgin(JSONObject user,boolean learned,
+                                           boolean withWall,int dir)throws Exception{
+        GameSceneSnapshot.Scene scene=GameSceneSnapshot.workingPosture(
+            user.getString("training_room_1_scene_v379"));
+        assertNotNull(scene);assertNotNull(scene.matter);
+        MotorBrain.Body body=scene.body;Morphology.Surface skin=scene.skin;
+        SymbioteMatterV1 gel=scene.matter;
+        java.util.ArrayList<UnknownWorld.Entity> world=withWall?
+            scene.objects:new java.util.ArrayList<UnknownWorld.Entity>();
+        Zero3LearningFoundation.AdaptiveCortex cortex;
+        if(learned){
+            Zero3OriginalBrainV356.Readout saved=
+                Zero3OriginalBrainV356.inspectSaved(user.getString("brain"));
+            java.lang.reflect.Field field=saved.getClass().getDeclaredField("cortex");
+            field.setAccessible(true);
+            cortex=((Zero3LearningFoundation.AdaptiveCortex)field.get(saved))
+                .forkForEvaluation();
+        }else cortex=new Zero3LearningFoundation.AdaptiveCortex();
+        Zero3LearningFoundation.Coordinator owner=
+            new Zero3LearningFoundation.Coordinator(cortex);
+        gel.enableOriginalZero3TractionV363();
+        gel.configurePhysicalTurnBrakeV382(-.04f);
+        final float dt=1f/60f;
+        float originalX=body.cx,originalY=body.cy,originalVx=body.cvx;
+        float heading=dir==0?1f:dir==2?-1f:0f;
+        float y=dir==1?1f:dir==3?-1f:0f;
+        float totalImpulse=0f,absoluteCommand=0f;
+        int framesWithWallTouch=0,externals=0;
+        for(int k=0;k<5;k++){
+            Zero3LearningFoundation.MotorIntent intent=
+                new Zero3LearningFoundation.MotorIntent(
+                    7,k,cortex.revision(),heading,y,.5f,.5f,.4f);
+            owner.begin(intent,body,false,true,false,true,true);
+            for(int step=0;step<24;step++){
+                float[] motor=owner.actuate(body,skin,dt);
+                for(float v:motor)absoluteCommand+=Math.abs(v);
+                float[] preSkinX=skin.x.clone(),preSkinY=skin.y.clone();
+                float[] preBodyX=body.x.clone(),preBodyY=body.y.clone();
+                float prevWork=gel.work;
+                gel.step(body,skin,motor,dt);
+                float[] preWorldX=skin.x.clone(),preWorldY=skin.y.clone();
+                Zero387TactileFrame.begin(skin);
+                if(withWall)
+                    TrainingRoomV379.constrain(body,skin,world,
+                        preSkinX,preSkinY,preBodyX,preBodyY);
+                SymbioteWorldStepV171.interior(gel,body,skin,null,world,dt,
+                    preWorldX,preWorldY);
+                boolean touched=false;
+                for(float touch:skin.touchSense)
+                    if(touch>.2f){touched=true;break;}
+                if(touched)framesWithWallTouch++;
+                totalImpulse+=gel.lastMuscleReactionImpulse;
+                owner.observe(body,dt,Math.max(0,gel.work-prevWork),
+                    gel.lastMuscleReactionImpulse,false,false);
+            }
+            owner.finish();
+        }
+        float dx=body.cx-originalX,dy=body.cy-originalY;
+        float forward=dx*heading+dy*y;
+        float inertial=forward-(originalVx*heading)*2f;
+        return "weight="+(learned?"USER_LEARNED":"NEVER_TRAINED")+
+            ",wall="+withWall+",dir="+dir+",comDx="+dx+",comDy="+dy+
+            ",along="+forward+",inertiaCorrected="+inertial+
+            ",muscleImpulse="+totalImpulse+",absMotorCommands="+absoluteCommand+
+            ",wallTouchFrames="+framesWithWallTouch;
+    }
+    @Test(timeout=720000)
+    public void exactlySameBodyLearnedMotorVsVirginMotorWithoutWalls()throws Exception{
+        File path=new File(InstrumentationRegistry.getInstrumentation()
+            .getTargetContext().getExternalFilesDir(null),"zero385-user-readonly.json");
+        JSONObject real=new JSONObject(new String(Files.readAllBytes(path.toPath()),
+            StandardCharsets.UTF_8));
+        for(boolean wall:new boolean[]{false,true}){
+            for(int dir=0;dir<4;dir++){
+                report("ZERO389_USER_VS_VIRGIN,"+
+                    trainedVsVirgin(real,true,wall,dir));
+                report("ZERO389_USER_VS_VIRGIN,"+
+                    trainedVsVirgin(real,false,wall,dir));
+            }
+        }
+        report("ZERO389_USER_VIRGIN_CAUSAL_PROFILE_COMPLETE=PASS_MEASUREMENT_ONLY");
+    }
+
     @Test(timeout=720000)
     public void physicallyIdenticalV388RealS21ControlledHeadingVsWorldWall()
         throws Exception {
