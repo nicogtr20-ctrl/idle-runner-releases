@@ -1,0 +1,124 @@
+package com.overmind.zero;
+
+import androidx.test.ext.junit.runners.AndroidJUnit4;
+import android.util.Log;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Comparator;
+import org.json.JSONObject;
+import org.junit.Test;
+import org.junit.runner.RunWith;
+import static org.junit.Assert.*;
+
+/**
+ * Precise physical actuator Jacobian on authentic V388-trained S21 cortex.
+ * One sector+one original CH0/CH1/CH3 muscle's signal +/-0.30, no new forces,
+ * no authored policy, no replay to the user's checkpoint. All alternatives
+ * start from the SAME 170 material positions, speeds and saved 64 recurrent
+ * motor states. Evaluates 96 true local interventions in free space, top six
+ * physically discovered improvements at the real west Training wall.
+ */
+@RunWith(AndroidJUnit4.class)
+public final class Zero392TrueLocalActuatorJacobianAndroidTest {
+    static final float DT=1f/60f,INTERVENTION=.30f;
+    static final class Result {
+        final int sector,channel,sign;
+        final float dx,dy,work,impulse,compression;
+        Result(int s,int ch,int sign,float dx,float dy,float work,
+               float impulse,float compression){
+            sector=s;channel=ch;this.sign=sign;this.dx=dx;this.dy=dy;
+            this.work=work;this.impulse=impulse;this.compression=compression;
+        }
+        String printable(){
+            return "sector="+sector+",ch="+channel+",sign="+sign+
+                ",dx="+dx+",dy="+dy+",impulse="+impulse+
+                ",meanNegativeCH0="+compression;
+        }
+    }
+    static Result trial(JSONObject user,boolean wall,int sector,int channel,int sign)
+        throws Exception{
+        GameSceneSnapshot.Scene scene=GameSceneSnapshot.workingPosture(
+            user.getString("training_room_1_scene_v379"));
+        assertNotNull(scene);
+        SymbioteMatterV1 gel=scene.matter;
+        gel.enableOriginalZero3TractionV363();
+        gel.configurePhysicalTurnBrakeV382(-.04f);
+        ArrayList<UnknownWorld.Entity> world=wall?
+            scene.objects:new ArrayList<UnknownWorld.Entity>();
+        Zero3LearningFoundation.AdaptiveCortex cortex=
+            Zero390ActualUserMotorRehabilitationAndroidTest.trained(user);
+        Zero3LearningFoundation.Coordinator coordinator=
+            new Zero3LearningFoundation.Coordinator(cortex);
+        float firstX=scene.body.cx,firstY=scene.body.cy;
+        float impulse=0,meanCompression=0f;
+        for(int decision=0;decision<5;decision++){
+            Zero3LearningFoundation.MotorIntent intent=
+                new Zero3LearningFoundation.MotorIntent(3,decision,
+                    cortex.revision(),1f,0f,.5f,.5f,.4f);
+            coordinator.begin(intent,scene.body,false,true,false,true,true);
+            for(int tick=0;tick<24;tick++){
+                float[] muscles=coordinator.actuate(scene.body,scene.skin,DT);
+                if(sector>=0){
+                    int i=sector*4+channel;
+                    muscles[i]=Math.max(-1f,Math.min(1f,
+                        muscles[i]+INTERVENTION*sign));
+                }
+                for(int k=0;k<16;k++)
+                    meanCompression+=Math.max(0f,-muscles[k*4])/16f/120f;
+                float[] preX=scene.skin.x.clone(),preY=scene.skin.y.clone();
+                float[] preBodyX=scene.body.x.clone(),
+                        preBodyY=scene.body.y.clone();
+                float oldWork=gel.work;
+                gel.step(scene.body,scene.skin,muscles,DT);
+                float[] gelX=scene.skin.x.clone(),gelY=scene.skin.y.clone();
+                Zero387TactileFrame.begin(scene.skin);
+                if(wall)TrainingRoomV379.constrain(scene.body,scene.skin,
+                    world,preX,preY,preBodyX,preBodyY);
+                SymbioteWorldStepV171.interior(gel,scene.body,scene.skin,null,
+                    world,DT,gelX,gelY);
+                impulse+=gel.lastMuscleReactionImpulse;
+                coordinator.observe(scene.body,DT,
+                    Math.max(0f,gel.work-oldWork),
+                    gel.lastMuscleReactionImpulse,false,false);
+            }
+            coordinator.finish();
+        }
+        return new Result(sector,channel,sign,
+            scene.body.cx-firstX,scene.body.cy-firstY,gel.work,impulse,meanCompression);
+    }
+
+    @Test(timeout=900000)
+    public void originalS21SavedCortexDetectWhichMusclesReallyGenerateEastwardTranslation()
+        throws Exception{
+        JSONObject user=Zero390ActualUserMotorRehabilitationAndroidTest.fixture();
+        Result passive=trial(user,false,-1,-1,0);
+        Log.i("ZERO392_JACOBIAN","ORIGINAL_USER_V388_CORTEX_BASELINE_FREE "+passive.printable());
+        ArrayList<Result> alternatives=new ArrayList<>();
+        for(int ch:new int[]{0,1,3}){
+            for(int site=0;site<16;site++){
+                for(int sign:new int[]{-1,+1}){
+                    Result experiment=trial(user,false,site,ch,sign);
+                    alternatives.add(experiment);
+                }
+            }
+        }
+        alternatives.sort((a,b)->Float.compare(b.dx,a.dx));
+        assertEquals(96,alternatives.size());
+        int improvements=0;
+        for(Result a:alternatives)if(a.dx>passive.dx+.05f)improvements++;
+        Log.i("ZERO392_JACOBIAN","LOCAL_MUSCLE_SENSITIVITY_BASELINE="+
+            passive.dx+",IMPROVING_EXPERIMENTS="+improvements+"/96"+
+            ",BEST="+alternatives.get(0).dx+",WORST="+
+            alternatives.get(alternatives.size()-1).dx);
+        Result wallBaseline=trial(user,true,-1,-1,0);
+        Log.i("ZERO392_JACOBIAN","ORIGINAL_USER_V388_WALL_BASELINE "+wallBaseline.printable());
+        for(int i=0;i<6;i++){
+            Result best=alternatives.get(i);
+            Result withWall=trial(user,true,best.sector,best.channel,best.sign);
+            Log.i("ZERO392_JACOBIAN","PHYSICALLY_DISCOVERED_MOTOR_"+
+                i+" FREE "+best.printable()+" WALL "+withWall.printable());
+        }
+        Log.i("ZERO392_JACOBIAN",
+            "ZERO392_JACOBIAN_COMPLETE=PASS_MEASUREMENT_ONLY_NO_UNPROVEN_AUTOMATIC_ACTION");
+    }
+}
