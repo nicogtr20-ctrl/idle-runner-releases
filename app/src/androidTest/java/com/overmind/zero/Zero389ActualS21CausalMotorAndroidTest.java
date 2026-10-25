@@ -43,8 +43,13 @@ public final class Zero389ActualS21CausalMotorAndroidTest {
                 Zero3OriginalBrainV356.inspectSaved(user.getString("brain"));
             java.lang.reflect.Field field=saved.getClass().getDeclaredField("cortex");
             field.setAccessible(true);
-            cortex=((Zero3LearningFoundation.AdaptiveCortex)field.get(saved))
-                .forkForEvaluation();
+            // STRICT LIVE-STATE EVALUATION: the older forkForEvaluation()
+            // copies the 512 W but silently clears 64 recurrent local states.
+            // Here inspectSaved() already returned an isolated full CPU
+            // restore; use THAT actual saved trained cortex directly, with
+            // state, outputs and revision intact. Each trial parses a NEW
+            // copy so no user's source can be modified.
+            cortex=(Zero3LearningFoundation.AdaptiveCortex)field.get(saved);
         }else cortex=new Zero3LearningFoundation.AdaptiveCortex();
         Zero3LearningFoundation.Coordinator owner=
             new Zero3LearningFoundation.Coordinator(cortex);
