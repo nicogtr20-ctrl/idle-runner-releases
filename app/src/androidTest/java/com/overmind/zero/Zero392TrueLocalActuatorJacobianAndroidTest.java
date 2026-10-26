@@ -48,6 +48,12 @@ public final class Zero392TrueLocalActuatorJacobianAndroidTest {
     }
     static Result trialCombination(JSONObject user,boolean wall,int direction,
             int[] sites,int[] channels,int[] signs,float virginFraction)throws Exception{
+        return trialCombination(user,wall,direction,sites,channels,signs,virginFraction,false);
+    }
+    /** Laboratory-only A/B with identical true S21 body and original V3 cortex. */
+    static Result trialCombination(JSONObject user,boolean wall,int direction,
+            int[] sites,int[] channels,int[] signs,float virginFraction,
+            boolean groundReactionShearV397)throws Exception{
         if(!Float.isFinite(virginFraction)||virginFraction<0f||virginFraction>1f)
             throw new IllegalArgumentException("untrusted blend fraction");
         if(sites.length!=channels.length||channels.length!=signs.length)
@@ -58,6 +64,7 @@ public final class Zero392TrueLocalActuatorJacobianAndroidTest {
         SymbioteMatterV1 gel=scene.matter;
         gel.enableOriginalZero3TractionV363();
         gel.configurePhysicalTurnBrakeV382(-.04f);
+        gel.configureGroundReactionShearLabV397(groundReactionShearV397);
         ArrayList<UnknownWorld.Entity> world=wall?
             scene.objects:new ArrayList<UnknownWorld.Entity>();
         Zero3LearningFoundation.AdaptiveCortex cortex=
