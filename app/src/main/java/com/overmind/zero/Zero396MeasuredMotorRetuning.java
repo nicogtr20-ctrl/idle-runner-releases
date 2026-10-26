@@ -16,6 +16,7 @@ final class Zero396MeasuredMotorRetuning {
     private final boolean[][][] observed=new boolean[8][4][3];
     private final float[] selected=new float[8];
     private final boolean[] finalized=new boolean[8];
+    private static final float MIN_REPRODUCIBLE_GAIN=.07f;
     static float fraction(int idx){
         if(idx<0||idx>=FRACTIONS.length)
             throw new IllegalArgumentException("fraction index");
@@ -33,7 +34,7 @@ final class Zero396MeasuredMotorRetuning {
     float provisional(int heading){
         if(heading<0||heading>=8||finalized[heading])
             throw new IllegalArgumentException("motor category");
-        float best=0f;float maxWorst=.07f;
+        float best=0f;float maxWorst=MIN_REPRODUCIBLE_GAIN;
         for(int fraction=0;fraction<4;fraction++){
             float worst=Float.POSITIVE_INFINITY;
             for(int condition=0;condition<3;condition++){
@@ -53,7 +54,10 @@ final class Zero396MeasuredMotorRetuning {
            !Float.isFinite(candidate)||!Float.isFinite(observedGain)||
            candidate!=provisional(heading))
             throw new IllegalArgumentException("unproven motor efficacy");
-        selected[heading]=candidate>0f&&observedGain>.07f?candidate:0f;
+        // An independent holdout is necessary but never sufficient without all
+        // three physically distinct training contexts agreeing in sign.
+        selected[heading]=candidate>0f&&observedGain>MIN_REPRODUCIBLE_GAIN
+                ?candidate:0f;
         finalized[heading]=true;
     }
     float approved(int heading){
