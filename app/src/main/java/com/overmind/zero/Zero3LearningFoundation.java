@@ -64,6 +64,15 @@ public final class Zero3LearningFoundation {
         private final float[] weights=new float[OUTPUTS*INPUTS];
         private final float[] state=new float[OUTPUTS];
         private final float[] noise=new float[OUTPUTS];
+        // V397 transient lab-only eligibility measured at the ACTUAL solver
+        // command after tanh saturation, effort gain and output clipping.
+        // Never persisted: legacy 512 weights / 64 state / V356 CRC unchanged.
+        private final float[] deliveredProbeV397=new float[OUTPUTS];
+        private boolean measuredProbeCreditLabV397=false;
+        void enableMeasuredProbeCreditLabV397(){
+            if(pendingDecision)throw new IllegalStateException("V397 pending");
+            measuredProbeCreditLabV397=true;
+        }
         private final float[] accumulated=new float[OUTPUTS*INPUTS];
         private final float[] output=new float[OUTPUTS];
         private final float[] features=new float[INPUTS];
@@ -378,7 +387,8 @@ public final class Zero3LearningFoundation {
         void begin(boolean explore,MotorIntent intent,boolean gripExternallyOwned){
             if(pendingDecision)throw new IllegalStateException("unfinished cortex decision");
             pendingDecision=true;
-            Arrays.fill(noise,0f);Arrays.fill(accumulated,0f);samples=0;
+            Arrays.fill(noise,0f);Arrays.fill(accumulated,0f);
+            Arrays.fill(deliveredProbeV397,0f);samples=0;
             probing=explore;externalGripOwnerV361=gripExternallyOwned;
             activeChannel=-1;isolatedSectorV390=-1;lastAcceptedGradientNorm=0f;
             if(intent!=null){
@@ -389,7 +399,8 @@ public final class Zero3LearningFoundation {
         }
         void discard(){
             pendingDecision=false;
-            Arrays.fill(noise,0);Arrays.fill(accumulated,0);samples=0;probing=false;
+            Arrays.fill(noise,0);Arrays.fill(accumulated,0);
+            Arrays.fill(deliveredProbeV397,0);samples=0;probing=false;
             activeChannel=-1;isolatedSectorV390=-1;externalGripOwnerV361=false;
         }
         /**
@@ -457,8 +468,20 @@ public final class Zero3LearningFoundation {
                     // physical solver envelope. CH2 is V319 grip-owned.
                     float gain=ch==2?1f:2f*intention.effort;
                     output[at]=limit(learned*gain,-1f,1f);
-                    if(probing)for(int f=0;f<INPUTS;f++)
-                        accumulated[at*INPUTS+f]+=features[f];
+                    if(probing){
+                        if(measuredProbeCreditLabV397&&noise[at]!=0f){
+                            // Compare with THIS command's unperturbed neural
+                            // transfer, not a fictional physics replay.
+                            // A clipped/saturated muscle with no actual
+                            // command change gets ZERO gradient eligibility.
+                            float undisturbed=limit((float)Math.tanh(
+                                activationGain*z)*gain,-1f,1f);
+                            deliveredProbeV397[at]+=
+                                (output[at]-undisturbed)/activationGain;
+                        }
+                        for(int f=0;f<INPUTS;f++)
+                            accumulated[at*INPUTS+f]+=features[f];
+                    }
                     // Slow local state supports future recurrent evolution;
                     // never a pre-programmed rhythm.
                     state[at]=limit(state[at]*.85f+output[at]*.15f,-1,1);
@@ -480,7 +503,9 @@ public final class Zero3LearningFoundation {
             for(int out=0;out<OUTPUTS;out++)for(int f=0;f<INPUTS;f++){
                 int ix=out*INPUTS+f;
                 float feat=limit(accumulated[ix]/samples,-2,2);
-                float delta=limit(lr*advantage*noise[out]*feat,-.002f,.002f);
+                float perturb=measuredProbeCreditLabV397?
+                    deliveredProbeV397[out]/samples:noise[out];
+                float delta=limit(lr*advantage*perturb*feat,-.002f,.002f);
                 float previous=weights[ix];
                 weights[ix]=limit(previous+delta,-1.5f,1.5f);
                 float actual=weights[ix]-previous;
@@ -514,6 +539,10 @@ public final class Zero3LearningFoundation {
         void enableCausalMotorCreditV390(){
             if(active!=null)throw new IllegalStateException("V390 pending");
             causalMotorCreditV390=true;cortex.enableIsolatedCreditV390();
+        }
+        void enableActualDeliveredMotorProbeLabV397(){
+            if(active!=null)throw new IllegalStateException("V397 pending");
+            cortex.enableMeasuredProbeCreditLabV397();
         }
         int frontContactFramesV390(){return frontContactFramesV390;}
         int rearContactFramesV390(){return rearContactFramesV390;}
