@@ -1,0 +1,28 @@
+# ZERO392→394 — autentico cervello V388 e capacità fisica locale sullo stesso Galaxy S21
+
+**Stato 26 ottobre 2026: DATI FORENSI, NON RILASCIO.** Il checkpoint originale utente è `zero-telemetry/reports/20261025-104220-36e86668b9aff`: GRU3 genuino **33.312 decisioni**, corteccia locale 19.452 updates, tutti i 512 pesi e 64 stati ricorrenti restaurati, 170 elementi corporei e velocità reali preservati. NESSUN reset della memoria/12 slot, NESSUN OTA o nuova APK. Studio rigoroso di motorica NON è prova di navigazione autonoma.
+
+## Contesto delle correzioni già applicate
+V390 `fix/zero390-isolated-motor-credit-wall-validity`: differenza motoria tra un solo settore reale vs sedici perturbati alla volta, niente finto premio inerziale da muro anteriore, possibile credito solo su fuga reale con muro dietro e senza correzione del mondo. [18/18 regressioni Android PASS](https://github.com/nicogtr20-ctrl/idle-runner-releases/actions/runs/40234592208). Ma [GameActivity GRU3 2.001 vere decisioni FAIL](https://github.com/nicogtr20-ctrl/idle-runner-releases/actions/runs/40235005992): blue 2, red 1, signed 71.09898/gross 733.67910, efficienza **9,69%** sotto soglia scientifica di **12%**; già 128 esperienze di corteccia utente NON riabilitano EST (-2.603 baseline, -2.632 col credito isolato). Non dichiarare V390 risolta.
+
+V391 `lab/zero391-relative-ground-footing` [run A/B 40235739000](https://github.com/nicogtr20-ctrl/idle-runner-releases/actions/runs/40235739000): usare contrazione rispetto a media muscoli per ancoraggio al suolo migliora certi assi MA peggiora EST (-2.603 → -2.720 senza muro; -0.415 → -0.434 con muro). **RESPINTA**, non integrare in production.
+
+## V392: prova sperimentale di causalità per singolo muscolo
+[Original 96 local-muscle jacobian Android S21](https://github.com/nicogtr20-ctrl/idle-runner-releases/actions/runs/40236291112): per OGNI possibile settore 0–15 × CH0/CH1/CH3 × segno +/- (96 diverse piccole variazioni temporanee `±0.30` sull'uscita neurale), 120 frame realmente integrati Android dall'IDENTICO 170-body e checkpoint V388. Ogni prova agisce esclusivamente sui 64 segnali consegnati al solver, non sceglie destinazione né modifica alcun peso dell'utente.
+
+- Baseline EST, **spazio libero**: COM DX **−2,6028442**; 40/96 alterazioni riducono questa spinta verso OVEST; BEST una sola CH0 nel settore 8, +0.30: COM DX **−1,4662933** (migliora ma ancora OVEST).
+- Baseline EST **muro originale**: COM DX **−0,4154358**. Con CH0 settore 14, decremento −0.30, COM DX **+0,88661194** (spostamento EAST reale); CH0 settore 15, −0.30: **+0,59529114**; settore 8 CH0 +0.30: **+0,11836243**. Il corpo è fisicamente CAPACE di uscire dal muro sotto lo stesso controller/neural stato con piccole modifiche della distribuzione dei muscoli; il vero failure è nella coordinazione e credito neurale, non impossibilità meccanica assoluta.
+
+## V393: tutte le 96 alterazioni confrontate IN DUE MONDI, identico corpo
+[Original 192 Android causal motor A/B, 40391641767](https://github.com/nicogtr20-ctrl/idle-runner-releases/actions/runs/40391641767), run GREEN per MISURE (non certificazione). Tutte le 96 perturbazioni sono state ripetute sul medesimo corpo con e senza muri reali. **25/96** migliorano EST in entrambi i mondi di almeno 0.05 unità; **6/96** permettono DX positivo EST nella postura addossata al muro; **ZERO** singole modifiche rende DX EAST nello spazio libero. MIGLIORE `sector14 CH0 −.30`: senza muro −1,7104034 (migliora +.8924408), con muro +.88661194 (migliora +1.3020477). Seconda `sector15 CH0 −.30`: free −1.7948, wall +0.5953. La scelta di questo settore NON DEVE diventare una regola nel runtime: è una scoperta causale specifica di UNA postura e UN heading controllato in laboratorio.
+
+## V394: studio della sinergia reale fra contrazioni, senza app/brain live side effect
+Branch `lab/zero394-s21-learned-muscle-synergy`, [Android run 40392736458](https://github.com/nicogtr20-ctrl/idle-runner-releases/actions/runs/40392736458). Lo studio prende i 12 migliori motori V393 (dati misurati), esplora greedily massimo 8 interventi combinati su due mondi; sceglie ogni muscolo SOLO da vera differenza di spostamento del centro materiale, non da una tabella di movimenti prefissati. **Poi valuta anche una seconda postura indipendente già presente nel vero S21 upload, e le altre tre direzioni originarie**, tutti con cortex V388 identica non mutata. I 12 candidati sono elementi DI TEST estratti dal Jacobiano V393 e non vengono mai chiamati come motor commands nel vero gioco. Non considerare conclusioni V394 prima del suo esito.
+
+## Cosa manca per una vera versione corretta
+1. Dare alla corteccia un meccanismo GENERALIZZABILE di apprendimento di derivate motorie locali, con esperienze REALI, crediti matched e heldout e NON la preimpostazione di `sector14`.
+2. Verificare efficacia su posture indipendenti e almeno 4 direzioni, con/mancanza contatto; fermare training se il controller peggiora l'azione su altri stati.
+3. Unire SOLO la correzione provata al runtime esclusivo GRU3, senza cambiare forma dei 512 pesi corticali, 194 ingressi o CRC checkpoint, senza rompere i 12 slot V354.
+4. Superare test Android reali cold resume/sensing, 2.000+ decisioni autonome della medesima scena e vero cervello allenato: niente APK/OTA se continua a dirigersi sul muro.
+
+**Non confondere essere capace fisicamente di muoversi con intelligenza completa o aprire una porta.** La causa centrale ora è credito non identificabile di 16 motori insieme e una corteccia allenata non allineata; la forza fisica del corpo può agire nella direzione voluta se modula i siti giusti, ma tale selezione non deve essere preprogrammata.
