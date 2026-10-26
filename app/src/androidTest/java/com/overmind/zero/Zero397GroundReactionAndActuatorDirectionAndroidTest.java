@@ -75,27 +75,30 @@ public final class Zero397GroundReactionAndActuatorDirectionAndroidTest {
         float[] dir=new float[2],rotated=new float[2];
         float cx=scene.body.cx,cy=scene.body.cy;
         float[] oldX=scene.skin.x.clone(),oldY=scene.skin.y.clone();
+        float[][] originalDirections=new float[Morphology.POINTS][2];
         for(int i=0;i<Morphology.POINTS;i++){
             float rx=oldX[i]-cx,ry=oldY[i]-cy;
             float d=(float)Math.hypot(rx,ry);
-            if(d<.01f)continue;
             SymbioteMatterV1.actuatorDirectionAt(scene.skin,i,cx,cy,sign,dir);
+            originalDirections[i][0]=dir[0];
+            originalDirections[i][1]=dir[1];
+            if(d<.01f)continue;
             float projection=(dir[0]*rx+dir[1]*ry)/d;
             assertTrue("Cannot invert CH0 extension on concave material site "+i,
                 projection>.10f);
             assertEquals(1f,(float)Math.hypot(dir[0],dir[1]),1e-4f);
         }
-        // All local geometry vectors must rotate with the tissue, not the world.
+        // Rotate the WHOLE material and its neighbours before comparison;
+        // rotating one node at a time would corrupt actual polygon normals.
         for(int i=0;i<Morphology.POINTS;i++){
             scene.skin.x[i]=-oldY[i];scene.skin.y[i]=oldX[i];
         }
         for(int i=0;i<Morphology.POINTS;i++){
             SymbioteMatterV1.actuatorDirectionAt(scene.skin,i,-cy,cx,sign,rotated);
-            scene.skin.x[i]=oldX[i];scene.skin.y[i]=oldY[i];
-            SymbioteMatterV1.actuatorDirectionAt(scene.skin,i,cx,cy,sign,dir);
-            scene.skin.x[i]=-oldY[i];scene.skin.y[i]=oldX[i];
-            assertEquals("Actuator rotation x="+i,-dir[1],rotated[0],1e-3f);
-            assertEquals("Actuator rotation y="+i,dir[0],rotated[1],1e-3f);
+            assertEquals("Actuator rotation x="+i,-originalDirections[i][1],
+                rotated[0],1e-3f);
+            assertEquals("Actuator rotation y="+i,originalDirections[i][0],
+                rotated[1],1e-3f);
         }
         Log.i("ZERO397_MATERIAL","CONCAVE_ACTUATOR_OUTWARD_AND_ROTATION=PASS");
     }
