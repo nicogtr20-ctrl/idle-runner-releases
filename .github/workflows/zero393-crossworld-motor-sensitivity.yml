@@ -1,0 +1,67 @@
+name: ZERO393 real S21 local motor sensitivity across wall and free-space
+on:
+  push:
+    branches: [lab/zero393-real-s21-symmetric-motor-derivatives]
+    paths:
+      - 'app/src/androidTest/java/com/overmind/zero/Zero393CrossWorldMotorEffectsAndroidTest.java'
+      - '.github/workflows/zero393-crossworld-motor-sensitivity.yml'
+  workflow_dispatch:
+permissions: {contents: read}
+jobs:
+  actual-user-causal-dynamics:
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with: {distribution: temurin, java-version: '17'}
+      - name: Build original V388 Android app + scientific measurements
+        run: gradle --no-daemon assembleDebug assembleDebugAndroidTest
+      - name: Reconstruct exact user-shared live V388 trained brain and living material
+        run: |
+          python3 - <<'PY'
+          import json,urllib.request,pathlib
+          base='https://raw.githubusercontent.com/nicogtr20-ctrl/idle-runner-releases/zero-telemetry/zero-telemetry/reports/20261025-104220-36e86668b9aff/'
+          def get(i):
+              u=base+'part-%03d.json'%i
+              with urllib.request.urlopen(urllib.request.Request(u,headers={'User-Agent':'ZERO389-Real-User-Causal'}),timeout=40) as h:
+                  return json.load(h)
+          p1=get(1)['currentZero']
+          p2=get(2)['currentZero']
+          chunks=[]
+          for i in range(3,22):
+              doc=get(i)
+              assert doc['fragmentIndex']==i-3 and doc['fragmentCount']==19
+              chunks.append(doc['jsonFragment'])
+          brain=json.loads(''.join(chunks))['zero3_original_brain_only_v356']
+          assert len(brain)>300000
+          fixture=dict(brain=brain,motor=p1['symbiote_motor_head_v1'],
+              local=p1['symbiote_cortex_local_v161'],fast=p1['somatic_fast_v167'],
+              physical_scene_v100=p1['physical_scene_v100'],
+              training_room_1_scene_v379=p2['training_room_1_scene_v379'])
+          path=pathlib.Path('/tmp/zero385-user-readonly.json')
+          path.write_text(json.dumps(fixture))
+          training=json.loads(fixture['training_room_1_scene_v379'])
+          assert len(training['physical']['objects'])>90
+          print('ZERO389_REAL_V388_USER_DATA=PASS; USER_ORIGINAL_BRAIN_LENGTH='+str(len(brain)))
+          PY
+      - name: Allow emulator KVM
+        run: |
+          echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' | sudo tee /etc/udev/rules.d/99-kvm4all.rules
+          sudo udevadm control --reload-rules
+          sudo udevadm trigger --name-match=kvm
+      - name: Produce identical-user-state cortex-only vs passive and wall vs same free body
+        uses: reactivecircus/android-emulator-runner@v2
+        with:
+          api-level: 35
+          arch: x86_64
+          profile: pixel_6
+          disable-animations: true
+          script: |
+            bash -c 'set -euo pipefail; adb install -r app/build/outputs/apk/debug/app-debug.apk; adb install -r app/build/outputs/apk/androidTest/debug/app-debug-androidTest.apk; adb shell mkdir -p /sdcard/Android/data/com.overmind.zero.ota/files; adb push /tmp/zero385-user-readonly.json /sdcard/Android/data/com.overmind.zero.ota/files/zero385-user-readonly.json; adb shell am instrument -w -r -e class com.overmind.zero.Zero393CrossWorldMotorEffectsAndroidTest com.overmind.zero.ota.test/androidx.test.runner.AndroidJUnitRunner 2>&1 | tee "$RUNNER_TEMP/ZERO393_REAL_S21_CROSSWORLD.txt"; adb logcat -d -s ZERO393_CROSSWORLD:I > "$RUNNER_TEMP/ZERO393_REAL_S21_CROSSWORLD_metrics.txt"; grep -q "OK (1 test)" "$RUNNER_TEMP/ZERO393_REAL_S21_CROSSWORLD.txt"; grep -q "ZERO393_MOTOR_CROSSWORLD_COMPLETE=PASS_MATH_ONLY_NOT_AUTONOMY" "$RUNNER_TEMP/ZERO393_REAL_S21_CROSSWORLD_metrics.txt"; ! grep -qE "FAILURES!!!|INSTRUMENTATION_FAILED|Process crashed" "$RUNNER_TEMP/ZERO393_REAL_S21_CROSSWORLD.txt"'
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: ZERO393-CROSSWORLD-MOTOR-SENSITIVITY
+          path: ${{ runner.temp }}/ZERO393_REAL_S21_CROSSWORLD*.txt
+          if-no-files-found: warn
