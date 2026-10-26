@@ -41,6 +41,11 @@ public final class Zero390ActualUserMotorRehabilitationAndroidTest {
     static float execute(JSONObject user,Zero3LearningFoundation.AdaptiveCortex c,
             boolean v390,int heading,boolean learn,long serial,int segments)
             throws Exception{
+        return execute(user,c,v390,heading,learn,serial,segments,false);
+    }
+    static float execute(JSONObject user,Zero3LearningFoundation.AdaptiveCortex c,
+            boolean v390,int heading,boolean learn,long serial,int segments,
+            boolean useActualDeliveredProbeV397)throws Exception{
         GameSceneSnapshot.Scene scene=GameSceneSnapshot.workingPosture(
             user.getString("training_room_1_scene_v379"));
         assertNotNull(scene);assertNotNull(scene.matter);
@@ -53,6 +58,7 @@ public final class Zero390ActualUserMotorRehabilitationAndroidTest {
         Zero3LearningFoundation.Coordinator control=
             new Zero3LearningFoundation.Coordinator(c);
         if(v390)control.enableCausalMotorCreditV390();
+        if(useActualDeliveredProbeV397)control.enableActualDeliveredMotorProbeLabV397();
         for(int k=0;k<segments;k++){
             Zero3LearningFoundation.MotorIntent intent=
                 new Zero3LearningFoundation.MotorIntent(
