@@ -1,3 +1,11 @@
+## V394 RESULT (exact emulator, second genuine S21 pose) — OVERFITTING CONFIRMED
+
+[GitHub Actions real Android V394 40392736458](https://github.com/nicogtr20-ctrl/idle-runner-releases/actions/runs/40392736458), 170 material particles, original cortex full state. Greedy selected 3 V393-measured phys-motor interventions, not user-visible gait: CH0 sector14 -0.30, CH1 sector10 -0.30, CH1 sector0 -0.30. On exact training posture EAST no wall dx -2.6028442 → -1.1619263; with left wall EAST -0.4154358 → **+1.0537720** (real escape). HOWEVER on independent actual user S21 free posture (unused for choosing motor sites), EAST -0.2055664 → **-1.0569458, severely WORSE**. Heldout SOUTH also degrades 3.5372238 → 2.8481064; NORTH improves -0.047 → +0.385, WEST 1.56 → 2.118. This single posture motor optimization does NOT generalize. Hardcoding three muscles would duplicate the user's repeated production malfunction. **DO NOT SHIP**.
+
+V395 branch `lab/zero395-s21-motor-selective-recovery`, [run 40393884594](https://github.com/nicogtr20-ctrl/idle-runner-releases/actions/runs/40393884594): test safe partial recovery of ONLY low-level 512 learned cortical weights (0.25,0.5,0.75,1.00 virgin coefficient), preserving original GRU64 decisions, hidden cortex states, 170 body, 12 slots. The comparison observes original training free / original training wall / second independent S21 free pose × all 4 neural directions, a total of 12 contexts × four blends. **LAB ONLY**, no changes to user's checkpoint, no release, no auto rollback or actual weight modification in production. Read full results before choosing repair.
+
+---
+
 # ZERO392→394 — autentico cervello V388 e capacità fisica locale sullo stesso Galaxy S21
 
 **Stato 26 ottobre 2026: DATI FORENSI, NON RILASCIO.** Il checkpoint originale utente è `zero-telemetry/reports/20261025-104220-36e86668b9aff`: GRU3 genuino **33.312 decisioni**, corteccia locale 19.452 updates, tutti i 512 pesi e 64 stati ricorrenti restaurati, 170 elementi corporei e velocità reali preservati. NESSUN reset della memoria/12 slot, NESSUN OTA o nuova APK. Studio rigoroso di motorica NON è prova di navigazione autonoma.
