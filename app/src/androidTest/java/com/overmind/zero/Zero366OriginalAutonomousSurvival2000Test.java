@@ -90,6 +90,23 @@ public final class Zero366OriginalAutonomousSurvival2000Test {
                 instrument.runOnMainSync(()->result.set(
                     original.originalV356DecisionsForQA()));
                 cursor=result.get();
+                // V397: never misreport a lost original Android brain owner
+                // as a harmless missing statistics field at the next 200
+                // decisions. This is a SCIENTIFIC instrumentation failure,
+                // not a score for neural locomotion.
+                boolean owner=original.originalV356NeuralOwnerForQA();
+                if(burst%30==0 || !owner){
+                    android.util.Log.i("ZERO397_AUTONOMY",
+                        "REAL_ORIGINAL_LIFECYCLE burst="+burst+
+                        ",cursor="+cursor+",owner="+owner+
+                        ",destroyed="+original.isDestroyed()+
+                        ",finishing="+original.isFinishing()+
+                        ",error="+original.originalV356BrainErrorForQA());
+                }
+                assertTrue("Original GRU3 owner vanished at physical burst "+
+                    burst+" (cursor="+cursor+",destroyed="+original.isDestroyed()+
+                    ",finishing="+original.isFinishing()+",error="+
+                    original.originalV356BrainErrorForQA()+")",owner);
                 String error=original.originalV356BrainErrorForQA();
                 assertTrue("real world must not stop due to neural or physics error: "+error,
                     error==null||error.isEmpty());
