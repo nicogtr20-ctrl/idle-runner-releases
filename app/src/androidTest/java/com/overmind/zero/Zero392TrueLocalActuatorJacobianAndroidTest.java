@@ -44,6 +44,12 @@ public final class Zero392TrueLocalActuatorJacobianAndroidTest {
     /** Causal physical-only laboratory, never an alternate live AI actor. */
     static Result trialCombination(JSONObject user,boolean wall,int direction,
             int[] sites,int[] channels,int[] signs)throws Exception{
+        return trialCombination(user,wall,direction,sites,channels,signs,0f);
+    }
+    static Result trialCombination(JSONObject user,boolean wall,int direction,
+            int[] sites,int[] channels,int[] signs,float virginFraction)throws Exception{
+        if(!Float.isFinite(virginFraction)||virginFraction<0f||virginFraction>1f)
+            throw new IllegalArgumentException("untrusted blend fraction");
         if(sites.length!=channels.length||channels.length!=signs.length)
             throw new IllegalArgumentException("mismatched actual muscle interventions");
         GameSceneSnapshot.Scene scene=GameSceneSnapshot.workingPosture(
@@ -56,6 +62,19 @@ public final class Zero392TrueLocalActuatorJacobianAndroidTest {
             scene.objects:new ArrayList<UnknownWorld.Entity>();
         Zero3LearningFoundation.AdaptiveCortex cortex=
             Zero390ActualUserMotorRehabilitationAndroidTest.trained(user);
+        if(virginFraction>0f){
+            // Strict LAB ONLY: physically compare recovery of damaged V3
+            // motor cortical coefficients. Leave original GRU64 decision
+            // weights, readout, recurring cortex states and 12 saved slots
+            // untouched; a NEW user checkpoint is parsed for each trial.
+            java.lang.reflect.Field f=
+                Zero3LearningFoundation.AdaptiveCortex.class.getDeclaredField("weights");
+            f.setAccessible(true);
+            float[] actual=(float[])f.get(cortex);
+            float[] virgin=new Zero3LearningFoundation.AdaptiveCortex().weights();
+            for(int k=0;k<actual.length;k++)
+                actual[k]=(1f-virginFraction)*actual[k]+virginFraction*virgin[k];
+        }
         Zero3LearningFoundation.Coordinator coordinator=
             new Zero3LearningFoundation.Coordinator(cortex);
         float firstX=scene.body.cx,firstY=scene.body.cy;
