@@ -32,6 +32,14 @@ public final class SymbioteMatterV1 {
     // actuators. No later node can see an earlier node's already-moved pose.
     private final float[] springKV388=new float[SURFACE];
     private final float[] normalXV388=new float[SURFACE],normalYV388=new float[SURFACE];
+    // V397: terrain loading acts during cortex/fluid velocity exchange too,
+    // otherwise an already damped foothold gets freely dragged by the core.
+    private final float[] floorShearMobilityV397=new float[SURFACE];
+    private boolean groundReactionShearV397=false;
+    public float lastGroundShearImpulseV397=0f;
+    void configureGroundReactionShearLabV397(boolean enabled){
+        groundReactionShearV397=enabled;
+    }
     private final float[] nx=new float[SURFACE],ny=new float[SURFACE];
     private final float[] impulsesX=new float[MotorBrain.N+INNER],impulsesY=new float[MotorBrain.N+INNER];
     private final float[] fluidX=new float[MotorBrain.N+INNER],fluidY=new float[MotorBrain.N+INNER];
@@ -100,6 +108,17 @@ public final class SymbioteMatterV1 {
         float correction=clip((.55f-alignment)/.8f,0f,1f);
         float ux=rx*(1f-correction)+out[0]*correction;
         float uy=ry*(1f-correction)+out[1]*correction;
+        // V397: a deeply concave live surface can yield a nominal
+        // "outward" tangent normal actually pointing inward from material
+        // COM (confirmed on an original S21 saved contour). This makes
+        // positive CH0 extension contract that patch instead of extending it.
+        // Keep the tangential component but bound the outward radial
+        // component geometrically; never use intent or a world heading.
+        float radial=ux*rx+uy*ry;
+        if(radial<.12f){
+            ux+=(.12f-radial)*rx;
+            uy+=(.12f-radial)*ry;
+        }
         float mag=len(ux,uy);
         if(mag>.001f){out[0]=ux/mag;out[1]=uy/mag;}
     }
@@ -169,6 +188,17 @@ public final class SymbioteMatterV1 {
      */
     static void exchangeCortexFluidShear(Morphology.Surface skin,
             float[] px,float[] py,float[] pvx,float[] pvy,float dt){
+        exchangeCortexFluidShear(skin,px,py,pvx,pvy,dt,null);
+    }
+    // Optional real ground-reaction constitutive law: mobility is the
+    // fraction of shear impulse supported by this living surface patch;
+    // the remaining impulse is opposed by the substrate. A mobile patch
+    // uses the exact V388 behavior; never a direct COM/goal force.
+    static float exchangeCortexFluidShear(Morphology.Surface skin,
+            float[] px,float[] py,float[] pvx,float[] pvy,float dt,
+            float[] floorMobility){
+        if(floorMobility!=null&&floorMobility.length!=SURFACE)
+            throw new IllegalArgumentException("V397 surface mobility");
         if(skin==null||px==null||py==null||pvx==null||pvy==null||
             px.length!=MotorBrain.N+INNER||py.length!=px.length||
             pvx.length!=px.length||pvy.length!=px.length||
@@ -177,6 +207,7 @@ public final class SymbioteMatterV1 {
         final float cutoff2=20f*20f;
         float base=1f-(float)Math.exp(-6f*dt);
         final float fluidRatio=(float)(MotorBrain.N+INNER)/SURFACE;
+        float absorbedByGround=0f;
         for(int j=0;j<px.length;j++){
             float nearest=cutoff2;
             int closest=-1;
@@ -194,11 +225,20 @@ public final class SymbioteMatterV1 {
                 pvy[j]-=alpha*dvy;
             }else{
                 float sx=alpha*dvx,sy=alpha*dvy;
-                skin.vx[closest]+=sx;skin.vy[closest]+=sy;
-                skin.x[closest]+=sx*dt;skin.y[closest]+=sy*dt;
+                float mobility=floorMobility==null?1f:
+                    clip(floorMobility[closest],0f,1f);
+                // Same fluid impulse as the original equal/opposite pair.
+                // Immobile cortex passes its missing share to actual floor,
+                // not to a fictitious core, heading or reward.
+                skin.vx[closest]+=sx*mobility;
+                skin.vy[closest]+=sy*mobility;
+                skin.x[closest]+=sx*mobility*dt;
+                skin.y[closest]+=sy*mobility*dt;
                 pvx[j]-=fluidRatio*sx;pvy[j]-=fluidRatio*sy;
+                absorbedByGround+=len(sx,sy)*(1f-mobility);
             }
         }
+        return absorbedByGround;
     }
     /**
      * A moderately extended patch must be able to pull material back even
@@ -718,6 +758,7 @@ public final class SymbioteMatterV1 {
             throw new IllegalArgumentException("Non-finite muscle command");
         float previousCumulativeEffort=work;
         lastMuscleReactionImpulse=lastElasticForceMagnitude=0f;
+        lastGroundShearImpulseV397=0f;
         time+=dt;body.time+=dt;ticks++;
         if(Math.abs(transientGroundBrakeV382)>.000001f)
             transientGroundBrakeV382*=(float)Math.exp(-1.8f*dt);
@@ -827,6 +868,10 @@ public final class SymbioteMatterV1 {
             if(testCompressionStanceV386)
                 drag*=compressionStanceDragV386(extend,dt);
             float preX=lastSkinX[i],preY=lastSkinY[i];
+            // Base drag is exactly the measured ground-supported response:
+            // a loaded cortex must not be freely accelerated again by
+            // interior shear later in the very same physics substep.
+            floorShearMobilityV397[i]=clip(drag,0f,1f);
             float appliedVx=skin.vx[i]+fx[i]*dt;
             float appliedVy=skin.vy[i]+fy[i]*dt;
             // OTA164: isolated strong pseudopod retraction needs radial
@@ -840,6 +885,9 @@ public final class SymbioteMatterV1 {
                 float radial=appliedVx*ux+appliedVy*uy;
                 float tangent=-appliedVx*uy+appliedVy*ux;
                 float radialDrag=radialRetractionDrag(traction,release,dt);
+                // Extended free tips intentionally retract radially; their
+                // permitted mobility must survive the ground-shear pass.
+                floorShearMobilityV397[i]=Math.max(drag,radialDrag);
                 skin.vx[i]=clip(radial*radialDrag*ux-tangent*drag*uy,-140f,140f);
                 skin.vy[i]=clip(radial*radialDrag*uy+tangent*drag*ux,-140f,140f);
             }else{
@@ -918,7 +966,9 @@ public final class SymbioteMatterV1 {
         // The liquid must also exchange shear with its real CORTEX, not
         // only with itself. Without this, strong opposite spin can build
         // up in the mobile inner core while the substrate slows the shell.
-        exchangeCortexFluidShear(skin,fluidX,fluidY,fluidVx,fluidVy,dt);
+        lastGroundShearImpulseV397=exchangeCortexFluidShear(
+            skin,fluidX,fluidY,fluidVx,fluidVy,dt,
+            groundReactionShearV397?floorShearMobilityV397:null);
         // XSPH viscosity exchanges velocity between neighbouring *real*
         // parcels. Pairwise impulses sum to zero: fluid shear diffuses,
         // rather than each particle behaving like an independent rubber ball.
