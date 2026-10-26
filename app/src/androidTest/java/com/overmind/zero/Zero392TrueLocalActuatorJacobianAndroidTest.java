@@ -37,6 +37,15 @@ public final class Zero392TrueLocalActuatorJacobianAndroidTest {
     }
     static Result trial(JSONObject user,boolean wall,int sector,int channel,int sign)
         throws Exception{
+        return trialCombination(user,wall,0,sector<0?new int[0]:new int[]{sector},
+            sector<0?new int[0]:new int[]{channel},
+            sector<0?new int[0]:new int[]{sign});
+    }
+    /** Causal physical-only laboratory, never an alternate live AI actor. */
+    static Result trialCombination(JSONObject user,boolean wall,int direction,
+            int[] sites,int[] channels,int[] signs)throws Exception{
+        if(sites.length!=channels.length||channels.length!=signs.length)
+            throw new IllegalArgumentException("mismatched actual muscle interventions");
         GameSceneSnapshot.Scene scene=GameSceneSnapshot.workingPosture(
             user.getString("training_room_1_scene_v379"));
         assertNotNull(scene);
@@ -51,17 +60,23 @@ public final class Zero392TrueLocalActuatorJacobianAndroidTest {
             new Zero3LearningFoundation.Coordinator(cortex);
         float firstX=scene.body.cx,firstY=scene.body.cy;
         float impulse=0,meanCompression=0f;
+        float headingX=direction==0?1f:direction==2?-1f:0f;
+        float headingY=direction==1?1f:direction==3?-1f:0f;
         for(int decision=0;decision<5;decision++){
             Zero3LearningFoundation.MotorIntent intent=
                 new Zero3LearningFoundation.MotorIntent(3,decision,
-                    cortex.revision(),1f,0f,.5f,.5f,.4f);
+                    cortex.revision(),headingX,headingY,.5f,.5f,.4f);
             coordinator.begin(intent,scene.body,false,true,false,true,true);
             for(int tick=0;tick<24;tick++){
                 float[] muscles=coordinator.actuate(scene.body,scene.skin,DT);
-                if(sector>=0){
-                    int i=sector*4+channel;
-                    muscles[i]=Math.max(-1f,Math.min(1f,
-                        muscles[i]+INTERVENTION*sign));
+                for(int c=0;c<sites.length;c++){
+                    if(sites[c]<0||sites[c]>=16||
+                       (channels[c]!=0&&channels[c]!=1&&channels[c]!=3)||
+                       (signs[c]!=1&&signs[c]!=-1))
+                        throw new IllegalArgumentException("invalid physical motor site");
+                    int motorIndex=sites[c]*4+channels[c];
+                    muscles[motorIndex]=Math.max(-1f,Math.min(1f,
+                        muscles[motorIndex]+INTERVENTION*signs[c]));
                 }
                 for(int k=0;k<16;k++)
                     meanCompression+=Math.max(0f,-muscles[k*4])/16f/120f;
@@ -83,7 +98,8 @@ public final class Zero392TrueLocalActuatorJacobianAndroidTest {
             }
             coordinator.finish();
         }
-        return new Result(sector,channel,sign,
+        return new Result(sites.length==1?sites[0]:-1,
+            sites.length==1?channels[0]:-1,sites.length==1?signs[0]:0,
             scene.body.cx-firstX,scene.body.cy-firstY,gel.work,impulse,meanCompression);
     }
 
