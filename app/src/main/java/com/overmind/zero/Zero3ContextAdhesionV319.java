@@ -63,7 +63,7 @@ public final class Zero3ContextAdhesionV319 {
         State(float[] weights,long rng,boolean training,int decisions,
               int credits,double changes,double adhesion,double total){
             if(weights==null||weights.length!=SECTORS*FEATURES||
-               rng==0||decisions<0||credits<0||credits>decisions*SECTORS||
+               rng==0||decisions<0||credits<0||credits>(long)decisions*SECTORS||
                !Double.isFinite(changes)||changes<0||
                !Double.isFinite(adhesion)||adhesion<0||
                !Double.isFinite(total)||total<0)

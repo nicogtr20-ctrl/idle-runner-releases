@@ -13,6 +13,15 @@ import java.util.zip.CRC32;
  */
 final class Zero3OriginalBrainV356 {
     static final String KEY="zero3_original_brain_only_v356";
+    // This decision cursor is a 64-bit number in V356 on disk, but the
+    // original V319 hand journal deliberately remains a 32-bit count.
+    // Do not invent a 100,000-decision expiration: the user's 33k+ fully
+    // trained cortex must be allowed to continue over 100k decisions.
+    // Remain safely BELOW the existing V319 int rollover without altering
+    // the established 12 named save slots or V356 CRC/wire layout.
+    static boolean supportedDecisionCounterV407(long n){
+        return n>=0L&&n<Integer.MAX_VALUE;
+    }
     private static final int MAGIC=0x5A333536,VERSION=356,MAX=1200000;
     private static final String OWNER="original-game-zero3-v356";
     private Zero3RecurrentBrain brain;
@@ -669,7 +678,8 @@ final class Zero3OriginalBrainV356 {
         DataInputStream d=new DataInputStream(new ByteArrayInputStream(bytes,0,bytes.length-4));
         if(d.readInt()!=MAGIC||d.readInt()!=VERSION)throw new IOException("Schema V356 incompatibile");
         long count=d.readLong();int size=d.readInt();
-        if(count<0||count>100000||size<100||size>MAX)throw new IOException("Contatore/cervello V356 danneggiato");
+        if(!supportedDecisionCounterV407(count)||size<100||size>MAX)
+            throw new IOException("Contatore/cervello V356 danneggiato");
         byte[] gru=new byte[size];d.readFully(gru);
         Zero3RecurrentBrain core=Zero3RecurrentBrain.fromCheckpoint(gru);
         Zero3LearningFoundation.AdaptiveCortex.State cortexState=
