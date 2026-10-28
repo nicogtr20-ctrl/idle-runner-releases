@@ -90,14 +90,16 @@ public final class Zero399S21LocalDelayedLearningAndroidTest {
             Zero3LearningFoundation.Coordinator control,
             Zero3LearningFoundation.AdaptiveCortex cortex,
             int h,long episode,long serial,boolean train,
-            boolean delayedLocal,boolean wall)throws Exception{
+            boolean explore,boolean wall)throws Exception{
         float[] dir=heading(h);
         Zero3LearningFoundation.MotorIntent intent=
             new Zero3LearningFoundation.MotorIntent(episode,serial,
                 cortex.revision(),dir[0],dir[1],.5f,.5f,.4f);
         // LOCAL and FROZEN still execute one original single-site probe;
         // gradients only occur in explicitly chosen learning method.
-        control.begin(intent,scene.body,train,!train,true,true,true);
+        // Heldout evaluation must never contain motor probes, otherwise
+        // post-training perturbation cursor changes the comparison.
+        control.begin(intent,scene.body,train,!train,explore,true,true);
         float[] evidence=new float[16];
         for(int tick=0;tick<STEPS;tick++){
             float[] commands=control.actuate(scene.body,scene.skin,DT);
@@ -165,7 +167,7 @@ public final class Zero399S21LocalDelayedLearningAndroidTest {
             for(int decision=0;decision<DECISIONS;decision++){
                 boolean old=arm==OLD;
                 float[] local=simulate(scene,control,cortex,h,ep+10,
-                    decision,old,false,false);
+                    decision,old,true,false);
                 Zero3LearningFoundation.AdaptiveCortex.LocalProbeV332 probe=null;
                 if(arm==LOCAL)probe=cortex.captureProbeV332();
                 control.finish();
