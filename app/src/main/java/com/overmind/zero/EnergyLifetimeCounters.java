@@ -18,6 +18,22 @@ public final class EnergyLifetimeCounters {
             if(rare)violet++;else blue++;
         }else if(actualEnergyDelta<0)red++;
     }
+    /**
+     * V409: a count of real touched MATERIAL sources is not the same as
+     * a delta of the physiological reserve after its [0,100] saturation.
+     * A blue/violet source is actually collected even when reserve=100,
+     * and a physically touched red source remains a genuine red contact
+     * when an earlier same-frame contact has already exhausted reserve.
+     *
+     * IMPORTANT: this is HUD/QA book-keeping ONLY. Never feed a raw
+     * hypothetical energy increase to GRU3, mortality or its 194 senses:
+     * all of those continue to consume the original CLAMPED real delta.
+     */
+    public void recordPhysicalContact(float resolvedTouchLawDelta,boolean rare){
+        // The law's signed effect is returned by an actually invoked
+        // UnknownWorld.Entity.touch(), not an invented or projected reward.
+        record(resolvedTouchLawDelta,rare);
+    }
     private static long lifeTotal(LifeStatistics stats,int metric){
         if(stats==null)return 0;
         double mean=stats.lifetimeAverage(metric);
