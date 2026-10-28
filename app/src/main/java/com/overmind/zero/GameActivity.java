@@ -1094,6 +1094,35 @@ public final class GameActivity extends Activity {
                         SensorimotorMind.Senses.spectral8(
                             creature,surface,chamber,environment):null;
                     float delta=object.touch(dx/Math.max(1,dist),dy/Math.max(1,dist));
+                    // V404 read-only forensic: genuinely touched red or blue
+                    // material. Compare GRU intention vs actual PRE-red center
+                    // momentum toward THIS encountered material; neither data
+                    // nor real material identity can reach the chooser. This
+                    // distinguishes willing red pursuit from inertial drift.
+                    if(brain3!=null&&Math.abs(delta)>0f){
+                        float denom=Math.max(.001f,dist);
+                        float towardX=dx/denom,towardY=dy/denom;
+                        float headingDot=brain3.directionX()*towardX+
+                            brain3.directionY()*towardY;
+                        float momentumDot=creature.cvx*towardX+
+                            creature.cvy*towardY;
+                        float speed=(float)Math.hypot(creature.cvx,creature.cvy);
+                        int sector=((int)Math.floor(
+                            (Math.atan2(dy,dx)+Math.PI/8)/
+                            (Math.PI/4))+8)%8;
+                        float photon=contactPhotonsV369==null?Float.NaN:
+                            contactPhotonsV369[object.signature*8+sector];
+                        android.util.Log.i("ZERO404_HAZARD",
+                            "REAL_MATERIAL_CAUSALITY decision="+brain3.decisions()+
+                            ",sign="+(delta<0?"HARM":"BENEFIT")+
+                            ",actualDelta="+delta+
+                            ",objectSignature="+object.signature+
+                            ",opticalAtTouch="+photon+
+                            ",intentionToward="+headingDot+
+                            ",PRE_HARM_momentumToward="+momentumDot+
+                            ",PRE_HARM_speed="+speed+
+                            ",centerDistance="+dist);
+                    }
                     reserve=Math.max(0,Math.min(100,reserve+delta));
                     lifeStats.contact(reserve-before); // actual clamped contact outcome
                     energyTotals.record(reserve-before,object.isRare());
