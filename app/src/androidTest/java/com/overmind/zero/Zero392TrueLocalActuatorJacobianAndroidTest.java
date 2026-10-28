@@ -54,6 +54,14 @@ public final class Zero392TrueLocalActuatorJacobianAndroidTest {
     static Result trialCombination(JSONObject user,boolean wall,int direction,
             int[] sites,int[] channels,int[] signs,float virginFraction,
             boolean groundReactionShearV397)throws Exception{
+        return trialCombination(user,wall,direction,sites,channels,signs,
+            virginFraction,groundReactionShearV397,2.3f,.55f);
+    }
+    /** V398: compare two passive material rates, never a directional force. */
+    static Result trialCombination(JSONObject user,boolean wall,int direction,
+            int[] sites,int[] channels,int[] signs,float virginFraction,
+            boolean groundReactionShearV397,float interiorDragRateV398,
+            float shearStrengthV398)throws Exception{
         if(!Float.isFinite(virginFraction)||virginFraction<0f||virginFraction>1f)
             throw new IllegalArgumentException("untrusted blend fraction");
         if(sites.length!=channels.length||channels.length!=signs.length)
@@ -65,6 +73,7 @@ public final class Zero392TrueLocalActuatorJacobianAndroidTest {
         gel.enableOriginalZero3TractionV363();
         gel.configurePhysicalTurnBrakeV382(-.04f);
         gel.configureGroundReactionShearLabV397(groundReactionShearV397);
+        gel.configureInteriorDynamicsLabV398(interiorDragRateV398,shearStrengthV398);
         ArrayList<UnknownWorld.Entity> world=wall?
             scene.objects:new ArrayList<UnknownWorld.Entity>();
         Zero3LearningFoundation.AdaptiveCortex cortex=
