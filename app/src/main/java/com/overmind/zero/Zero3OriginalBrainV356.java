@@ -486,7 +486,8 @@ final class Zero3OriginalBrainV356 {
                     // The previously validated V390 motor eligibility also
                     // rejects "learning" from a passive organism with no
                     // significant VOLUNTARY effort or no isolated intervention.
-                    choice.effort>.01f&&physicallyProbedV403==1;
+                    Zero401LocalMotorCreditSafety.hasPhysicalMotorProbe(
+                        choice.effort,physicallyProbedV403);
                 if(probeV400!=null&&actualDamageDuringDecisionV359>0f)
                     harmfulMotorCreditsRejectedV401++;
                 if(eligible){
