@@ -111,6 +111,21 @@ public final class GameActivity extends Activity {
     }
     void originalV356ForceDeathForQA(){if(lab!=null)lab.reserve=0f;}
     float originalV362LifeStartFuelForQA(){return lab==null?-1f:lab.liveStartEnergy;}
+    /**
+     * V410: never interrupt an in-flight original GRU3 motor decision merely
+     * because 12 seconds of WALL CLOCK have passed since the prior save.
+     * Deferring an auto-checkpoint to the next natural completed decision
+     * prevents an arbitrary clock-dependent loss of local motor eligibility,
+     * while onPause()/onDestroy() retain their explicit crash-safe flush.
+     *
+     * Scientific QA must measure real per-decision physics, not the emulator's
+     * varying render throughput or diagnostic logging overhead.
+     */
+    static boolean originalV410MayAutoCheckpoint(boolean running,long now,
+            long priorSave,boolean unfinishedOriginalAction){
+        return running&&now>=priorSave&&now-priorSave>12000000000L&&
+            !unfinishedOriginalAction;
+    }
     @Override public void onCreate(Bundle b){
         super.onCreate(b);
         getWindow().setFlags(1024,1024);
@@ -1877,7 +1892,11 @@ public final class GameActivity extends Activity {
             }
             // Lightweight periodic checkpoint for app/task interruptions.
             // Normal neural saves remain more frequent than physical writes.
-            if(simulationRunning&&lastSave+12000000000L<now){
+            if(originalV410MayAutoCheckpoint(simulationRunning,now,lastSave,
+                    brain3!=null&&brain3.pending())){
+                // The regular onPause flush can still explicitly abort a
+                // partial decision. Only *periodic* saves must be timed to
+                // natural GRU boundaries, not to arbitrary GPU render slots.
                 save();saveScene();lastSave=now;
             }
             if(qaSuppressPaintV366){
