@@ -113,24 +113,29 @@ public final class Zero406OriginalAutonomous10000DecisionAndroidTest {
             }
             assertTrue("Original sole GRU3 must really finish boot",ready);
             AtomicLong initial=new AtomicLong(-1);
+            AtomicReference<Window> initialWindow=new AtomicReference<>();
+            // V412: snapshot STARTING state and PRE physical GRU3 stats on
+            // the same genuine Activity UI transaction BEFORE enabling MAX
+            // speed; otherwise the Android compositor may advance decisions,
+            // drop the observed Activity, or trigger onDraw while a different
+            // test thread snapshots, corrupting the 10x1000 science baseline.
             instrument.runOnMainSync(()->{
                 initial.set(original.originalV356DecisionsForQA());
                 original.originalV400EnableLocalTemporalMotorCreditForQA();
+                initialWindow.set(new Window(
+                    original.originalV406TrueLifetimeMaterialContactsForQA(),
+                    original.originalV400LocalMotorDiagnosticsForQA(),
+                    original.originalV366MotorDiagnosticForQA(),
+                    initial.get()));
                 original.originalV366EnableRealTestMaxForQA();
             });
             assertTrue("fresh original GRU3 start",initial.get()>=0&&initial.get()<10);
             final int TARGET=10000, MAX_BURSTS=24000;
             final long finalCursor=initial.get()+TARGET;
             long cursor=initial.get(),nextBucket=1000;
-            Window previous=null;
+            Window previous=initialWindow.get();
             final Window[] windows=new Window[11];
-            AtomicReference<Window> initialWindow=new AtomicReference<>();
-            instrument.runOnMainSync(()->initialWindow.set(new Window(
-                original.originalV406TrueLifetimeMaterialContactsForQA(),
-                original.originalV400LocalMotorDiagnosticsForQA(),
-                original.originalV366MotorDiagnosticForQA(),
-                initial.get())));
-            previous=initialWindow.get();windows[0]=previous;
+            windows[0]=previous;
             for(int burst=0;burst<MAX_BURSTS && cursor<finalCursor;burst++){
                 AtomicLong result=new AtomicLong(-1);
                 // The game advances autonomously on its normal UI clock.
