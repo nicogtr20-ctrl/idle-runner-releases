@@ -70,6 +70,18 @@ public final class GameActivity extends Activity {
     String originalV366MotorDiagnosticForQA(){
         return lab==null||lab.brain3==null?"":lab.brain3.motorDiagnosticV361();
     }
+    // V400 Android science only: request a different already-implemented
+    // V332 low-level training rule at the NEXT true neural decision boundary.
+    // Production GameActivity never enables this by itself.
+    void originalV400EnableLocalTemporalMotorCreditForQA(){
+        if(lab==null||lab.brain3==null)
+            throw new IllegalStateException("V400 genuine original GRU3 missing");
+        lab.brain3.requestLocalTemporalCreditLabV400();
+    }
+    String originalV400LocalMotorDiagnosticsForQA(){
+        return lab==null||lab.brain3==null?"":
+            lab.brain3.localCreditDiagnosticsV400();
+    }
     int originalV366ActualPositivePickupsForQA(){return lab==null?-1:lab.energyEaten;}
     String originalV366ActualLifeStatisticsForQA(){
         return lab==null?"":lab.lifeStats.encode();
