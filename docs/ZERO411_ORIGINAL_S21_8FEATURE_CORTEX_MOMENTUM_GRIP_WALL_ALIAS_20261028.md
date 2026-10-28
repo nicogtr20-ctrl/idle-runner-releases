@@ -25,3 +25,15 @@
 2. Same actual S21 membrane contour; replace ONLY one six-node sector's traction/tactile readings with equal feature[5] from true grip support versus contact. Require all 64 original trained muscle outputs identical within 1e-6 across this physically distinct local state.
 
 This is **observability/representational diagnosis** using controlled motor-free interventions, not >=10,000-decision locomotion success. Do NOT confuse static one-command invariance with adaptive learning improvement. Such a finding would call for a backward-compatible velocity/touch-grip sensory expansion with zero-initialized additional synapses and verified original 12-save migration, not a magic forced motor direction. A live behavioral candidate remains unapproved until **>=10,000 natural original GRU3 decisions** in both original wild hazard environment and real user's S21 wall/blue room, genuine red hazard exposure, repeated heldout physical contexts, improved steering/braking, and no rollback in object manipulation.
+
+## Actual completed Android results
+
+[Run 40780226267](https://github.com/nicogtr20-ctrl/idle-runner-releases/actions/runs/40780226267), source `9afc960018eb1b5a5a1b0ce09ac79ce6389782dd`: **2/2 PASS**, true owner-uploaded V388 33312 original neural, exact same S21 material posture, complete 512 neural weights, same 64 recurrent motor states and real original muscle commands. For the uniform velocity test every original executed muscle power remained nonzero (sum ~4), while largest of all 64 command differences was:
+- EAST intention: **7.45e−9**
+- SOUTH intention: **1.49e−8**
+- WEST intention: **1.49e−8**
+- NORTH intention: **2.98e−8**
+
+True material patch substrate hold vs collision touch also produced **identical all 64 cortical outputs on all 4 intentions**. Both are reproducible representational *aliasing*. The margin is effectively floating-point rounding, not a measurable corrective response.
+
+**This is a meaningful design flaw independent of statistical sample size, but not a reason to publish a hurried fixed controller.** Existing V3 high-level GRU is not blind to body velocity; low-level motor lacks it as an independent feature. To fix robustly, consider a *new separately trainable extra sensor branch* initialized to zero so all original 512 trained weights and behavior are preserved initially, plus original V356 checkpoint migration and sustained 10,000-decision true S21/wild test. Reusing feature[5] or feature[7] by overriding semantics would immediately scramble user 33k trained motor weights and is forbidden without measured A/B.
