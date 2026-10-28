@@ -467,6 +467,12 @@ final class Zero3OriginalBrainV356 {
             Zero3LearningFoundation.AdaptiveCortex.LocalProbeV332 probeV400=
                 localMotorEnabledV400&&!heldout&&!genuineTerminal?
                     cortex.captureProbeV332():null;
+            // V403: V390 already requires exactly one genuinely probed muscle.
+            // V400 bypassed that guard because its motor was heldout from the
+            // old global learner even while V332 changed the SAME synapses.
+            // Read physical probe count BEFORE motor.finish clears the noise.
+            int physicallyProbedV403=localMotorEnabledV400?
+                cortex.activeProbeCountV390():0;
             Zero3LearningFoundation.Experience outcome=motor.finish(genuineTerminal);
             if(localMotorEnabledV400){
                 // A forward wall arrest or world teleport cannot teach
@@ -476,7 +482,11 @@ final class Zero3OriginalBrainV356 {
                     probeV400!=null,outcome.physicalEvidence,heldout,
                     genuineTerminal,disturbed,outcome.externalCorrection,
                     outcome.censored,physicallyTouchedSolidDuringDecisionV380,
-                    actualDamageDuringDecisionV359);
+                    actualDamageDuringDecisionV359)&&
+                    // The previously validated V390 motor eligibility also
+                    // rejects "learning" from a passive organism with no
+                    // significant VOLUNTARY effort or no isolated intervention.
+                    choice.effort>.01f&&physicallyProbedV403==1;
                 if(probeV400!=null&&actualDamageDuringDecisionV359>0f)
                     harmfulMotorCreditsRejectedV401++;
                 if(eligible){
