@@ -57,6 +57,8 @@ final class Zero3OriginalBrainV356 {
     private Zero3LearningFoundation.AdaptiveCortex.LocalProbeV332 priorProbeV400;
     private float[] priorResponseV400;
     private long localCreditCallsV400,localUpdatesV400,localCensoredV400;
+    // V401 independent factual counters: no change to the persisted V356 format.
+    private long harmfulMotorCreditsRejectedV401,sharpTurnsFilteredV401;
     void requestLocalTemporalCreditLabV400(){
         localMotorRequestedV400=true;
     }
@@ -65,6 +67,8 @@ final class Zero3OriginalBrainV356 {
             "|creditCalls="+localCreditCallsV400+
             "|weightUpdates="+localUpdatesV400+
             "|censored="+localCensoredV400+
+            "|harmRejected="+harmfulMotorCreditsRejectedV401+
+            "|turnFiltered="+sharpTurnsFilteredV401+
             "|pending="+(priorProbeV400!=null);
     }
     /**
@@ -468,15 +472,31 @@ final class Zero3OriginalBrainV356 {
                 // A forward wall arrest or world teleport cannot teach
                 // a phantom motor derivative. Pending delayed credit is
                 // discarded if either real action is not a clean motor trial.
-                boolean eligible=probeV400!=null&&outcome.physicalEvidence&&
-                    !heldout&&!genuineTerminal&&!disturbed&&
-                    !outcome.externalCorrection&&!outcome.censored&&
-                    !physicallyTouchedSolidDuringDecisionV380;
+                boolean eligible=Zero401LocalMotorCreditSafety.cleanPhysicalDecision(
+                    probeV400!=null,outcome.physicalEvidence,heldout,
+                    genuineTerminal,disturbed,outcome.externalCorrection,
+                    outcome.censored,physicallyTouchedSolidDuringDecisionV380,
+                    actualDamageDuringDecisionV359);
+                if(probeV400!=null&&actualDamageDuringDecisionV359>0f)
+                    harmfulMotorCreditsRejectedV401++;
                 if(eligible){
                     if(priorProbeV400!=null&&priorResponseV400!=null){
                         long before=cortex.updates();
+                        // V401: second action can reverse or turn sharply.
+                        // Its own motor work then belongs to the SECOND
+                        // action, not to the PREVIOUS muscle perturbation.
+                        // The first action's real local response is retained;
+                        // only its speculative late cross-action share is
+                        // attenuated. No heading imposed on the GRU itself.
+                        float validDelay=
+                            Zero401LocalMotorCreditSafety.nextDecisionDelayValidity(
+                                priorLocalX,priorLocalY,choice.x,choice.y);
+                        if(validDelay<.001f)sharpTurnsFilteredV401++;
+                        float[] actualDelayed=delayedResponseV400.clone();
+                        for(int i=0;i<actualDelayed.length;i++)
+                            actualDelayed[i]*=validDelay;
                         cortex.learnV332(priorProbeV400,
-                            priorResponseV400,delayedResponseV400);
+                            priorResponseV400,actualDelayed);
                         localCreditCallsV400++;
                         if(cortex.updates()>before)localUpdatesV400++;
                     }
