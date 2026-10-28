@@ -36,6 +36,18 @@ public final class SymbioteMatterV1 {
     // otherwise an already damped foothold gets freely dragged by the core.
     private final float[] floorShearMobilityV397=new float[SURFACE];
     private boolean groundReactionShearV397=false;
+    // V398: physical, direction-independent LAB coefficients only. The
+    // original production equations are bit-identical at the defaults.
+    private float interiorDragRateLabV398=2.3f;
+    private float cortexFluidShearLabV398=.55f;
+    void configureInteriorDynamicsLabV398(float interiorDragRate,float shear){
+        if(!Float.isFinite(interiorDragRate)||!Float.isFinite(shear)||
+           interiorDragRate<2.3f||interiorDragRate>24f||
+           shear<.55f||shear>2.5f)
+            throw new IllegalArgumentException("V398 unphysical gel parameter");
+        interiorDragRateLabV398=interiorDragRate;
+        cortexFluidShearLabV398=shear;
+    }
     public float lastGroundShearImpulseV397=0f;
     void configureGroundReactionShearLabV397(boolean enabled){
         groundReactionShearV397=enabled;
@@ -197,6 +209,14 @@ public final class SymbioteMatterV1 {
     static float exchangeCortexFluidShear(Morphology.Surface skin,
             float[] px,float[] py,float[] pvx,float[] pvy,float dt,
             float[] floorMobility){
+        return exchangeCortexFluidShear(skin,px,py,pvx,pvy,dt,
+            floorMobility,.55f);
+    }
+    static float exchangeCortexFluidShear(Morphology.Surface skin,
+            float[] px,float[] py,float[] pvx,float[] pvy,float dt,
+            float[] floorMobility,float localShear){
+        if(!Float.isFinite(localShear)||localShear<0f||localShear>2.5f)
+            throw new IllegalArgumentException("V398 shear strength");
         if(floorMobility!=null&&floorMobility.length!=SURFACE)
             throw new IllegalArgumentException("V397 surface mobility");
         if(skin==null||px==null||py==null||pvx==null||pvy==null||
@@ -217,7 +237,7 @@ public final class SymbioteMatterV1 {
                 if(d2<nearest){nearest=d2;closest=i;}
             }
             if(closest<0)continue;
-            float alpha=.55f*base*(1f-nearest/cutoff2);
+            float alpha=clip(localShear*base*(1f-nearest/cutoff2),0f,.4f);
             float dvx=pvx[j]-skin.vx[closest],dvy=pvy[j]-skin.vy[closest];
             if(skin.gripHold[closest]>=Morphology.GRIP_HOLD){
                 // An actually contacted solid is the external sink.
@@ -959,7 +979,7 @@ public final class SymbioteMatterV1 {
         }
         for(int j=0;j<n;j++){
             // Damping through real material rather than position teleport.
-            float drag=(float)Math.exp(-2.3f*dt);
+            float drag=(float)Math.exp(-interiorDragRateLabV398*dt);
             fluidVx[j]=clip((fluidVx[j]+impulsesX[j])*drag,-140f,140f);
             fluidVy[j]=clip((fluidVy[j]+impulsesY[j])*drag,-140f,140f);
         }
@@ -968,7 +988,8 @@ public final class SymbioteMatterV1 {
         // up in the mobile inner core while the substrate slows the shell.
         lastGroundShearImpulseV397=exchangeCortexFluidShear(
             skin,fluidX,fluidY,fluidVx,fluidVy,dt,
-            groundReactionShearV397?floorShearMobilityV397:null);
+            groundReactionShearV397?floorShearMobilityV397:null,
+            cortexFluidShearLabV398);
         // XSPH viscosity exchanges velocity between neighbouring *real*
         // parcels. Pairwise impulses sum to zero: fluid shear diffuses,
         // rather than each particle behaving like an independent rubber ball.
