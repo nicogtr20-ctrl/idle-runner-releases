@@ -83,6 +83,14 @@ public final class GameActivity extends Activity {
             lab.brain3.localCreditDiagnosticsV400();
     }
     int originalV366ActualPositivePickupsForQA(){return lab==null?-1:lab.energyEaten;}
+    // V406: real cumulative contact ledger. Unlike LifeStatistics's 50-life
+    // UI history, these counts remain MONOTONIC after arbitrarily many deaths.
+    // This reads ONLY externally resolved material contacts; the actor sees
+    // no energy labels, damage identities or inferred future information.
+    String originalV406TrueLifetimeMaterialContactsForQA(){
+        return lab==null||lab.energyTotals==null?"":
+            lab.energyTotals.encode();
+    }
     String originalV366ActualLifeStatisticsForQA(){
         return lab==null?"":lab.lifeStats.encode();
     }
