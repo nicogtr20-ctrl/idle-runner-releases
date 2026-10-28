@@ -29,3 +29,27 @@
 - [V407 future trained checkpoint QA](https://github.com/nicogtr20-ctrl/idle-runner-releases/actions/runs/40777256576): exact 100,001 valid counter and V319 2-billion-safe multiplication bound; 512 weights and 64 recurrent states never reset. Do not promote until PASS.
 
 **All real user saves untouched.** Installed signed V400 manually selected versionCode1200 stays as-is. Stable V388 channel/main/updater/public/latest.json not modified. No new APK/OTA, no hidden fallback to V2.2, no scripted attractive/repulsive direction.
+
+## First actual 10,002-decision Android result (completed 28 Oct)
+
+[Run 40776797396](https://github.com/nicogtr20-ctrl/idle-runner-releases/actions/runs/40776797396) returned **Android `OK (1 test)` and printed `ZERO406_10000_ORIGINAL_G3_HAZARD_AND_LOCOMOTION_GATE=PASS`**. Its GitHub overall workflow is labeled FAILURE solely because its last shell statement incorrectly grepped an obsolete marker `ZERO400_ORIGINAL_GRU3_TRUE_LOCAL_CREDIT`, whereas the new real test emits `localWeightUpdates=` in the authoritative result. That shell check has been fixed in current workflow (commit `ed0e31229257c7895355530096970b7b4b6b10d7`); DO NOT misclassify the old Android 10k as no run. Real original autonomous GRU3 remained alive for **10,002 decisions**, signed **1814.07746**, gross **4334.41449**, directed efficiency **41.8529%**, real BLUE **3**, real RED **22**, VIOLET **0** (these are *pre-V409* net-energy capped material counts, thus can undercount truly touched full/zero-reserve objects), **3,193 actual local cortical weight updates**, 1,855 motor decisions with physical harm/weather rejected from motor credit, 1,044 turns with delayed credit filtered. NOT 1,855 red contacts.
+
+| Genuine autonomous interval | New blue | New red | Directed efficiency (that 1k interval) |
+|---|---:|---:|---:|
+| 1..1000 | 1 | 0 | 6.5350% |
+| 1001..2000 | 0 | 4 | 19.1356% |
+| 2001..3000 | 1 | 12 | 34.8285% |
+| 3001..4000 | 0 | 0 | 19.5105% |
+| 4001..5000 | 0 | 0 | 59.1106% |
+| 5001..6000 | 0 | 0 | 55.0653% |
+| 6001..7000 | 1 | 1 | 61.7385% |
+| 7001..8000 | 0 | 0 | 16.8795% |
+| 8001..9000 | 0 | 0 | 63.8974% |
+| 9001..10000 | 0 | 5 | 47.5008% |
+
+First 5000 red **16**, second 5000 red **6**. This meets the preliminary specified within-run late-harm improvement, BUT 22 harmful contacts overall and only 3 blues is still poor survival and proves no robust red avoidance or ability to brake when the body drifts. Do NOT publish as fully functioning locomotion nor compare one 10k run to older 2k as a matched counterfactual. At least one independent heldout 10k + the genuine user S21 trained 10k are necessary, with accurate pre/post-V409 counters.
+
+**Other verified defects and isolated code**:
+- [V409 actual physical blue/red/violet contact at clamped reserve](https://github.com/nicogtr20-ctrl/idle-runner-releases/actions/runs/40779137464) Android technical PASS. At reserve100 a physically consumed +22 blue was skipped by old counters; red physically touched at zero reserve could also be skipped. Cognitive biological reward remains unchanged.
+- [V410 atomic auto-checkpoint source](https://github.com/nicogtr20-ctrl/idle-runner-releases/actions/workflows/zero410-original-atomic-checkpoint-android.yml): old 12-second wall-clock autosave aborted unfinished motor action and also erased even **completed** 1-step delayed local motor trace. V410 saves only on finished decision boundary and `saveScene()` censors only actually pending actions. Original named slot/pause flush still unchanged. Technical Android suite PASS run 40779781082. First V410 10k job 40779690716 failed **before decision 1** because the 10k test snapshots baseline in a separate UI callback AFTER starting TEST MAX, a race. Fix in test V412 samples baseline and enables max in a SINGLE UI main-thread transaction; no biology result can be inferred from that startup failure.
+- [V411 true user trained S21 body sensory identifiability run 40780226267](https://github.com/nicogtr20-ctrl/idle-runner-releases/actions/runs/40780226267), original 33312 GRU3 data, 2/2 physical invariance proofs PASS: 64 cortical commands remain identical (max difference ~3e-8) when entire 170-node body is uniformly shifted to ±65 speed and original local relative velocity unchanged; and identical when a six-node patch changes from physically held substrate to wall touch but feature5 remains same. Confirms essential low-level motor observation alias. The higher GRU3 can access velocity in 194 inputs, so this is specifically an 8-feature low-level proprioceptive limitation, not a proof high-level is blind. **No live/new cortex inputs without zero-initialized additional learned synapses, backward-compatible original V356/12-slot migration and >=10k genuine physical tests.**
