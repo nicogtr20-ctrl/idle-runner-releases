@@ -228,6 +228,18 @@ public final class Zero3RecurrentBrain {
      * The only source of high-level intentional directions in the experimental
      * autonomous loop. No object, world coordinates or reward class enters.
      */
+    // V405 read-only true GRU candidate-coverage forensic. No probe changes the
+    // actor's selected action, candidate sampling, photons or checkpoint.
+    private int lastOfferedChoicesV405;
+    private boolean lastLearnedVisibleV405;
+    private float bestOfferedOpticalV405,chosenOpticalV405,worstOfferedOpticalV405;
+    String optionCoverageForQA(){
+        return "o405|offered="+lastOfferedChoicesV405+
+            "|learnedVisible="+lastLearnedVisibleV405+
+            "|bestOptical="+bestOfferedOpticalV405+
+            "|chosenOptical="+chosenOpticalV405+
+            "|worstOptical="+worstOfferedOpticalV405;
+    }
     public Zero3LearningFoundation.MotorIntent choose(float[] observation,
             long episode,long decision,long cortexRevision){
         if(pending)throw new IllegalStateException("unfinished decision");
@@ -287,6 +299,20 @@ public final class Zero3RecurrentBrain {
             options[k][4]=.25f+.4f*sigmoid(proposal[4]+noise[k][4]);
             if(cognition!=null)options[k][4]=Math.round(options[k][4]/.025f)*.025f;
         }
+        // Original observed photons and original V369 learned valence ONLY.
+        // This records whether the sampled alternatives differ in known
+        // optical safety BEFORE any choice. It is not an action re-ranking.
+        lastOfferedChoicesV405=options.length;
+        lastLearnedVisibleV405=cognition!=null&&
+            cognition.hasVisibleContactKnowledgeV369(x);
+        bestOfferedOpticalV405=-Float.MAX_VALUE;
+        worstOfferedOpticalV405=Float.MAX_VALUE;
+        for(float[] offered:options){
+            float utility=cognition==null?0f:
+                cognition.contactValenceScoreV369(x,offered[0],offered[1]);
+            bestOfferedOpticalV405=Math.max(bestOfferedOpticalV405,utility);
+            worstOfferedOpticalV405=Math.min(worstOfferedOpticalV405,utility);
+        }
         int selected=cognition==null?0:cognition.select(x,options);
         // Undirected physical exploration is essential BEFORE the GRU has
         // proven a body-response map. Probability decays with lived real
@@ -327,6 +353,8 @@ public final class Zero3RecurrentBrain {
         if(executive!=null){authorized=executive.propose(x,authorized,decision,observeV354,cognition);optionReplayV354=executive.usedMemory();}
         float dx=authorized[0],dy=authorized[1],effort=authorized[2],
             adhesion=authorized[3],duration=authorized[4];
+        chosenOpticalV405=cognition==null?0f:
+            cognition.contactValenceScoreV369(x,dx,dy);
         if(cognition!=null)cognition.begin(x,authorized,
             executive!=null?Zero3ConfigurationV354.heldout(decision):Zero3CognitionV353.heldout(decision));
         if(plannerV354!=null)plannerV354.begin(decision,x,decisionState,authorized,modelV354(),Zero3ConfigurationV354.heldout(decision),observeV354,cognition.baselineV354());
