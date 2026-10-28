@@ -263,6 +263,7 @@ final class Zero3OriginalBrainV356 {
             sumForwardV361,sumGrossV361,sumWorkV361,
             java.util.Arrays.toString(intentSectorsV361));
     }
+    String optionCoverageForQAV405(){return brain.optionCoverageForQA();}
     float[] commands(){return executed64;}
     Zero3NeuralGraphV354 graph(){
         if(pending)throw new IllegalStateException("Atlante disponibile solo su decisione chiusa");
