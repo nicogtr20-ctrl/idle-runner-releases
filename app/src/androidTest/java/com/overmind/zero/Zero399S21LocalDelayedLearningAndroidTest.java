@@ -80,10 +80,22 @@ public final class Zero399S21LocalDelayedLearningAndroidTest {
                            h==1?1f:h==3?-1f:0f};
     }
     static Zero3LearningFoundation.AdaptiveCortex evalCopy(
-        Zero3LearningFoundation.AdaptiveCortex cortex){
+        Zero3LearningFoundation.AdaptiveCortex learned,
+        Zero3LearningFoundation.AdaptiveCortex reference)throws Exception{
         Zero3LearningFoundation.AdaptiveCortex c=
             new Zero3LearningFoundation.AdaptiveCortex();
-        c.restore(cortex.checkpoint()); // all 512 weights and 64 recurrent states
+        // CRITICAL A/B: train/holdout motor weights must be measured from
+        // the exact SAME original 64 recurrent states, RNG and baselines.
+        // Even FROZEN cortex evolves its 64 motor states while experiencing
+        // training scenes; copying that state confounds plasticity with
+        // reversible life experience and falsely labels frozen "learning".
+        c.restore(reference.checkpoint());
+        java.lang.reflect.Field f=
+            Zero3LearningFoundation.AdaptiveCortex.class.getDeclaredField("weights");
+        f.setAccessible(true);
+        float[] out=(float[])f.get(c);
+        float[] candidate=learned.weights();
+        System.arraycopy(candidate,0,out,0,out.length);
         return c;
     }
     static float[] simulate(Scene scene,
@@ -180,10 +192,11 @@ public final class Zero399S21LocalDelayedLearningAndroidTest {
         }
     }
     static float evaluate(JSONObject doc,boolean wall,
-            Zero3LearningFoundation.AdaptiveCortex source,int heading)
+            Zero3LearningFoundation.AdaptiveCortex source,
+            Zero3LearningFoundation.AdaptiveCortex reference,int heading)
             throws Exception{
         Scene scene=new Scene(doc,wall);
-        Zero3LearningFoundation.AdaptiveCortex cortex=evalCopy(source);
+        Zero3LearningFoundation.AdaptiveCortex cortex=evalCopy(source,reference);
         Zero3LearningFoundation.Coordinator control=
             new Zero3LearningFoundation.Coordinator(cortex);
         control.enableCausalMotorCreditV390();
@@ -205,10 +218,12 @@ public final class Zero399S21LocalDelayedLearningAndroidTest {
         boolean[] walls={false,true,false,false};
         Zero3LearningFoundation.AdaptiveCortex[] cortex=
             new Zero3LearningFoundation.AdaptiveCortex[3];
+        Zero3LearningFoundation.AdaptiveCortex originalCortex=
+            Zero390ActualUserMotorRehabilitationAndroidTest.trained(original);
         float[][] initial=new float[4][4];
         for(int c=0;c<4;c++)for(int h=0;h<4;h++)
             initial[c][h]=evaluate(contexts[c],walls[c],
-                Zero390ActualUserMotorRehabilitationAndroidTest.trained(original),h);
+                originalCortex,originalCortex,h);
         for(int arm=0;arm<3;arm++){
             cortex[arm]=Zero390ActualUserMotorRehabilitationAndroidTest.trained(original);
             long updates=cortex[arm].updates();
@@ -219,8 +234,11 @@ public final class Zero399S21LocalDelayedLearningAndroidTest {
             float eastLowest=Float.POSITIVE_INFINITY;
             int improved=0,degraded=0;
             for(int c=0;c<4;c++)for(int h=0;h<4;h++){
-                float value=evaluate(contexts[c],walls[c],cortex[arm],h);
+                float value=evaluate(contexts[c],walls[c],cortex[arm],originalCortex,h);
                 float gain=value-initial[c][h];
+                if(arm==FROZEN)assertEquals(
+                    "Untrained frozen weights must match original S21 exactly",
+                    0f,gain,.0001f);
                 if(gain>.07f)improved++;
                 if(gain<-.07f)degraded++;
                 meanGain+=gain/16f;
