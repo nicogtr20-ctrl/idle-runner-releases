@@ -63,6 +63,18 @@ public final class GameActivity extends Activity {
         lab.testMaxStartedNs=System.nanoTime();
         lab.invalidate();
     }
+    // V408 real user saved S21 Training 1 scientific replay ONLY: the user's
+    // own current saved room opens paused in EDIT MODE. Resume its exact
+    // physically restored materials without changing a single source object,
+    // assigning a direction, or enabling old V2.2 brain control.
+    void originalV408ResumeRestoredUserTrainingForQA(){
+        if(lab==null||lab.brain3==null||!lab.trainingActive||
+           lab.symMatter==null)
+            throw new IllegalStateException("V408 exact S21 training not restored");
+        lab.trainingEditing=false;
+        lab.simulationRunning=true;
+        originalV366EnableRealTestMaxForQA();
+    }
     float originalV382PhysicalTurnBrakeForQA(){
         return lab==null||lab.symMatter==null?Float.NaN:
             lab.symMatter.configuredTurnBrakeLimitV382();
