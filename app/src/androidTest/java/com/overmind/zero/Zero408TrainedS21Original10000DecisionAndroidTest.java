@@ -292,7 +292,7 @@ public final class Zero408TrainedS21Original10000DecisionAndroidTest {
             // acceptance is intentionally strict (no lowering thresholds).
             assertTrue("Must execute >=10000 COMPLETE original autonomous decisions: "+outcome,
                 last.decisions-initial.get()>=TARGET);
-            assertTrue("Real physical body must be moving: "+outcome,last.gross>100d);
+            assertTrue("Real physical body must be moving: "+outcome,actualNewGross>100d);
             assertTrue("Actual GRU3 local cortex must update real original weights: "+outcome,
                 last.updates>0&&local.contains("enabled=true"));
             assertTrue("Each thousand original decisions must be sampled, never 2k x5",
