@@ -1121,7 +1121,9 @@ public final class GameActivity extends Activity {
                             ",intentionToward="+headingDot+
                             ",PRE_HARM_momentumToward="+momentumDot+
                             ",PRE_HARM_speed="+speed+
-                            ",centerDistance="+dist);
+                            ",centerDistance="+dist+
+                            ",PRE_choiceCoverage="+
+                                brain3.optionCoverageForQAV405());
                     }
                     reserve=Math.max(0,Math.min(100,reserve+delta));
                     lifeStats.contact(reserve-before); // actual clamped contact outcome
