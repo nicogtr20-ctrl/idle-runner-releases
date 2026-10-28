@@ -1135,7 +1135,11 @@ public final class GameActivity extends Activity {
                     }
                     reserve=Math.max(0,Math.min(100,reserve+delta));
                     lifeStats.contact(reserve-before); // actual clamped contact outcome
-                    energyTotals.record(reserve-before,object.isRare());
+                    // HUD/10k counts TRUE accepted physical material touch even when
+                    // saturated reserve receives zero net energy. The GRU3
+                    // and LifeStatistics still receive the genuine CLAMPED
+                    // reserve-before, never unreceived imaginary food.
+                    energyTotals.recordPhysicalContact(delta,object.isRare());
                     float realContactHarm=Math.max(0f,before-reserve);
                     brain3HarmThisPhysicalFrameV359+=realContactHarm;
                     mortality.energyFlows(0,0,realContactHarm,
@@ -1662,7 +1666,10 @@ public final class GameActivity extends Activity {
                                 creature,surface,chamber,environment):null;
                         reserve=Math.min(100,reserve+UnknownWorld.RARE_ENERGY);
                         lifeStats.contact(reserve-prior);
-                        energyTotals.record(reserve-prior,true);
+                        // Chamber's actual rare material was physically touched;
+                        // at full reserve the biological net stays ZERO but
+                        // the violet source must still count as collected.
+                        energyTotals.recordPhysicalContact(UnknownWorld.RARE_ENERGY,true);
                         mortality.energyFlows(0,0,0,Math.max(0,reserve-prior));
                         lifeStats.roomSolved();
                         if(reserve>prior)
