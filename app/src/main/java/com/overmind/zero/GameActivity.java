@@ -675,7 +675,13 @@ public final class GameActivity extends Activity {
                     .putString(GateLifeJournal.CURRENT,gateJournal.encode())
                     .putString(ContactGeometryForensics.KEY,contactGeometry.encode());
                 if(brain3!=null){
-                    brain3.interrupt(); // Partial actions earn no fake reward.
+                    // V410: do NOT discard an ALREADY COMPLETED decision's
+                    // living one-step V332 delayed synaptic eligibility at
+                    // an automatic periodic checkpoint. checkpoint() already
+                    // refuses in-flight decisions. An explicit pause/close
+                    // still interrupts before this method, as it must.
+                    if(brain3.pending())
+                        brain3.interrupt(); // Censor only actual partial action.
                     sceneEditor.putString(Zero3OriginalBrainV356.KEY,brain3.checkpoint());
                     sceneEditor.putString("zero3_motor_diagnostic_v361",brain3.motorDiagnosticV361())
                         .putString(Zero381MotorCalibration.KEY,brain3.motorResponseCheckpointV381())
