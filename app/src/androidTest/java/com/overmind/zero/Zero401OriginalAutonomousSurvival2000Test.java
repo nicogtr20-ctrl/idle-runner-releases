@@ -1,0 +1,178 @@
+package com.overmind.zero;
+
+import android.app.Activity;
+import android.app.Instrumentation;
+import android.content.Context;
+import android.content.Intent;
+import android.content.SharedPreferences;
+import androidx.test.ext.junit.runners.AndroidJUnit4;
+import androidx.test.platform.app.InstrumentationRegistry;
+import org.junit.Test;
+import org.junit.runner.RunWith;
+import java.util.Locale;
+import java.util.concurrent.atomic.AtomicLong;
+import static org.junit.Assert.*;
+
+/**
+ * V366 SCIENTIFIC BLIND BEHAVIOUR GATE, not a scripted motor test.
+ * Run the original Android game, freshly newborn V356 GRU, 2000 COMPLETE
+ * autonomous intentions and every real frame in existing TEST MAX engine.
+ * No target coordinates, reward editing, synthetic damage, prescribed
+ * muscle outputs, injected sample, or 'red' condition read by the actor.
+ *
+ * This test MAY FAIL; a failure prohibits OTA, never retune the threshold
+ * after seeing these 2000 real experiences.
+ */
+@RunWith(AndroidJUnit4.class)
+public final class Zero401OriginalAutonomousSurvival2000Test {
+    private static double field(String diagnostic,String key){
+        String m="|"+key+"=";
+        int i=diagnostic.indexOf(m);
+        if(i<0)throw new AssertionError("missing genuine V361 motor statistic "+key);
+        int start=i+m.length(),end=diagnostic.indexOf('|',start);
+        if(end<0)end=diagnostic.length();
+        return Double.parseDouble(diagnostic.substring(start,end));
+    }
+    private static int recordedHarms(String serialized){
+        if(!serialized.startsWith("ls2|"))throw new AssertionError("Not original life statistics");
+        String[] pieces=serialized.split("\\|");
+        int completed=Integer.parseInt(pieces[1]);
+        int historyCount=Integer.parseInt(pieces[3]);
+        assertTrue("recorded life count is bounded by actual death events",
+            completed>=0&&historyCount>=0&&historyCount<=50&&completed>=historyCount);
+        int harms=0;
+        // ls2 wire: count|CURRENT|HISTORY_COUNT|life0|life1..., not
+        // count|life0|life1...! Include ongoing-life harm too, because
+        // source contacts are real even if ZERO has not died yet.
+        for(int i=0;i<=historyCount;i++){
+            int index=i==historyCount?2:4+i;
+            String[] life=pieces[index].split(",");
+            harms+=Integer.parseInt(life[2]);
+        }
+        return harms;
+    }
+    @Test(timeout=900000)
+    public void naturalUnseenPhysicalLivesRecoverUsefulMotorAndEnergyAvoidance()throws Exception {
+        Instrumentation instrument=InstrumentationRegistry.getInstrumentation();
+        Context c=instrument.getTargetContext();
+        SharedPreferences p=c.getSharedPreferences(SaveSlotStore.WORKING,Context.MODE_PRIVATE);
+        assertTrue(p.edit().clear().putBoolean(SymbioteMatterV1.ENABLED,true)
+            .putBoolean(SaveSlotStore.FRESH_ZERO3_BIRTH,true).commit());
+        Intent intent=new Intent(c,GameActivity.class);
+        intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK|Intent.FLAG_ACTIVITY_CLEAR_TASK);
+        // The real original game repaints continuously. startActivitySync()
+        // incorrectly waits for a permanently idle UI and times out. The
+        // already approved V362 tests use the activity monitor protocol.
+        Instrumentation.ActivityMonitor monitor=instrument.addMonitor(
+            GameActivity.class.getName(),null,false);
+        GameActivity original;
+        try {
+            c.startActivity(intent);
+            Activity created=instrument.waitForMonitorWithTimeout(monitor,30000);
+            assertNotNull("original repainting organism actually launched",created);
+            assertTrue(created instanceof GameActivity);
+            original=(GameActivity)created;
+        }finally{instrument.removeMonitor(monitor);}
+        try {
+            // The original Activity draws continuously; do not block its
+            // main looper with forced onDraw() calls from the test!
+            assertTrue("only real V3 GRU may drive body",original.originalV356NeuralOwnerForQA());
+            assertEquals("must be a virgin causal actor",0,original.originalV356DecisionsForQA());
+            instrument.runOnMainSync(
+                original::originalV400EnableLocalTemporalMotorCreditForQA);
+            instrument.runOnMainSync(original::originalV366EnableRealTestMaxForQA);
+            final int TARGET=2000, MAX_BURSTS=3000;
+            int earlyHarm=-1,earlyPickups=-1;
+            long cursor=0;
+            for(int burst=0;burst<MAX_BURSTS && cursor<TARGET;burst++){
+                AtomicLong result=new AtomicLong(-1);
+                // The game advances autonomously on its normal UI clock.
+                // Test thread only observes a sampled decision cursor.
+                android.os.SystemClock.sleep(260);
+                instrument.runOnMainSync(()->result.set(
+                    original.originalV356DecisionsForQA()));
+                cursor=result.get();
+                // V397: never misreport a lost original Android brain owner
+                // as a harmless missing statistics field at the next 200
+                // decisions. This is a SCIENTIFIC instrumentation failure,
+                // not a score for neural locomotion.
+                boolean owner=original.originalV356NeuralOwnerForQA();
+                if(burst%30==0 || !owner){
+                    android.util.Log.i("ZERO397_AUTONOMY",
+                        "REAL_ORIGINAL_LIFECYCLE burst="+burst+
+                        ",cursor="+cursor+",owner="+owner+
+                        ",destroyed="+original.isDestroyed()+
+                        ",finishing="+original.isFinishing()+
+                        ",error="+original.originalV356BrainErrorForQA());
+                }
+                assertTrue("Original GRU3 owner vanished at physical burst "+
+                    burst+" (cursor="+cursor+",destroyed="+original.isDestroyed()+
+                    ",finishing="+original.isFinishing()+",error="+
+                    original.originalV356BrainErrorForQA()+")",owner);
+                String error=original.originalV356BrainErrorForQA();
+                assertTrue("real world must not stop due to neural or physics error: "+error,
+                    error==null||error.isEmpty());
+                if(earlyHarm<0&&cursor>=1000){
+                    earlyHarm=recordedHarms(original.originalV366ActualLifeStatisticsForQA());
+                    earlyPickups=original.originalV366ActualPositivePickupsForQA();
+                }
+                if(burst%200==0){
+                    String diag=original.originalV366MotorDiagnosticForQA();
+                    System.out.println("ZERO386_LIVE_QA_LIFECYCLE cursor="+cursor+
+                        " neuralOwner="+original.originalV356NeuralOwnerForQA()+
+                        " activityDestroyed="+original.isDestroyed()+
+                        " activityFinishing="+original.isFinishing()+
+                        " brainError="+original.originalV356BrainErrorForQA()+
+                        " diagnostic="+diag);
+                    String observation=String.format(Locale.ROOT,
+                        "ZERO366_TRUE_BLIND_PROGRESS decisions=%d picked=%d harmActual=%d gross=%.3f directed=%.3f",
+                        cursor,original.originalV366ActualPositivePickupsForQA(),
+                        recordedHarms(original.originalV366ActualLifeStatisticsForQA()),
+                        field(diag,"grossDistance"),field(diag,"signedProgress"));
+                    System.out.println(observation);
+                    android.util.Log.i("ZERO366_REAL",observation);
+                }
+            }
+            int pickups=original.originalV366ActualPositivePickupsForQA();
+            int red=recordedHarms(original.originalV366ActualLifeStatisticsForQA());
+            String motor=original.originalV366MotorDiagnosticForQA();
+            double signed=field(motor,"signedProgress"),gross=field(motor,"grossDistance");
+            String outcome=String.format(Locale.ROOT,
+                "ZERO366_BLIND_2000_REAL_ORIGINAL_RESULT decisions=%d blue=%d red=%d redFirst=%d redLater=%d blueFirst=%d signed=%.5f gross=%.5f efficiency=%.4f actualX=%+.4f actualY=%+.4f",
+                cursor,pickups,red,earlyHarm,earlyHarm<0?-1:red-earlyHarm,
+                earlyPickups,signed,gross,signed/Math.max(1,gross),
+                field(motor,"actualX"),field(motor,"actualY"));
+            System.out.println(outcome);
+            android.util.Log.i("ZERO366_REAL",outcome);
+            String local=original.originalV400LocalMotorDiagnosticsForQA();
+            android.util.Log.i("ZERO400_CREDIT",
+                "ZERO400_ORIGINAL_GRU3_TRUE_LOCAL_CREDIT "+local);
+            assertTrue("Local delay must actually own the V3 motor learning path",
+                local.contains("enabled=true"));
+            assertTrue("V400 must execute REAL signed local neural weight updates",
+                field(local,"weightUpdates")>0d);
+            assertTrue("V401 instrument counters must exist",local.contains("|harmRejected=")
+                &&local.contains("|turnFiltered="));
+            android.util.Log.i("ZERO401_CAUSAL",
+                "ZERO401_REAL_MOTOR_CREDIT_CENSOR "+local);
+            assertTrue("must finish 2000 genuine GRU intentions, NO lab script: "+outcome,cursor>=TARGET);
+            assertTrue("V400 must physically follow original GRU3 intentions >=12 percent: "+outcome,
+                signed/Math.max(1,gross)>=.12);
+            assertTrue("must learn to collect positive energy in the ORIGINAL habitat: "+outcome,
+                pickups>0);
+            assertTrue("early half must contain comparable physical red-contact evidence",
+                earlyHarm>=0);
+            assertTrue("real late red harm must improve on early contact rate: "+outcome,
+                red==0||red-earlyHarm<earlyHarm);
+            System.out.println("ZERO366_BLIND_2000_UNSCRIPTED_SURVIVAL_G3_G5_PRELIMINARY=PASS_NOT_PHONE");
+            // AndroidJUnitRunner prints only the one-dot instrument protocol.
+            // Emit the same completed scientific gate in Android's actual
+            // logcat, so CI cannot mistake a PASS for a FAIL.
+            android.util.Log.i("ZERO366_REAL",
+                "ZERO366_BLIND_2000_UNSCRIPTED_SURVIVAL_G3_G5_PRELIMINARY=PASS_NOT_PHONE");
+        } finally {
+            instrument.runOnMainSync(original::finish);
+            // No artificial Canvas or detached physics owner to recycle.
+        }
+    }
+}
