@@ -43,6 +43,71 @@ final class Zero3OriginalBrainV356 {
     private final Zero381MotorFlightRecorder flightV381=new Zero381MotorFlightRecorder();
     private final Zero384BodyAffordance embodiedV384=new Zero384BodyAffordance();
     private float preVxV381,preVyV381;
+    // V400 experiment: direct original GRU3 + old V319 head, NO alternate
+    // brain, no body simulator and no save schema change. Disabled in normal
+    // production; enabled explicitly only by the Android scientific gate.
+    private boolean localMotorRequestedV400,localMotorEnabledV400;
+    private final float[] prevSurfaceXV400=new float[Morphology.POINTS];
+    private final float[] prevSurfaceYV400=new float[Morphology.POINTS];
+    private final float[] localResponseV400=new float[16];
+    private final float[] delayedResponseV400=new float[16];
+    private final float[] motorPowerV400=new float[16];
+    private float prevCenterXV400,prevCenterYV400,priorLocalX,priorLocalY;
+    private boolean localFramePendingV400;
+    private Zero3LearningFoundation.AdaptiveCortex.LocalProbeV332 priorProbeV400;
+    private float[] priorResponseV400;
+    private long localCreditCallsV400,localUpdatesV400,localCensoredV400;
+    void requestLocalTemporalCreditLabV400(){
+        localMotorRequestedV400=true;
+    }
+    String localCreditDiagnosticsV400(){
+        return "l400|enabled="+localMotorEnabledV400+
+            "|creditCalls="+localCreditCallsV400+
+            "|weightUpdates="+localUpdatesV400+
+            "|censored="+localCensoredV400+
+            "|pending="+(priorProbeV400!=null);
+    }
+    /**
+     * Original GameActivity living-frame PRE vs real POST local material
+     * response. The next action contributes delayed consequences measured
+     * along the PREVIOUS action's direction, not its own unrelated heading.
+     * Cannot see resource positions, future motor commands or a shadow body.
+     */
+    private void observeLocalMaterialV400(MotorBrain.Body b,
+            Morphology.Surface skin,float physicalWork){
+        if(!localFramePendingV400)return;
+        localFramePendingV400=false;
+        float dx=b.cx-prevCenterXV400,dy=b.cy-prevCenterYV400;
+        float normalizer=1e-6f;
+        for(float strength:motorPowerV400)normalizer+=strength;
+        float[] currentDirection={choice.x,choice.y};
+        float[] previousDirection={priorLocalX,priorLocalY};
+        for(int sector=0;sector<16;sector++){
+            float relativeX=0f,relativeY=0f;
+            for(int j=sector*6;j<sector*6+6;j++){
+                relativeX+=(skin.x[j]-prevSurfaceXV400[j])-dx;
+                relativeY+=(skin.y[j]-prevSurfaceYV400[j])-dy;
+            }
+            relativeX/=6f;relativeY/=6f;
+            float allocated=physicalWork*motorPowerV400[sector]/normalizer;
+            float now=dx*currentDirection[0]+dy*currentDirection[1];
+            float localNow=relativeX*currentDirection[0]+
+                           relativeY*currentDirection[1];
+            localResponseV400[sector]+=.5f*now/
+                (4f+Math.abs(dx)+Math.abs(dy))+
+                .5f*localNow/(4f+Math.abs(localNow))-.01f*allocated;
+            if(priorProbeV400!=null){
+                float previous=dx*previousDirection[0]+
+                               dy*previousDirection[1];
+                float localPrevious=relativeX*previousDirection[0]+
+                                    relativeY*previousDirection[1];
+                delayedResponseV400[sector]+=.5f*previous/
+                    (4f+Math.abs(dx)+Math.abs(dy))+
+                    .5f*localPrevious/(4f+Math.abs(localPrevious))-
+                    .01f*allocated;
+            }
+        }
+    }
 
     // V361: read-only measured motor execution since this app session began.
     // These are not rewards, goals, authored directions, or neural input.
@@ -262,6 +327,18 @@ final class Zero3OriginalBrainV356 {
             ScarcityLab chamber,float reserve,float time,float dt)throws IOException{
         try{
             if(!pending){
+                // Switch motor TRAIN rule only at a physical decision
+                // boundary. Requests during a pending action cannot mutate
+                // an already issued efference or confuse the owner journal.
+                if(localMotorRequestedV400&&!localMotorEnabledV400){
+                    localMotorEnabledV400=true;
+                    priorProbeV400=null;priorResponseV400=null;
+                }
+                if(localMotorEnabledV400){
+                    Arrays.fill(localResponseV400,0f);
+                    Arrays.fill(delayedResponseV400,0f);
+                    localFramePendingV400=false;
+                }
                 prior194=sense(body,skin,matter,objects,chamber,reserve,time,true);
                 beforeFuel=reserve;workAccum=0f;
                 actualDamageDuringDecisionV359=0f;
@@ -282,7 +359,11 @@ final class Zero3OriginalBrainV356 {
                 // Original 170-node gel only: physical motor credit is evaluated
                 // against measured PRE momentum. No change to GRU action,
                 // muscles, world forces, profile, or original 2.2 runtime.
-                motor.begin(choice,body,!heldout,heldout,true,true,true);
+                // In laboratory mode only, V332 delayed local eligibility owns
+                // the ORIGINAL cortex plasticity, so V390 global score must
+                // not also update the same 512 synapses.
+                boolean motorTrain=!heldout&&!localMotorEnabledV400;
+                motor.begin(choice,body,motorTrain,!motorTrain,true,true,true);
                 grip.begin(heldout);
                 directPhysicalOwnerV387=physicalPeripheralV364==null;
                 if(physicalPeripheralV364!=null){
@@ -309,6 +390,17 @@ final class Zero3OriginalBrainV356 {
             // The proprioceptive efference matches EXACT post-blend channels
             // actually submitted to the original original-body solver.
             System.arraycopy(out,0,executed64,0,64);
+            if(localMotorEnabledV400){
+                System.arraycopy(skin.x,0,prevSurfaceXV400,0,Morphology.POINTS);
+                System.arraycopy(skin.y,0,prevSurfaceYV400,0,Morphology.POINTS);
+                prevCenterXV400=body.cx;prevCenterYV400=body.cy;
+                for(int k=0;k<16;k++){
+                    int at=k*4;
+                    motorPowerV400[k]=Math.abs(out[at])+
+                        Math.abs(out[at+1])+Math.abs(out[at+3]);
+                }
+                localFramePendingV400=true;
+            }
             return out;
         }catch(RuntimeException failure){
             interrupt();throw new IOException("Scelta neurale 3.0 non valida",failure);
@@ -351,6 +443,8 @@ final class Zero3OriginalBrainV356 {
                 throw new IllegalStateException("Danno interocettivo cumulato non finito");
             motor.observeContactV390(body,skin,dt,Math.max(0,work),
                 Math.max(0,impulse),external,false);
+            if(localMotorEnabledV400)
+                observeLocalMaterialV400(body,skin,Math.max(0f,work));
             for(float sensed:skin.touchSense)if(sensed>.2f){
                 solidContactStepsV361++;
                 physicallyTouchedSolidDuringDecisionV380=true;break;
@@ -364,7 +458,36 @@ final class Zero3OriginalBrainV356 {
             // Such a normal POST callback is also terminal, and must never
             // train an unexecuted motor duration as if it completed.
             boolean genuineTerminal=terminal||reserve<=0f;
+            // Genuine completed PRE→POST data only. Capture the isolated
+            // V390 muscle probe BEFORE finish clears the transient trace.
+            Zero3LearningFoundation.AdaptiveCortex.LocalProbeV332 probeV400=
+                localMotorEnabledV400&&!heldout&&!genuineTerminal?
+                    cortex.captureProbeV332():null;
             Zero3LearningFoundation.Experience outcome=motor.finish(genuineTerminal);
+            if(localMotorEnabledV400){
+                // A forward wall arrest or world teleport cannot teach
+                // a phantom motor derivative. Pending delayed credit is
+                // discarded if either real action is not a clean motor trial.
+                boolean eligible=probeV400!=null&&outcome.physicalEvidence&&
+                    !heldout&&!genuineTerminal&&!disturbed&&
+                    !outcome.externalCorrection&&!outcome.censored&&
+                    !physicallyTouchedSolidDuringDecisionV380;
+                if(eligible){
+                    if(priorProbeV400!=null&&priorResponseV400!=null){
+                        long before=cortex.updates();
+                        cortex.learnV332(priorProbeV400,
+                            priorResponseV400,delayedResponseV400);
+                        localCreditCallsV400++;
+                        if(cortex.updates()>before)localUpdatesV400++;
+                    }
+                    priorProbeV400=probeV400;
+                    priorResponseV400=localResponseV400.clone();
+                    priorLocalX=choice.x;priorLocalY=choice.y;
+                }else{
+                    priorProbeV400=null;priorResponseV400=null;
+                    localCensoredV400++;
+                }
+            }
             // Physical measurements only: no reward or decisions are altered.
             measuredMotorDecisionsV361++;
             if(outcome.physicalEvidence)measuredPhysicalV361++;
@@ -434,6 +557,8 @@ final class Zero3OriginalBrainV356 {
     }
     /** Incomplete intentions receive no fictional reward on pause/death/reset. */
     void interrupt(){
+        priorProbeV400=null;priorResponseV400=null;
+        localFramePendingV400=false;
         embodiedV384.abort();
         if(!pending)return;
         motor.abort();grip.abortOriginalV356();brain.abort();
