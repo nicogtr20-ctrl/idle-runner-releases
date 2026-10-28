@@ -523,6 +523,14 @@ public final class GameActivity extends Activity {
                     :prefs.getString(Zero381MotorCalibration.DIRECT_KEY_V387,""));
                 brain3.restoreEmbodiedV384(virginBirthV362||wasReset?""
                     :prefs.getString(Zero384BodyAffordance.KEY,""));
+                // V400 user-requested MANUAL signed preview only. This bool is
+                // true solely for a build explicitly marked candidate by CI;
+                // stable V388 and the ordinary V400 code default to OFF.
+                // The ORIGINAL GRU3 still chooses every intention; switching
+                // its low-level plasticity occurs at the NEXT true boundary.
+                // No checkpoint, named slot or V2.2 brain is changed here.
+                if(getResources().getBoolean(R.bool.zero3_candidate))
+                    brain3.requestLocalTemporalCreditLabV400();
                 // Previous original-world biography came ONLY from authentic
                 // material contacts, but lacks the photon image at contact.
                 // Explicitly import as a weak archival prior once; it never
