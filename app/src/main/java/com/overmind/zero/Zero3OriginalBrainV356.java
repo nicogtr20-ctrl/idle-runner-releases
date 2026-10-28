@@ -468,6 +468,10 @@ final class Zero3OriginalBrainV356 {
             Zero3LearningFoundation.AdaptiveCortex.LocalProbeV332 probeV400=
                 localMotorEnabledV400&&!heldout&&!genuineTerminal?
                     cortex.captureProbeV332():null;
+            // Exact V390 physical eligibility must be checked BEFORE finish
+            // resets the transient noise. Local V332 once bypassed this gate.
+            int isolatedPhysicalProbeCountV406=localMotorEnabledV400?
+                cortex.activeProbeCountV390():0;
             Zero3LearningFoundation.Experience outcome=motor.finish(genuineTerminal);
             if(localMotorEnabledV400){
                 // A forward wall arrest or world teleport cannot teach
@@ -477,7 +481,9 @@ final class Zero3OriginalBrainV356 {
                     probeV400!=null,outcome.physicalEvidence,heldout,
                     genuineTerminal,disturbed,outcome.externalCorrection,
                     outcome.censored,physicallyTouchedSolidDuringDecisionV380,
-                    actualDamageDuringDecisionV359);
+                    actualDamageDuringDecisionV359)&&
+                    Zero401LocalMotorCreditSafety.hasPhysicalMotorProbe(
+                        choice.effort,isolatedPhysicalProbeCountV406);
                 if(probeV400!=null&&actualDamageDuringDecisionV359>0f)
                     harmfulMotorCreditsRejectedV401++;
                 if(eligible){
