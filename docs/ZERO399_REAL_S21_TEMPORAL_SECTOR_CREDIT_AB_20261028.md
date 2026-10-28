@@ -29,3 +29,19 @@ No source in the actual GameActivity, original saved brain, 194 sensors, 512×8 
 ### Important first-attempt measurement artifact (caught before promotion)
 
 Initial [run 40717210384](https://github.com/nicogtr20-ctrl/idle-runner-releases/actions/runs/40717210384) was technically GREEN but its heldout accidentally continued exploratory noise and copied 64 slow-states *after training*. As a result even FROZEN, with zero synaptic updates, displayed mean heldout change -0.0778 and apparent EAST regression -0.5952. **This cannot be attributed to learning**: it mixes state evolution, noise cursor and weights. A subsequent amendment disabled heldout exploration; the final correction at commit `422b301ae3949140be10e99749b46ecc35c52570` gives every arm the identical original recurrent state and tests frozen exact equality. Only run results at/after this commit may support the effect of motor synapse plasticity. Do not quote earlier numbers as correct control estimates.
+
+## Verified outcome — final corrected S21 Android run (28 October 2026)
+
+**[Run 40718235625](https://github.com/nicogtr20-ctrl/idle-runner-releases/actions/runs/40718235625): Android 1/1 PASS for true measurements.** This is commit `422b301ae3949140be10e99749b46ecc35c52570`, the *first* run that both disables heldout motor probing and restores identical original **64 recurrent motor states/RNG** in all three compared arms. Frozen arm matched original **exactly in all 16 cases (0.000000 gain)**, proving the previous confound was removed.
+
+| Arm, original trained V388 33,312-decision cortex | Motor weight updates | True S21 conditions with gain >0.07 | Conditions with loss <−0.07 | Mean gain across all 16 contexts | Minimum gain |
+|---|---:|---:|---:|---:|---:|
+| V390 old global score | 512 | 0 | 0 | +0.005474 | −0.015259 |
+| Already-implemented V332 local+0.82 delayed | 480 | **5** | **0** | **+0.046417** | −0.049517 |
+| Frozen weights | 0 | 0 | 0 | exactly 0 | exactly 0 |
+
+EAST directional signed material travel after training on original free pose: original −2.615158; global after −2.606674; V332 local after **−2.492630**. EAST on original real west wall: original −0.427094; V332 −0.378571. EAST in independent user free pose: original −0.205566; V332 −0.171112. EAST with free pose all velocities stopped: original −0.118683; V332 −0.091919. All EAST responses **remain NEGATIVE despite a favorable local gradient**. True S21 physical motor coordination has NOT been restored.
+
+One other direction-context deteriorates by −0.049517, below the test's magnitude threshold but still an actual loss; never claim no regression at all. V332 improves some real original cortex responses at unchanged original body physics and neural memory; this is bounded 512-lab-decision evidence, not durable autonomous survival or complete locomotion.
+
+**No runtime adoption, APK or OTA from this result.** The next independent branch `lab/zero400-original-game-local-delay-motor-credit` tests the actual autonomous original GRU3 cognitive decisions with this existing delayed local rule as laboratory-only opt-in, rather than scheduled user-free headings. It must pass original >=2,000 decision game gate, actual energy contacts and regression before any promotion.
