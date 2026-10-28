@@ -149,6 +149,8 @@ public final class Zero400OriginalAutonomousSurvival2000Test {
                 "ZERO400_ORIGINAL_GRU3_TRUE_LOCAL_CREDIT "+local);
             assertTrue("Local delay must actually own the V3 motor learning path",
                 local.contains("enabled=true"));
+            assertTrue("V400 must execute REAL signed local neural weight updates",
+                field(local,"weightUpdates")>0d);
             assertTrue("must finish 2000 genuine GRU intentions, NO lab script: "+outcome,cursor>=TARGET);
             assertTrue("V400 must physically follow original GRU3 intentions >=12 percent: "+outcome,
                 signed/Math.max(1,gross)>=.12);
