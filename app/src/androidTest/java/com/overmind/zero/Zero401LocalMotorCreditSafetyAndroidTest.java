@@ -65,4 +65,21 @@ public final class Zero401LocalMotorCreditSafetyAndroidTest {
         assertEquals(0f,Zero401LocalMotorCreditSafety.nextDecisionDelayValidity(
             -.4f,.916515f,.4f,-.916515f),1e-6f);
     }
+    @Test public void originalV390IsolatedEffectorSafetyCannotBeSkippedByLocalV332(){
+        assertTrue("Physical voluntary isolated muscle remains eligible",
+            Zero401LocalMotorCreditSafety.hasPhysicalMotorProbe(.5f,1));
+        assertFalse("A passive floating body is not a trained actuator",
+            Zero401LocalMotorCreditSafety.hasPhysicalMotorProbe(0f,1));
+        assertFalse("Subthreshold gain cannot cause motor gradients",
+            Zero401LocalMotorCreditSafety.hasPhysicalMotorProbe(.005f,1));
+        assertFalse("No local perturbation is not a causal motor experiment",
+            Zero401LocalMotorCreditSafety.hasPhysicalMotorProbe(.5f,0));
+        assertFalse("Multi-muscle noise violates isolated credit",
+            Zero401LocalMotorCreditSafety.hasPhysicalMotorProbe(.5f,2));
+        try{
+            Zero401LocalMotorCreditSafety.hasPhysicalMotorProbe(Float.NaN,1);
+            fail("Motor effector safety must reject corrupt effort");
+        }catch(IllegalArgumentException expected){}
+    }
+
 }
