@@ -24,6 +24,14 @@ final class Zero401LocalMotorCreditSafety {
             !solidContact&&actualHarm<=0f;
     }
 
+    // Reuse the old validated V390 proof: one actual sampled muscle and
+    // meaningful VOLUNTARY effort, not a passive drift or multiple probes.
+    static boolean hasPhysicalMotorProbe(float effort,int probeCount){
+        if(!Float.isFinite(effort)||effort<0f||effort>1f)
+            throw new IllegalArgumentException("V406 invalid effort");
+        return effort>.01f&&probeCount==1;
+    }
+
     static float nextDecisionDelayValidity(float prevX,float prevY,
             float nextX,float nextY){
         if(!Float.isFinite(prevX)||!Float.isFinite(prevY)||
