@@ -53,12 +53,20 @@ public final class Zero408TrainedS21Original10000DecisionAndroidTest {
     }
     private static final class Window {
         final long decisions,blue,red,violet,updates,harmRejects,turnFilters;
+        // Actual original motor opposition, near-static events and external
+        // collisions. These come from physical POST measurements, not
+        // generated/scheduled intentions; critical for wall and braking audit.
+        final long opposed,almostStatic,solidContact,externalCorrection;
         final double signed,gross;
         Window(String counters,String cortex,String locomotion,long d){
             long[] c=actualCumulativeMaterials(counters);
             decisions=d;blue=c[0];red=c[1];violet=c[2];
             signed=field(locomotion,"signedProgress");
             gross=field(locomotion,"grossDistance");
+            opposed=(long)field(locomotion,"opposed");
+            almostStatic=(long)field(locomotion,"almostStatic");
+            solidContact=(long)field(locomotion,"solidSteps");
+            externalCorrection=(long)field(locomotion,"externallyCorrected");
             updates=(long)field(cortex,"weightUpdates");
             harmRejects=(long)field(cortex,"harmRejected");
             turnFilters=(long)field(cortex,"turnFiltered");
@@ -70,12 +78,17 @@ public final class Zero408TrainedS21Original10000DecisionAndroidTest {
                 "ZERO408_TRAINED_S21_1000 decision=%d bucket=%d blueCum=%d redCum=%d violetCum=%d"+
                 " blueWindow=%d redWindow=%d signedWindow=%.5f grossWindow=%.5f efficiencyWindow=%.6f"+
                 " signedTotal=%.5f grossTotal=%.5f efficiencyTotal=%.6f weightUpdates=%d"+
-                " harmRejected=%d turnFiltered=%d",
+                " harmRejected=%d turnFiltered=%d"+
+                " opposedMovementWindow=%d staticMovementWindow=%d"+
+                " wallContactFramesWindow=%d externalCorrectionsWindow=%d",
                 decisions,bucket,blue,red,violet,blue-prev.blue,red-prev.red,
                 intervalSigned,intervalGross,
                 intervalSigned/Math.max(1d,intervalGross),
                 signed,gross,signed/Math.max(1d,gross),updates,
-                harmRejects,turnFilters);
+                harmRejects,turnFilters,
+                opposed-prev.opposed,almostStatic-prev.almostStatic,
+                solidContact-prev.solidContact,
+                externalCorrection-prev.externalCorrection);
         }
     }
     @Test(timeout=5400000)
