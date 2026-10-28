@@ -67,10 +67,18 @@ public final class GameActivity extends Activity {
     // own current saved room opens paused in EDIT MODE. Resume its exact
     // physically restored materials without changing a single source object,
     // assigning a direction, or enabling old V2.2 brain control.
-    void originalV408ResumeRestoredUserTrainingForQA(){
+    void originalV408ResumeRestoredUserTrainingForQA(
+            float originalX,float originalY,int savedObjects){
         if(lab==null||lab.brain3==null||!lab.trainingActive||
            lab.symMatter==null)
             throw new IllegalStateException("V408 exact S21 training not restored");
+        if(!Float.isFinite(originalX)||!Float.isFinite(originalY)||
+           savedObjects<90||
+           Math.abs(lab.creature.cx-originalX)>.02f||
+           Math.abs(lab.creature.cy-originalY)>.02f||
+           lab.environment.size()!=savedObjects)
+            throw new IllegalStateException(
+                "V408 user physical S21 scene was not EXACTLY restored");
         lab.trainingEditing=false;
         lab.simulationRunning=true;
         originalV366EnableRealTestMaxForQA();
