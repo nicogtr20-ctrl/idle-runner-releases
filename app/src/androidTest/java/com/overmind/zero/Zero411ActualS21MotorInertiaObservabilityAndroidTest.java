@@ -21,10 +21,27 @@ public final class Zero411ActualS21MotorInertiaObservabilityAndroidTest {
     static final float DT=1f/60f;
     static float[] commands(JSONObject original,float vx,float vy,int heading)
             throws Exception{
+        return commands(original,vx,vy,heading,0);
+    }
+    static float[] commands(JSONObject original,float vx,float vy,int heading,
+            int materialContactMode)throws Exception{
         GameSceneSnapshot.Scene scene=GameSceneSnapshot.workingPosture(
             original.getString("training_room_1_scene_v379"));
         assertNotNull("Actual saved original S21 material shape required",scene);
         assertNotNull(scene.matter);
+        if(materialContactMode!=0){
+            if(materialContactMode!=1&&materialContactMode!=2)
+                throw new IllegalArgumentException("V411 contact-mode experiment");
+            // Identical 6-node physically saved S21 patch. Exchange ONLY
+            // the true sensory cause: held substrate versus wall touch.
+            // Existing V3 cortex feature[5] combines them into one number.
+            int sector=5;
+            for(int i=sector*6;i<sector*6+6;i++){
+                scene.skin.gripHold[i]=materialContactMode==1?
+                    Morphology.GRIP_HOLD+.2f:0f;
+                scene.skin.touchSense[i]=materialContactMode==2?1f:0f;
+            }
+        }
         float preX=scene.body.cvx,preY=scene.body.cvy;
         scene.body.cvx+=vx;scene.body.cvy+=vy;
         for(int i=0;i<MotorBrain.N;i++){
@@ -88,4 +105,24 @@ public final class Zero411ActualS21MotorInertiaObservabilityAndroidTest {
         Log.i("ZERO411_OBSERVATION",
             "ZERO411_33312_GENUINE_S21_MOTOR_INERTIA_UNOBSERVABLE=LAB_CONFIRMED");
     }
+    @Test(timeout=900000)
+    public void genuineS21MotorCannotTellSubstrateFootholdFromSolidWallContact()
+            throws Exception {
+        JSONObject original=Zero390ActualUserMotorRehabilitationAndroidTest.fixture();
+        for(int heading=0;heading<4;heading++){
+            float[] substrate=commands(original,0f,0f,heading,1);
+            float[] wall=commands(original,0f,0f,heading,2);
+            assertEquals(64,substrate.length);
+            for(int motor=0;motor<64;motor++)
+                assertEquals("Original eight-feature V3 motor aliases genuine "+
+                    "FOOTHOLD and WALL contact at same membrane sector "+motor,
+                    substrate[motor],wall[motor],1e-6f);
+            Log.i("ZERO411_OBSERVATION",
+                "ACTUAL_S21_CONTACT_HOLD_VS_WALL_ALIAS heading="+heading+
+                ",motorOutputs=64,differingPhysicalContactTypes=2");
+        }
+        Log.i("ZERO411_OBSERVATION",
+            "ZERO411_33312_GENUINE_S21_GRIP_WALL_INPUT_ALIAS=LAB_CONFIRMED");
+    }
+
 }
