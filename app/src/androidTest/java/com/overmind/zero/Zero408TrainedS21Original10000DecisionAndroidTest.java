@@ -95,6 +95,10 @@ public final class Zero408TrainedS21Original10000DecisionAndroidTest {
         JSONObject saved=new JSONObject(fixture.getString(
             "training_room_1_scene_v379"));
         JSONArray entities=saved.getJSONObject("physical").getJSONArray("objects");
+        final JSONObject oldBody=saved.getJSONObject("physical").getJSONObject("body");
+        final float expectedOriginalX=(float)oldBody.getDouble("cx"),
+                    expectedOriginalY=(float)oldBody.getDouble("cy");
+        final int expectedOriginalObjects=entities.length();
         JSONArray items=new JSONArray();
         for(int i=0;i<entities.length();i++){
             JSONObject object=entities.getJSONObject(i);
@@ -169,7 +173,8 @@ public final class Zero408TrainedS21Original10000DecisionAndroidTest {
             instrument.runOnMainSync(()->{
                 initial.set(original.originalV356DecisionsForQA());
                 original.originalV400EnableLocalTemporalMotorCreditForQA();
-                original.originalV408ResumeRestoredUserTrainingForQA();
+                original.originalV408ResumeRestoredUserTrainingForQA(
+                    expectedOriginalX,expectedOriginalY,expectedOriginalObjects);
             });
             assertEquals("Must resume EXACT user original 33,312 GRU3 decisions",
                 33312L,initial.get());
