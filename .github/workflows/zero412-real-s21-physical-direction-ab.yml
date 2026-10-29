@@ -3,6 +3,8 @@ on:
   push:
     branches: [fix/zero412-observable-inertia-and-ground-contact]
     paths:
+      - 'app/src/main/java/com/overmind/zero/Zero3LearningFoundation.java'
+      - 'app/src/main/java/com/overmind/zero/Zero3OriginalBrainV356.java'
       - 'app/src/androidTest/java/com/overmind/zero/Zero412TrueS21MotorContextPhysicalABAndroidTest.java'
       - '.github/workflows/zero412-real-s21-physical-direction-ab.yml'
   workflow_dispatch:
