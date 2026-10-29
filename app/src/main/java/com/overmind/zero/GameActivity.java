@@ -106,6 +106,16 @@ public final class GameActivity extends Activity {
             throw new IllegalStateException("V414 needs restored original V3 owner");
         lab.brain3.enableVerifiedRearWallTeachingLabV414();
     }
+    // ZERO417: lab only, same original GRU3 owner after original V356
+    // checkpoint restored and BEFORE any motor decision. Changes neither
+    // action nor actual world response, only which physically observed
+    // quantity the existing 512-synapse cortex learns from.
+    void originalV417EnableMeasuredBrakingCreditForQA(){
+        if(lab==null||lab.brain3==null||
+           !lab.brain3.realPhysicalMotorContextV412())
+            throw new IllegalStateException("V417 original restored cortex missing");
+        lab.brain3.enableGenuineComVelocityCreditLabV417();
+    }
     String originalV400LocalMotorDiagnosticsForQA(){
         return lab==null||lab.brain3==null?"":
             lab.brain3.localCreditDiagnosticsV400();
