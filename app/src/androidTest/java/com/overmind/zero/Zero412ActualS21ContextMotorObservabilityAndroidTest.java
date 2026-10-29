@@ -148,6 +148,33 @@ public final class Zero412ActualS21ContextMotorObservabilityAndroidTest {
     }
 
     @Test(timeout=900000)
+    public void restoredFull33312DecisionUserBrainKeepsPhysicalContextAfterV356Reconstruction()
+            throws Exception{
+        JSONObject user=Zero390ActualUserMotorRehabilitationAndroidTest.fixture();
+        android.content.Context ctx=androidx.test.platform.app.InstrumentationRegistry
+            .getInstrumentation().getTargetContext();
+        Zero3OriginalBrainV356 actual=Zero3OriginalBrainV356.load(
+            ctx,user.getString("brain"),true);
+        try{
+            assertEquals("True user unchanged 33,312-decision life",
+                33312L,actual.decisions());
+            assertTrue("Original restored cortex must NOT revert to V411"+
+                " inertia/contact alias on load()",
+                actual.realPhysicalMotorContextV412());
+            String serialized=actual.checkpoint();
+            Zero3OriginalBrainV356.Readout verify=
+                Zero3OriginalBrainV356.inspectSaved(serialized);
+            assertEquals(33312L,verify.decisions);
+            assertEquals(19452L,verify.motorUpdates);
+            assertEquals(194,verify.sensoryInputs);
+            assertEquals(64,verify.hiddenUnits);
+            assertEquals(16,verify.adhesionSectors);
+        }finally{actual.close();}
+        Log.i("ZERO412_PHYSICAL",
+            "ZERO412_REAL_S21_SAVED_CORTEX_RESTORE_CONTEXT=PASS");
+    }
+
+    @Test(timeout=900000)
     public void addingSensesDoesNotChange512SavedSynapsesOrMakePassiveThrust()
             throws Exception{
         JSONObject user=Zero390ActualUserMotorRehabilitationAndroidTest.fixture();
