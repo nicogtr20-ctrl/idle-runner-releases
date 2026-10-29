@@ -97,6 +97,15 @@ public final class GameActivity extends Activity {
             throw new IllegalStateException("V400 genuine original GRU3 missing");
         lab.brain3.requestLocalTemporalCreditLabV400();
     }
+    // ZERO414 research-only gate. No UI, no default user game enablement.
+    // Called only after the original V356 S21 saved owner is ready and
+    // BEFORE issuing a neural decision; never resets the trained cortex.
+    void originalV414AllowVerifiedRearOnlyWallCreditForQA(){
+        if(lab==null||lab.brain3==null||
+           !lab.brain3.realPhysicalMotorContextV412())
+            throw new IllegalStateException("V414 needs restored original V3 owner");
+        lab.brain3.enableVerifiedRearWallTeachingLabV414();
+    }
     String originalV400LocalMotorDiagnosticsForQA(){
         return lab==null||lab.brain3==null?"":
             lab.brain3.localCreditDiagnosticsV400();
