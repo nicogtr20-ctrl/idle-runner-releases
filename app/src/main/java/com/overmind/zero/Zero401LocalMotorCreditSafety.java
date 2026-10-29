@@ -24,6 +24,26 @@ final class Zero401LocalMotorCreditSafety {
             !solidContact&&actualHarm<=0f;
     }
 
+    /**
+     * ZERO414: V401 mistakenly censored EVERY wall touch, even when the
+     * real original S21 cortex was physically retreating FROM a wall.
+     * The already-existing V390 measured rear/front geometry is the
+     * validated primitive. Strictly reward only the rare REAR-only contact
+     * with actual signed material travel AWAY from the obstacle. The full
+     * V401 harm/external/terminal/isolated motor guards still apply.
+     *
+     * Safety is a test hypothesis: 10k real red and 10k saved S21 tests
+     * must both pass before production. It cannot choose a direction,
+     * supply energy, or move a membrane node by itself.
+     */
+    static boolean rearWallCanTeachMuscleV414(boolean realWallContact,
+            int realRearFrames,int realFrontFrames,float actualForward){
+        if(!Float.isFinite(actualForward)||realRearFrames<0||realFrontFrames<0)
+            throw new IllegalArgumentException("V414 invalid physical evidence");
+        return realWallContact&&realRearFrames>0&&realFrontFrames==0&&
+            actualForward>.05f;
+    }
+
     // Reuse the old validated V390 proof: one actual sampled muscle and
     // meaningful VOLUNTARY effort, not a passive drift or multiple probes.
     static boolean hasPhysicalMotorProbe(float effort,int probeCount){
