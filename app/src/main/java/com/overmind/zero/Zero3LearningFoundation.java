@@ -80,6 +80,17 @@ public final class Zero3LearningFoundation {
         private boolean probing,pendingDecision,externalGripOwnerV361;
         // V390 original 3.0 only: one independent physical probe per decision.
         private boolean isolatedMotorCreditV390;
+        // V412: the ORIGINAL 8-input/64-output learned cortex remains exactly
+        // 512 synaptic weights. These are REAL physical sensors (no desired
+        // gait/force). Only the V412 original-game owner opts in after restore.
+        // Keeping the research switch explicit allows bit-exact old-profile
+        // matched A/B on the same 33k trained user's state.
+        private boolean physicalContextV412;
+        void enablePhysicalContextV412(){
+            if(pendingDecision)throw new IllegalStateException("V412 must switch at a neural boundary");
+            physicalContextV412=true;
+        }
+        boolean physicalContextV412(){return physicalContextV412;}
         private int isolatedSectorV390=-1;
         void enableIsolatedCreditV390(){isolatedMotorCreditV390=true;}
         int isolatedSectorV390(){return isolatedSectorV390;}
@@ -442,17 +453,50 @@ public final class Zero3LearningFoundation {
                 features[2]=tangent;
                 features[3]=limit(r/per/80f,0f,2f);
                 features[4]=limit(rv/per/100f,-1f,1f);
-                features[5]=limit((held+contact)/per,0f,2f);
+                // V411 demonstrated actual S21 sensor ALIASING: a muscle
+                // saw the SAME features when its tissue was anchored to the
+                // floor or was pressing against a wall. Preserve the learned
+                // sum signal and add a bounded differential within the SAME
+                // existing feature5. No checkpoint shape or sensor width
+                // changes; neutral held=contact=0 is exactly old behavior.
+                float footholdMinusWall=limit((held-contact)/per,-1f,1f);
+                // CH2 is an EXTERNAL V319 grip-head command and MUST retain
+                // the original feature semantics in archived 512-weight state.
+                float legacyContact=limit((held+contact)/per,0f,2f);
+                float independentContact=limit(
+                    legacyContact+.35f*footholdMinusWall,0f,2f);
                 features[6]=intention.effort;
                 for(int ch=0;ch<CHANNELS;ch++){
                     int at=k*CHANNELS+ch;
+                    features[5]=physicalContextV412&&ch!=2?
+                        independentContact:legacyContact;
                     // Preserve 512 existing learned coefficients and the
                     // previous CH1 local-state feature. Blend measured
                     // tangential shear ONLY into CH1's own existing feedback
                     // channel; zero shear yields bit-identical old input.
+                    // Original S21 V411 alias: the 64 original outputs
+                    // cannot tell a stationary body from 65u/s of uniform
+                    // inertial drift because every other input is RELATIVE
+                    // to center velocity. Project the REAL measured COM
+                    // speed onto the tissue's radial/tangent directions and
+                    // onto this original GRU intention for CH3 stiffness.
+                    // It is sensory feedback only: never adds a force,
+                    // changes a GRU choice or manufactures reward. 0 COM
+                    // motion is BIT-EXACT old V400 cortex feature7.
+                    float localMomentum=0f;
+                    if(physicalContextV412&&ch!=2){
+                        float component=ch==0?
+                            (b.cvx*nx+b.cvy*ny):
+                            ch==1?(-b.cvx*ny+b.cvy*nx):
+                            (b.cvx*intention.x+b.cvy*intention.y);
+                        localMomentum=.30f*limit(component/110f,-1f,1f);
+                    }
                     features[7]=ch==2?intention.adhesion:
-                        ch==1?limit(state[at]+.35f*limit(tv/per/100f,-1f,1f),
-                                    -1f,1f):state[at];
+                        ch==1?limit(state[at]+
+                            .35f*limit(tv/per/100f,-1f,1f)+localMomentum,-1f,1f):
+                        physicalContextV412?
+                            limit(state[at]+localMomentum,-1f,1f):
+                            state[at];
                     float z=0f;
                     for(int f=0;f<INPUTS;f++)z+=weights[at*INPUTS+f]*features[f];
                     // Exploration is an intervention, not a scripted gait.

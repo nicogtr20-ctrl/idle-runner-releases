@@ -131,12 +131,19 @@ final class Zero3OriginalBrainV356 {
     private final long[] intentSectorsV361=new long[8];
     private int lastLife=-1;
 
+    // V412 original 3.0 ONLY. Never revive V2.2 or change the trained
+    // GRU64 policy, existing 512 cortical synapses or V356/slot layout.
+    // This is read-only physical context passed into the sole motor cortex.
+    boolean realPhysicalMotorContextV412(){return cortex.physicalContextV412();}
     private Zero3OriginalBrainV356(){
         brain=new Zero3RecurrentBrain(194,true);
         brain.enableCognitionV353();
         brain.enableExecutiveV354();
         brain.attachEmbodiedV384(embodiedV384);
         cortex=new Zero3LearningFoundation.AdaptiveCortex();
+        // Physical context is observed before any actual muscle decision;
+        // the old trained weights and 64 slow states restore unmodified.
+        cortex.enablePhysicalContextV412();
         grip=new Zero3ContextAdhesionV319(0x356A33L,true);
         motor=new Zero3LearningFoundation.Coordinator(cortex);
         motor.enableCausalMotorCreditV390();
@@ -707,6 +714,12 @@ final class Zero3OriginalBrainV356 {
     private void restore(String saved)throws IOException{
         Readout restored=inspectSaved(saved);
         brain=restored.core;cortex=restored.cortex;
+        // V412 RESTORE BUG: V356 reconstructs the cortex from checkpoint,
+        // REPLACING the instance that constructor configured. Reattach
+        // actual physical-context sensors AFTER loading the ORIGINAL
+        // 512 learned weights and all 64 live recurrent motor states.
+        // The V356 CRC/wire layout, history and learned weights do not change.
+        cortex.enablePhysicalContextV412();
         motor=new Zero3LearningFoundation.Coordinator(cortex);
         motor.enableCausalMotorCreditV390();
         grip=restored.grip;cursor=restored.decisions;
