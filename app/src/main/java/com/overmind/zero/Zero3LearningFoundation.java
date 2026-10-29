@@ -460,12 +460,16 @@ public final class Zero3LearningFoundation {
                 // existing feature5. No checkpoint shape or sensor width
                 // changes; neutral held=contact=0 is exactly old behavior.
                 float footholdMinusWall=limit((held-contact)/per,-1f,1f);
-                features[5]=physicalContextV412?
-                    limit((held+contact)/per+.35f*footholdMinusWall,0f,2f):
-                    limit((held+contact)/per,0f,2f);
+                // CH2 is an EXTERNAL V319 grip-head command and MUST retain
+                // the original feature semantics in archived 512-weight state.
+                float legacyContact=limit((held+contact)/per,0f,2f);
+                float independentContact=limit(
+                    legacyContact+.35f*footholdMinusWall,0f,2f);
                 features[6]=intention.effort;
                 for(int ch=0;ch<CHANNELS;ch++){
                     int at=k*CHANNELS+ch;
+                    features[5]=physicalContextV412&&ch!=2?
+                        independentContact:legacyContact;
                     // Preserve 512 existing learned coefficients and the
                     // previous CH1 local-state feature. Blend measured
                     // tangential shear ONLY into CH1's own existing feedback
