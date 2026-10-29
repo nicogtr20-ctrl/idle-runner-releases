@@ -32,9 +32,14 @@ public final class Zero413MatchedPhysicalMotorCausalityAndroidTest {
         final float dx,dy,deltaVx,deltaVy,initialAx,initialAy,work,impulse;
         final long invalid;
         final int contactFrames;
+        // EXACT original V400 per-sector observed local response,
+        // including its global COM drift and local relative patch movement.
+        final float[] rawV400Credit;
         Trial(float dx,float dy,float vx,float vy,float firstAx,float firstAy,
-                float work,float impulse,long invalid,int contacts){
+                float work,float impulse,long invalid,int contacts,
+                float[] localCredit){
             this.dx=dx;this.dy=dy;deltaVx=vx;deltaVy=vy;
+            rawV400Credit=localCredit.clone();
             initialAx=firstAx;initialAy=firstAy;this.work=work;
             this.impulse=impulse;this.invalid=invalid;contactFrames=contacts;
         }
@@ -109,6 +114,7 @@ public final class Zero413MatchedPhysicalMotorCausalityAndroidTest {
         final float startVx=s.body.cvx,startVy=s.body.cvy;
         float firstAx=0f,firstAy=0f,impulse=0f;
         int contacts=0;
+        float[] localCredit=new float[16];
         for(int tick=0;tick<FRAMES;tick++){
             float[] command=control.actuate(s.body,s.skin,DT);
             // Never edit the cortex's command array: actuate returns a
@@ -127,6 +133,14 @@ public final class Zero413MatchedPhysicalMotorCausalityAndroidTest {
                     command[at]+PERTURBATION*sign));
             }
             final float preVx=s.body.cvx,preVy=s.body.cvy;
+            final float preCx=s.body.cx,preCy=s.body.cy;
+            float[] motorPower=new float[16];
+            float totalPower=1e-6f;
+            for(int sec=0;sec<16;sec++){
+                motorPower[sec]=Math.abs(command[sec*4])+
+                    Math.abs(command[sec*4+1])+Math.abs(command[sec*4+3]);
+                totalPower+=motorPower[sec];
+            }
             float[] preX=s.skin.x.clone(),preY=s.skin.y.clone();
             float[] bodyX=s.body.x.clone(),bodyY=s.body.y.clone();
             float lastWork=gel.work;
@@ -147,7 +161,26 @@ public final class Zero413MatchedPhysicalMotorCausalityAndroidTest {
                 firstAx=(s.body.cvx-preVx)/DT;
                 firstAy=(s.body.cvy-preVy)/DT;
             }
-            control.observe(s.body,DT,Math.max(0f,gel.work-lastWork),
+            // The actual V400 local learner calls observeLocalMaterialV400
+            // with precisely this completed PRE/POST material measurement.
+            // It does NOT subtract passive coasting or a sham trajectory.
+            float mx=s.body.cx-preCx,my=s.body.cy-preCy;
+            float now=mx*ux+my*uy;
+            float physicalWork=Math.max(0f,gel.work-lastWork);
+            for(int sec=0;sec<16;sec++){
+                float rx=0f,ry=0f;
+                for(int j=sec*6;j<sec*6+6;j++){
+                    rx+=s.skin.x[j]-preX[j]-mx;
+                    ry+=s.skin.y[j]-preY[j]-my;
+                }
+                rx/=6f;ry/=6f;
+                float local=rx*ux+ry*uy;
+                float allocated=physicalWork*motorPower[sec]/totalPower;
+                localCredit[sec]+=.5f*now/
+                    (4f+Math.abs(mx)+Math.abs(my))+
+                    .5f*local/(4f+Math.abs(local))-.01f*allocated;
+            }
+            control.observe(s.body,DT,physicalWork,
                 gel.lastMuscleReactionImpulse,false,false);
             impulse+=gel.lastMuscleReactionImpulse;
             assertEquals("True original S21 physics must stay valid",
@@ -156,7 +189,7 @@ public final class Zero413MatchedPhysicalMotorCausalityAndroidTest {
         control.finish();
         float dx=s.body.cx-startX,dy=s.body.cy-startY;
         Trial out=new Trial(dx,dy,s.body.cvx-startVx,s.body.cvy-startVy,
-            firstAx,firstAy,gel.work,impulse,gel.invalid,contacts);
+            firstAx,firstAy,gel.work,impulse,gel.invalid,contacts,localCredit);
         assertTrue(Float.isFinite(out.dx));
         assertTrue(Float.isFinite(out.deltaVx));
         assertTrue(Float.isFinite(out.initialAx));
