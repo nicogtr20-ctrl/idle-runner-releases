@@ -63,6 +63,25 @@ public final class GameActivity extends Activity {
         lab.testMaxStartedNs=System.nanoTime();
         lab.invalidate();
     }
+    // V412 research-only original saved-S21 baseline integrity gate.
+    // The actual 96-shell + 74-fluid scene must match what the user uploaded.
+    // This does not create a body, move a muscle or give a heading to GRU3.
+    void originalV412ResumeTrueS21TrainingForQA(
+            float originalX,float originalY,int savedObjects){
+        if(lab==null||lab.brain3==null||!lab.brain3.realPhysicalMotorContextV412()||
+           !lab.trainingActive||lab.symMatter==null)
+            throw new IllegalStateException("V412 genuine original S21 GRU3 missing");
+        if(!Float.isFinite(originalX)||!Float.isFinite(originalY)||
+           savedObjects<90||
+           Math.abs(lab.creature.cx-originalX)>.02f||
+           Math.abs(lab.creature.cy-originalY)>.02f||
+           lab.environment.size()!=savedObjects)
+            throw new IllegalStateException(
+                "V412 physical scene does not exactly match user S21 save");
+        lab.trainingEditing=false;
+        lab.simulationRunning=true;
+        originalV366EnableRealTestMaxForQA();
+    }
     float originalV382PhysicalTurnBrakeForQA(){
         return lab==null||lab.symMatter==null?Float.NaN:
             lab.symMatter.configuredTurnBrakeLimitV382();
