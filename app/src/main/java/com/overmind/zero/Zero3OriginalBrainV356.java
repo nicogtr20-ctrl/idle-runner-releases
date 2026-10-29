@@ -67,6 +67,17 @@ final class Zero3OriginalBrainV356 {
     private float[] priorResponseV400;
     private long localCreditCallsV400,localUpdatesV400,localCensoredV400;
     private boolean verifiedRearWallTeachingLabV414;
+    // ZERO417: compare tested V416 physically true signed braking credit on
+    // the ONE actual original Cortex. Explicit Android science flag only;
+    // the normal V400/V414 game keeps its previously validated learner.
+    private boolean genuineComVelocityCreditLabV417;
+    private float decisionStartVxV417,decisionStartVyV417;
+    private long measuredBrakingCreditV417;
+    void enableGenuineComVelocityCreditLabV417(){
+        if(pending)throw new IllegalStateException(
+            "V417 motor learner may switch only between REAL decisions");
+        genuineComVelocityCreditLabV417=true;
+    }
     private long rearWallEligibleV414,frontWallExcludedV414;
     void enableVerifiedRearWallTeachingLabV414(){
         if(pending)throw new IllegalStateException("V414 only at genuine decision boundary");
@@ -85,6 +96,8 @@ final class Zero3OriginalBrainV356 {
             "|rearWallAccepted="+rearWallEligibleV414+
             "|frontWallExcluded="+frontWallExcludedV414+
             "|rearWallLab="+verifiedRearWallTeachingLabV414+
+            "|realVelocityCreditLab="+genuineComVelocityCreditLabV417+
+            "|velocityCreditSamples="+measuredBrakingCreditV417+
             "|harmRejected="+harmfulMotorCreditsRejectedV401+
             "|turnFiltered="+sharpTurnsFilteredV401+
             "|pending="+(priorProbeV400!=null);
@@ -368,6 +381,8 @@ final class Zero3OriginalBrainV356 {
                     Arrays.fill(localResponseV400,0f);
                     Arrays.fill(delayedResponseV400,0f);
                     localFramePendingV400=false;
+                    decisionStartVxV417=body.cvx;
+                    decisionStartVyV417=body.cvy;
                 }
                 prior194=sense(body,skin,matter,objects,chamber,reserve,time,true);
                 beforeFuel=reserve;workAccum=0f;
@@ -499,6 +514,27 @@ final class Zero3OriginalBrainV356 {
                 cortex.activeProbeCountV390():0;
             Zero3LearningFoundation.Experience outcome=motor.finish(genuineTerminal);
             if(localMotorEnabledV400){
+                if(genuineComVelocityCreditLabV417){
+                    // V416 true S21 512-decision 5-arm A/B: using the REAL
+                    // post-minus-pre center velocity is robust in all 16
+                    // heldout physical contexts (zero >.07 losses), whereas
+                    // plain COM position worsened six contexts, and V332
+                    // instantaneous local response pointed opposite its
+                    // true physical Jacobian in 92/177 pairwise comparisons.
+                    // No passive body force, scripted heading, hidden object
+                    // reward, second brain or new persistent cortical weight.
+                    float ax=body.cvx-decisionStartVxV417;
+                    float ay=body.cvy-decisionStartVyV417;
+                    float denom=4f+(float)Math.hypot(ax,ay);
+                    float first=3f*(ax*choice.x+ay*choice.y)/denom-
+                        .01f*outcome.work;
+                    float delayed=3f*(ax*priorLocalX+ay*priorLocalY)/denom-
+                        .01f*outcome.work;
+                    Arrays.fill(localResponseV400,Math.max(-1f,Math.min(1f,first)));
+                    Arrays.fill(delayedResponseV400,
+                        Math.max(-1f,Math.min(1f,delayed)));
+                    measuredBrakingCreditV417++;
+                }
                 // A forward wall arrest or world teleport cannot teach
                 // a phantom motor derivative. Pending delayed credit is
                 // discarded if either real action is not a clean motor trial.
