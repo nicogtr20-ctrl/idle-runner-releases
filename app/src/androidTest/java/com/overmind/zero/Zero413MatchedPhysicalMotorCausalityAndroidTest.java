@@ -30,9 +30,10 @@ public final class Zero413MatchedPhysicalMotorCausalityAndroidTest {
 
     static final class Trial {
         final float dx,dy,deltaVx,deltaVy,initialAx,initialAy,work,impulse;
-        final int invalid,contactFrames;
+        final long invalid;
+        final int contactFrames;
         Trial(float dx,float dy,float vx,float vy,float firstAx,float firstAy,
-                float work,float impulse,int invalid,int contacts){
+                float work,float impulse,long invalid,int contacts){
             this.dx=dx;this.dy=dy;deltaVx=vx;deltaVy=vy;
             initialAx=firstAx;initialAy=firstAy;this.work=work;
             this.impulse=impulse;this.invalid=invalid;contactFrames=contacts;
@@ -158,7 +159,7 @@ public final class Zero413MatchedPhysicalMotorCausalityAndroidTest {
             firstAx,firstAy,gel.work,impulse,gel.invalid,contacts);
         assertTrue(Float.isFinite(out.dx));
         assertTrue(Float.isFinite(out.deltaVx));
-        assertTrue(Float.isFinite(out.firstAx));
+        assertTrue(Float.isFinite(out.initialAx));
         return out;
     }
 
