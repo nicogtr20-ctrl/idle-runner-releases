@@ -714,6 +714,12 @@ final class Zero3OriginalBrainV356 {
     private void restore(String saved)throws IOException{
         Readout restored=inspectSaved(saved);
         brain=restored.core;cortex=restored.cortex;
+        // V412 RESTORE BUG: V356 reconstructs the cortex from checkpoint,
+        // REPLACING the instance that constructor configured. Reattach
+        // actual physical-context sensors AFTER loading the ORIGINAL
+        // 512 learned weights and all 64 live recurrent motor states.
+        // The V356 CRC/wire layout, history and learned weights do not change.
+        cortex.enablePhysicalContextV412();
         motor=new Zero3LearningFoundation.Coordinator(cortex);
         motor.enableCausalMotorCreditV390();
         grip=restored.grip;cursor=restored.decisions;
