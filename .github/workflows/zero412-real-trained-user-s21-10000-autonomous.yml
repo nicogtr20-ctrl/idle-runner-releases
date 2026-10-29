@@ -15,7 +15,7 @@ on:
   workflow_dispatch:
 concurrency:
   group: zero412-s21-${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
-  cancel-in-progress: false
+  cancel-in-progress: true
 permissions: {contents: read}
 jobs:
   original-unseen-10000:
