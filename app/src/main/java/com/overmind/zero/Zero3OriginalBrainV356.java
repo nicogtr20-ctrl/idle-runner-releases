@@ -66,6 +66,12 @@ final class Zero3OriginalBrainV356 {
     private Zero3LearningFoundation.AdaptiveCortex.LocalProbeV332 priorProbeV400;
     private float[] priorResponseV400;
     private long localCreditCallsV400,localUpdatesV400,localCensoredV400;
+    private boolean verifiedRearWallTeachingLabV414;
+    private long rearWallEligibleV414,frontWallExcludedV414;
+    void enableVerifiedRearWallTeachingLabV414(){
+        if(pending)throw new IllegalStateException("V414 only at genuine decision boundary");
+        verifiedRearWallTeachingLabV414=true;
+    }
     // V401 independent factual counters: no change to the persisted V356 format.
     private long harmfulMotorCreditsRejectedV401,sharpTurnsFilteredV401;
     void requestLocalTemporalCreditLabV400(){
@@ -76,6 +82,9 @@ final class Zero3OriginalBrainV356 {
             "|creditCalls="+localCreditCallsV400+
             "|weightUpdates="+localUpdatesV400+
             "|censored="+localCensoredV400+
+            "|rearWallAccepted="+rearWallEligibleV414+
+            "|frontWallExcluded="+frontWallExcludedV414+
+            "|rearWallLab="+verifiedRearWallTeachingLabV414+
             "|harmRejected="+harmfulMotorCreditsRejectedV401+
             "|turnFiltered="+sharpTurnsFilteredV401+
             "|pending="+(priorProbeV400!=null);
@@ -493,10 +502,28 @@ final class Zero3OriginalBrainV356 {
                 // A forward wall arrest or world teleport cannot teach
                 // a phantom motor derivative. Pending delayed credit is
                 // discarded if either real action is not a clean motor trial.
+                // V413 paired 576 real physical trials proved there is
+                // genuine rear-wall escape authority; V412 original S21
+                // had entire wall-dominated 1000-decision blocks with ZERO
+                // weight updates because V401 censored all solid contacts.
+                // V414 lab may reopen ONLY measured rear-side retreat. A
+                // front wall, real energy harm, storm, teleport or passive
+                // unprobed motion remains strictly ineligible.
+                boolean verifiedRearRetreat=verifiedRearWallTeachingLabV414&&
+                    Zero401LocalMotorCreditSafety.rearWallCanTeachMuscleV414(
+                        physicallyTouchedSolidDuringDecisionV380,
+                        motor.rearContactFramesV390(),
+                        motor.frontContactFramesV390(),
+                        outcome.deltaX*choice.x+outcome.deltaY*choice.y);
+                if(verifiedRearRetreat)rearWallEligibleV414++;
+                if(verifiedRearWallTeachingLabV414&&
+                   physicallyTouchedSolidDuringDecisionV380&&
+                   motor.frontContactFramesV390()>0)frontWallExcludedV414++;
                 boolean eligible=Zero401LocalMotorCreditSafety.cleanPhysicalDecision(
                     probeV400!=null,outcome.physicalEvidence,heldout,
                     genuineTerminal,disturbed,outcome.externalCorrection,
-                    outcome.censored,physicallyTouchedSolidDuringDecisionV380,
+                    outcome.censored,
+                    physicallyTouchedSolidDuringDecisionV380&&!verifiedRearRetreat,
                     actualDamageDuringDecisionV359)&&
                     Zero401LocalMotorCreditSafety.hasPhysicalMotorProbe(
                         choice.effort,isolatedPhysicalProbeCountV406);
