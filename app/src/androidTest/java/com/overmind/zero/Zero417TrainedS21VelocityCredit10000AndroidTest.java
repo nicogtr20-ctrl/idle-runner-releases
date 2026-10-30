@@ -194,6 +194,7 @@ public final class Zero417TrainedS21VelocityCredit10000AndroidTest {
                 original.originalV400EnableLocalTemporalMotorCreditForQA();
                 original.originalV414AllowVerifiedRearOnlyWallCreditForQA();
                 original.originalV417EnableMeasuredBrakingCreditForQA();
+                original.originalV418EnableIndependentDecisionCreditForQA();
                 initialWindow.set(new Window(
                     original.originalV406TrueLifetimeMaterialContactsForQA(),
                     original.originalV400LocalMotorDiagnosticsForQA(),
@@ -294,7 +295,8 @@ public final class Zero417TrainedS21VelocityCredit10000AndroidTest {
                 "ZERO417_ORIGINAL_PHYSICAL_REAR_WALL_CREDIT "+local);
             assertTrue("Must test actual original V414 rear-only research mode",
                 local.contains("rearWallLab=true")&&
-                local.contains("realVelocityCreditLab=true"));
+                local.contains("realVelocityCreditLab=true")&&
+                local.contains("independentDecisionCreditLab=true"));
             double actualNewSigned=last.signed-windows[0].signed;
             double actualNewGross=last.gross-windows[0].gross;
             double ratio=actualNewSigned/Math.max(1d,actualNewGross);
