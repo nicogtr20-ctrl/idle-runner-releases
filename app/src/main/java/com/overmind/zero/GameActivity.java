@@ -125,6 +125,15 @@ public final class GameActivity extends Activity {
             throw new IllegalStateException("V418 original restored cortex missing");
         lab.brain3.enableIndependentDecisionCreditLabV418();
     }
+    // ZERO420 research only; the one saved original GRU3 remains unchanged.
+    // The V371/V377 high-level muscle->COM map must use the same REAL
+    // damage/wall eligibility as low-level physical motor trials.
+    void originalV420EnableSafeHighLevelMotorMapForQA(){
+        if(lab==null||lab.brain3==null||
+           !lab.brain3.realPhysicalMotorContextV412())
+            throw new IllegalStateException("V420 original V3 actor unavailable");
+        lab.brain3.enableSafeMotorMapEvidenceLabV420();
+    }
     String originalV400LocalMotorDiagnosticsForQA(){
         return lab==null||lab.brain3==null?"":
             lab.brain3.localCreditDiagnosticsV400();
