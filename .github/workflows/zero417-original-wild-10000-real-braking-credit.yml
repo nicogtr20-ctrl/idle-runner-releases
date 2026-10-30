@@ -1,7 +1,7 @@
-name: ZERO418 independent decision motor credit (V417 comparator) original GRU3 wild 10000 genuine red/blue with real braking credit
+name: ZERO420 safe original GRU3 high-level motor evidence (V417 comparator) original GRU3 wild 10000 genuine red/blue with real braking credit
 on:
   push:
-    branches: [lab/zero417-real-com-braking-credit-original-gru3, lab/zero418-isolated-decision-motor-credit]
+    branches: [lab/zero417-real-com-braking-credit-original-gru3, lab/zero418-isolated-decision-motor-credit, lab/zero420-original-high-level-motor-evidence-eligibility]
     paths:
       - 'app/src/**'
       - 'app/src/main/java/com/overmind/zero/Zero387TactileFrame.java'
