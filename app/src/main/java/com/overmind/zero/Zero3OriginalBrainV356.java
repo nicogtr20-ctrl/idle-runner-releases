@@ -90,6 +90,18 @@ final class Zero3OriginalBrainV356 {
             "V417 motor learner may switch only between REAL decisions");
         genuineComVelocityCreditLabV417=true;
     }
+    // ZERO420 original GRU3 research only: upper V371/V377 movement model
+    // must not learn actuator response from a front wall, RED damping or
+    // other contaminated world forces while the lower V401 motor rejects it.
+    // Ephemeral mode: never persisted in the V356/12-slot checkpoint.
+    private boolean safeMotorMapEvidenceLabV420;
+    private long v420AcceptedRealMotorMap, v420ExcludedWall,
+                 v420ExcludedHarm, v420ExcludedOther;
+    void enableSafeMotorMapEvidenceLabV420(){
+        if(pending)throw new IllegalStateException(
+            "V420 can switch only at original completed GRU3 boundary");
+        safeMotorMapEvidenceLabV420=true;
+    }
     private long rearWallEligibleV414,frontWallExcludedV414;
     void enableVerifiedRearWallTeachingLabV414(){
         if(pending)throw new IllegalStateException("V414 only at genuine decision boundary");
@@ -114,6 +126,11 @@ final class Zero3OriginalBrainV356 {
             "|isolatedAccelerationSamples="+isolatedDecisionAccelerationSamplesV418+
             "|harmRejected="+harmfulMotorCreditsRejectedV401+
             "|turnFiltered="+sharpTurnsFilteredV401+
+            "|safeMotorMapLabV420="+safeMotorMapEvidenceLabV420+
+            "|safeMotorMapAccepted="+v420AcceptedRealMotorMap+
+            "|safeMotorMapExcludedWall="+v420ExcludedWall+
+            "|safeMotorMapExcludedHarm="+v420ExcludedHarm+
+            "|safeMotorMapExcludedOther="+v420ExcludedOther+
             "|pending="+(priorProbeV400!=null);
     }
     /**
@@ -527,6 +544,7 @@ final class Zero3OriginalBrainV356 {
             int isolatedPhysicalProbeCountV406=localMotorEnabledV400?
                 cortex.activeProbeCountV390():0;
             Zero3LearningFoundation.Experience outcome=motor.finish(genuineTerminal);
+            boolean verifiedRealRearRetreatV420=false;
             if(localMotorEnabledV400){
                 if(genuineComVelocityCreditLabV417){
                     // V416 true S21 512-decision 5-arm A/B: using the REAL
@@ -577,6 +595,7 @@ final class Zero3OriginalBrainV356 {
                         motor.rearContactFramesV390(),
                         motor.frontContactFramesV390(),
                         outcome.deltaX*choice.x+outcome.deltaY*choice.y);
+                verifiedRealRearRetreatV420=verifiedRearRetreat;
                 if(verifiedRearRetreat)rearWallEligibleV414++;
                 if(verifiedRearWallTeachingLabV414&&
                    physicallyTouchedSolidDuringDecisionV380&&
@@ -673,10 +692,29 @@ final class Zero3OriginalBrainV356 {
             embodiedV384.perceive(body,skin);
             embodiedV384.complete(outcome.deltaX,outcome.deltaY,elapsed,
                 outcome.activeImpulse,physicallyTouchedSolidDuringDecisionV380,heldout);
+            // ZERO420: V371/V377 is a learned actual command->body model.
+            // Before this experiment it called an action with FRONT-WALL
+            // arrests or RED physical velocity damping "clean" even when
+            // V401's original tissue eligibility had correctly rejected it.
+            // Preserve negative material valence and executive harm learning;
+            // only the motor-instrumentality estimate is made causal.
+            boolean trustedMotorMapV420=Zero420MotorMapEligibility.fromRealDecision(
+                outcome.physicalEvidence,disturbed,outcome.externalCorrection,
+                outcome.censored,genuineTerminal,actualDamageDuringDecisionV359,
+                physicallyTouchedSolidDuringDecisionV380,
+                verifiedRealRearRetreatV420);
+            if(safeMotorMapEvidenceLabV420){
+                if(trustedMotorMapV420)v420AcceptedRealMotorMap++;
+                else if(actualDamageDuringDecisionV359>0f)v420ExcludedHarm++;
+                else if(physicallyTouchedSolidDuringDecisionV380&&
+                        !verifiedRealRearRetreatV420)v420ExcludedWall++;
+                else v420ExcludedOther++;
+            }
             brain.witnessedMaterialMotionV371(outcome.deltaX,outcome.deltaY,
-                elapsed,outcome.physicalEvidence,disturbed||outcome.externalCorrection||
-                outcome.censored,heldout,
-                physicallyTouchedSolidDuringDecisionV380);
+                elapsed,safeMotorMapEvidenceLabV420?
+                    trustedMotorMapV420:outcome.physicalEvidence,
+                disturbed||outcome.externalCorrection||outcome.censored,
+                heldout,physicallyTouchedSolidDuringDecisionV380);
             brain.physicalTargetsV353(targets,heldout);
             brain.consequenceObservedV352(after,net,heldout,elapsed,reserve<=0,genuineTerminal);
             brain.completeExecutiveV354(outcome.score,net,harm,
