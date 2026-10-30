@@ -73,6 +73,18 @@ final class Zero3OriginalBrainV356 {
     private boolean genuineComVelocityCreditLabV417;
     private float decisionStartVxV417,decisionStartVyV417;
     private long measuredBrakingCreditV417;
+    // ZERO418 research: a different voluntary action on the NEXT decision
+    // cannot be used as the counterfactual derivative of the PREVIOUS
+    // single-site perturbation just because the intentions are aligned.
+    // V417's delayed acceleration credits another actuator's actual work.
+    private boolean independentDecisionCreditLabV418;
+    private long isolatedDecisionAccelerationSamplesV418;
+    void enableIndependentDecisionCreditLabV418(){
+        if(pending||!genuineComVelocityCreditLabV417)
+            throw new IllegalStateException(
+                "V418 requires V417 observed COM acceleration at a genuine boundary");
+        independentDecisionCreditLabV418=true;
+    }
     void enableGenuineComVelocityCreditLabV417(){
         if(pending)throw new IllegalStateException(
             "V417 motor learner may switch only between REAL decisions");
@@ -98,6 +110,8 @@ final class Zero3OriginalBrainV356 {
             "|rearWallLab="+verifiedRearWallTeachingLabV414+
             "|realVelocityCreditLab="+genuineComVelocityCreditLabV417+
             "|velocityCreditSamples="+measuredBrakingCreditV417+
+            "|independentDecisionCreditLab="+independentDecisionCreditLabV418+
+            "|isolatedAccelerationSamples="+isolatedDecisionAccelerationSamplesV418+
             "|harmRejected="+harmfulMotorCreditsRejectedV401+
             "|turnFiltered="+sharpTurnsFilteredV401+
             "|pending="+(priorProbeV400!=null);
@@ -531,8 +545,20 @@ final class Zero3OriginalBrainV356 {
                     float delayed=3f*(ax*priorLocalX+ay*priorLocalY)/denom-
                         .01f*outcome.work;
                     Arrays.fill(localResponseV400,Math.max(-1f,Math.min(1f,first)));
-                    Arrays.fill(delayedResponseV400,
-                        Math.max(-1f,Math.min(1f,delayed)));
+                    if(independentDecisionCreditLabV418){
+                        // In V417, the NEXT voluntary decision's acceleration
+                        // was attributed to the PREVIOUS sector's noise.
+                        // Even when headings agree, the next command is an
+                        // independent intervention; do not fabricate delayed
+                        // causal eligibility from its physical outcome.
+                        // Preserve the PREVIOUS decision's fully observed
+                        // acceleration and V401/V414 contact/damage gates.
+                        Arrays.fill(delayedResponseV400,0f);
+                        isolatedDecisionAccelerationSamplesV418++;
+                    }else{
+                        Arrays.fill(delayedResponseV400,
+                            Math.max(-1f,Math.min(1f,delayed)));
+                    }
                     measuredBrakingCreditV417++;
                 }
                 // A forward wall arrest or world teleport cannot teach
