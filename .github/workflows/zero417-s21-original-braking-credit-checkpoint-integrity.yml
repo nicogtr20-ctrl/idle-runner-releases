@@ -1,7 +1,7 @@
-name: ZERO417 actual saved S21 33312 original brain measured braking learning preserves V356 CRC
+name: ZERO418 independent decision motor credit (V417 comparator) actual saved S21 33312 original brain measured braking learning preserves V356 CRC
 on:
   push:
-    branches: [lab/zero417-real-com-braking-credit-original-gru3]
+    branches: [lab/zero417-real-com-braking-credit-original-gru3, lab/zero418-isolated-decision-motor-credit]
     paths:
       - 'app/src/main/java/com/overmind/zero/Zero3LearningFoundation.java'
       - 'app/src/main/java/com/overmind/zero/Zero3OriginalBrainV356.java'
