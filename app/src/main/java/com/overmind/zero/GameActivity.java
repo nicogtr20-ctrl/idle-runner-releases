@@ -116,6 +116,15 @@ public final class GameActivity extends Activity {
             throw new IllegalStateException("V417 original restored cortex missing");
         lab.brain3.enableGenuineComVelocityCreditLabV417();
     }
+    // V418 opt-in Android-only experiment: do not train the previous
+    // muscle from acceleration caused by the next distinct voluntary action.
+    // Never changes neural choices, solver forces, save slots or live OTA.
+    void originalV418EnableIndependentDecisionCreditForQA(){
+        if(lab==null||lab.brain3==null||
+           !lab.brain3.realPhysicalMotorContextV412())
+            throw new IllegalStateException("V418 original restored cortex missing");
+        lab.brain3.enableIndependentDecisionCreditLabV418();
+    }
     String originalV400LocalMotorDiagnosticsForQA(){
         return lab==null||lab.brain3==null?"":
             lab.brain3.localCreditDiagnosticsV400();
