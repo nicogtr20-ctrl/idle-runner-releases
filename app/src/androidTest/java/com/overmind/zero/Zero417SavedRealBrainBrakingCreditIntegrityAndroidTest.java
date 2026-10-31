@@ -29,7 +29,8 @@ public final class Zero417SavedRealBrainBrakingCreditIntegrityAndroidTest {
             assertTrue("Experimental neural credit must default OFF",
                 baseDiag.contains("realVelocityCreditLab=false"));
             brain.enableGenuineComVelocityCreditLabV417();
-            brain.enableLearnedHarmCandidateCoverageLabV422();
+            brain.requestLocalTemporalCreditLabV400();
+            brain.enableImmediateOwnDecisionCreditLabV423();
             String after=brain.checkpoint();
             assertEquals("New neural-learning evidence must not change any "+
                 "existing source weight, recurrent slow state, V319 grip, "+
@@ -37,7 +38,7 @@ public final class Zero417SavedRealBrainBrakingCreditIntegrityAndroidTest {
             String diagnostic=brain.localCreditDiagnosticsV400();
             assertTrue(diagnostic.contains("realVelocityCreditLab=true"));
             assertTrue("V418 only changes ephemeral learning eligibility, not saved state",
-                brain.learnedHarmCandidateDiagnosticsV422().contains("enabled=true"));
+                diagnostic.contains("immediateOwnDecisionCreditLabV423=true"));
             Zero3OriginalBrainV356.Readout saved=
                 Zero3OriginalBrainV356.inspectSaved(after);
             assertEquals(33312L,saved.decisions);
