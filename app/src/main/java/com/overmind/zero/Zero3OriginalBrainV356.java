@@ -105,6 +105,11 @@ final class Zero3OriginalBrainV356 {
         brain.enableTangentActorCreditLabV425();
     }
     boolean tangentActorCreditEnabledV425(){return brain.tangentActorCreditEnabledV425();}
+    void enableJointSampleActorScoreLabV426(){
+        if(pending)throw new IllegalStateException("V426 original decision pending");
+        brain.enableJointSampleActorScoreLabV426();
+    }
+    boolean jointSampleActorScoreEnabledV426(){return brain.jointSampleActorScoreEnabledV426();}
     private boolean immediateOwnDecisionCreditLabV423;
     private long immediateOwnDecisionCreditsV423;
     void enableImmediateOwnDecisionCreditLabV423(){
