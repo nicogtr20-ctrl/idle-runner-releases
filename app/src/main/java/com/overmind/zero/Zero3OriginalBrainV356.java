@@ -86,6 +86,13 @@ final class Zero3OriginalBrainV356 {
         cortex.enableDeliveredLocalCreditLabV421();
         deliveredLocalProbeLabV421=true;
     }
+    // ZERO422 scientific option coverage: pure actor candidates from
+    // wavelengths whose true contact has already caused physical harm.
+    // V356 checkpoint, legacy GRU and motor source remain byte-identical.
+    void enableLearnedHarmCandidateCoverageLabV422(){
+        if(pending)throw new IllegalStateException("ZERO422 original decision pending");
+        brain.enableLearnedHarmCandidateCoverageLabV422();
+    }
     private boolean independentDecisionCreditLabV418;
     private long isolatedDecisionAccelerationSamplesV418;
     void enableIndependentDecisionCreditLabV418(){
@@ -343,6 +350,9 @@ final class Zero3OriginalBrainV356 {
             java.util.Arrays.toString(intentSectorsV361));
     }
     String optionCoverageForQAV405(){return brain.optionCoverageForQA();}
+    String learnedHarmCandidateDiagnosticsV422(){
+        return brain.learnedHarmCoverageDiagnosticsV422();
+    }
     float[] commands(){return executed64;}
     Zero3NeuralGraphV354 graph(){
         if(pending)throw new IllegalStateException("Atlante disponibile solo su decisione chiusa");
