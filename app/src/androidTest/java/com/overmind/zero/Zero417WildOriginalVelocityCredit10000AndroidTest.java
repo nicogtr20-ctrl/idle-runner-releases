@@ -132,6 +132,9 @@ public final class Zero417WildOriginalVelocityCredit10000AndroidTest {
                 original.originalV425EnableTangentActorCreditForQA();
                 assertTrue("V425 wild original GRU3 actor flag",
                     original.originalV425TangentActorCreditEnabledForQA());
+                original.originalV426EnableJointSampleActorScoreForQA();
+                assertTrue("V426 original wild joint actor score flag",
+                    original.originalV426JointSampleActorScoreEnabledForQA());
                 initialWindow.set(new Window(
                     original.originalV406TrueLifetimeMaterialContactsForQA(),
                     original.originalV400LocalMotorDiagnosticsForQA(),
