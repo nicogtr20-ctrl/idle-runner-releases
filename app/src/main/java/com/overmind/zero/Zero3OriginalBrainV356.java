@@ -77,6 +77,15 @@ final class Zero3OriginalBrainV356 {
     // cannot be used as the counterfactual derivative of the PREVIOUS
     // single-site perturbation just because the intentions are aligned.
     // V417's delayed acceleration credits another actuator's actual work.
+    // ZERO421 independent original V332 motor probe: actual delivered command
+    // before physics, never a new actuator, topology or saved parameter.
+    private boolean deliveredLocalProbeLabV421;
+    void enableDeliveredLocalProbeLabV421(){
+        if(pending||!localMotorRequestedV400)
+            throw new IllegalStateException("ZERO421 requires original V400 at a decision boundary");
+        cortex.enableDeliveredLocalCreditLabV421();
+        deliveredLocalProbeLabV421=true;
+    }
     private boolean independentDecisionCreditLabV418;
     private long isolatedDecisionAccelerationSamplesV418;
     void enableIndependentDecisionCreditLabV418(){
@@ -122,6 +131,7 @@ final class Zero3OriginalBrainV356 {
             "|rearWallLab="+verifiedRearWallTeachingLabV414+
             "|realVelocityCreditLab="+genuineComVelocityCreditLabV417+
             "|velocityCreditSamples="+measuredBrakingCreditV417+
+            "|deliveredLocalProbeLabV421="+deliveredLocalProbeLabV421+
             "|independentDecisionCreditLab="+independentDecisionCreditLabV418+
             "|isolatedAccelerationSamples="+isolatedDecisionAccelerationSamplesV418+
             "|harmRejected="+harmfulMotorCreditsRejectedV401+
