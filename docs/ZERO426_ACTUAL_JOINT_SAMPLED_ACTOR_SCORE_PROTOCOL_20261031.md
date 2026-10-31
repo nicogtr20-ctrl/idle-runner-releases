@@ -31,3 +31,10 @@ V426 is activated only in original Android test paths after actual original GRU3
 - [Full original Android regressions including new V426 five cases 41166203789](https://github.com/nicogtr20-ctrl/idle-runner-releases/actions/runs/41166203789) — initial in_progress, job 124434204023.
 - [Exact original S21 512-weight V356 CRC 41166206026](https://github.com/nicogtr20-ctrl/idle-runner-releases/actions/runs/41166206026) — initial in_progress, job 124434210579.
 All four jobs must be rechecked and their full actual Android logs parsed before any claim. The source/QA changes were committed before these workflow-only triggers. No release.
+
+## First actual V426 technical CI results (not behavioral approval)
+- Full original Android regression [41166203789](https://github.com/nicogtr20-ctrl/idle-runner-releases/actions/runs/41166203789), job 124434204023: **completed SUCCESS**, original regression suite plus **V426 5/5 Android tests PASS** (including original first-choice/RNG parity); build SUCCESS.
+- Exact restored original user S21 33,312 brain / 512 weights / V356 CRC [41166206026](https://github.com/nicogtr20-ctrl/idle-runner-releases/actions/runs/41166206026), job 124434210579: **completed SUCCESS**.
+- Original S21 [41166209043](https://github.com/nicogtr20-ctrl/idle-runner-releases/actions/runs/41166209043) initial attempt job 124434220329 failed **before compilation** because Maven Central returned HTTP 429 for multiple Gradle plugin dependencies; this is a **build infrastructure censor, NOT a 10k locomotion result**. Rerun of that job requested, attempt 2 job 124434398207 subsequently reached the genuine Android 10k instrumentation step. Its behavior result remains pending.
+- V426 wild [41166211536](https://github.com/nicogtr20-ctrl/idle-runner-releases/actions/runs/41166211536) reached the genuine original Android 10k instrumentation step; result pending.
+- V425 wild original boot-censored run retry [41161597708](https://github.com/nicogtr20-ctrl/idle-runner-releases/actions/runs/41161597708), job 124433504210, also running original 10k; do not confuse V425 and V426 populations.
