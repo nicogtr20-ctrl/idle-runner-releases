@@ -121,6 +121,19 @@ final class Zero3ContactValenceV369 {
         }
         return Math.max(-.25f,Math.min(.25f,total));
     }
+    /** ZERO422 research: an actual previously harmful wavelength is visible.
+     * No innate red/blue identity, map coordinate or preset heading.
+     * The legacy historical measured contact prior remains weak as in V369.
+     */
+    boolean hasVisibleLearnedHarmV422(float[] observation194){
+        senses(observation194,20,BANDS*BEAMS);
+        for(int band=0;band<BANDS;band++){
+            if(effectiveValue(band)>-.10f)continue;
+            for(int ray=0;ray<BEAMS;ray++)
+                if(observation194[20+band*BEAMS+ray]>.15f)return true;
+        }
+        return false;
+    }
     boolean hasReliableVisibleEvidence(float[] observation194){
         senses(observation194,20,BANDS*BEAMS);
         for(int c=0;c<BANDS;c++)if(Math.abs(effectiveValue(c))>.1)
