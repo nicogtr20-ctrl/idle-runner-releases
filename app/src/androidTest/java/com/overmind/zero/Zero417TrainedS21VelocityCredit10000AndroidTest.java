@@ -199,6 +199,11 @@ public final class Zero417TrainedS21VelocityCredit10000AndroidTest {
                 // for the SAME decision's V423 measured COM-gradient update.
                 original.originalV421EnableDeliveredLocalProbeForQA();
                 original.originalV423EnableImmediateOwnMotorCreditForQA();
+                // ZERO425: one new high-level actor gradient eligibility
+                // correction; original 10k gates and physical world unchanged.
+                original.originalV425EnableTangentActorCreditForQA();
+                assertTrue("V425 actual original GRU3 actor flag",
+                    original.originalV425TangentActorCreditEnabledForQA());
                 initialWindow.set(new Window(
                     original.originalV406TrueLifetimeMaterialContactsForQA(),
                     original.originalV400LocalMotorDiagnosticsForQA(),
