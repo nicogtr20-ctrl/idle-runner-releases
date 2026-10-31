@@ -154,6 +154,13 @@ public final class GameActivity extends Activity {
             throw new IllegalStateException("V433 original GRU3 unavailable");
         lab.brain3.enableStrictInertialOpticalEvidenceLabV433();
     }
+    // V434: prior genuine delayed-contact associations, no invented steering.
+    void originalV434EnableObservedDelayedContactForQA(){
+        if(lab==null||lab.brain3==null||
+           !lab.brain3.realPhysicalMotorContextV412())
+            throw new IllegalStateException("V434 original GRU3 unavailable");
+        lab.brain3.enableObservedDelayedContactWithoutMotorMapLabV434();
+    }
     void originalV432EnableSignedRearDeliveredProbeForQA(){
         if(lab==null||lab.brain3==null||
            !lab.brain3.realPhysicalMotorContextV412())
