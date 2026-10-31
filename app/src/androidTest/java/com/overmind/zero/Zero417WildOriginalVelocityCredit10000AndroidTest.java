@@ -143,6 +143,7 @@ public final class Zero417WildOriginalVelocityCredit10000AndroidTest {
                 // require measured acceleration for LOWER V332 rear-wall credit.
                 original.originalV432EnableSignedRearDeliveredProbeForQA();
                 original.originalV433EnableStrictInertialOpticalEvidenceForQA();
+                original.originalV434EnableObservedDelayedContactForQA();
                 initialWindow.set(new Window(
                     original.originalV406TrueLifetimeMaterialContactsForQA(),
                     original.originalV400LocalMotorDiagnosticsForQA(),
