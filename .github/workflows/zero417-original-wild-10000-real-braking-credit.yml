@@ -1,7 +1,7 @@
-name: ZERO421 genuinely delivered local muscle probe (V417 comparator) original GRU3 wild 10000 genuine red/blue with real braking credit
+name: ZERO422 learned physical harm optical actor alternatives (V417 comparator) original GRU3 wild 10000 genuine red/blue with real braking credit
 on:
   push:
-    branches: [lab/zero417-real-com-braking-credit-original-gru3, lab/zero418-isolated-decision-motor-credit, lab/zero420-original-high-level-motor-evidence-eligibility, lab/zero421-delivered-physical-probe-original-gru3]
+    branches: [lab/zero417-real-com-braking-credit-original-gru3, lab/zero418-isolated-decision-motor-credit, lab/zero420-original-high-level-motor-evidence-eligibility, lab/zero421-delivered-physical-probe-original-gru3, lab/zero422-learned-harm-candidate-coverage]
     paths:
       - 'app/src/**'
       - 'app/src/main/java/com/overmind/zero/Zero387TactileFrame.java'
