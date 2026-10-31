@@ -134,6 +134,14 @@ public final class GameActivity extends Activity {
             throw new IllegalStateException("V420 original V3 actor unavailable");
         lab.brain3.enableSafeMotorMapEvidenceLabV420();
     }
+    // ZERO421 science-only: causal probe delivered after true muscle clipping.
+    // No new motor policy, no force, no changed checkpoint or user slot.
+    void originalV421EnableDeliveredLocalProbeForQA(){
+        if(lab==null||lab.brain3==null||
+           !lab.brain3.realPhysicalMotorContextV412())
+            throw new IllegalStateException("ZERO421 original motor unavailable");
+        lab.brain3.enableDeliveredLocalProbeLabV421();
+    }
     String originalV400LocalMotorDiagnosticsForQA(){
         return lab==null||lab.brain3==null?"":
             lab.brain3.localCreditDiagnosticsV400();
