@@ -143,6 +143,18 @@ final class Zero3OriginalBrainV356 {
     // credit for rear-wall travel caused by passive pre-existing momentum.
     private boolean rearWallLocalAccelerationLabV431;
     private long passiveRearMuscleCreditsRejectedV431;
+    // V432 LAB: negative real COM acceleration is negative motor feedback,
+    // not evidence that a physically delivered muscle probe was absent.
+    // Do not persist these switches/counters in the original V356 checkpoint.
+    private boolean signedRearDeliveredProbeLabV432;
+    private long undeliveredRearMuscleCreditsRejectedV432;
+    void enableSignedRearDeliveredProbeLabV432(){
+        if(pending||!localMotorRequestedV400||!verifiedRearWallTeachingLabV414||
+           !genuineComVelocityCreditLabV417||!deliveredLocalProbeLabV421||
+           !immediateOwnDecisionCreditLabV423||rearWallLocalAccelerationLabV431)
+            throw new IllegalStateException("V432 requires V414/V417/V421/V423 without V431");
+        signedRearDeliveredProbeLabV432=true;
+    }
     void enableRearWallLocalAccelerationLabV431(){
         if(pending||!localMotorRequestedV400||!genuineComVelocityCreditLabV417||
            !verifiedRearWallTeachingLabV414)
@@ -189,6 +201,8 @@ final class Zero3OriginalBrainV356 {
             "|passiveRearRetreatRejectedV430="+v430PassiveRearRetreatRejected+
             "|rearMuscleAccelerationLabV431="+rearWallLocalAccelerationLabV431+
             "|passiveRearMuscleCreditsRejectedV431="+passiveRearMuscleCreditsRejectedV431+
+            "|signedRearDeliveredProbeLabV432="+signedRearDeliveredProbeLabV432+
+            "|undeliveredRearMuscleCreditsRejectedV432="+undeliveredRearMuscleCreditsRejectedV432+
             "|pending="+(priorProbeV400!=null)+
             "|randomUniformActorHeadsSkippedV428="+brain.randomUniformActorHeadsSkippedV428();
     }
@@ -661,7 +675,18 @@ final class Zero3OriginalBrainV356 {
                 // measured contract. V431 changes ONLY lower V332 eligibility.
                 verifiedRealRearRetreatV420=verifiedRearRetreatV414;
                 boolean verifiedRearRetreat=verifiedRearRetreatV414;
-                if(rearWallLocalAccelerationLabV431&&verifiedRearRetreatV414){
+                if(signedRearDeliveredProbeLabV432&&verifiedRearRetreatV414){
+                    // Only a truly delivered perturbation may update the local
+                    // cortex. The signed outcome (including braking/failure)
+                    // stays in the existing V417 gradient; do NOT censor it.
+                    verifiedRearRetreat=Zero432RearWallDeliveredProbe.eligible(
+                        physicallyTouchedSolidDuringDecisionV380,
+                        motor.rearContactFramesV390(),
+                        motor.frontContactFramesV390(),
+                        outcome.deltaX*choice.x+outcome.deltaY*choice.y,
+                        probeV400);
+                    if(!verifiedRearRetreat)undeliveredRearMuscleCreditsRejectedV432++;
+                }else if(rearWallLocalAccelerationLabV431&&verifiedRearRetreatV414){
                     verifiedRearRetreat=Zero431RearWallMuscleEligibility.verifiedRearRetreat(
                         physicallyTouchedSolidDuringDecisionV380,
                         motor.rearContactFramesV390(),

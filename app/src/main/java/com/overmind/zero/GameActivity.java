@@ -143,6 +143,15 @@ public final class GameActivity extends Activity {
             throw new IllegalStateException("V431 original cortex not ready");
         lab.brain3.enableRearWallLocalAccelerationLabV431();
     }
+    // V432 experiment: retain signed positive/negative physical feedback on
+    // genuine rear-only V414 probes only when V421 measured a nonzero
+    // delivered muscle perturbation. No authored movement or reward.
+    void originalV432EnableSignedRearDeliveredProbeForQA(){
+        if(lab==null||lab.brain3==null||
+           !lab.brain3.realPhysicalMotorContextV412())
+            throw new IllegalStateException("V432 original cortex not ready");
+        lab.brain3.enableSignedRearDeliveredProbeLabV432();
+    }
     // ZERO421 science-only: causal probe delivered after true muscle clipping.
     // No new motor policy, no force, no changed checkpoint or user slot.
     void originalV421EnableDeliveredLocalProbeForQA(){
