@@ -32,3 +32,10 @@ Exact user original S21 33,312 + >=10,000 real decisions, signed/gross >=25%, >=
 ## Original Android CI
 
 The four existing original V417-compatibility workflow files are extended to the V428 isolated branch; a single commit triggers original S21 10k, wild 10k, Android regressions and CRC. Record **actual run IDs and full logs after completion**. A successful build is not an accepted organism.
+
+## Triggered V428 actual original Android Actions (commit 8c2d9bc01387948e65d1c1cb46d7591ea5256fb7)
+- [S21 saved 33,312 + genuine 10,000 — 41177945509](https://github.com/nicogtr20-ctrl/idle-runner-releases/actions/runs/41177945509): in_progress at initial recheck.
+- [Wild genuine 10,000 red/blue — 41177945498](https://github.com/nicogtr20-ctrl/idle-runner-releases/actions/runs/41177945498): in_progress at initial recheck.
+- [Original Android regression + 5 V428 tests — 41177945542](https://github.com/nicogtr20-ctrl/idle-runner-releases/actions/runs/41177945542): in_progress at initial recheck.
+- [Exact original S21 512-weight V356 CRC — 41177945435](https://github.com/nicogtr20-ctrl/idle-runner-releases/actions/runs/41177945435): in_progress at initial recheck.
+No behavioral result inferred until actual complete logs. Next check must inspect all four job logs, 1k signed/gross windows, 5k red halves, real blue contacts, and new randomized-uniform eligibility counter; only if all gates pass may a release be considered.
