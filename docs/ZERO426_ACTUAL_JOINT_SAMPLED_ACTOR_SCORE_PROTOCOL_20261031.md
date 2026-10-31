@@ -24,3 +24,10 @@ V426 is activated only in original Android test paths after actual original GRU3
 - The S21 training room uses `TrainingRoomV379` physical wall objects; `GameActivity.resetEpisode` sets `chamber=null`. Thus the ZERO419 coarse-ray null-chamber discrepancy is **not a justified fix for the failing S21/wild runs**. Do not implement a chamber-ray patch as if it would cure these tests.
 - V422 wild had 50/52 red contacts with 7 candidates and learned negative wavelength visible; 42/52 issued heading toward the red. Read-only reanalysis of 52 contact records: 28/52 chosen optical utility equals the best offered, 17/52 have best-minus-chosen >.005, 8/52 >.01; mean best 0.05541 vs chosen 0.04665. These logs cannot by themselves isolate a planner, executive, traction or retina failure. No scripted avoidance or fixed red label authorized.
 - All ZERO426 behavior tests are **unscored until actual Android Actions finish**; mathematical unit tests alone never certify learning, wall escape or red avoidance.
+
+## Actual V426 original Android Actions initiated (results NOT assumed)
+- [S21 original 10k 41166209043](https://github.com/nicogtr20-ctrl/idle-runner-releases/actions/runs/41166209043) — initial in_progress, job 124434220329.
+- [Wild original 10k 41166211536](https://github.com/nicogtr20-ctrl/idle-runner-releases/actions/runs/41166211536) — initial queued, job 124434228684.
+- [Full original Android regressions including new V426 five cases 41166203789](https://github.com/nicogtr20-ctrl/idle-runner-releases/actions/runs/41166203789) — initial in_progress, job 124434204023.
+- [Exact original S21 512-weight V356 CRC 41166206026](https://github.com/nicogtr20-ctrl/idle-runner-releases/actions/runs/41166206026) — initial in_progress, job 124434210579.
+All four jobs must be rechecked and their full actual Android logs parsed before any claim. The source/QA changes were committed before these workflow-only triggers. No release.
