@@ -55,6 +55,13 @@ public final class Zero3RecurrentBrain {
         jointSampleActorScoreLabV426=true;
     }
     boolean jointSampleActorScoreEnabledV426(){return jointSampleActorScoreLabV426;}
+    // V427: the sampled-set likelihood ratio still depends on the actor when
+    // V384's independently uniform candidate wins selection. Only that
+    // candidate's overwritten heading sample has zero score (V426 already
+    // excludes it). Legacy selected-only credit remains censored as before.
+    static boolean offPolicyHeadingShouldSkipV427(boolean jointSetScore,boolean offPolicy){
+        return offPolicy&&!jointSetScore;
+    }
     private boolean physicalTargetsReadyV353,physicalHeldoutV353;
     private final float[] wz,wr,wn,world,before;
 
@@ -596,7 +603,7 @@ public final class Zero3RecurrentBrain {
                 proposal[0]+lastNoise[0],proposal[1]+lastNoise[1]):null;
         for(int k=0;k<MOTOR;k++){
             if(optionReplayV354)continue; // recalled action did not execute this sampled noise
-            if(offPolicyDirectionV384&&k<2)continue; // unbiased probe is NOT sampled from the actor distribution
+            if(k<2&&offPolicyHeadingShouldSkipV427(jointSampleActorScoreLabV426,offPolicyDirectionV384))continue; // V427 full sampled-set score survives independent impasse selection
             if(k==MOTOR-1&&!durationExecuted)continue; // V350 no fictitious duration credit
             // Candidate noise can have physically learned exploratory width.
             // Credit the true sampling distribution, NOT a fictitious .2 std.
