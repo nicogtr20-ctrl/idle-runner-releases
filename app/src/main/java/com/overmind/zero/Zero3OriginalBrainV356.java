@@ -110,6 +110,17 @@ final class Zero3OriginalBrainV356 {
         brain.enableJointSampleActorScoreLabV426();
     }
     boolean jointSampleActorScoreEnabledV426(){return brain.jointSampleActorScoreEnabledV426();}
+    // ZERO431: isolated in-vivo ON/OFF/OFF/ON muscle trial, with
+    // real post-solver ABBA detrended acceleration. Never a new actuator.
+    private boolean pairedCausalMotorCreditLabV431;
+    private long abbaAcceptedV431,abbaRejectedV431,abbaQuadsV431;
+    void enablePairedCausalMotorCreditLabV431(){
+        if(pending||!localMotorRequestedV400||!genuineComVelocityCreditLabV417||
+           !immediateOwnDecisionCreditLabV423||!deliveredLocalProbeLabV421)
+            throw new IllegalStateException("ZERO431 must enable original V400/V417/V421/V423 first");
+        cortex.enablePairedPhysicalProbeLabV431();
+        pairedCausalMotorCreditLabV431=true;
+    }
     private boolean immediateOwnDecisionCreditLabV423;
     private long immediateOwnDecisionCreditsV423;
     void enableImmediateOwnDecisionCreditLabV423(){
@@ -164,6 +175,10 @@ final class Zero3OriginalBrainV356 {
             "|realVelocityCreditLab="+genuineComVelocityCreditLabV417+
             "|velocityCreditSamples="+measuredBrakingCreditV417+
             "|deliveredLocalProbeLabV421="+deliveredLocalProbeLabV421+
+            "|pairedCausalMotorCreditLabV431="+pairedCausalMotorCreditLabV431+
+            "|abbaAcceptedV431="+abbaAcceptedV431+
+            "|abbaRejectedV431="+abbaRejectedV431+
+            "|abbaQuadsV431="+abbaQuadsV431+
             "|immediateOwnDecisionCreditLabV423="+immediateOwnDecisionCreditLabV423+
             "|immediateOwnDecisionCreditsV423="+immediateOwnDecisionCreditsV423+
             "|independentDecisionCreditLab="+independentDecisionCreditLabV418+
@@ -649,7 +664,33 @@ final class Zero3OriginalBrainV356 {
                 if(verifiedRearWallTeachingLabV414&&
                    physicallyTouchedSolidDuringDecisionV380&&
                    motor.frontContactFramesV390()>0)frontWallExcludedV414++;
-                boolean eligible=Zero401LocalMotorCreditSafety.cleanPhysicalDecision(
+                // V415 92/177 true isolated muscle gradients had the
+                // OPPOSITE sign from raw V332 correlation. V431 replaces
+                // that motor credit with the actual measured ON-minus-OFF
+                // physical acceleration in a balanced ABBA experiment.
+                // No unknown future or target positions ever enter cortex.
+                float pairedAccelerationV431=pairedCausalMotorCreditLabV431?
+                    motor.abbaObservedEffectV431():Float.NaN;
+                int pairedQuadsV431=pairedCausalMotorCreditLabV431?
+                    motor.abbaValidQuadsV431():0;
+                boolean crediblePairedV431=!pairedCausalMotorCreditLabV431||
+                    (pairedQuadsV431>=2&&Float.isFinite(pairedAccelerationV431)&&
+                     Math.abs(pairedAccelerationV431)>.0002f);
+                if(pairedCausalMotorCreditLabV431){
+                    abbaQuadsV431+=pairedQuadsV431;
+                    if(crediblePairedV431){
+                        // The original selected muscle's measured positive
+                        // noise sign is applied once in learnV332().
+                        // The response is just the empirical effect of the
+                        // ON intervention minus OFF, never signed distance.
+                        float measured=pairedAccelerationV431/
+                            (.12f+Math.abs(pairedAccelerationV431));
+                        Arrays.fill(localResponseV400,measured);
+                        abbaAcceptedV431++;
+                    }else abbaRejectedV431++;
+                }
+                boolean eligible=crediblePairedV431&&
+                    Zero401LocalMotorCreditSafety.cleanPhysicalDecision(
                     probeV400!=null,outcome.physicalEvidence,heldout,
                     genuineTerminal,disturbed,outcome.externalCorrection,
                     outcome.censored,
