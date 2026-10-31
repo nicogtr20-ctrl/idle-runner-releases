@@ -25,6 +25,20 @@ public final class Zero3RecurrentBrain {
     private Zero3PlannerV354 plannerV354;
     private long observationCount;
     private boolean observeV354,optionReplayV354;
+    // ZERO422 science ONLY. Widen purely stochastic candidate coverage when
+    // current photons show a wavelength proven harmful by actual contact.
+    // Does not issue headings, forces, target vectors or alter checkpoints.
+    private boolean learnedHarmCandidateCoverageLabV422;
+    private long learnedHarmExpandedDecisionsV422;
+    void enableLearnedHarmCandidateCoverageLabV422(){
+        if(pending)throw new IllegalStateException("ZERO422 choice pending");
+        learnedHarmCandidateCoverageLabV422=true;
+    }
+    String learnedHarmCoverageDiagnosticsV422(){
+        return "v422|enabled="+learnedHarmCandidateCoverageLabV422+
+            "|expanded="+learnedHarmExpandedDecisionsV422+
+            "|offered="+lastOfferedChoicesV405;
+    }
     private boolean offPolicyDirectionV384;
     private boolean physicalTargetsReadyV353,physicalHeldoutV353;
     private final float[] wz,wr,wn,world,before;
@@ -270,8 +284,16 @@ public final class Zero3RecurrentBrain {
         // Only previously observed, heldout-confirmed physical impasse
         // authorizes unbiased physical experiments in additional directions.
         boolean embodiedImpass=cognition!=null&&cognition.learnedImpassV384();
+        // A previously injurious wavelength is learned from REAL membrane
+        // contact, yet V417 wild red contacts still had exactly three nearby
+        // GRU alternatives. Offer additional unbiased policy samples only
+        // while that learned injury is perceptually present. Unlike V382,
+        // this does NOT raise exploration merely because any light is seen.
+        boolean learnedHarmVisibleV422=learnedHarmCandidateCoverageLabV422&&
+            cognition!=null&&cognition.hasVisibleLearnedHarmV422(x);
+        if(learnedHarmVisibleV422)learnedHarmExpandedDecisionsV422++;
         float[][] options=new float[cognition==null?1:embodiedImpass?7:
-            motorCanSteer?(realStall?7:5):3][5];
+            motorCanSteer?(realStall?7:5):learnedHarmVisibleV422?7:3][5];
         float[][] noise=new float[options.length][MOTOR];
         float[][] noiseScale=new float[options.length][MOTOR];
         for(int k=0;k<options.length;k++){
@@ -283,7 +305,13 @@ public final class Zero3RecurrentBrain {
                 // than forcing a hand-authored escape heading.
                 float scale=k>0&&j<2&&motorCanSteer?
                     (realStall?(k>=4?2.5f:k>=2?1.7f:1.2f):
-                     k>=3?2f:1.5f):1f;
+                     k>=3?2f:1.5f):
+                    // Additional options are still actor-generated random
+                    // policy samples; no fixed escape ray or food heading.
+                    // Wider angular offsets are restricted to proposals 4-7
+                    // and to actual learned harmful photons only.
+                    learnedHarmVisibleV422&&k>=3&&j<2?
+                        (k>=5?2.5f:1.75f):1f;
                 noiseScale[k][j]=scale;
                 noise[k][j]=k==0?lastNoise[j]:sample()*scale;
             }
