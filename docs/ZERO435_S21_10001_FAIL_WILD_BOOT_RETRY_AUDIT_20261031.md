@@ -38,7 +38,7 @@ Same exact lab SHA `7907f92ca9c507fb853c8fb37b82ddb38e2df2cb` for all four workf
 | 9 | 128.60083 | 468.91061 | 27.4254% | 6 | 120 | 258 | 15033 |
 | 10 | 47.12708 | 200.06257 | 23.5562% | 6 | 58 | 652 | 24304 |
 
-This is a measured improvement from V434's S21 11.19%, 4 blue and 2 inverse windows, but **not approval**. Four windows (2,4,8 plus one? actually only 2,4,8 are below 10%; 7/10 pass) fail the >=10% criterion; one is inverse. V435's 6 blue do not by themselves establish controlled steering.
+This is a measured improvement from V434's S21 11.19%, 4 blue and 2 inverse windows, but **not approval**. Three windows (2, 4 and 8) fall below the >=10% criterion; window 8 is inverse. V435's 6 blue do not by themselves establish controlled steering.
 
 ### Important physical-vs-intent observation (not an inferred neural fix)
 
