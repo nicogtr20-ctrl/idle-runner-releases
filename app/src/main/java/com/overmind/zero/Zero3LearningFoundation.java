@@ -69,6 +69,14 @@ public final class Zero3LearningFoundation {
         // Never persisted: legacy 512 weights / 64 state / V356 CRC unchanged.
         private final float[] deliveredProbeV397=new float[OUTPUTS];
         private boolean measuredProbeCreditLabV397=false;
+        // ZERO421: the original 194D/64GRU + 512 synapse local V332 learner
+        // must use the perturbation actually delivered to physical muscles
+        // AFTER tanh, effort gain and saturation. Opt-in only; no saved data.
+        private boolean deliveredLocalCreditLabV421;
+        void enableDeliveredLocalCreditLabV421(){
+            if(pendingDecision)throw new IllegalStateException("ZERO421 mid-motor decision");
+            deliveredLocalCreditLabV421=true;
+        }
         void enableMeasuredProbeCreditLabV397(){
             if(pendingDecision)throw new IllegalStateException("V397 pending");
             measuredProbeCreditLabV397=true;
@@ -297,11 +305,15 @@ public final class Zero3LearningFoundation {
          */
         static final class LocalProbeV332 {
             final int selectedChannel;
-            final float[] noise,meanFeatures;
+            final float[] noise,meanFeatures,deliveredNoise;
             final int context;
             LocalProbeV332(int channel,int context,float[] n,float[] f){
+                this(channel,context,n,f,null);
+            }
+            LocalProbeV332(int channel,int context,float[] n,float[] f,float[] actual){
                 selectedChannel=channel;this.context=context;
                 noise=n.clone();meanFeatures=f.clone();
+                deliveredNoise=actual==null?null:actual.clone();
             }
         }
         LocalProbeV332 captureProbeV332(){
@@ -310,7 +322,13 @@ public final class Zero3LearningFoundation {
             float[] averaged=new float[accumulated.length];
             for(int j=0;j<averaged.length;j++)
                 averaged[j]=limit(accumulated[j]/samples,-2f,2f);
-            return new LocalProbeV332(activeChannel,contextBucket,noise,averaged);
+            float[] delivered=null;
+            if(deliveredLocalCreditLabV421){
+                delivered=new float[OUTPUTS];
+                for(int i=0;i<OUTPUTS;i++)
+                    delivered[i]=deliveredProbeV397[i]/samples;
+            }
+            return new LocalProbeV332(activeChannel,contextBucket,noise,averaged,delivered);
         }
         /**
          * Delayed measured local eligibility update. Each response is from
@@ -338,7 +356,9 @@ public final class Zero3LearningFoundation {
                 int out=sector*CHANNELS+ch;
                 for(int feature=0;feature<INPUTS;feature++){
                     int idx=out*INPUTS+feature;
-                    float delta=limit(learningRate*localAdv*probe.noise[out]*
+                    float delivered=probe.deliveredNoise==null?
+                        probe.noise[out]:probe.deliveredNoise[out];
+                    float delta=limit(learningRate*localAdv*delivered*
                                       probe.meanFeatures[idx],-.002f,.002f);
                     float original=weights[idx];
                     weights[idx]=limit(original+delta,-1.5f,1.5f);
@@ -513,7 +533,8 @@ public final class Zero3LearningFoundation {
                     float gain=ch==2?1f:2f*intention.effort;
                     output[at]=limit(learned*gain,-1f,1f);
                     if(probing){
-                        if(measuredProbeCreditLabV397&&noise[at]!=0f){
+                        if((measuredProbeCreditLabV397||
+                            deliveredLocalCreditLabV421)&&noise[at]!=0f){
                             // Compare with THIS command's unperturbed neural
                             // transfer, not a fictional physics replay.
                             // A clipped/saturated muscle with no actual
