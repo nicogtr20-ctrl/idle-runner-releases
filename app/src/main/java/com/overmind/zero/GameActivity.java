@@ -134,6 +134,15 @@ public final class GameActivity extends Activity {
             throw new IllegalStateException("V420 original V3 actor unavailable");
         lab.brain3.enableSafeMotorMapEvidenceLabV420();
     }
+    // ZERO431: research-only low-level V332 rear-wall attribution. Require
+    // actual positive PRE-to-POST COM velocity change in issued direction;
+    // no changes to action, reward, 170-node physics or user checkpoint.
+    void originalV431EnableRearWallLocalAccelerationForQA(){
+        if(lab==null||lab.brain3==null||
+           !lab.brain3.realPhysicalMotorContextV412())
+            throw new IllegalStateException("V431 original cortex not ready");
+        lab.brain3.enableRearWallLocalAccelerationLabV431();
+    }
     // ZERO421 science-only: causal probe delivered after true muscle clipping.
     // No new motor policy, no force, no changed checkpoint or user slot.
     void originalV421EnableDeliveredLocalProbeForQA(){
