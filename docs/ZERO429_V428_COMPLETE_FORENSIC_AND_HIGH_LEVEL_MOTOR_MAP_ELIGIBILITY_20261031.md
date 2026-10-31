@@ -27,3 +27,13 @@ The existing five-case `Zero420MotorMapEligibilityAndroidTest` runs again in ful
 - Original newborn wild >=10,000 true decisions, >=12% signed/gross, real blue and red contacts, red last 5,000 < first 5,000, total red <=2× actual blue.
 - Android original regression incl. V420/V428 tests PASS; exact original S21 512 weights / V356 CRC PASS. Inspect V420 accepted/wall/harm/other counters and true red trace intent/momentum after runs.
 - If any test fails: **NO APPROVAL, NO APK, NO OTA, NO MERGE**. Keep only this one experimental change; do not tune thresholds or alter original 12 slots. Record actual Action IDs and all 1k windows after completion.
+
+## Triggered exact original Android V429 GitHub Actions
+
+Single behavioral-code/test configuration commit `3a4c3a65b369c911ed18e5826c47287762e60897`, all four runs created on the **same SHA**:
+- [S21 exact original saved brain 10k — 41186276799](https://github.com/nicogtr20-ctrl/idle-runner-releases/actions/runs/41186276799): in_progress at first check.
+- [Wild original red/blue 10k — 41186276867](https://github.com/nicogtr20-ctrl/idle-runner-releases/actions/runs/41186276867): in_progress at first check.
+- [Original Android regressions incl. V420/V428 — 41186276833](https://github.com/nicogtr20-ctrl/idle-runner-releases/actions/runs/41186276833): in_progress at first check.
+- [Saved user S21 V356/512-weight CRC — 41186276832](https://github.com/nicogtr20-ctrl/idle-runner-releases/actions/runs/41186276832): in_progress at first check.
+
+Do not infer behavioral PASS from started tests. Recheck full job logs after completion and record all measured windows, red half-rates, blue counts, V420 accepted/rejected counters and CRC/regression outcomes before deciding whether the V429 single change helps.
