@@ -509,7 +509,7 @@ public final class Zero3LearningFoundation {
                             (b.cvx*nx+b.cvy*ny):
                             ch==1?(-b.cvx*ny+b.cvy*nx):
                             (b.cvx*intention.x+b.cvy*intention.y);
-                        localMomentum=.30f*limit(component/110f,-1f,1f);
+                        localMomentum=.30f*limit(component/10f,-1f,1f);
                     }
                     features[7]=ch==2?intention.adhesion:
                         ch==1?limit(state[at]+
