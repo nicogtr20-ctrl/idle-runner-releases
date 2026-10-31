@@ -9,7 +9,8 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import static org.junit.Assert.*;
 
-/** ZERO431: paired physical ON/OFF/OFF/ON intervention runs through the
+/** ZERO431: scientific V415 true signed local Jacobian falsification gate.
+ * Paired physical ON/OFF/OFF/ON intervention runs through the
  * unchanged original S21 170-material and original 64 muscle solver.
  * These are causal instrument checks, NOT 10000-decision approval. */
 @RunWith(AndroidJUnit4.class)
