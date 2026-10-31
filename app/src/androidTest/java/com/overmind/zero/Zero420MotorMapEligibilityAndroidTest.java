@@ -48,6 +48,37 @@ public final class Zero420MotorMapEligibilityAndroidTest {
         assertFalse(eligible(true,false,false,false,true,0,false,false));
         assertFalse(eligible(false,false,false,false,false,0,false,false));
     }
+    @Test public void passiveRearWallCoastingCannotBeCreditedAsOwnAcceleration(){
+        assertFalse(Zero420MotorMapEligibility.measuredForwardAccelerationV430(
+            3f,0f,1f,0f,1f,0f));
+        assertFalse(Zero420MotorMapEligibility.measuredForwardAccelerationV430(
+            0f,0f,0f,0f,1f,0f));
+    }
+    @Test public void measuredForwardVelocityChangeCanPassRearOnlyEvidenceGate(){
+        assertTrue(Zero420MotorMapEligibility.measuredForwardAccelerationV430(
+            0f,0f,1f,0f,1f,0f));
+        assertTrue(Zero420MotorMapEligibility.measuredForwardAccelerationV430(
+            -2f,0f,-1f,0f,1f,0f));
+    }
+    @Test public void sidewaysMotionAndCorruptSensorsCannotForgeRearAcceleration(){
+        assertFalse(Zero420MotorMapEligibility.measuredForwardAccelerationV430(
+            0f,0f,0f,2f,1f,0f));
+        try{
+            Zero420MotorMapEligibility.measuredForwardAccelerationV430(
+                Float.NaN,0f,1f,0f,1f,0f);
+            fail("Unmeasured PRE COM must never authorize motor learning");
+        }catch(IllegalArgumentException expected){}
+    }
+    @Test public void passiveRearRetreatCannotChangeOriginalV377Weights()throws Exception{
+        Zero3InstrumentalCreditV371 motor=new Zero3InstrumentalCreditV371();
+        byte[] original=v377Bytes(motor);
+        boolean realRearOnly=true;
+        boolean positiveAcceleration=Zero420MotorMapEligibility.measuredForwardAccelerationV430(
+            2f,0f,1f,0f,1f,0f);
+        genuineMotorEvent(motor,eligible(true,false,false,false,false,0f,
+            true,realRearOnly&&positiveAcceleration),true);
+        assertArrayEquals("Passive rear-wall coasting cannot teach V377",original,v377Bytes(motor));
+    }
     private static byte[] v377Bytes(Zero3InstrumentalCreditV371 motor)throws Exception{
         Field f=Zero3InstrumentalCreditV371.class.getDeclaredField("inertia");
         f.setAccessible(true);

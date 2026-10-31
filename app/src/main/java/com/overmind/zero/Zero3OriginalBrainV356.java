@@ -137,6 +137,7 @@ final class Zero3OriginalBrainV356 {
     private boolean safeMotorMapEvidenceLabV420;
     private long v420AcceptedRealMotorMap, v420ExcludedWall,
                  v420ExcludedHarm, v420ExcludedOther;
+    private long v430PassiveRearRetreatRejected;
     void enableSafeMotorMapEvidenceLabV420(){
         if(pending)throw new IllegalStateException(
             "V420 can switch only at original completed GRU3 boundary");
@@ -174,6 +175,7 @@ final class Zero3OriginalBrainV356 {
             "|safeMotorMapExcludedWall="+v420ExcludedWall+
             "|safeMotorMapExcludedHarm="+v420ExcludedHarm+
             "|safeMotorMapExcludedOther="+v420ExcludedOther+
+            "|passiveRearRetreatRejectedV430="+v430PassiveRearRetreatRejected+
             "|pending="+(priorProbeV400!=null)+
             "|randomUniformActorHeadsSkippedV428="+brain.randomUniformActorHeadsSkippedV428();
     }
@@ -762,11 +764,22 @@ final class Zero3OriginalBrainV356 {
             // V401's original tissue eligibility had correctly rejected it.
             // Preserve negative material valence and executive harm learning;
             // only the motor-instrumentality estimate is made causal.
+            // V430: rear-wall displacement can be residual inertia, not a
+            // muscle-caused escape. Preserve V414 lower-cortex eligibility;
+            // only require a measured positive COM velocity change for the
+            // exceptional rear-wall evidence admitted into V371/V377.
+            boolean forwardAccelerationV430=!verifiedRealRearRetreatV420||
+                Zero420MotorMapEligibility.measuredForwardAccelerationV430(
+                    decisionStartVxV417,decisionStartVyV417,
+                    body.cvx,body.cvy,choice.x,choice.y);
+            if(safeMotorMapEvidenceLabV420&&verifiedRealRearRetreatV420&&
+               !forwardAccelerationV430)v430PassiveRearRetreatRejected++;
             boolean trustedMotorMapV420=Zero420MotorMapEligibility.fromRealDecision(
                 outcome.physicalEvidence,disturbed,outcome.externalCorrection,
                 outcome.censored,genuineTerminal,actualDamageDuringDecisionV359,
                 physicallyTouchedSolidDuringDecisionV380,
-                verifiedRealRearRetreatV420);
+                verifiedRealRearRetreatV420&&
+                    (!safeMotorMapEvidenceLabV420||forwardAccelerationV430));
             if(safeMotorMapEvidenceLabV420){
                 if(trustedMotorMapV420)v420AcceptedRealMotorMap++;
                 else if(actualDamageDuringDecisionV359>0f)v420ExcludedHarm++;

@@ -12,6 +12,25 @@ package com.overmind.zero;
 final class Zero420MotorMapEligibility {
     private Zero420MotorMapEligibility(){}
 
+    /**
+     * V430: a rear-only retreat can be passive coasting. Positive displacement
+     * alone does NOT demonstrate an actuator response. Require the measured
+     * POST-minus-PRE COM velocity to have a positive component along the
+     * actual issued GRU3 heading before allowing this exceptional wall trial
+     * into the upper V371/V377 motor-response map. This is a necessary causal
+     * evidence gate, not a reward, steering command or proof of sufficiency.
+     */
+    static boolean measuredForwardAccelerationV430(float preVx,float preVy,
+            float postVx,float postVy,float intentX,float intentY){
+        if(!Float.isFinite(preVx)||!Float.isFinite(preVy)||
+           !Float.isFinite(postVx)||!Float.isFinite(postVy)||
+           !Float.isFinite(intentX)||!Float.isFinite(intentY))
+            throw new IllegalArgumentException("V430 requires real finite COM evidence");
+        float length=(float)Math.hypot(intentX,intentY);
+        if(length<.5f)return false;
+        return ((postVx-preVx)*intentX+(postVy-preVy)*intentY)/length>0f;
+    }
+
     static boolean fromRealDecision(
             boolean physicalEvidence, boolean disturbed,
             boolean externalCorrection, boolean censored,
