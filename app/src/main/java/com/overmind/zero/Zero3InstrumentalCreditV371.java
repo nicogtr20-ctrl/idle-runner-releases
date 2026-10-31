@@ -24,6 +24,18 @@ final class Zero3InstrumentalCreditV371 {
     // V434 LAB: physically clean past approaches later followed by actual contact.
     // Observational bank association is NOT a verified motor response.
     private boolean observedDelayedContactWithoutMotorMapLabV434;
+    // V435 research: a clean observed approach must also have a measured
+    // positive acceleration ALONG its real travel, rather than passive coast.
+    // This changes only the eligibility of historical delayed contact links.
+    private boolean acceleratedDelayedContactEvidenceLabV435;
+    private float pendingPreVxV435,pendingPreVyV435;
+    private long passiveDelayedApproachesRejectedV435;
+    void enableAcceleratedDelayedContactEvidenceLabV435(){
+        if(pendingSight!=null||!observedDelayedContactWithoutMotorMapLabV434)
+            throw new IllegalStateException("V435 requires V434 between decisions");
+        acceleratedDelayedContactEvidenceLabV435=true;
+    }
+    long passiveDelayedApproachesRejectedV435(){return passiveDelayedApproachesRejectedV435;}
     void enableObservedDelayedContactWithoutMotorMapLabV434(){
         if(pendingSight!=null||!strictInertialOpticalEvidenceLabV433)
             throw new IllegalStateException("V434 requires V433 between decisions");
@@ -69,6 +81,8 @@ final class Zero3InstrumentalCreditV371 {
                 observation194[i]<0||observation194[i]>1)
             throw new IllegalArgumentException("V371 invalid photons");
         pendingSight=Arrays.copyOfRange(observation194,20,44);
+        pendingPreVxV435=observation194[191]*130f;
+        pendingPreVyV435=observation194[192]*130f;
         pendingBank=heading(action[0],action[1]);pendingHeldout=heldout;
         inertia.begin(observation194,action,heldout);
     }
@@ -104,8 +118,27 @@ final class Zero3InstrumentalCreditV371 {
                 learnedY[bank]+=alpha*(my-learnedY[bank]);
                 trained[bank]++;
                 int slot=history%TRACE;
-                System.arraycopy(pendingSight,0,recentSight[slot],0,BANDS*8);
-                recentDX[slot]=mx;recentDY[slot]=my;recentBank[slot]=bank;history++;
+                // V435: only assign a past approach to its issued bank when
+                // the measured travel has a positive change of velocity
+                // relative to PRE momentum. Pure coasting and ordinary drag
+                // are not evidence that the muscles drove that approach.
+                // Preserve the six-CLEAN-decision temporal horizon: rejected
+                // records occupy a zero-evidence slot, never an old link.
+                float travel=(float)Math.hypot(mx,my);
+                float activeX=mx-.30f*pendingPreVxV435;
+                float activeY=my-.30f*pendingPreVyV435;
+                float activeAlong=travel>.35f?(mx*activeX+my*activeY)/travel:0f;
+                boolean linkedApproachEligible=!acceleratedDelayedContactEvidenceLabV435||
+                    (travel>.35f&&activeAlong>.35f);
+                if(linkedApproachEligible){
+                    System.arraycopy(pendingSight,0,recentSight[slot],0,BANDS*8);
+                    recentDX[slot]=mx;recentDY[slot]=my;
+                }else{
+                    Arrays.fill(recentSight[slot],0f);
+                    recentDX[slot]=0f;recentDY[slot]=0f;
+                    passiveDelayedApproachesRejectedV435++;
+                }
+                recentBank[slot]=bank;history++;
             }
             if(!heldout){
                 // Stagnation is recognized from PHYSICS, not from staying in

@@ -38,6 +38,10 @@ public final class Zero3RecurrentBrain {
         if(pending||cognition==null)throw new IllegalStateException("V434 requires original cognition between choices");
         cognition.enableObservedDelayedContactWithoutMotorMapLabV434();
     }
+    void enableAcceleratedDelayedContactEvidenceLabV435(){
+        if(pending||cognition==null)throw new IllegalStateException("V435 requires original cognition between choices");
+        cognition.enableAcceleratedDelayedContactEvidenceLabV435();
+    }
     void enableLearnedHarmCandidateCoverageLabV422(){
         if(pending)throw new IllegalStateException("ZERO422 choice pending");
         learnedHarmCandidateCoverageLabV422=true;

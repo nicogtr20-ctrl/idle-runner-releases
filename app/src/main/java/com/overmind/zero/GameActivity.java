@@ -161,6 +161,14 @@ public final class GameActivity extends Activity {
             throw new IllegalStateException("V434 original GRU3 unavailable");
         lab.brain3.enableObservedDelayedContactWithoutMotorMapLabV434();
     }
+    // V435 isolated Android lab: observed delayed-contact credit requires
+    // positive PRE-relative acceleration along the actually travelled path.
+    void originalV435EnableAcceleratedDelayedContactForQA(){
+        if(lab==null||lab.brain3==null||
+           !lab.brain3.realPhysicalMotorContextV412())
+            throw new IllegalStateException("V435 original GRU3 unavailable");
+        lab.brain3.enableAcceleratedDelayedContactEvidenceLabV435();
+    }
     void originalV432EnableSignedRearDeliveredProbeForQA(){
         if(lab==null||lab.brain3==null||
            !lab.brain3.realPhysicalMotorContextV412())

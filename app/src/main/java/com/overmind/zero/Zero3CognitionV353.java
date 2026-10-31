@@ -172,6 +172,9 @@ public final class Zero3CognitionV353 {
     void enableObservedDelayedContactWithoutMotorMapLabV434(){
         instrumental.enableObservedDelayedContactWithoutMotorMapLabV434();
     }
+    void enableAcceleratedDelayedContactEvidenceLabV435(){
+        instrumental.enableAcceleratedDelayedContactEvidenceLabV435();
+    }
     boolean hasVisibleLearnedHarmV422(float[] observation){
         return contactValence.hasVisibleLearnedHarmV422(observation);
     }

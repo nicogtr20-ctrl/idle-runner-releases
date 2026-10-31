@@ -144,6 +144,10 @@ final class Zero3OriginalBrainV356 {
         if(pending)throw new IllegalStateException("V434 original brain decision pending");
         brain.enableObservedDelayedContactWithoutMotorMapLabV434();
     }
+    void enableAcceleratedDelayedContactEvidenceLabV435(){
+        if(pending)throw new IllegalStateException("V435 original brain decision pending");
+        brain.enableAcceleratedDelayedContactEvidenceLabV435();
+    }
     private boolean safeMotorMapEvidenceLabV420;
     private long v420AcceptedRealMotorMap, v420ExcludedWall,
                  v420ExcludedHarm, v420ExcludedOther;

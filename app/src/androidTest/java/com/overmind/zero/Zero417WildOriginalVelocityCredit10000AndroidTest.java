@@ -144,6 +144,7 @@ public final class Zero417WildOriginalVelocityCredit10000AndroidTest {
                 original.originalV432EnableSignedRearDeliveredProbeForQA();
                 original.originalV433EnableStrictInertialOpticalEvidenceForQA();
                 original.originalV434EnableObservedDelayedContactForQA();
+                original.originalV435EnableAcceleratedDelayedContactForQA();
                 initialWindow.set(new Window(
                     original.originalV406TrueLifetimeMaterialContactsForQA(),
                     original.originalV400LocalMotorDiagnosticsForQA(),
