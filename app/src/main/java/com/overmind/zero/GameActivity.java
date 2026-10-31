@@ -185,6 +185,15 @@ public final class GameActivity extends Activity {
         return lab!=null&&lab.brain3!=null&&
             lab.brain3.jointSampleActorScoreEnabledV426();
     }
+    // ZERO431: lab-only original V3 single-body ABBA observation experiment.
+    // The GRU3 still selects the entire intention and the living 170-node
+    // physical solver executes every substep with its own 64 motor outputs.
+    void originalV431EnableInVivoPairedMuscleCreditForQA(){
+        if(lab==null||lab.brain3==null||
+           !lab.brain3.realPhysicalMotorContextV412())
+            throw new IllegalStateException("ZERO431 original body unavailable");
+        lab.brain3.enablePairedCausalMotorCreditLabV431();
+    }
     String originalV400LocalMotorDiagnosticsForQA(){
         return lab==null||lab.brain3==null?"":
             lab.brain3.localCreditDiagnosticsV400();
