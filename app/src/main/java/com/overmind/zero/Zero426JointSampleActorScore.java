@@ -3,6 +3,8 @@ package com.overmind.zero;
 /**
  * V426 research-only score of the ACTUAL independently sampled heading option
  * set, not of the single candidate selected by a learned/planned argmax.
+ * V437: candidate 0 replays the PREVIOUS decision's lastNoise and is not
+ * independently sampled now; only indices >=1 contribute current score.
  * sample() is 0.20 * (sum of six U[0,1) - 3), not Gaussian sigma=.20.
  * Score-function derivative is for the latent sampled vector; clipping and
  * normalization are downstream deterministic transformations.
@@ -34,7 +36,12 @@ final class Zero426JointSampleActorScore {
         if(noise==null||scale==null||noise.length!=scale.length||noise.length<1)
             throw new IllegalArgumentException("V426 candidate set");
         float[] result=new float[2];
-        for(int k=0;k<noise.length;k++){
+        // k=0 is lastNoise from the PREVIOUS completed decision, reused as
+        // a deterministic continuity candidate by choose(). It is NOT a new
+        // random draw conditioned on this decision's current actor parameters.
+        // The current joint log-density therefore starts at fresh draw k=1.
+        // Including k=0 falsely attributes prior action noise to current reward.
+        for(int k=1;k<noise.length;k++){
             if(noise[k]==null||scale[k]==null||noise[k].length<2||scale[k].length<2)
                 throw new IllegalArgumentException("V426 candidate shape");
             // Embodied impasse proposals k>=3 replace the two sampled

@@ -19,12 +19,12 @@ public final class Zero426JointSampleActorScoreAndroidTest {
         float b=Zero426JointSampleActorScore.latentScore(.04f,2f);
         assertEquals(a*.5f,b,1e-4f);
     }
-    @Test public void allSampledAlternativesNotOnlyWinnerContribute(){
+    @Test public void onlyFreshAlternativesNotOnlyWinnerContribute(){
         float[][] n={{.02f,-.02f},{-.01f,.03f},{.03f,-.01f}};
         float[][] s={{1f,1f},{1f,1f},{1f,1f}};
         float[] score=Zero426JointSampleActorScore.headingScore(n,s,false);
         float sx=0f,sy=0f;
-        for(int k=0;k<n.length;k++){
+        for(int k=1;k<n.length;k++){
             sx+=Zero426JointSampleActorScore.latentScore(n[k][0],1f);
             sy+=Zero426JointSampleActorScore.latentScore(n[k][1],1f);
         }
@@ -37,6 +37,36 @@ public final class Zero426JointSampleActorScoreAndroidTest {
         float[] score=Zero426JointSampleActorScore.headingScore(n,s,true);
         assertEquals(0f,score[0],0f);assertEquals(0f,score[1],0f);
         assertTrue(Zero426JointSampleActorScore.headingScore(n,s,false)[0]>0f);
+    }
+    @Test public void replayedPreviousHeadingCannotCreateCurrentActorGradient(){
+        // Candidate 0 is lastNoise from the PREVIOUS completed choice, not
+        // a new random draw. Its value and scale cannot influence this score.
+        float[][] scales={{1f,1f},{1f,1f},{1f,1f}};
+        float[][] first={{.30f,-.30f},{0f,0f},{0f,0f}};
+        float[][] second={{-.30f,.30f},{0f,0f},{0f,0f}};
+        float[] a=Zero426JointSampleActorScore.headingScore(first,scales,false);
+        float[] b=Zero426JointSampleActorScore.headingScore(second,scales,false);
+        assertEquals(0f,a[0],0f);assertEquals(0f,a[1],0f);
+        assertArrayEquals(a,b,0f);
+    }
+    @Test public void learnedHarmSevenChoicesCreditExactlySixFreshDraws(){
+        float[][] n={{.20f,-.20f},{.01f,-.02f},{-.01f,.03f},
+            {.02f,.01f},{-.03f,.01f},{.02f,-.02f},{.01f,.02f}};
+        float[][] s={{1f,1f},{1f,1f},{1f,1f},{1.75f,1.75f},
+            {1.75f,1.75f},{2.5f,2.5f},{2.5f,2.5f}};
+        float sx=0f,sy=0f;
+        for(int k=1;k<n.length;k++){
+            sx+=Zero426JointSampleActorScore.latentScore(n[k][0],s[k][0]);
+            sy+=Zero426JointSampleActorScore.latentScore(n[k][1],s[k][1]);
+        }
+        float[] score=Zero426JointSampleActorScore.headingScore(n,s,false);
+        assertEquals(Math.max(-3f,Math.min(3f,sx)),score[0],1e-5f);
+        assertEquals(Math.max(-3f,Math.min(3f,sy)),score[1],1e-5f);
+    }
+    @Test public void noFreshAlternativesHaveZeroCurrentHeadingScore(){
+        float[][] n={{.17f,-.21f}},s={{1f,1f}};
+        assertArrayEquals(new float[]{0f,0f},
+            Zero426JointSampleActorScore.headingScore(n,s,false),0f);
     }
     @Test public void firstOriginalGRUChoiceAndRngStayUnchanged(){
         Zero3RecurrentBrain base=new Zero3RecurrentBrain(194,true);
