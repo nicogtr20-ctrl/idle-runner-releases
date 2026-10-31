@@ -40,6 +40,13 @@ public final class Zero3RecurrentBrain {
             "|offered="+lastOfferedChoicesV405;
     }
     private boolean offPolicyDirectionV384;
+    // V425 research-only: no credit for radial/clipped heading perturbations.
+    private boolean tangentActorCreditLabV425;
+    void enableTangentActorCreditLabV425(){
+        if(pending)throw new IllegalStateException("V425 requires original GRU3 boundary");
+        tangentActorCreditLabV425=true;
+    }
+    boolean tangentActorCreditEnabledV425(){return tangentActorCreditLabV425;}
     private boolean physicalTargetsReadyV353,physicalHeldoutV353;
     private final float[] wz,wr,wn,world,before;
 
@@ -562,6 +569,14 @@ public final class Zero3RecurrentBrain {
             for(int head=0;head<2;head++)for(int j=0;j<=HIDDEN;j++)
                 targetCritic[head][j]+=.02f*(critic[head][j]-targetCritic[head][j]);
         }
+        // V425: the actual actor output for heading is clip(x,y), then
+        // normalize to a unit vector. Raw Gaussian radial components and
+        // saturated coordinates do not rotate the physically issued heading.
+        // Keep all original action sampling and measured reward unchanged.
+        float[] realizedTangentV425=tangentActorCreditLabV425?
+            Zero425TangentActorCredit.realizedHeadingNoise(
+                lastNoise[0],lastNoise[1],
+                proposal[0]+lastNoise[0],proposal[1]+lastNoise[1]):null;
         for(int k=0;k<MOTOR;k++){
             if(optionReplayV354)continue; // recalled action did not execute this sampled noise
             if(offPolicyDirectionV384&&k<2)continue; // unbiased probe is NOT sampled from the actor distribution
@@ -569,7 +584,9 @@ public final class Zero3RecurrentBrain {
             // Candidate noise can have physically learned exploratory width.
             // Credit the true sampling distribution, NOT a fictitious .2 std.
             float sigma=.2f*selectedNoiseScaleV369[k];
-            float explorationGradient=clip(lastNoise[k]/(sigma*sigma),-3f,3f);
+            float eligibleNoise=realizedTangentV425!=null&&k<2?
+                realizedTangentV425[k]:lastNoise[k];
+            float explorationGradient=clip(eligibleNoise/(sigma*sigma),-3f,3f);
             int at=k*(HIDDEN+1);
             for(int j=0;j<HIDDEN;j++)
                 actor[at+j]=clip(actor[at+j]+ACTOR_LR*advantage*explorationGradient*decisionState[j],-1.5f,1.5f);
