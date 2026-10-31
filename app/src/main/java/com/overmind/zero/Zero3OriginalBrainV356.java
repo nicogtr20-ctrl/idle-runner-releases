@@ -138,6 +138,16 @@ final class Zero3OriginalBrainV356 {
     private long v420AcceptedRealMotorMap, v420ExcludedWall,
                  v420ExcludedHarm, v420ExcludedOther;
     private long v430PassiveRearRetreatRejected;
+    // ZERO431: only in an explicit Android LAB, veto lower V332 motor
+    // credit for rear-wall travel caused by passive pre-existing momentum.
+    private boolean rearWallLocalAccelerationLabV431;
+    private long passiveRearMuscleCreditsRejectedV431;
+    void enableRearWallLocalAccelerationLabV431(){
+        if(pending||!localMotorRequestedV400||!genuineComVelocityCreditLabV417||
+           !verifiedRearWallTeachingLabV414)
+            throw new IllegalStateException("V431 requires original V400/V414/V417 boundary");
+        rearWallLocalAccelerationLabV431=true;
+    }
     void enableSafeMotorMapEvidenceLabV420(){
         if(pending)throw new IllegalStateException(
             "V420 can switch only at original completed GRU3 boundary");
@@ -176,6 +186,8 @@ final class Zero3OriginalBrainV356 {
             "|safeMotorMapExcludedHarm="+v420ExcludedHarm+
             "|safeMotorMapExcludedOther="+v420ExcludedOther+
             "|passiveRearRetreatRejectedV430="+v430PassiveRearRetreatRejected+
+            "|rearMuscleAccelerationLabV431="+rearWallLocalAccelerationLabV431+
+            "|passiveRearMuscleCreditsRejectedV431="+passiveRearMuscleCreditsRejectedV431+
             "|pending="+(priorProbeV400!=null)+
             "|randomUniformActorHeadsSkippedV428="+brain.randomUniformActorHeadsSkippedV428();
     }
@@ -638,13 +650,26 @@ final class Zero3OriginalBrainV356 {
                 // V414 lab may reopen ONLY measured rear-side retreat. A
                 // front wall, real energy harm, storm, teleport or passive
                 // unprobed motion remains strictly ineligible.
-                boolean verifiedRearRetreat=verifiedRearWallTeachingLabV414&&
+                boolean verifiedRearRetreatV414=verifiedRearWallTeachingLabV414&&
                     Zero401LocalMotorCreditSafety.rearWallCanTeachMuscleV414(
                         physicallyTouchedSolidDuringDecisionV380,
                         motor.rearContactFramesV390(),
                         motor.frontContactFramesV390(),
                         outcome.deltaX*choice.x+outcome.deltaY*choice.y);
-                verifiedRealRearRetreatV420=verifiedRearRetreat;
+                // V430 upper-map eligibility keeps its independently
+                // measured contract. V431 changes ONLY lower V332 eligibility.
+                verifiedRealRearRetreatV420=verifiedRearRetreatV414;
+                boolean verifiedRearRetreat=verifiedRearRetreatV414;
+                if(rearWallLocalAccelerationLabV431&&verifiedRearRetreatV414){
+                    verifiedRearRetreat=Zero431RearWallMuscleEligibility.verifiedRearRetreat(
+                        physicallyTouchedSolidDuringDecisionV380,
+                        motor.rearContactFramesV390(),
+                        motor.frontContactFramesV390(),
+                        outcome.deltaX*choice.x+outcome.deltaY*choice.y,
+                        decisionStartVxV417,decisionStartVyV417,
+                        body.cvx,body.cvy,choice.x,choice.y);
+                    if(!verifiedRearRetreat)passiveRearMuscleCreditsRejectedV431++;
+                }
                 if(verifiedRearRetreat)rearWallEligibleV414++;
                 if(verifiedRearWallTeachingLabV414&&
                    physicallyTouchedSolidDuringDecisionV380&&
