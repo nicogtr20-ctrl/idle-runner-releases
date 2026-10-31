@@ -73,6 +73,17 @@ public final class Zero3LearningFoundation {
         // must use the perturbation actually delivered to physical muscles
         // AFTER tanh, effort gain and saturation. Opt-in only; no saved data.
         private boolean deliveredLocalCreditLabV421;
+        // ZERO431 science only: randomized single-site muscle intervention
+        // alternates ON/OFF/OFF/ON in real solver substeps. The balanced ABBA
+        // sequence removes first-order drift; V332 uses actual measured
+        // post-solver acceleration contrast, not global unpaired motion.
+        private boolean pairedPhysicalProbeLabV431,lastAppliedProbeV431;
+        void enablePairedPhysicalProbeLabV431(){
+            if(pendingDecision)throw new IllegalStateException("ZERO431 mid-action");
+            pairedPhysicalProbeLabV431=true;
+        }
+        boolean pairedPhysicalProbeLabV431(){return pairedPhysicalProbeLabV431;}
+        boolean lastAppliedProbeV431(){return lastAppliedProbeV431;}
         void enableDeliveredLocalCreditLabV421(){
             if(pendingDecision)throw new IllegalStateException("ZERO421 mid-motor decision");
             deliveredLocalCreditLabV421=true;
@@ -421,6 +432,7 @@ public final class Zero3LearningFoundation {
             Arrays.fill(noise,0f);Arrays.fill(accumulated,0f);
             Arrays.fill(deliveredProbeV397,0f);samples=0;
             probing=explore;externalGripOwnerV361=gripExternallyOwned;
+            lastAppliedProbeV431=false;
             activeChannel=-1;isolatedSectorV390=-1;lastAcceptedGradientNorm=0f;
             if(intent!=null){
                 float angle=(float)Math.atan2(intent.y,intent.x);
@@ -433,6 +445,7 @@ public final class Zero3LearningFoundation {
             Arrays.fill(noise,0);Arrays.fill(accumulated,0);
             Arrays.fill(deliveredProbeV397,0);samples=0;probing=false;
             activeChannel=-1;isolatedSectorV390=-1;externalGripOwnerV361=false;
+            lastAppliedProbeV431=false;
         }
         /**
          * Actual geometry is read every physical substep. OUTPUTS are the
@@ -443,6 +456,13 @@ public final class Zero3LearningFoundation {
             finite(dt,"dt");
             if(dt<=0||dt>.04f)throw new IllegalArgumentException("dt");
             final int per=Morphology.POINTS/SECTORS;
+            // Balanced real-physics ABBA: ON,OFF,OFF,ON. In 4 substeps,
+            // linear changes in passive acceleration cancel (0+3 = 1+2).
+            // Same selected V390 muscle, same original 64 outputs and GRU3
+            // intention; the no-probe B steps use exactly learned cortex.
+            final boolean applyProbe=!pairedPhysicalProbeLabV431||
+                samples%4==0||samples%4==3;
+            lastAppliedProbeV431=probing&&applyProbe;
             for(int k=0;k<SECTORS;k++){
                 float dx=0,dy=0,rv=0,tv=0,held=0,contact=0,r=0;
                 for(int j=0;j<per;j++){
@@ -520,7 +540,8 @@ public final class Zero3LearningFoundation {
                     float z=0f;
                     for(int f=0;f<INPUTS;f++)z+=weights[at*INPUTS+f]*features[f];
                     // Exploration is an intervention, not a scripted gait.
-                    float learned=(float)Math.tanh(activationGain*(z+noise[at]));
+                    float learned=(float)Math.tanh(activationGain*(z+
+                        (lastAppliedProbeV431?noise[at]:0f)));
                     // ZERO386: physical voluntary effort MUST have real
                     // actuator authority. Previously effort existed only as
                     // an input feature: even effort=0 could produce full
@@ -534,7 +555,8 @@ public final class Zero3LearningFoundation {
                     output[at]=limit(learned*gain,-1f,1f);
                     if(probing){
                         if((measuredProbeCreditLabV397||
-                            deliveredLocalCreditLabV421)&&noise[at]!=0f){
+                            deliveredLocalCreditLabV421)&&
+                            lastAppliedProbeV431&&noise[at]!=0f){
                             // Compare with THIS command's unperturbed neural
                             // transfer, not a fictional physics replay.
                             // A clipped/saturated muscle with no actual
