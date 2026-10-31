@@ -138,6 +138,8 @@ final class Zero3OriginalBrainV356 {
         if(pending)throw new IllegalStateException("V433 original brain decision pending");
         brain.enableStrictInertialOpticalEvidenceLabV433();
     }
+    // Transient QA-only switch. Never serialized into the 33,312-decision
+    // V356 checkpoint, 512 motor weights or any of the 12 named save slots.
     void enableObservedDelayedContactWithoutMotorMapLabV434(){
         if(pending)throw new IllegalStateException("V434 original brain decision pending");
         brain.enableObservedDelayedContactWithoutMotorMapLabV434();
