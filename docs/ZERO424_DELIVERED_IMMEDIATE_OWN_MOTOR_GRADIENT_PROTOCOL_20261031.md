@@ -28,4 +28,10 @@ Detailed original job evidence and 10×1000 windows: `docs/ZERO424_V421_V423_COM
 
 ## Pending Actions
 
-GitHub workflow runs will be recorded here **only after actual completion**. At protocol creation no V424 behavior PASS is claimed. Preserve state and recheck. If V424 fails, the next experiment should first inspect real physical candidate/COM/skin shear, heldout action-to-motion estimates, saturation and true retinal azimuth without changing the learned original actor or inventing a destination.
+The four V424 GitHub Android runs were launched and independently verified as **in_progress** on 2026-10-31; no PASS or behavior result is yet claimed:
+- [S21 10k 41154281984](https://github.com/nicogtr20-ctrl/idle-runner-releases/actions/runs/41154281984)
+- [Wild 10k 41154286099](https://github.com/nicogtr20-ctrl/idle-runner-releases/actions/runs/41154286099)
+- [Original Android regressions 41154289430](https://github.com/nicogtr20-ctrl/idle-runner-releases/actions/runs/41154289430)
+- [Exact original S21 CRC 41154293160](https://github.com/nicogtr20-ctrl/idle-runner-releases/actions/runs/41154293160)
+
+Workflow trigger commits differ only by workflow YAML edits, after the two original Android test files were already committed; no production Java source changed between the four runs. Preserve state and recheck. If V424 fails, the next experiment should first inspect real physical candidate/COM/skin shear, heldout action-to-motion estimates, saturation and true retinal azimuth without changing the learned original actor or inventing a destination.
