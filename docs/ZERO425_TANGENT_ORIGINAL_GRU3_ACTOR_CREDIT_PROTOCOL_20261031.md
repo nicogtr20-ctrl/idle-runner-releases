@@ -23,3 +23,11 @@ The actor perturbation is selected by cognition from several Gaussian candidates
 
 ## Required CI
 Four existing original Android Actions, extended to this branch: S21 10k, wild 10k, full regressions including new V425, exact saved S21 CRC. Fill links and full results only after actual Actions are created and inspected.
+
+## Actual V425 Actions started (no result assumed)
+- [Original S21 10k 41161594283](https://github.com/nicogtr20-ctrl/idle-runner-releases/actions/runs/41161594283)
+- [Original wild 10k 41161597708](https://github.com/nicogtr20-ctrl/idle-runner-releases/actions/runs/41161597708)
+- [Original Android regressions including V425 41161587419](https://github.com/nicogtr20-ctrl/idle-runner-releases/actions/runs/41161587419)
+- [Original S21 512-weight/V356 CRC 41161590410](https://github.com/nicogtr20-ctrl/idle-runner-releases/actions/runs/41161590410)
+
+All four initially observed queued/in_progress, not PASS. Workflow-only commits differ but the Java/test source already committed before each trigger. Inspect exact logs and physical 10k before any further change.
