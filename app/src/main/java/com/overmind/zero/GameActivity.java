@@ -162,6 +162,18 @@ public final class GameActivity extends Activity {
             throw new IllegalStateException("ZERO423 original S21 unavailable");
         lab.brain3.enableImmediateOwnDecisionCreditLabV423();
     }
+    // ZERO425 research-only: no radial or saturated phantom actor heading
+    // gradient, no new direction, reward, actuator or saved parameter.
+    void originalV425EnableTangentActorCreditForQA(){
+        if(lab==null||lab.brain3==null||
+           !lab.brain3.realPhysicalMotorContextV412())
+            throw new IllegalStateException("ZERO425 original GRU3 unavailable");
+        lab.brain3.enableTangentActorCreditLabV425();
+    }
+    boolean originalV425TangentActorCreditEnabledForQA(){
+        return lab!=null&&lab.brain3!=null&&
+            lab.brain3.tangentActorCreditEnabledV425();
+    }
     String originalV400LocalMotorDiagnosticsForQA(){
         return lab==null||lab.brain3==null?"":
             lab.brain3.localCreditDiagnosticsV400();
