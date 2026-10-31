@@ -138,6 +138,7 @@ final class Zero3OriginalBrainV356 {
     private long v420AcceptedRealMotorMap, v420ExcludedWall,
                  v420ExcludedHarm, v420ExcludedOther;
     private long v430PassiveRearRetreatRejected;
+    // ZERO431 final source gate: original 2x10000 + regression + CRC required.
     // ZERO431: only in an explicit Android LAB, veto lower V332 motor
     // credit for rear-wall travel caused by passive pre-existing momentum.
     private boolean rearWallLocalAccelerationLabV431;
