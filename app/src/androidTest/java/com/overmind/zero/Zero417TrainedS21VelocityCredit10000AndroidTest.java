@@ -217,6 +217,9 @@ public final class Zero417TrainedS21VelocityCredit10000AndroidTest {
                 original.originalV433EnableStrictInertialOpticalEvidenceForQA();
                 original.originalV434EnableObservedDelayedContactForQA();
                 original.originalV435EnableAcceleratedDelayedContactForQA();
+                // V436: only new behavioral variable versus V435. Wider actor-sampled
+                // choices require genuine previously learned, currently visible harm.
+                original.originalV422EnableLearnedHarmCandidatesForQA();
                 initialWindow.set(new Window(
                     original.originalV406TrueLifetimeMaterialContactsForQA(),
                     original.originalV400LocalMotorDiagnosticsForQA(),
@@ -313,6 +316,8 @@ public final class Zero417TrainedS21VelocityCredit10000AndroidTest {
             }
             String motor=original.originalV366MotorDiagnosticForQA();
             String local=original.originalV400LocalMotorDiagnosticsForQA();
+            android.util.Log.i("ZERO417_USER_S21_LONG","ZERO436_LEARNED_HARM_COVERAGE "+
+                original.originalV422LearnedHarmCandidateDiagnosticsForQA());
             assertTrue("V429 real high-level causal motor map enabled",
                 local.contains("safeMotorMapLabV420=true"));
             android.util.Log.i("ZERO417_USER_S21_LONG",

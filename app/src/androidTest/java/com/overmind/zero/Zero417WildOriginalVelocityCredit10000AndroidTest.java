@@ -145,6 +145,9 @@ public final class Zero417WildOriginalVelocityCredit10000AndroidTest {
                 original.originalV433EnableStrictInertialOpticalEvidenceForQA();
                 original.originalV434EnableObservedDelayedContactForQA();
                 original.originalV435EnableAcceleratedDelayedContactForQA();
+                // V436: only new behavioral variable versus V435. Wider actor-sampled
+                // choices require genuine previously learned, currently visible harm.
+                original.originalV422EnableLearnedHarmCandidatesForQA();
                 initialWindow.set(new Window(
                     original.originalV406TrueLifetimeMaterialContactsForQA(),
                     original.originalV400LocalMotorDiagnosticsForQA(),
@@ -242,6 +245,9 @@ public final class Zero417WildOriginalVelocityCredit10000AndroidTest {
             assertTrue("V429 real high-level causal motor map enabled",
                 local.contains("safeMotorMapLabV420=true"));
             android.util.Log.i("ZERO417_WILD_LONG","ZERO417_REAR_WALL_RULE "+local);
+            String v436Coverage=original.originalV422LearnedHarmCandidateDiagnosticsForQA();
+            android.util.Log.i("ZERO417_WILD_LONG","ZERO436_LEARNED_HARM_COVERAGE "+v436Coverage);
+            assertTrue("V436 learned harm sampling flag enabled",v436Coverage.contains("enabled=true"));
             assertTrue("Real wild trial must use V414 same original neural owner",
                 local.contains("rearWallLab=true")&&
                 local.contains("realVelocityCreditLab=true")&&
