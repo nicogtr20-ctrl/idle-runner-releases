@@ -97,6 +97,14 @@ final class Zero3OriginalBrainV356 {
     // from its own observed COM acceleration at its own decision boundary.
     // No requirement that the NEXT independent decision also be clean.
     // This is V417-physical-response timing only, not a second controller.
+    // V425: opt-in-only original GRU3 actor credit uses the delivered unit
+    // heading Jacobian; original checkpoint, 194 senses, and 512 cortex
+    // weights are untouched, and the normal actor remains unmodified.
+    void enableTangentActorCreditLabV425(){
+        if(pending)throw new IllegalStateException("V425 original decision pending");
+        brain.enableTangentActorCreditLabV425();
+    }
+    boolean tangentActorCreditEnabledV425(){return brain.tangentActorCreditEnabledV425();}
     private boolean immediateOwnDecisionCreditLabV423;
     private long immediateOwnDecisionCreditsV423;
     void enableImmediateOwnDecisionCreditLabV423(){
