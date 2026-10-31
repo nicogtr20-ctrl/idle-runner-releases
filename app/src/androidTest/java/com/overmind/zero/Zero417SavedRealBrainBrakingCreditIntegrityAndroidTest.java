@@ -31,6 +31,7 @@ public final class Zero417SavedRealBrainBrakingCreditIntegrityAndroidTest {
             brain.enableGenuineComVelocityCreditLabV417();
             brain.requestLocalTemporalCreditLabV400();
             brain.enableImmediateOwnDecisionCreditLabV423();
+            brain.enableSafeMotorMapEvidenceLabV420();
             String after=brain.checkpoint();
             assertEquals("New neural-learning evidence must not change any "+
                 "existing source weight, recurrent slow state, V319 grip, "+
@@ -39,6 +40,8 @@ public final class Zero417SavedRealBrainBrakingCreditIntegrityAndroidTest {
             assertTrue(diagnostic.contains("realVelocityCreditLab=true"));
             assertTrue("V418 only changes ephemeral learning eligibility, not saved state",
                 diagnostic.contains("immediateOwnDecisionCreditLabV423=true"));
+            assertTrue("V429 causal motor-map opt-in must remain transient",
+                diagnostic.contains("safeMotorMapLabV420=true"));
             Zero3OriginalBrainV356.Readout saved=
                 Zero3OriginalBrainV356.inspectSaved(after);
             assertEquals(33312L,saved.decisions);

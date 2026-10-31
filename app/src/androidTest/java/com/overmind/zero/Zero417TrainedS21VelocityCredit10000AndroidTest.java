@@ -194,6 +194,10 @@ public final class Zero417TrainedS21VelocityCredit10000AndroidTest {
                 original.originalV400EnableLocalTemporalMotorCreditForQA();
                 original.originalV414AllowVerifiedRearOnlyWallCreditForQA();
                 original.originalV417EnableMeasuredBrakingCreditForQA();
+                // V429 sole behavioral difference from V428: prevent original
+                // V371/V377 high-level response learning from RED damping,
+                // front-wall arrest or externally disturbed motor samples.
+                original.originalV420EnableSafeHighLevelMotorMapForQA();
                 // ZERO424: ONE additional isolated variable versus V423: use the
                 // actual delivered (post-tanh/effort/clip) V390 muscle probe
                 // for the SAME decision's V423 measured COM-gradient update.
@@ -303,6 +307,8 @@ public final class Zero417TrainedS21VelocityCredit10000AndroidTest {
             }
             String motor=original.originalV366MotorDiagnosticForQA();
             String local=original.originalV400LocalMotorDiagnosticsForQA();
+            assertTrue("V429 real high-level causal motor map enabled",
+                local.contains("safeMotorMapLabV420=true"));
             android.util.Log.i("ZERO417_USER_S21_LONG",
                 "ZERO417_ORIGINAL_PHYSICAL_REAR_WALL_CREDIT "+local);
             assertTrue("Must test actual original V414 rear-only research mode",
