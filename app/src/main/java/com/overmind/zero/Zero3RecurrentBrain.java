@@ -47,6 +47,14 @@ public final class Zero3RecurrentBrain {
         tangentActorCreditLabV425=true;
     }
     boolean tangentActorCreditEnabledV425(){return tangentActorCreditLabV425;}
+    // V426: opt-in exact score of the original actor-generated candidate set.
+    private boolean jointSampleActorScoreLabV426;
+    private final float[] jointHeadingScoreV426=new float[2];
+    void enableJointSampleActorScoreLabV426(){
+        if(pending)throw new IllegalStateException("V426 requires original GRU3 boundary");
+        jointSampleActorScoreLabV426=true;
+    }
+    boolean jointSampleActorScoreEnabledV426(){return jointSampleActorScoreLabV426;}
     private boolean physicalTargetsReadyV353,physicalHeldoutV353;
     private final float[] wz,wr,wn,world,before;
 
@@ -334,6 +342,15 @@ public final class Zero3RecurrentBrain {
             options[k][4]=.25f+.4f*sigmoid(proposal[4]+noise[k][4]);
             if(cognition!=null)options[k][4]=Math.round(options[k][4]/.025f)*.025f;
         }
+        // V426: every independent sampled option contributes to the score
+        // function of the candidate SET. The selected sample alone is
+        // conditional on V353/V354 scoring and is not an unbiased policy
+        // sample. No change to sampling, choice or the real issued heading.
+        if(jointSampleActorScoreLabV426){
+            float[] score=Zero426JointSampleActorScore.headingScore(
+                noise,noiseScale,embodiedImpass);
+            System.arraycopy(score,0,jointHeadingScoreV426,0,2);
+        }
         // Original observed photons and original V369 learned valence ONLY.
         // This records whether the sampled alternatives differ in known
         // optical safety BEFORE any choice. It is not an action re-ranking.
@@ -586,7 +603,8 @@ public final class Zero3RecurrentBrain {
             float sigma=.2f*selectedNoiseScaleV369[k];
             float eligibleNoise=realizedTangentV425!=null&&k<2?
                 realizedTangentV425[k]:lastNoise[k];
-            float explorationGradient=clip(eligibleNoise/(sigma*sigma),-3f,3f);
+            float explorationGradient=jointSampleActorScoreLabV426&&k<2?
+                jointHeadingScoreV426[k]:clip(eligibleNoise/(sigma*sigma),-3f,3f);
             int at=k*(HIDDEN+1);
             for(int j=0;j<HIDDEN;j++)
                 actor[at+j]=clip(actor[at+j]+ACTOR_LR*advantage*explorationGradient*decisionState[j],-1.5f,1.5f);
