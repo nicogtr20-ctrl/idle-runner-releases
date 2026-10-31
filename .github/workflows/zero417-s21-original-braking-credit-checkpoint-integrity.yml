@@ -1,7 +1,7 @@
-name: ZERO420 safe original GRU3 high-level motor evidence (V417 comparator) actual saved S21 33312 original brain measured braking learning preserves V356 CRC
+name: ZERO421 genuinely delivered local muscle probe (V417 comparator) actual saved S21 33312 original brain measured braking learning preserves V356 CRC
 on:
   push:
-    branches: [lab/zero417-real-com-braking-credit-original-gru3, lab/zero418-isolated-decision-motor-credit, lab/zero420-original-high-level-motor-evidence-eligibility]
+    branches: [lab/zero417-real-com-braking-credit-original-gru3, lab/zero418-isolated-decision-motor-credit, lab/zero420-original-high-level-motor-evidence-eligibility, lab/zero421-delivered-physical-probe-original-gru3]
     paths:
       - 'app/src/main/java/com/overmind/zero/Zero3LearningFoundation.java'
       - 'app/src/main/java/com/overmind/zero/Zero3OriginalBrainV356.java'
