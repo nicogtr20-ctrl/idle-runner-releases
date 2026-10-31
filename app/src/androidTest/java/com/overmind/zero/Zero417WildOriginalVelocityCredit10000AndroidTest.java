@@ -129,6 +129,9 @@ public final class Zero417WildOriginalVelocityCredit10000AndroidTest {
                 // for the SAME decision's V423 measured COM-gradient update.
                 original.originalV421EnableDeliveredLocalProbeForQA();
                 original.originalV423EnableImmediateOwnMotorCreditForQA();
+                original.originalV425EnableTangentActorCreditForQA();
+                assertTrue("V425 wild original GRU3 actor flag",
+                    original.originalV425TangentActorCreditEnabledForQA());
                 initialWindow.set(new Window(
                     original.originalV406TrueLifetimeMaterialContactsForQA(),
                     original.originalV400LocalMotorDiagnosticsForQA(),
