@@ -444,6 +444,12 @@ final class Zero3OriginalBrainV356 {
             epoch,cursor,t,before,body,skin,matter,objects,executed64);
         float[] inputs=new float[194];
         System.arraycopy(Zero3AutonomousLoopV317.encode(frame),0,inputs,0,20);
+        // ZERO440 LAB: give the ORIGINAL 194D GRU a resolvable measured
+        // COM-drift signal in its EXISTING coarse velocity slots only.
+        // Keep 191/192 at the original /130 scale: V371/V377 decode those
+        // to physical units and must not inherit this GRU-only gain.
+        inputs[16]=clip(frame.bodyVelX/10f);
+        inputs[17]=clip(frame.bodyVelY/10f);
         float[] spectral=SensorimotorMind.Senses.spectral8(body,skin,chamber,objects);
         System.arraycopy(spectral,0,inputs,20,24);
         for(int ray=0;ray<16;ray++){
