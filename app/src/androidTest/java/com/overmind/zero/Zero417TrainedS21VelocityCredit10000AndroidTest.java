@@ -181,7 +181,10 @@ public final class Zero417TrainedS21VelocityCredit10000AndroidTest {
                 ready=has.get();
                 if(!ready)android.os.SystemClock.sleep(100);
             }
-            assertTrue("Original sole GRU3 must really finish boot",ready);
+            assertTrue("Original sole GRU3 must really finish boot: "+
+                "error="+original.originalV356BrainErrorForQA()+
+                " destroyed="+original.isDestroyed()+
+                " finishing="+original.isFinishing(),ready);
             AtomicLong initial=new AtomicLong(-1);
             AtomicReference<Window> initialWindow=new AtomicReference<>();
             // V412: snapshot STARTING state and PRE physical GRU3 stats on
@@ -203,6 +206,9 @@ public final class Zero417TrainedS21VelocityCredit10000AndroidTest {
                 // for the SAME decision's V423 measured COM-gradient update.
                 original.originalV421EnableDeliveredLocalProbeForQA();
                 original.originalV423EnableImmediateOwnMotorCreditForQA();
+                // ZERO431: balanced in-vivo ON/OFF/OFF/ON physically actual
+                // paired motor gradient, not V415's 52% wrong raw correlation.
+                original.originalV431EnableInVivoPairedMuscleCreditForQA();
                 // ZERO425: one new high-level actor gradient eligibility
                 // correction; original 10k gates and physical world unchanged.
                 original.originalV425EnableTangentActorCreditForQA();
@@ -315,6 +321,7 @@ public final class Zero417TrainedS21VelocityCredit10000AndroidTest {
                 local.contains("rearWallLab=true")&&
                 local.contains("realVelocityCreditLab=true")&&
                 local.contains("immediateOwnDecisionCreditLabV423=true")&&
+                local.contains("pairedCausalMotorCreditLabV431=true")&&
                 local.contains("deliveredLocalProbeLabV421=true"));
             double actualNewSigned=last.signed-windows[0].signed;
             double actualNewGross=last.gross-windows[0].gross;
