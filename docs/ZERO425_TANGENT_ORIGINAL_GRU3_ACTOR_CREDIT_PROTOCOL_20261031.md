@@ -33,3 +33,8 @@ Four existing original Android Actions, extended to this branch: S21 10k, wild 1
 - [Original S21 512-weight/V356 CRC 41161590410](https://github.com/nicogtr20-ctrl/idle-runner-releases/actions/runs/41161590410)
 
 All four initially observed queued/in_progress, not PASS. Workflow-only commits differ but the Java/test source already committed before each trigger. Inspect exact logs and physical 10k before any further change.
+
+## First actual completed V425 technical results (not behavior approval)
+- [Original regressions 41161587419](https://github.com/nicogtr20-ctrl/idle-runner-releases/actions/runs/41161587419) **completed SUCCESS**. Job 124420103067, full original Android regression suite, including **new V425 3/3 mathematical radial/tangent/clipping cases**, Android build PASS.
+- [Original S21 V356 CRC 41161590410](https://github.com/nicogtr20-ctrl/idle-runner-releases/actions/runs/41161590410) **completed SUCCESS**. Job 124420111841, exact original user 33,312 S21 saved brain/512 cortex weights unchanged.
+- S21 and wild 10k remain in_progress at this checkpoint; absolutely NO approval until both finish and satisfy original behavioral gates.
