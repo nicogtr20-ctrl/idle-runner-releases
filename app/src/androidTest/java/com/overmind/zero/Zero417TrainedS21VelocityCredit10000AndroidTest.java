@@ -204,6 +204,9 @@ public final class Zero417TrainedS21VelocityCredit10000AndroidTest {
                 original.originalV425EnableTangentActorCreditForQA();
                 assertTrue("V425 actual original GRU3 actor flag",
                     original.originalV425TangentActorCreditEnabledForQA());
+                original.originalV426EnableJointSampleActorScoreForQA();
+                assertTrue("V426 original S21 joint actor score flag",
+                    original.originalV426JointSampleActorScoreEnabledForQA());
                 initialWindow.set(new Window(
                     original.originalV406TrueLifetimeMaterialContactsForQA(),
                     original.originalV400LocalMotorDiagnosticsForQA(),
