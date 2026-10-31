@@ -124,6 +124,10 @@ public final class Zero417WildOriginalVelocityCredit10000AndroidTest {
                 original.originalV400EnableLocalTemporalMotorCreditForQA();
                 original.originalV414AllowVerifiedRearOnlyWallCreditForQA();
                 original.originalV417EnableMeasuredBrakingCreditForQA();
+                // ZERO424: ONE additional isolated variable versus V423: use the
+                // actual delivered (post-tanh/effort/clip) V390 muscle probe
+                // for the SAME decision's V423 measured COM-gradient update.
+                original.originalV421EnableDeliveredLocalProbeForQA();
                 original.originalV423EnableImmediateOwnMotorCreditForQA();
                 initialWindow.set(new Window(
                     original.originalV406TrueLifetimeMaterialContactsForQA(),
@@ -223,7 +227,8 @@ public final class Zero417WildOriginalVelocityCredit10000AndroidTest {
             assertTrue("Real wild trial must use V414 same original neural owner",
                 local.contains("rearWallLab=true")&&
                 local.contains("realVelocityCreditLab=true")&&
-                local.contains("immediateOwnDecisionCreditLabV423=true"));
+                local.contains("immediateOwnDecisionCreditLabV423=true")&&
+                local.contains("deliveredLocalProbeLabV421=true"));
             double ratio=last.signed/Math.max(1d,last.gross);
             String outcome=String.format(Locale.ROOT,
                 "ZERO417_WILD_REAL_10000_RESULT decisions=%d baseline=%d blue=%d red=%d"+
