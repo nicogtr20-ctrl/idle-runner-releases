@@ -194,6 +194,10 @@ public final class Zero417TrainedS21VelocityCredit10000AndroidTest {
                 original.originalV400EnableLocalTemporalMotorCreditForQA();
                 original.originalV414AllowVerifiedRearOnlyWallCreditForQA();
                 original.originalV417EnableMeasuredBrakingCreditForQA();
+                // ZERO424: ONE additional isolated variable versus V423: use the
+                // actual delivered (post-tanh/effort/clip) V390 muscle probe
+                // for the SAME decision's V423 measured COM-gradient update.
+                original.originalV421EnableDeliveredLocalProbeForQA();
                 original.originalV423EnableImmediateOwnMotorCreditForQA();
                 initialWindow.set(new Window(
                     original.originalV406TrueLifetimeMaterialContactsForQA(),
@@ -296,7 +300,8 @@ public final class Zero417TrainedS21VelocityCredit10000AndroidTest {
             assertTrue("Must test actual original V414 rear-only research mode",
                 local.contains("rearWallLab=true")&&
                 local.contains("realVelocityCreditLab=true")&&
-                local.contains("immediateOwnDecisionCreditLabV423=true"));
+                local.contains("immediateOwnDecisionCreditLabV423=true")&&
+                local.contains("deliveredLocalProbeLabV421=true"));
             double actualNewSigned=last.signed-windows[0].signed;
             double actualNewGross=last.gross-windows[0].gross;
             double ratio=actualNewSigned/Math.max(1d,actualNewGross);
