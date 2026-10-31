@@ -40,6 +40,18 @@ public final class Zero3RecurrentBrain {
             "|offered="+lastOfferedChoicesV405;
     }
     private boolean offPolicyDirectionV384;
+    // V428: if a learned impasse selects an independent uniform heading by
+    // RANDOM OVERRIDE, none of the actor-generated competing headings caused
+    // the selected motor outcome. Their joint score must not receive credit.
+    // A cognition/planner-selected uniform option remains V427-eligible.
+    private boolean randomizedIndependentUniformChoiceV428;
+    private long randomUniformActorHeadsSkippedV428;
+    long randomUniformActorHeadsSkippedV428(){return randomUniformActorHeadsSkippedV428;}
+    static boolean headingCreditShouldSkipV428(boolean jointSetScore,
+            boolean offPolicy,boolean randomUniformOverride){
+        return offPolicyHeadingShouldSkipV427(jointSetScore,offPolicy)||
+            (jointSetScore&&offPolicy&&randomUniformOverride);
+    }
     // V425 research-only: no credit for radial/clipped heading perturbations.
     private boolean tangentActorCreditLabV425;
     void enableTangentActorCreditLabV425(){
@@ -373,14 +385,18 @@ public final class Zero3RecurrentBrain {
             worstOfferedOpticalV405=Math.min(worstOfferedOpticalV405,utility);
         }
         int selected=cognition==null?0:cognition.select(x,options);
+        boolean randomSelectionOverrideV428=false;
         // Undirected physical exploration is essential BEFORE the GRU has
         // proven a body-response map. Probability decays with lived real
         // decisions and never overrides an independently verified learned
         // energy/motor relation.
         if(cognition!=null&&realStall&&!verifiedMotor){
             float exploration=.20f/(1f+(trainCount+validationCount)/1500f);
-            if(random()<exploration)selected=Math.min(options.length-1,
-                (int)(random()*options.length));
+            if(random()<exploration){
+                selected=Math.min(options.length-1,
+                    (int)(random()*options.length));
+                randomSelectionOverrideV428=true;
+            }
         }
         if(plannerV354!=null){
             plannerV354.topology(cognition.snapshot().predictiveUnits);
@@ -401,10 +417,17 @@ public final class Zero3RecurrentBrain {
                 // enough independent real-contact evidence.
                 float selectedReal=cognition.realContactPreferenceV374(x,options[selected]);
                 float proposedReal=cognition.realContactPreferenceV374(x,options[planned]);
-                if(proposedReal+.035f>=selectedReal)selected=planned;
+                if(proposedReal+.035f>=selectedReal){
+                    selected=planned;
+                    // Planner accepted a new candidate using sampled evidence;
+                    // the previous random override is no longer the selector.
+                    randomSelectionOverrideV428=false;
+                }
             }
         }
         offPolicyDirectionV384=embodiedImpass&&selected>=3;
+        randomizedIndependentUniformChoiceV428=
+            randomSelectionOverrideV428&&offPolicyDirectionV384;
         System.arraycopy(noise[selected],0,lastNoise,0,MOTOR);
         System.arraycopy(noiseScale[selected],0,selectedNoiseScaleV369,0,MOTOR);
         float[] authorized=options[selected];
@@ -603,7 +626,12 @@ public final class Zero3RecurrentBrain {
                 proposal[0]+lastNoise[0],proposal[1]+lastNoise[1]):null;
         for(int k=0;k<MOTOR;k++){
             if(optionReplayV354)continue; // recalled action did not execute this sampled noise
-            if(k<2&&offPolicyHeadingShouldSkipV427(jointSampleActorScoreLabV426,offPolicyDirectionV384))continue; // V427 full sampled-set score survives independent impasse selection
+            if(k<2&&headingCreditShouldSkipV428(jointSampleActorScoreLabV426,
+                    offPolicyDirectionV384,randomizedIndependentUniformChoiceV428)){
+                if(jointSampleActorScoreLabV426&&randomizedIndependentUniformChoiceV428)
+                    randomUniformActorHeadsSkippedV428++;
+                continue;
+            } // V428 random uniform override has no actor-heading causal path
             if(k==MOTOR-1&&!durationExecuted)continue; // V350 no fictitious duration credit
             // Candidate noise can have physically learned exploratory width.
             // Credit the true sampling distribution, NOT a fictitious .2 std.

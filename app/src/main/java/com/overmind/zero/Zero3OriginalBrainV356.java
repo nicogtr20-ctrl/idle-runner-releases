@@ -174,7 +174,8 @@ final class Zero3OriginalBrainV356 {
             "|safeMotorMapExcludedWall="+v420ExcludedWall+
             "|safeMotorMapExcludedHarm="+v420ExcludedHarm+
             "|safeMotorMapExcludedOther="+v420ExcludedOther+
-            "|pending="+(priorProbeV400!=null);
+            "|pending="+(priorProbeV400!=null)+
+            "|randomUniformActorHeadsSkippedV428="+brain.randomUniformActorHeadsSkippedV428();
     }
     /**
      * Original GameActivity living-frame PRE vs real POST local material
