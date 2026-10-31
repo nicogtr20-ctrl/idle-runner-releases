@@ -133,6 +133,9 @@ public final class Zero417WildOriginalVelocityCredit10000AndroidTest {
                 // for the SAME decision's V423 measured COM-gradient update.
                 original.originalV421EnableDeliveredLocalProbeForQA();
                 original.originalV423EnableImmediateOwnMotorCreditForQA();
+                // ZERO431: balanced in-vivo ON/OFF/OFF/ON physically actual
+                // paired motor gradient, not V415's 52% wrong raw correlation.
+                original.originalV431EnableInVivoPairedMuscleCreditForQA();
                 original.originalV425EnableTangentActorCreditForQA();
                 assertTrue("V425 wild original GRU3 actor flag",
                     original.originalV425TangentActorCreditEnabledForQA());
@@ -240,6 +243,7 @@ public final class Zero417WildOriginalVelocityCredit10000AndroidTest {
                 local.contains("rearWallLab=true")&&
                 local.contains("realVelocityCreditLab=true")&&
                 local.contains("immediateOwnDecisionCreditLabV423=true")&&
+                local.contains("pairedCausalMotorCreditLabV431=true")&&
                 local.contains("deliveredLocalProbeLabV421=true"));
             double ratio=last.signed/Math.max(1d,last.gross);
             String outcome=String.format(Locale.ROOT,
