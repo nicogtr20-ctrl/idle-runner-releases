@@ -165,6 +165,10 @@ public final class Zero3CognitionV353 {
         if(pendingInput!=null)instrumental.contact(spectral24,physicalEnergyDelta,heldout);
         if(!heldout)contactValence.contact(spectral24,physicalEnergyDelta);
     }
+    // ZERO422: observed physical negative wavelength only, no preset color.
+    boolean hasVisibleLearnedHarmV422(float[] observation){
+        return contactValence.hasVisibleLearnedHarmV422(observation);
+    }
     boolean hasVisibleContactKnowledgeV369(float[] observation){
         return contactValence.hasReliableVisibleEvidence(observation);
     }
