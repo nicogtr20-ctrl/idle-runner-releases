@@ -620,6 +620,14 @@ public final class Zero3LearningFoundation {
         // V378 ORIGINAL V3 ONLY: measured momentum at the PRE decision boundary.
         // This is not a force, target position, reward for distance, or schema field.
         private float startVxV378,startVyV378;
+        private float lastVelocityXV431,lastVelocityYV431;
+        private float abbaCycleSumV431,abbaPairSumV431;
+        private int abbaFramesV431,abbaValidQuadsV431;
+        float abbaObservedEffectV431(){
+            return abbaValidQuadsV431==0?Float.NaN:
+                abbaPairSumV431/abbaValidQuadsV431;
+        }
+        int abbaValidQuadsV431(){return abbaValidQuadsV431;}
         private boolean momentumCreditV378;
         private boolean causalMotorCreditV390;
         private int frontContactFramesV390,rearContactFramesV390,anyContactFramesV390;
@@ -667,6 +675,9 @@ public final class Zero3LearningFoundation {
             active=intent;this.train=train;this.heldout=heldout;external=false;censored=false;
             lastDecision=intent.decisionId;episode=intent.episodeId;startedRevision=cortex.revision();
             startX=lastX=endX=b.cx;startY=lastY=endY=b.cy;
+            lastVelocityXV431=b.cvx;lastVelocityYV431=b.cvy;
+            abbaCycleSumV431=abbaPairSumV431=0f;
+            abbaFramesV431=abbaValidQuadsV431=0;
             frames=0;gross=work=impulse=seconds=0;
             frontContactFramesV390=rearContactFramesV390=anyContactFramesV390=0;
             this.momentumCreditV378=momentumCreditV378;
@@ -686,6 +697,31 @@ public final class Zero3LearningFoundation {
             finite(dt,"dt");finite(physicalWork,"work");finite(muscleImpulse,"impulse");
             if(dt<=0||dt>.04f||physicalWork<0||muscleImpulse<0)
                 throw new IllegalArgumentException("invalid physical outcome");
+            if(cortex.pairedPhysicalProbeLabV431()&&
+                cortex.activeProbeCountV390()==1){
+                // Actuation and physics are executed in the same original
+                // material step. In ABBA phase 0,3 the ONE original cortex
+                // motor probe is ON; in phase 1,2 it is OFF. Do not confuse
+                // net coasting with an actual ON-minus-OFF comparison.
+                if(solverCorrection||teleport){
+                    abbaFramesV431=0;abbaCycleSumV431=0f;
+                }else{
+                    float accel=((after.cvx-lastVelocityXV431)*active.x+
+                        (after.cvy-lastVelocityYV431)*active.y)*
+                        (1f/60f)/dt;
+                    int phase=abbaFramesV431%4;
+                    // For OFF phases lastAppliedProbeV431 must be false;
+                    // see the complete pairing block below.
+                    abbaCycleSumV431+=(phase==0||phase==3?1f:-1f)*accel;
+                    abbaFramesV431++;
+                    if(abbaFramesV431%4==0){
+                        abbaPairSumV431+=abbaCycleSumV431*.5f;
+                        abbaValidQuadsV431++;
+                        abbaCycleSumV431=0f;
+                    }
+                }
+            }
+            lastVelocityXV431=after.cvx;lastVelocityYV431=after.cvy;
             gross+=(float)Math.hypot(after.cx-lastX,after.cy-lastY);
             lastX=endX=after.cx;lastY=endY=after.cy;
             work+=physicalWork;impulse+=muscleImpulse;seconds+=dt;frames++;
