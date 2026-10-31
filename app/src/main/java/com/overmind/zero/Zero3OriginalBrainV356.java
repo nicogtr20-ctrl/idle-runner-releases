@@ -93,6 +93,17 @@ final class Zero3OriginalBrainV356 {
         if(pending)throw new IllegalStateException("ZERO422 original decision pending");
         brain.enableLearnedHarmCandidateCoverageLabV422();
     }
+    // ZERO423: every genuinely eligible ORIGINAL motor decision trains
+    // from its own observed COM acceleration at its own decision boundary.
+    // No requirement that the NEXT independent decision also be clean.
+    // This is V417-physical-response timing only, not a second controller.
+    private boolean immediateOwnDecisionCreditLabV423;
+    private long immediateOwnDecisionCreditsV423;
+    void enableImmediateOwnDecisionCreditLabV423(){
+        if(pending||!localMotorRequestedV400||!genuineComVelocityCreditLabV417)
+            throw new IllegalStateException("ZERO423 requires V400/V417 at true boundary");
+        immediateOwnDecisionCreditLabV423=true;
+    }
     private boolean independentDecisionCreditLabV418;
     private long isolatedDecisionAccelerationSamplesV418;
     void enableIndependentDecisionCreditLabV418(){
@@ -139,6 +150,8 @@ final class Zero3OriginalBrainV356 {
             "|realVelocityCreditLab="+genuineComVelocityCreditLabV417+
             "|velocityCreditSamples="+measuredBrakingCreditV417+
             "|deliveredLocalProbeLabV421="+deliveredLocalProbeLabV421+
+            "|immediateOwnDecisionCreditLabV423="+immediateOwnDecisionCreditLabV423+
+            "|immediateOwnDecisionCreditsV423="+immediateOwnDecisionCreditsV423+
             "|independentDecisionCreditLab="+independentDecisionCreditLabV418+
             "|isolatedAccelerationSamples="+isolatedDecisionAccelerationSamplesV418+
             "|harmRejected="+harmfulMotorCreditsRejectedV401+
@@ -631,7 +644,22 @@ final class Zero3OriginalBrainV356 {
                 if(probeV400!=null&&actualDamageDuringDecisionV359>0f)
                     harmfulMotorCreditsRejectedV401++;
                 if(eligible){
-                    if(priorProbeV400!=null&&priorResponseV400!=null){
+                    if(immediateOwnDecisionCreditLabV423){
+                        // All actual pre/post physical work and the original
+                        // V390/401/414 eligibility are known NOW. The original
+                        // V417 next-decision scheme wrongly discarded this
+                        // valid trace when an independent NEXT action hit a
+                        // wall, red gem or was heldout; it also credited NEXT
+                        // actuation to the PREVIOUS perturbation. Train THIS
+                        // isolated muscle only from its own measured response.
+                        long before=cortex.updates();
+                        cortex.learnV332(probeV400,localResponseV400,
+                            new float[16]);
+                        immediateOwnDecisionCreditsV423++;
+                        localCreditCallsV400++;
+                        if(cortex.updates()>before)localUpdatesV400++;
+                        priorProbeV400=null;priorResponseV400=null;
+                    }else if(priorProbeV400!=null&&priorResponseV400!=null){
                         long before=cortex.updates();
                         // V401: second action can reverse or turn sharply.
                         // Its own motor work then belongs to the SECOND
@@ -651,9 +679,11 @@ final class Zero3OriginalBrainV356 {
                         localCreditCallsV400++;
                         if(cortex.updates()>before)localUpdatesV400++;
                     }
-                    priorProbeV400=probeV400;
-                    priorResponseV400=localResponseV400.clone();
-                    priorLocalX=choice.x;priorLocalY=choice.y;
+                    if(!immediateOwnDecisionCreditLabV423){
+                        priorProbeV400=probeV400;
+                        priorResponseV400=localResponseV400.clone();
+                        priorLocalX=choice.x;priorLocalY=choice.y;
+                    }
                 }else{
                     priorProbeV400=null;priorResponseV400=null;
                     localCensoredV400++;
