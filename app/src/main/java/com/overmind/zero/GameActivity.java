@@ -146,6 +146,14 @@ public final class GameActivity extends Activity {
     // V432 experiment: retain signed positive/negative physical feedback on
     // genuine rear-only V414 probes only when V421 measured a nonzero
     // delivered muscle perturbation. No authored movement or reward.
+    // V433 lab-only: no physically validated steering prediction means
+    // intended heading cannot stand in for drift-dominated optical travel.
+    void originalV433EnableStrictInertialOpticalEvidenceForQA(){
+        if(lab==null||lab.brain3==null||
+           !lab.brain3.realPhysicalMotorContextV412())
+            throw new IllegalStateException("V433 original GRU3 unavailable");
+        lab.brain3.enableStrictInertialOpticalEvidenceLabV433();
+    }
     void originalV432EnableSignedRearDeliveredProbeForQA(){
         if(lab==null||lab.brain3==null||
            !lab.brain3.realPhysicalMotorContextV412())

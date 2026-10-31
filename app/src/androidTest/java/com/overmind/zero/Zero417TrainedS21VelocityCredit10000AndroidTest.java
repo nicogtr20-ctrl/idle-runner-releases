@@ -214,6 +214,7 @@ public final class Zero417TrainedS21VelocityCredit10000AndroidTest {
                 // ZERO431 is the only new behavioral change versus V430:
                 // require measured acceleration for LOWER V332 rear-wall credit.
                 original.originalV432EnableSignedRearDeliveredProbeForQA();
+                original.originalV433EnableStrictInertialOpticalEvidenceForQA();
                 initialWindow.set(new Window(
                     original.originalV406TrueLifetimeMaterialContactsForQA(),
                     original.originalV400LocalMotorDiagnosticsForQA(),

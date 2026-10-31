@@ -18,6 +18,17 @@ final class Zero3InstrumentalCreditV371 {
     private final int[] trained=new int[BINS],validated=new int[BINS];
     private final double[] error=new double[BINS],baseline=new double[BINS];
     private Zero3InertialResponseV377 inertia=new Zero3InertialResponseV377();
+    // V433 LAB: without a heldout-validated motor response, high PRE inertia
+    // cannot be replaced by the intended heading when estimating optical travel.
+    private boolean strictInertialOpticalEvidenceLabV433;
+    private long unsupportedMovingOpticalPredictionsRejectedV433;
+    void enableStrictInertialOpticalEvidenceLabV433(){
+        if(pendingSight!=null)throw new IllegalStateException("V433 must start between decisions");
+        strictInertialOpticalEvidenceLabV433=true;
+    }
+    long unsupportedMovingOpticalPredictionsRejectedV433(){
+        return unsupportedMovingOpticalPredictionsRejectedV433;
+    }
     // Real energy contact can retrospectively credit up to six physically
     // verified approaches without falsifying the V353 ONE-STEP predictor.
     private final float[][] delayedContactValue=new float[BANDS][BINS];
@@ -208,8 +219,17 @@ final class Zero3InstrumentalCreditV371 {
         }
         // V371's apparent motor skill can be pure balloon coasting.
         // Do not trust unconditional bank travel when already moving.
-        if(Math.hypot(observation194[191]*130f,observation194[192]*130f)>=2d)
+        if(Math.hypot(observation194[191]*130f,observation194[192]*130f)>=2d){
+            // V433: commanded bearing is NOT evidence of material travel
+            // while a drifting body has no validated action->inertia map.
+            // The real negative contact remains learned; do not invent a
+            // motor outcome or select a preset escape direction.
+            if(strictInertialOpticalEvidenceLabV433){
+                unsupportedMovingOpticalPredictionsRejectedV433++;
+                return 0f;
+            }
             return .35f*contact.utility(observation194,chosen[0],chosen[1]);
+        }
         if(motorVerified(bank)){
             float dx=learnedX[bank],dy=learnedY[bank];
             float len=(float)Math.hypot(dx,dy);

@@ -30,6 +30,10 @@ public final class Zero3RecurrentBrain {
     // Does not issue headings, forces, target vectors or alter checkpoints.
     private boolean learnedHarmCandidateCoverageLabV422;
     private long learnedHarmExpandedDecisionsV422;
+    void enableStrictInertialOpticalEvidenceLabV433(){
+        if(pending||cognition==null)throw new IllegalStateException("V433 requires original cognition between choices");
+        cognition.enableStrictInertialOpticalEvidenceLabV433();
+    }
     void enableLearnedHarmCandidateCoverageLabV422(){
         if(pending)throw new IllegalStateException("ZERO422 choice pending");
         learnedHarmCandidateCoverageLabV422=true;
