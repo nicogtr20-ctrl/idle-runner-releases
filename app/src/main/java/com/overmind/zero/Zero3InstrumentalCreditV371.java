@@ -21,6 +21,14 @@ final class Zero3InstrumentalCreditV371 {
     // V433 LAB: without a heldout-validated motor response, high PRE inertia
     // cannot be replaced by the intended heading when estimating optical travel.
     private boolean strictInertialOpticalEvidenceLabV433;
+    // V434 LAB: physically clean past approaches later followed by actual contact.
+    // Observational bank association is NOT a verified motor response.
+    private boolean observedDelayedContactWithoutMotorMapLabV434;
+    void enableObservedDelayedContactWithoutMotorMapLabV434(){
+        if(pendingSight!=null||!strictInertialOpticalEvidenceLabV433)
+            throw new IllegalStateException("V434 requires V433 between decisions");
+        observedDelayedContactWithoutMotorMapLabV434=true;
+    }
     private long unsupportedMovingOpticalPredictionsRejectedV433;
     void enableStrictInertialOpticalEvidenceLabV433(){
         if(pendingSight!=null)throw new IllegalStateException("V433 must start between decisions");
@@ -238,6 +246,32 @@ final class Zero3InstrumentalCreditV371 {
         }
         return .35f*contact.utility(observation194,chosen[0],chosen[1]);
     }
+    /** V434: only previously measured clean approaches linked to actual later
+     * energy contacts can rank a motor bank while V377 travel is unverified.
+     * No guessed displacement, innate colour or artificial reward.
+     */
+    private float observedDelayedContactScoreV434(float[] observation194,int bank,
+            Zero3ContactValenceV369 contact){
+        float reserve=limit((observation194[188]+1f)*.5f,0f,1f);
+        float positiveNeed=.35f+1.25f*(1f-reserve);
+        float reward=0f,observed=0f;
+        for(int b=0;b<BANDS;b++){
+            float value=contact.valueForInstrumentalV371(b);
+            if(Math.abs(value)<.10f||delayedContactCount[b][bank]<2)continue;
+            float brightness=0f;
+            for(int ray=0;ray<BINS;ray++){
+                float seen=observation194[20+b*BINS+ray];
+                if(!Float.isFinite(seen)||seen<0f||seen>1f)
+                    throw new IllegalArgumentException("V434 nonphysical retina");
+                brightness=Math.max(brightness,seen);
+            }
+            if(brightness<=.08f)continue;
+            observed+=brightness;
+            reward+=.22f*delayedContactValue[b][bank]*brightness*
+                (value>0f?positiveNeed:1.35f);
+        }
+        return observed<=.08f?0f:limit(reward/(.35f+observed),-.5f,.5f);
+    }
     float score(float[] observation194,float[] chosen,
                 Zero3ContactValenceV369 contact){
         if(observation194==null||observation194.length!=194||
@@ -249,7 +283,10 @@ final class Zero3InstrumentalCreditV371 {
         if(predicted!=null){mx=predicted[0];my=predicted[1];}
         else{
             if(Math.hypot(observation194[191]*130f,observation194[192]*130f)>=2d||
-               !motorVerified(bank))return 0f;
+               !motorVerified(bank)){
+                return observedDelayedContactWithoutMotorMapLabV434?
+                    observedDelayedContactScoreV434(observation194,bank,contact):0f;
+            }
             mx=learnedX[bank];my=learnedY[bank];
         }
         float reward=0f,brightness=0f;
