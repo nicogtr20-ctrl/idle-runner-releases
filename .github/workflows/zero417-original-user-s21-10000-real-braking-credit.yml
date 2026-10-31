@@ -1,7 +1,7 @@
-name: ZERO420 safe original GRU3 high-level motor evidence (V417 comparator) true saved 33312-trained S21 GRU3 10000 real braking credit
+name: ZERO421 genuinely delivered local muscle probe (V417 comparator) true saved 33312-trained S21 GRU3 10000 real braking credit
 on:
   push:
-    branches: [lab/zero417-real-com-braking-credit-original-gru3, lab/zero418-isolated-decision-motor-credit, lab/zero420-original-high-level-motor-evidence-eligibility]
+    branches: [lab/zero417-real-com-braking-credit-original-gru3, lab/zero418-isolated-decision-motor-credit, lab/zero420-original-high-level-motor-evidence-eligibility, lab/zero421-delivered-physical-probe-original-gru3]
     paths:
       - 'app/src/**'
       - 'app/src/main/java/com/overmind/zero/Zero387TactileFrame.java'
