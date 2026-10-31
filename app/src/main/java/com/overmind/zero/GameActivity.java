@@ -174,6 +174,17 @@ public final class GameActivity extends Activity {
         return lab!=null&&lab.brain3!=null&&
             lab.brain3.tangentActorCreditEnabledV425();
     }
+    // V426: sampled-set score-function eligibility only; no heading/reward override.
+    void originalV426EnableJointSampleActorScoreForQA(){
+        if(lab==null||lab.brain3==null||
+           !lab.brain3.realPhysicalMotorContextV412())
+            throw new IllegalStateException("ZERO426 original GRU3 unavailable");
+        lab.brain3.enableJointSampleActorScoreLabV426();
+    }
+    boolean originalV426JointSampleActorScoreEnabledForQA(){
+        return lab!=null&&lab.brain3!=null&&
+            lab.brain3.jointSampleActorScoreEnabledV426();
+    }
     String originalV400LocalMotorDiagnosticsForQA(){
         return lab==null||lab.brain3==null?"":
             lab.brain3.localCreditDiagnosticsV400();
