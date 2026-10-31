@@ -142,6 +142,18 @@ public final class GameActivity extends Activity {
             throw new IllegalStateException("ZERO421 original motor unavailable");
         lab.brain3.enableDeliveredLocalProbeLabV421();
     }
+    // ZERO422 research: only REAL learned negative optical contact can
+    // widen self-sampled GRU3 actor alternatives; no authored destination.
+    void originalV422EnableLearnedHarmCandidatesForQA(){
+        if(lab==null||lab.brain3==null||
+            !lab.brain3.realPhysicalMotorContextV412())
+            throw new IllegalStateException("ZERO422 original GRU3 not ready");
+        lab.brain3.enableLearnedHarmCandidateCoverageLabV422();
+    }
+    String originalV422LearnedHarmCandidateDiagnosticsForQA(){
+        return lab==null||lab.brain3==null?"":
+            lab.brain3.learnedHarmCandidateDiagnosticsV422();
+    }
     String originalV400LocalMotorDiagnosticsForQA(){
         return lab==null||lab.brain3==null?"":
             lab.brain3.localCreditDiagnosticsV400();
