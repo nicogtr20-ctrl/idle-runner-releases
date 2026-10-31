@@ -48,3 +48,14 @@ V433 [regression 41201035438](https://github.com/nicogtr20-ctrl/idle-runner-rele
 ## ADR
 
 Decision: test existing *observed* delayed-contact evidence in the same GRU3 scorer rather than restore V433's physically unsupported desired-heading-to-travel inference. Alternative: revert V433 (known V432 52 red/3 blue, S21 19.29%, still FAIL); rejected as no new causal test. Alternative: force opposite heading or increase scripted braking; prohibited and not causally grounded. Risk: false correlations with passive inertia, underexploration, negative S21 movement. Mitigation: ephemeral LAB switch, isolated branch, same exact 2x10k Android gates, full CRC/regressions, no publication or persistence changes.
+
+## Original Android CI initiated — single exact source SHA
+
+All four required workflows were triggered on the **same final commit** `18d4d0473e73477e13cfed44343d3cc3f05a51e8` (2026-10-31), rather than accepting results from earlier intermediate commits. At the time of this entry, **none has a final PASS**:
+
+- [V434 original Android regression + five new tests — 41212457622](https://github.com/nicogtr20-ctrl/idle-runner-releases/actions/runs/41212457622): pending.
+- [V434 saved S21 original CRC/512 weights — 41212457590](https://github.com/nicogtr20-ctrl/idle-runner-releases/actions/runs/41212457590): pending.
+- [V434 real trained S21 10,000 — 41212457674](https://github.com/nicogtr20-ctrl/idle-runner-releases/actions/runs/41212457674): pending.
+- [V434 real newborn wild 10,000 — 41212457587](https://github.com/nicogtr20-ctrl/idle-runner-releases/actions/runs/41212457587): pending.
+
+Earlier intermediate-commit runs were superseded by this same-SHA suite and must NOT be counted as final acceptance. Recheck job logs, each 1k window, real red/blue, signed/gross, regression and CRC before making any behavioral conclusion or another change. No APK/OTA/merge.
