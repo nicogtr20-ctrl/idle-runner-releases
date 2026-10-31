@@ -24,3 +24,11 @@ Risk: original S21 weights were trained with the prior feature distribution; an 
 - Wild original newborn, >=10,000 real decisions, >=12% signed/gross, real blue pickups, red last 5000 strictly below first 5000, red total <=2× blue.
 - Original Android regression PASS and original S21 V356 CRC/512 weights PASS, same commit.
 - If fails: keep this lab-only, inspect actual speed-conditioned muscle response and gradient, no APK/OTA/merge, no second simultaneous behavioral correction.
+
+## V439 Android jobs actually launched (same source commit `d187b1e05b5b14ceb0954b8469e1c9db1661164e`)
+- [S21 original 10k](https://github.com/nicogtr20-ctrl/idle-runner-releases/actions/runs/41248172521)
+- [Wild original 10k](https://github.com/nicogtr20-ctrl/idle-runner-releases/actions/runs/41248172551)
+- [Original Android regressions](https://github.com/nicogtr20-ctrl/idle-runner-releases/actions/runs/41248172444)
+- [Original S21 CRC](https://github.com/nicogtr20-ctrl/idle-runner-releases/actions/runs/41248172737)
+
+These jobs were queued/running at the time of writing. Earlier runs triggered by the four workflow-metadata commits before the single behavioral source commit are **NOT** valid V439 evidence and MUST NOT be confused with these four exact SHA-matched runs. Do not claim any V439 PASS before the final logs are retrieved.
