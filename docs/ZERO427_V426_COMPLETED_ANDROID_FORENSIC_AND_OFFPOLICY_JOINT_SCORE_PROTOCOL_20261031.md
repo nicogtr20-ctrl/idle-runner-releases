@@ -19,4 +19,9 @@ Single V427 behavior change: keep old exclusion for legacy selected-only score, 
 S21 original >=10,000 additional true decisions, >=25% signed/gross, >=9/10 1k windows >=10%, zero inverse, >=5 new real blue; wild original >=10,000, >=12% signed/gross, red last 5000 < first 5000, red total <=2×blue, genuine blue/red physical contacts. Full original Android regressions including V427 four cases and original 33,312 S21 512/V356 CRC must PASS. Preserve all 12 user slots and stable. NO APK, OTA, merge or solved claim.
 
 ## V427 CI
-Four original GitHub Actions are configured to run on this separate experimental branch. Record real run IDs and final complete logs here only after Actions finish. No preemptive PASS claim.
+Four original GitHub Actions were triggered by the single V427 code+workflow commit `7e32181184dc3acfd4feb89c63eedcde602c14b3`, on the isolated experimental branch:
+- [S21 original 10k 41172705057](https://github.com/nicogtr20-ctrl/idle-runner-releases/actions/runs/41172705057) — in progress at first check.
+- [Wild original 10k 41172704905](https://github.com/nicogtr20-ctrl/idle-runner-releases/actions/runs/41172704905) — in progress at first check.
+- [Full original Android regressions + V427 4 cases 41172704908](https://github.com/nicogtr20-ctrl/idle-runner-releases/actions/runs/41172704908) — queued at first check.
+- [Exact original S21 V356 512-weight CRC 41172704916](https://github.com/nicogtr20-ctrl/idle-runner-releases/actions/runs/41172704916) — in progress at first check.
+Do not score or release until all four have final actual logs and pass their precommitted gates. A build/boot censor is not a behavior result.
