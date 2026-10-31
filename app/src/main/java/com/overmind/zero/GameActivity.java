@@ -154,6 +154,14 @@ public final class GameActivity extends Activity {
         return lab==null||lab.brain3==null?"":
             lab.brain3.learnedHarmCandidateDiagnosticsV422();
     }
+    // ZERO423 science only: immediate self-decision motor credit, using the
+    // original body's actually measured signed COM velocity delta.
+    void originalV423EnableImmediateOwnMotorCreditForQA(){
+        if(lab==null||lab.brain3==null||
+           !lab.brain3.realPhysicalMotorContextV412())
+            throw new IllegalStateException("ZERO423 original S21 unavailable");
+        lab.brain3.enableImmediateOwnDecisionCreditLabV423();
+    }
     String originalV400LocalMotorDiagnosticsForQA(){
         return lab==null||lab.brain3==null?"":
             lab.brain3.localCreditDiagnosticsV400();
