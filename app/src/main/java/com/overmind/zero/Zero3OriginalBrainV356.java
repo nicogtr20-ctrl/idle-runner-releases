@@ -160,6 +160,14 @@ final class Zero3OriginalBrainV356 {
         if(pending)throw new IllegalStateException("V435 original brain decision pending");
         brain.enableAcceleratedDelayedContactEvidenceLabV435();
     }
+    // V459 isolated genuine original GRU3 motor map: only independent CLEAN
+    // LOW-PRE-momentum forward responses can validate a low-speed direction.
+    // The existing 8 historical V371 bins mix high and low inertia and cannot
+    // be trusted as a conditioned low-speed muscle response. Nonpersistent.
+    void enableLowPreMomentumEvidenceLabV459(){
+        if(pending)throw new IllegalStateException("V459 original choice pending");
+        brain.enableLowPreMomentumEvidenceLabV459();
+    }
     // V442 isolated Android QA; never persisted.
     void enableCensorUnverifiedDelayedBankUnderDriftLabV442(){
         if(pending)throw new IllegalStateException("V442 original decision pending");
