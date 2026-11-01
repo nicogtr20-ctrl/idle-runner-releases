@@ -34,6 +34,7 @@ public final class Zero417SavedRealBrainBrakingCreditIntegrityAndroidTest {
             brain.enableDeliveredLocalProbeLabV421();
             brain.enableOriginalPairedMotorContrastLabV454();
             brain.enableSafeMotorMapEvidenceLabV420();
+            brain.enableDeterministicGripPhysicalEvidenceLabV461();
             String after=brain.checkpoint();
             assertEquals("New neural-learning evidence must not change any "+
                 "existing source weight, recurrent slow state, V319 grip, "+
@@ -44,6 +45,8 @@ public final class Zero417SavedRealBrainBrakingCreditIntegrityAndroidTest {
                 diagnostic.contains("immediateOwnDecisionCreditLabV423=true"));
             assertTrue("V454 physically balanced motor probe must be transient",
                 diagnostic.contains("pairedMotorContrastLabV454=true"));
+            assertTrue("V461 changing probe flag must never change V319 or V356 saved CRC",
+                diagnostic.contains("gripProbeOffLabV461=true"));
             assertTrue("V429 causal motor-map opt-in must remain transient",
                 diagnostic.contains("safeMotorMapLabV420=true"));
             Zero3OriginalBrainV356.Readout saved=
