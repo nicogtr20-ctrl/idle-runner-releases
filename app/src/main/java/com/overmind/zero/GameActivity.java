@@ -217,6 +217,14 @@ public final class GameActivity extends Activity {
     // Only the original Android test opt-in differs; V454 production code unchanged.
     // ZERO454 final matched 2x10000/CRC/regression source marker. This changes
     // no gameplay or save data; four workflows must share this exact SHA.
+    // ZERO459 QA-only: physically separate low-inertia training and
+    // HELDOUT responses from inherited coast-correlated V371 motor bins.
+    void originalV459EnableLowPreMotorEvidenceForQA(){
+        if(lab==null||lab.brain3==null||
+           !lab.brain3.realPhysicalMotorContextV412())
+            throw new IllegalStateException("V459 original V356 body unavailable");
+        lab.brain3.enableLowPreMomentumEvidenceLabV459();
+    }
     // ZERO454 scientific original physical probe contrast, only after
     // V390/V421/V423 real original brain ready; never on user production.
     void originalV454EnablePairedMotorContrastForQA(){
