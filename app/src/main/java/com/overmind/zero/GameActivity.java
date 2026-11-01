@@ -176,6 +176,15 @@ public final class GameActivity extends Activity {
             throw new IllegalStateException("V442 original GRU3 unavailable");
         lab.brain3.enableCensorUnverifiedDelayedBankUnderDriftLabV442();
     }
+    // ZERO461 physical experiment only: user still controls same GRU3,
+    // original V319 CH2 learned adhesion output remains active; remove only
+    // its stochastic 16-sector perturbations while motor map is measured.
+    void originalV461EnableDeterministicGripForQA(){
+        if(lab==null||lab.brain3==null||
+            !lab.brain3.realPhysicalMotorContextV412())
+            throw new IllegalStateException("V461 original sole GRU3 unavailable");
+        lab.brain3.enableDeterministicGripPhysicalEvidenceLabV461();
+    }
     void originalV432EnableSignedRearDeliveredProbeForQA(){
         if(lab==null||lab.brain3==null||
            !lab.brain3.realPhysicalMotorContextV412())
