@@ -425,6 +425,7 @@ final class Zero3OriginalBrainV356 {
             java.util.Arrays.toString(intentSectorsV361));
     }
     String optionCoverageForQAV405(){return brain.optionCoverageForQA();}
+    String choiceStageTraceForQAV451(){return brain.choiceStageTraceForQAV451();}
     String motorEvidenceDiagnosticsV443(){return brain.motorEvidenceDiagnosticsV443();}
     String learnedHarmCandidateDiagnosticsV422(){
         return brain.learnedHarmCoverageDiagnosticsV422();
