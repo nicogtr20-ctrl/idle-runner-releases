@@ -5,7 +5,7 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import static org.junit.Assert.*;
 
-/** Controlled eligibility checks only; original 2x10k determines competence. */
+/** Controlled eligibility checks only; V459 additionally rejects passive PRE coast.\n * Genuine original S21 and wild 2x10k plus regression/CRC gates decide competence. */
 @RunWith(AndroidJUnit4.class)
 public final class Zero458V371MeasuredForwardEvidenceAndroidTest {
     private static final float[] EAST={1f,0f,0f,0f,0f};
