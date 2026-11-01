@@ -49,3 +49,6 @@ Actual `Zero3OriginalBrainV356.sense`: coarse 16/17 use measured bodyVel /10 aft
 3. If proceeding with V442, change only the V434 observational-bank fallback eligibility under unsupported measured drift, add Android unit tests for PRE drift/low speed/heldout V377, and run **both original 10k Android lives** plus full regressions and original S21 CRC on one source SHA. Do not claim approval unless every user gate passes.
 
 **Current status: ZERO 3.0 NOT APPROVABLE. No APK, OTA, stable merge, or modifications to original brain, body, checkpoints or 12 saved profiles.**
+
+## QA workflow correction verified on unchanged V441 behavior
+The audit branch corrected only the stale YAML assertion from 3 to 5 optical tests and included the audit branch in the workflow's push filter. New [Android regression run 41266183060](https://github.com/nicogtr20-ctrl/idle-runner-releases/actions/runs/41266183060) on commit `13b2733fc1a18e921b53bc3744a288ccdd02608d` completed **SUCCESS** on 2026-11-01 02:43 UTC. This does **not** retroactively change the failed conclusion of original V441 run 41262684185, but verifies the unchanged V441 runtime source against the corrected 23-suite Android test harness. S21 original retry attempt 2 remains a separate run on unchanged behavioral commit `ca3f7f8` and must be read before declaring a full S21 outcome.
