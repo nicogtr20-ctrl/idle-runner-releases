@@ -176,6 +176,8 @@ public final class GameActivity extends Activity {
             throw new IllegalStateException("V442 original GRU3 unavailable");
         lab.brain3.enableCensorUnverifiedDelayedBankUnderDriftLabV442();
     }
+    // V461 final same-SHA Android 2x10000 physical GRU3, original S21 CRC,
+    // and all GRU/motor/CH2 adhesion regressions after completed experiment.
     // ZERO461 physical experiment only: user still controls same GRU3,
     // original V319 CH2 learned adhesion output remains active; remove only
     // its stochastic 16-sector perturbations while motor map is measured.
