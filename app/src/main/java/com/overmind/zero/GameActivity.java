@@ -217,6 +217,8 @@ public final class GameActivity extends Activity {
     // Only the original Android test opt-in differs; V454 production code unchanged.
     // ZERO454 final matched 2x10000/CRC/regression source marker. This changes
     // no gameplay or save data; four workflows must share this exact SHA.
+    // ZERO459 COMPLETE-SOURCE SHA synchronization marker for all four
+    // original Android tests; documentation/AGENTS and 4 cases committed.
     // ZERO459 QA-only: physically separate low-inertia training and
     // HELDOUT responses from inherited coast-correlated V371 motor bins.
     void originalV459EnableLowPreMotorEvidenceForQA(){
