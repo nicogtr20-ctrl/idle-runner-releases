@@ -213,6 +213,14 @@ public final class GameActivity extends Activity {
             throw new IllegalStateException("ZERO423 original S21 unavailable");
         lab.brain3.enableImmediateOwnDecisionCreditLabV423();
     }
+    // ZERO454 scientific original physical probe contrast, only after
+    // V390/V421/V423 real original brain ready; never on user production.
+    void originalV454EnablePairedMotorContrastForQA(){
+        if(lab==null||lab.brain3==null||
+           !lab.brain3.realPhysicalMotorContextV412())
+            throw new IllegalStateException("ZERO454 original body unavailable");
+        lab.brain3.enableOriginalPairedMotorContrastLabV454();
+    }
     // ZERO425 research-only: no radial or saturated phantom actor heading
     // gradient, no new direction, reward, actuator or saved parameter.
     void originalV425EnableTangentActorCreditForQA(){
