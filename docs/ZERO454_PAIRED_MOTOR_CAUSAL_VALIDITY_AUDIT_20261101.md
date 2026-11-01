@@ -31,3 +31,48 @@ The original V417 local credit used whole-decision PRE→POST COM acceleration a
 - Hard acceptance: original S21 >=10,000 decisions, >=25% signed/gross, >=9/10 windows >=10%, **zero** inverse windows, >=5 new blues; wild >=10,000 original decisions, late 5000 red < early 5000, red <=2*blue; regressions AND CRC PASS. Until then **NO APK/OTA/stable merge**.
 
 This audit modifies only this Markdown document on its own branch; it does not interrupt or modify the running V454 experimental branch.
+
+
+## Verified actual V453 and V454 original Android evidence — update 2026-11-01
+These are **real completed** GitHub Actions job logs, not merely workflow definitions. V453 exact source `e5f204713cc8d22039b7e3163709f11c026d15ef`: [S21 41312000716](https://github.com/nicogtr20-ctrl/idle-runner-releases/actions/runs/41312000716) FAIL, [wild 41312000652](https://github.com/nicogtr20-ctrl/idle-runner-releases/actions/runs/41312000652) FAIL, [regressions 41312000708](https://github.com/nicogtr20-ctrl/idle-runner-releases/actions/runs/41312000708) PASS, [CRC 41312000667](https://github.com/nicogtr20-ctrl/idle-runner-releases/actions/runs/41312000667) PASS. V454 exact source `e12b1160d71ae342555b3a659953c9cad152012d`: [S21 41316640363](https://github.com/nicogtr20-ctrl/idle-runner-releases/actions/runs/41316640363) FAIL, [wild 41316640365](https://github.com/nicogtr20-ctrl/idle-runner-releases/actions/runs/41316640365) FAIL, [regressions 41316640379](https://github.com/nicogtr20-ctrl/idle-runner-releases/actions/runs/41316640379) PASS, [CRC 41316640390](https://github.com/nicogtr20-ctrl/idle-runner-releases/actions/runs/41316640390) PASS.
+
+| Original 10k metric | V453 | V454 ABBA ON |
+|---|---:|---:|
+| S21 additional decisions | 10,002 | 10,001 |
+| S21 signed/gross | 570.09987 / 3163.54081 = **18.0209%** | 233.90274 / 2754.14043 = **8.4928%** |
+| S21 windows >=10% | 8/10 | **6/10** |
+| S21 inverse windows | 1 (4) | **3 (4,7,9)** |
+| S21 actual new blues | 4 | 4 |
+| S21 local synaptic updates | 3,084 | **1,079** |
+| Wild original decisions | 10,005 | 10,003 |
+| Wild signed/gross | 1609.67424 / 4774.47470 = **33.7142%** | 59.95076 / 3724.88821 = **1.6095%** |
+| Wild red first 5k / last 5k | 37 / 13 | **39 / 19** |
+| Wild total red / blue | 50 / 5 (10×) | **58 / 4 (14.5×)** |
+| Wild local synaptic updates | 5,441 | 5,904 |
+| Wild V377 verified motor banks | 1 | **0** |
+| Wild V371 motor score predictions / evaluations | 16,004 / 408,448 | **72 / 416,795** |
+| Regressions / exact S21 V356 CRC | PASS / PASS | PASS / PASS |
+| Behavioral approval | FAIL / FAIL | **FAIL / FAIL** |
+
+### All genuine 1000-decision windows (percent signed/gross, with actual wild red/blue)
+| Window | V453 S21 % | V454 S21 % | V453 wild % | V454 wild % | V454 wild red | V454 wild blue |
+|---|---:|---:|---:|---:|---:|---:|
+| 1 | 26.3334 | 15.8067 | 13.9826 | 15.3822 | 0 | 3 |
+| 2 | 14.0010 | 3.8265 | 28.7190 | 9.5359 | 7 | 1 |
+| 3 | 30.3145 | 32.4445 | 21.4100 | -5.0501 | 11 | 0 |
+| 4 | -3.3456 | -27.6357 | 36.2624 | -8.1023 | 11 | 0 |
+| 5 | 28.7760 | 43.8569 | 30.3265 | -5.6621 | 10 | 0 |
+| 6 | 23.7534 | 28.9630 | 36.4147 | -0.2888 | 9 | 0 |
+| 7 | 16.1861 | -0.8135 | 41.3263 | -4.5292 | 10 | 0 |
+| 8 | 31.7120 | 39.2471 | 41.7531 | 2.3493 | 0 | 0 |
+| 9 | 3.6694 | -20.0688 | 40.6212 | 10.9750 | 0 | 0 |
+| 10 | 25.2321 | 15.5249 | 39.4772 | 3.2078 | 0 | 0 |
+
+V454 S21 real physical static movement per window: `545,312,927,678,618,868,419,754,624,632`; opposed: `54,239,2,213,19,1,210,1,216,15`. Its original V319/170-material solver continues, but three windows move in the inverse direction. Wild physical RED logs contain 58 genuine `sign=HARM` events: **56/58** already have momentum toward the object, **23/58** issue intention >0.3 toward it, **58/58** report `learnedVisible=true` (which only means some visible learned wavelength, not proven correct classification of the specific red). S21's cumulative 90 reds are inherited, not 90 new contacts.
+
+V454 physical credit counters from genuine logs: S21 `pairedMotorContrastLabV454=true, validPairedCreditDecisionsV454=1079, rejectedPairedCreditDecisionsV454=8640`; wild `pairedMotorContrastLabV454=true, validPairedCreditDecisionsV454=5907, rejectedPairedCreditDecisionsV454=2511`. Wild `v444AcceptedTrain=5941, v444AcceptedHeldout=1498` but `v444ReliableBanks=0`, `verifiedV371Directions=0`, `unsupportedDrift=375212`. This supports a genuine evidence/control bottleneck. The ABBA arm is markedly worse than V453, but because multiple flags and the motor duty cycle differ, the comparison alone cannot prove the ABBA estimator is the sole cause.
+
+### Isolated matched control launched, not yet approved
+New independent experimental branch `lab/zero455-v454-matched-off-control`, exact CI source commit [e103225daf0320f88f3849a1de6c61c241402c6b](https://github.com/nicogtr20-ctrl/idle-runner-releases/commit/e103225daf0320f88f3849a1de6c61c241402c6b). It copies the same V454 source, tests, 194D GRU3, original physical solver, and all other research opt-ins, but removes **only the two Android original 10k test calls** that enable V454 ABBA. Four workflows were triggered on that same SHA: [S21 41320023593](https://github.com/nicogtr20-ctrl/idle-runner-releases/actions/runs/41320023593), [wild 41320023629](https://github.com/nicogtr20-ctrl/idle-runner-releases/actions/runs/41320023629), [regressions 41320023591](https://github.com/nicogtr20-ctrl/idle-runner-releases/actions/runs/41320023591), [CRC 41320023578](https://github.com/nicogtr20-ctrl/idle-runner-releases/actions/runs/41320023578). At first check S21/wild/regression PENDING and CRC IN_PROGRESS; **no V455 result is claimed**. This control isolates the combined V454 pulse-schedule+credit-target effect, not the estimator independent of duty cycle.
+
+**Disposition:** V454 rejected for behavioral approval; V455 control pending. No APK, OTA, merge, hardcoded motor heading, fake reward or changes to the original 33,312 S21 brain, V356 CRC, 512 synapses, V319 CH2, 194 sensors or 12 slots.
