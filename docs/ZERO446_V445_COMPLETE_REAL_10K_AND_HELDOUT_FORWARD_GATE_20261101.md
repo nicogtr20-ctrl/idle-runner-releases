@@ -49,4 +49,10 @@ The V377 trust gate currently treats *large residual error variance* as proof of
 New Android `Zero446HeldoutForwardAuthorityAndroidTest` checks mathematically that low-coast but independently confirmed forward control becomes eligible, that negative forward braking is never mislabeled as steering, and that heldout disagreement blocks prediction. **These unit tests are not behavioral approval**. Mandatory 4 independent original Android workflows on a single V446 source commit: exact 33312 S21 >=10000 (>=25%, 9/10 >=10%, zero inverse, >=5 new blue), wild original >=10000 (>=12%, red latter 5000 < first, total red <=2× blue), regressions including V446 unit, and V356/512-weight CRC. Preserve original body, 12 saves, CH2 V319, no V2.2, no APK/OTA or stable merge if any fail.
 
 ## V446 results
-PENDING original GitHub Actions. Record exact IDs, source SHA, ten windows, 5k red rates, bank trust and original regression/CRC only after actual completion. No approval presumed.
+All four ORIGINAL Android jobs have started on **exact same behavioral commit** `64f8c551d829b25f0f49ebf6ebfb8c48876d927c` (2026-11-01). Their status is pending until logs complete:
+- [S21 original 10k 41279152306](https://github.com/nicogtr20-ctrl/idle-runner-releases/actions/runs/41279152306)
+- [Wild original 10k 41279152222](https://github.com/nicogtr20-ctrl/idle-runner-releases/actions/runs/41279152222)
+- [Android regressions including V446 three causal tests 41279152213](https://github.com/nicogtr20-ctrl/idle-runner-releases/actions/runs/41279152213)
+- [Exact original 33312/512 V356 CRC 41279152258](https://github.com/nicogtr20-ctrl/idle-runner-releases/actions/runs/41279152258)
+
+The branch diff versus V445 changes ONLY V377 trust interpretation, a dedicated regression, these four workflow branch selectors/test inclusion and this report. No changed GRU3 194D sensor, physics, CH2 V319, original saved weights/12 slots. Do not confuse a future PASS regression with behavioral approval. At creation, two jobs were in progress, one queued, all four on the same SHA. Await real original Android >=10k results before any decision.
