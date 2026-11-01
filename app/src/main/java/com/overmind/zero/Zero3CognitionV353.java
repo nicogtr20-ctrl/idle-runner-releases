@@ -197,6 +197,25 @@ public final class Zero3CognitionV353 {
     boolean motorExplorationReadyV383(float[] sensed194){
         return instrumental.wideMotorExplorationSupportedV383(sensed194);
     }
+    // V452 diagnostic only: actual components already evaluated by the live V353
+    // selector, retained transiently for later real-contact forensics.
+    // This is NOT a new decision, score, direction, reward or serialized field.
+    private float[][] v452ScoreParts=new float[0][];
+    private int v452BestOpticalIndex,v452BestTotalIndex,v452CognitionIndex;
+    String choiceScoreComponentsV452(){
+        if(v452ScoreParts.length==0)return "v452|unavailable";
+        float[] chosen=v452ScoreParts[v452CognitionIndex];
+        float[] optical=v452ScoreParts[v452BestOpticalIndex];
+        return "v452|bestOptIndex="+v452BestOpticalIndex+
+            "|bestTotalIndex="+v452BestTotalIndex+
+            "|chosenIndex="+v452CognitionIndex+
+            "|chosenRawOpt="+chosen[0]+"|bestRawOpt="+optical[0]+
+            "|chosenMotor="+chosen[1]+"|bestMotor="+optical[1]+
+            "|chosenOptPref="+chosen[2]+"|bestOptPref="+optical[2]+
+            "|chosenEmbodied="+chosen[3]+"|bestEmbodied="+optical[3]+
+            "|chosenPrediction="+chosen[4]+"|bestPrediction="+optical[4]+
+            "|chosenTotal="+chosen[5]+"|bestTotal="+optical[5];
+    }
     int select(float[] observation,float[][] proposals){
         // A trusted one-step model is ONE source of evidence. The original
         // controller also demanded REAL, independently heldout movement
@@ -208,15 +227,23 @@ public final class Zero3CognitionV353 {
             conservativeCostMarginV366(error[2],validations-reliabilityValidations):0f;
         boolean canPredict=reliableEnergy&&(costTrusted||Float.isFinite(costSafety));
         int best=0;float bestScore=-Float.MAX_VALUE,original=Float.NaN;
+        float[][] v452Parts=new float[proposals.length][6];
+        int v452BestOpt=0;float v452BestRaw=-Float.MAX_VALUE;
         for(int i=0;i<proposals.length;i++){
             float movementScore=instrumental.score(observation,proposals[i],contactValence);
             // V374: actual material injury is already learned in V369,
             // so it must affect selection even for headings that have not
             // accumulated enough clean motor trials to pass V371's gait
             // confidence threshold. V371 verified motion adds evidence.
-            float score=movementScore+
-                instrumental.opticalPreferenceV374(observation,proposals[i],contactValence)+
-                (embodiedV384==null?0f:embodiedV384.learnedCost(proposals[i][0],proposals[i][1]));
+            float opticalPreference=instrumental.opticalPreferenceV374(
+                observation,proposals[i],contactValence);
+            float embodiedCost=embodiedV384==null?0f:
+                embodiedV384.learnedCost(proposals[i][0],proposals[i][1]);
+            float score=movementScore+opticalPreference+embodiedCost;
+            float rawOptical=contactValence.utility(
+                observation,proposals[i][0],proposals[i][1]);
+            if(rawOptical>v452BestRaw){v452BestRaw=rawOptical;v452BestOpt=i;}
+            float predictionContribution=0f;
             if(canPredict){
                 float[][] p=champion.predict(input(observation,proposals[i]),false,null);
                 // The V382 cost predictor may have MSE >2000x its own
@@ -230,8 +257,12 @@ public final class Zero3CognitionV353 {
                 for(int e=0;e<ENSEMBLE;e++)for(int h=0;h<heads;h++){
                     float delta=p[e][h]-mean(p,h);uncertainty+=delta*delta;
                 }
-                score+=energy-damage-cost-2*(float)Math.sqrt(uncertainty/(3f*heads));
+                predictionContribution=energy-damage-cost-
+                    2*(float)Math.sqrt(uncertainty/(3f*heads));
+                score+=predictionContribution;
             }
+            v452Parts[i]=new float[]{rawOptical,movementScore,opticalPreference,
+                embodiedCost,predictionContribution,score};
             if(i==0)original=score;
             if(score>bestScore){bestScore=score;best=i;}
         }
@@ -244,9 +275,17 @@ public final class Zero3CognitionV353 {
         // while the action-to-body mapping is still uncertain.
         boolean materialValenceObserved=contactValence.hasReliableVisibleEvidence(observation);
         float margin=materialValenceObserved?.005f:.025f;
-        if(!canPredict)return bestScore>original+margin?best:0;
-        plannerUses++;
-        return bestScore>original+Math.max(margin,costSafety)?best:0;
+        int chosen;
+        if(!canPredict)chosen=bestScore>original+margin?best:0;
+        else{
+            plannerUses++;
+            chosen=bestScore>original+Math.max(margin,costSafety)?best:0;
+        }
+        v452ScoreParts=v452Parts;
+        v452BestOpticalIndex=v452BestOpt;
+        v452BestTotalIndex=best;
+        v452CognitionIndex=chosen;
+        return chosen;
     }
     float instrumentalScoreV371(float[] observation,float[] action){
         return instrumental.score(observation,action,contactValence);
