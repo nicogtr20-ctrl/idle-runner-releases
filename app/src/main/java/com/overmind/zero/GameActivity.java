@@ -1,4 +1,5 @@
 package com.overmind.zero;
+// ZERO453 exact-commit original Android four-gate trigger: forensic-only V353 score telemetry; no gameplay changes.
 
 import android.app.Activity;
 import android.os.Bundle;
