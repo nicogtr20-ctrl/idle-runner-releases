@@ -16,5 +16,35 @@ Reviewed AGENTS.md and original docs ZERO419, ZERO420, ZERO421, ZERO422, ZERO423
 ## Single V448 change, no altered motor or reward
 V448 changes ONLY the existing V319 exception message to include `active`, `hasStep`, `dt`, `steps`, `scale` at the exact failed guard, keeping the same predicate, exception type, fail-closed behavior and training. Four original Android workflows are enabled for this new branch on the same final commit. Do not claim V448 fixes locomotion. After wild reproduces the error, use the actual guard state and adjacent source path to justify **one** behavioral repair on a new branch, with full Android regression, CRC and two independent original 10k tests. If wild completes, apply every strict red/blue gate anyway.
 
+
+## Historical original Android log reconstruction (V421–V423; 12 runs actually verified)
+All 12 runs were checked by job ID and all six behavioral **full job logs** parsed, not inferred from workflow names. S21 redCum=90 is **historical in saved checkpoint**; all six S21 runs had zero newly touched red. Values below are the last complete 1000-window counters (the final test may include 1–3 additional decisions).
+
+| Run | Original decision windows | Signed/gross total | New blue | New red | First 5k red → last 5k red | Local cortex weight updates | Outcome |
+|---|---:|---:|---:|---:|---:|---:|---|
+| V421 S21 41149391000 | 10 | 574.11644 / 3342.83681 = 17.17% | 4 | 0 | n/a | 1918 | FAIL: 8/10 >=10%, two inverse |
+| V421 wild 41149393560 | 10 | 2747.91379 / 4459.19043 = 61.62% | 3 | 87 | 35 → 52 | 5842 | FAIL: reds worsen, 29× blue |
+| V422 S21 41149758090 | 10 | 336.44837 / 2980.70822 = 11.29% | 4 | 0 | n/a | 1851 | FAIL: 7/10 >=10%, two inverse |
+| V422 wild 41149762948 | 10 | 1872.49766 / 4385.50670 = 42.70% | 5 | 52 | 19 → 33 | 4587 | FAIL: reds worsen, 10.4× blue |
+| V423 S21 41149983685 | 10 | 281.40051 / 2799.39399 = 10.05% | 4 | 0 | n/a | 2961 | FAIL: 7/10 >=10%, two inverse |
+| V423 wild 41149987734 | 10 | 1209.85250 / 3892.88175 = 31.08% | 4 | 26 | 14 → 12 | 4712 | FAIL: 6.5× blue despite decreasing late red |
+
+Original S21 signed/gross % per successive 1000-decision window:
+- V421: 16.52, 19.29, 19.88, -15.21, 43.93, 26.74, 12.69, 29.37, -19.79, 38.31; 1160 opposed and 4711 static decisions across windows.
+- V422: 16.61, 16.15, 24.27, -11.79, 30.05, 14.88, 8.79, 25.33, -19.60, 26.32; 1230 opposed and 5404 static.
+- V423: 19.84, 6.49, 16.05, -41.03, 26.50, 15.65, 10.13, 24.81, -10.74, 29.91; 1205 opposed and 5897 static.
+
+Original wild successive 1000-decision red counts / blue counts:
+- V421 red: 0,10,6,9,10,10,10,13,9,10; blue: 3,0,0,0,0,0,0,0,0,0.
+- V422 red: 0,10,9,0,0,6,4,12,10,1; blue: 3,0,0,0,0,0,1,0,0,1.
+- V423 red: 0,0,2,12,0,0,6,0,0,6; blue: 3,0,0,1,0,0,0,0,0,0.
+
+Original wild signed/gross % per successive 1000-decision window:
+- V421: 12.12, 54.15, 60.10, 55.93, 70.17, 72.35, 70.79, 66.01, 73.61, 76.18.
+- V422: 10.85, 45.10, 32.18, 22.77, 38.23, 27.82, 33.08, 68.88, 70.55, 49.03.
+- V423: 11.88, 23.38, 44.35, 57.44, 4.94, 39.51, 31.98, 15.61, 43.21, 32.58.
+
+These logs establish that more cortex updates or better gross travel alone are NOT proof of avoidance or competent steering. They do not expose every per-weight signed gradient; no gradient distribution has been invented. Physical S21 static/opposed counters and actual wild harm/blue contact counters are separately reported rather than conflated. All historical regression/CRC jobs PASS; behavioral gates fail.
+
 ## Non-negotiable gates
 Original S21 33312 prior decisions, 512 weights, V356 CRC, V319 CH2, 194 sensory inputs, original 170-material body and 12 slots remain untouched. No V2.2, fixed steering, fabricated reward, saved-weight edits. Release requires original S21 >=10000 real new decisions, >=25% signed/gross, 9/10 windows >=10%, zero inverse, >=5 new blue; original wild >=10000, >=12%, last 5000 red < first 5000, red <=2x blue, plus regressions and CRC PASS. **NOT APPROVED.**
