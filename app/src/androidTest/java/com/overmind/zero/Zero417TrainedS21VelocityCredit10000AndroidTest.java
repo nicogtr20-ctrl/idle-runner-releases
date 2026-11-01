@@ -203,6 +203,10 @@ public final class Zero417TrainedS21VelocityCredit10000AndroidTest {
                 // for the SAME decision's V423 measured COM-gradient update.
                 original.originalV421EnableDeliveredLocalProbeForQA();
                 original.originalV423EnableImmediateOwnMotorCreditForQA();
+                // ZERO454 only new scientific motor change versus V453:
+                // original real V390 muscle pulses ON/OFF/OFF/ON and learns
+                // signed physical COM acceleration contrast in SAME action.
+                original.originalV454EnablePairedMotorContrastForQA();
                 // ZERO425: one new high-level actor gradient eligibility
                 // correction; original 10k gates and physical world unchanged.
                 original.originalV425EnableTangentActorCreditForQA();
