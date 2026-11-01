@@ -1497,8 +1497,13 @@ public final class GameActivity extends Activity {
                         if(prior==null){prior=new float[2];materialBefore.put(e,prior);}
                         prior[0]=e.x;prior[1]=e.y;
                     }
-                    int lifeStamp=episode;
+                    // V450: world streaming in updateHabitat() increments episode
+                    // without reincarnating ZERO. Snapshot AFTER that streaming,
+                    // so this frame's real V319 PRE is always paired with its
+                    // real POST; only an actual death inside resolveObjects()
+                    // may change the generation before terminal observation.
                     updateHabitat(slice);
+                    int lifeStamp=episode;
                     // ACTION is sampled from learned sensory-action
                     // values. There is no atan2(food), target teleport or
                     // fixed rule that pulling an opened gate is "correct".
