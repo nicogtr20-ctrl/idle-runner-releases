@@ -133,6 +133,10 @@ public final class Zero417WildOriginalVelocityCredit10000AndroidTest {
                 // for the SAME decision's V423 measured COM-gradient update.
                 original.originalV421EnableDeliveredLocalProbeForQA();
                 original.originalV423EnableImmediateOwnMotorCreditForQA();
+                // ZERO454 only new scientific motor change versus V453:
+                // original real V390 muscle pulses ON/OFF/OFF/ON and learns
+                // signed physical COM acceleration contrast in SAME action.
+                original.originalV454EnablePairedMotorContrastForQA();
                 original.originalV425EnableTangentActorCreditForQA();
                 assertTrue("V425 wild original GRU3 actor flag",
                     original.originalV425TangentActorCreditEnabledForQA());
