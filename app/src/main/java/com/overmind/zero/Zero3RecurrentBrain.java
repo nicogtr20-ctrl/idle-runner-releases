@@ -51,6 +51,11 @@ public final class Zero3RecurrentBrain {
         if(pending)throw new IllegalStateException("ZERO422 choice pending");
         learnedHarmCandidateCoverageLabV422=true;
     }
+    void enableLowPreMomentumEvidenceLabV459(){
+        if(pending||cognition==null)
+            throw new IllegalStateException("V459 original choice pending");
+        cognition.enableLowPreMomentumEvidenceLabV459();
+    }
     String motorEvidenceDiagnosticsV443(){return cognition==null?"no-cognition":cognition.motorEvidenceDiagnosticsV443();}
     String learnedHarmCoverageDiagnosticsV422(){
         return "v422|enabled="+learnedHarmCandidateCoverageLabV422+
