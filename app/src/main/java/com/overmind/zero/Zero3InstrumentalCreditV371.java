@@ -161,19 +161,26 @@ final class Zero3InstrumentalCreditV371 {
             // This is a measured displacement, NOT an authored motion target.
             float scale=.30f/seconds;
             float mx=limit(dx*scale,-120,120),my=limit(dy*scale,-120,120);
+            // V459: the V371 actuator-response bank must not treat passive
+            // PRE momentum as an effect of the current neural motor command.
+            // The total measured travel remains available to the separate
+            // contact/history and stall ledgers below. Only TRAIN/HELDOUT
+            // motor-response estimation uses the PRE-coast residual.
+            float activeMx=limit(mx-.30f*pendingPreVxV435,-120,120);
+            float activeMy=limit(my-.30f*pendingPreVyV435,-120,120);
             int bank=pendingBank;
             if(heldout){
                 validated[bank]++;
-                double e=(mx-learnedX[bank])*(mx-learnedX[bank])+
-                         (my-learnedY[bank])*(my-learnedY[bank]);
-                double zero=mx*mx+my*my;
+                double e=(activeMx-learnedX[bank])*(activeMx-learnedX[bank])+
+                         (activeMy-learnedY[bank])*(activeMy-learnedY[bank]);
+                double zero=activeMx*activeMx+activeMy*activeMy;
                 float alpha=validated[bank]==1?1f:.1f;
                 error[bank]+=alpha*(e-error[bank]);
                 baseline[bank]+=alpha*(zero-baseline[bank]);
             }else{
                 float alpha=trained[bank]==0?1f:.10f;
-                learnedX[bank]+=alpha*(mx-learnedX[bank]);
-                learnedY[bank]+=alpha*(my-learnedY[bank]);
+                learnedX[bank]+=alpha*(activeMx-learnedX[bank]);
+                learnedY[bank]+=alpha*(activeMy-learnedY[bank]);
                 trained[bank]++;
                 int slot=history%TRACE;
                 // V435: only assign a past approach to its issued bank when
