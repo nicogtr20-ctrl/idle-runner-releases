@@ -22,6 +22,21 @@ public final class Zero458V371MeasuredForwardEvidenceAndroidTest {
         assertTrue(m.motorVerified(0));
         assertEquals(1,m.verifiedDirections());
     }
+    @Test public void passiveCoastMustNotBecomeCertifiedMotorAuthority(){
+        Zero3InstrumentalCreditV371 m=new Zero3InstrumentalCreditV371();
+        for(int i=0;i<16;i++){
+            float[] pre=new float[194];
+            pre[193]=1f;
+            // 2 units/s PRE east, .30 seconds, .60 measured east:
+            // all of the observed displacement is passive PRE momentum.
+            pre[191]=2f/130f;
+            boolean heldout=i>=8;
+            m.begin(pre,EAST,heldout);
+            m.complete(.60f,0f,.30f,true,heldout);
+        }
+        assertFalse(m.motorVerified(0));
+        assertEquals(0,m.verifiedDirections());
+    }
     @Test public void lowForwardMotionIsNotMotorAuthority(){
         Zero3InstrumentalCreditV371 m=new Zero3InstrumentalCreditV371();
         for(int i=0;i<8;i++)sample(m,.12f,false);
