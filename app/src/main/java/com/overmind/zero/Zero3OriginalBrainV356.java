@@ -1,4 +1,6 @@
 package com.overmind.zero;
+// ZERO462 scientific Android gates: no original GRU3/checkpoint behavior change here.
+// Only the isolated V319 CH2 no-probe positive-credit correction is under test.
 
 import android.content.Context;
 import android.util.Base64;
