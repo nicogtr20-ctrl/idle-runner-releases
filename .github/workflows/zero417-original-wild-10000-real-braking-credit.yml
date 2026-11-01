@@ -47,3 +47,5 @@ jobs:
           name: ZERO414-ORIGINAL-GRU3-10000-STRICT-RED-SAFETY
           path: ${{ runner.temp }}/ZERO417_ORIGINAL_WILD_10000*.txt
           if-no-files-found: warn
+
+# V443 final original Android four-gate SHA: diagnostic-only score eligibility.

@@ -68,3 +68,5 @@ jobs:
           name: ZERO417-ORIGINAL-33312-BRAIN-MOTOR-LEARNING-CHECKPOINT-SAFETY
           path: ${{ runner.temp }}/ZERO417_S21_REAL_V356_CRC*.txt
           if-no-files-found: warn
+
+# V443 final original Android four-gate SHA: diagnostic-only score eligibility.

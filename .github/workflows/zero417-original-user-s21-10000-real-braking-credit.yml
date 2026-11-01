@@ -71,3 +71,5 @@ jobs:
           name: ZERO414-ORIGINAL-S21-10000-REAR-WALL-LEARNING
           path: ${{ runner.temp }}/ZERO417_USER_S21_REAR_10000*.txt
           if-no-files-found: warn
+
+# V443 final original Android four-gate SHA: diagnostic-only score eligibility.
