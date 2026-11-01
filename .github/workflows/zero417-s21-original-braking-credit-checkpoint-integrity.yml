@@ -7,6 +7,8 @@ on:
       - 'app/src/main/java/com/overmind/zero/Zero3OriginalBrainV356.java'
       - 'app/src/androidTest/java/com/overmind/zero/Zero417SavedRealBrainBrakingCreditIntegrityAndroidTest.java'
       - 'app/src/main/java/com/overmind/zero/GameActivity.java'
+      - 'app/src/main/java/com/overmind/zero/Zero3InstrumentalCreditV371.java'
+      - 'app/src/androidTest/java/com/overmind/zero/Zero458V371MeasuredForwardEvidenceAndroidTest.java'
       - '.github/workflows/zero417-s21-original-braking-credit-checkpoint-integrity.yml'
   workflow_dispatch:
 permissions: {contents: read}
