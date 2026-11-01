@@ -213,6 +213,8 @@ public final class GameActivity extends Activity {
             throw new IllegalStateException("ZERO423 original S21 unavailable");
         lab.brain3.enableImmediateOwnDecisionCreditLabV423();
     }
+    // ZERO454 final matched 2x10000/CRC/regression source marker. This changes
+    // no gameplay or save data; four workflows must share this exact SHA.
     // ZERO454 scientific original physical probe contrast, only after
     // V390/V421/V423 real original brain ready; never on user production.
     void originalV454EnablePairedMotorContrastForQA(){
