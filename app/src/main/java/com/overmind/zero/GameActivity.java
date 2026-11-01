@@ -197,6 +197,9 @@ public final class GameActivity extends Activity {
             throw new IllegalStateException("ZERO422 original GRU3 not ready");
         lab.brain3.enableLearnedHarmCandidateCoverageLabV422();
     }
+    String originalV443MotorEvidenceDiagnosticsForQA(){
+        return lab==null||lab.brain3==null?"no-original-brain":lab.brain3.motorEvidenceDiagnosticsV443();
+    }
     String originalV422LearnedHarmCandidateDiagnosticsForQA(){
         return lab==null||lab.brain3==null?"":
             lab.brain3.learnedHarmCandidateDiagnosticsV422();
