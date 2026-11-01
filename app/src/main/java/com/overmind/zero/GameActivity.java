@@ -213,6 +213,8 @@ public final class GameActivity extends Activity {
             throw new IllegalStateException("ZERO423 original S21 unavailable");
         lab.brain3.enableImmediateOwnDecisionCreditLabV423();
     }
+    // ZERO455 matched ABBA-OFF 2x10000/CRC/regression final CI source marker.
+    // Only the original Android test opt-in differs; V454 production code unchanged.
     // ZERO454 final matched 2x10000/CRC/regression source marker. This changes
     // no gameplay or save data; four workflows must share this exact SHA.
     // ZERO454 scientific original physical probe contrast, only after
