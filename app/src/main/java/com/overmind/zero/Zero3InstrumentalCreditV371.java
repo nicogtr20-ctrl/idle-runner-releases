@@ -294,7 +294,17 @@ final class Zero3InstrumentalCreditV371 {
     /** Trust motor direction only if its OUT-OF-TRAIN physical displacement
      * estimate beats zero motion, with enough evidence. */
     boolean motorVerified(int bank){
-        return trained[bank]>=4&&validated[bank]>=3&&baseline[bank]>1.0&&
+        // V458 isolated experiment: V457 heldout zero-motion baselines are
+        // all <1.0 in both original 10k runs; the absolute squared-unit
+        // floor therefore rejected every real V371 motor bank.
+        // At low PRE drift (<.35 units/s), .30s passive travel is <.105.
+        // Require >2x that forward displacement, independent heldout
+        // prediction gain, and original TRAIN/HELDOUT minimum counts.
+        // Not proof of causal propulsion: V377 remains the inertial guard.
+        double angle=bank*Math.PI/4d;
+        double forward=learnedX[bank]*Math.cos(angle)+learnedY[bank]*Math.sin(angle);
+        return trained[bank]>=4&&validated[bank]>=3&&
+            baseline[bank]>0d&&forward>.21d&&
             error[bank]<baseline[bank]*.90;
     }
     /** V374: once this body's REAL response for an intended heading has
