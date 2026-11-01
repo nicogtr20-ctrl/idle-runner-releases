@@ -45,3 +45,12 @@ Push to isolated V452 branch triggers the exact original 10k S21, original 10k w
 
 ### Hard acceptance
 S21 saved original >=10,000 real decisions, >=25% signed/gross, >=9/10 windows >=10%, zero inverse windows, >=5 new blue. Wild original >=10,000 real decisions, red last 5000 strictly less than first 5000, total red <=2*blue. Original Android regressions and 33312/512 V356 CRC both PASS. Preserve CH2 V319, 194 sensors, 170-material original body, all 12 user save slots; never enable V2.2 or authored headings.
+
+## Exact-commit V452 Android runs (pending; not PASS)
+The four *same-commit* original workflows were actually dispatched by push on `e302fd71d92ff8329f7d294d1c7759462405a595` (an additional comment-only V356 edit to trigger the original CRC workflow, with no code behavior change):
+- [S21 original 10000 — 41307947006](https://github.com/nicogtr20-ctrl/idle-runner-releases/actions/runs/41307947006)
+- [Wild original 10000 — 41307947019](https://github.com/nicogtr20-ctrl/idle-runner-releases/actions/runs/41307947019)
+- [Android regressions — 41307946994](https://github.com/nicogtr20-ctrl/idle-runner-releases/actions/runs/41307946994)
+- [Original S21 V356 CRC — 41307946992](https://github.com/nicogtr20-ctrl/idle-runner-releases/actions/runs/41307946992)
+
+Earlier branch-edit pushes produced superseded runs at different commit SHAs; **do not use those** to approve V452. At the last status check these four exact-commit runs were pending/in progress. Their actual 10k outcomes remain unknown. No behavioral repair is claimed.
