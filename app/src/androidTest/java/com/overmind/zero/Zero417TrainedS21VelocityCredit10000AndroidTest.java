@@ -217,6 +217,9 @@ public final class Zero417TrainedS21VelocityCredit10000AndroidTest {
                 original.originalV433EnableStrictInertialOpticalEvidenceForQA();
                 original.originalV434EnableObservedDelayedContactForQA();
                 original.originalV435EnableAcceleratedDelayedContactForQA();
+                // V442 sole behavioral change versus V441: do not treat
+                // historical bank association as a verified new motor action.
+                original.originalV442EnableCensorUnverifiedDelayedBankUnderDriftForQA();
                 // V436: only new behavioral variable versus V435. Wider actor-sampled
                 // choices require genuine previously learned, currently visible harm.
                 original.originalV422EnableLearnedHarmCandidatesForQA();
