@@ -148,6 +148,11 @@ final class Zero3OriginalBrainV356 {
         if(pending)throw new IllegalStateException("V435 original brain decision pending");
         brain.enableAcceleratedDelayedContactEvidenceLabV435();
     }
+    // V442 isolated Android QA; never persisted.
+    void enableCensorUnverifiedDelayedBankUnderDriftLabV442(){
+        if(pending)throw new IllegalStateException("V442 original decision pending");
+        brain.enableCensorUnverifiedDelayedBankUnderDriftLabV442();
+    }
     private boolean safeMotorMapEvidenceLabV420;
     private long v420AcceptedRealMotorMap, v420ExcludedWall,
                  v420ExcludedHarm, v420ExcludedOther;
