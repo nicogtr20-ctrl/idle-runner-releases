@@ -202,6 +202,11 @@ public final class Zero3CognitionV353 {
     // This is NOT a new decision, score, direction, reward or serialized field.
     private float[][] v452ScoreParts=new float[0][];
     private int v452BestOpticalIndex,v452BestTotalIndex,v452CognitionIndex;
+    // V453 forensic ONLY: distinguish the best-scoring candidate from the
+    // best-raw-optical candidate, and expose the EXISTING V353 safety gate.
+    private transient float v453BestScore,v453OriginalScore,v453RequiredGain;
+    private transient boolean v453CanPredict,v453MaterialEvidence,v453MarginBlocked;
+    private transient int v453NonzeroOpticalPreferences,v453NonzeroMotorScores;
     String choiceScoreComponentsV452(){
         if(v452ScoreParts.length==0)return "v452|unavailable";
         float[] chosen=v452ScoreParts[v452CognitionIndex];
@@ -214,7 +219,19 @@ public final class Zero3CognitionV353 {
             "|chosenOptPref="+chosen[2]+"|bestOptPref="+optical[2]+
             "|chosenEmbodied="+chosen[3]+"|bestEmbodied="+optical[3]+
             "|chosenPrediction="+chosen[4]+"|bestPrediction="+optical[4]+
-            "|chosenTotal="+chosen[5]+"|bestTotal="+optical[5];
+            "|chosenTotal="+chosen[5]+"|bestTotal="+optical[5]+
+            // V452 bestTotal was the total of the OPTICAL candidate, NOT
+            // the highest-total candidate. V453 disambiguates both values.
+            "|v453|opticalCandidateTotal="+optical[5]+
+            "|bestScoredTotal="+v452ScoreParts[v452BestTotalIndex][5]+
+            "|actorOriginalTotal="+v453OriginalScore+
+            "|bestScoreGain="+(v453BestScore-v453OriginalScore)+
+            "|requiredGain="+v453RequiredGain+
+            "|marginBlocked="+v453MarginBlocked+
+            "|canPredict="+v453CanPredict+
+            "|materialEvidence="+v453MaterialEvidence+
+            "|nonzeroOptPrefCandidates="+v453NonzeroOpticalPreferences+
+            "|nonzeroMotorCandidates="+v453NonzeroMotorScores;
     }
     int select(float[] observation,float[][] proposals){
         // A trusted one-step model is ONE source of evidence. The original
@@ -229,6 +246,7 @@ public final class Zero3CognitionV353 {
         int best=0;float bestScore=-Float.MAX_VALUE,original=Float.NaN;
         float[][] v452Parts=new float[proposals.length][6];
         int v452BestOpt=0;float v452BestRaw=-Float.MAX_VALUE;
+        int v453OpticalNonzero=0,v453MotorNonzero=0;
         for(int i=0;i<proposals.length;i++){
             float movementScore=instrumental.score(observation,proposals[i],contactValence);
             // V374: actual material injury is already learned in V369,
@@ -240,6 +258,8 @@ public final class Zero3CognitionV353 {
             float embodiedCost=embodiedV384==null?0f:
                 embodiedV384.learnedCost(proposals[i][0],proposals[i][1]);
             float score=movementScore+opticalPreference+embodiedCost;
+            if(Math.abs(opticalPreference)>0.000001f)v453OpticalNonzero++;
+            if(Math.abs(movementScore)>0.000001f)v453MotorNonzero++;
             float rawOptical=contactValence.utility(
                 observation,proposals[i][0],proposals[i][1]);
             if(rawOptical>v452BestRaw){v452BestRaw=rawOptical;v452BestOpt=i;}
@@ -285,6 +305,14 @@ public final class Zero3CognitionV353 {
         v452BestOpticalIndex=v452BestOpt;
         v452BestTotalIndex=best;
         v452CognitionIndex=chosen;
+        v453BestScore=bestScore;
+        v453OriginalScore=original;
+        v453RequiredGain=canPredict?Math.max(margin,costSafety):margin;
+        v453CanPredict=canPredict;
+        v453MaterialEvidence=materialValenceObserved;
+        v453MarginBlocked=best!=0&&bestScore>original&&chosen==0;
+        v453NonzeroOpticalPreferences=v453OpticalNonzero;
+        v453NonzeroMotorScores=v453MotorNonzero;
         return chosen;
     }
     float instrumentalScoreV371(float[] observation,float[] action){
