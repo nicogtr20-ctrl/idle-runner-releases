@@ -73,6 +73,16 @@ public final class Zero3LearningFoundation {
         // must use the perturbation actually delivered to physical muscles
         // AFTER tanh, effort gain and saturation. Opt-in only; no saved data.
         private boolean deliveredLocalCreditLabV421;
+        // ZERO454 lab-only: compare actual physical motor probe ON/OFF/OFF/ON.
+        private boolean pairedMotorContrastLabV454;
+        private int lastPhysicalProbePhaseV454=-1;
+        void enablePairedMotorContrastLabV454(){
+            if(pendingDecision||!isolatedMotorCreditV390)
+                throw new IllegalStateException("V454 original V390 boundary required");
+            pairedMotorContrastLabV454=true;
+        }
+        boolean pairedMotorContrastLabV454(){return pairedMotorContrastLabV454;}
+        int lastPhysicalProbePhaseV454(){return lastPhysicalProbePhaseV454;}
         void enableDeliveredLocalCreditLabV421(){
             if(pendingDecision)throw new IllegalStateException("ZERO421 mid-motor decision");
             deliveredLocalCreditLabV421=true;
@@ -421,6 +431,7 @@ public final class Zero3LearningFoundation {
             Arrays.fill(noise,0f);Arrays.fill(accumulated,0f);
             Arrays.fill(deliveredProbeV397,0f);samples=0;
             probing=explore;externalGripOwnerV361=gripExternallyOwned;
+            lastPhysicalProbePhaseV454=-1;
             activeChannel=-1;isolatedSectorV390=-1;lastAcceptedGradientNorm=0f;
             if(intent!=null){
                 float angle=(float)Math.atan2(intent.y,intent.x);
@@ -433,6 +444,7 @@ public final class Zero3LearningFoundation {
             Arrays.fill(noise,0);Arrays.fill(accumulated,0);
             Arrays.fill(deliveredProbeV397,0);samples=0;probing=false;
             activeChannel=-1;isolatedSectorV390=-1;externalGripOwnerV361=false;
+            lastPhysicalProbePhaseV454=-1;
         }
         /**
          * Actual geometry is read every physical substep. OUTPUTS are the
@@ -443,6 +455,10 @@ public final class Zero3LearningFoundation {
             finite(dt,"dt");
             if(dt<=0||dt>.04f)throw new IllegalArgumentException("dt");
             final int per=Morphology.POINTS/SECTORS;
+            int v454Phase=pairedMotorContrastLabV454? samples&3 :0;
+            boolean v454On=!pairedMotorContrastLabV454||
+                Zero454PairedMotorContrast.probeOn(v454Phase);
+            lastPhysicalProbePhaseV454=probing?v454Phase:-1;
             for(int k=0;k<SECTORS;k++){
                 float dx=0,dy=0,rv=0,tv=0,held=0,contact=0,r=0;
                 for(int j=0;j<per;j++){
@@ -520,7 +536,8 @@ public final class Zero3LearningFoundation {
                     float z=0f;
                     for(int f=0;f<INPUTS;f++)z+=weights[at*INPUTS+f]*features[f];
                     // Exploration is an intervention, not a scripted gait.
-                    float learned=(float)Math.tanh(activationGain*(z+noise[at]));
+                    float learned=(float)Math.tanh(activationGain*(z+
+                        (v454On?noise[at]:0f)));
                     // ZERO386: physical voluntary effort MUST have real
                     // actuator authority. Previously effort existed only as
                     // an input feature: even effort=0 could produce full
@@ -534,7 +551,7 @@ public final class Zero3LearningFoundation {
                     output[at]=limit(learned*gain,-1f,1f);
                     if(probing){
                         if((measuredProbeCreditLabV397||
-                            deliveredLocalCreditLabV421)&&noise[at]!=0f){
+                            deliveredLocalCreditLabV421)&&v454On&&noise[at]!=0f){
                             // Compare with THIS command's unperturbed neural
                             // transfer, not a fictional physics replay.
                             // A clipped/saturated muscle with no actual
