@@ -581,7 +581,14 @@ final class Zero3OriginalBrainV356 {
             }
             return out;
         }catch(RuntimeException failure){
-            interrupt();throw new IOException("Scelta neurale 3.0 non valida",failure);
+            // V447 LAB forensic: the old generic wrapper concealed the actual
+            // original GRU3/motor exception in Android 10k runs. Keep the
+            // identical fail-closed behavior and preserve the original cause.
+            StackTraceElement[] trace=failure.getStackTrace();
+            String site=trace.length==0?"unknown":trace[0].toString();
+            String cause=failure.getClass().getSimpleName()+": "+failure.getMessage();
+            interrupt();throw new IOException(
+                "Scelta neurale 3.0 non valida ["+cause+" @ "+site+"]",failure);
         }
     }
     /**
