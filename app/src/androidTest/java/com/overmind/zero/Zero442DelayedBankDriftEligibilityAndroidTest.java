@@ -62,6 +62,18 @@ public final class Zero442DelayedBankDriftEligibilityAndroidTest {
             assertEquals(before,m.score(obs(b,.2f),east(),v),0f);
         }
     }
+    @Test public void v443TelemetryObservesRealCensoredScoreWithoutChangingItsValue(){
+        Zero3InstrumentalCreditV371 m=new Zero3InstrumentalCreditV371();
+        Zero3ContactValenceV369 v=new Zero3ContactValenceV369();
+        enable(m);twoLinks(m,v,1,-7f);
+        m.enableCensorUnverifiedDelayedBankUnderDriftLabV442();
+        assertEquals(0f,m.score(obs(1,1.2f),east(),v),0f);
+        String d=m.motorEvidenceDiagnosticsV443();
+        assertTrue(d,d.contains("censoredNonzeroHistorical=1"));
+        assertTrue(d,d.contains("verifiedV377Banks=0"));
+        assertTrue(d,d.contains("unsupportedDrift=1"));
+        assertTrue(d,d.contains("scoreEvaluations=1"));
+    }
     @Test public void driftingPositiveBankAlsoCensoredWithoutErasingGain(){
         Zero3InstrumentalCreditV371 m=new Zero3InstrumentalCreditV371();
         Zero3ContactValenceV369 v=new Zero3ContactValenceV369();
