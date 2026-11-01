@@ -61,3 +61,12 @@ In `Zero3InstrumentalCreditV371.opticalPreferenceV374` strict V433 rejects the f
 
 ## Diagnostics limits
 The full workflow logs expose 1k windows, PRE hazard velocity, choice heading/optical telemetry, genuine cortex update counts, wall exclusions and actual energy contacts. They do NOT expose a complete paired 64-muscle PRE/POST actuator gradient or all V377 per-bank confidence traces. Those require a future **read-only** instrumentation experiment before asserting which muscle causes each brake. The 12 saved profiles remain untouched by this experimental branch. 
+
+## V441 actual GitHub workflow dispatch verified (same source commit)
+At 2026-11-01 UTC, four push-triggered original Android Actions were found **in progress** on exactly `ca3f7f83051fb8b1dfc1840373aa7742ca63ca80`:
+- [S21 10k 41262684117](https://github.com/nicogtr20-ctrl/idle-runner-releases/actions/runs/41262684117)
+- [Wild 10k 41262684124](https://github.com/nicogtr20-ctrl/idle-runner-releases/actions/runs/41262684124)
+- [Original regressions + V441 tests 41262684185](https://github.com/nicogtr20-ctrl/idle-runner-releases/actions/runs/41262684185)
+- [Exact original 33,312 / 512 V356 CRC 41262684187](https://github.com/nicogtr20-ctrl/idle-runner-releases/actions/runs/41262684187)
+
+These are **started, not passed**. Recheck latest job steps, complete logcat and all 1k buckets after finish; do not merge or publish unless all hard behavioral and integrity gates PASS. The docs-only update after this commit does not change tested source.
