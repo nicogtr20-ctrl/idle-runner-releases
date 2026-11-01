@@ -18,6 +18,35 @@ final class Zero3InstrumentalCreditV371 {
     private final int[] trained=new int[BINS],validated=new int[BINS];
     private final double[] error=new double[BINS],baseline=new double[BINS];
     private Zero3InertialResponseV377 inertia=new Zero3InertialResponseV377();
+    // ZERO459 LAB ONLY: do not call a historical high-momentum displacement
+    // a verified LOW-speed muscle response. Condition train + independent
+    // HELDOUT on actual PRE center speed <0.35 units/s, measured residual
+    // after known PRE inertial continuation; persist nothing to user S21.
+    private boolean lowPreMomentumEvidenceLabV459;
+    private final float[] lowResidualX459=new float[BINS],lowResidualY459=new float[BINS];
+    private final int[] lowTrained459=new int[BINS],lowHeldout459=new int[BINS];
+    private final double[] lowError459=new double[BINS],lowCoast459=new double[BINS];
+    private boolean pendingLowPreV459;
+    private long v459LowTrain,v459LowHeldout,v459HighSkipped,v459CleanRejected;
+    void enableLowPreMomentumEvidenceLabV459(){
+        if(pendingSight!=null||!strictInertialOpticalEvidenceLabV433)
+            throw new IllegalStateException("V459 needs verified physical V433 before choice");
+        lowPreMomentumEvidenceLabV459=true;
+    }
+    boolean lowEvidenceVerifiedV459(int bank){
+        if(bank<0||bank>=BINS)throw new IllegalArgumentException("V459 motor bank");
+        double a=bank*Math.PI/4d;
+        double along=lowResidualX459[bank]*Math.cos(a)+
+            lowResidualY459[bank]*Math.sin(a);
+        return lowTrained459[bank]>=4&&lowHeldout459[bank]>=3&&
+            lowCoast459[bank]>0d&&along>.21d&&
+            lowError459[bank]<lowCoast459[bank]*.90d;
+    }
+    String lowEvidenceDiagnosticsV459(){
+        return "v459|lowTrain="+v459LowTrain+"|lowHeldout="+v459LowHeldout+
+            "|highSkipped="+v459HighSkipped+"|uncleanRejected="+v459CleanRejected+
+            "|verifiedLowDirections="+verifiedDirections();
+    }
     // V433 LAB: without a heldout-validated motor response, high PRE inertia
     // cannot be replaced by the intended heading when estimating optical travel.
     private boolean strictInertialOpticalEvidenceLabV433;
@@ -142,6 +171,7 @@ final class Zero3InstrumentalCreditV371 {
         pendingPreVxV435=observation194[191]*130f;
         pendingPreVyV435=observation194[192]*130f;
         pendingBank=heading(action[0],action[1]);pendingHeldout=heldout;
+        pendingLowPreV459=Math.hypot(pendingPreVxV435,pendingPreVyV435)<.35d;
         inertia.begin(observation194,action,heldout);
     }
     void complete(float dx,float dy,float seconds,boolean clean,boolean heldout){
@@ -155,6 +185,31 @@ final class Zero3InstrumentalCreditV371 {
             throw new IllegalStateException("V371 incomplete physical evidence");
         recentHarmTime=Math.max(0f,recentHarmTime-seconds);
         if(recentHarmTime==0f)recentHarmBand=-1;
+        if(lowPreMomentumEvidenceLabV459){
+            if(!clean)v459CleanRejected++;
+            else if(!pendingLowPreV459)v459HighSkipped++;
+            else{
+                float norm=.30f/seconds;
+                float rx=limit(dx*norm-.30f*pendingPreVxV435,-120f,120f);
+                float ry=limit(dy*norm-.30f*pendingPreVyV435,-120f,120f);
+                int i=pendingBank;
+                if(heldout){
+                    v459LowHeldout++;
+                    if(lowHeldout459[i]<100000000)lowHeldout459[i]++;
+                    double ex=rx-lowResidualX459[i],ey=ry-lowResidualY459[i];
+                    double errorNew=ex*ex+ey*ey,coastNew=rx*rx+ry*ry;
+                    double alpha=lowHeldout459[i]==1?1d:.1d;
+                    lowError459[i]+=alpha*(errorNew-lowError459[i]);
+                    lowCoast459[i]+=alpha*(coastNew-lowCoast459[i]);
+                }else{
+                    v459LowTrain++;
+                    float alpha=lowTrained459[i]==0?1f:.1f;
+                    lowResidualX459[i]+=alpha*(rx-lowResidualX459[i]);
+                    lowResidualY459[i]+=alpha*(ry-lowResidualY459[i]);
+                    if(lowTrained459[i]<100000000)lowTrained459[i]++;
+                }
+            }
+        }
         if(clean){
             inertia.finish(dx,dy,seconds,heldout);
             // Normalized to a physical 0.30s decision for comparable trials.
@@ -294,6 +349,7 @@ final class Zero3InstrumentalCreditV371 {
     /** Trust motor direction only if its OUT-OF-TRAIN physical displacement
      * estimate beats zero motion, with enough evidence. */
     boolean motorVerified(int bank){
+        if(lowPreMomentumEvidenceLabV459)return lowEvidenceVerifiedV459(bank);
         // V458 isolated experiment: V457 heldout zero-motion baselines are
         // all <1.0 in both original 10k runs; the absolute squared-unit
         // floor therefore rejected every real V371 motor bank.
@@ -341,7 +397,10 @@ final class Zero3InstrumentalCreditV371 {
             return .35f*contact.utility(observation194,chosen[0],chosen[1]);
         }
         if(motorVerified(bank)){
-            float dx=learnedX[bank],dy=learnedY[bank];
+            float dx=lowPreMomentumEvidenceLabV459?
+                .30f*observation194[191]*130f+lowResidualX459[bank]:learnedX[bank];
+            float dy=lowPreMomentumEvidenceLabV459?
+                .30f*observation194[192]*130f+lowResidualY459[bank]:learnedY[bank];
             float len=(float)Math.hypot(dx,dy);
             if(len<.35f)return 0f;
             return contact.utility(observation194,dx/len,dy/len);
@@ -400,7 +459,10 @@ final class Zero3InstrumentalCreditV371 {
                 if(Math.abs(historical)>0.000001f)v443UncensoredNonzeroHistorical++;
                 return historical;
             }
-            mx=learnedX[bank];my=learnedY[bank];
+            mx=lowPreMomentumEvidenceLabV459?
+                .30f*observation194[191]*130f+lowResidualX459[bank]:learnedX[bank];
+            my=lowPreMomentumEvidenceLabV459?
+                .30f*observation194[192]*130f+lowResidualY459[bank]:learnedY[bank];
         }
         float reward=0f,brightness=0f;
         // Sensor 188 is ACTUAL reserve in [-1,+1], not a food label.
