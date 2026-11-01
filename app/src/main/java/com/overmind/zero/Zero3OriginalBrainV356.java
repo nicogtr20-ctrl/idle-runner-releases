@@ -11,6 +11,7 @@ import java.util.zip.CRC32;
  * Never allocates a V3 organism/world/room/body and never advances physics.
  * All pre/post frames reference GameActivity's real organism and materials.
  */
+// V452: QA-only cognition-score instrumentation lives outside this unchanged V356 save layout.
 final class Zero3OriginalBrainV356 {
     static final String KEY="zero3_original_brain_only_v356";
     // This decision cursor is a 64-bit number in V356 on disk, but the
