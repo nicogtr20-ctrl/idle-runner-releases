@@ -166,6 +166,7 @@ final class Zero3InstrumentalCreditV371 {
             // The total measured travel remains available to the separate
             // contact/history and stall ledgers below. Only TRAIN/HELDOUT
             // motor-response estimation uses the PRE-coast residual.
+            // Original GRU3, V319 grip and full-world contact ledger are unchanged.
             float activeMx=limit(mx-.30f*pendingPreVxV435,-120,120);
             float activeMy=limit(my-.30f*pendingPreVyV435,-120,120);
             int bank=pendingBank;
