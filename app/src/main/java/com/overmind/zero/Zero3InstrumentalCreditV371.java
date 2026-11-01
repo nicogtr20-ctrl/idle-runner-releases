@@ -30,6 +30,23 @@ final class Zero3InstrumentalCreditV371 {
     private boolean acceleratedDelayedContactEvidenceLabV435;
     // V442: historical observed bank is not a validated new motor response.
     private boolean censorUnverifiedDelayedBankUnderDriftLabV442;
+    // V443 transient READ-ONLY evidence counters: evaluations, not decisions.
+    private long v443ScoreEvaluations, v443PredictedEvaluations,
+        v443UnsupportedDriftEvaluations, v443CensoredNonzeroHistorical,
+        v443CensoredZeroHistorical, v443UncensoredNonzeroHistorical,
+        v443OpticalDriftSuppressed;
+    String motorEvidenceDiagnosticsV443(){
+        return "v443|scoreEvaluations="+v443ScoreEvaluations+
+            "|predicted="+v443PredictedEvaluations+
+            "|unsupportedDrift="+v443UnsupportedDriftEvaluations+
+            "|censoredNonzeroHistorical="+v443CensoredNonzeroHistorical+
+            "|censoredZeroHistorical="+v443CensoredZeroHistorical+
+            "|uncensoredNonzeroHistorical="+v443UncensoredNonzeroHistorical+
+            "|opticalDriftSuppressed="+v443OpticalDriftSuppressed+
+            "|verifiedV377Banks="+inertia.reliableBanks()+
+            "|verifiedV371Directions="+verifiedDirections()+
+            "|delayedRealLinks="+delayedCredits();
+    }
     void enableCensorUnverifiedDelayedBankUnderDriftLabV442(){
         if(pendingSight!=null||!strictInertialOpticalEvidenceLabV433||
            !observedDelayedContactWithoutMotorMapLabV434||
@@ -289,6 +306,7 @@ final class Zero3InstrumentalCreditV371 {
             // motor outcome or select a preset escape direction.
             if(strictInertialOpticalEvidenceLabV433){
                 unsupportedMovingOpticalPredictionsRejectedV433++;
+                v443OpticalDriftSuppressed++;
                 return 0f;
             }
             return .35f*contact.utility(observation194,chosen[0],chosen[1]);
@@ -333,19 +351,25 @@ final class Zero3InstrumentalCreditV371 {
            chosen==null||chosen.length<2||contact==null)
             throw new IllegalArgumentException("V371 score shape");
         int bank=heading(chosen[0],chosen[1]);
+        v443ScoreEvaluations++;
         float[] predicted=inertia.expected(observation194,chosen);
+        if(predicted!=null)v443PredictedEvaluations++;
         float mx,my;
         if(predicted!=null){mx=predicted[0];my=predicted[1];}
         else{
             boolean unsupportedDrift=unsupportedPreDriftV441(observation194);
+            if(unsupportedDrift)v443UnsupportedDriftEvaluations++;
             if(unsupportedDrift||!motorVerified(bank)){
-                // V442: a past observed bank/contact association is not a
-                // verified action->COM response for this new heading in drift.
-                // Actual material valence and stored history remain untouched.
-                if(unsupportedDrift&&censorUnverifiedDelayedBankUnderDriftLabV442)
-                    return 0f;
-                return observedDelayedContactWithoutMotorMapLabV434?
+                // V443 observes V442 eligibility without changing the score.
+                float historical=observedDelayedContactWithoutMotorMapLabV434?
                     observedDelayedContactScoreV434(observation194,bank,contact):0f;
+                if(unsupportedDrift&&censorUnverifiedDelayedBankUnderDriftLabV442){
+                    if(Math.abs(historical)>0.000001f)v443CensoredNonzeroHistorical++;
+                    else v443CensoredZeroHistorical++;
+                    return 0f;
+                }
+                if(Math.abs(historical)>0.000001f)v443UncensoredNonzeroHistorical++;
+                return historical;
             }
             mx=learnedX[bank];my=learnedY[bank];
         }
