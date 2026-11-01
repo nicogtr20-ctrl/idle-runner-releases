@@ -28,6 +28,15 @@ final class Zero3InstrumentalCreditV371 {
     // positive acceleration ALONG its real travel, rather than passive coast.
     // This changes only the eligibility of historical delayed contact links.
     private boolean acceleratedDelayedContactEvidenceLabV435;
+    // V442: historical observed bank is not a validated new motor response.
+    private boolean censorUnverifiedDelayedBankUnderDriftLabV442;
+    void enableCensorUnverifiedDelayedBankUnderDriftLabV442(){
+        if(pendingSight!=null||!strictInertialOpticalEvidenceLabV433||
+           !observedDelayedContactWithoutMotorMapLabV434||
+           !acceleratedDelayedContactEvidenceLabV435)
+            throw new IllegalStateException("V442 requires V433/V434/V435 between decisions");
+        censorUnverifiedDelayedBankUnderDriftLabV442=true;
+    }
     private float pendingPreVxV435,pendingPreVyV435;
     private long passiveDelayedApproachesRejectedV435;
     void enableAcceleratedDelayedContactEvidenceLabV435(){
@@ -328,8 +337,13 @@ final class Zero3InstrumentalCreditV371 {
         float mx,my;
         if(predicted!=null){mx=predicted[0];my=predicted[1];}
         else{
-            if(unsupportedPreDriftV441(observation194)||
-               !motorVerified(bank)){
+            boolean unsupportedDrift=unsupportedPreDriftV441(observation194);
+            if(unsupportedDrift||!motorVerified(bank)){
+                // V442: a past observed bank/contact association is not a
+                // verified action->COM response for this new heading in drift.
+                // Actual material valence and stored history remain untouched.
+                if(unsupportedDrift&&censorUnverifiedDelayedBankUnderDriftLabV442)
+                    return 0f;
                 return observedDelayedContactWithoutMotorMapLabV434?
                     observedDelayedContactScoreV434(observation194,bank,contact):0f;
             }
