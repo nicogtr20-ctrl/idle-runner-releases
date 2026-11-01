@@ -45,7 +45,26 @@ final class Zero3InstrumentalCreditV371 {
             "|opticalDriftSuppressed="+v443OpticalDriftSuppressed+
             "|verifiedV377Banks="+inertia.reliableBanks()+
             "|verifiedV371Directions="+verifiedDirections()+
-            "|delayedRealLinks="+delayedCredits()+"|"+inertia.motorValidationDiagnosticsV444();
+            "|delayedRealLinks="+delayedCredits()+"|"+inertia.motorValidationDiagnosticsV444()+
+            "|"+motorBankEvidenceDiagnosticsV457();
+    }
+    // V457 read-only: inspect all original V371 bank TRAIN/HELDOUT
+    // measurements against the V377 inertial validation already logged.
+    // No new state, reward, action selection, threshold, or persistence.
+    private String motorBankEvidenceDiagnosticsV457(){
+        StringBuilder b=new StringBuilder("v457V371BankTrainHeldoutForwardLossBaselineMilli=");
+        for(int i=0;i<BINS;i++){
+            if(i>0)b.append(',');
+            double angle=i*Math.PI/4d;
+            double forward=learnedX[i]*Math.cos(angle)+learnedY[i]*Math.sin(angle);
+            b.append(i).append(':').append(trained[i]).append('/')
+                .append(validated[i]).append(':')
+                .append(Math.round(forward*1000d)).append(':')
+                .append(Math.round(error[i]*1000d)).append(':')
+                .append(Math.round(baseline[i]*1000d)).append(':')
+                .append(motorVerified(i)?1:0);
+        }
+        return b.toString();
     }
     void enableCensorUnverifiedDelayedBankUnderDriftLabV442(){
         if(pendingSight!=null||!strictInertialOpticalEvidenceLabV433||
