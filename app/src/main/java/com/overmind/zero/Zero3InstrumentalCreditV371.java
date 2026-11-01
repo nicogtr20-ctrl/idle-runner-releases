@@ -402,7 +402,10 @@ final class Zero3InstrumentalCreditV371 {
             float dy=lowPreMomentumEvidenceLabV459?
                 .30f*observation194[192]*130f+lowResidualY459[bank]:learnedY[bank];
             float len=(float)Math.hypot(dx,dy);
-            if(len<.35f)return 0f;
+            // V459's independently validated low-momentum actuator residual
+            // begins at 0.21 units; do not discard trusted 0.21-0.35 motion
+            // while still rejecting near-zero effect and unsupported drift.
+            if(len<(lowPreMomentumEvidenceLabV459?.21f:.35f))return 0f;
             return contact.utility(observation194,dx/len,dy/len);
         }
         return .35f*contact.utility(observation194,chosen[0],chosen[1]);
