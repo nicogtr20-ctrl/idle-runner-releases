@@ -169,6 +169,12 @@ public final class GameActivity extends Activity {
             throw new IllegalStateException("V435 original GRU3 unavailable");
         lab.brain3.enableAcceleratedDelayedContactEvidenceLabV435();
     }
+    // V442 isolated Android QA; never persisted.
+    void originalV442EnableCensorUnverifiedDelayedBankUnderDriftForQA(){
+        if(lab==null||lab.brain3==null||!lab.brain3.realPhysicalMotorContextV412())
+            throw new IllegalStateException("V442 original GRU3 unavailable");
+        lab.brain3.enableCensorUnverifiedDelayedBankUnderDriftLabV442();
+    }
     void originalV432EnableSignedRearDeliveredProbeForQA(){
         if(lab==null||lab.brain3==null||
            !lab.brain3.realPhysicalMotorContextV412())
