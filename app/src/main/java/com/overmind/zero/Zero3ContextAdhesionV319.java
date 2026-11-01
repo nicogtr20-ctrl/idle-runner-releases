@@ -128,7 +128,7 @@ public final class Zero3ContextAdhesionV319 {
     }
     // ZERO462: no exploratory CH2 perturbation was physically delivered in
     // the V461 lab arm, so positive exploratory credit cannot be inferred.
-    // Preserve default V319 bit-for-bit and keep real physical cost/decay.
+    // Preserve default V319 bit-for-bit and keep real physical cost/decay.\n    // Four Android gates must execute from the same final source commit.
     static float gripProbeCreditFactorV462(float deliveredProbe,boolean probeDisabled){
         return probeDisabled?0f:Math.max(.15f,Math.abs(deliveredProbe));
     }
