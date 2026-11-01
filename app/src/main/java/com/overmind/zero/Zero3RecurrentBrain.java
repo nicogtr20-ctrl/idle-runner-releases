@@ -42,6 +42,11 @@ public final class Zero3RecurrentBrain {
         if(pending||cognition==null)throw new IllegalStateException("V435 requires original cognition between choices");
         cognition.enableAcceleratedDelayedContactEvidenceLabV435();
     }
+    // V442 research-only, not persisted in V356 checkpoint.
+    void enableCensorUnverifiedDelayedBankUnderDriftLabV442(){
+        if(pending)throw new IllegalStateException("V442 original decision pending");
+        cognition.enableCensorUnverifiedDelayedBankUnderDriftLabV442();
+    }
     void enableLearnedHarmCandidateCoverageLabV422(){
         if(pending)throw new IllegalStateException("ZERO422 choice pending");
         learnedHarmCandidateCoverageLabV422=true;
