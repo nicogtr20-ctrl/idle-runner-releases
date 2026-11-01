@@ -165,6 +165,12 @@ final class Zero3OriginalBrainV356 {
         if(pending)throw new IllegalStateException("V442 original decision pending");
         brain.enableCensorUnverifiedDelayedBankUnderDriftLabV442();
     }
+    // V461 QA-only ablation: physical GRU3 muscle vs randomized V319
+    // adhesion-head perturbation, leaving actual learned CH2 grip intact.
+    void enableDeterministicGripPhysicalEvidenceLabV461(){
+        if(pending)throw new IllegalStateException("V461 real motor decision pending");
+        grip.enableDeterministicGripPhysicalEvidenceLabV461();
+    }
     private boolean safeMotorMapEvidenceLabV420;
     private long v420AcceptedRealMotorMap, v420ExcludedWall,
                  v420ExcludedHarm, v420ExcludedOther;
@@ -227,6 +233,8 @@ final class Zero3OriginalBrainV356 {
             "|isolatedAccelerationSamples="+isolatedDecisionAccelerationSamplesV418+
             "|harmRejected="+harmfulMotorCreditsRejectedV401+
             "|turnFiltered="+sharpTurnsFilteredV401+
+            "|gripProbeOffLabV461="+grip.deterministicGripPhysicalEvidenceLabV461()+
+            "|gripProbeSuppressedDecisionsV461="+grip.suppressedV319ProbeDecisionsV461()+
             "|safeMotorMapLabV420="+safeMotorMapEvidenceLabV420+
             "|safeMotorMapAccepted="+v420AcceptedRealMotorMap+
             "|safeMotorMapExcludedWall="+v420ExcludedWall+
