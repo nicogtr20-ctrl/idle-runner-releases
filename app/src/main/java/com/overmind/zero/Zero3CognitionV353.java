@@ -179,7 +179,13 @@ public final class Zero3CognitionV353 {
     void enableCensorUnverifiedDelayedBankUnderDriftLabV442(){
         instrumental.enableCensorUnverifiedDelayedBankUnderDriftLabV442();
     }
-    String motorEvidenceDiagnosticsV443(){return instrumental.motorEvidenceDiagnosticsV443();}
+    void enableLowPreMomentumEvidenceLabV459(){
+        instrumental.enableLowPreMomentumEvidenceLabV459();
+    }
+    String motorEvidenceDiagnosticsV443(){
+        return instrumental.motorEvidenceDiagnosticsV443()+"|"+
+            instrumental.lowEvidenceDiagnosticsV459();
+    }
     boolean hasVisibleLearnedHarmV422(float[] observation){
         return contactValence.hasVisibleLearnedHarmV422(observation);
     }
