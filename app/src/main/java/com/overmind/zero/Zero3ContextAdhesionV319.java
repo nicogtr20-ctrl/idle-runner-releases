@@ -149,7 +149,9 @@ public final class Zero3ContextAdhesionV319 {
     /** Physical timestep of the ORIGINAL game, set before each neural grip actuation. */
     void originalTimestepV356(float dt){
         if(!active||hasStep||!Float.isFinite(dt)||dt<=0f||dt>.04f)
-            throw new IllegalStateException("V356 timestep outside real physics");
+            throw new IllegalStateException("V356 timestep outside real physics"
+                +" [active="+active+",hasStep="+hasStep+",dt="+dt
+                +",steps="+steps+",scale="+originalStepScaleV356+"]");
         originalStepScaleV356=dt/DT;
     }
     /** Discard a partial action on Android pause/death; no fictitious credit. */
