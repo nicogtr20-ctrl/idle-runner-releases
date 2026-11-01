@@ -136,7 +136,10 @@ public final class Zero417WildOriginalVelocityCredit10000AndroidTest {
                 // ZERO454 only new scientific motor change versus V453:
                 // original real V390 muscle pulses ON/OFF/OFF/ON and learns
                 // signed physical COM acceleration contrast in SAME action.
-                original.originalV454EnablePairedMotorContrastForQA();
+                // ZERO455 matched-control: intentionally do NOT enable V454 ABBA.
+                // All other original 10k flags, physical body, seed and gates are unchanged.
+                android.util.Log.i("ZERO455_MATCHED_CONTROL",
+                    "V454_ABBA_OFF=true,V421_DELIVERED_ON=true,V423_OWN_CREDIT_ON=true");
                 original.originalV425EnableTangentActorCreditForQA();
                 assertTrue("V425 wild original GRU3 actor flag",
                     original.originalV425TangentActorCreditEnabledForQA());
