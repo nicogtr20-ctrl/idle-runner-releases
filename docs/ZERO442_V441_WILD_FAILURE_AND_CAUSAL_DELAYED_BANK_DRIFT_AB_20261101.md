@@ -17,3 +17,12 @@ V442 adds only a transient opt-in: if strict V433/V434/V435 are enabled, real PR
 Four new unit cases: requires V433/V434/V435 and no pending decision; real negative delayed contact preserved but bank score censored at 1.2U/s; positive and negative true-contact ranking unchanged at 0.2U/s; real positive contact preserved while bank score censored at 1.2U/s. Full original 23-suite regression including V433 five tests must PASS. On ONE final source SHA, original saved S21 33,312→>=43,312 true decisions with >=25% signed/gross, >=9/10 1000 windows >=10%, zero inverse, >=5 new blue; original newborn wild >=10k, >=12% signed/gross, last 5k red < first 5k, total red <=2×blue; regressions and exact original CRC PASS. Report 10 windows, all red/blue contacts, motor signed/gross, gradients and wall exclusions. Retry emulator boot without code change if no valid decisions. **No APK/OTA/merge unless all gates pass.**
 
 Historical V421–V423: S21 17.1723%/11.2881%/10.0486% FAIL, wild 87/52/26 red FAIL, original regressions/CRC PASS in all three. These are separate experimental commits, not certification.
+
+## V442 final tested source and original Android workflow dispatch
+All four workflows were triggered on exactly source commit `14c3a7ffbdf508c7e4f60ea8b4fba389fd8573e1` (separate experimental branch):
+- [Original S21 10,000 decisions 41266630484](https://github.com/nicogtr20-ctrl/idle-runner-releases/actions/runs/41266630484)
+- [Original newborn wild 10,000 red/blue decisions 41266630508](https://github.com/nicogtr20-ctrl/idle-runner-releases/actions/runs/41266630508)
+- [Full Android regressions, corrected V433 count and new V442 tests 41266630497](https://github.com/nicogtr20-ctrl/idle-runner-releases/actions/runs/41266630497)
+- [Exact original S21 V356/512 CRC 41266630512](https://github.com/nicogtr20-ctrl/idle-runner-releases/actions/runs/41266630512)
+
+**At dispatch these were QUEUED, not PASS.** The older V441 S21 boot retry remains active on its own original V441 SHA; no comparison or approval can be claimed until its genuine original 10k finishes. The document-only update does not change the tested source.
