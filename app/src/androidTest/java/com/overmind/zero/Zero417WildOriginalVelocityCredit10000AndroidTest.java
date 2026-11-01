@@ -155,6 +155,10 @@ public final class Zero417WildOriginalVelocityCredit10000AndroidTest {
                 // V442 sole behavioral change versus V441: do not treat
                 // historical bank association as a verified new motor action.
                 original.originalV442EnableCensorUnverifiedDelayedBankUnderDriftForQA();
+                // ZERO459 sole new behavioral experiment on the exact
+                // original body: validate low-PRE-momentum motion separately
+                // from old V371 bank histories trained during passive drift.
+                original.originalV459EnableLowPreMotorEvidenceForQA();
                 // V436: only new behavioral variable versus V435. Wider actor-sampled
                 // choices require genuine previously learned, currently visible harm.
                 original.originalV422EnableLearnedHarmCandidatesForQA();
