@@ -313,7 +313,8 @@ public final class Zero3RecurrentBrain {
             "|afterRandomOptical="+v451AfterRandomOptical+
             "|afterPlannerOptical="+v451AfterPlannerOptical+
             "|finalOptical="+v451FinalOptical+
-            "|executiveRecall="+v451ExecutiveRecall;
+            "|executiveRecall="+v451ExecutiveRecall+
+            "|"+(cognition==null?"v452|unavailable":cognition.choiceScoreComponentsV452());
     }
     String optionCoverageForQA(){
         return "o405|offered="+lastOfferedChoicesV405+
