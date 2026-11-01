@@ -618,6 +618,16 @@ public final class Zero3LearningFoundation {
         private boolean momentumCreditV378;
         private boolean causalMotorCreditV390;
         private int frontContactFramesV390,rearContactFramesV390,anyContactFramesV390;
+        private final Zero454PairedMotorContrast pairedV454=
+            new Zero454PairedMotorContrast();
+        private float lastBodyVxV454,lastBodyVyV454,frameDVxV454,frameDVyV454;
+        void enablePairedOriginalPhysicalProbeLabV454(){
+            if(active!=null||!causalMotorCreditV390)
+                throw new IllegalStateException("V454 requires V390 at boundary");
+            cortex.enablePairedMotorContrastLabV454();
+        }
+        int validPairedQuadsV454(){return pairedV454.validQuads();}
+        float pairedEffectV454(){return pairedV454.mean();}
         void enableCausalMotorCreditV390(){
             if(active!=null)throw new IllegalStateException("V390 pending");
             causalMotorCreditV390=true;cortex.enableIsolatedCreditV390();
@@ -662,6 +672,8 @@ public final class Zero3LearningFoundation {
             active=intent;this.train=train;this.heldout=heldout;external=false;censored=false;
             lastDecision=intent.decisionId;episode=intent.episodeId;startedRevision=cortex.revision();
             startX=lastX=endX=b.cx;startY=lastY=endY=b.cy;
+            lastBodyVxV454=b.cvx;lastBodyVyV454=b.cvy;
+            pairedV454.reset();
             frames=0;gross=work=impulse=seconds=0;
             frontContactFramesV390=rearContactFramesV390=anyContactFramesV390=0;
             this.momentumCreditV378=momentumCreditV378;
@@ -681,6 +693,12 @@ public final class Zero3LearningFoundation {
             finite(dt,"dt");finite(physicalWork,"work");finite(muscleImpulse,"impulse");
             if(dt<=0||dt>.04f||physicalWork<0||muscleImpulse<0)
                 throw new IllegalArgumentException("invalid physical outcome");
+            if(cortex.pairedMotorContrastLabV454()){
+                frameDVxV454=after.cvx-lastBodyVxV454;
+                frameDVyV454=after.cvy-lastBodyVyV454;
+                lastBodyVxV454=after.cvx;
+                lastBodyVyV454=after.cvy;
+            }
             gross+=(float)Math.hypot(after.cx-lastX,after.cy-lastY);
             lastX=endX=after.cx;lastY=endY=after.cy;
             work+=physicalWork;impulse+=muscleImpulse;seconds+=dt;frames++;
@@ -702,6 +720,11 @@ public final class Zero3LearningFoundation {
                 if(facing>.35f)front=true;
                 if(facing<-.35f)rear=true;
             }
+            if(cortex.pairedMotorContrastLabV454()&&
+                cortex.lastPhysicalProbePhaseV454()>=0)
+                pairedV454.observe(cortex.lastPhysicalProbePhaseV454(),
+                    frameDVxV454,frameDVyV454,active.x,active.y,
+                    correction||teleport||any);
             if(any)anyContactFramesV390++;
             if(front)frontContactFramesV390++;
             if(rear)rearContactFramesV390++;
