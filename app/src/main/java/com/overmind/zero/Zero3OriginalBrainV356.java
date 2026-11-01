@@ -111,6 +111,17 @@ final class Zero3OriginalBrainV356 {
         brain.enableJointSampleActorScoreLabV426();
     }
     boolean jointSampleActorScoreEnabledV426(){return brain.jointSampleActorScoreEnabledV426();}
+    // ZERO454: actual ON/OFF/OFF/ON original motor perturbation contrasted
+    // against same-action physical acceleration; opt-in, no saved field.
+    private boolean originalPairedMotorContrastLabV454;
+    private long validPairedCreditDecisionsV454,rejectedPairedCreditDecisionsV454;
+    void enableOriginalPairedMotorContrastLabV454(){
+        if(pending||!localMotorRequestedV400||!deliveredLocalProbeLabV421||
+           !immediateOwnDecisionCreditLabV423)
+            throw new IllegalStateException("ZERO454 needs original V390/V421/V423 boundary");
+        motor.enablePairedOriginalPhysicalProbeLabV454();
+        originalPairedMotorContrastLabV454=true;
+    }
     private boolean immediateOwnDecisionCreditLabV423;
     private long immediateOwnDecisionCreditsV423;
     void enableImmediateOwnDecisionCreditLabV423(){
@@ -209,6 +220,9 @@ final class Zero3OriginalBrainV356 {
             "|deliveredLocalProbeLabV421="+deliveredLocalProbeLabV421+
             "|immediateOwnDecisionCreditLabV423="+immediateOwnDecisionCreditLabV423+
             "|immediateOwnDecisionCreditsV423="+immediateOwnDecisionCreditsV423+
+            "|pairedMotorContrastLabV454="+originalPairedMotorContrastLabV454+
+            "|validPairedCreditDecisionsV454="+validPairedCreditDecisionsV454+
+            "|rejectedPairedCreditDecisionsV454="+rejectedPairedCreditDecisionsV454+
             "|independentDecisionCreditLab="+independentDecisionCreditLabV418+
             "|isolatedAccelerationSamples="+isolatedDecisionAccelerationSamplesV418+
             "|harmRejected="+harmfulMotorCreditsRejectedV401+
@@ -690,6 +704,20 @@ final class Zero3OriginalBrainV356 {
                     }
                     measuredBrakingCreditV417++;
                 }
+                if(originalPairedMotorContrastLabV454){
+                    // V415 matched real S21 motor-intervention audit observed
+                    // 92/177 wrong-sign V332 local credits from unpaired COM
+                    // responses. This uses the real physical ON-minus-OFF
+                    // substep contrast, not raw coasting or visual labels.
+                    float paired=motor.pairedEffectV454();
+                    if(motor.validPairedQuadsV454()>=2&&Float.isFinite(paired)){
+                        float equivalentDecisionDelta=16f*paired;
+                        float bounded=3f*equivalentDecisionDelta/
+                            (4f+Math.abs(equivalentDecisionDelta));
+                        Arrays.fill(localResponseV400,Math.max(-1f,Math.min(1f,bounded)));
+                        Arrays.fill(delayedResponseV400,0f);
+                    }
+                }
                 // A forward wall arrest or world teleport cannot teach
                 // a phantom motor derivative. Pending delayed credit is
                 // discarded if either real action is not a clean motor trial.
@@ -745,6 +773,13 @@ final class Zero3OriginalBrainV356 {
                         choice.effort,isolatedPhysicalProbeCountV406);
                 if(probeV400!=null&&actualDamageDuringDecisionV359>0f)
                     harmfulMotorCreditsRejectedV401++;
+                if(originalPairedMotorContrastLabV454){
+                    boolean enoughRealPairedEvidence=motor.validPairedQuadsV454()>=2&&
+                        Float.isFinite(motor.pairedEffectV454());
+                    if(!enoughRealPairedEvidence)rejectedPairedCreditDecisionsV454++;
+                    eligible=eligible&&enoughRealPairedEvidence;
+                    if(eligible)validPairedCreditDecisionsV454++;
+                }
                 if(eligible){
                     if(immediateOwnDecisionCreditLabV423){
                         // All actual pre/post physical work and the original
