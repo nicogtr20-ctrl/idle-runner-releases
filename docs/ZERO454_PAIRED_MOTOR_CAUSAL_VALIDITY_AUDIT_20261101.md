@@ -1,0 +1,33 @@
+# ZERO454 — independent scientific validity audit (no gameplay change)
+Date: 2026-11-01. Documentation-only audit branch `audit/zero454-paired-motor-validity-20261101`, based on `lab/zero454-motor-response-audit` commit `5597869434adef52c9b9f85fb648c98da99e4b59`. **NO RELEASE, APK, OTA, MERGE, or approval.**
+
+## Sources actually checked
+Read root AGENTS.md, docs/AGENTS.md, ZERO419–ZERO423 and canonical ZERO30 master/implementation/UI contracts before this audit. Inspected `Zero454PairedMotorContrast`, `Zero3LearningFoundation.AdaptiveCortex/Coordinator`, `Zero3OriginalBrainV356`, V353 scoring, original S21/wild Android test sources and all four V454 workflow definitions. Independently fetched **all 12** historical V421/V422/V423 GitHub Actions job statuses **and the six behavioral and six regression/CRC full job logs**. The historical results are not approvals:
+
+| Lab | S21 original signed/gross | S21 >=10% windows | S21 opposite windows | S21 new blue | Wild signed/gross | Wild red first/last 5k | Wild red/blue | Regressions / CRC |
+|---|---:|---:|---:|---:|---:|---|---|---|
+| V421 | 17.1723% | 8/10 | 2 | 4 | 61.6262% | 35/52 | 87/3 | PASS / PASS |
+| V422 | 11.2881% | 7/10 | 2 | 4 | 42.7053% | 19/33 | 52/5 | PASS / PASS |
+| V423 | 10.0486% | 7/10 | 2 | 4 | 31.0766% | 14/12 | 26/4 | PASS / PASS |
+
+Run IDs S21/wild/regression/CRC: V421 `41149391000/41149393560/41149404217/41149399737`; V422 `41149758090/41149762948/41149771615/41149767313`; V423 `41149983685/41149987734/41149995431/41149992279`. Each behavioral job completed FAILURE; the six source regressions/checkpoint jobs completed SUCCESS. The logs confirm actual original autonomous decision windows, real contacts, V356 CRC Android `OK (1 test)` and full Android regressions. Do not confuse inherited S21 90 red contacts with new S21 harm.
+
+Most recent **confirmed** exact-commit original V452 evidence is in `docs/ZERO453_V452_COMPLETE_10K_V353_MARGIN_VS_PHYSICAL_EVIDENCE_FORENSICS_20261101.md`: S21 10,002 / 18.0209%, 8/10 good, one inverse, four new blue; wild 10,006 / 33.7023%, 50 red, 5 blue, 37/13 red first/last five buckets. Regression and original CRC PASS. Both behavioral gates FAIL. V453 new Android outcome cannot be inferred from the V452 report.
+
+## Source-level V454 hypothesis and genuine measurement
+The original V417 local credit used whole-decision PRE→POST COM acceleration and attributed it to a single local motor perturbation; independent V415 motor experiments reported 92/177 wrong-sign examples. V454 adds a **real physical** ON/OFF/OFF/ON four-frame contrast on the same original V390 probe, measuring COM velocity increments after each solver step. `Zero454PairedMotorContrast` computes `0.5*(a-b-c+d)` for matched four-frame increments and rejects a quad if actual touch, external correction or teleport occurs. The instrument's mean is fed into V332 local credit only when at least two quads are valid, with original V401/V414 eligibility still required. The original body solver, V319 CH2, 194D GRU3, 512 cortex weights, V356 checkpoint format, 12 slots, physical harm/energy and all red/blue contacts are not replaced. No scripted heading or invented reward appears in this intervention.
+
+## Important interpretation limits before any behavioral claim
+1. **Not an exact counterfactual.** The ON pulse changes body state and the subsequent OFF frame inherits membrane inertia, slow local cortical state and contact history. The ABBA pattern cancels only an approximately linear drift. A measured positive ABBA value is evidence of physical probe association, **not** a mathematical proof that a different complete heading would avoid a red gem.
+2. **Multiple active research flags.** The V454 test harness enables V421 delivered local probe and V423 immediate own-decision credit before enabling V454 paired contrast. Those are different experimental switches. Comparing V454 directly to V453/V452 cannot isolate the paired contrast's effect. A matched V421+V423 control with V454 OFF is required before attributing any gain to V454 alone.
+3. **Duty cycle changes the intervention.** The V454 physical probe is actually applied on two of four substeps rather than continuously; this changes motor actuation. `deliveredProbeV397` is accumulated only when ON but divided by the count of all probing frames, so the effective V332 perturbation scale also differs. Any result must be described as a combined changed physical probe schedule and paired estimator, not a pure telemetry improvement.
+4. **Physical validity gates remain necessary.** A valid quad excludes observed surface touch, correction and teleport, but the full decision's genuine harm, weather, front-wall and terminal flags still must exclude false learning. Check `validPairedCreditDecisionsV454`, `rejectedPairedCreditDecisionsV454`, original V401/V414 counters and real red contacts together.
+5. **Workflow results not established by source.** Four V454 Android workflows are configured for the isolated branch and source has V454 opt-in in both original 10k tests, plus a physical-contrast regression. Source inspection alone cannot confirm run IDs, actual execution, same SHA or PASS. Do not report these as completed or approved without fetching the corresponding Actions jobs/logs.
+
+## Required next validation (no threshold relaxation)
+- First retrieve actual V453 S21/wild/regression/CRC run IDs and logs if available; verify the telemetry correction is behavior-neutral and examine `bestScoreGain|requiredGain|marginBlocked|canPredict|materialEvidence` for all 50 red contacts.
+- Check the **actual V454** four Android Actions on identical SHA; do not alter its branch while tests may be running. Parse all ten 1000-decision windows per environment, S21 static/opposed/blue, wild red per window and first/last 5000, signed/gross, local V332 gradients, V377 heldout evidence, sensory GRU3/retina and V319 physical steps.
+- If V454 fails or is inconclusive, do not add another policy tweak. Isolate exactly one cause with a matched original-body control; retain the protected user S21 original 33,312 decisions, 512 weights, V356 CRC, V319 CH2, 194 senses, original 170-material solver and all 12 saved slots.
+- Hard acceptance: original S21 >=10,000 decisions, >=25% signed/gross, >=9/10 windows >=10%, **zero** inverse windows, >=5 new blues; wild >=10,000 original decisions, late 5000 red < early 5000, red <=2*blue; regressions AND CRC PASS. Until then **NO APK/OTA/stable merge**.
+
+This audit modifies only this Markdown document on its own branch; it does not interrupt or modify the running V454 experimental branch.
