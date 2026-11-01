@@ -126,6 +126,12 @@ public final class Zero3ContextAdhesionV319 {
     static float clip(float a,float min,float max){
         return Math.min(max,Math.max(min,a));
     }
+    // ZERO462: no exploratory CH2 perturbation was physically delivered in
+    // the V461 lab arm, so positive exploratory credit cannot be inferred.
+    // Preserve default V319 bit-for-bit and keep real physical cost/decay.
+    static float gripProbeCreditFactorV462(float deliveredProbe,boolean probeDisabled){
+        return probeDisabled?0f:Math.max(.15f,Math.abs(deliveredProbe));
+    }
     static float sigmoid(float x){
         return (float)(1.0/(1.0+Math.exp(-clip(x,-10,10))));
     }
@@ -305,7 +311,7 @@ public final class Zero3ContextAdhesionV319 {
                 // Grip difference is credited via observed positive result
                 // and sampled neural-logit exploration, not future vision.
                 float credited=GRIP_CREDIT*gripRatio*gripFeature*
-                    Math.max(.15f,Math.abs(perturb[s]));
+                    gripProbeCreditFactorV462(perturb[s],deterministicGripPhysicalEvidenceLabV461);
                 float cost=COST_CREDIT*normalizedPhysicalCost*
                     meanDrive*(1-meanDrive)*fmean;
                 float gradient=credited-cost-DECAY*weights[s*FEATURES+k];
