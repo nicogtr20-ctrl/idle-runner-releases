@@ -60,4 +60,14 @@ public final class Zero461V319OriginalGripExplorationAblationAndroidTest {
             0f,freeze.appliedGripProbeL1V461(),0f);
         freeze.abortOriginalV356();
     }
+    @Test public void zero462CannotInventPositiveGripExplorationCreditWithoutDeliveredProbe(){
+        // V461 suppresses every actual CH2 perturbation. An observed legal
+        // grip is still real, but not evidence of a sampled logit gradient.
+        assertEquals(0f,Zero3ContextAdhesionV319.gripProbeCreditFactorV462(0f,true),0f);
+        assertEquals(0f,Zero3ContextAdhesionV319.gripProbeCreditFactorV462(.8f,true),0f);
+        // Normal original V319 must retain its historical credit scale.
+        assertEquals(.15f,Zero3ContextAdhesionV319.gripProbeCreditFactorV462(0f,false),0f);
+        assertEquals(.8f,Zero3ContextAdhesionV319.gripProbeCreditFactorV462(-.8f,false),0f);
+    }
+
 }
