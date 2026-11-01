@@ -122,11 +122,25 @@ final class Zero3InertialResponseV377 {
         }
         abort();
     }
+    /**
+     * V446 LAB: A fixed 0.10 squared-error floor discarded all 8 slow-speed
+     * banks even when independent heldout trials beat passive coasting and
+     * measured propulsion was positive. Require actual forward authority
+     * >0.10 material units instead of a large *error variance*. This is
+     * still learned from real TRAIN/HELDOUT physical transitions, never a
+     * scripted direction or optimistic motor prediction.
+     */
+    private boolean heldoutForwardAuthorityV446(int i){
+        if(trains[i]<4||validations[i]<3||
+           !(loss[i]<coastLoss[i]*.90d))return false;
+        double angle=(i%DIRS)*Math.PI/4d;
+        double forward=meanX[i]*Math.cos(angle)+meanY[i]*Math.sin(angle);
+        return forward>.10d;
+    }
     boolean reliable(float[] observation,float[] action){
         if(observation==null||observation.length!=194||action==null||action.length<2)return false;
         int i=slot(action[0],action[1],observation[191]*130f,observation[192]*130f);
-        return trains[i]>=4&&validations[i]>=3&&coastLoss[i]>.10d&&
-            loss[i]<coastLoss[i]*.90d;
+        return heldoutForwardAuthorityV446(i);
     }
     float[] expected(float[] observation,float[] action){
         if(!reliable(observation,action))return null;
@@ -152,22 +166,15 @@ final class Zero3InertialResponseV377 {
         int count=0;
         for(int k=0;k<DIRS;k++){
             int index=k+speedBank;
-            if(trains[index]<4||validations[index]<3||
-               coastLoss[index]<=.10d||loss[index]>=coastLoss[index]*.90d)
-                continue;
-            double angle=k*Math.PI/4d;
-            double activeForward=meanX[index]*Math.cos(angle)+
-                                 meanY[index]*Math.sin(angle);
-            // Must actually propel in the commanded direction, not merely
-            // predict passive coasting or a statistically predictable brake.
-            if(activeForward>.10d)count++;
+            // Identical measured-forward/heldout evidence as reliable().
+            // A predictable brake is never counted as propulsion.
+            if(heldoutForwardAuthorityV446(index))count++;
         }
         return count;
     }
     int reliableBanks(){
         int n=0;for(int i=0;i<N;i++)
-            if(trains[i]>=4&&validations[i]>=3&&coastLoss[i]>.10d&&
-               loss[i]<coastLoss[i]*.90d)n++;
+            if(heldoutForwardAuthorityV446(i))n++;
         return n;
     }
     void abort(){pending=false;issued=-1;}
