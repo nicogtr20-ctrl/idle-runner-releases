@@ -299,6 +299,22 @@ public final class Zero3RecurrentBrain {
     private int lastOfferedChoicesV405;
     private boolean lastLearnedVisibleV405;
     private float bestOfferedOpticalV405,chosenOpticalV405,worstOfferedOpticalV405;
+    // V451 read-only: trace WHICH stage selected an optically inferior action.
+    // Transient telemetry only; never used to choose, learn or serialize.
+    private int v451CognitionIndex,v451AfterRandomIndex,v451AfterPlannerIndex;
+    private float v451CognitionOptical,v451AfterRandomOptical,
+        v451AfterPlannerOptical,v451FinalOptical;
+    private boolean v451ExecutiveRecall;
+    String choiceStageTraceForQAV451(){
+        return "v451|cognitionIndex="+v451CognitionIndex+
+            "|afterRandomIndex="+v451AfterRandomIndex+
+            "|afterPlannerIndex="+v451AfterPlannerIndex+
+            "|cognitionOptical="+v451CognitionOptical+
+            "|afterRandomOptical="+v451AfterRandomOptical+
+            "|afterPlannerOptical="+v451AfterPlannerOptical+
+            "|finalOptical="+v451FinalOptical+
+            "|executiveRecall="+v451ExecutiveRecall;
+    }
     String optionCoverageForQA(){
         return "o405|offered="+lastOfferedChoicesV405+
             "|learnedVisible="+lastLearnedVisibleV405+
@@ -403,6 +419,9 @@ public final class Zero3RecurrentBrain {
             worstOfferedOpticalV405=Math.min(worstOfferedOpticalV405,utility);
         }
         int selected=cognition==null?0:cognition.select(x,options);
+        v451CognitionIndex=selected;
+        v451CognitionOptical=cognition==null?0f:
+            cognition.contactValenceScoreV369(x,options[selected][0],options[selected][1]);
         boolean randomSelectionOverrideV428=false;
         // Undirected physical exploration is essential BEFORE the GRU has
         // proven a body-response map. Probability decays with lived real
@@ -416,6 +435,9 @@ public final class Zero3RecurrentBrain {
                 randomSelectionOverrideV428=true;
             }
         }
+        v451AfterRandomIndex=selected;
+        v451AfterRandomOptical=cognition==null?0f:
+            cognition.contactValenceScoreV369(x,options[selected][0],options[selected][1]);
         if(plannerV354!=null){
             plannerV354.topology(cognition.snapshot().predictiveUnits);
             // The real S21 reserve-cost head can have a nearly constant
@@ -443,6 +465,9 @@ public final class Zero3RecurrentBrain {
                 }
             }
         }
+        v451AfterPlannerIndex=selected;
+        v451AfterPlannerOptical=cognition==null?0f:
+            cognition.contactValenceScoreV369(x,options[selected][0],options[selected][1]);
         offPolicyDirectionV384=embodiedImpass&&selected>=3;
         randomizedIndependentUniformChoiceV428=
             randomSelectionOverrideV428&&offPolicyDirectionV384;
@@ -451,6 +476,9 @@ public final class Zero3RecurrentBrain {
         float[] authorized=options[selected];
         optionReplayV354=false;
         if(executive!=null){authorized=executive.propose(x,authorized,decision,observeV354,cognition);optionReplayV354=executive.usedMemory();}
+        v451ExecutiveRecall=optionReplayV354;
+        v451FinalOptical=cognition==null?0f:
+            cognition.contactValenceScoreV369(x,authorized[0],authorized[1]);
         float dx=authorized[0],dy=authorized[1],effort=authorized[2],
             adhesion=authorized[3],duration=authorized[4];
         chosenOpticalV405=cognition==null?0f:
