@@ -31,6 +31,23 @@ public final class Zero3ContextAdhesionV319 {
     private final Rng rng;
     private final boolean training;
     private boolean active,hasStep,heldoutDecision;
+    // ZERO461 RESEARCH ONLY: isolate whether random V319 CH2 exploration
+    // confounds the original V390 CH0/CH1/CH3 body-to-action motor learner.
+    // Keep V319 learned grip output, physical grip contact, actual work,
+    // rewards, CH2 sole owner and trained weights intact. Never serialized.
+    private boolean deterministicGripPhysicalEvidenceLabV461;
+    private long suppressedV319ProbeDecisionsV461;
+    void enableDeterministicGripPhysicalEvidenceLabV461(){
+        if(active||hasStep)throw new IllegalStateException("V461 decision pending");
+        deterministicGripPhysicalEvidenceLabV461=true;
+    }
+    boolean deterministicGripPhysicalEvidenceLabV461(){
+        return deterministicGripPhysicalEvidenceLabV461;
+    }
+    long suppressedV319ProbeDecisionsV461(){return suppressedV319ProbeDecisionsV461;}
+    float appliedGripProbeL1V461(){
+        float n=0f;for(float p:perturb)n+=Math.abs(p);return n;
+    }
     // Original GameActivity runs at 1/60s, unlike the V3 lab's fixed .025s.
     // Only physical cost bookkeeping adapts: the learned grip and world physics
     // retain their exact functions. Default 1.0 keeps V319 research unchanged.
@@ -143,8 +160,15 @@ public final class Zero3ContextAdhesionV319 {
         }
         // Exploration of the neuron's LOGIT; not a hand-coded on/off grip.
         float coarse=training?(rng.u()*2f-1f)*1.35f:0f;
-        for(int s=0;s<SECTORS;s++)
-            perturb[s]=training?coarse+(rng.u()*2f-1f)*1.45f:0f;
+        for(int s=0;s<SECTORS;s++){
+            // The same V319 RNG samples are consumed in both trial arms,
+            // so the isolated change is only whether CH2 exploratory noise
+            // reaches the existing learned sigmoid grip output.
+            float drawn=training?coarse+(rng.u()*2f-1f)*1.45f:0f;
+            perturb[s]=deterministicGripPhysicalEvidenceLabV461?0f:drawn;
+        }
+        if(training&&deterministicGripPhysicalEvidenceLabV461)
+            suppressedV319ProbeDecisionsV461++;
     }
     /** Physical timestep of the ORIGINAL game, set before each neural grip actuation. */
     void originalTimestepV356(float dt){
