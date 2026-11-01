@@ -248,6 +248,8 @@ public final class Zero417WildOriginalVelocityCredit10000AndroidTest {
             assertTrue("V429 real high-level causal motor map enabled",
                 local.contains("safeMotorMapLabV420=true"));
             android.util.Log.i("ZERO417_WILD_LONG","ZERO417_REAR_WALL_RULE "+local);
+            android.util.Log.i("ZERO417_WILD_LONG","ZERO443_MOTOR_EVIDENCE "+
+                original.originalV443MotorEvidenceDiagnosticsForQA());
             String v436Coverage=original.originalV422LearnedHarmCandidateDiagnosticsForQA();
             android.util.Log.i("ZERO417_WILD_LONG","ZERO436_LEARNED_HARM_COVERAGE "+v436Coverage);
             assertTrue("V436 learned harm sampling flag enabled",v436Coverage.contains("enabled=true"));
