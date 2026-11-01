@@ -58,7 +58,7 @@ jobs:
             grep -q "OK (5 tests)" "$RUNNER_TEMP/Zero434ObservedDelayedContactAndroidTest.txt"
             grep -q "OK (5 tests)" "$RUNNER_TEMP/Zero435AcceleratedDelayedContactAndroidTest.txt"
             grep -q "OK (5 tests)" "$RUNNER_TEMP/Zero442DelayedBankDriftEligibilityAndroidTest.txt"
-            grep -q "OK (3 tests)" "$RUNNER_TEMP/Zero446HeldoutForwardAuthorityAndroidTest.txt"'
+            grep -q "OK (3 tests)" "$RUNNER_TEMP/Zero446HeldoutForwardAuthorityAndroidTest.txt"
             grep -q "OK (4 tests)" "$RUNNER_TEMP/Zero458V371MeasuredForwardEvidenceAndroidTest.txt"
       - uses: actions/upload-artifact@v4
         if: always()
