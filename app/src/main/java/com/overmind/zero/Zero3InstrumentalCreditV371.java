@@ -68,6 +68,19 @@ final class Zero3InstrumentalCreditV371 {
     private int recentHarmBand=-1;
     private float recentHarmTime;
     private static float limit(float x,float a,float b){return Math.max(a,Math.min(b,x));}
+    /**
+     * V441 LAB: V433 must not confuse a requested heading with material travel
+     * when PRE COM drift is already physically measurable. Original V433's
+     * 2 U/s gate missed every one of V440's 39 genuine red contacts (max
+     * 1.785 U/s), even though 38 were already drifting toward the hazard.
+     * The existing .35 physical-motion evidence floor is used only while
+     * V433's strict, transient lab flag is ON. No neural/physics change.
+     */
+    private boolean unsupportedPreDriftV441(float[] observation194){
+        double speed=Math.hypot(observation194[191]*130f,observation194[192]*130f);
+        return speed>=(strictInertialOpticalEvidenceLabV433?.35d:2d);
+    }
+
     private static int heading(float x,float y){
         if(!Float.isFinite(x)||!Float.isFinite(y)||Math.hypot(x,y)<.1)
             throw new IllegalArgumentException("V371 invalid physical intention");
@@ -260,7 +273,7 @@ final class Zero3InstrumentalCreditV371 {
         }
         // V371's apparent motor skill can be pure balloon coasting.
         // Do not trust unconditional bank travel when already moving.
-        if(Math.hypot(observation194[191]*130f,observation194[192]*130f)>=2d){
+        if(unsupportedPreDriftV441(observation194)){
             // V433: commanded bearing is NOT evidence of material travel
             // while a drifting body has no validated action->inertia map.
             // The real negative contact remains learned; do not invent a
@@ -315,7 +328,7 @@ final class Zero3InstrumentalCreditV371 {
         float mx,my;
         if(predicted!=null){mx=predicted[0];my=predicted[1];}
         else{
-            if(Math.hypot(observation194[191]*130f,observation194[192]*130f)>=2d||
+            if(unsupportedPreDriftV441(observation194)||
                !motorVerified(bank)){
                 return observedDelayedContactWithoutMotorMapLabV434?
                     observedDelayedContactScoreV434(observation194,bank,contact):0f;

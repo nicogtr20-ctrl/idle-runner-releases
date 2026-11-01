@@ -41,6 +41,28 @@ public final class Zero433InertialOpticalEvidenceAndroidTest {
         assertEquals(before,model.opticalPreferenceV374(stationary,east,experienced()),0f);
         assertEquals(0L,model.unsupportedMovingOpticalPredictionsRejectedV433());
     }
+
+    @Test public void subTwoMeasuredDriftDoesNotPretendCommandedHeadingIsTravelV441(){
+        Zero3InstrumentalCreditV371 model=new Zero3InstrumentalCreditV371();
+        float[] east={1f,0f};
+        float[] drifting=observation(1.2f,0f);
+        float legacy=model.opticalPreferenceV374(drifting,east,experienced());
+        assertTrue("old 2U/s threshold falsely credits intended bearing",legacy<-.001f);
+        model.enableStrictInertialOpticalEvidenceLabV433();
+        assertEquals("real 1.2U/s PRE drift must not imply issued travel",
+            0f,model.opticalPreferenceV374(drifting,east,experienced()),0f);
+        assertEquals(1L,model.unsupportedMovingOpticalPredictionsRejectedV433());
+    }
+    @Test public void belowMeasuredDriftFloorRetainsGenuineLearnedOpticalValueV441(){
+        Zero3InstrumentalCreditV371 model=new Zero3InstrumentalCreditV371();
+        float[] east={1f,0f};
+        float[] slow=observation(.20f,0f);
+        float prior=model.opticalPreferenceV374(slow,east,experienced());
+        assertTrue(prior<-.001f);
+        model.enableStrictInertialOpticalEvidenceLabV433();
+        assertEquals(prior,model.opticalPreferenceV374(slow,east,experienced()),0f);
+        assertEquals(0L,model.unsupportedMovingOpticalPredictionsRejectedV433());
+    }
     @Test public void noInventedContactValueOrMotorEvidence(){
         Zero3InstrumentalCreditV371 model=new Zero3InstrumentalCreditV371();
         model.enableStrictInertialOpticalEvidenceLabV433();
