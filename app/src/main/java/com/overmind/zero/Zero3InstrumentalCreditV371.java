@@ -45,7 +45,7 @@ final class Zero3InstrumentalCreditV371 {
             "|opticalDriftSuppressed="+v443OpticalDriftSuppressed+
             "|verifiedV377Banks="+inertia.reliableBanks()+
             "|verifiedV371Directions="+verifiedDirections()+
-            "|delayedRealLinks="+delayedCredits();
+            "|delayedRealLinks="+delayedCredits()+"|"+inertia.motorValidationDiagnosticsV444();
     }
     void enableCensorUnverifiedDelayedBankUnderDriftLabV442(){
         if(pendingSight!=null||!strictInertialOpticalEvidenceLabV433||

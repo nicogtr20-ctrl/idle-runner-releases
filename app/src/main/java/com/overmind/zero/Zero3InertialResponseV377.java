@@ -16,6 +16,45 @@ final class Zero3InertialResponseV377 {
     private float initialVx,initialVy;
     private int issued=-1;
     private boolean pending,heldout;
+    // V444 transient READ-ONLY counters: accepted CLEAN train/heldout samples.
+    // These are never serialized and never participate in actor decisions.
+    private long v444AcceptedTrain, v444AcceptedHeldout,
+        v444LowTrain, v444LowHeldout, v444HighTrain, v444HighHeldout;
+    String motorValidationDiagnosticsV444(){
+        int train4=0,heldout3=0,both=0,coastStrong=0,lossPass=0,reliable=0;
+        int lowReliable=0,highReliable=0;
+        long storedTrain=0,storedHeldout=0;
+        for(int i=0;i<N;i++){
+            storedTrain+=trains[i];storedHeldout+=validations[i];
+            boolean t=trains[i]>=4,v=validations[i]>=3;
+            if(t)train4++;if(v)heldout3++;
+            if(t&&v){
+                both++;
+                if(coastLoss[i]>.10d)coastStrong++;
+                if(loss[i]<coastLoss[i]*.90d)lossPass++;
+                if(coastLoss[i]>.10d&&loss[i]<coastLoss[i]*.90d){
+                    reliable++;
+                    if(i<DIRS)lowReliable++;else highReliable++;
+                }
+            }
+        }
+        return "v444AcceptedTrain="+v444AcceptedTrain+
+            "|v444AcceptedHeldout="+v444AcceptedHeldout+
+            "|v444LowTrain="+v444LowTrain+
+            "|v444LowHeldout="+v444LowHeldout+
+            "|v444HighTrain="+v444HighTrain+
+            "|v444HighHeldout="+v444HighHeldout+
+            "|v444StoredTrain="+storedTrain+
+            "|v444StoredHeldout="+storedHeldout+
+            "|v444Train4Banks="+train4+
+            "|v444Heldout3Banks="+heldout3+
+            "|v444BothBanks="+both+
+            "|v444CoastStrongBanks="+coastStrong+
+            "|v444LossPassBanks="+lossPass+
+            "|v444ReliableBanks="+reliable+
+            "|v444LowReliable="+lowReliable+
+            "|v444HighReliable="+highReliable;
+    }
     private static float clip(float x,float max){return Math.max(-max,Math.min(max,x));}
     private static int slot(float x,float y,float vx,float vy){
         if(!Float.isFinite(x)||!Float.isFinite(y)||!Float.isFinite(vx)||
@@ -46,6 +85,13 @@ final class Zero3InertialResponseV377 {
         float responseX=actualX-clip(.30f*initialVx,120f);
         float responseY=actualY-clip(.30f*initialVy,120f);
         int i=issued;
+        if(independent){
+            v444AcceptedHeldout++;
+            if(i<DIRS)v444LowHeldout++;else v444HighHeldout++;
+        }else{
+            v444AcceptedTrain++;
+            if(i<DIRS)v444LowTrain++;else v444HighTrain++;
+        }
         if(independent){
             if(validations[i]<100000000)validations[i]++;
             double dx=responseX-meanX[i],dy=responseY-meanY[i];
@@ -117,6 +163,12 @@ final class Zero3InertialResponseV377 {
         System.arraycopy(validations,0,other.validations,0,N);
         System.arraycopy(loss,0,other.loss,0,N);
         System.arraycopy(coastLoss,0,other.coastLoss,0,N);
+        other.v444AcceptedTrain=v444AcceptedTrain;
+        other.v444AcceptedHeldout=v444AcceptedHeldout;
+        other.v444LowTrain=v444LowTrain;
+        other.v444LowHeldout=v444LowHeldout;
+        other.v444HighTrain=v444HighTrain;
+        other.v444HighHeldout=v444HighHeldout;
     }
     void write(DataOutputStream d)throws IOException{
         if(pending)throw new IOException("V377 pending neural choice");
