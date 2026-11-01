@@ -391,6 +391,11 @@ public final class GameActivity extends Activity {
         boolean trainingLayoutDirty=false;
         float trainingLastX=Float.NaN,trainingLastY=Float.NaN;
         String brain3Error="";
+        // V449 read-only physical PRE/POST lifecycle counters, never saved.
+        long zero449Pre=0,zero449Post=0,zero449TerminalPost=0;
+        long zero449Resets=0,zero449GenerationSkips=0;
+        int zero449LastPreEpisode=-1,zero449LastPostEpisode=-1;
+        String zero449Stage="BOOT";
         // Measured ONLY from the original world's red contact and weather.
         // Reset each real simulation substep, not once per GRU decision.
         float brain3HarmThisPhysicalFrameV359=0f;
@@ -1052,6 +1057,8 @@ public final class GameActivity extends Activity {
             lastFrame=0;
         }
         void resetEpisode(){
+            zero449Resets++;
+            zero449Stage="RESET_EPISODE";
             brain3LifeSerial++;
             // The original instant reincarnation remains authoritative.
             // Only recurrent activations reset, V3 neural weights are retained.
@@ -1373,6 +1380,10 @@ public final class GameActivity extends Activity {
                             brain3ImpulseThisPhysicalFrameV368,
                             brain3MotorSpentThisPhysicalFrameV359,
                             brain3HarmThisPhysicalFrameV359,false,true);
+                        zero449Post++;
+                        zero449TerminalPost++;
+                        zero449LastPostEpisode=episode;
+                        zero449Stage="TERMINAL_POST";
                     }catch(java.io.IOException failure){
                         simulationRunning=false;
                         brain3Error="V368 esperienza terminale non salvata: "+
@@ -1533,7 +1544,9 @@ public final class GameActivity extends Activity {
                     // proprioceptive recurrent refinement every real dt.
                     // Record efference from EXACTLY what physics receives.
                     if(useSymbiote&&symMatter!=null&&brain3!=null){
+                        String zero449PreviousStage=zero449Stage;
                         try{
+                            zero449Stage="PRE_ENTER";
                             // ZERO385: the original 3.0 GRU64 owns 100% of
                             // physical CH0/CH1/CH3 motor output. CH2 remains
                             // fully owned by the original V319 grip module
@@ -1543,10 +1556,23 @@ public final class GameActivity extends Activity {
                             // without changing the preserved 2.2 legacy path.
                             brain3.actuate(brain3LifeSerial,creature,surface,symMatter,
                                 null,environment,chamber,reserve,worldTime,slice);
+                            zero449Pre++;
+                            zero449LastPreEpisode=episode;
+                            zero449Stage="PRE_DONE";
                             mx=brain3.directionX();my=brain3.directionY();
                         }catch(java.io.IOException failure){
                             simulationRunning=false;
-                            brain3Error=failure.getMessage();break;
+                            brain3Error=failure.getMessage()
+                                +" [V449 lastStage="+zero449PreviousStage
+                                +",pre="+zero449Pre+",post="+zero449Post
+                                +",terminalPost="+zero449TerminalPost
+                                +",resets="+zero449Resets
+                                +",generationSkips="+zero449GenerationSkips
+                                +",preEpisode="+zero449LastPreEpisode
+                                +",postEpisode="+zero449LastPostEpisode
+                                +",episode="+episode
+                                +",lifeSerial="+brain3LifeSerial+"]";
+                            break;
                         }
                     }else if(useSymbiote&&symMatter!=null&&symMotor!=null){
                         symMotor.fastTick(creature,surface,slice);
@@ -1812,6 +1838,10 @@ public final class GameActivity extends Activity {
                         // Real experienced energy drain; never assign to a
                         // red resource signature or to moving a block.
                     }
+                    if(brain3!=null&&lifeStamp!=episode){
+                        zero449GenerationSkips++;
+                        zero449Stage="POST_SKIPPED_GENERATION";
+                    }
                     if(lifeStamp==episode){
                         float newlyMeasuredEffect=Math.max(0,
                             environmentEffectSinceAction-worldEffectAtFrameStart);
@@ -1944,6 +1974,9 @@ public final class GameActivity extends Activity {
                                 witnessedMuscleImpulse,
                                 brain3MotorSpentThisPhysicalFrameV359,
                                 brain3HarmThisPhysicalFrameV359,external);
+                            zero449Post++;
+                            zero449LastPostEpisode=episode;
+                            zero449Stage="NORMAL_POST";
                             // Keep original HUD visual sensors refreshed but
                             // never enter the 2.2 decision/training loop.
                             sensorMind.updateBodySense(creature,surface);
