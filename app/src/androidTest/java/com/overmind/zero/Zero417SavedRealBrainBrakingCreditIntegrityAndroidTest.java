@@ -34,10 +34,15 @@ public final class Zero417SavedRealBrainBrakingCreditIntegrityAndroidTest {
             brain.enableDeliveredLocalProbeLabV421();
             brain.enableOriginalPairedMotorContrastLabV454();
             brain.enableSafeMotorMapEvidenceLabV420();
+            brain.enableStrictInertialOpticalEvidenceLabV433();
+            brain.enableLowPreMomentumEvidenceLabV459();
             String after=brain.checkpoint();
             assertEquals("New neural-learning evidence must not change any "+
                 "existing source weight, recurrent slow state, V319 grip, "+
                 "cursor or V356 CRC before REAL experience",before,after);
+            String v459MotorEvidence=brain.motorEvidenceDiagnosticsV443();
+            assertTrue("V459 transient physical motor trust must be isolated",
+                v459MotorEvidence.contains("v459|lowTrain=0"));
             String diagnostic=brain.localCreditDiagnosticsV400();
             assertTrue(diagnostic.contains("realVelocityCreditLab=true"));
             assertTrue("V418 only changes ephemeral learning eligibility, not saved state",
