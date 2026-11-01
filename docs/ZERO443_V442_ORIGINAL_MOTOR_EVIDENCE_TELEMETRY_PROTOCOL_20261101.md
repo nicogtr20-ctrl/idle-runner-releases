@@ -19,3 +19,14 @@ The wild V442 ten 1k windows and 49 red/4 blue are effectively identical to V441
 If `censoredNonzeroHistorical=0` in original wild 10k, V442's behavioral effect was absent or negligible in that test, despite its unit PASS. If `verifiedV377Banks=0`, no heldout-certified motor mapping exists; assigning arbitrary desired headings as safe physical travel would be unsound. If there are nonzero censored scores yet behavior unchanged, next inspect planner/executive overrides and whether motor commands actually overcome PRE COM inertia. These counters are **score evaluations**, not distinct GRU decisions, and cannot be misrepresented as new pickups or movement.
 
 Mandatory unchanged approval: exact original S21 33,312-trained +>=10k decisions, >=25% signed/gross, >=9/10 windows >=10%, zero inverse, >=5 new blue; original wild >=10k real decisions, >=12% signed/gross, red last 5k < first 5k and total red <=2× actual blue; regressions and CRC PASS. Original 194 sensors, 64 GRU, 512 weights, V356 CRC, CH2 V319, 170-material body and 12 saves preserved. No V2.2.
+
+## Actual final V443 source SHA and original Android jobs
+
+**Final source/workflow commit** `4e243b4b2e91d744f58a21185d87a59c97872bc0`. The earlier V443 `d1f1de68` runs were superseded before acceptance because the regression harness still expected four V442 tests, while the new read-only fifth test had been added. That CI-only mismatch was corrected before these four final runs. Never combine results from different SHAs.
+
+- [Original saved S21 10k — 41269049693](https://github.com/nicogtr20-ctrl/idle-runner-releases/actions/runs/41269049693)
+- [Original newborn wild 10k — 41269049677](https://github.com/nicogtr20-ctrl/idle-runner-releases/actions/runs/41269049677)
+- [Original Android regressions, five-case V442/V443 test — 41269049713](https://github.com/nicogtr20-ctrl/idle-runner-releases/actions/runs/41269049713)
+- [Original 33,312 S21 V356 CRC/512 weights — 41269049662](https://github.com/nicogtr20-ctrl/idle-runner-releases/actions/runs/41269049662)
+
+All were QUEUED/IN_PROGRESS when recorded. **No behavioral or integrity PASS is claimed until actual completed logs are read.** The original user brain, 194 sensors, 170-body physics and 12 saves were not modified.
