@@ -38,6 +38,20 @@ final class Zero3InertialResponseV377 {
                 }
             }
         }
+        // V445 READ-ONLY: per-bank actual action-conditioned forward response,
+        // independent heldout loss and coast baseline, all in milli-units.
+        // No reliability gate, prediction, training or serialized data changes.
+        StringBuilder perBank=new StringBuilder();
+        for(int i=0;i<N;i++){
+            if(i>0)perBank.append(',');
+            double angle=(i%DIRS)*Math.PI/4d;
+            double forward=meanX[i]*Math.cos(angle)+meanY[i]*Math.sin(angle);
+            perBank.append(i).append(':').append(trains[i]).append('/')
+                .append(validations[i]).append(':')
+                .append(Math.round(forward*1000d)).append(':')
+                .append(Math.round(loss[i]*1000d)).append(':')
+                .append(Math.round(coastLoss[i]*1000d));
+        }
         return "v444AcceptedTrain="+v444AcceptedTrain+
             "|v444AcceptedHeldout="+v444AcceptedHeldout+
             "|v444LowTrain="+v444LowTrain+
@@ -53,7 +67,8 @@ final class Zero3InertialResponseV377 {
             "|v444LossPassBanks="+lossPass+
             "|v444ReliableBanks="+reliable+
             "|v444LowReliable="+lowReliable+
-            "|v444HighReliable="+highReliable;
+            "|v444HighReliable="+highReliable+
+            "|v445BankTrainHeldoutForwardLossCoastMilli="+perBank;
     }
     private static float clip(float x,float max){return Math.max(-max,Math.min(max,x));}
     private static int slot(float x,float y,float vx,float vy){
