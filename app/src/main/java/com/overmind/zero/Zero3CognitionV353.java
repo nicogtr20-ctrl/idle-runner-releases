@@ -175,6 +175,10 @@ public final class Zero3CognitionV353 {
     void enableAcceleratedDelayedContactEvidenceLabV435(){
         instrumental.enableAcceleratedDelayedContactEvidenceLabV435();
     }
+    // V442 research-only, not persisted in V356 checkpoint.
+    void enableCensorUnverifiedDelayedBankUnderDriftLabV442(){
+        instrumental.enableCensorUnverifiedDelayedBankUnderDriftLabV442();
+    }
     boolean hasVisibleLearnedHarmV422(float[] observation){
         return contactValence.hasVisibleLearnedHarmV422(observation);
     }
