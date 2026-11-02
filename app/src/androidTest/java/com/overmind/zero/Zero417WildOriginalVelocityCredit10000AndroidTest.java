@@ -175,6 +175,9 @@ public final class Zero417WildOriginalVelocityCredit10000AndroidTest {
                 // V442 sole behavioral change versus V441: do not treat
                 // historical bank association as a verified new motor action.
                 original.originalV442EnableCensorUnverifiedDelayedBankUnderDriftForQA();
+                // V476 ONLY behavioral variable: independent heldout-validated
+                // intermediate PRE drift 0.35..2.0 in transient V377 banks.
+                original.originalV476EnableTransientMidDriftModelForQA();
                 // ZERO461 sole new scientific variable from V457: preserve
                 // original learned CH2 grip while suppressing only its 16
                 // random exploratory logits; actual sole GRU3 muscle train
