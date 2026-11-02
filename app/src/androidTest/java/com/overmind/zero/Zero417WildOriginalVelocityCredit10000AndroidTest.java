@@ -103,15 +103,35 @@ public final class Zero417WildOriginalVelocityCredit10000AndroidTest {
             // Activity monitor returns when launch is observed, potentially
             // BEFORE onCreate()/Lab.load() completes. A previous V403
             // laboratory trial misreported that as loss of the GRU owner.
+            // ZERO471 read-only boot forensics. V470 wild failed before
+            // decision 1 in THREE independent emulator attempts, but the
+            // previous assertion discarded the original Activity's error.
+            // Do not lengthen/shorten the wait or alter actor, world, saves.
             boolean ready=false;
+            AtomicReference<String> bootDiagnostic=new AtomicReference<>("not sampled");
             for(int wait=0;wait<300&&!ready;wait++){
                 AtomicBoolean has=new AtomicBoolean(false);
-                instrument.runOnMainSync(()->has.set(
-                    original.originalV356NeuralOwnerForQA()));
+                instrument.runOnMainSync(()->{
+                    has.set(original.originalV356NeuralOwnerForQA());
+                    bootDiagnostic.set("owner="+has.get()+
+                        ",cursor="+original.originalV356DecisionsForQA()+
+                        ",error="+original.originalV356BrainErrorForQA()+
+                        ",destroyed="+original.isDestroyed()+
+                        ",finishing="+original.isFinishing());
+                });
                 ready=has.get();
+                if(!ready&&(wait%50==0||wait==299))
+                    android.util.Log.i("ZERO417_WILD_LONG",
+                        "ZERO471_ORIGINAL_GRU3_BOOT_DIAGNOSTIC poll="+wait+
+                        ",freshBirthFlag="+p.getBoolean(
+                            SaveSlotStore.FRESH_ZERO3_BIRTH,false)+
+                        ",savedBrainBytes="+p.getString(
+                            Zero3OriginalBrainV356.KEY,"").length()+
+                        ","+bootDiagnostic.get());
                 if(!ready)android.os.SystemClock.sleep(100);
             }
-            assertTrue("Original sole GRU3 must really finish boot",ready);
+            assertTrue("Original sole GRU3 must really finish boot: "+
+                bootDiagnostic.get(),ready);
             AtomicLong initial=new AtomicLong(-1);
             AtomicReference<Window> initialWindow=new AtomicReference<>();
             // V412: snapshot STARTING state and PRE physical GRU3 stats on
