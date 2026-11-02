@@ -5,7 +5,10 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import static org.junit.Assert.*;
 
-/** V469 one-variable original V371/V369 safety-gate ablation; not release proof. */
+/** V469 one-variable original V371/V369 safety-gate ablation; not release proof.
+ * The separate original 2x10000 Android runs decide whether the hypothesis is safe.
+ * The default strict V433 behavior is deliberately unchanged without opt-in.
+ */
 @RunWith(AndroidJUnit4.class)
 public final class Zero469LearnedHarmOpticalDriftAndroidTest {
     private static float[] sight(float speed){
