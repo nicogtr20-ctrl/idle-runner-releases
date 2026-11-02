@@ -155,6 +155,11 @@ public final class GameActivity extends Activity {
     // delivered muscle perturbation. No authored movement or reward.
     // V433 lab-only: no physically validated steering prediction means
     // intended heading cannot stand in for drift-dominated optical travel.
+    void originalV469EnableLearnedHarmDriftOpticalAblationForQA(){
+        if(lab==null||lab.brain3==null||!lab.brain3.realPhysicalMotorContextV412())
+            throw new IllegalStateException("V469 original GRU3 unavailable");
+        lab.brain3.enableLearnedHarmDriftOpticalAblationLabV469();
+    }
     void originalV433EnableStrictInertialOpticalEvidenceForQA(){
         if(lab==null||lab.brain3==null||
            !lab.brain3.realPhysicalMotorContextV412())
