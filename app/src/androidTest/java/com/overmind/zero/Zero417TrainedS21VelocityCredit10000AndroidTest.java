@@ -297,11 +297,20 @@ public final class Zero417TrainedS21VelocityCredit10000AndroidTest {
                 // This does not mutate the original actor, material or brain.
                 if(cursor-initial.get()>=nextBucket){
                     AtomicReference<Window> snap=new AtomicReference<>();
-                    instrument.runOnMainSync(()->snap.set(new Window(
-                        original.originalV406TrueLifetimeMaterialContactsForQA(),
-                        original.originalV400LocalMotorDiagnosticsForQA(),
-                        original.originalV366MotorDiagnosticForQA(),
-                        original.originalV356DecisionsForQA())));
+                    // V465 read-only: capture actual physical rebirth serial
+                    // on the SAME UI transaction as each 1000-decision window.
+                    // This tests whether inverse locomotion windows coincide
+                    // with death and genuine training-room respawn; it does
+                    // not change the actor, rewards, world or saved brain.
+                    AtomicLong sampledLife=new AtomicLong(-1);
+                    instrument.runOnMainSync(()->{
+                        snap.set(new Window(
+                            original.originalV406TrueLifetimeMaterialContactsForQA(),
+                            original.originalV400LocalMotorDiagnosticsForQA(),
+                            original.originalV366MotorDiagnosticForQA(),
+                            original.originalV356DecisionsForQA()));
+                        sampledLife.set(original.originalV356LifeForQA());
+                    });
                     Window now=snap.get();
                     assertNotNull(now);
                     int window=(int)(nextBucket/1000);
@@ -314,6 +323,15 @@ public final class Zero417TrainedS21VelocityCredit10000AndroidTest {
                         Double.isFinite(now.signed)&&Double.isFinite(now.gross));
                     assertTrue("Original material travel must not decrease",now.gross>=previous.gross);
                     windows[window]=now;
+                    // V465: do not claim the saved four ready blues form a
+                    // lifetime 10k ceiling: real deaths recreate five blues.
+                    // Count only genuine pickups in the original contact ledger.
+                    android.util.Log.i("ZERO417_USER_S21_LONG",
+                        "ZERO465_WINDOW_LIFE_RESOURCE bucket="+window+
+                        " lifeSerial="+sampledLife.get()+
+                        " rebirthsSinceStart="+(sampledLife.get()-initialLife.get())+
+                        " newBlueThisWindow="+(now.blue-previous.blue)+
+                        " newBlueCumulative="+(now.blue-windows[0].blue));
                     String status=now.metric(window,previous);
                     System.out.println(status);
                     android.util.Log.i("ZERO417_USER_S21_LONG",status);
