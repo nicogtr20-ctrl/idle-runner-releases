@@ -373,9 +373,11 @@ final class Zero3InstrumentalCreditV371 {
         int bank=heading(chosen[0],chosen[1]);
         float[] predicted=inertia.expected(observation194,chosen);
         if(predicted!=null){
-            float len=(float)Math.hypot(predicted[0],predicted[1]);
-            return len<.1f?0f:contact.utility(observation194,
-                predicted[0]/len,predicted[1]/len);
+            // V480 LAB: score() already scores the SAME heldout V377 travel
+            // against the SAME actually learned wavelength consequences.
+            // Adding its normalized bearing again is correlated evidence,
+            // not a second physical motor observation.
+            return 0f;
         }
         // V371's apparent motor skill can be pure balloon coasting.
         // Do not trust unconditional bank travel when already moving.
@@ -405,13 +407,11 @@ final class Zero3InstrumentalCreditV371 {
             return .35f*contact.utility(observation194,chosen[0],chosen[1]);
         }
         if(motorVerified(bank)){
+            // V480: score() already reconstructs the identical measured
+            // V371 residual plus PRE coast and scores that physical travel.
+            // Do not count the same retinal/contact evidence twice.
             v475OpticalReconstructed++;
-            float[] totalTravel=reconstructRealTravelFromResidualV474(
-                observation194,learnedX[bank],learnedY[bank]);
-            float dx=totalTravel[0],dy=totalTravel[1];
-            float len=(float)Math.hypot(dx,dy);
-            if(len<.35f)return 0f;
-            return contact.utility(observation194,dx/len,dy/len);
+            return 0f;
         }
         return .35f*contact.utility(observation194,chosen[0],chosen[1]);
     }
