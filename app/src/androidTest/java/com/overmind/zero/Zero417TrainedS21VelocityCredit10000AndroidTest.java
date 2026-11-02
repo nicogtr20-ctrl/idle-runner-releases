@@ -265,14 +265,51 @@ public final class Zero417TrainedS21VelocityCredit10000AndroidTest {
             Window previous=initialWindow.get();
             final Window[] windows=new Window[11];
             windows[0]=previous;
+            // V466 diagnostic ONLY: locate the actual original-life boundary
+            // within a 1000-decision window. No body, GRU, reward, or test gate
+            // changes. Polling can lag a few genuine decisions, so these are
+            // approximate event positions, NOT pre/post death force samples.
+            final long[] lastObservedLifeV466={initialLife.get()};
+            final Window[] previousLifeSnapshotV466={previous};
             for(int burst=0;burst<MAX_BURSTS && cursor<finalCursor;burst++){
                 AtomicLong result=new AtomicLong(-1);
+                AtomicLong priorLifeV466=new AtomicLong(-1);
+                AtomicLong currentLifeV466=new AtomicLong(-1);
+                AtomicReference<Window> lifeSnapshotV466=new AtomicReference<>();
                 // The game advances autonomously on its normal UI clock.
                 // Test thread only observes a sampled decision cursor.
                 android.os.SystemClock.sleep(260);
-                instrument.runOnMainSync(()->result.set(
-                    original.originalV356DecisionsForQA()));
+                instrument.runOnMainSync(()->{
+                    result.set(original.originalV356DecisionsForQA());
+                    long life=original.originalV356LifeForQA();
+                    if(life!=lastObservedLifeV466[0]){
+                        priorLifeV466.set(lastObservedLifeV466[0]);
+                        currentLifeV466.set(life);
+                        lifeSnapshotV466.set(new Window(
+                            original.originalV406TrueLifetimeMaterialContactsForQA(),
+                            original.originalV400LocalMotorDiagnosticsForQA(),
+                            original.originalV366MotorDiagnosticForQA(),
+                            result.get()));
+                        lastObservedLifeV466[0]=life;
+                    }
+                });
                 cursor=result.get();
+                Window lifeBoundaryV466=lifeSnapshotV466.get();
+                if(lifeBoundaryV466!=null){
+                    Window prior=previousLifeSnapshotV466[0];
+                    android.util.Log.i("ZERO417_USER_S21_LONG",
+                        "ZERO466_REAL_REBIRTH_BOUNDARY decision="+cursor+
+                        " fromLife="+priorLifeV466.get()+
+                        " toLife="+currentLifeV466.get()+
+                        " approximateBucket="+((cursor-initial.get()-1)/1000+1)+
+                        " signedSincePriorBoundary="+(lifeBoundaryV466.signed-prior.signed)+
+                        " grossSincePriorBoundary="+(lifeBoundaryV466.gross-prior.gross)+
+                        " blueSincePriorBoundary="+(lifeBoundaryV466.blue-prior.blue)+
+                        " signedSinceStart="+(lifeBoundaryV466.signed-windows[0].signed)+
+                        " grossSinceStart="+(lifeBoundaryV466.gross-windows[0].gross)+
+                        " blueSinceStart="+(lifeBoundaryV466.blue-windows[0].blue));
+                    previousLifeSnapshotV466[0]=lifeBoundaryV466;
+                }
                 // V397: never misreport a lost original Android brain owner
                 // as a harmless missing statistics field at the next 200
                 // decisions. This is a SCIENTIFIC instrumentation failure,
