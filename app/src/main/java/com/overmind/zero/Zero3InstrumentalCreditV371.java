@@ -316,6 +316,24 @@ final class Zero3InstrumentalCreditV371 {
             learnedY[bank]*Math.sin(angle);
         return forward>.10d;
     }
+    /**
+     * V474 experimental consistency repair: V473 stored a PRE-coast-subtracted
+     * motor residual in learnedX/Y. Candidate scoring must reconstruct the
+     * physically expected TOTAL travel, as V377.expected already does, rather
+     * than misreading that residual as an absolute material displacement.
+     * No reward, steering direction, body force or saved-state change.
+     */
+    static float[] reconstructRealTravelFromResidualV474(float[] pre194,
+                                                          float residualX,float residualY){
+        if(pre194==null||pre194.length!=194||
+           !Float.isFinite(pre194[191])||!Float.isFinite(pre194[192])||
+           !Float.isFinite(residualX)||!Float.isFinite(residualY))
+            throw new IllegalArgumentException("V474 invalid PRE/residual");
+        return new float[]{
+            limit(residualX+.30f*pre194[191]*130f,-120f,120f),
+            limit(residualY+.30f*pre194[192]*130f,-120f,120f)
+        };
+    }
     /** V374: once this body's REAL response for an intended heading has
      * been heldout-validated, use the measured physical bearing when judging
      * optical consequences. Otherwise the actor may select a commanded
@@ -350,7 +368,9 @@ final class Zero3InstrumentalCreditV371 {
             return .35f*contact.utility(observation194,chosen[0],chosen[1]);
         }
         if(motorVerified(bank)){
-            float dx=learnedX[bank],dy=learnedY[bank];
+            float[] totalTravel=reconstructRealTravelFromResidualV474(
+                observation194,learnedX[bank],learnedY[bank]);
+            float dx=totalTravel[0],dy=totalTravel[1];
             float len=(float)Math.hypot(dx,dy);
             if(len<.35f)return 0f;
             return contact.utility(observation194,dx/len,dy/len);
@@ -409,7 +429,9 @@ final class Zero3InstrumentalCreditV371 {
                 if(Math.abs(historical)>0.000001f)v443UncensoredNonzeroHistorical++;
                 return historical;
             }
-            mx=learnedX[bank];my=learnedY[bank];
+            float[] totalTravel=reconstructRealTravelFromResidualV474(
+                observation194,learnedX[bank],learnedY[bank]);
+            mx=totalTravel[0];my=totalTravel[1];
         }
         float reward=0f,brightness=0f;
         // Sensor 188 is ACTUAL reserve in [-1,+1], not a food label.
