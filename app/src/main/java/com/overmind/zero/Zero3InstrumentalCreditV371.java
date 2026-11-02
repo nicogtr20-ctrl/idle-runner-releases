@@ -86,6 +86,15 @@ final class Zero3InstrumentalCreditV371 {
             throw new IllegalStateException("V434 requires V433 between decisions");
         observedDelayedContactWithoutMotorMapLabV434=true;
     }
+    // V469 LAB ONLY: test whether suppressing ALL learned hazard preference
+    // during measured drift prevents genuine contact learning from affecting
+    // the existing GRU3 candidate selector. No new direction or reward.
+    private transient boolean learnedHarmDriftOpticalAblationLabV469;
+    void enableLearnedHarmDriftOpticalAblationLabV469(){
+        if(pendingSight!=null||!strictInertialOpticalEvidenceLabV433)
+            throw new IllegalStateException("V469 requires closed decision and strict V433");
+        learnedHarmDriftOpticalAblationLabV469=true;
+    }
     private long unsupportedMovingOpticalPredictionsRejectedV433;
     void enableStrictInertialOpticalEvidenceLabV433(){
         if(pendingSight!=null)throw new IllegalStateException("V433 must start between decisions");
@@ -324,6 +333,14 @@ final class Zero3InstrumentalCreditV371 {
             // The real negative contact remains learned; do not invent a
             // motor outcome or select a preset escape direction.
             if(strictInertialOpticalEvidenceLabV433){
+                // V469 isolated falsification: ONLY a currently visible,
+                // genuinely learned negative wavelength can restore the
+                // original WEAK 0.35 actor-heading optical hypothesis.
+                // This is not verified physical travel: strict default stays
+                // unchanged and full original Android safety gates decide.
+                if(learnedHarmDriftOpticalAblationLabV469&&
+                   contact.hasVisibleLearnedHarmV422(observation194))
+                    return .35f*contact.utility(observation194,chosen[0],chosen[1]);
                 unsupportedMovingOpticalPredictionsRejectedV433++;
                 v443OpticalDriftSuppressed++;
                 return 0f;
