@@ -149,6 +149,7 @@ final class Zero3OriginalBrainV356 {
     // other contaminated world forces while the lower V401 motor rejects it.
     // Ephemeral mode: never persisted in the V356/12-slot checkpoint.
     // Final same-SHA 4-gate trigger: V476 changes ONLY transient V377 mid-speed evidence.
+    // V476 V444 counters keep mid-speed trials separate from legacy low/high bins.
     void enableMidDriftRegimeLabV476(){
         if(pending)throw new IllegalStateException("V476 original body decision pending");
         brain.enableMidDriftRegimeLabV476();
