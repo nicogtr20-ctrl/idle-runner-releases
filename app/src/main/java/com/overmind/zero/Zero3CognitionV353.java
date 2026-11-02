@@ -239,6 +239,20 @@ public final class Zero3CognitionV353 {
             "|nonzeroOptPrefCandidates="+v453NonzeroOpticalPreferences+
             "|nonzeroMotorCandidates="+v453NonzeroMotorScores;
     }
+    /** V482 lab-only causal ranking gate: a wavelength is dangerous only
+     * AFTER genuine physical contacts taught V369 its negative outcome.
+     * The 0.005 blanket deadband previously vetoed a better already-scored
+     * GRU proposal even during real visible learned harm (31/56 V481 RED
+     * contacts). Remove that deadband ONLY for observed learned harm;
+     * leave the independent V353 costSafety and actual score unchanged.
+     * No hand-authored heading, reward, force or checkpoint field. */
+    static float learnedHarmSelectionMarginV482(
+            Zero3ContactValenceV369 contacts,float[] observation){
+        if(contacts==null||observation==null||observation.length!=INPUTS)
+            throw new IllegalArgumentException("V482 invalid real optical evidence");
+        if(contacts.hasVisibleLearnedHarmV422(observation))return 0f;
+        return contacts.hasReliableVisibleEvidence(observation)?.005f:.025f;
+    }
     int select(float[] observation,float[][] proposals){
         // A trusted one-step model is ONE source of evidence. The original
         // controller also demanded REAL, independently heldout movement
@@ -300,7 +314,10 @@ public final class Zero3CognitionV353 {
         // solely because its photons were divided by eight and downweighted
         // while the action-to-body mapping is still uncertain.
         boolean materialValenceObserved=contactValence.hasReliableVisibleEvidence(observation);
-        float margin=materialValenceObserved?.005f:.025f;
+        // V482: preserve all original score terms and independent cost safety;
+        // only a genuinely learned visible harmful wavelength can waive the
+        // legacy 0.005 proposal-switch deadband.
+        float margin=learnedHarmSelectionMarginV482(contactValence,observation);
         int chosen;
         if(!canPredict)chosen=bestScore>original+margin?best:0;
         else{
