@@ -10,12 +10,27 @@ import java.io.*;
  */
 final class Zero3InertialResponseV377 {
     private static final int DIRS=8, REGIMES=2, N=DIRS*REGIMES, VERSION=377;
-    private final float[] meanX=new float[N],meanY=new float[N];
-    private final int[] trains=new int[N],validations=new int[N];
-    private final double[] loss=new double[N],coastLoss=new double[N];
+    // V476: extra LAB-only intermediate-drift bank, NEVER written to V377 saves.
+    private static final int LIVE_N=N+DIRS;
+    private final float[] meanX=new float[LIVE_N],meanY=new float[LIVE_N];
+    private final int[] trains=new int[LIVE_N],validations=new int[LIVE_N];
+    private final double[] loss=new double[LIVE_N],coastLoss=new double[LIVE_N];
     private float initialVx,initialVy;
     private int issued=-1;
     private boolean pending,heldout;
+    private boolean midDriftRegimeLabV476;
+    void enableMidDriftRegimeLabV476(){
+        if(pending)throw new IllegalStateException("V476 only between real motor decisions");
+        midDriftRegimeLabV476=true;
+    }
+    private int slotV476(float x,float y,float vx,float vy){
+        int original=slot(x,y,vx,vy);
+        double speed=Math.hypot(vx,vy);
+        // 0.35 is the already measured V441 drift floor, NOT a new motor target.
+        // Never reinterpret original low/high saved V377 evidence in place.
+        return midDriftRegimeLabV476&&speed>=.35d&&speed<2d?
+            N+(original%DIRS):original;
+    }
     // V444 transient READ-ONLY counters: accepted CLEAN train/heldout samples.
     // These are never serialized and never participate in actor decisions.
     private long v444AcceptedTrain, v444AcceptedHeldout,
@@ -52,7 +67,14 @@ final class Zero3InertialResponseV377 {
                 .append(Math.round(loss[i]*1000d)).append(':')
                 .append(Math.round(coastLoss[i]*1000d));
         }
-        return "v444AcceptedTrain="+v444AcceptedTrain+
+        int midTrain=0,midHeldout=0,midReliable=0;
+        for(int i=N;i<LIVE_N;i++){
+            midTrain+=trains[i];midHeldout+=validations[i];
+            if(heldoutForwardAuthorityV446(i))midReliable++;
+        }
+        return "v476MidEnabled="+midDriftRegimeLabV476+
+            "|v476MidTrain="+midTrain+"|v476MidHeldout="+midHeldout+
+            "|v476MidReliable="+midReliable+"|v444AcceptedTrain="+v444AcceptedTrain+
             "|v444AcceptedHeldout="+v444AcceptedHeldout+
             "|v444LowTrain="+v444LowTrain+
             "|v444LowHeldout="+v444LowHeldout+
@@ -84,7 +106,7 @@ final class Zero3InertialResponseV377 {
             throw new IllegalStateException("V377 missing physical PRE");
         // 191/192 are actual COM velocity scaled /130 by original sensor.
         initialVx=perception[191]*130f;initialVy=perception[192]*130f;
-        issued=slot(action[0],action[1],initialVx,initialVy);
+        issued=slotV476(action[0],action[1],initialVx,initialVy);
         heldout=independent;pending=true;
     }
     void finish(float materialDx,float materialDy,float elapsed,boolean independent){
@@ -139,13 +161,13 @@ final class Zero3InertialResponseV377 {
     }
     boolean reliable(float[] observation,float[] action){
         if(observation==null||observation.length!=194||action==null||action.length<2)return false;
-        int i=slot(action[0],action[1],observation[191]*130f,observation[192]*130f);
+        int i=slotV476(action[0],action[1],observation[191]*130f,observation[192]*130f);
         return heldoutForwardAuthorityV446(i);
     }
     float[] expected(float[] observation,float[] action){
         if(!reliable(observation,action))return null;
         float vx=observation[191]*130f,vy=observation[192]*130f;
-        int i=slot(action[0],action[1],vx,vy);
+        int i=slotV476(action[0],action[1],vx,vy);
         // 0.3s physically predicted actual travel after this exact action.
         return new float[]{clip(.30f*vx+meanX[i],120f),
             clip(.30f*vy+meanY[i],120f)};
@@ -162,7 +184,9 @@ final class Zero3InertialResponseV377 {
         if(observation==null||observation.length!=194)return 0;
         float vx=observation[191]*130f,vy=observation[192]*130f;
         if(!Float.isFinite(vx)||!Float.isFinite(vy))return 0;
-        int speedBank=Math.hypot(vx,vy)>=2d?DIRS:0;
+        double speed=Math.hypot(vx,vy);
+        int speedBank=midDriftRegimeLabV476&&speed>=.35d&&speed<2d?
+            N:(speed>=2d?DIRS:0);
         int count=0;
         for(int k=0;k<DIRS;k++){
             int index=k+speedBank;
@@ -173,18 +197,19 @@ final class Zero3InertialResponseV377 {
         return count;
     }
     int reliableBanks(){
-        int n=0;for(int i=0;i<N;i++)
+        int n=0;for(int i=0;i<(midDriftRegimeLabV476?LIVE_N:N);i++)
             if(heldoutForwardAuthorityV446(i))n++;
         return n;
     }
     void abort(){pending=false;issued=-1;}
     void copyTo(Zero3InertialResponseV377 other){
-        System.arraycopy(meanX,0,other.meanX,0,N);
-        System.arraycopy(meanY,0,other.meanY,0,N);
-        System.arraycopy(trains,0,other.trains,0,N);
-        System.arraycopy(validations,0,other.validations,0,N);
-        System.arraycopy(loss,0,other.loss,0,N);
-        System.arraycopy(coastLoss,0,other.coastLoss,0,N);
+        System.arraycopy(meanX,0,other.meanX,0,LIVE_N);
+        System.arraycopy(meanY,0,other.meanY,0,LIVE_N);
+        System.arraycopy(trains,0,other.trains,0,LIVE_N);
+        System.arraycopy(validations,0,other.validations,0,LIVE_N);
+        System.arraycopy(loss,0,other.loss,0,LIVE_N);
+        System.arraycopy(coastLoss,0,other.coastLoss,0,LIVE_N);
+        other.midDriftRegimeLabV476=midDriftRegimeLabV476;
         other.v444AcceptedTrain=v444AcceptedTrain;
         other.v444AcceptedHeldout=v444AcceptedHeldout;
         other.v444LowTrain=v444LowTrain;
