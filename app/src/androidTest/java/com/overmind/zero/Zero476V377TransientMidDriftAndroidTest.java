@@ -4,7 +4,8 @@ import org.junit.Test;
 import static org.junit.Assert.*;
 import java.io.*;
 
-/** V476 Android regressions: real physical-response formulas, NO scripted heading or reward. */
+/** V476 Android regressions: real physical-response formulas, NO scripted heading or reward.
+ * Final same-SHA original Android S21/wild/regression/CRC gate trigger. */
 public final class Zero476V377TransientMidDriftAndroidTest {
     private static float[] pre(float vx,float vy){
         float[] p=new float[194];
