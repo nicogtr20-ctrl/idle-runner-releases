@@ -5,6 +5,7 @@ on:
     paths:
       - 'app/src/main/java/com/overmind/zero/Zero3LearningFoundation.java'
       - 'app/src/main/java/com/overmind/zero/Zero3OriginalBrainV356.java'
+      - 'app/src/main/java/com/overmind/zero/Zero3InstrumentalCreditV371.java'
       - 'app/src/androidTest/java/com/overmind/zero/Zero417SavedRealBrainBrakingCreditIntegrityAndroidTest.java'
       - 'app/src/main/java/com/overmind/zero/GameActivity.java'
       - '.github/workflows/zero417-s21-original-braking-credit-checkpoint-integrity.yml'
