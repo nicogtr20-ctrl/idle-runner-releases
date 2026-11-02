@@ -155,6 +155,8 @@ public final class GameActivity extends Activity {
     // delivered muscle perturbation. No authored movement or reward.
     // V433 lab-only: no physically validated steering prediction means
     // intended heading cannot stand in for drift-dominated optical travel.
+    // V469 is a reversible LAB-ONLY hypothesis; the exact 2x10k tests,
+    // Android regressions and original checkpoint CRC must ALL pass.
     void originalV469EnableLearnedHarmDriftOpticalAblationForQA(){
         if(lab==null||lab.brain3==null||!lab.brain3.realPhysicalMotorContextV412())
             throw new IllegalStateException("V469 original GRU3 unavailable");
