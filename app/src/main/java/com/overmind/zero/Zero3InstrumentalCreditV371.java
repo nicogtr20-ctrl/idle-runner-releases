@@ -389,10 +389,13 @@ final class Zero3InstrumentalCreditV371 {
                     // Actual PRE COM momentum is physically known even though
                     // the proposed muscle command has NO verified steering.
                     // Identical value for every unsupported proposed heading.
-                    float vx=observation194[191]*130f,vy=observation194[192]*130f;
-                    float speed=(float)Math.hypot(vx,vy);
+                    // V479: the SAME measured passive displacement is already
+                    // evaluated by score() for every unsupported action. V478
+                    // additionally added its normalized direction as optical
+                    // preference, counting one physical observation twice.
+                    // Keep one evidence-backed term, not two correlated rewards.
                     v478PassiveOpticalEvaluations++;
-                    return contact.utility(observation194,vx/speed,vy/speed);
+                    return 0f;
                 }
                 unsupportedMovingOpticalPredictionsRejectedV433++;
                 v443OpticalDriftSuppressed++;

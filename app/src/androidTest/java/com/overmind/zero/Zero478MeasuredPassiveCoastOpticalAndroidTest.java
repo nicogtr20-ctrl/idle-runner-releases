@@ -46,8 +46,8 @@ public final class Zero478MeasuredPassiveCoastOpticalAndroidTest {
         assertEquals("unsupported west command cannot erase eastward PRE drift",e,w,0f);
         float oe=m.opticalPreferenceV374(p,EAST,v),
               ow=m.opticalPreferenceV374(p,WEST,v);
-        assertTrue(oe<-.001f);
-        assertEquals("optical risk is not fabricated motor control",oe,ow,0f);
+        assertEquals("V479: passive contact evidence already counted by score",0f,oe,0f);
+        assertEquals("unsupported headings cannot claim a second optical consequence",oe,ow,0f);
         assertEquals(0,m.verifiedInertialResponseV377());
         String d=m.motorEvidenceDiagnosticsV443();
         assertTrue(d,d.contains("v478PassiveScore=2"));
@@ -57,14 +57,14 @@ public final class Zero478MeasuredPassiveCoastOpticalAndroidTest {
         Zero3InstrumentalCreditV371 m=enabled();
         Zero3ContactValenceV369 v=experienced(1,-7f);
         assertTrue(m.score(seen(1,-1.2f,0f),EAST,v)>.0001f);
-        assertTrue(m.opticalPreferenceV374(seen(1,-1.2f,0f),WEST,v)>.001f);
+        assertEquals(0f,m.opticalPreferenceV374(seen(1,-1.2f,0f),WEST,v),0f);
         assertEquals(0,m.verifiedInertialResponseV377());
     }
     @Test public void realLearnedBenefitUsesSamePhysicsAndUnknownIsNeutral(){
         Zero3InstrumentalCreditV371 m=enabled();
         float[] p=seen(2,1.2f,0f);
         assertTrue(m.score(p,EAST,experienced(2,22f))>.0001f);
-        assertTrue(m.opticalPreferenceV374(p,WEST,experienced(2,22f))>.001f);
+        assertEquals(0f,m.opticalPreferenceV374(p,WEST,experienced(2,22f)),0f);
         Zero3ContactValenceV369 unknown=new Zero3ContactValenceV369();
         assertEquals(0f,m.score(p,EAST,unknown),0f);
         assertEquals(0f,m.opticalPreferenceV374(p,WEST,unknown),0f);
