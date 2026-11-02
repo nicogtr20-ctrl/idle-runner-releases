@@ -166,6 +166,9 @@ public final class Zero3CognitionV353 {
         if(!heldout)contactValence.contact(spectral24,physicalEnergyDelta);
     }
     // ZERO422: observed physical negative wavelength only, no preset color.
+    void enableMidDriftRegimeLabV476(){
+        instrumental.enableMidDriftRegimeLabV476();
+    }
     void enableStrictInertialOpticalEvidenceLabV433(){
         instrumental.enableStrictInertialOpticalEvidenceLabV433();
     }
