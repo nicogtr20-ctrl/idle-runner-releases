@@ -254,6 +254,8 @@ public final class Zero417TrainedS21VelocityCredit10000AndroidTest {
                     original.originalV400LocalMotorDiagnosticsForQA(),
                     original.originalV366MotorDiagnosticForQA(),
                     initial.get()));
+                // V467 exact real death snapshots; no behavioral intervention.
+                original.originalV467EnableExactDeathBoundaryForQA();
                 original.originalV412ResumeTrueS21TrainingForQA(
                     expectedOriginalX,expectedOriginalY,expectedOriginalObjects);
             });

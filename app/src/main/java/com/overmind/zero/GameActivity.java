@@ -36,6 +36,12 @@ public final class GameActivity extends Activity {
     long originalV356DecisionsForQA(){return lab==null||lab.brain3==null?-1:lab.brain3.decisions();}
     float originalV363OriginalBodyTractionForQA(){return lab==null||lab.symMatter==null?-1f:lab.symMatter.passiveFloorBaselineV363();}
     int originalV356LifeForQA(){return lab==null?-1:lab.brain3LifeSerial;}
+    // V467 read-only QA flag, never exposed to the actual user UI or saves.
+    void originalV467EnableExactDeathBoundaryForQA(){
+        if(lab==null||lab.brain3==null)
+            throw new IllegalStateException("Original GRU3 owner required");
+        lab.qaExactDeathBoundaryV467=true;
+    }
     int originalV356WorldZoneForQA(){return lab==null?-1:lab.episode;}
     String originalV356BrainErrorForQA(){return lab==null?"no game":lab.brain3Error;}
     // QA probes read actual original-world physical harm, never test labels
@@ -460,6 +466,7 @@ public final class GameActivity extends Activity {
         // extendHabitat() increases it while the same body is ALIVE.
         // This is the actual generation, changed ONLY by resetEpisode().
         int brain3LifeSerial=0;
+        boolean qaExactDeathBoundaryV467=false; // transient original-world QA only
         // Separate TEST MAX mode: never part of x1/x5/x20 cycling.
         // Session-only, stopped by explicit STOP, Android pause or overheating.
         boolean testMax=false;
@@ -1455,8 +1462,24 @@ public final class GameActivity extends Activity {
                 lifeStats.death();
                 competenceMemoryV21.newLife();
                 skillExecution.resetLife();
+                // V467 original physical death BEFORE body reset, after terminal learning.
+                // No motor, reward, body, sensor or checkpoint changes.
+                if(qaExactDeathBoundaryV467&&brain3!=null)
+                    android.util.Log.i("ZERO467_EXACT_DEATH",
+                        "phase=PRE|life="+brain3LifeSerial+
+                        "|cursor="+brain3.decisions()+"|reserve="+reserve+
+                        "|cx="+creature.cx+"|cy="+creature.cy+
+                        "|cvx="+creature.cvx+"|cvy="+creature.cvy+
+                        "|motor="+brain3.motorDiagnosticV361());
                 reserve=100;lastEvent="CORPO ESAUSTO • MEMORIA CONSERVATA";eventTime=6;
                 resetEpisode();
+                if(qaExactDeathBoundaryV467&&brain3!=null)
+                    android.util.Log.i("ZERO467_EXACT_DEATH",
+                        "phase=POST|life="+brain3LifeSerial+
+                        "|cursor="+brain3.decisions()+"|reserve="+reserve+
+                        "|cx="+creature.cx+"|cy="+creature.cy+
+                        "|cvx="+creature.cvx+"|cvy="+creature.cvy+
+                        "|motor="+brain3.motorDiagnosticV361());
                 nextChamber=elapsedLife+12f;
                 save();
             }
