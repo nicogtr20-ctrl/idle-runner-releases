@@ -74,4 +74,30 @@ public final class Zero476V377TransientMidDriftAndroidTest {
         assertNull("no measured motor residual over PRE coast",m.expected(pre(1f,0),EAST));
         assertEquals(0,m.reliableSteeringDirectionsV383(pre(1f,0f)));
     }
+
+    @Test public void passiveViscousBrakingOppositeIssuedHeadingCannotCertifyFalseMotorAuthority(){
+        Zero3InertialResponseV377 m=new Zero3InertialResponseV377();
+        m.enableMidDriftRegimeLabV476();
+        float[] west={-1f,0f};
+        // PRE COM +1 U/s, passive damped POST +0.15 U in 0.30s.
+        // Old residual -0.15 falsely points WEST despite zero WEST muscle.
+        for(int k=0;k<7;k++){
+            boolean heldout=k>=4;
+            m.begin(pre(1f,0f),west,heldout);
+            m.finish(.15f,0f,.30f,heldout);
+        }
+        assertNull("passive viscous braking cannot become certified WEST propulsion",
+            m.expected(pre(1f,0f),west));
+        assertTrue(m.motorValidationDiagnosticsV444().contains(
+            "v477MidOpposingPreRejected=7"));
+        assertTrue(m.motorValidationDiagnosticsV444().contains("v476MidTrain=0"));
+        assertTrue(m.motorValidationDiagnosticsV444().contains("v476MidHeldout=0"));
+    }
+    @Test public void independentlyObservedAlignedMidPropulsionStillCertifies(){
+        Zero3InertialResponseV377 m=verifiedMid();
+        assertNotNull(m.expected(pre(1f,0f),EAST));
+        assertEquals(.60f,m.expected(pre(1f,0f),EAST)[0],.0002f);
+        assertTrue(m.motorValidationDiagnosticsV444().contains(
+            "v477MidOpposingPreRejected=0"));
+    }
 }

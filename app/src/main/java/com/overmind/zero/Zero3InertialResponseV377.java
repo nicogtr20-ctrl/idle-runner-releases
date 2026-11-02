@@ -36,6 +36,8 @@ final class Zero3InertialResponseV377 {
     private long v444AcceptedTrain, v444AcceptedHeldout,
         v444LowTrain, v444LowHeldout, v444HighTrain, v444HighHeldout;
     private long v476MidAcceptedTrain,v476MidAcceptedHeldout;
+    // V477 LAB: conservative evidence censor for passive viscous braking.
+    private long v477MidOpposingPreRejected;
     String motorValidationDiagnosticsV444(){
         int train4=0,heldout3=0,both=0,coastStrong=0,lossPass=0,reliable=0;
         int lowReliable=0,highReliable=0;
@@ -78,6 +80,7 @@ final class Zero3InertialResponseV377 {
             "|v476MidReliable="+midReliable+
             "|v476MidAcceptedTrain="+v476MidAcceptedTrain+
             "|v476MidAcceptedHeldout="+v476MidAcceptedHeldout+
+            "|v477MidOpposingPreRejected="+v477MidOpposingPreRejected+
             "|v444AcceptedTrain="+v444AcceptedTrain+
             "|v444AcceptedHeldout="+v444AcceptedHeldout+
             "|v444LowTrain="+v444LowTrain+
@@ -126,6 +129,22 @@ final class Zero3InertialResponseV377 {
         float responseX=actualX-clip(.30f*initialVx,120f);
         float responseY=actualY-clip(.30f*initialVy,120f);
         int i=issued;
+        // V477: viscous drag can look like propulsion in the OPPOSITE
+        // issued direction: passive PRE +X -> damped POST +X produces a
+        // negative (POST-PRE) residual, falsely credited to a WEST command.
+        // The V476 mid bank must NOT certify such ambiguous transitions.
+        // Conservative eligibility ONLY: no force, reward, direction or
+        // persistent original low/high bank changes. True counter-drift
+        // muscle effects remain unverified rather than optimistically learned.
+        if(midDriftRegimeLabV476&&i>=N){
+            double angle=(i%DIRS)*Math.PI/4d;
+            double preAlong=initialVx*Math.cos(angle)+initialVy*Math.sin(angle);
+            if(preAlong<-.0001d){
+                v477MidOpposingPreRejected++;
+                abort();
+                return;
+            }
+        }
         if(independent){
             v444AcceptedHeldout++;
             if(i>=N)v476MidAcceptedHeldout++;
@@ -218,6 +237,7 @@ final class Zero3InertialResponseV377 {
         other.midDriftRegimeLabV476=midDriftRegimeLabV476;
         other.v476MidAcceptedTrain=v476MidAcceptedTrain;
         other.v476MidAcceptedHeldout=v476MidAcceptedHeldout;
+        other.v477MidOpposingPreRejected=v477MidOpposingPreRejected;
         other.v444AcceptedTrain=v444AcceptedTrain;
         other.v444AcceptedHeldout=v444AcceptedHeldout;
         other.v444LowTrain=v444LowTrain;
