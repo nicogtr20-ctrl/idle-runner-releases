@@ -952,6 +952,12 @@ final class Zero3OriginalBrainV356 {
     }
     void newLife(){
         interrupt();brain.resetLife();lastLife=-1;
+        // V468 LAB: this body's last 64 executed muscle efferences belong to
+        // the DEAD body. The next newborn's 194D GRU input slots 124..187
+        // must not report commands that its freshly reset solver never ran.
+        // Only transient motor echo is cleared: no neural weights, physical
+        // traction, V319 grip, reward, sensor topology or V356 wire change.
+        Arrays.fill(executed64,0f);
         // A new physical body has no previous-life pain stimulus.
         priorDamage=0f;actualDamageDuringDecisionV359=0f;
         motorReserveSpentDuringDecisionV359=0f;

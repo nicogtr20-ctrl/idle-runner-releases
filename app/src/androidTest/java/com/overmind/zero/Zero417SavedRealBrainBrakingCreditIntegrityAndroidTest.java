@@ -57,6 +57,21 @@ public final class Zero417SavedRealBrainBrakingCreditIntegrityAndroidTest {
             assertEquals(64,saved.hiddenUnits);
             assertEquals(64,saved.actionOutputs);
             assertEquals(16,saved.adhesionSectors);
+            // V468: the actual trained user's last-life motor echo must not
+            // leak into the FIRST 194D observation of a newly reset body.
+            // Mutate only this in-memory QA copy, never the user's fixture.
+            float[] previousLifeMotor=brain.commands();
+            for(int i=0;i<previousLifeMotor.length;i++)
+                previousLifeMotor[i]=(i%2==0?.7f:-.35f);
+            brain.newLife();
+            for(float value:brain.commands())
+                assertEquals("No dead-body motor command in newborn 194D senses",0f,value,0f);
+            assertEquals(33312L,brain.decisions());
+            Zero3OriginalBrainV356.Readout newborn=
+                Zero3OriginalBrainV356.inspectSaved(brain.checkpoint());
+            assertEquals(19452L,newborn.motorUpdates);
+            assertEquals(194,newborn.sensoryInputs);
+            assertEquals(64,newborn.hiddenUnits);
         }finally{
             brain.close();
         }
