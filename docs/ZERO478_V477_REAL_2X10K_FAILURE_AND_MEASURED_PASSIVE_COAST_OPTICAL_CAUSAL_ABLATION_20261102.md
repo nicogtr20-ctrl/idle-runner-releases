@@ -57,3 +57,13 @@ Added `Zero478MeasuredPassiveCoastOpticalAndroidTest`: known real harm with east
 4. Exact original V356 CRC/512 weights and 12 slots PASS. Same SHA for all four, otherwise NOT approved.
 
 **STATUS:** V478 experimental commit prepared, Android Actions not yet proven. No APK, OTA, merge, phone change or saved-brain replacement. If V478 fails, do not claim locomotion repaired; inspect real score counter reachability and per-contact PRE inertia, then isolate next hypothesis.
+
+
+## V478 actual GitHub Actions, same source SHA
+Four original Android Actions were triggered from exact code commit `044030207cbd741c6caa5bb8b5776cc81702700b` on 2026-11-02, and were still in progress at last observation:
+- [S21 10k 41475655258](https://github.com/nicogtr20-ctrl/idle-runner-releases/actions/runs/41475655258)
+- [wild 10k 41475655203](https://github.com/nicogtr20-ctrl/idle-runner-releases/actions/runs/41475655203)
+- [regressions 41475655156](https://github.com/nicogtr20-ctrl/idle-runner-releases/actions/runs/41475655156)
+- [V356 CRC 41475655140](https://github.com/nicogtr20-ctrl/idle-runner-releases/actions/runs/41475655140)
+
+The subsequent documentation-only commit fixes arithmetic in this report; **the four required code-validation jobs all target the identical source commit above**. Do not treat queued/running as PASS. Preserve the state and read complete logs before further behavioral edits.
