@@ -293,9 +293,19 @@ final class Zero3InstrumentalCreditV371 {
     }
     /** Trust motor direction only if its OUT-OF-TRAIN physical displacement
      * estimate beats zero motion, with enough evidence. */
+    /** V472 LAB: a squared-displacement floor of 1.0 discarded every
+     * original S21/wild bank despite genuine TRAIN/HELDOUT measurements
+     * in the 0.02..0.58 squared-unit range. Validate against the observed
+     * zero-motion heldout baseline and require measured forward travel.
+     * The V433 pre-drift guard still forbids inventing an action-to-travel
+     * prediction for a moving body without V377 evidence. */
     boolean motorVerified(int bank){
-        return trained[bank]>=4&&validated[bank]>=3&&baseline[bank]>1.0&&
-            error[bank]<baseline[bank]*.90;
+        if(trained[bank]<4||validated[bank]<3||baseline[bank]<=0d||
+           !(error[bank]<baseline[bank]*.90d))return false;
+        double angle=bank*Math.PI/4d;
+        double forward=learnedX[bank]*Math.cos(angle)+
+            learnedY[bank]*Math.sin(angle);
+        return forward>.10d;
     }
     /** V374: once this body's REAL response for an intended heading has
      * been heldout-validated, use the measured physical bearing when judging
