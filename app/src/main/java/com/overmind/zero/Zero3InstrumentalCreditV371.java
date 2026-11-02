@@ -452,6 +452,9 @@ final class Zero3InstrumentalCreditV371 {
         if(predicted!=null)v443PredictedEvaluations++;
         float mx,my;
         boolean passiveOnly=false;
+        // V481: only an independently verified physical travel may use the
+        // normalized measured optical bearing; never the requested heading.
+        boolean verifiedTravel=predicted!=null;
         if(predicted!=null){mx=predicted[0];my=predicted[1];}
         else{
             boolean unsupportedDrift=unsupportedPreDriftV441(observation194);
@@ -481,6 +484,7 @@ final class Zero3InstrumentalCreditV371 {
                 float[] totalTravel=reconstructRealTravelFromResidualV474(
                     observation194,learnedX[bank],learnedY[bank]);
                 mx=totalTravel[0];my=totalTravel[1];
+                verifiedTravel=true;
             }
         }
         float reward=0f,brightness=0f;
@@ -505,7 +509,10 @@ final class Zero3InstrumentalCreditV371 {
                 float toward=limit((mx*(float)Math.cos(theta)+
                     my*(float)Math.sin(theta))/35f,-1,1);
                 float strength=seen*seen;
-                reward+=value*strength*toward;
+                // V481: for verified V377/V371 travel, this tiny /35
+                // magnitude term must NOT replace the previously learned
+                // normalized optical bearing nor be counted twice.
+                if(!verifiedTravel)reward+=value*strength*toward;
                 brightness+=strength;
             }
             // An independent delayed outcome from TRUE previously
@@ -516,6 +523,15 @@ final class Zero3InstrumentalCreditV371 {
                     (value>0?positiveNeed:1.35f);
         }
         float utility=brightness>.015f?limit(reward/(.35f+brightness),-.5f,.5f):0f;
+        if(verifiedTravel){
+            // The SAME existing V369 contact valence is used ONCE, on the
+            // measured/heldout-predicted physical bearing. PRE inertia may
+            // point opposite the GRU action. Zero real travel gives zero
+            // directional optical authority; no invented steering/reward.
+            float travel=(float)Math.hypot(mx,my);
+            if(travel>.0001f)
+                utility+=.35f*contact.utility(observation194,mx/travel,my/travel);
+        }
         // If a real action has repeated produced no forward material motion,
         // discourage repeating that exact bank, without selecting a direction.
         if(!passiveOnly&&bank==lastBank&&stalledStreak>=3)utility-=.04f;
