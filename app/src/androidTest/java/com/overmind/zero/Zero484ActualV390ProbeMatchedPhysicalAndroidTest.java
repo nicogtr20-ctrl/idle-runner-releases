@@ -25,12 +25,12 @@ public final class Zero484ActualV390ProbeMatchedPhysicalAndroidTest {
     private static final float[] PRE_WEST={.35f,1f,2f};
 
     static final class Result {
-        final float firstX,firstY,lastX,lastY,delivered,raw;
+        final float firstX,firstY,lastX,lastY,delivered,raw,work;
         final int site,channel,contacts;
-        Result(float fx,float fy,float lx,float ly,float d,float r,
+        Result(float fx,float fy,float lx,float ly,float d,float r,float w,
                 int site,int ch,int contacts){
             firstX=fx;firstY=fy;lastX=lx;lastY=ly;
-            delivered=d;raw=r;this.site=site;channel=ch;
+            delivered=d;raw=r;work=w;this.site=site;channel=ch;
             this.contacts=contacts;
         }
     }
@@ -76,6 +76,7 @@ public final class Zero484ActualV390ProbeMatchedPhysicalAndroidTest {
         float startX=scene.body.cvx,startY=scene.body.cvy;
         float firstX=0f,firstY=0f;
         int contacts=0;
+        float workAccum=0f;
         ArrayList<UnknownWorld.Entity> emptyWorld=new ArrayList<>();
         for(int frame=0;frame<FRAMES;frame++){
             float[] cmd=motor.actuate(scene.body,scene.skin,DT);
@@ -93,8 +94,10 @@ public final class Zero484ActualV390ProbeMatchedPhysicalAndroidTest {
                 firstX=scene.body.cvx-startX;
                 firstY=scene.body.cvy-startY;
             }
+            float actualStepWork=Math.max(0f,scene.matter.work-previousWork);
+            workAccum+=actualStepWork;
             motor.observeContactV390(scene.body,scene.skin,DT,
-                Math.max(0f,scene.matter.work-previousWork),
+                actualStepWork,
                 scene.matter.lastMuscleReactionImpulse,false,false);
             assertEquals("original physical solver valid",0L,scene.matter.invalid);
         }
@@ -116,7 +119,7 @@ public final class Zero484ActualV390ProbeMatchedPhysicalAndroidTest {
             state.updates,cortex.updates());
         return new Result(firstX,firstY,
             scene.body.cvx-startX,scene.body.cvy-startY,
-            delivered,raw,site,ch,contacts);
+            delivered,raw,workAccum,site,ch,contacts);
     }
 
     @Test(timeout=1500000)
@@ -191,5 +194,96 @@ public final class Zero484ActualV390ProbeMatchedPhysicalAndroidTest {
         assertEquals(144,total);
         assertTrue("actual small neural probes reach original material",measured>0);
         assertTrue("matched physical contrast must be measurable",physical>0);
+    }
+
+    // ZERO485 diagnostic: individual sign discordance is not proof of
+    // a biased randomized policy-gradient estimator. Compare repeated
+    // actual V390 score-times-delivered with same-state ON-minus-OFF.
+    private static double v417Score(Result r,float ux,float uy){
+        return 3.0*(r.lastX*ux+r.lastY*uy)/
+            (4.0+Math.hypot(r.lastX,r.lastY))-.01*r.work;
+    }
+
+    @Test(timeout=1500000)
+    public void repeatedOriginalV390SameStateGradientEstimatorAudit()
+            throws Exception{
+        JSONObject user=Zero390ActualUserMotorRehabilitationAndroidTest.fixture();
+        Zero3OriginalBrainV356.Readout saved=
+            Zero3OriginalBrainV356.inspectSaved(user.getString("brain"));
+        assertEquals(33312L,saved.decisions);
+        JSONObject free=Zero412TrueS21MotorContextPhysicalABAndroidTest.savedFree(user);
+        Zero3LearningFoundation.AdaptiveCortex.State original=
+            Zero390ActualUserMotorRehabilitationAndroidTest.trained(user).checkpoint();
+        int total=0;
+        for(float speed:PRE_WEST){
+            Zero3LearningFoundation.AdaptiveCortex sequence=cloneCortex(original);
+            sequence.enableIsolatedCreditV390();
+            double[] estimated=new double[48],counterfactual=new double[48];
+            int[] positive=new int[48],negative=new int[48];
+            int discordantSingle=0,nonzero=0;
+            for(int repeat=0;repeat<8;repeat++){
+                HashSet<Integer> visited=new HashSet<>();
+                for(int sample=0;sample<48;sample++){
+                    int heading=sample%4;
+                    Zero3LearningFoundation.AdaptiveCortex.State state=
+                        sequence.checkpoint();
+                    Result on=run(free,state,speed,heading,true);
+                    Result off=run(free,state,speed,heading,false);
+                    int channelIndex=on.channel==3?2:on.channel;
+                    assertTrue(on.channel==0||on.channel==1||on.channel==3);
+                    int site=on.site*3+channelIndex;
+                    assertTrue(site>=0&&site<48);
+                    assertTrue("one probe per site in each original V390 cycle",
+                        visited.add(site));
+                    float ux=heading==0?1f:heading==2?-1f:0f;
+                    float uy=heading==1?1f:heading==3?-1f:0f;
+                    double observed=v417Score(on,ux,uy);
+                    double control=v417Score(off,ux,uy);
+                    double estimate=observed*on.delivered;
+                    double paired=(observed-control)*on.delivered;
+                    assertTrue(Double.isFinite(estimate)&&Double.isFinite(paired));
+                    assertTrue("physical delivered perturbation",
+                        Math.abs(on.delivered)>1e-8f);
+                    estimated[site]+=estimate;
+                    counterfactual[site]+=paired;
+                    if(on.raw>0f)positive[site]++;else negative[site]++;
+                    if(estimate*paired<0)discordantSingle++;
+                    if(Math.abs(paired)>1e-9)nonzero++;
+                    total++;
+                    Zero3LearningFoundation.MotorIntent dummy=
+                        new Zero3LearningFoundation.MotorIntent(
+                            485L,0L,sequence.revision(),ux,uy,.5f,.5f,.4f);
+                    sequence.begin(true,dummy,true);
+                    sequence.discard();
+                }
+                assertEquals("all original 16 x CH0/1/3 sites",48,visited.size());
+            }
+            double dot=0d,estSq=0d,causalSq=0d,estAbs=0d,causalAbs=0d;
+            int meanSignDisagree=0,bothSigns=0;
+            for(int site=0;site<48;site++){
+                double e=estimated[site]/8d,c=counterfactual[site]/8d;
+                dot+=e*c;estSq+=e*e;causalSq+=c*c;
+                estAbs+=Math.abs(e);causalAbs+=Math.abs(c);
+                if(e*c<0)meanSignDisagree++;
+                if(positive[site]>0&&negative[site]>0)bothSigns++;
+            }
+            double cosine=dot/Math.sqrt(estSq*causalSq);
+            assertTrue("finite empirical estimator alignment",Double.isFinite(cosine));
+            Log.i("ZERO485_CAUSAL",String.format(Locale.US,
+                "ORIGINAL_S21_V390_REPEATED_ESTIMATOR speedWest=%.3f"+
+                " repeats=8 sites=48 total=384 physicalNonzero=%d"+
+                " singleSignDiscordance=%d meanSiteSignDiscordance=%d"+
+                " bothRawSignsSites=%d estimatorCausalCosine=%.6f"+
+                " estimatorMeanAbs=%.9f causalMeanAbs=%.9f"+
+                " liveMotorChanged=false",
+                speed,nonzero,discordantSingle,meanSignDisagree,
+                bothSigns,cosine,estAbs/48d,causalAbs/48d));
+            assertTrue("bidirectional real neural probes",bothSigns>0);
+        }
+        assertEquals(1152,total);
+        Log.i("ZERO485_CAUSAL",
+            "ORIGINAL_S21_V390_REPEATED_ESTIMATOR_COMPLETE samples="+total+
+            " sameStateONOFF=true originalSavedWeightsUntouched=true"+
+            " noLiveCreditReplacement=true");
     }
 }
