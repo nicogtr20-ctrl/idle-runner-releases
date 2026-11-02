@@ -165,6 +165,7 @@ final class Zero3InstrumentalCreditV371 {
             // observed PRE-decision COM velocity. A passive sliding body can
             // have repeatable heldout displacement without steering authority.
             // A measured residual is not itself proof of isolated muscle causation.
+            // Strict Android behavior, regression and CRC gates remain mandatory.
             // V377 still receives the full genuine displacement unchanged;
             // wall/stall and delayed-contact traces still use real mx/my.
             float motorMx=limit(mx-.30f*pendingPreVxV435,-120,120);
