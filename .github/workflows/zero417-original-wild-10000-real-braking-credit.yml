@@ -49,3 +49,5 @@ jobs:
           if-no-files-found: warn
 
 # V443 final original Android four-gate SHA: diagnostic-only score eligibility.
+
+# ZERO477 final same-SHA run gate: passive braking mid-bank counterexample + original 2x10000 + CRC; no release.

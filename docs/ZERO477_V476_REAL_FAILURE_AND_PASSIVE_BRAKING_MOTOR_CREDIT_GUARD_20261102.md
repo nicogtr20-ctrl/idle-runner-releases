@@ -38,7 +38,7 @@ Date: 2026-11-02. **LAB ONLY** on `lab/zero477-mid-drift-passive-braking-confoun
 |Version|S21 / wild decisions|S21 signed/gross; good/inverse windows; new blue|Wild signed/gross; red first→last; total red/blue|Regressions|CRC|
 |---|---|---|---|---|---|
 |V421|10,001 / 10,002|17.1723%; 8/10, 2 inverse; 4 blue|61.6262%; 35→52; 87/3|PASS 41149404217|PASS 41149399737|
-|V422|10,003 / 10,003|11.2881%; 7/10, 2 inverse; 4 blue|42.7053%; 25→27; 52/5|PASS 41149771615|PASS 41149767313|
+|V422|10,003 / 10,003|11.2881%; 7/10, 2 inverse; 4 blue|42.7053%; 19→33; 52/5|PASS 41149771615|PASS 41149767313|
 |V423|10,002 / 10,003|10.0486%; 7/10, 2 inverse; 4 blue|31.0766%; 14→12; 26/4|PASS 41149995431|PASS 41149992279|
 
 All six behavior runs FAIL: V421 S21 [41149391000](https://github.com/nicogtr20-ctrl/idle-runner-releases/actions/runs/41149391000), wild [41149393560](https://github.com/nicogtr20-ctrl/idle-runner-releases/actions/runs/41149393560); V422 S21 [41149758090](https://github.com/nicogtr20-ctrl/idle-runner-releases/actions/runs/41149758090), wild [41149762948](https://github.com/nicogtr20-ctrl/idle-runner-releases/actions/runs/41149762948); V423 S21 [41149983685](https://github.com/nicogtr20-ctrl/idle-runner-releases/actions/runs/41149983685), wild [41149987734](https://github.com/nicogtr20-ctrl/idle-runner-releases/actions/runs/41149987734). **Methodological caveat:** the four historical runs for each of V421–V423 do NOT share the same GitHub head SHA; never treat their four independent PASS/FAIL as one same-commit approval bundle. V423 wild was attempt 2. V476 is a genuine same-SHA set.
