@@ -148,6 +148,7 @@ final class Zero3OriginalBrainV356 {
     // must not learn actuator response from a front wall, RED damping or
     // other contaminated world forces while the lower V401 motor rejects it.
     // Ephemeral mode: never persisted in the V356/12-slot checkpoint.
+    // Final same-SHA 4-gate trigger: V476 changes ONLY transient V377 mid-speed evidence.
     void enableMidDriftRegimeLabV476(){
         if(pending)throw new IllegalStateException("V476 original body decision pending");
         brain.enableMidDriftRegimeLabV476();
