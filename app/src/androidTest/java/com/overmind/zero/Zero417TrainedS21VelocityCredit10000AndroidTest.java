@@ -236,6 +236,7 @@ public final class Zero417TrainedS21VelocityCredit10000AndroidTest {
                 // require measured acceleration for LOWER V332 rear-wall credit.
                 original.originalV432EnableSignedRearDeliveredProbeForQA();
                 original.originalV433EnableStrictInertialOpticalEvidenceForQA();
+                original.originalV469EnableLearnedHarmDriftOpticalAblationForQA();
                 original.originalV434EnableObservedDelayedContactForQA();
                 original.originalV435EnableAcceleratedDelayedContactForQA();
                 // V442 sole behavioral change versus V441: do not treat
