@@ -31,6 +31,9 @@ final class Zero3InstrumentalCreditV371 {
     // V442: historical observed bank is not a validated new motor response.
     private boolean censorUnverifiedDelayedBankUnderDriftLabV442;
     // V443 transient READ-ONLY evidence counters: evaluations, not decisions.
+    // V475: ephemeral branch-reachability counters; never serialized or used in scoring.
+    private long v475ScoreReconstructed, v475OpticalReconstructed,
+        v475ScoreDriftBlocked, v475OpticalDriftBlocked;
     private long v443ScoreEvaluations, v443PredictedEvaluations,
         v443UnsupportedDriftEvaluations, v443CensoredNonzeroHistorical,
         v443CensoredZeroHistorical, v443UncensoredNonzeroHistorical,
@@ -43,6 +46,10 @@ final class Zero3InstrumentalCreditV371 {
             "|censoredZeroHistorical="+v443CensoredZeroHistorical+
             "|uncensoredNonzeroHistorical="+v443UncensoredNonzeroHistorical+
             "|opticalDriftSuppressed="+v443OpticalDriftSuppressed+
+            "|v475ScoreReconstructed="+v475ScoreReconstructed+
+            "|v475OpticalReconstructed="+v475OpticalReconstructed+
+            "|v475ScoreDriftBlocked="+v475ScoreDriftBlocked+
+            "|v475OpticalDriftBlocked="+v475OpticalDriftBlocked+
             "|verifiedV377Banks="+inertia.reliableBanks()+
             "|verifiedV371Directions="+verifiedDirections()+
             "|delayedRealLinks="+delayedCredits()+"|"+inertia.motorValidationDiagnosticsV444()+
@@ -363,11 +370,13 @@ final class Zero3InstrumentalCreditV371 {
             if(strictInertialOpticalEvidenceLabV433){
                 unsupportedMovingOpticalPredictionsRejectedV433++;
                 v443OpticalDriftSuppressed++;
+                v475OpticalDriftBlocked++;
                 return 0f;
             }
             return .35f*contact.utility(observation194,chosen[0],chosen[1]);
         }
         if(motorVerified(bank)){
+            v475OpticalReconstructed++;
             float[] totalTravel=reconstructRealTravelFromResidualV474(
                 observation194,learnedX[bank],learnedY[bank]);
             float dx=totalTravel[0],dy=totalTravel[1];
@@ -422,6 +431,7 @@ final class Zero3InstrumentalCreditV371 {
                 float historical=observedDelayedContactWithoutMotorMapLabV434?
                     observedDelayedContactScoreV434(observation194,bank,contact):0f;
                 if(unsupportedDrift&&censorUnverifiedDelayedBankUnderDriftLabV442){
+                    v475ScoreDriftBlocked++;
                     if(Math.abs(historical)>0.000001f)v443CensoredNonzeroHistorical++;
                     else v443CensoredZeroHistorical++;
                     return 0f;
@@ -429,6 +439,7 @@ final class Zero3InstrumentalCreditV371 {
                 if(Math.abs(historical)>0.000001f)v443UncensoredNonzeroHistorical++;
                 return historical;
             }
+            v475ScoreReconstructed++;
             float[] totalTravel=reconstructRealTravelFromResidualV474(
                 observation194,learnedX[bank],learnedY[bank]);
             mx=totalTravel[0];my=totalTravel[1];
