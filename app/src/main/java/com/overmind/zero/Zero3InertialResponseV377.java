@@ -35,6 +35,7 @@ final class Zero3InertialResponseV377 {
     // These are never serialized and never participate in actor decisions.
     private long v444AcceptedTrain, v444AcceptedHeldout,
         v444LowTrain, v444LowHeldout, v444HighTrain, v444HighHeldout;
+    private long v476MidAcceptedTrain,v476MidAcceptedHeldout;
     String motorValidationDiagnosticsV444(){
         int train4=0,heldout3=0,both=0,coastStrong=0,lossPass=0,reliable=0;
         int lowReliable=0,highReliable=0;
@@ -74,7 +75,10 @@ final class Zero3InertialResponseV377 {
         }
         return "v476MidEnabled="+midDriftRegimeLabV476+
             "|v476MidTrain="+midTrain+"|v476MidHeldout="+midHeldout+
-            "|v476MidReliable="+midReliable+"|v444AcceptedTrain="+v444AcceptedTrain+
+            "|v476MidReliable="+midReliable+
+            "|v476MidAcceptedTrain="+v476MidAcceptedTrain+
+            "|v476MidAcceptedHeldout="+v476MidAcceptedHeldout+
+            "|v444AcceptedTrain="+v444AcceptedTrain+
             "|v444AcceptedHeldout="+v444AcceptedHeldout+
             "|v444LowTrain="+v444LowTrain+
             "|v444LowHeldout="+v444LowHeldout+
@@ -124,10 +128,12 @@ final class Zero3InertialResponseV377 {
         int i=issued;
         if(independent){
             v444AcceptedHeldout++;
-            if(i<DIRS)v444LowHeldout++;else v444HighHeldout++;
+            if(i>=N)v476MidAcceptedHeldout++;
+            else if(i<DIRS)v444LowHeldout++;else v444HighHeldout++;
         }else{
             v444AcceptedTrain++;
-            if(i<DIRS)v444LowTrain++;else v444HighTrain++;
+            if(i>=N)v476MidAcceptedTrain++;
+            else if(i<DIRS)v444LowTrain++;else v444HighTrain++;
         }
         if(independent){
             if(validations[i]<100000000)validations[i]++;
@@ -210,6 +216,8 @@ final class Zero3InertialResponseV377 {
         System.arraycopy(loss,0,other.loss,0,LIVE_N);
         System.arraycopy(coastLoss,0,other.coastLoss,0,LIVE_N);
         other.midDriftRegimeLabV476=midDriftRegimeLabV476;
+        other.v476MidAcceptedTrain=v476MidAcceptedTrain;
+        other.v476MidAcceptedHeldout=v476MidAcceptedHeldout;
         other.v444AcceptedTrain=v444AcceptedTrain;
         other.v444AcceptedHeldout=v444AcceptedHeldout;
         other.v444LowTrain=v444LowTrain;
