@@ -30,6 +30,11 @@ public final class Zero3RecurrentBrain {
     // Does not issue headings, forces, target vectors or alter checkpoints.
     private boolean learnedHarmCandidateCoverageLabV422;
     private long learnedHarmExpandedDecisionsV422;
+    void enableMeasuredPassiveCoastOpticalLabV478(){
+        if(pending||cognition==null)
+            throw new IllegalStateException("V478 requires original GRU3 decision boundary");
+        cognition.enableMeasuredPassiveCoastOpticalLabV478();
+    }
     void enableMidDriftRegimeLabV476(){
         if(pending||cognition==null)throw new IllegalStateException("V476 original GRU3 boundary required");
         cognition.enableMidDriftRegimeLabV476();

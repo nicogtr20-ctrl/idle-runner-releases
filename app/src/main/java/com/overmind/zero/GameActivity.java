@@ -157,6 +157,11 @@ public final class GameActivity extends Activity {
     // intended heading cannot stand in for drift-dominated optical travel.
     // V476: transient original V377 measured 0.35..2.0 COM-speed response banks.
     // Opt-in Android science only; never modifies saved original 16 V377 banks.
+    void originalV478EnableMeasuredPassiveCoastOpticalForQA(){
+        if(lab==null||lab.brain3==null||!lab.brain3.realPhysicalMotorContextV412())
+            throw new IllegalStateException("V478 original sole GRU3 required");
+        lab.brain3.enableMeasuredPassiveCoastOpticalLabV478();
+    }
     void originalV476EnableTransientMidDriftModelForQA(){
         if(lab==null||lab.brain3==null||!lab.brain3.realPhysicalMotorContextV412())
             throw new IllegalStateException("V476 original sole GRU3 required");

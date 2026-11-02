@@ -32,6 +32,8 @@ final class Zero3InstrumentalCreditV371 {
     private boolean censorUnverifiedDelayedBankUnderDriftLabV442;
     // V443 transient READ-ONLY evidence counters: evaluations, not decisions.
     // V475: ephemeral branch-reachability counters; never serialized or used in scoring.
+    private boolean measuredPassiveCoastOpticalLabV478;
+    private long v478PassiveScoreEvaluations,v478PassiveOpticalEvaluations;
     private long v475ScoreReconstructed, v475OpticalReconstructed,
         v475ScoreDriftBlocked, v475OpticalDriftBlocked;
     private long v443ScoreEvaluations, v443PredictedEvaluations,
@@ -46,6 +48,8 @@ final class Zero3InstrumentalCreditV371 {
             "|censoredZeroHistorical="+v443CensoredZeroHistorical+
             "|uncensoredNonzeroHistorical="+v443UncensoredNonzeroHistorical+
             "|opticalDriftSuppressed="+v443OpticalDriftSuppressed+
+            "|v478PassiveScore="+v478PassiveScoreEvaluations+
+            "|v478PassiveOptical="+v478PassiveOpticalEvaluations+
             "|v475ScoreReconstructed="+v475ScoreReconstructed+
             "|v475OpticalReconstructed="+v475OpticalReconstructed+
             "|v475ScoreDriftBlocked="+v475ScoreDriftBlocked+
@@ -94,6 +98,15 @@ final class Zero3InstrumentalCreditV371 {
         observedDelayedContactWithoutMotorMapLabV434=true;
     }
     private long unsupportedMovingOpticalPredictionsRejectedV433;
+    /** V478 LAB: an unsupported command does not cancel actual measured PRE
+     * inertia. Compare its passive coast using learned wavelength consequences
+     * identically for ALL unverified actions, never as motor authority. */
+    void enableMeasuredPassiveCoastOpticalLabV478(){
+        if(pendingSight!=null||!strictInertialOpticalEvidenceLabV433||
+           !censorUnverifiedDelayedBankUnderDriftLabV442)
+            throw new IllegalStateException("V478 requires V433/V442 at real decision boundary");
+        measuredPassiveCoastOpticalLabV478=true;
+    }
     void enableMidDriftRegimeLabV476(){
         if(pendingSight!=null)throw new IllegalStateException("V476 original decision pending");
         inertia.enableMidDriftRegimeLabV476();
@@ -372,6 +385,15 @@ final class Zero3InstrumentalCreditV371 {
             // The real negative contact remains learned; do not invent a
             // motor outcome or select a preset escape direction.
             if(strictInertialOpticalEvidenceLabV433){
+                if(measuredPassiveCoastOpticalLabV478){
+                    // Actual PRE COM momentum is physically known even though
+                    // the proposed muscle command has NO verified steering.
+                    // Identical value for every unsupported proposed heading.
+                    float vx=observation194[191]*130f,vy=observation194[192]*130f;
+                    float speed=(float)Math.hypot(vx,vy);
+                    v478PassiveOpticalEvaluations++;
+                    return contact.utility(observation194,vx/speed,vy/speed);
+                }
                 unsupportedMovingOpticalPredictionsRejectedV433++;
                 v443OpticalDriftSuppressed++;
                 v475OpticalDriftBlocked++;
@@ -426,27 +448,37 @@ final class Zero3InstrumentalCreditV371 {
         float[] predicted=inertia.expected(observation194,chosen);
         if(predicted!=null)v443PredictedEvaluations++;
         float mx,my;
+        boolean passiveOnly=false;
         if(predicted!=null){mx=predicted[0];my=predicted[1];}
         else{
             boolean unsupportedDrift=unsupportedPreDriftV441(observation194);
             if(unsupportedDrift)v443UnsupportedDriftEvaluations++;
             if(unsupportedDrift||!motorVerified(bank)){
-                // V443 observes V442 eligibility without changing the score.
                 float historical=observedDelayedContactWithoutMotorMapLabV434?
                     observedDelayedContactScoreV434(observation194,bank,contact):0f;
                 if(unsupportedDrift&&censorUnverifiedDelayedBankUnderDriftLabV442){
-                    v475ScoreDriftBlocked++;
                     if(Math.abs(historical)>0.000001f)v443CensoredNonzeroHistorical++;
                     else v443CensoredZeroHistorical++;
-                    return 0f;
+                    if(!measuredPassiveCoastOpticalLabV478){
+                        v475ScoreDriftBlocked++;
+                        return 0f;
+                    }
+                    // One physically measured PRE velocity for ALL unsupported
+                    // commands: NOT a guessed actuator response or a heading.
+                    mx=limit(.30f*observation194[191]*130f,-120f,120f);
+                    my=limit(.30f*observation194[192]*130f,-120f,120f);
+                    passiveOnly=true;
+                    v478PassiveScoreEvaluations++;
+                }else{
+                    if(Math.abs(historical)>0.000001f)v443UncensoredNonzeroHistorical++;
+                    return historical;
                 }
-                if(Math.abs(historical)>0.000001f)v443UncensoredNonzeroHistorical++;
-                return historical;
+            }else{
+                v475ScoreReconstructed++;
+                float[] totalTravel=reconstructRealTravelFromResidualV474(
+                    observation194,learnedX[bank],learnedY[bank]);
+                mx=totalTravel[0];my=totalTravel[1];
             }
-            v475ScoreReconstructed++;
-            float[] totalTravel=reconstructRealTravelFromResidualV474(
-                observation194,learnedX[bank],learnedY[bank]);
-            mx=totalTravel[0];my=totalTravel[1];
         }
         float reward=0f,brightness=0f;
         // Sensor 188 is ACTUAL reserve in [-1,+1], not a food label.
@@ -476,14 +508,14 @@ final class Zero3InstrumentalCreditV371 {
             // An independent delayed outcome from TRUE previously
             // executed approaches; never label a one-step V353 prediction
             // with future energy or grant an imagined pickup.
-            if(delayedContactCount[b][bank]>=2&&observedBand>.08f)
+            if(!passiveOnly&&delayedContactCount[b][bank]>=2&&observedBand>.08f)
                 reward+=.22f*delayedContactValue[b][bank]*observedBand*
                     (value>0?positiveNeed:1.35f);
         }
         float utility=brightness>.015f?limit(reward/(.35f+brightness),-.5f,.5f):0f;
         // If a real action has repeated produced no forward material motion,
         // discourage repeating that exact bank, without selecting a direction.
-        if(bank==lastBank&&stalledStreak>=3)utility-=.04f;
+        if(!passiveOnly&&bank==lastBank&&stalledStreak>=3)utility-=.04f;
         return limit(utility,-.5f,.5f);
     }
     /** Physical motor control, not a visually recognized gem, is the
@@ -520,6 +552,9 @@ final class Zero3InstrumentalCreditV371 {
         }
         c.linkedContacts=linkedContacts;c.ambiguousContacts=ambiguousContacts;
         c.stalledActions=stalledActions;
+        c.measuredPassiveCoastOpticalLabV478=measuredPassiveCoastOpticalLabV478;
+        c.v478PassiveScoreEvaluations=v478PassiveScoreEvaluations;
+        c.v478PassiveOpticalEvaluations=v478PassiveOpticalEvaluations;
     }
     int verifiedDirections(){int n=0;for(int i=0;i<BINS;i++)if(motorVerified(i))n++;return n;}
     int verifiedInertialResponseV377(){return inertia.reliableBanks();}
