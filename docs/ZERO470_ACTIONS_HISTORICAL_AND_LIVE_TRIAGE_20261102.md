@@ -66,3 +66,27 @@ V470 changes only `Zero3OriginalBrainV356.sense`: 8 coarse rays `inputs[8..15]` 
 2. If wild retry again fails *before* GRU owner boot, inspect actual owner error/Activity startup and isolate a **test-only** readiness fix, without changing motor learning or treating boot as behavior.
 3. If a full 10k fails the preregistered behavior gates, investigate the measured causal source and make at most **one isolated, justified** behavioral change on a new branch, then rerun all four original Android gates.
 4. Hard gates remain S21 >=10k, >=25% signed/gross, 9/10 windows >=10%, zero inverse, >=5 new blue; wild >=10k, >=12% locomotion, late red < early red, total red <=2x blue; regressions+CRC PASS. No APK, OTA, stable merge, new 2.2 blend, hardcoded headings, synthetic reward or modification of original S21/12 saves.
+
+
+## 2026-11-02 09:00 CET update — V470 actual S21 complete FAIL, wild boot still unmeasured
+
+The preceding **IN PROGRESS** statements are superseded for S21. Same SHA `db79ea1f14238aff28789e7b011e91556ace7d72`, [run 41397116177](https://github.com/nicogtr20-ctrl/idle-runner-releases/actions/runs/41397116177), job 125120843131, ended **FAIL** after **10,002** original trained decisions (cursor 43,314 from 33,312). Final signed **532.65651**, gross **3507.14343**, efficiency **15.1878%** (strict >=25% FAIL). 4 new blue (>=5 FAIL); 7/10 windows >=10% (>=9 FAIL); 2 inverse windows (zero required, FAIL): #4 and #9. Local 512-weight cortex **3,409 actual updates**, 6,593 censored, 1,757 strict rear-wall accepts, 1,779 front-wall excludes, 588 undelivered rear probes rejected; 10,002 velocity-credit samples. Four genuine deaths and resets recorded, body COM velocity reset exactly to 0; these are NOT teleport-induced signed-progress discontinuities.
+
+| 1000-decision bucket | Signed | Gross | Efficiency | New blue | Wall-contact frames | Cumulative cortex updates |
+|---:|---:|---:|---:|---:|---:|---:|
+| 1 | 58.55305 | 417.43293 | 14.027% | 0 | 24320 | 127 |
+| 2 | 59.04808 | 572.96100 | 10.306% | 1 | 9113 | 566 |
+| 3 | 123.61548 | 300.38057 | 41.153% | 0 | 20125 | 857 |
+| 4 | -10.38389 | 378.13327 | -2.746% | 1 | 14002 | 1220 |
+| 5 | 111.91218 | 334.84353 | 33.422% | 0 | 18554 | 1550 |
+| 6 | 55.30115 | 161.88253 | 34.161% | 0 | 24192 | 1725 |
+| 7 | 90.93222 | 516.93223 | 17.591% | 1 | 6906 | 2216 |
+| 8 | 47.11511 | 185.74868 | 25.365% | 0 | 24352 | 2426 |
+| 9 | -35.91776 | 279.54872 | -12.848% | 1 | 18741 | 2741 |
+| 10 | 32.67360 | 359.06938 | 9.100% | 0 | 0 | 3408 |
+
+High-level motor evidence after 10k: V443 score evaluations **303,460**, V377 predicted **21,018**, unsupported-drift evaluations **205,539**, optical drift suppression **205,539**, reliable V377 banks **1**, verified V371 directions **0**, delayed real contact links **395**. V371 heldout table `v457V371BankTrainHeldoutForwardLossBaselineMilli`: `0:912/161:115:67:77:0,1:802/212:136:37:50:0,2:380/484:118:592:421:0,3:844/189:216:390:581:0,4:8215/1340:-73:10:14:0,5:8960/1866:-37:30:174:0,6:1108/767:97:347:335:0,7:1151/644:59:47:48:0`. The learned-harm 7-option trigger expanded **0** times in this blue-only S21 room, as expected. The V470 ray consistency regression and original CRC both remain **PASS**; they cannot certify locomotion.
+
+Wild [run 41397116200](https://github.com/nicogtr20-ctrl/idle-runner-releases/actions/runs/41397116200) **attempt 2** also ended **FAIL before first neural decision**, `AssertionError: Original sole GRU3 must really finish boot` at `Zero417WildOriginalVelocityCredit10000AndroidTest.java:114`. Android Activity was displayed, but its original brain owner was not ready during 30-second polling. The test does not print `originalV356BrainErrorForQA()` at this assertion; `GameActivity.Lab.load()` catches and records an initialization error, so current log cannot distinguish a real constructor/load error from a slow startup. **Attempt 3 was requested on the exact same job and SHA** (job 125162049397 in progress at last check); do not count the two boot failures as 10k red-avoidance outcomes. A targeted boot-error diagnostic is justified if attempt 3 also fails, without touching the actual original actor or physics.
+
+**Decision: V470 NOT APPROVABLE.** Even a successful wild rerun cannot override the S21 10k failure. Preserve V470 lab, original S21 33,312/512/V356, CH2 V319, 194 sensors, 170-material body and 12 saves. No APK/OTA/merge.
