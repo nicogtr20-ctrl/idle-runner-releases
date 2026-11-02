@@ -463,6 +463,13 @@ final class Zero3OriginalBrainV356 {
         grip.appendGraphV354(result);return result.build();
     }
     private static float clip(float value){return Math.max(-1f,Math.min(1f,value));}
+    /** Reconcile original eight coarse rays with sixteen already sampled real rays. */
+    static void reconcileChamberAwareCoarseRaysV470(float[] inputs){
+        if(inputs==null||inputs.length!=194)
+            throw new IllegalArgumentException("ZERO470 requires original 194 senses");
+        for(int sector=0;sector<8;sector++)
+            inputs[8+sector]=Math.max(inputs[44+2*sector],inputs[45+2*sector]);
+    }
     /**
      * Exact V351 194-channel neural projection from the ORIGINAL physical game.
      * Null chamber is natural for the original open-world habitat.
@@ -492,6 +499,11 @@ final class Zero3OriginalBrainV356 {
                 eye[0],eye[1],dx,dy,SpatialPerception.RANGE);
             inputs[44+ray]=Float.isFinite(dist)?clip(1f-dist/SpatialPerception.RANGE):0f;
         }
+        // ZERO470 LAB: coarse (8..15) and fine (44..59) GRU3 obstacle rays
+        // must represent the SAME measured physical chamber and eye geometry.
+        // V315's coarse capture omitted chamber while these fine rays include it.
+        // No new inputs, directions, world labels, reward, or physical action.
+        reconcileChamberAwareCoarseRaysV470(inputs);
         int[] channels={Zero3SensoryFrameV315.TOUCH_SOLID,
             Zero3SensoryFrameV315.TOUCH_IMPULSE,Zero3SensoryFrameV315.GRIP_HELD,
             Zero3SensoryFrameV315.EXTENSION};
