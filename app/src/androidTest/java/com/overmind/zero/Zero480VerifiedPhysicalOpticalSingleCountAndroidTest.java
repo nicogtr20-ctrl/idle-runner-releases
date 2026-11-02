@@ -45,6 +45,14 @@ public final class Zero480VerifiedPhysicalOpticalSingleCountAndroidTest {
         float[] p=sight();
         assertTrue(m.score(p,EAST,contact(22f))>0f);
         assertEquals(0f,m.opticalPreferenceV374(p,EAST,contact(22f)),0f);
+        // V481: the physical PRE drift may reverse the measured predicted
+        // travel even while the original actor still asks to go EAST.
+        // One learned optical term must follow real predicted motion, not
+        // the commanded heading. No hazard label or scripted turn.
+        p[191]=-.009f; // real measured PRE vx = -1.17 U/s
+        assertTrue("PRE momentum reverses the physically predicted bearing",
+            m.score(p,EAST,contact(22f))<0f);
+        assertEquals(0f,m.opticalPreferenceV374(p,EAST,contact(22f)),0f);
     }
     @Test public void unverifiedStationaryHypothesisIsNotRemoved(){
         Zero3InstrumentalCreditV371 m=new Zero3InstrumentalCreditV371();
