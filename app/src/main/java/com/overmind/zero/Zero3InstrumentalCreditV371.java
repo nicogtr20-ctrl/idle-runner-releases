@@ -94,6 +94,10 @@ final class Zero3InstrumentalCreditV371 {
         observedDelayedContactWithoutMotorMapLabV434=true;
     }
     private long unsupportedMovingOpticalPredictionsRejectedV433;
+    void enableMidDriftRegimeLabV476(){
+        if(pendingSight!=null)throw new IllegalStateException("V476 original decision pending");
+        inertia.enableMidDriftRegimeLabV476();
+    }
     void enableStrictInertialOpticalEvidenceLabV433(){
         if(pendingSight!=null)throw new IllegalStateException("V433 must start between decisions");
         strictInertialOpticalEvidenceLabV433=true;
