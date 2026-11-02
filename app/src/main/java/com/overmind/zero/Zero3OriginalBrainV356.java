@@ -148,6 +148,10 @@ final class Zero3OriginalBrainV356 {
     // must not learn actuator response from a front wall, RED damping or
     // other contaminated world forces while the lower V401 motor rejects it.
     // Ephemeral mode: never persisted in the V356/12-slot checkpoint.
+    void enableLearnedHarmDriftOpticalAblationLabV469(){
+        if(pending)throw new IllegalStateException("V469 original brain decision pending");
+        brain.enableLearnedHarmDriftOpticalAblationLabV469();
+    }
     void enableStrictInertialOpticalEvidenceLabV433(){
         if(pending)throw new IllegalStateException("V433 original brain decision pending");
         brain.enableStrictInertialOpticalEvidenceLabV433();
