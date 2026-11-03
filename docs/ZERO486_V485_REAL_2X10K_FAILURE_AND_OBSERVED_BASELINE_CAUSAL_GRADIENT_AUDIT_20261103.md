@@ -62,3 +62,6 @@ Log both cosine similarities to oracle, wrong-sign site counts, and mean absolut
 
 ## No release
 Hard gate unchanged: S21 >=25%, >=9/10 1k windows >=10%, zero inverse, >=5 true new blue; wild >=12%, red late < early, red <=2x blue; regressions and CRC PASS. Preserve V319 CH2, 194 sensors, saved S21/512/V356 CRC, original physics/game/UI and 12 slots. No APK, OTA, merge.
+
+## Frozen four-gate trigger
+All four original workflow definitions now include this isolated branch, and the CRC workflow requires the third Android test plus the ZERO486 completion marker. The final documentation-only commit triggers all four workflows on a **single final SHA**. Results must be read from GitHub logs before any decision; a workflow SUCCESS for diagnostics alone is not a locomotion success.
