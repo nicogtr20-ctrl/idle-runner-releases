@@ -126,11 +126,12 @@ final class Zero3OriginalBrainV356 {
     }
     private boolean immediateOwnDecisionCreditLabV423;
     private long immediateOwnDecisionCreditsV423;
-    // V487 isolated A/B: subtract the PREVIOUSLY measured physical
-    // credit baseline of the same issued heading and real PRE speed regime.
+    // V488 isolated A/B: subtract the PREVIOUSLY measured physical
+    // credit baseline of the same issued heading, real PRE speed and
+    // actually applied GRU3 muscle-effort regime.
     // No future outcome, inferred motor response, new action or save field.
     private final Zero488EffortConditionedMotorBaseline observedMotorBaselineV488=
-        new Zero487ObservedMotorBaseline();
+        new Zero488EffortConditionedMotorBaseline();
     private boolean observedMotorBaselineCreditLabV487;
     private float rawPhysicalCreditV487;
     void enableObservedMotorBaselineCreditLabV487(){
