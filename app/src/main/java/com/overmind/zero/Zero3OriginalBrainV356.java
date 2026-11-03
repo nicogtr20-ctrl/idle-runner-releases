@@ -129,7 +129,7 @@ final class Zero3OriginalBrainV356 {
     // V487 isolated A/B: subtract the PREVIOUSLY measured physical
     // credit baseline of the same issued heading and real PRE speed regime.
     // No future outcome, inferred motor response, new action or save field.
-    private final Zero487ObservedMotorBaseline observedMotorBaselineV487=
+    private final Zero488EffortConditionedMotorBaseline observedMotorBaselineV488=
         new Zero487ObservedMotorBaseline();
     private boolean observedMotorBaselineCreditLabV487;
     private float rawPhysicalCreditV487;
@@ -253,8 +253,9 @@ final class Zero3OriginalBrainV356 {
             "|immediateOwnDecisionCreditLabV423="+immediateOwnDecisionCreditLabV423+
             "|immediateOwnDecisionCreditsV423="+immediateOwnDecisionCreditsV423+
             "|v487ObservedBaseline="+observedMotorBaselineCreditLabV487+
-            "|v487Accepted="+observedMotorBaselineV487.accepted()+
-            "|v487Centered="+observedMotorBaselineV487.centered()+
+            "|v487Accepted="+observedMotorBaselineV488.accepted()+
+            "|v487Centered="+observedMotorBaselineV488.centered()+
+            "|v488EffortConditioned="+observedMotorBaselineCreditLabV487+
             "|pairedMotorContrastLabV454="+originalPairedMotorContrastLabV454+
             "|validPairedCreditDecisionsV454="+validPairedCreditDecisionsV454+
             "|rejectedPairedCreditDecisionsV454="+rejectedPairedCreditDecisionsV454+
@@ -746,9 +747,9 @@ final class Zero3OriginalBrainV356 {
                     // until after this decision's local learning finishes.
                     if(observedMotorBaselineCreditLabV487&&
                        !physicallyTouchedSolidDuringDecisionV380)
-                        first=observedMotorBaselineV487.advantage(
+                        first=observedMotorBaselineV488.advantage(
                             choice.x,choice.y,decisionStartVxV417,
-                            decisionStartVyV417,rawPhysicalCreditV487);
+                            decisionStartVyV417,choice.effort,rawPhysicalCreditV487);
                     float delayed=3f*(ax*priorLocalX+ay*priorLocalY)/denom-
                         .01f*outcome.work;
                     Arrays.fill(localResponseV400,Math.max(-1f,Math.min(1f,first)));
@@ -858,9 +859,9 @@ final class Zero3OriginalBrainV356 {
                             new float[16]);
                         if(observedMotorBaselineCreditLabV487&&
                            !physicallyTouchedSolidDuringDecisionV380)
-                            observedMotorBaselineV487.accept(
+                            observedMotorBaselineV488.accept(
                                 choice.x,choice.y,decisionStartVxV417,
-                                decisionStartVyV417,rawPhysicalCreditV487);
+                                decisionStartVyV417,choice.effort,rawPhysicalCreditV487);
                         immediateOwnDecisionCreditsV423++;
                         localCreditCallsV400++;
                         if(cortex.updates()>before)localUpdatesV400++;
@@ -1013,7 +1014,7 @@ final class Zero3OriginalBrainV356 {
         interrupt();brain.resetLife();lastLife=-1;
         // Fresh physical body: do not reuse a previous life's unobserved
         // motor-credit baseline. The original trained weights stay intact.
-        observedMotorBaselineV487.newLife();
+        observedMotorBaselineV488.newLife();
         // V468 LAB: this body's last 64 executed muscle efferences belong to
         // the DEAD body. The next newborn's 194D GRU input slots 124..187
         // must not report commands that its freshly reset solver never ran.
