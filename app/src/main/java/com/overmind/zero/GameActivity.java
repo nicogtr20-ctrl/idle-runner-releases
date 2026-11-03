@@ -254,6 +254,14 @@ public final class GameActivity extends Activity {
             throw new IllegalStateException("ZERO454 original body unavailable");
         lab.brain3.enableOriginalPairedMotorContrastLabV454();
     }
+    // V487: test the V486 verified historical observed-motor baseline
+    // in actual V390/421/423 neural learning; never an app setting or OTA.
+    void originalV487EnableObservedMotorBaselineCreditForQA(){
+        if(lab==null||lab.brain3==null||
+           !lab.brain3.realPhysicalMotorContextV412())
+            throw new IllegalStateException("V487 original physical GRU3 required");
+        lab.brain3.enableObservedMotorBaselineCreditLabV487();
+    }
     // ZERO425 research-only: no radial or saturated phantom actor heading
     // gradient, no new direction, reward, actuator or saved parameter.
     void originalV425EnableTangentActorCreditForQA(){
