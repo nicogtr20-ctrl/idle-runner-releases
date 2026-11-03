@@ -3204,3 +3204,5 @@ public final class GameActivity extends Activity {
         }
     }
 }
+
+// ZERO486 read-only four-gate synchronization marker: no change to live game, body, brain or learning.
