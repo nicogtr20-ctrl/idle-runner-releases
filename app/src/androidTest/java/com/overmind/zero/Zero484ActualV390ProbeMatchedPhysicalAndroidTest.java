@@ -286,4 +286,114 @@ public final class Zero484ActualV390ProbeMatchedPhysicalAndroidTest {
             " sameStateONOFF=true originalSavedWeightsUntouched=true"+
             " noLiveCreditReplacement=true");
     }
+
+    /**
+     * ZERO486 read-only, prospective control-variate test. The candidate
+     * baseline is learned ONLY from PREVIOUS genuine ON-arm physical scores
+     * with the same issued heading; the paired OFF-arm is NEVER consulted
+     * to construct it. OFF is used solely as heldout causal ground truth.
+     * Each original V390 site is evaluated at all four lab headings.
+     * No online brain, saved weight, reward, solver or motor is changed.
+     */
+    @Test(timeout=1500000)
+    public void independentObservedBaselineAgainstMatchedCausalV486()
+            throws Exception{
+        JSONObject user=Zero390ActualUserMotorRehabilitationAndroidTest.fixture();
+        Zero3OriginalBrainV356.Readout saved=
+            Zero3OriginalBrainV356.inspectSaved(user.getString("brain"));
+        assertEquals(33312L,saved.decisions);
+        assertEquals(19452L,saved.motorUpdates);
+        JSONObject free=Zero412TrueS21MotorContextPhysicalABAndroidTest.savedFree(user);
+        Zero3LearningFoundation.AdaptiveCortex.State original=
+            Zero390ActualUserMotorRehabilitationAndroidTest.trained(user).checkpoint();
+        int grandTotal=0,grandEvaluated=0;
+        for(float speed:PRE_WEST){
+            Zero3LearningFoundation.AdaptiveCortex sequence=cloneCortex(original);
+            sequence.enableIsolatedCreditV390();
+            double[] naive=new double[48],centered=new double[48],causal=new double[48];
+            int[] counts=new int[48];
+            double[] priorObservedMean=new double[4];
+            int[] priorCount=new int[4];
+            int evaluated=0;
+            for(int repeat=0;repeat<16;repeat++){
+                HashSet<Integer> visited=new HashSet<>();
+                for(int sample=0;sample<48;sample++){
+                    int heading=(sample+repeat)%4;
+                    Zero3LearningFoundation.AdaptiveCortex.State state=
+                        sequence.checkpoint();
+                    Result on=run(free,state,speed,heading,true);
+                    Result off=run(free,state,speed,heading,false);
+                    int site=on.site*3+(on.channel==3?2:on.channel);
+                    assertTrue(site>=0&&site<48);
+                    assertTrue("all original sites once per cycle",visited.add(site));
+                    assertTrue("delivered genuine V390 motor intervention",
+                        Math.abs(on.delivered)>1e-8f);
+                    float ux=heading==0?1f:heading==2?-1f:0f;
+                    float uy=heading==1?1f:heading==3?-1f:0f;
+                    double observed=v417Score(on,ux,uy);
+                    double offScore=v417Score(off,ux,uy);
+                    assertTrue(Double.isFinite(observed)&&Double.isFinite(offScore));
+                    // First complete cycle warms up each independent heading.
+                    // Future estimates use only PREVIOUS ON observations.
+                    if(priorCount[heading]>=12){
+                        double p=on.delivered;
+                        naive[site]+=observed*p;
+                        centered[site]+=(observed-priorObservedMean[heading])*p;
+                        causal[site]+=(observed-offScore)*p;
+                        counts[site]++;
+                        evaluated++;
+                    }
+                    // Incremental observed-only mean, never matched OFF.
+                    priorCount[heading]++;
+                    priorObservedMean[heading]+=
+                        (observed-priorObservedMean[heading])/priorCount[heading];
+                    grandTotal++;
+                    Zero3LearningFoundation.MotorIntent dummy=
+                        new Zero3LearningFoundation.MotorIntent(
+                            486L,0L,sequence.revision(),ux,uy,.5f,.5f,.4f);
+                    sequence.begin(true,dummy,true);
+                    sequence.discard();
+                }
+                assertEquals(48,visited.size());
+            }
+            double dotN=0,dotB=0,sqN=0,sqB=0,sqC=0;
+            double absN=0,absB=0,absC=0;
+            int wrongN=0,wrongB=0;
+            for(int site=0;site<48;site++){
+                assertEquals("15 heldout samples per original site",15,counts[site]);
+                double n=naive[site]/counts[site];
+                double b=centered[site]/counts[site];
+                double t=causal[site]/counts[site];
+                dotN+=n*t;dotB+=b*t;
+                sqN+=n*n;sqB+=b*b;sqC+=t*t;
+                absN+=Math.abs(n);absB+=Math.abs(b);absC+=Math.abs(t);
+                if(n*t<0)wrongN++;
+                if(b*t<0)wrongB++;
+            }
+            double cosineN=dotN/Math.sqrt(sqN*sqC);
+            double cosineB=dotB/Math.sqrt(sqB*sqC);
+            assertTrue("finite unbiased-comparison diagnostic",
+                Double.isFinite(cosineN)&&Double.isFinite(cosineB));
+            assertEquals(720,evaluated);
+            grandEvaluated+=evaluated;
+            Log.i("ZERO486_CAUSAL",String.format(Locale.US,
+                "ORIGINAL_S21_OBSERVED_BASELINE_HELDOUT speedWest=%.3f"+
+                " repeats=16 total=768 evaluated=720 sites=48"+
+                " naiveCosine=%.6f observedBaselineCosine=%.6f"+
+                " naiveWrongSites=%d observedBaselineWrongSites=%d"+
+                " naiveMeanAbs=%.9f observedBaselineMeanAbs=%.9f"+
+                " matchedCausalMeanAbs=%.9f"+
+                " baselineUsesOnlyPriorPhysicalON=true liveMotorChanged=false",
+                speed,cosineN,cosineB,wrongN,wrongB,
+                absN/48d,absB/48d,absC/48d));
+        }
+        assertEquals(2304,grandTotal);
+        assertEquals(2160,grandEvaluated);
+        Log.i("ZERO486_CAUSAL",
+            "ORIGINAL_S21_OBSERVED_BASELINE_HELDOUT_COMPLETE"+
+            " originalV390Probes=2304 evaluated=2160"+
+            " noPairedCounterfactualUsedForBaseline=true"+
+            " originalSavedWeightsUntouched=true noLiveCreditReplacement=true");
+    }
+
 }
