@@ -126,6 +126,20 @@ final class Zero3OriginalBrainV356 {
     }
     private boolean immediateOwnDecisionCreditLabV423;
     private long immediateOwnDecisionCreditsV423;
+    // V487 isolated A/B: subtract the PREVIOUSLY measured physical
+    // credit baseline of the same issued heading and real PRE speed regime.
+    // No future outcome, inferred motor response, new action or save field.
+    private final Zero487ObservedMotorBaseline observedMotorBaselineV487=
+        new Zero487ObservedMotorBaseline();
+    private boolean observedMotorBaselineCreditLabV487;
+    private float rawPhysicalCreditV487;
+    void enableObservedMotorBaselineCreditLabV487(){
+        if(pending||!localMotorRequestedV400||!genuineComVelocityCreditLabV417||
+           !deliveredLocalProbeLabV421||!immediateOwnDecisionCreditLabV423||
+           originalPairedMotorContrastLabV454)
+            throw new IllegalStateException("V487 requires V400/V417/V421/V423 without V454");
+        observedMotorBaselineCreditLabV487=true;
+    }
     void enableImmediateOwnDecisionCreditLabV423(){
         if(pending||!localMotorRequestedV400||!genuineComVelocityCreditLabV417)
             throw new IllegalStateException("ZERO423 requires V400/V417 at true boundary");
@@ -238,6 +252,9 @@ final class Zero3OriginalBrainV356 {
             "|deliveredLocalProbeLabV421="+deliveredLocalProbeLabV421+
             "|immediateOwnDecisionCreditLabV423="+immediateOwnDecisionCreditLabV423+
             "|immediateOwnDecisionCreditsV423="+immediateOwnDecisionCreditsV423+
+            "|v487ObservedBaseline="+observedMotorBaselineCreditLabV487+
+            "|v487Accepted="+observedMotorBaselineV487.accepted()+
+            "|v487Centered="+observedMotorBaselineV487.centered()+
             "|pairedMotorContrastLabV454="+originalPairedMotorContrastLabV454+
             "|validPairedCreditDecisionsV454="+validPairedCreditDecisionsV454+
             "|rejectedPairedCreditDecisionsV454="+rejectedPairedCreditDecisionsV454+
@@ -717,6 +734,18 @@ final class Zero3OriginalBrainV356 {
                     float denom=4f+(float)Math.hypot(ax,ay);
                     float first=3f*(ax*choice.x+ay*choice.y)/denom-
                         .01f*outcome.work;
+                    rawPhysicalCreditV487=first;
+                    // The V486 heldout real-material comparator found that
+                    // a historical observed ON credit can distinguish a V390
+                    // muscle's effect from passive COM motion. Test this
+                    // prospectively ONLY on clean, contact-free V390 events.
+                    // The current outcome is NOT added to the baseline
+                    // until after this decision's local learning finishes.
+                    if(observedMotorBaselineCreditLabV487&&
+                       !physicallyTouchedSolidDuringDecisionV380)
+                        first=observedMotorBaselineV487.advantage(
+                            choice.x,choice.y,decisionStartVxV417,
+                            decisionStartVyV417,first);
                     float delayed=3f*(ax*priorLocalX+ay*priorLocalY)/denom-
                         .01f*outcome.work;
                     Arrays.fill(localResponseV400,Math.max(-1f,Math.min(1f,first)));
@@ -824,6 +853,11 @@ final class Zero3OriginalBrainV356 {
                         long before=cortex.updates();
                         cortex.learnV332(probeV400,localResponseV400,
                             new float[16]);
+                        if(observedMotorBaselineCreditLabV487&&
+                           !physicallyTouchedSolidDuringDecisionV380)
+                            observedMotorBaselineV487.accept(
+                                choice.x,choice.y,decisionStartVxV417,
+                                decisionStartVyV417,rawPhysicalCreditV487);
                         immediateOwnDecisionCreditsV423++;
                         localCreditCallsV400++;
                         if(cortex.updates()>before)localUpdatesV400++;
