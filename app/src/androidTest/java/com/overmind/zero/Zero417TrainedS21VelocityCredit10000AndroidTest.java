@@ -217,6 +217,9 @@ public final class Zero417TrainedS21VelocityCredit10000AndroidTest {
                 // for the SAME decision's V423 measured COM-gradient update.
                 original.originalV421EnableDeliveredLocalProbeForQA();
                 original.originalV423EnableImmediateOwnMotorCreditForQA();
+                // V487 isolated ACTUAL-ORIGINAL behavioral A/B: historical
+                // physically eligible ON baseline; not a scripted heading.
+                original.originalV487EnableObservedMotorBaselineCreditForQA();
                 // ZERO454 only new scientific motor change versus V453:
                 // original real V390 muscle pulses ON/OFF/OFF/ON and learns
                 // signed physical COM acceleration contrast in SAME action.
