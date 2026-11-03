@@ -421,6 +421,10 @@ public final class Zero417TrainedS21VelocityCredit10000AndroidTest {
             }
             String motor=original.originalV366MotorDiagnosticForQA();
             String local=original.originalV400LocalMotorDiagnosticsForQA();
+            assertTrue("V487 new live original physical baseline must be explicitly enabled, "+
+                "not the V486 read-only diagnostic: "+local,
+                local.contains("|v487ObservedBaseline=true|")&&
+                local.contains("|v487Accepted=")&&local.contains("|v487Centered="));
             android.util.Log.i("ZERO417_USER_S21_LONG","ZERO443_MOTOR_EVIDENCE "+
                 original.originalV443MotorEvidenceDiagnosticsForQA());
             android.util.Log.i("ZERO417_USER_S21_LONG","ZERO436_LEARNED_HARM_COVERAGE "+
