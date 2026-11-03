@@ -734,7 +734,10 @@ final class Zero3OriginalBrainV356 {
                     float denom=4f+(float)Math.hypot(ax,ay);
                     float first=3f*(ax*choice.x+ay*choice.y)/denom-
                         .01f*outcome.work;
-                    rawPhysicalCreditV487=first;
+                    // Match the old V417 response's exact bounded signal:
+                    // never let an extreme work impulse poison the historical
+                    // average even though old cortex credit clips at [-1,1].
+                    rawPhysicalCreditV487=Math.max(-1f,Math.min(1f,first));
                     // The V486 heldout real-material comparator found that
                     // a historical observed ON credit can distinguish a V390
                     // muscle's effect from passive COM motion. Test this
@@ -745,7 +748,7 @@ final class Zero3OriginalBrainV356 {
                        !physicallyTouchedSolidDuringDecisionV380)
                         first=observedMotorBaselineV487.advantage(
                             choice.x,choice.y,decisionStartVxV417,
-                            decisionStartVyV417,first);
+                            decisionStartVyV417,rawPhysicalCreditV487);
                     float delayed=3f*(ax*priorLocalX+ay*priorLocalY)/denom-
                         .01f*outcome.work;
                     Arrays.fill(localResponseV400,Math.max(-1f,Math.min(1f,first)));
