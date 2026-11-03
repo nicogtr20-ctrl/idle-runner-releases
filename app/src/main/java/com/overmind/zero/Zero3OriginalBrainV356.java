@@ -1008,6 +1008,9 @@ final class Zero3OriginalBrainV356 {
     }
     void newLife(){
         interrupt();brain.resetLife();lastLife=-1;
+        // Fresh physical body: do not reuse a previous life's unobserved
+        // motor-credit baseline. The original trained weights stay intact.
+        observedMotorBaselineV487.newLife();
         // V468 LAB: this body's last 64 executed muscle efferences belong to
         // the DEAD body. The next newborn's 194D GRU input slots 124..187
         // must not report commands that its freshly reset solver never ran.
