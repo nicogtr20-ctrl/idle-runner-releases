@@ -284,6 +284,10 @@ public final class Zero417WildOriginalVelocityCredit10000AndroidTest {
             }
             String motor=original.originalV366MotorDiagnosticForQA();
             String local=original.originalV400LocalMotorDiagnosticsForQA();
+            assertTrue("V487 new live original physical baseline must be explicitly enabled, "+
+                "not the V486 read-only diagnostic: "+local,
+                local.contains("|v487ObservedBaseline=true|")&&
+                local.contains("|v487Accepted=")&&local.contains("|v487Centered="));
             assertTrue("V429 real high-level causal motor map enabled",
                 local.contains("safeMotorMapLabV420=true"));
             android.util.Log.i("ZERO417_WILD_LONG","ZERO417_REAR_WALL_RULE "+local);
