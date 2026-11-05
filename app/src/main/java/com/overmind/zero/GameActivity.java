@@ -262,6 +262,14 @@ public final class GameActivity extends Activity {
             throw new IllegalStateException("V487 original physical GRU3 required");
         lab.brain3.enableObservedMotorBaselineCreditLabV487();
     }
+    /** ZERO489 LAB only. A learned physical action contrast must outperform
+     * the same-PRE context-only negative control on HELDOUT real trials. */
+    void originalV489EnableMatchedPreMotorForQA(){
+        if(lab==null||lab.brain3==null||
+           !lab.brain3.realPhysicalMotorContextV412())
+            throw new IllegalStateException("V489 original physical GRU3 required");
+        lab.brain3.enableMatchedPreMotorLabV489();
+    }
     // ZERO425 research-only: no radial or saturated phantom actor heading
     // gradient, no new direction, reward, actuator or saved parameter.
     void originalV425EnableTangentActorCreditForQA(){
