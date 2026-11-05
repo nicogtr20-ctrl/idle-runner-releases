@@ -582,7 +582,13 @@ final class Zero3InstrumentalCreditV371 {
         }
         return false;
     }
-    void abort(){pendingSight=null;pendingBank=-1;pendingHeldout=false;inertia.abort();}
+    void abort(){
+        pendingSight=null;pendingBank=-1;pendingHeldout=false;
+        // An interrupted or dead original GRU3 decision is NOT a V489
+        // physical observation, and has no reusable issued effort.
+        pendingEffortV489=0f;
+        inertia.abort();
+    }
     void newLife(){abort();history=0;stalledStreak=0;lastBank=-1;
         recentHarmBand=-1;recentHarmTime=0f;}
     void copyTo(Zero3InstrumentalCreditV371 c){
