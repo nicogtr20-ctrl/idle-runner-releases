@@ -182,6 +182,10 @@ public final class Zero417WildOriginalVelocityCredit10000AndroidTest {
                 // V478 sole behavioral delta: learned optical consequence of
                 // ACTUAL PRE inertia, same for every unverified command.
                 original.originalV478EnableMeasuredPassiveCoastOpticalForQA();
+                // V489: compare actual candidate-conditioned material movement
+                // to real same-PRE/effort context baseline on disjoint heldout.
+                // No authored red escape direction or external muscle force.
+                original.originalV489EnableMatchedPreMotorForQA();
                 // ZERO461 sole new scientific variable from V457: preserve
                 // original learned CH2 grip while suppressing only its 16
                 // random exploratory logits; actual sole GRU3 muscle train
