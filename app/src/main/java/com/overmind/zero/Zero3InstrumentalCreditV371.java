@@ -18,6 +18,26 @@ final class Zero3InstrumentalCreditV371 {
     private final int[] trained=new int[BINS],validated=new int[BINS];
     private final double[] error=new double[BINS],baseline=new double[BINS];
     private Zero3InertialResponseV377 inertia=new Zero3InertialResponseV377();
+    // V489 QA-only: matched observed PRE-velocity and effort for the same
+    // ORIGINAL real material outcome, against a pooled real negative control.
+    private final Zero489MatchedPreMotorResponse matchedMotorV489=
+        new Zero489MatchedPreMotorResponse();
+    private boolean matchedPreMotorLabV489;
+    private float pendingEffortV489;
+    void enableMatchedPreMotorLabV489(){
+        if(pendingSight!=null||!strictInertialOpticalEvidenceLabV433||
+           !censorUnverifiedDelayedBankUnderDriftLabV442||
+           !measuredPassiveCoastOpticalLabV478)
+            throw new IllegalStateException("V489 needs real original V433/V442/V478 boundary");
+        matchedPreMotorLabV489=true;
+    }
+    /** Old V377 model stays intact and takes precedence if verified.
+     * V489 is ONLY actual separate heldout-confirmed real material evidence. */
+    private float[] predictedPhysicalTravelV489(float[] observations,float[] proposed){
+        float[] previous=inertia.expected(observations,proposed);
+        return previous!=null?previous:
+            matchedPreMotorLabV489?matchedMotorV489.predicted(observations,proposed):null;
+    }
     // V433 LAB: without a heldout-validated motor response, high PRE inertia
     // cannot be replaced by the intended heading when estimating optical travel.
     private boolean strictInertialOpticalEvidenceLabV433;
@@ -57,7 +77,8 @@ final class Zero3InstrumentalCreditV371 {
             "|verifiedV377Banks="+inertia.reliableBanks()+
             "|verifiedV371Directions="+verifiedDirections()+
             "|delayedRealLinks="+delayedCredits()+"|"+inertia.motorValidationDiagnosticsV444()+
-            "|"+motorBankEvidenceDiagnosticsV457();
+            "|"+motorBankEvidenceDiagnosticsV457()+
+            "|v489Enabled="+matchedPreMotorLabV489+"|"+matchedMotorV489.diagnostics();
     }
     // V457 read-only: inspect all original V371 bank TRAIN/HELDOUT
     // measurements against the V377 inertial validation already logged.
@@ -166,6 +187,7 @@ final class Zero3InstrumentalCreditV371 {
         pendingPreVxV435=observation194[191]*130f;
         pendingPreVyV435=observation194[192]*130f;
         pendingBank=heading(action[0],action[1]);pendingHeldout=heldout;
+        pendingEffortV489=action[2];
         inertia.begin(observation194,action,heldout);
     }
     void complete(float dx,float dy,float seconds,boolean clean,boolean heldout){
@@ -180,6 +202,12 @@ final class Zero3InstrumentalCreditV371 {
         recentHarmTime=Math.max(0f,recentHarmTime-seconds);
         if(recentHarmTime==0f)recentHarmBand=-1;
         if(clean){
+            if(matchedPreMotorLabV489){
+                double angle=pendingBank*Math.PI/4d;
+                matchedMotorV489.observe(pendingPreVxV435,pendingPreVyV435,
+                    (float)Math.cos(angle),(float)Math.sin(angle),
+                    pendingEffortV489,dx,dy,seconds,heldout);
+            }
             inertia.finish(dx,dy,seconds,heldout);
             // Normalized to a physical 0.30s decision for comparable trials.
             // This is a measured displacement, NOT an authored motion target.
@@ -371,7 +399,7 @@ final class Zero3InstrumentalCreditV371 {
            chosen==null||chosen.length<2||contact==null)
             throw new IllegalArgumentException("V374 physical optical comparison");
         int bank=heading(chosen[0],chosen[1]);
-        float[] predicted=inertia.expected(observation194,chosen);
+        float[] predicted=predictedPhysicalTravelV489(observation194,chosen);
         if(predicted!=null){
             // V480 LAB: score() already scores the SAME heldout V377 travel
             // against the SAME actually learned wavelength consequences.
@@ -448,7 +476,7 @@ final class Zero3InstrumentalCreditV371 {
             throw new IllegalArgumentException("V371 score shape");
         int bank=heading(chosen[0],chosen[1]);
         v443ScoreEvaluations++;
-        float[] predicted=inertia.expected(observation194,chosen);
+        float[] predicted=predictedPhysicalTravelV489(observation194,chosen);
         if(predicted!=null)v443PredictedEvaluations++;
         float mx,my;
         boolean passiveOnly=false;
@@ -565,6 +593,8 @@ final class Zero3InstrumentalCreditV371 {
         System.arraycopy(error,0,c.error,0,BINS);
         System.arraycopy(baseline,0,c.baseline,0,BINS);
         inertia.copyTo(c.inertia);
+        matchedMotorV489.copyTo(c.matchedMotorV489);
+        c.matchedPreMotorLabV489=matchedPreMotorLabV489;
         for(int b=0;b<BANDS;b++){
             System.arraycopy(delayedContactValue[b],0,c.delayedContactValue[b],0,BINS);
             System.arraycopy(delayedContactCount[b],0,c.delayedContactCount[b],0,BINS);
