@@ -298,6 +298,9 @@ public final class Zero417WildOriginalVelocityCredit10000AndroidTest {
             android.util.Log.i("ZERO417_WILD_LONG","ZERO417_REAR_WALL_RULE "+local);
             android.util.Log.i("ZERO417_WILD_LONG","ZERO443_MOTOR_EVIDENCE "+
                 original.originalV443MotorEvidenceDiagnosticsForQA());
+            assertTrue("V489 must run in the real original candidate scorer",
+                original.originalV443MotorEvidenceDiagnosticsForQA()
+                    .contains("|v489Enabled=true|"));
             String v436Coverage=original.originalV422LearnedHarmCandidateDiagnosticsForQA();
             android.util.Log.i("ZERO417_WILD_LONG","ZERO436_LEARNED_HARM_COVERAGE "+v436Coverage);
             assertTrue("V436 learned harm sampling flag enabled",v436Coverage.contains("enabled=true"));
