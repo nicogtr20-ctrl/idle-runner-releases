@@ -142,6 +142,13 @@ final class Zero3OriginalBrainV356 {
             throw new IllegalStateException("V487 requires V400/V417/V421/V423 without V454");
         observedMotorBaselineCreditLabV487=true;
     }
+    /** V489 science only: original brain remains the sole action chooser;
+     * accepted V489 responses come exclusively from heldout real body motion. */
+    void enableMatchedPreMotorLabV489(){
+        if(pending||!observedMotorBaselineCreditLabV487)
+            throw new IllegalStateException("V489 needs original V488 motor-credit boundary");
+        brain.enableMatchedPreMotorLabV489();
+    }
     void enableImmediateOwnDecisionCreditLabV423(){
         if(pending||!localMotorRequestedV400||!genuineComVelocityCreditLabV417)
             throw new IllegalStateException("ZERO423 requires V400/V417 at true boundary");
