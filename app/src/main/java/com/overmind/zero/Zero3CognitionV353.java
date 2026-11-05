@@ -172,6 +172,9 @@ public final class Zero3CognitionV353 {
     void enableMidDriftRegimeLabV476(){
         instrumental.enableMidDriftRegimeLabV476();
     }
+    void enableMatchedPreMotorLabV489(){
+        instrumental.enableMatchedPreMotorLabV489();
+    }
     void enableStrictInertialOpticalEvidenceLabV433(){
         instrumental.enableStrictInertialOpticalEvidenceLabV433();
     }
