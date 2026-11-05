@@ -432,6 +432,9 @@ public final class Zero417TrainedS21VelocityCredit10000AndroidTest {
                 local.contains("|v488EffortConditioned=true|"));
             android.util.Log.i("ZERO417_USER_S21_LONG","ZERO443_MOTOR_EVIDENCE "+
                 original.originalV443MotorEvidenceDiagnosticsForQA());
+            assertTrue("V489 must run in the real original candidate scorer",
+                original.originalV443MotorEvidenceDiagnosticsForQA()
+                    .contains("|v489Enabled=true|"));
             android.util.Log.i("ZERO417_USER_S21_LONG","ZERO436_LEARNED_HARM_COVERAGE "+
                 original.originalV422LearnedHarmCandidateDiagnosticsForQA());
             assertTrue("V429 real high-level causal motor map enabled",
