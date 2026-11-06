@@ -585,7 +585,9 @@ public final class Zero3LearningFoundation {
             for(int out=0;out<OUTPUTS;out++)for(int f=0;f<INPUTS;f++){
                 int ix=out*INPUTS+f;
                 float feat=limit(accumulated[ix]/samples,-2,2);
-                float perturb=measuredProbeCreditLabV397?
+                // ZERO490: V421 also records the actual post-saturation muscle probe.
+                // Credit exactly that delivered intervention, never raw noise.
+                float perturb=(measuredProbeCreditLabV397||deliveredLocalCreditLabV421)?
                     deliveredProbeV397[out]/samples:noise[out];
                 float delta=limit(lr*advantage*perturb*feat,-.002f,.002f);
                 float previous=weights[ix];
