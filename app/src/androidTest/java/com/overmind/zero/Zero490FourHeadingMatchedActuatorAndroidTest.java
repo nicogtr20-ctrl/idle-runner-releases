@@ -31,7 +31,7 @@ public final class Zero490FourHeadingMatchedActuatorAndroidTest {
         }
     }
 
-    @Test(timeout=1500000)
+    private static float projectedFirstAcceleration(\n            Zero413MatchedPhysicalMotorCausalityAndroidTest.Trial t,\n            int heading) {\n        switch(heading){\n            case 0:return t.initialAx;\n            case 1:return t.initialAy;\n            case 2:return -t.initialAx;\n            default:return -t.initialAy;\n        }\n    }\n\n    @Test(timeout=1500000)
     public void originalS21FourHeadingsMatchedDeliveredMuscleSigns()
             throws Exception {
         JSONObject user=Zero390ActualUserMotorRehabilitationAndroidTest.fixture();
@@ -54,7 +54,7 @@ public final class Zero490FourHeadingMatchedActuatorAndroidTest {
                     s,user,1,-1,-1,0);
             float observed=projectedVelocity(full,heading);
             float abovePassive=observed-projectedVelocity(passive,heading);
-            int headingNonzero=0,headingOpposing=0;
+            int headingNonzero=0,headingOpposing=0,headingFirstNonzero=0;\n            int delayedOnly=0,firstOpposingToFull=0;\n            float fullFirstAbovePassive=projectedFirstAcceleration(full,heading)-\n                projectedFirstAcceleration(passive,heading);
             float min=Float.POSITIVE_INFINITY,max=Float.NEGATIVE_INFINITY;
             for(int sector=0;sector<16;sector++){
                 for(int channel:CHANNELS){
@@ -69,7 +69,7 @@ public final class Zero490FourHeadingMatchedActuatorAndroidTest {
                     float derivative=projectedVelocity(plus,heading)-
                         projectedVelocity(minus,heading);
                     assertTrue(Float.isFinite(derivative));
-                    min=Math.min(min,derivative);
+                    float firstDerivative=projectedFirstAcceleration(plus,heading)-\n                        projectedFirstAcceleration(minus,heading);\n                    assertTrue(Float.isFinite(firstDerivative));\n                    if(Math.abs(firstDerivative)>1e-4f){\n                        headingFirstNonzero++;\n                        if(fullFirstAbovePassive*firstDerivative<0f)\n                            firstOpposingToFull++;\n                    }else if(Math.abs(derivative)>1e-4f){\n                        delayedOnly++;\n                    }\n                    min=Math.min(min,derivative);
                     max=Math.max(max,derivative);
                     comparisons++;
                     if(Math.abs(derivative)>1e-4f){
@@ -83,12 +83,12 @@ public final class Zero490FourHeadingMatchedActuatorAndroidTest {
             Log.i("ZERO490_PHYSICS",String.format(Locale.US,
                 "heading=%d preV=(%.3f,%.3f) passiveProjectedDV=%.7f"+
                 " fullProjectedDV=%.7f fullAbovePassive=%.7f"+
-                " nonzeroJacobian=%d/48 opposingToFull=%d"+
+                " nonzeroJacobian=%d/48 opposingToFull=%d"+\n                " firstFrameNonzero=%d/48 firstOpposing=%d delayedOnly=%d"+\n                " fullFirstAbovePassive=%.7f"+
                 " jacobianMin=%.7f jacobianMax=%.7f"+
                 " passiveContacts=%d fullContacts=%d",
                 heading,PRE_X,PRE_Y,
                 projectedVelocity(passive,heading),observed,abovePassive,
-                headingNonzero,headingOpposing,min,max,
+                headingNonzero,headingOpposing,headingFirstNonzero,\n                firstOpposingToFull,delayedOnly,fullFirstAbovePassive,min,max,
                 passive.contactFrames,full.contactFrames));
             assertTrue("ZERO490 heading="+heading+
                 " has no measurable motor response across 48 channel/sector pairs",
