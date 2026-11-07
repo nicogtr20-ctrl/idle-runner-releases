@@ -120,6 +120,10 @@ public final class Zero490FourHeadingMatchedActuatorAndroidTest {
             assertTrue("ZERO490 heading="+heading+
                 " has no measurable motor response across 48 channel/sector pairs",
                 headingNonzero>0);
+            assertTrue("ZERO490 heading="+heading+
+                " has no measurable FIRST-FRAME actuator impulse across 48 pairs; "+
+                "24-frame displacement alone cannot establish local credit sign",
+                headingFirstNonzero>0);
         }
         assertEquals("four headings x sixteen sectors x three original channels",
             192,comparisons);
