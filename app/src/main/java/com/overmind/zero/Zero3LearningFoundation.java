@@ -79,6 +79,24 @@ public final class Zero3LearningFoundation {
             postureMotorTransducerV499=true;
         }
         boolean postureMotorTransducerV499(){return postureMotorTransducerV499;}
+        // V507: intrinsic biological actuator activation/relaxation. The
+        // V499 solver receives a real muscle force field with a bounded
+        // ~0.5s first-order response, not discontinuous new force 60 times
+        // per second. This does NOT alter the GRU3 chosen heading, CH2
+        // V319 grip, or the serialized 512/64 cortex synaptic checkpoint.
+        // Rate determined experimentally from the user's actual latest 256
+        // recorded original-GRU intentions (V504 Android physical A/B).
+        private boolean muscleActivationDynamicsLabV507;
+        private final float[] physicalActivationV507=new float[OUTPUTS];
+        void enableMuscleActivationDynamicsLabV507(){
+            if(pendingDecision||!postureMotorTransducerV499)
+                throw new IllegalStateException("V507 requires V499 real motor at a neural boundary");
+            muscleActivationDynamicsLabV507=true;
+        }
+        boolean muscleActivationDynamicsLabV507(){
+            return muscleActivationDynamicsLabV507;
+        }
+
 
         private boolean measuredProbeCreditLabV397=false;
         // ZERO421: the original 194D/64GRU + 512 synapse local V332 learner
@@ -597,6 +615,25 @@ public final class Zero3LearningFoundation {
                         intention,b,s,alternativeOutputV499);
                 }
                 Zero499PostureMotorTransducer.apply(intention,b,s,output);
+                if(muscleActivationDynamicsLabV507){
+                    float alpha=1f-(float)Math.exp(-dt/.50f);
+                    alpha=limit(alpha,0f,1f);
+                    for(int site=0;site<SECTORS;site++){
+                        int offset=site*CHANNELS;
+                        for(int ch:new int[]{0,1,3}){
+                            int at=offset+ch;
+                            float prior=physicalActivationV507[at];
+                            float delivered=prior+alpha*(output[at]-prior);
+                            if(probing)
+                                alternativeOutputV499[at]=prior+alpha*
+                                    (alternativeOutputV499[at]-prior);
+                            output[at]=limit(delivered,-1f,1f);
+                            physicalActivationV507[at]=output[at];
+                        }
+                        // CH2 remains exactly as produced by original V319
+                        // downstream grip head. Never filter it here.
+                    }
+                }
                 if(probing&&v454On&&(measuredProbeCreditLabV397||
                     deliveredLocalCreditLabV421))
                     for(int at=0;at<OUTPUTS;at++)
