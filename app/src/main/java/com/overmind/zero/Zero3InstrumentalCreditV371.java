@@ -536,7 +536,11 @@ final class Zero3InstrumentalCreditV371 {
                     else v443CensoredZeroHistorical++;
                     if(!measuredPassiveCoastOpticalLabV478){
                         v475ScoreDriftBlocked++;
-                        return 0f;
+                        // V505 cannot vanish simply because current inertia
+                        // exceeds the heldout motor-model confidence range.
+                        return physicalLearnedHarmEnvelopeLabV505?
+                            -.45f*learnedMaterialHarmExposureV505(
+                                observation194,chosen[0],chosen[1],contact):0f;
                     }
                     // One physically measured PRE velocity for ALL unsupported
                     // commands: NOT a guessed actuator response or a heading.
@@ -546,7 +550,11 @@ final class Zero3InstrumentalCreditV371 {
                     v478PassiveScoreEvaluations++;
                 }else{
                     if(Math.abs(historical)>0.000001f)v443UncensoredNonzeroHistorical++;
-                    return historical;
+                    // Unverified travel must not disable consequences of
+                    // already experienced harmful optical material.
+                    return historical-(physicalLearnedHarmEnvelopeLabV505?
+                        .45f*learnedMaterialHarmExposureV505(
+                            observation194,chosen[0],chosen[1],contact):0f);
                 }
             }else{
                 v475ScoreReconstructed++;
