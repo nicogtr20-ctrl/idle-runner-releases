@@ -282,6 +282,12 @@ public final class GameActivity extends Activity {
             throw new IllegalStateException("V489 original physical GRU3 required");
         lab.brain3.enableMatchedPreMotorLabV489();
     }
+    void originalV505EnablePhysicalLearnedHarmEnvelopeForQA(){
+        if(lab==null||lab.brain3==null||
+           !lab.brain3.realPhysicalMotorContextV412())
+            throw new IllegalStateException("V505 original V3 real cognition unavailable");
+        lab.brain3.enablePhysicalLearnedHarmEnvelopeLabV505();
+    }
     // ZERO425 research-only: no radial or saturated phantom actor heading
     // gradient, no new direction, reward, actuator or saved parameter.
     void originalV425EnableTangentActorCreditForQA(){
