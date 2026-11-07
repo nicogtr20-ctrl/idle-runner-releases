@@ -24,7 +24,13 @@ final class Zero499PostureMotorTransducer {
     static final float RESIDUAL=0.12f;
     static final float MAX_DRIVE=0.80f;
     static final float TARGET_MIN=2.0f, TARGET_PER_EFFORT=4.0f;
-    private static final float ERROR_FULL_SCALE=5.75f;
+    // The membrane has delayed shear and internal momentum. A per-frame
+    // 2D velocity-error vector steers the muscle field side-to-side faster
+    // than physical tissue can settle (ZERO499 first 4-axis FAIL). Keep
+    // ONLY the GRU's requested heading as the low-level muscle frame.
+    // Real measured velocity governs FORCE, never switches intention.
+    private static final float GOVERNOR_ONSET_FRACTION=.50f;
+    private static final float GOVERNOR_WIDTH_FRACTION=.70f;
 
     private static float clip(float x,float lo,float hi) {
         return Math.max(lo,Math.min(hi,x));
@@ -44,14 +50,16 @@ final class Zero499PostureMotorTransducer {
         if(len<.9f)throw new IllegalArgumentException("ZERO499 needs GRU3 heading");
         float ux=intent.x/len,uy=intent.y/len;
         float speed=TARGET_MIN+TARGET_PER_EFFORT*effort;
-        // Real measured global COM, not a predicted goal/food/wall or hidden
-        // heading from a second actor. This body has a true PRE velocity.
-        float errX=ux*speed-body.cvx,errY=uy*speed-body.cvy;
-        float errLen=(float)Math.hypot(errX,errY);
-        float drive=MAX_DRIVE*clip(errLen/ERROR_FULL_SCALE,0f,1f)*
-            clip(2f*effort,0f,1f);
-        float rx=errLen>.00001f?errX/errLen:0f;
-        float ry=errLen>.00001f?errY/errLen:0f;
+        // ZERO499 matched Android A/B proved that steering the MOTOR FORCE
+        // toward instantaneous velocity error creates large unintended
+        // orthogonal impulses. Preserve the high-level neural direction.
+        // Only let real COM velocity ALONG THAT SAME DIRECTION reduce drive.
+        // This is a passive saturating speed governor, not a new choice.
+        float along=body.cvx*ux+body.cvy*uy;
+        float over=Math.max(0f,along-GOVERNOR_ONSET_FRACTION*speed);
+        float governor=1f/(1f+over/(GOVERNOR_WIDTH_FRACTION*speed));
+        float drive=MAX_DRIVE*clip(2f*effort,0f,1f)*governor;
+        float rx=ux,ry=uy;
         for(int sector=0;sector<SECTORS;sector++){
             int offset=sector*CHANNELS;
             float dx=0f,dy=0f;
