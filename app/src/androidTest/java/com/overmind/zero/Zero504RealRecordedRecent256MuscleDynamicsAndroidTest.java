@@ -55,6 +55,10 @@ public final class Zero504RealRecordedRecent256MuscleDynamicsAndroidTest {
         }
     }
     static Report replay(JSONObject user,JSONArray trace,float tau)throws Exception{
+        return replay(user,trace,tau,false);
+    }
+    static Report replay(JSONObject user,JSONArray trace,float tau,
+                         boolean useProductionMuscleDynamicsV507)throws Exception{
         GameSceneSnapshot.Scene s=GameSceneSnapshot.restore(
             user.getString("physical_scene_v100"));
         assertNotNull(s);assertNotNull(s.matter);
@@ -63,6 +67,11 @@ public final class Zero504RealRecordedRecent256MuscleDynamicsAndroidTest {
         Zero3LearningFoundation.AdaptiveCortex cortex=
             Zero492ActualNewbornMotorCausalityAndroidTest.cortex(user);
         cortex.enablePostureMotorTransducerV499();
+        if(useProductionMuscleDynamicsV507){
+            if(Math.abs(tau-.50f)>.00001f)
+                throw new IllegalArgumentException("V507 production physical tau must be 0.5s");
+            cortex.enableMuscleActivationDynamicsLabV507();
+        }
         Zero3LearningFoundation.Coordinator control=
             new Zero3LearningFoundation.Coordinator(cortex);
         float[] previous=new float[64];
@@ -71,7 +80,8 @@ public final class Zero504RealRecordedRecent256MuscleDynamicsAndroidTest {
         int opposed=0,aligned=0;
         int firstId=4491;
         long beforeInvalid=s.matter.invalid;
-        float smooth=tau<=0f?1f:1f-(float)Math.exp(-DT/tau);
+        float smooth=useProductionMuscleDynamicsV507||tau<=0f?
+            1f:1f-(float)Math.exp(-DT/tau);
         for(int action=0;action<trace.length();action++){
             JSONArray d=trace.getJSONArray(action);
             int id=d.getInt(0);
