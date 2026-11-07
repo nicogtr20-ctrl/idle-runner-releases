@@ -1,0 +1,197 @@
+name: ZERO489 USER-REQUESTED signed experimental in-app OTA (known behavioral FAIL)
+on:
+  push:
+    branches: [lab/zero489-user-requested-signed-ota]
+    paths: ['.github/workflows/zero489-user-requested-signed-ota.yml']
+permissions:
+  contents: write
+concurrency:
+  group: zero489-user-requested-signed-ota
+  cancel-in-progress: false
+jobs:
+  signed-user-requested-ota:
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    env:
+      OVERMIND_BUILD_NUMBER: '489'
+      OVERMIND_CANDIDATE_NAME: '3.0-ota.489-exp.1'
+    steps:
+      - uses: actions/checkout@v4
+        with: {fetch-depth: 0}
+      - uses: actions/setup-java@v4
+        with: {distribution: temurin, java-version: '17'}
+      - name: Freeze reviewed original V489 branch and independently validate scientific disclaimer
+        run: |
+          set -euo pipefail
+          test "$GITHUB_REF_NAME" = 'lab/zero489-user-requested-signed-ota'
+          git merge-base --is-ancestor 46f93f20168294fd6c5c57dea56fee5dc495529a HEAD
+          python3 - <<'PY'
+          import subprocess
+          allowed={
+            'app/src/main/java/com/overmind/zero/GameActivity.java',
+            'docs/ZERO489_USER_REQUESTED_EXPERIMENTAL_OTA_20261107.md',
+            '.github/workflows/zero489-user-requested-signed-ota.yml',
+          }
+          files=set(subprocess.check_output(['git','diff','--name-only',
+              '46f93f20168294fd6c5c57dea56fee5dc495529a','HEAD'],
+              text=True).splitlines())
+          assert files==allowed, f'Unreviewed changes in signing workflow source: {files^allowed}'
+          from pathlib import Path
+          game=Path('app/src/main/java/com/overmind/zero/GameActivity.java').read_text()
+          assert 'getResources().getBoolean(R.bool.zero3_candidate)' in game
+          assert 'brain3.enableMatchedPreMotorLabV489();' in game
+          assert 'brain3.enableLearnedHarmCandidateCoverageLabV422();' in game
+          assert 'USER_REQUESTED_EXPERIMENTAL_V489_ENABLED' in game
+          doc=Path('docs/ZERO489_USER_REQUESTED_EXPERIMENTAL_OTA_20261107.md').read_text()
+          assert '4.4736%' in doc and '39' in doc and '12.3361%' in doc
+          print('SIGNED_OTA489_EXPLICIT_USER_REQUEST_AND_FAILED_BEHAVIOR_DISCLOSED=PASS')
+          PY
+          git fetch --no-tags origin main
+          python3 - <<'PY'
+          import json,subprocess
+          m=json.loads(subprocess.check_output(
+              ['git','show','origin/main:updater/public/latest.json'],text=True))
+          assert m['available'] is True
+          assert m['applicationId']=='com.overmind.zero.ota'
+          assert 0<int(m['versionCode'])<1489, 'Installed public OTA already too new'
+          print('PUBLIC_MANIFEST_VERSION_COMPATIBLE',m['versionCode'])
+          PY
+      - name: Compile original full Android app and regression test APK
+        run: gradle --no-daemon assembleDebug assembleDebugAndroidTest
+      - name: Restore historical OTA signing identity without exposing secret
+        env:
+          SIGNING_BUNDLE: ${{ secrets.OVERMIND_SIGNING_BUNDLE }}
+        run: |
+          python3 - <<'PY'
+          import os,json,base64,pathlib
+          s=os.environ.get('SIGNING_BUNDLE','')
+          if not s:raise RuntimeError('Cannot sign an update to the installed phone: original keystore secret missing')
+          o=json.loads(base64.b64decode(s,validate=True))
+          key=pathlib.Path(os.environ['RUNNER_TEMP'])/'zero489-user-requested-ota.p12'
+          key.write_bytes(base64.b64decode(o['keyStoreBase64'],validate=True))
+          key.chmod(0o600)
+          for secret in (o['password'],o['alias']):print('::add-mask::'+secret)
+          with open(os.environ['GITHUB_ENV'],'a') as f:
+              f.write('OVERMIND_KEYSTORE_FILE='+str(key)+'\n')
+              f.write('OVERMIND_KEYSTORE_PASSWORD='+o['password']+'\n')
+              f.write('OVERMIND_KEY_PASSWORD='+o['password']+'\n')
+              f.write('OVERMIND_KEY_ALIAS='+o['alias']+'\n')
+          PY
+      - name: Compile ORIGINAL OTA install-over-existing APK with candidate V489 mode enabled
+        run: gradle --no-daemon assembleRelease
+      - name: Verify actual signed APK original identity, version, manifest and candidate code
+        run: |
+          set -euo pipefail
+          apk=app/build/outputs/apk/release/app-release.apk
+          test -s "$apk"
+          bt=$(find "$ANDROID_HOME/build-tools" -mindepth 1 -maxdepth 1 -type d | sort -V | tail -n 1)
+          "$bt/apksigner" verify --print-certs --verbose "$apk" > "$RUNNER_TEMP/zero489-cert.txt"
+          "$bt/aapt" dump badging "$apk" > "$RUNNER_TEMP/zero489-package.txt"
+          "$bt/aapt" dump permissions "$apk" > "$RUNNER_TEMP/zero489-perms.txt"
+          python3 - <<'PY'
+          from pathlib import Path
+          import os,json,hashlib
+          p=Path(os.environ['RUNNER_TEMP'])
+          cert=(p/'zero489-cert.txt').read_text()
+          expected='45010684b4fd74de00f87fb81ca89e1e79b58409cf9fefc497b445b0fe19f583'
+          assert 'Number of signers: 1' in cert
+          assert 'certificate SHA-256 digest: '+expected in cert, 'Mismatched signer can destroy update path'
+          a=(p/'zero489-package.txt').read_text()
+          assert "package: name='com.overmind.zero.ota'" in a
+          assert "versionCode='1489'" in a
+          assert "versionName='3.0-ota.489-exp.1'" in a
+          perms=(p/'zero489-perms.txt').read_text()
+          assert 'android.permission.INTERNET' in perms
+          assert 'android.permission.REQUEST_INSTALL_PACKAGES' in perms
+          obj=json.loads(Path('app/build/outputs/apk/release/output-metadata.json').read_text())
+          assert obj['elements'][0]['versionCode']==1489
+          assert obj['elements'][0]['versionName']=='3.0-ota.489-exp.1'
+          b=Path('app/build/outputs/apk/release/app-release.apk').read_bytes()
+          print('ZERO489_SIGNED_CANDIDATE_CERT_ORIGINAL_PACKAGE_AND_VERSION=PASS')
+          print('SHA256='+hashlib.sha256(b).hexdigest()+' bytes='+str(len(b)))
+          PY
+      - name: Signed APK artifact (retrievable even if manifest deployment fails)
+        uses: actions/upload-artifact@v4
+        with:
+          name: ZERO489-EXPERIMENTAL-SIGNED-INSTALL-OVER-EXISTING-APK
+          path: app/build/outputs/apk/release/app-release.apk
+          retention-days: 30
+          if-no-files-found: error
+      - name: Create immutable prerelease with clear experimental known-failure warning
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          tag='overmind-zero-v3.0-ota.489-exp.1'
+          apk=app/build/outputs/apk/release/app-release.apk
+          mkdir -p "$RUNNER_TEMP/zero489-distribution"
+          cp "$apk" "$RUNNER_TEMP/zero489-distribution/OVERMIND-ZERO-V489-EXPERIMENTAL.apk"
+          sha256sum "$apk" > "$RUNNER_TEMP/zero489-distribution/SHA256.txt"
+          if gh release view "$tag" --repo "${{ github.repository }}" >/dev/null 2>&1; then
+            mkdir -p "$RUNNER_TEMP/zero489-existing"
+            gh release download "$tag" --repo "${{ github.repository }}"               -p OVERMIND-ZERO-V489-EXPERIMENTAL.apk -D "$RUNNER_TEMP/zero489-existing"
+            cmp "$apk" "$RUNNER_TEMP/zero489-existing/OVERMIND-ZERO-V489-EXPERIMENTAL.apk"
+          else
+            gh release create "$tag" \
+              "$RUNNER_TEMP/zero489-distribution/OVERMIND-ZERO-V489-EXPERIMENTAL.apk" \
+              "$RUNNER_TEMP/zero489-distribution/SHA256.txt" \
+              --repo "${{ github.repository }}" --target "${{ github.sha }}" \
+              --title 'OVERMIND ZERO 3.0 V489 — OTA SPERIMENTALE richiesta' --prerelease \
+              --notes 'SU RICHIESTA ESPLICITA: V489 BETA CON RISULTATI COMPORTAMENTALI NEGATIVI. S21 originale 12.34% efficienza e 4 blu, ZERO vergine 4.47% efficienza e 39 rossi contro 3 blu. NON E UNA CORREZIONE RISOLUTIVA. Unico originale GRU3, stessa firma Android, versionCode 1489 e salvataggi V356 invariati. PRIMA dell aggiornamento fare backup degli slot. NON DISINSTALLARE: aggiornare dall app per conservare i ricordi. Il downgrade richiede una futura build con versionCode maggiore.'
+          fi
+      - name: Publish explicitly requested experimental APK to existing in-app OTA endpoint
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          apk=app/build/outputs/apk/release/app-release.apk
+          sha=$(sha256sum "$apk" | awk '{print $1}')
+          bytes=$(wc -c < "$apk" | tr -d ' ')
+          cp "$apk" "$RUNNER_TEMP/zero489-user-requested-signed.apk"
+          git fetch --no-tags origin main
+          git checkout -B main origin/main
+          python3 - <<'PY'
+          from pathlib import Path
+          import json
+          p=Path('updater/public/latest.json')
+          m=json.loads(p.read_text())
+          assert m['applicationId']=='com.overmind.zero.ota'
+          assert int(m['versionCode'])<1489, 'Do not overwrite newer OTA or downgrade'
+          assert m['available'] is True
+          print('PREPARE_EXPERIMENTAL_OTA_FROM_PUBLIC',m['versionCode'])
+          PY
+          mkdir -p updater/public/apk
+          name="overmind-zero-1489-v489-experimental-${sha:0:12}.apk"
+          cp "$RUNNER_TEMP/zero489-user-requested-signed.apk" "updater/public/apk/$name"
+          python3 - "$name" "$sha" "$bytes" <<'PY'
+          import json,sys
+          from pathlib import Path
+          from datetime import datetime,timezone
+          name,sha,bytes=sys.argv[1:]
+          data={
+            'schemaVersion':1,
+            'available':True,
+            'applicationId':'com.overmind.zero.ota',
+            'versionCode':1489,
+            'versionName':'3.0-ota.489-exp.1',
+            'apkUrl':'https://overmind-zero-updates.vercel.app/apk/'+name,
+            'sha256':sha,
+            'sizeBytes':int(bytes),
+            'notes':'V489 TEST SPERIMENTALE richiesto: mobilita e sicurezza NON risolte (S21 12.34%, vergine 4.47%, 39 rosse/3 blu). Backup cervello prima; non disinstallare.',
+            'publishedAt':datetime.now(timezone.utc).isoformat()
+          }
+          target=Path('updater/public/latest.json')
+          target.write_text(json.dumps(data,indent=2,ensure_ascii=False)+'\n')
+          assert Path('updater/public/apk',name).stat().st_size==int(bytes)
+          print('ZERO489_IN_APP_OTA_MANIFEST',json.dumps(data,ensure_ascii=False))
+          PY
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add updater/public/latest.json "updater/public/apk/$name"
+          git commit -m 'Publish owner-requested V489 known-failing experimental signed in-app OTA, preserving V356'
+          git push origin HEAD:main
+          echo "OTA489_SIGNED_APK_URL=https://overmind-zero-updates.vercel.app/apk/$name"
+          echo "OTA489_SIGNED_APK_SHA256=$sha"
+      - name: Remove temporary original signing file
+        if: always()
+        run: rm -f "$RUNNER_TEMP/zero489-user-requested-ota.p12"
