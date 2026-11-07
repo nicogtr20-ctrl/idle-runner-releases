@@ -47,10 +47,15 @@ jobs:
           checkpoint=json.loads(''.join(fragments))['zero3_original_brain_only_v356']
           scene=p1['currentZero']['physical_scene_v100']
           physical=json.loads(scene)
-          assert physical['version']==1
-          assert len(physical['surface']['x'])==96
-          assert len(physical['symbiote']['x'])==64
+          assert physical['v']==1
+          snapshot=physical['physical']
+          assert snapshot['version']==1
+          assert len(snapshot['surface']['x'])==96
+          assert len(snapshot['symbiote']['x'])==64
           assert len(checkpoint)>10000
+          # GameSceneSnapshot.restore accepts the inner physical snapshot,
+          # not GameActivity's outer persisted episode/session wrapper.
+          scene=json.dumps(snapshot,separators=(',',':'))
           saved=dict(reportId=idx['reportId'],brain=checkpoint,
                      physical_scene_v100=scene)
           out=pathlib.Path('/tmp/zero492-nov07-newborn-readonly.json')
