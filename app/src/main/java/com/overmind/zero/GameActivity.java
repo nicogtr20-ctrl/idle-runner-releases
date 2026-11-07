@@ -774,6 +774,37 @@ public final class GameActivity extends Activity {
                 if(!virginBirthV362&&!wasReset)
                     brain3.inheritedPhysicalContactPriorV369(
                         mind.estimated.clone(),mind.contacts.clone());
+                // EXPLICIT USER-REQUESTED OTA489 EXPERIMENTAL PHONE TRIAL.
+                // This opt-in is compiled ONLY when a candidate versionName
+                // is provided by signed CI (R.bool.zero3_candidate=true).
+                // Default real/stable OTA and ordinary local builds remain
+                // unchanged. These are the SAME options, in the SAME order,
+                // that failed V489's original S21/wild 2x10000 Android tests.
+                // This does not assert locomotion is solved or erase a save.
+                if(getResources().getBoolean(R.bool.zero3_candidate)){
+                    brain3.requestLocalTemporalCreditLabV400();
+                    brain3.enableVerifiedRearWallTeachingLabV414();
+                    brain3.enableGenuineComVelocityCreditLabV417();
+                    brain3.enableSafeMotorMapEvidenceLabV420();
+                    brain3.enableDeliveredLocalProbeLabV421();
+                    brain3.enableImmediateOwnDecisionCreditLabV423();
+                    brain3.enableObservedMotorBaselineCreditLabV487();
+                    brain3.enableTangentActorCreditLabV425();
+                    brain3.enableJointSampleActorScoreLabV426();
+                    brain3.enableSignedRearDeliveredProbeLabV432();
+                    brain3.enableStrictInertialOpticalEvidenceLabV433();
+                    brain3.enableObservedDelayedContactWithoutMotorMapLabV434();
+                    brain3.enableAcceleratedDelayedContactEvidenceLabV435();
+                    brain3.enableCensorUnverifiedDelayedBankUnderDriftLabV442();
+                    brain3.enableMidDriftRegimeLabV476();
+                    brain3.enableMeasuredPassiveCoastOpticalLabV478();
+                    brain3.enableMatchedPreMotorLabV489();
+                    brain3.enableDeterministicGripPhysicalEvidenceLabV461();
+                    brain3.enableLearnedHarmCandidateCoverageLabV422();
+                    android.util.Log.w("ZERO489_PHONE_BETA",
+                        "USER_REQUESTED_EXPERIMENTAL_V489_ENABLED; "+
+                        "original_brain_saved=true; autonomous_behavior_GATE=FAIL");
+                }
                 // Sole original-game V3 body gets the controlled passive
                 // drag improvement on every saved-scene restore. The dormant
                 // V2.2 fluid code/physics does NOT receive this calibration.
