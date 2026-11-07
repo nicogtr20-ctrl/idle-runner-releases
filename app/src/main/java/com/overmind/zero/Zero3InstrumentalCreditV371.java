@@ -23,6 +23,14 @@ final class Zero3InstrumentalCreditV371 {
     private final Zero489MatchedPreMotorResponse matchedMotorV489=
         new Zero489MatchedPreMotorResponse();
     private boolean matchedPreMotorLabV489;
+    // V505 diagnostic-only conservative loss envelope: choose with the
+    // actually learned harmful wavelength, never hard-coded red/blue.
+    // Disabled on regular V489 phone and original 3.0 checkpoints.
+    private boolean physicalLearnedHarmEnvelopeLabV505;
+    void enablePhysicalLearnedHarmEnvelopeLabV505(){
+        physicalLearnedHarmEnvelopeLabV505=true;
+    }
+
     private float pendingEffortV489;
     void enableMatchedPreMotorLabV489(){
         if(pendingSight!=null||!strictInertialOpticalEvidenceLabV433||
@@ -78,6 +86,7 @@ final class Zero3InstrumentalCreditV371 {
             "|verifiedV371Directions="+verifiedDirections()+
             "|delayedRealLinks="+delayedCredits()+"|"+inertia.motorValidationDiagnosticsV444()+
             "|"+motorBankEvidenceDiagnosticsV457()+
+            "|v505HarmEnvelope="+physicalLearnedHarmEnvelopeLabV505+
             "|v489Enabled="+matchedPreMotorLabV489+"|"+matchedMotorV489.diagnostics();
     }
     // V457 read-only: inspect all original V371 bank TRAIN/HELDOUT
@@ -469,6 +478,38 @@ final class Zero3InstrumentalCreditV371 {
         }
         return observed<=.08f?0f:limit(reward/(.35f+observed),-.5f,.5f);
     }
+    /**
+     * Directional exposure to PREVIOUSLY EXPERIENCED harmful material only.
+     * No known semantic color, object identity, unseen future contact, or
+     * authored heading.  This quantity is a risk preference, NOT a second
+     * independent observation of damage or a reward to learn from.
+     * V489's physically predicted travel can be incorrect during a fast
+     * direction change. Cover BOTH issued and model-predicted headings.
+     */
+    static float learnedMaterialHarmExposureV505(float[] observed194,
+            float dx,float dy,Zero3ContactValenceV369 remembered){
+        if(observed194==null||observed194.length!=194||remembered==null||
+           !Float.isFinite(dx)||!Float.isFinite(dy))
+            throw new IllegalArgumentException("V505 invalid actual physical sensory evidence");
+        float norm=(float)Math.hypot(dx,dy);
+        if(norm<.0001f)return 0f;
+        float x=dx/norm,y=dy/norm,peak=0f;
+        for(int band=0;band<3;band++){
+            float value=remembered.valueForInstrumentalV371(band);
+            if(value>=-.10f)continue;
+            for(int ray=0;ray<8;ray++){
+                float optical=observed194[20+8*band+ray];
+                if(!Float.isFinite(optical)||optical<0f||optical>1f)
+                    throw new IllegalArgumentException("V505 invalid observed photons");
+                if(optical<=.15f)continue;
+                float angle=(float)(Math.PI*ray/4d);
+                float toward=Math.max(0f,x*(float)Math.cos(angle)+
+                    y*(float)Math.sin(angle));
+                peak=Math.max(peak,Math.min(1f,-value)*optical*toward);
+            }
+        }
+        return Math.min(1f,Math.max(0f,peak));
+    }
     float score(float[] observation194,float[] chosen,
                 Zero3ContactValenceV369 contact){
         if(observation194==null||observation194.length!=194||
@@ -560,6 +601,31 @@ final class Zero3InstrumentalCreditV371 {
             if(travel>.0001f)
                 utility+=.35f*contact.utility(observation194,mx/travel,my/travel);
         }
+        // V505: physical harmful contacts have already taught a wavelength
+        // a negative consequence. At rapid reversals, the learned V489
+        // predictor can forecast safe movement while the issued intention
+        // points directly at a visibly harmful source (V500 actual red
+        // collisions with available safer GRU proposals). This is a
+        // conservative risk COST, not another invented contact/reward.
+        // Only previously learned harm and actually observed photons apply;
+        // do not add positive-blue bias or override GRU sample generation.
+        if(physicalLearnedHarmEnvelopeLabV505){
+            float commanded=learnedMaterialHarmExposureV505(
+                observation194,chosen[0],chosen[1],contact);
+            float predictedHarm=0f;
+            if(verifiedTravel){
+                float predictedLength=(float)Math.hypot(mx,my);
+                if(predictedLength>.0001f)
+                    predictedHarm=learnedMaterialHarmExposureV505(
+                        observation194,mx/predictedLength,my/predictedLength,
+                        contact);
+            }
+            float risk=Math.max(commanded,predictedHarm);
+            // Still one original cognition score/actor owner: physical
+            // loss aversion weighs experienced risk more than uncertain
+            // motor-score advantage, without prescribing a safe direction.
+            utility-=.45f*risk;
+        }
         // If a real action has repeated produced no forward material motion,
         // discourage repeating that exact bank, without selecting a direction.
         if(!passiveOnly&&bank==lastBank&&stalledStreak>=3)utility-=.04f;
@@ -601,6 +667,7 @@ final class Zero3InstrumentalCreditV371 {
         inertia.copyTo(c.inertia);
         matchedMotorV489.copyTo(c.matchedMotorV489);
         c.matchedPreMotorLabV489=matchedPreMotorLabV489;
+        c.physicalLearnedHarmEnvelopeLabV505=physicalLearnedHarmEnvelopeLabV505;
         for(int b=0;b<BANDS;b++){
             System.arraycopy(delayedContactValue[b],0,c.delayedContactValue[b],0,BINS);
             System.arraycopy(delayedContactCount[b],0,c.delayedContactCount[b],0,BINS);
