@@ -44,14 +44,23 @@ final class Zero384BodyAffordance {
             if(!Float.isFinite(rr))continue;
             int k=direction(x,y);
             float contact=clip(skin.touchSense[i],0f,1f);
-            sensed[k]+=contact;
+            // ZERO506: actual wall touching ONE membrane patch is an
+            // observed obstruction even if only 1 of ~12 points in the
+            // coarse direction is affected. The old sector-mean divided
+            // that real 1.0 touch by count, often < .23, so no failure was
+            // recorded, no tactile danger was retained and the original
+            // GRU kept pushing into the wall despite real contact.
+            // A bounded MAX is genuine measured touch, not innate wall
+            // location or a forced escape direction. Keep radial and
+            // voluntary extension as physical means, unchanged.
+            sensed[k]=Math.max(sensed[k],contact);
             radial[k]+=rr/Morphology.MAX_RADIAL;
             // This is desired extension, NOT radial distance actually reached.
             efference[k]+=clip(skin.extension[i]/Morphology.MAX_REACH,0f,1f);
             count[k]++;
         }
         for(int k=0;k<BINS;k++)if(count[k]>0){
-            sensed[k]/=count[k];
+            // sensed[k] already holds the measured peak physical contact.
             radial[k]/=count[k];
             efference[k]/=count[k];
         }
