@@ -1031,6 +1031,7 @@ final class Zero3OriginalBrainV356 {
     }
     void newLife(){
         interrupt();brain.resetLife();lastLife=-1;
+        cortex.resetPhysicalActivationForNewLifeV507();
         // Fresh physical body: do not reuse a previous life's unobserved
         // motor-credit baseline. The original trained weights stay intact.
         observedMotorBaselineV488.newLife();
