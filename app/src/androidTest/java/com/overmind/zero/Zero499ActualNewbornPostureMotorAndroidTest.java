@@ -42,7 +42,7 @@ public final class Zero499ActualNewbornPostureMotorAndroidTest {
         s.matter.configurePhysicalTurnBrakeV382(-.04f);
         Zero3LearningFoundation.AdaptiveCortex cortex=
             Zero492ActualNewbornMotorCausalityAndroidTest.cortex(user);
-        float[] original512=cortex.checkpoint().weights();
+        float[] original512=cortex.weights();
         if(v499)cortex.enablePostureMotorTransducerV499();
         Zero3LearningFoundation.Coordinator control=
             new Zero3LearningFoundation.Coordinator(cortex);
@@ -77,7 +77,7 @@ public final class Zero499ActualNewbornPostureMotorAndroidTest {
         assertEquals("No 512-weight mutation without physical learning",
             1871L,cortex.updates());
         assertArrayEquals("All 512 saved motor synapses preserved exactly",
-            original512,cortex.checkpoint().weights(),0f);
+            original512,cortex.weights(),0f);
         return new Trial(s.body.cvx,s.body.cvy,s.body.cx-startX,
             s.body.cy-startY,imp);
     }
