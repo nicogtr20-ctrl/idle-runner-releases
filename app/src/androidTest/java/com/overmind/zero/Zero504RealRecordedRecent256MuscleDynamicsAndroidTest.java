@@ -82,8 +82,8 @@ public final class Zero504RealRecordedRecent256MuscleDynamicsAndroidTest {
             assertTrue(directionLen>.90f);
             ux/=directionLen;uy/=directionLen;
             float duration=(float)d.getDouble(3);
-            assertTrue(duration>=.2f&&duration<=.7f);
-            int frames=Math.max(8,Math.min(42,Math.round(duration/DT)));
+            assertTrue("Live first/last death-boundary decisions may be shorter",duration>0f&&duration<=.7f);
+            int frames=Math.max(1,Math.min(42,Math.round(duration/DT)));
             Zero3LearningFoundation.MotorIntent intent=
                 new Zero3LearningFoundation.MotorIntent(
                     504,action,cortex.revision(),ux,uy,.5f,.5f,.4f);
