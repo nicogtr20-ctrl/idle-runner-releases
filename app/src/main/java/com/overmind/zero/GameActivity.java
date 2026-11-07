@@ -119,6 +119,11 @@ public final class GameActivity extends Activity {
     // quantity the existing 512-synapse cortex learns from.
     /** Experimental V499 physical motor transducer, original GRU3 only.
      * No changes to existing phone mode until explicit QA/release opt-in. */
+    void originalV503EnableLearnedContactOpticalHypothesisForQA(){
+        if(lab==null||lab.brain3==null)
+            throw new IllegalStateException("V503 requires original brain");
+        lab.brain3.enableMotorEnabledOpticalHypothesisLabV503();
+    }
     void originalV499EnablePostureMotorTransducerForQA(){
         if(lab==null||lab.brain3==null||
            !lab.brain3.realPhysicalMotorContextV412())
