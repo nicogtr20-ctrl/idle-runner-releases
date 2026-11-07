@@ -125,12 +125,16 @@ public final class Zero501RecordedSequentialMotorAndroidTest {
 
     static Result replay(JSONObject user,Sample[] samples,int mode)
             throws Exception{
+        return replayWithTraction(user,samples,mode,-.04f);
+    }
+    static Result replayWithTraction(JSONObject user,Sample[] samples,
+            int mode,float turnTraction)throws Exception{
         GameSceneSnapshot.Scene scene=GameSceneSnapshot.restore(
             user.getString("physical_scene_v100"));
         assertNotNull(scene);assertNotNull(scene.matter);
         SymbioteMatterV1 matter=scene.matter;
         matter.enableOriginalZero3TractionV363();
-        matter.configurePhysicalTurnBrakeV382(-.04f);
+        matter.configurePhysicalTurnBrakeV382(turnTraction);
         Zero3LearningFoundation.AdaptiveCortex cortex=
             Zero492ActualNewbornMotorCausalityAndroidTest.cortex(user);
         if(mode==1)cortex.enablePostureMotorTransducerV499();
