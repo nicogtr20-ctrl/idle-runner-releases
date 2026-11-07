@@ -117,6 +117,18 @@ public final class GameActivity extends Activity {
     // checkpoint restored and BEFORE any motor decision. Changes neither
     // action nor actual world response, only which physically observed
     // quantity the existing 512-synapse cortex learns from.
+    /** Experimental V499 physical motor transducer, original GRU3 only.
+     * No changes to existing phone mode until explicit QA/release opt-in. */
+    void originalV499EnablePostureMotorTransducerForQA(){
+        if(lab==null||lab.brain3==null||
+           !lab.brain3.realPhysicalMotorContextV412())
+            throw new IllegalStateException("ZERO499 original V3 material missing");
+        lab.brain3.enablePostureMotorTransducerLabV499();
+    }
+    boolean originalV499PostureMotorEnabledForQA(){
+        return lab!=null&&lab.brain3!=null&&
+            lab.brain3.postureMotorTransducerEnabledV499();
+    }
     void originalV417EnableMeasuredBrakingCreditForQA(){
         if(lab==null||lab.brain3==null||
            !lab.brain3.realPhysicalMotorContextV412())
