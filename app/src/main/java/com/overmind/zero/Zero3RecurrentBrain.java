@@ -39,6 +39,11 @@ public final class Zero3RecurrentBrain {
         if(pending||cognition==null)throw new IllegalStateException("V476 original GRU3 boundary required");
         cognition.enableMidDriftRegimeLabV476();
     }
+    void enableMotorEnabledOpticalHypothesisLabV503(){
+        if(pending||cognition==null)
+            throw new IllegalStateException("V503 true GRU boundary required");
+        cognition.enableMotorEnabledOpticalHypothesisLabV503();
+    }
     void enableMatchedPreMotorLabV489(){
         if(pending||cognition==null)
             throw new IllegalStateException("V489 original GRU3 boundary required");
