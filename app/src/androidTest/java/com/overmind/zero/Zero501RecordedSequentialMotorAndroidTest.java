@@ -24,7 +24,7 @@ import static org.junit.Assert.*;
 @RunWith(AndroidJUnit4.class)
 public final class Zero501RecordedSequentialMotorAndroidTest {
     static final float DT=1f/60f;
-    static final int NMODES=8;
+    static final int NMODES=13;
     static float limit(float x,float min,float max){
         return Math.max(min,Math.min(max,x));
     }
@@ -91,6 +91,32 @@ public final class Zero501RecordedSequentialMotorAndroidTest {
                 governor=1f/(1f+Math.max(0f,forward-tgt*.50f)/(tgt*.70f));
                 br=.22f;
                 break;
+            case 8:
+                drive=.8f;
+                governor=1f/(1f+Math.max(0f,(float)Math.hypot(
+                    body.cvx,body.cvy)-8f)/8f);
+                break;
+            case 9:
+                drive=.8f;
+                governor=1f/(1f+Math.max(0f,(float)Math.hypot(
+                    body.cvx,body.cvy)-5f)/5f);
+                break;
+            case 10:
+                drive=.8f;
+                governor=1f/(1f+Math.max(0f,(float)Math.hypot(
+                    body.cvx,body.cvy)-11f)/10f);
+                break;
+            case 11:
+                drive=.8f;
+                governor=1f/(1f+Math.max(0f,forward-6f)/7f);
+                break;
+            case 12:
+                drive=.8f;
+                // Dampen both forward overshoot and orthogonal coasting
+                // without changing the GRU-issued muscle target axis.
+                governor=1f/(1f+Math.max(0f,forward-5f)/8f+
+                    Math.max(0f,cross-7f)/8f);
+                break;
             default:throw new IllegalArgumentException("mode "+mode);
         }
         drive*=governor;
@@ -99,7 +125,7 @@ public final class Zero501RecordedSequentialMotorAndroidTest {
         float targetY=drive*uy-(cross>.01f?crossGain*crossy/cross:0f);
         // Smooth only the corrective axis (not neural heading). The measured
         // true COM vector never becomes a second desired future destination.
-        if(mode>=5){
+        if(mode>=5&&mode<=7){
             float alpha=1f-(float)Math.exp(-DT/.30f);
             filtered[0]+=(targetX-filtered[0])*alpha;
             filtered[1]+=(targetY-filtered[1])*alpha;
