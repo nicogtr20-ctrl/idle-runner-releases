@@ -159,6 +159,10 @@ final class Zero3OriginalBrainV356 {
             throw new IllegalStateException("V489 needs original V488 motor-credit boundary");
         brain.enableMatchedPreMotorLabV489();
     }
+    void enablePhysicalLearnedHarmEnvelopeLabV505(){
+        if(pending)throw new IllegalStateException("V505 original motor decision pending");
+        brain.enablePhysicalLearnedHarmEnvelopeLabV505();
+    }
     void enableImmediateOwnDecisionCreditLabV423(){
         if(pending||!localMotorRequestedV400||!genuineComVelocityCreditLabV417)
             throw new IllegalStateException("ZERO423 requires V400/V417 at true boundary");
