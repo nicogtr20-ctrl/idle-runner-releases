@@ -96,6 +96,13 @@ public final class Zero3LearningFoundation {
         boolean muscleActivationDynamicsLabV507(){
             return muscleActivationDynamicsLabV507;
         }
+        void resetPhysicalActivationForNewLifeV507(){
+            // The actual died tissue cannot carry a previous-life motor
+            // activation into a new membrane. Only transient physical
+            // synaptic efference clears; original learned weights remain.
+            if(muscleActivationDynamicsLabV507)
+                Arrays.fill(physicalActivationV507,0f);
+        }
 
 
         private boolean measuredProbeCreditLabV397=false;
@@ -620,7 +627,8 @@ public final class Zero3LearningFoundation {
                     alpha=limit(alpha,0f,1f);
                     for(int site=0;site<SECTORS;site++){
                         int offset=site*CHANNELS;
-                        for(int ch:new int[]{0,1,3}){
+                        for(int ch=0;ch<CHANNELS;ch++){
+                            if(ch==2)continue;
                             int at=offset+ch;
                             float prior=physicalActivationV507[at];
                             float delivered=prior+alpha*(output[at]-prior);
