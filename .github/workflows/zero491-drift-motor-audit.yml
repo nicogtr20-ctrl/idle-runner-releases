@@ -28,6 +28,33 @@ jobs:
             sudo tee /etc/udev/rules.d/99-kvm4all.rules
           sudo udevadm control --reload-rules
           sudo udevadm trigger --name-match=kvm
+      - name: Reconstruct exact October 25 user's 33312-decision S21 checkpoint
+        run: |
+          python3 - <<'PY'
+          import json,urllib.request,pathlib
+          base='https://raw.githubusercontent.com/nicogtr20-ctrl/idle-runner-releases/zero-telemetry/zero-telemetry/reports/20261025-104220-36e86668b9aff/'
+          def get(i):
+              url=base+'part-%03d.json'%i
+              with urllib.request.urlopen(urllib.request.Request(url,headers={'User-Agent':'ZERO491-real-S21-audit'}),timeout=45) as h:
+                  return json.load(h)
+          p1=get(1)['currentZero']
+          p2=get(2)['currentZero']
+          pieces=[]
+          for i in range(3,22):
+              part=get(i)
+              assert part['fragmentIndex']==i-3 and part['fragmentCount']==19
+              pieces.append(part['jsonFragment'])
+          brain=json.loads(''.join(pieces))['zero3_original_brain_only_v356']
+          assert len(brain)>300000
+          fixture=dict(brain=brain,motor=p1['symbiote_motor_head_v1'],
+              local=p1['symbiote_cortex_local_v161'],fast=p1['somatic_fast_v167'],
+              physical_scene_v100=p1['physical_scene_v100'],
+              training_room_1_scene_v379=p2['training_room_1_scene_v379'],
+              training_room_1_free_scene_v379=p2['training_room_1_free_scene_v379'])
+          path=pathlib.Path('/tmp/zero385-user-readonly.json')
+          path.write_text(json.dumps(fixture))
+          print('ZERO491 physical fixture verified; brain length=',len(brain))
+          PY
       - name: Test matched S21 muscles and diagonal inertial drift on Android
         uses: reactivecircus/android-emulator-runner@v2
         with:
@@ -38,7 +65,20 @@ jobs:
           emulator-options: -no-window -no-audio -no-boot-anim -camera-back none -camera-front none
           disable-animations: true
           script: |
-            gradle --no-daemon :app:connectedDebugAndroidTest "-Pandroid.testInstrumentationRunnerArguments.class=com.overmind.zero.Zero490DeliveredLearnPathAndroidTest,com.overmind.zero.Zero490FourHeadingMatchedActuatorAndroidTest,com.overmind.zero.Zero491CardinalDriftMotorAuthorityAndroidTest"
+            set -euo pipefail
+            gradle --no-daemon :app:assembleDebug :app:assembleDebugAndroidTest
+            adb install -r app/build/outputs/apk/debug/app-debug.apk
+            adb install -r app/build/outputs/apk/androidTest/debug/app-debug-androidTest.apk
+            adb shell mkdir -p /sdcard/Android/data/com.overmind.zero.ota/files
+            adb push /tmp/zero385-user-readonly.json /sdcard/Android/data/com.overmind.zero.ota/files/zero385-user-readonly.json
+            adb logcat -c
+            adb shell am instrument -w -r -e class com.overmind.zero.Zero490DeliveredLearnPathAndroidTest,com.overmind.zero.Zero490FourHeadingMatchedActuatorAndroidTest,com.overmind.zero.Zero491CardinalDriftMotorAuthorityAndroidTest com.overmind.zero.ota.test/androidx.test.runner.AndroidJUnitRunner 2>&1 | tee "$RUNNER_TEMP/ZERO491_ANDROID_TESTS.txt"
+            adb logcat -d -s ZERO490_PHYSICS:I ZERO491_DRIFT:I > "$RUNNER_TEMP/ZERO491_PHYSICAL_SIGNS.txt"
+            cat "$RUNNER_TEMP/ZERO491_PHYSICAL_SIGNS.txt"
+            grep -q "OK (4 tests)" "$RUNNER_TEMP/ZERO491_ANDROID_TESTS.txt"
+            grep -q "MATCHED_ORIGINAL_S21_DONE" "$RUNNER_TEMP/ZERO491_PHYSICAL_SIGNS.txt"
+            grep -q "MATCHED_ORIGINAL_170_SITE_FOUR_HEADING_COMPLETE" "$RUNNER_TEMP/ZERO491_PHYSICAL_SIGNS.txt"
+            ! grep -qE "FAILURES!!!|INSTRUMENTATION_FAILED|Process crashed" "$RUNNER_TEMP/ZERO491_ANDROID_TESTS.txt"
       - name: Preserve test reports and physical-sign diagnostics
         if: always()
         uses: actions/upload-artifact@v4
@@ -48,3 +88,4 @@ jobs:
           path: |
             app/build/reports/androidTests/connected/
             app/build/outputs/androidTest-results/connected/
+            ${{ runner.temp }}/ZERO491_*txt
