@@ -23,6 +23,31 @@ final class Zero3InstrumentalCreditV371 {
     private final Zero489MatchedPreMotorResponse matchedMotorV489=
         new Zero489MatchedPreMotorResponse();
     private boolean matchedPreMotorLabV489;
+    // V503 research: the original GRU may rank genuine learned contact
+    // valence as a weak directional HYPOTHESIS when its V499 motor is active.
+    // Unlike real motion scoring, this never invents action->velocity proof.
+    private boolean motorEnabledOpticalHypothesisLabV503;
+    private long motorEnabledOpticalEvaluationsV503;
+    void enableMotorEnabledOpticalHypothesisLabV503(){
+        if(pendingSight!=null||!matchedPreMotorLabV489||
+           !strictInertialOpticalEvidenceLabV433||
+           !measuredPassiveCoastOpticalLabV478)
+            throw new IllegalStateException("V503 needs original V489 boundary");
+        motorEnabledOpticalHypothesisLabV503=true;
+    }
+    boolean motorEnabledOpticalHypothesisLabV503(){
+        return motorEnabledOpticalHypothesisLabV503;
+    }
+    private float measuredLearnedContactPreferenceV503(
+            float[] observation194,float[] chosen,
+            Zero3ContactValenceV369 contact){
+        // Evidence exists only after at least two actual net energy contacts
+        // with a real physical band, or a preexisting explicitly weak
+        // historical physical-contact prior. Never label colours at birth.
+        if(!contact.hasReliableVisibleEvidence(observation194))return 0f;
+        motorEnabledOpticalEvaluationsV503++;
+        return .35f*contact.utility(observation194,chosen[0],chosen[1]);
+    }
     private float pendingEffortV489;
     void enableMatchedPreMotorLabV489(){
         if(pendingSight!=null||!strictInertialOpticalEvidenceLabV433||
@@ -78,6 +103,8 @@ final class Zero3InstrumentalCreditV371 {
             "|verifiedV371Directions="+verifiedDirections()+
             "|delayedRealLinks="+delayedCredits()+"|"+inertia.motorValidationDiagnosticsV444()+
             "|"+motorBankEvidenceDiagnosticsV457()+
+            "|v503OpticalEnabled="+motorEnabledOpticalHypothesisLabV503+
+            "|v503OpticalComparisons="+motorEnabledOpticalEvaluationsV503+
             "|v489Enabled="+matchedPreMotorLabV489+"|"+matchedMotorV489.diagnostics();
     }
     // V457 read-only: inspect all original V371 bank TRAIN/HELDOUT
@@ -425,6 +452,9 @@ final class Zero3InstrumentalCreditV371 {
                     // preference, counting one physical observation twice.
                     // Keep one evidence-backed term, not two correlated rewards.
                     v478PassiveOpticalEvaluations++;
+                    if(motorEnabledOpticalHypothesisLabV503)
+                        return measuredLearnedContactPreferenceV503(
+                            observation194,chosen,contact);
                     return 0f;
                 }
                 unsupportedMovingOpticalPredictionsRejectedV433++;
