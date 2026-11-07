@@ -164,6 +164,7 @@ public final class Zero501RecordedSequentialMotorAndroidTest {
         Zero3LearningFoundation.AdaptiveCortex cortex=
             Zero492ActualNewbornMotorCausalityAndroidTest.cortex(user);
         if(mode==1)cortex.enablePostureMotorTransducerV499();
+        if(mode==13)cortex.enablePhysicalPostureSpeedMotorV506();
         Zero3LearningFoundation.Coordinator control=
             new Zero3LearningFoundation.Coordinator(cortex);
         long invalid=matter.invalid;
@@ -181,7 +182,7 @@ public final class Zero501RecordedSequentialMotorAndroidTest {
             float sx=scene.body.cx,sy=scene.body.cy;
             for(int k=0;k<recorded.n;k++){
                 float[] act=control.actuate(scene.body,scene.skin,DT);
-                if(mode>=2)mechanicalBodyController(mode,act,
+                if(mode>=2&&mode<=12)mechanicalBodyController(mode,act,
                     scene.body,scene.skin,recorded,filtered);
                 float prev=matter.work;
                 matter.step(scene.body,scene.skin,act,DT);
