@@ -175,6 +175,9 @@ public final class Zero3CognitionV353 {
     void enableMatchedPreMotorLabV489(){
         instrumental.enableMatchedPreMotorLabV489();
     }
+    void enablePhysicalLearnedHarmEnvelopeLabV505(){
+        instrumental.enablePhysicalLearnedHarmEnvelopeLabV505();
+    }
     void enableStrictInertialOpticalEvidenceLabV433(){
         instrumental.enableStrictInertialOpticalEvidenceLabV433();
     }
