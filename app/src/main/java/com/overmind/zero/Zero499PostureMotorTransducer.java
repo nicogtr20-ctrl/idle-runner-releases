@@ -29,8 +29,14 @@ final class Zero499PostureMotorTransducer {
     // than physical tissue can settle (ZERO499 first 4-axis FAIL). Keep
     // ONLY the GRU's requested heading as the low-level muscle frame.
     // Real measured velocity governs FORCE, never switches intention.
-    private static final float GOVERNOR_ONSET_FRACTION=.50f;
-    private static final float GOVERNOR_WIDTH_FRACTION=.70f;
+    // ZERO503 A/B 256 real phone-issued neural decisions, original 170-site
+    // material and all existing saved weights: total COM speed governor at
+    // 5 physics units avoids the false extra acceleration when the GRU
+    // requests a different heading every 0.45 seconds. Mode 9 yielded
+    // +16.25368% signed/gross vs V499 +3.15700%, peak speed 17.1492
+    // vs 20.1995. These figures are LAB replay, NOT autonomous success.
+    private static final float SPEED_GOVERNOR_ONSET=5f;
+    private static final float SPEED_GOVERNOR_WIDTH=5f;
 
     private static float clip(float x,float lo,float hi) {
         return Math.max(lo,Math.min(hi,x));
@@ -49,15 +55,13 @@ final class Zero499PostureMotorTransducer {
         float len=(float)Math.hypot(intent.x,intent.y);
         if(len<.9f)throw new IllegalArgumentException("ZERO499 needs GRU3 heading");
         float ux=intent.x/len,uy=intent.y/len;
-        float speed=TARGET_MIN+TARGET_PER_EFFORT*effort;
-        // ZERO499 matched Android A/B proved that steering the MOTOR FORCE
-        // toward instantaneous velocity error creates large unintended
-        // orthogonal impulses. Preserve the high-level neural direction.
-        // Only let real COM velocity ALONG THAT SAME DIRECTION reduce drive.
-        // This is a passive saturating speed governor, not a new choice.
-        float along=body.cvx*ux+body.cvy*uy;
-        float over=Math.max(0f,along-GOVERNOR_ONSET_FRACTION*speed);
-        float governor=1f/(1f+over/(GOVERNOR_WIDTH_FRACTION*speed));
+        // Corrected from the actual user's rapid neural-choice trace V503:
+        // a direction-relative governor did not bound unwanted sideways
+        // inertia. Measure REAL 2D COM speed for a scalar force reduction,
+        // retaining the original requested GRU heading unmodified.
+        float speed=(float)Math.hypot(body.cvx,body.cvy);
+        float over=Math.max(0f,speed-SPEED_GOVERNOR_ONSET);
+        float governor=1f/(1f+over/SPEED_GOVERNOR_WIDTH);
         float drive=MAX_DRIVE*clip(2f*effort,0f,1f)*governor;
         float rx=ux,ry=uy;
         for(int sector=0;sector<SECTORS;sector++){
