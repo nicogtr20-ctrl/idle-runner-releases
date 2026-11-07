@@ -124,6 +124,15 @@ public final class GameActivity extends Activity {
             throw new IllegalStateException("V503 requires original brain");
         lab.brain3.enableMotorEnabledOpticalHypothesisLabV503();
     }
+    void originalV507EnableMuscleActivationForQA(){
+        if(lab==null||lab.brain3==null)
+            throw new IllegalStateException("V507 requires original saved GRU3");
+        lab.brain3.enableMuscleActivationDynamicsLabV507();
+    }
+    boolean originalV507MuscleActivationEnabledForQA(){
+        return lab!=null&&lab.brain3!=null&&
+            lab.brain3.muscleActivationDynamicsEnabledV507();
+    }
     void originalV499EnablePostureMotorTransducerForQA(){
         if(lab==null||lab.brain3==null||
            !lab.brain3.realPhysicalMotorContextV412())
