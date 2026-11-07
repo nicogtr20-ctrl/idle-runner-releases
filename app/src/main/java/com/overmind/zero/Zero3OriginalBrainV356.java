@@ -93,6 +93,13 @@ final class Zero3OriginalBrainV356 {
     boolean postureMotorTransducerEnabledV499(){
         return cortex.postureMotorTransducerV499();
     }
+    void enablePhysicalPostureSpeedMotorLabV506(){
+        if(pending)throw new IllegalStateException("ZERO506 original decision pending");
+        cortex.enablePhysicalPostureSpeedMotorV506();
+    }
+    boolean physicalPostureSpeedMotorEnabledV506(){
+        return cortex.physicalPostureSpeedMotorV506();
+    }
     void enableDeliveredLocalProbeLabV421(){
         if(pending||!localMotorRequestedV400)
             throw new IllegalStateException("ZERO421 requires original V400 at a decision boundary");
