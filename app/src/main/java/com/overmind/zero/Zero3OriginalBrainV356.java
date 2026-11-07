@@ -86,6 +86,14 @@ final class Zero3OriginalBrainV356 {
     /** ZERO499 optional lab/experimental 3.0-only motor transduction.
      * Keep original V356 checkpoint, decision owner, 512 weights, V319 grip.
      * Must be explicitly selected only at a finished physical decision. */
+    void enableMuscleActivationDynamicsLabV507(){
+        if(pending||!cortex.postureMotorTransducerV499())
+            throw new IllegalStateException("V507 physical activation requires original V499 motor");
+        cortex.enableMuscleActivationDynamicsLabV507();
+    }
+    boolean muscleActivationDynamicsEnabledV507(){
+        return cortex.muscleActivationDynamicsLabV507();
+    }
     void enablePostureMotorTransducerLabV499(){
         if(pending)throw new IllegalStateException("ZERO499 live motor decision");
         cortex.enablePostureMotorTransducerV499();
