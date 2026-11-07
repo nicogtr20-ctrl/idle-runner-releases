@@ -129,6 +129,18 @@ public final class GameActivity extends Activity {
         return lab!=null&&lab.brain3!=null&&
             lab.brain3.postureMotorTransducerEnabledV499();
     }
+    /** V506 learned cortex motor is still the only original GRU3 owner,
+     * but sector musculature gets real speed-governed anatomical control. */
+    void originalV506EnablePhysicalPostureSpeedMotorForQA(){
+        if(lab==null||lab.brain3==null||
+           !lab.brain3.realPhysicalMotorContextV412())
+            throw new IllegalStateException("ZERO506 real original V3 material missing");
+        lab.brain3.enablePhysicalPostureSpeedMotorLabV506();
+    }
+    boolean originalV506PhysicalPostureSpeedMotorEnabledForQA(){
+        return lab!=null&&lab.brain3!=null&&
+            lab.brain3.physicalPostureSpeedMotorEnabledV506();
+    }
     void originalV417EnableMeasuredBrakingCreditForQA(){
         if(lab==null||lab.brain3==null||
            !lab.brain3.realPhysicalMotorContextV412())
