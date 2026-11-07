@@ -154,6 +154,14 @@ final class Zero3OriginalBrainV356 {
     }
     /** V489 science only: original brain remains the sole action chooser;
      * accepted V489 responses come exclusively from heldout real body motion. */
+    void enableMotorEnabledOpticalHypothesisLabV503(){
+        // Never enable while the 3.0 physical transducer is unavailable;
+        // an unproven brain-action bearing cannot justify visible optical
+        // preference in a drifting world.
+        if(pending||!cortex.postureMotorTransducerV499())
+            throw new IllegalStateException("V503 needs genuine V499 original motor");
+        brain.enableMotorEnabledOpticalHypothesisLabV503();
+    }
     void enableMatchedPreMotorLabV489(){
         if(pending||!observedMotorBaselineCreditLabV487)
             throw new IllegalStateException("V489 needs original V488 motor-credit boundary");
