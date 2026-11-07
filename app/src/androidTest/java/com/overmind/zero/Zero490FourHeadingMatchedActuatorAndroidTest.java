@@ -90,6 +90,9 @@ public final class Zero490FourHeadingMatchedActuatorAndroidTest {
                 projectedVelocity(passive,heading),observed,abovePassive,
                 headingNonzero,headingOpposing,min,max,
                 passive.contactFrames,full.contactFrames));
+            assertTrue("ZERO490 heading="+heading+
+                " has no measurable motor response across 48 channel/sector pairs",
+                headingNonzero>0);
         }
         assertEquals("four headings x sixteen sectors x three original channels",
             192,comparisons);
