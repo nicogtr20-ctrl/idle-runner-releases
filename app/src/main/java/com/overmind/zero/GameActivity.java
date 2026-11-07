@@ -831,9 +831,17 @@ public final class GameActivity extends Activity {
                     // field obeys this brain's actual intent, never 2.2 or an
                     // external locomotion policy; V319 grip unchanged.
                     brain3.enablePostureMotorTransducerLabV499();
-                    android.util.Log.w("ZERO502_POSTURE_BETA",
-                        "USER_REQUESTED_EXPERIMENTAL_V489_FLAGS_PLUS_V499; "+
-                        "original_brain_saved=true; behavioral_gate_not_assumed");
+                    // V507 contracts/relaxes the true 170-site voluntary
+                    // muscles over their measured 0.5-second physical
+                    // response time; CH2 remains the original V319 grip.
+                    brain3.enableMuscleActivationDynamicsLabV507();
+                    // V503 uses only already learned TRUE contact outcomes,
+                    // never an innate red/blue rule or a fictitious velocity.
+                    brain3.enableMotorEnabledOpticalHypothesisLabV503();
+                    android.util.Log.w("ZERO508_INTEGRATED_BETA",
+                        "EXPERIMENTAL_ORIGINAL_V489_PLUS_V499_V503_V506_V507; "+
+                        "GRU3_sole_intention=true V319_grip_unchanged=true "+
+                        "original_brain_saved=true behavioral_gate_not_assumed");
                 }
                 // Sole original-game V3 body gets the controlled passive
                 // drag improvement on every saved-scene restore. The dormant
