@@ -79,6 +79,27 @@ public final class Zero3LearningFoundation {
             postureMotorTransducerV499=true;
         }
         boolean postureMotorTransducerV499(){return postureMotorTransducerV499;}
+        // V506: exact 256 actual neural-turn diagnostics selected a
+        // different anatomical inverse with speed-load damping. Reuse the
+        // SAME original CH0/1/3 efference and local neural V332 learner.
+        // No new V356 wire fields, save migration or independent actor.
+        private boolean physicalPostureSpeedMotorV506;
+        void enablePhysicalPostureSpeedMotorV506(){
+            if(pendingDecision||!physicalContextV412)
+                throw new IllegalStateException(
+                    "ZERO506 requires original physical cortex at decision boundary");
+            physicalPostureSpeedMotorV506=true;
+        }
+        boolean physicalPostureSpeedMotorV506(){
+            return physicalPostureSpeedMotorV506;
+        }
+        private void mapMeasuredPhysicalMotorV506(
+                MotorIntent intention,MotorBrain.Body b,Morphology.Surface s,
+                float[] commands){
+            if(physicalPostureSpeedMotorV506)
+                Zero506PhysicalPostureSpeedMotor.apply(intention,b,s,commands);
+            else Zero499PostureMotorTransducer.apply(intention,b,s,commands);
+        }
 
         private boolean measuredProbeCreditLabV397=false;
         // ZERO421: the original 194D/64GRU + 512 synapse local V332 learner
@@ -564,13 +585,13 @@ public final class Zero3LearningFoundation {
                     if(probing){
                         if((measuredProbeCreditLabV397||
                             deliveredLocalCreditLabV421||
-                            postureMotorTransducerV499)&&v454On&&noise[at]!=0f){
+                            (postureMotorTransducerV499||physicalPostureSpeedMotorV506))&&v454On&&noise[at]!=0f){
                             // Compare the actual perturbation AFTER saturation.
                             // Under V499, the tendon mapping changes its
                             // amplitude, so no pre-peripheral false credit.
                             float undisturbed=limit((float)Math.tanh(
                                 activationGain*z)*gain,-1f,1f);
-                            if(postureMotorTransducerV499)
+                            if(postureMotorTransducerV499||physicalPostureSpeedMotorV506)
                                 unperturbedOutputV499[at]=undisturbed;
                             else deliveredProbeV397[at]+=
                                 (output[at]-undisturbed)/activationGain;
@@ -583,7 +604,7 @@ public final class Zero3LearningFoundation {
                     state[at]=limit(state[at]*.85f+output[at]*.15f,-1,1);
                 }
             }
-            if(postureMotorTransducerV499){
+            if(postureMotorTransducerV499||physicalPostureSpeedMotorV506){
                 if(probing){
                     // Actual delivered local probe needs the SAME sensed
                     // tissue and PRE velocity, once with noise and once
@@ -593,10 +614,10 @@ public final class Zero3LearningFoundation {
                     for(int at=0;at<OUTPUTS;at++)
                         if(noise[at]!=0f)
                             alternativeOutputV499[at]=unperturbedOutputV499[at];
-                    Zero499PostureMotorTransducer.apply(
+                    mapMeasuredPhysicalMotorV506(
                         intention,b,s,alternativeOutputV499);
                 }
-                Zero499PostureMotorTransducer.apply(intention,b,s,output);
+                mapMeasuredPhysicalMotorV506(intention,b,s,output);
                 if(probing&&v454On&&(measuredProbeCreditLabV397||
                     deliveredLocalCreditLabV421))
                     for(int at=0;at<OUTPUTS;at++)
