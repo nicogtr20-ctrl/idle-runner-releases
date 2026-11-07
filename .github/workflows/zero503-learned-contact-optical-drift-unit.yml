@@ -1,0 +1,47 @@
+name: ZERO503 genuine contact-valence optical evidence during drift
+on:
+  push:
+    branches: [lab/zero503-physical-motor-verified-visual-contact-bias]
+  workflow_dispatch:
+permissions: {contents: read}
+jobs:
+  original-optical-learning:
+    runs-on: ubuntu-latest
+    timeout-minutes: 35
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with: {distribution: temurin, java-version: '17'}
+      - name: Gradle original Android compile
+        uses: gradle/actions/setup-gradle@v4
+        with: {gradle-version: '8.11.1'}
+      - name: Enable KVM
+        run: |
+          echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' | sudo tee /etc/udev/rules.d/99-kvm4all.rules
+          sudo udevadm control --reload-rules
+          sudo udevadm trigger --name-match=kvm
+      - name: Verify learned physical contact valence, no innate colour and retained V489 safety
+        uses: reactivecircus/android-emulator-runner@v2
+        with:
+          api-level: 35
+          arch: x86_64
+          profile: pixel_6
+          disable-animations: true
+          script: |
+            set -euo pipefail
+            gradle --no-daemon :app:assembleDebug :app:assembleDebugAndroidTest
+            adb install -r app/build/outputs/apk/debug/app-debug.apk
+            adb install -r app/build/outputs/apk/androidTest/debug/app-debug-androidTest.apk
+            adb logcat -c
+            adb shell am instrument -w -r -e class com.overmind.zero.Zero503RealContactValenceUnderDriftAndroidTest com.overmind.zero.ota.test/androidx.test.runner.AndroidJUnitRunner 2>&1 | tee "$RUNNER_TEMP/ZERO503_OPTICAL_TESTS.txt"
+            adb logcat -d -s ZERO503_OPTICAL:I AndroidRuntime:E > "$RUNNER_TEMP/ZERO503_OPTICAL_SIGNS.txt"
+            cat "$RUNNER_TEMP/ZERO503_OPTICAL_SIGNS.txt"
+            grep -q "OK (3 tests)" "$RUNNER_TEMP/ZERO503_OPTICAL_TESTS.txt"
+            grep -q "EXPERIENCED_PHOTON_VALENCE_RANKING_WITHOUT_V371_DIRECTION_PASS" "$RUNNER_TEMP/ZERO503_OPTICAL_SIGNS.txt"
+            ! grep -qE "FAILURES!!!|INSTRUMENTATION_FAILED|Process crashed" "$RUNNER_TEMP/ZERO503_OPTICAL_TESTS.txt"
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: ZERO503-genuine-contact-learning-optical-ranking-proof
+          if-no-files-found: warn
+          path: ${{ runner.temp }}/ZERO503_OPTICAL_*.txt
