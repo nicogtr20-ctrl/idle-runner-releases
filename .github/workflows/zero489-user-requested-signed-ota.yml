@@ -118,6 +118,7 @@ jobs:
           retention-days: 30
           if-no-files-found: error
       - name: Create immutable prerelease with clear experimental known-failure warning
+        continue-on-error: true # GH Actions installation 403 on releases: do not block independently verifiable signed Vercel OTA
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
