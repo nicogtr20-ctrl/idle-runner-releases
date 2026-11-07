@@ -68,6 +68,18 @@ public final class Zero3LearningFoundation {
         // command after tanh saturation, effort gain and output clipping.
         // Never persisted: legacy 512 weights / 64 state / V356 CRC unchanged.
         private final float[] deliveredProbeV397=new float[OUTPUTS];
+        // ZERO499: permanent V356 wire format stays identical. These are
+        // transient per-tick physical efference comparison scratch arrays.
+        private boolean postureMotorTransducerV499;
+        private final float[] unperturbedOutputV499=new float[OUTPUTS];
+        private final float[] alternativeOutputV499=new float[OUTPUTS];
+        void enablePostureMotorTransducerV499(){
+            if(pendingDecision)
+                throw new IllegalStateException("ZERO499 motor change mid decision");
+            postureMotorTransducerV499=true;
+        }
+        boolean postureMotorTransducerV499(){return postureMotorTransducerV499;}
+
         private boolean measuredProbeCreditLabV397=false;
         // ZERO421: the original 194D/64GRU + 512 synapse local V332 learner
         // must use the perturbation actually delivered to physical muscles
@@ -551,14 +563,16 @@ public final class Zero3LearningFoundation {
                     output[at]=limit(learned*gain,-1f,1f);
                     if(probing){
                         if((measuredProbeCreditLabV397||
-                            deliveredLocalCreditLabV421)&&v454On&&noise[at]!=0f){
-                            // Compare with THIS command's unperturbed neural
-                            // transfer, not a fictional physics replay.
-                            // A clipped/saturated muscle with no actual
-                            // command change gets ZERO gradient eligibility.
+                            deliveredLocalCreditLabV421||
+                            postureMotorTransducerV499)&&v454On&&noise[at]!=0f){
+                            // Compare the actual perturbation AFTER saturation.
+                            // Under V499, the tendon mapping changes its
+                            // amplitude, so no pre-peripheral false credit.
                             float undisturbed=limit((float)Math.tanh(
                                 activationGain*z)*gain,-1f,1f);
-                            deliveredProbeV397[at]+=
+                            if(postureMotorTransducerV499)
+                                unperturbedOutputV499[at]=undisturbed;
+                            else deliveredProbeV397[at]+=
                                 (output[at]-undisturbed)/activationGain;
                         }
                         for(int f=0;f<INPUTS;f++)
@@ -568,6 +582,27 @@ public final class Zero3LearningFoundation {
                     // never a pre-programmed rhythm.
                     state[at]=limit(state[at]*.85f+output[at]*.15f,-1,1);
                 }
+            }
+            if(postureMotorTransducerV499){
+                if(probing){
+                    // Actual delivered local probe needs the SAME sensed
+                    // tissue and PRE velocity, once with noise and once
+                    // without. Only the cheap mathematical 16-sector tendon
+                    // mapping is repeated; no fictitious world trajectory.
+                    System.arraycopy(output,0,alternativeOutputV499,0,OUTPUTS);
+                    for(int at=0;at<OUTPUTS;at++)
+                        if(noise[at]!=0f)
+                            alternativeOutputV499[at]=unperturbedOutputV499[at];
+                    Zero499PostureMotorTransducer.apply(
+                        intention,b,s,alternativeOutputV499);
+                }
+                Zero499PostureMotorTransducer.apply(intention,b,s,output);
+                if(probing&&v454On&&(measuredProbeCreditLabV397||
+                    deliveredLocalCreditLabV421))
+                    for(int at=0;at<OUTPUTS;at++)
+                        if(noise[at]!=0f)
+                            deliveredProbeV397[at]+=
+                                (output[at]-alternativeOutputV499[at])/activationGain;
             }
             if(probing)samples++;
             return output; // non-allocating physics command buffer
