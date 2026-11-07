@@ -83,6 +83,16 @@ final class Zero3OriginalBrainV356 {
     // ZERO421 independent original V332 motor probe: actual delivered command
     // before physics, never a new actuator, topology or saved parameter.
     private boolean deliveredLocalProbeLabV421;
+    /** ZERO499 optional lab/experimental 3.0-only motor transduction.
+     * Keep original V356 checkpoint, decision owner, 512 weights, V319 grip.
+     * Must be explicitly selected only at a finished physical decision. */
+    void enablePostureMotorTransducerLabV499(){
+        if(pending)throw new IllegalStateException("ZERO499 live motor decision");
+        cortex.enablePostureMotorTransducerV499();
+    }
+    boolean postureMotorTransducerEnabledV499(){
+        return cortex.postureMotorTransducerV499();
+    }
     void enableDeliveredLocalProbeLabV421(){
         if(pending||!localMotorRequestedV400)
             throw new IllegalStateException("ZERO421 requires original V400 at a decision boundary");
