@@ -300,6 +300,16 @@ public final class GameActivity extends Activity {
             throw new IllegalStateException("V510 original real GRU3 body unavailable");
         lab.brain3.enablePhysicalEvidenceFirstChoiceLabV510();
     }
+    void originalV511EnableVerifiedNegativeRiskFeasibilityForQA(){
+        if(lab==null||lab.brain3==null||
+           !lab.brain3.realPhysicalMotorContextV412())
+           throw new IllegalStateException("V511 original real GRU3 body unavailable");
+        lab.brain3.enableVerifiedNegativeRiskFeasibilityLabV511();
+    }
+    String originalV511VerifiedFeasibilityDiagnosticsForQA(){
+        return lab==null||lab.brain3==null?"no-original-brain":
+            lab.brain3.verifiedFeasibilityDiagnosticsV511();
+    }
     String originalV510PhysicalChoiceDiagnosticsForQA(){
         return lab==null||lab.brain3==null?"no-original-brain":
             lab.brain3.physicalEvidenceFirstChoiceDiagnosticsV510();
