@@ -59,6 +59,15 @@ public final class Zero3RecurrentBrain {
             throw new IllegalStateException("V510 original GRU3 decision boundary required");
         cognition.enablePhysicalEvidenceFirstChoiceLabV510();
     }
+    void enableVerifiedNegativeRiskFeasibilityLabV511(){
+        if(pending||cognition==null)
+            throw new IllegalStateException("V511 original GRU3 decision boundary required");
+        cognition.enableVerifiedNegativeRiskFeasibilityLabV511();
+    }
+    String verifiedFeasibilityDiagnosticsV511(){
+        return cognition==null?"no-original-cognition":
+            cognition.verifiedFeasibilityDiagnosticsV511();
+    }
     String physicalEvidenceFirstDiagnosticsV510(){
         return cognition==null?"no-original-cognition":
             cognition.evidenceFirstDiagnosticsV510();
@@ -503,6 +512,8 @@ public final class Zero3RecurrentBrain {
                 float proposedReal=cognition.realContactPreferenceV374(x,options[planned]);
                 if(proposedReal+.035f>=selectedReal&&
                    (cognition==null||!cognition.plannerBlockedByVerifiedBodyV510(
+                       x,options[selected],options[planned]))&&
+                   (cognition==null||!cognition.plannerBlockedByVerifiedBodyV511(
                        x,options[selected],options[planned]))){
                     selected=planned;
                     // Planner accepted a new candidate using sampled evidence;
