@@ -167,6 +167,13 @@ final class Zero3OriginalBrainV356 {
         if(pending)throw new IllegalStateException("V509 original decision pending");
         brain.enableVerifiedPhysicalImpassChoiceGuardLabV509();
     }
+    void enablePhysicalEvidenceFirstChoiceLabV510(){
+        if(pending)throw new IllegalStateException("V510 original decision pending");
+        brain.enablePhysicalEvidenceFirstChoiceLabV510();
+    }
+    String physicalEvidenceFirstChoiceDiagnosticsV510(){
+        return brain.physicalEvidenceFirstDiagnosticsV510();
+    }
     String verifiedPhysicalImpassChoiceDiagnosticsV509(){
         return brain.verifiedPhysicalImpassChoiceDiagnosticsV509();
     }
