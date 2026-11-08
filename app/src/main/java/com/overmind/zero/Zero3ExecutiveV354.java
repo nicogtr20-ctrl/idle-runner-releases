@@ -137,6 +137,13 @@ public final class Zero3ExecutiveV354 {
                cognition.realContactPreferenceV374(observation,o.policy)+.035f<
                cognition.realContactPreferenceV374(observation,actorProposal))
                 continue;
+            // V510: the recalled historical option's positive score is NOT
+            // a proof that it can move the current deformed, wall-touching
+            // body. Never replace a less-blocked GRU candidate with a
+            // train+heldout-confirmed physical impasse. No new heading.
+            if(cognition!=null&&cognition.replayBlockedByVerifiedBodyV510(
+                    observation,actorProposal,o.policy))
+                continue;
             // A previously successful straight-line option must NOT be
             // blindly recalled once this very body's real contacts have
             // taught it that the currently visible path carries net harm.
