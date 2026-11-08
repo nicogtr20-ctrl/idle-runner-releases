@@ -144,6 +144,9 @@ public final class Zero3ExecutiveV354 {
             if(cognition!=null&&cognition.replayBlockedByVerifiedBodyV510(
                     observation,actorProposal,o.policy))
                 continue;
+            if(cognition!=null&&cognition.executiveBlockedByVerifiedBodyV511(
+                    observation,actorProposal,o.policy))
+                continue;
             // A previously successful straight-line option must NOT be
             // blindly recalled once this very body's real contacts have
             // taught it that the currently visible path carries net harm.
