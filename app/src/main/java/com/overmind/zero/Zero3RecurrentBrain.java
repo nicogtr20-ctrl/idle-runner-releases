@@ -49,6 +49,15 @@ public final class Zero3RecurrentBrain {
             throw new IllegalStateException("V505 original GRU3 decision boundary required");
         cognition.enablePhysicalLearnedHarmEnvelopeLabV505();
     }
+    void enableVerifiedPhysicalImpassChoiceGuardLabV509(){
+        if(pending||cognition==null)
+            throw new IllegalStateException("V509 original GRU3 decision boundary required");
+        cognition.enableVerifiedPhysicalImpassChoiceGuardLabV509();
+    }
+    String verifiedPhysicalImpassChoiceDiagnosticsV509(){
+        return cognition==null?"no-original-cognition":
+            cognition.verifiedPhysicalImpassChoiceDiagnosticsV509();
+    }
     void enableStrictInertialOpticalEvidenceLabV433(){
         if(pending||cognition==null)throw new IllegalStateException("V433 requires original cognition between choices");
         cognition.enableStrictInertialOpticalEvidenceLabV433();
