@@ -163,6 +163,13 @@ final class Zero3OriginalBrainV356 {
         if(pending)throw new IllegalStateException("V505 original motor decision pending");
         brain.enablePhysicalLearnedHarmEnvelopeLabV505();
     }
+    void enableVerifiedPhysicalImpassChoiceGuardLabV509(){
+        if(pending)throw new IllegalStateException("V509 original decision pending");
+        brain.enableVerifiedPhysicalImpassChoiceGuardLabV509();
+    }
+    String verifiedPhysicalImpassChoiceDiagnosticsV509(){
+        return brain.verifiedPhysicalImpassChoiceDiagnosticsV509();
+    }
     void enableImmediateOwnDecisionCreditLabV423(){
         if(pending||!localMotorRequestedV400||!genuineComVelocityCreditLabV417)
             throw new IllegalStateException("ZERO423 requires V400/V417 at true boundary");
