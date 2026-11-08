@@ -66,12 +66,17 @@ public final class Zero511ActualS21ContactRetractionPhysicsAndroidTest {
                             oldBodyX=scene.body.x.clone(),oldBodyY=scene.body.y.clone();
                         float workBefore=matter.work;
                         matter.step(scene.body,scene.skin,issued,DT);
+                        // EXACT real GameActivity transaction: preserve
+                        // the tissue AFTER material force integration but
+                        // BEFORE world collision projection.
+                        float[] preWorldSkinX=scene.skin.x.clone();
+                        float[] preWorldSkinY=scene.skin.y.clone();
                         Zero387TactileFrame.begin(scene.skin);
                         // This is the actual ORIGINAL S21 solid tile solver.
                         TrainingRoomV379.constrain(scene.body,scene.skin,
                             scene.objects,oldSkinX,oldSkinY,oldBodyX,oldBodyY);
                         SymbioteWorldStepV171.interior(matter,scene.body,scene.skin,
-                            null,scene.objects,DT,scene.skin.x.clone(),scene.skin.y.clone());
+                            null,scene.objects,DT,preWorldSkinX,preWorldSkinY);
                         for(float contact:scene.skin.touchSense)
                             if(contact>.5f)realContactFrames++;
                         control.observe(scene.body,DT,
