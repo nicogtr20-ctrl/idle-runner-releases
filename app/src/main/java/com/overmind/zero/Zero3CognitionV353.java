@@ -212,6 +212,52 @@ public final class Zero3CognitionV353 {
     // V452 diagnostic only: actual components already evaluated by the live V353
     // selector, retained transiently for later real-contact forensics.
     // This is NOT a new decision, score, direction, reward or serialized field.
+    // V511 negative-only contact risk plus independently verified real body
+    // feasibility. No false requirement that a valid escape must keep moving
+    // directly toward a positive light source through a solid wall.
+    private boolean verifiedNegativeRiskFeasibilityLabV511;
+    private final Zero511FeasibleChoiceGate.Audit auditedChoicesV511=
+        new Zero511FeasibleChoiceGate.Audit();
+    private long blockedPlannerRequestsV511,blockedExecutiveCandidatesV511;
+    private boolean lastVerifiedPhysicalReliefV511;
+    void enableVerifiedNegativeRiskFeasibilityLabV511(){
+        verifiedNegativeRiskFeasibilityLabV511=true;
+    }
+    String verifiedFeasibilityDiagnosticsV511(){
+        return "v511|enabled="+verifiedNegativeRiskFeasibilityLabV511+
+            "|verifiedImpass="+(embodiedV384!=null&&embodiedV384.verifiedImpass())+
+            "|considered="+auditedChoicesV511.considered+
+            "|chosenPhysicallyBlocked="+auditedChoicesV511.blockedOriginal+
+            "|reliefCandidates="+auditedChoicesV511.reliefOffered+
+            "|harmRejected="+auditedChoicesV511.hazardVetoed+
+            "|physicalRedirects="+auditedChoicesV511.changed+
+            "|plannerVetoes="+blockedPlannerRequestsV511+
+            "|executiveCandidateVetoes="+blockedExecutiveCandidatesV511;
+    }
+    private boolean blockedByVerifiedBodyV511(float[] observation,
+            float[] selected,float[] contender){
+        if(!verifiedNegativeRiskFeasibilityLabV511||embodiedV384==null||
+           !embodiedV384.verifiedImpass())return false;
+        float[] cost={embodiedV384.learnedCost(selected[0],selected[1]),
+            embodiedV384.learnedCost(contender[0],contender[1])};
+        float[] risk={contactValence.negativeApproachRiskV511(observation,
+                selected[0],selected[1]),
+            contactValence.negativeApproachRiskV511(observation,
+                contender[0],contender[1])};
+        return Zero511FeasibleChoiceGate.choose(true,cost,risk,1,null)==0;
+    }
+    boolean plannerBlockedByVerifiedBodyV511(float[] observation,
+            float[] selected,float[] contender){
+        boolean blocked=blockedByVerifiedBodyV511(observation,selected,contender);
+        if(blocked)blockedPlannerRequestsV511++;
+        return blocked;
+    }
+    boolean executiveBlockedByVerifiedBodyV511(float[] observation,
+            float[] selected,float[] contender){
+        boolean blocked=blockedByVerifiedBodyV511(observation,selected,contender);
+        if(blocked)blockedExecutiveCandidatesV511++;
+        return blocked;
+    }
     // V509 opt-in: the body's ALREADY learned, independently held-out
     // collision impasse may waive the model-confidence switching margin
     // only for GRU-sampled alternatives that have both a BETTER total
@@ -249,7 +295,7 @@ public final class Zero3CognitionV353 {
         return Zero510EmbodiedChoiceGate.choose(
             true,costs,optical,valence,1)==0;
     }
-    boolean physicallyRelievedLastChoiceV510(){return lastPhysicalReliefV510;}
+    boolean physicallyRelievedLastChoiceV510(){return lastPhysicalReliefV510||lastVerifiedPhysicalReliefV511;}
     private boolean lastPhysicalReliefV510;
     boolean replayBlockedByVerifiedBodyV510(float[] observation,
             float[] actorChosen,float[] recalled){
@@ -330,6 +376,7 @@ public final class Zero3CognitionV353 {
     }
     int select(float[] observation,float[][] proposals){
         lastPhysicalReliefV510=false;
+        lastVerifiedPhysicalReliefV511=false;
         // A trusted one-step model is ONE source of evidence. The original
         // controller also demanded REAL, independently heldout movement
         // estimates before allowing light valence to bias a heading. The V3
@@ -455,6 +502,22 @@ public final class Zero3CognitionV353 {
                 chosen=verified;
                 evidenceFirstRelievedDecisionsV510++;
                 lastPhysicalReliefV510=true;
+            }
+        }
+        if(verifiedNegativeRiskFeasibilityLabV511&&embodiedV384!=null&&
+           embodiedV384.verifiedImpass()){
+            float[] costs=new float[proposals.length];
+            float[] negativeRisk=new float[proposals.length];
+            for(int i=0;i<proposals.length;i++){
+                costs[i]=v452Parts[i][3];
+                negativeRisk[i]=contactValence.negativeApproachRiskV511(
+                    observation,proposals[i][0],proposals[i][1]);
+            }
+            int feasible=Zero511FeasibleChoiceGate.choose(
+                true,costs,negativeRisk,chosen,auditedChoicesV511);
+            if(feasible!=chosen){
+                chosen=feasible;
+                lastVerifiedPhysicalReliefV511=true;
             }
         }
         v452ScoreParts=v452Parts;
