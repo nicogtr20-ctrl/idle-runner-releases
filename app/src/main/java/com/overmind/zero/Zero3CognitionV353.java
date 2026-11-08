@@ -212,6 +212,24 @@ public final class Zero3CognitionV353 {
     // V452 diagnostic only: actual components already evaluated by the live V353
     // selector, retained transiently for later real-contact forensics.
     // This is NOT a new decision, score, direction, reward or serialized field.
+    // V509 opt-in: the body's ALREADY learned, independently held-out
+    // collision impasse may waive the model-confidence switching margin
+    // only for GRU-sampled alternatives that have both a BETTER total
+    // learned score and LESS independently validated physical obstruction.
+    // This never synthesizes or rotates any actor heading.
+    private boolean verifiedPhysicalImpassChoiceGuardLabV509;
+    private long verifiedPhysicalImpassGuardScoredV509;
+    private long verifiedPhysicalImpassGuardOverrodeV509;
+    void enableVerifiedPhysicalImpassChoiceGuardLabV509(){
+        verifiedPhysicalImpassChoiceGuardLabV509=true;
+    }
+    String verifiedPhysicalImpassChoiceDiagnosticsV509(){
+        return "v509|enabled="+verifiedPhysicalImpassChoiceGuardLabV509+
+            "|verifiedImpass="+(embodiedV384!=null&&embodiedV384.verifiedImpass())+
+            "|confirmedFailures="+(embodiedV384==null?0:embodiedV384.confirmedFailures())+
+            "|impasseChoices="+verifiedPhysicalImpassGuardScoredV509+
+            "|betterVerifiedCandidatesChosen="+verifiedPhysicalImpassGuardOverrodeV509;
+    }
     private float[][] v452ScoreParts=new float[0][];
     private int v452BestOpticalIndex,v452BestTotalIndex,v452CognitionIndex;
     // V453 forensic ONLY: distinguish the best-scoring candidate from the
@@ -329,6 +347,37 @@ public final class Zero3CognitionV353 {
         else{
             plannerUses++;
             chosen=bestScore>original+Math.max(margin,costSafety)?best:0;
+        }
+        // V509: V508 measured >20k actual wall-contact PHYSICS frames
+        // per 1000 decisions yet selected a wall-facing GRU candidate in all
+        // ten failed S21 windows. In V353 a poorly calibrated cost ensemble
+        // can impose a proposal-switch margin larger than the verified
+        // bodily avoidance score, causing the actor's original option 0
+        // to win despite an independently proven safer GRU alternative.
+        // This control acts ONLY after learned + heldout bodily impasse,
+        // and ONLY if another ACTUALLY sampled actor option has BOTH
+        // a strictly better total learned score and a better verified
+        // locomotor feasibility score. No fixed escape ray or new action.
+        if(verifiedPhysicalImpassChoiceGuardLabV509&&embodiedV384!=null&&
+            embodiedV384.verifiedImpass()){
+            verifiedPhysicalImpassGuardScoredV509++;
+            float currentEmbodied=v452Parts[chosen][3];
+            float currentTotal=v452Parts[chosen][5];
+            int verifiedSafe=chosen;
+            float safeTotal=currentTotal;
+            for(int candidate=0;candidate<proposals.length;candidate++){
+                float lessObstructed=v452Parts[candidate][3]-currentEmbodied;
+                float betterScored=v452Parts[candidate][5]-currentTotal;
+                if(lessObstructed>.045f&&betterScored>.015f&&
+                    v452Parts[candidate][5]>safeTotal){
+                    verifiedSafe=candidate;
+                    safeTotal=v452Parts[candidate][5];
+                }
+            }
+            if(verifiedSafe!=chosen){
+                chosen=verifiedSafe;
+                verifiedPhysicalImpassGuardOverrodeV509++;
+            }
         }
         v452ScoreParts=v452Parts;
         v452BestOpticalIndex=v452BestOpt;
