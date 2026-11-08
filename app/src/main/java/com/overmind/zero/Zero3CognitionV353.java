@@ -234,6 +234,23 @@ public final class Zero3CognitionV353 {
     /** Compare only two already proposed actions, never predict an escape
      * vector. A recalled old motor skill cannot replace an actor-selected
      * policy when its current physical obstruction is independently known. */
+    boolean plannerBlockedByVerifiedBodyV510(float[] observation,
+            float[] actorChosen,float[] planned){
+        if(!physicalEvidenceFirstChoiceLabV510||embodiedV384==null||
+            !embodiedV384.verifiedImpass())return false;
+        float[] costs={embodiedV384.learnedCost(actorChosen[0],actorChosen[1]),
+            embodiedV384.learnedCost(planned[0],planned[1])};
+        float[] optical={instrumental.opticalPreferenceV374(
+                observation,actorChosen,contactValence),
+            instrumental.opticalPreferenceV374(
+                observation,planned,contactValence)};
+        float[] valence={contactValence.utility(observation,actorChosen[0],actorChosen[1]),
+            contactValence.utility(observation,planned[0],planned[1])};
+        return Zero510EmbodiedChoiceGate.choose(
+            true,costs,optical,valence,1)==0;
+    }
+    boolean physicallyRelievedLastChoiceV510(){return lastPhysicalReliefV510;}
+    private boolean lastPhysicalReliefV510;
     boolean replayBlockedByVerifiedBodyV510(float[] observation,
             float[] actorChosen,float[] recalled){
         if(!physicalEvidenceFirstChoiceLabV510||embodiedV384==null||
@@ -312,6 +329,7 @@ public final class Zero3CognitionV353 {
         return contacts.hasReliableVisibleEvidence(observation)?.005f:.025f;
     }
     int select(float[] observation,float[][] proposals){
+        lastPhysicalReliefV510=false;
         // A trusted one-step model is ONE source of evidence. The original
         // controller also demanded REAL, independently heldout movement
         // estimates before allowing light valence to bias a heading. The V3
@@ -436,6 +454,7 @@ public final class Zero3CognitionV353 {
             if(verified!=chosen){
                 chosen=verified;
                 evidenceFirstRelievedDecisionsV510++;
+                lastPhysicalReliefV510=true;
             }
         }
         v452ScoreParts=v452Parts;
