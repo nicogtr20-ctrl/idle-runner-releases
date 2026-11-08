@@ -54,6 +54,16 @@ public final class Zero3RecurrentBrain {
             throw new IllegalStateException("V509 original GRU3 decision boundary required");
         cognition.enableVerifiedPhysicalImpassChoiceGuardLabV509();
     }
+    void enablePhysicalEvidenceFirstChoiceLabV510(){
+        if(pending||cognition==null)
+            throw new IllegalStateException("V510 original GRU3 decision boundary required");
+        cognition.enablePhysicalEvidenceFirstChoiceLabV510();
+    }
+    String physicalEvidenceFirstDiagnosticsV510(){
+        return cognition==null?"no-original-cognition":
+            cognition.evidenceFirstDiagnosticsV510();
+    }
+    private boolean skippedMisattributedActorHeadingV510;
     String verifiedPhysicalImpassChoiceDiagnosticsV509(){
         return cognition==null?"no-original-cognition":
             cognition.verifiedPhysicalImpassChoiceDiagnosticsV509();
@@ -448,6 +458,11 @@ public final class Zero3RecurrentBrain {
             worstOfferedOpticalV405=Math.min(worstOfferedOpticalV405,utility);
         }
         int selected=cognition==null?0:cognition.select(x,options);
+        // A re-ranking by independently verified physical obstruction is
+        // CONDITIONAL on the samples. The score-function derivative of
+        // the final heading is not an unbiased actor policy gradient.
+        skippedMisattributedActorHeadingV510=cognition!=null&&
+            cognition.physicallyRelievedLastChoiceV510();
         v451CognitionIndex=selected;
         v451CognitionOptical=cognition==null?0f:
             cognition.contactValenceScoreV369(x,options[selected][0],options[selected][1]);
@@ -486,8 +501,13 @@ public final class Zero3RecurrentBrain {
                 // enough independent real-contact evidence.
                 float selectedReal=cognition.realContactPreferenceV374(x,options[selected]);
                 float proposedReal=cognition.realContactPreferenceV374(x,options[planned]);
-                if(proposedReal+.035f>=selectedReal){
+                if(proposedReal+.035f>=selectedReal&&
+                   (cognition==null||!cognition.plannerBlockedByVerifiedBodyV510(
+                       x,options[selected],options[planned]))){
                     selected=planned;
+                    // The realized planning path is not the original neural
+                    // sample chosen at the physical evidence gate.
+                    skippedMisattributedActorHeadingV510=true;
                     // Planner accepted a new candidate using sampled evidence;
                     // the previous random override is no longer the selector.
                     randomSelectionOverrideV428=false;
@@ -701,8 +721,9 @@ public final class Zero3RecurrentBrain {
                 proposal[0]+lastNoise[0],proposal[1]+lastNoise[1]):null;
         for(int k=0;k<MOTOR;k++){
             if(optionReplayV354)continue; // recalled action did not execute this sampled noise
-            if(k<2&&headingCreditShouldSkipV428(jointSampleActorScoreLabV426,
-                    offPolicyDirectionV384,randomizedIndependentUniformChoiceV428)){
+            if(k<2&&(skippedMisattributedActorHeadingV510||
+                headingCreditShouldSkipV428(jointSampleActorScoreLabV426,
+                    offPolicyDirectionV384,randomizedIndependentUniformChoiceV428))){
                 if(jointSampleActorScoreLabV426&&randomizedIndependentUniformChoiceV428)
                     randomUniformActorHeadsSkippedV428++;
                 continue;
