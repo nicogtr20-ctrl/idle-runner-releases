@@ -253,6 +253,20 @@ public final class SymbioteMatterV1 {
         return clip((radius-(R+9f))/8f,0f,1f)*
             clip((-extend-.83f)/.13f,0f,1f);
     }
+    // ZERO511 LAB ONLY: physically contacted surface may retract off
+    // the contact face while CH0 muscles pull inward, before it forms a
+    // long pseudopod. Never affects open-floor anchoring or actual held grip.
+    private boolean physicalContactRetractionReleaseLabV511;
+    long physicalContactRetractionFramesV511;
+    void configurePhysicalContactRetractionLabV511(boolean enabled){
+        physicalContactRetractionReleaseLabV511=enabled;
+    }
+    static float contactRetractionReleaseV511(float actualTouch,
+            float extend,boolean heldObject){
+        if(heldObject||!Float.isFinite(actualTouch)||!Float.isFinite(extend)||
+           actualTouch<.5f)return 0f;
+        return .90f*clip((-extend-.20f)/.55f,0f,1f);
+    }
     // V363 matched lab A/B knob. The original physical law remains 0.12
     // in every production organism until net motor gains are independently
     // proven across learned/frozen and virgin/resumed worlds.
@@ -881,6 +895,18 @@ public final class SymbioteMatterV1 {
             // tangential traction is untouched; solid obstacle holds stay fixed.
             float release=radialRetractionRelease(rr,extend,
                 skin.gripHold[i]>=Morphology.GRIP_HOLD);
+            if(physicalContactRetractionReleaseLabV511){
+                // PRE-frame real touch, not inferred wall position.
+                // Only radial traction is relaxed; tangential footholds,
+                // all muscles, direct body velocity, and CH2 stay intact.
+                float contactRelease=contactRetractionReleaseV511(
+                    skin.touchSense[i],extend,
+                    skin.gripHold[i]>=Morphology.GRIP_HOLD);
+                if(contactRelease>release){
+                    release=contactRelease;
+                    physicalContactRetractionFramesV511++;
+                }
+            }
             if(release>0f){
                 float radial=appliedVx*ux+appliedVy*uy;
                 float tangent=-appliedVx*uy+appliedVy*ux;
