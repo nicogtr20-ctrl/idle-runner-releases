@@ -505,9 +505,6 @@ public final class Zero3RecurrentBrain {
                    (cognition==null||!cognition.plannerBlockedByVerifiedBodyV510(
                        x,options[selected],options[planned]))){
                     selected=planned;
-                    // The realized planning path is not the original neural
-                    // sample chosen at the physical evidence gate.
-                    skippedMisattributedActorHeadingV510=true;
                     // Planner accepted a new candidate using sampled evidence;
                     // the previous random override is no longer the selector.
                     randomSelectionOverrideV428=false;
