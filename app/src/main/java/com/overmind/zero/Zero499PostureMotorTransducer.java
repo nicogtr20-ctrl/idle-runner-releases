@@ -63,38 +63,48 @@ final class Zero499PostureMotorTransducer {
         float over=Math.max(0f,speed-SPEED_GOVERNOR_ONSET);
         float governor=1f/(1f+over/SPEED_GOVERNOR_WIDTH);
         float drive=MAX_DRIVE*clip(2f*effort,0f,1f)*governor;
-        float rx=ux,ry=uy;
+        // ZERO508: the original material solver applies CH0/CH1 along
+        // SymbioteMatterV1.actuatorDirectionAt(), NOT along the radial
+        // centroid of its six-site cortex sector. A concave living contour
+        // may have a different actual local force basis. Reuse EXACT same
+        // pre-step polygon handedness and 96 site normals as the solver.
+        // V507 measured in 256 genuinely sampled user GRU decisions:
+        // +24.5487% signed/gross vs +16.2537% using centroid radial axes.
+        // CH1 is weaker than CH0 in the actual material (210 vs 680);
+        // measured 1.75x tangential effort improved actual forward outcomes.
+        // No extra action, center thrust, sight or semantic reward is made.
+        final float handedness=SymbioteMatterV1.signedArea(skin)>=0f?1f:-1f;
+        final float[] actualNormal=new float[2];
+        final int pointsPerSector=Morphology.POINTS/SECTORS;
         for(int sector=0;sector<SECTORS;sector++){
             int offset=sector*CHANNELS;
-            float dx=0f,dy=0f;
-            int start=sector*(Morphology.POINTS/SECTORS);
-            for(int i=start;i<start+Morphology.POINTS/SECTORS;i++){
-                dx+=skin.x[i]-body.cx;
-                dy+=skin.y[i]-body.cy;
+            float nxSum=0f,nySum=0f;
+            int start=sector*pointsPerSector;
+            for(int i=start;i<start+pointsPerSector;i++){
+                SymbioteMatterV1.actuatorDirectionAt(
+                    skin,i,body.cx,body.cy,handedness,actualNormal);
+                nxSum+=actualNormal[0];
+                nySum+=actualNormal[1];
             }
-            float radial=(float)Math.hypot(dx,dy);
-            if(radial<.01f){
-                // Degenerate membrane patch: no synthesized world direction
-                // can be justified. Keep original learned output only.
+            float length=(float)Math.hypot(nxSum,nySum);
+            if(length<.01f){
+                // A folded patch with opposing actual material normals
+                // cannot transfer a well-defined sector-scale muscle
+                // force. Retain learned output only, never invent a ray.
                 motor[offset]=clip(RESIDUAL*motor[offset],-1f,1f);
                 motor[offset+1]=clip(RESIDUAL*motor[offset+1],-1f,1f);
                 motor[offset+3]=clip(RESIDUAL*motor[offset+3],-1f,1f);
                 continue;
             }
-            float nx=dx/radial,ny=dy/radial;
-            float radialDesired=nx*rx+ny*ry;
-            float tangentDesired=-ny*rx+nx*ry;
-            // CH0 inward force ALSO increases real ground loading; CH1
-            // is the existing tangential muscle. Nothing bypasses real
-            // equal-and-opposite fluid force, friction or grip.
+            float nx=nxSum/length,ny=nySum/length;
+            float radialDesired=nx*ux+ny*uy;
+            float tangentialDesired=1.75f*(-ny*ux+nx*uy);
             motor[offset]=clip(drive*radialDesired+
                 RESIDUAL*motor[offset],-1f,1f);
-            motor[offset+1]=clip(drive*tangentDesired+
+            motor[offset+1]=clip(drive*tangentialDesired+
                 RESIDUAL*motor[offset+1],-1f,1f);
-            // CH3 is a neural stiffness residual. Physical neutral stiffness
-            // already exists; large cortical random tension can block stance.
             motor[offset+3]=clip(RESIDUAL*motor[offset+3],-1f,1f);
-            // NEVER touch CH2; V319 owns the externally applied physical grip.
+            // CH2 stays the original V319 physical object-grip command.
         }
     }
     private Zero499PostureMotorTransducer(){}
