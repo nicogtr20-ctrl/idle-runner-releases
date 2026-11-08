@@ -121,6 +121,32 @@ final class Zero3ContactValenceV369 {
         }
         return Math.max(-.25f,Math.min(.25f,total));
     }
+    /**
+     * V511: negative contact evidence only. Losing a positive optical goal
+     * when stepping around a verified obstacle is NOT itself harm; V510
+     * mistakenly compared both signed utilities as hard safety constraints.
+     * Read only physically experienced wavelength losses and currently
+     * observed retina. No named red/blue classes, inferred future contact
+     * or fabricated reward. No actor steering is performed here.
+     */
+    float negativeApproachRiskV511(float[] observation194,float dx,float dy){
+        senses(observation194,20,BANDS*BEAMS);
+        if(!Float.isFinite(dx)||!Float.isFinite(dy))
+            throw new IllegalArgumentException("V511 nonfinite actor heading");
+        float risk=0f;
+        for(int band=0;band<BANDS;band++){
+            float learned=effectiveValue(band);
+            if(learned>=-.10f)continue;
+            for(int ray=0;ray<BEAMS;ray++){
+                double angle=ray*Math.PI/4d;
+                float approach=Math.max(0f,(float)(Math.cos(angle)*dx+
+                    Math.sin(angle)*dy));
+                risk+=(-learned)*observation194[20+band*BEAMS+ray]*
+                    approach/BEAMS;
+            }
+        }
+        return Math.max(0f,Math.min(1f,risk));
+    }
     /** ZERO422 research: an actual previously harmful wavelength is visible.
      * No innate red/blue identity, map coordinate or preset heading.
      * The legacy historical measured contact prior remains weak as in V369.
