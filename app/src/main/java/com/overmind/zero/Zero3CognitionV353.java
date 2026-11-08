@@ -217,6 +217,40 @@ public final class Zero3CognitionV353 {
     // only for GRU-sampled alternatives that have both a BETTER total
     // learned score and LESS independently validated physical obstruction.
     // This never synthesizes or rotates any actor heading.
+    private boolean physicalEvidenceFirstChoiceLabV510;
+    private long evidenceFirstImpassChoicesV510;
+    private long evidenceFirstRelievedDecisionsV510;
+    private long evidenceFirstMemoryVetoesV510;
+    void enablePhysicalEvidenceFirstChoiceLabV510(){
+        physicalEvidenceFirstChoiceLabV510=true;
+    }
+    String evidenceFirstDiagnosticsV510(){
+        return "v510|enabled="+physicalEvidenceFirstChoiceLabV510+
+            "|verifiedImpass="+(embodiedV384!=null&&embodiedV384.verifiedImpass())+
+            "|impasseCandidateChecks="+evidenceFirstImpassChoicesV510+
+            "|physicallyRelievedChoices="+evidenceFirstRelievedDecisionsV510+
+            "|unsafeExecutiveRecallsVetoed="+evidenceFirstMemoryVetoesV510;
+    }
+    /** Compare only two already proposed actions, never predict an escape
+     * vector. A recalled old motor skill cannot replace an actor-selected
+     * policy when its current physical obstruction is independently known. */
+    boolean replayBlockedByVerifiedBodyV510(float[] observation,
+            float[] actorChosen,float[] recalled){
+        if(!physicalEvidenceFirstChoiceLabV510||embodiedV384==null||
+           !embodiedV384.verifiedImpass())return false;
+        float[] costs={embodiedV384.learnedCost(actorChosen[0],actorChosen[1]),
+            embodiedV384.learnedCost(recalled[0],recalled[1])};
+        float[] optical={instrumental.opticalPreferenceV374(
+                observation,actorChosen,contactValence),
+            instrumental.opticalPreferenceV374(
+                observation,recalled,contactValence)};
+        float[] valence={contactValence.utility(observation,actorChosen[0],actorChosen[1]),
+            contactValence.utility(observation,recalled[0],recalled[1])};
+        boolean veto=Zero510EmbodiedChoiceGate.choose(
+            true,costs,optical,valence,1)==0;
+        if(veto)evidenceFirstMemoryVetoesV510++;
+        return veto;
+    }
     private boolean verifiedPhysicalImpassChoiceGuardLabV509;
     private long verifiedPhysicalImpassGuardScoredV509;
     private long verifiedPhysicalImpassGuardOverrodeV509;
@@ -377,6 +411,31 @@ public final class Zero3CognitionV353 {
             if(verifiedSafe!=chosen){
                 chosen=verifiedSafe;
                 verifiedPhysicalImpassGuardOverrodeV509++;
+            }
+        }
+        // V510: V509 fired ZERO times in >9,000 verified S21 impasse
+        // choices. Requiring agreement from the *unreliable* prediction
+        // score rendered physically learned failure powerless. Only when
+        // THIS body has confirmed failure on train+heldout experience,
+        // select a different EXISTING neural sample if it offers lower
+        // learned physical obstruction without worsening either independently
+        // learned optical hazard metric. Never synthesize a target heading.
+        if(physicalEvidenceFirstChoiceLabV510&&embodiedV384!=null&&
+           embodiedV384.verifiedImpass()){
+            evidenceFirstImpassChoicesV510++;
+            float[] costs=new float[proposals.length];
+            float[] optical=new float[proposals.length];
+            float[] valence=new float[proposals.length];
+            for(int i=0;i<proposals.length;i++){
+                costs[i]=v452Parts[i][3];
+                optical[i]=v452Parts[i][2];
+                valence[i]=v452Parts[i][0];
+            }
+            int verified=Zero510EmbodiedChoiceGate.choose(
+                true,costs,optical,valence,chosen);
+            if(verified!=chosen){
+                chosen=verified;
+                evidenceFirstRelievedDecisionsV510++;
             }
         }
         v452ScoreParts=v452Parts;
