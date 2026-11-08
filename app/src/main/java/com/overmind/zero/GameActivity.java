@@ -294,6 +294,16 @@ public final class GameActivity extends Activity {
             throw new IllegalStateException("V509 original motor body missing");
         lab.brain3.enableVerifiedPhysicalImpassChoiceGuardLabV509();
     }
+    void originalV510EnablePhysicalEvidenceFirstChoiceForQA(){
+        if(lab==null||lab.brain3==null||
+            !lab.brain3.realPhysicalMotorContextV412())
+            throw new IllegalStateException("V510 original real GRU3 body unavailable");
+        lab.brain3.enablePhysicalEvidenceFirstChoiceLabV510();
+    }
+    String originalV510PhysicalChoiceDiagnosticsForQA(){
+        return lab==null||lab.brain3==null?"no-original-brain":
+            lab.brain3.physicalEvidenceFirstChoiceDiagnosticsV510();
+    }
     String originalV509PhysicalImpassChoiceDiagnosticsForQA(){
         return lab==null||lab.brain3==null?"no-original-brain":
             lab.brain3.verifiedPhysicalImpassChoiceDiagnosticsV509();
