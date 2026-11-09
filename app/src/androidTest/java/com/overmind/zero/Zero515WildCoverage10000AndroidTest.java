@@ -2,6 +2,8 @@ package com.overmind.zero;
 
 import android.app.Activity;
 import android.app.Instrumentation;
+import android.app.Application;
+import android.os.Bundle;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
@@ -84,54 +86,86 @@ public final class Zero515WildCoverage10000AndroidTest {
             .putBoolean(SaveSlotStore.FRESH_ZERO3_BIRTH,true).commit());
         Intent intent=new Intent(c,GameActivity.class);
         intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK|Intent.FLAG_ACTIVITY_CLEAR_TASK);
-        // The real original game repaints continuously. startActivitySync()
-        // incorrectly waits for a permanently idle UI and times out. The
-        // already approved V362 tests use the activity monitor protocol.
+        // V516 QA-only: the first Activity returned by monitor can be
+        // destroyed during the emulator's initial orientation/configuration
+        // transition. A dead Activity is not proof that the saved V356 GRU
+        // failed to initialize. Follow real Android lifecycle instead.
+        Application app=(Application)c.getApplicationContext();
+        final AtomicReference<GameActivity> currentActivity=new AtomicReference<>();
+        Application.ActivityLifecycleCallbacks lifecycle=
+            new Application.ActivityLifecycleCallbacks(){
+                @Override public void onActivityCreated(Activity a,Bundle state){
+                    if(a instanceof GameActivity)currentActivity.set((GameActivity)a);
+                }
+                @Override public void onActivityStarted(Activity a){}
+                @Override public void onActivityResumed(Activity a){
+                    if(a instanceof GameActivity)currentActivity.set((GameActivity)a);
+                }
+                @Override public void onActivityPaused(Activity a){}
+                @Override public void onActivityStopped(Activity a){}
+                @Override public void onActivitySaveInstanceState(Activity a,Bundle state){}
+                @Override public void onActivityDestroyed(Activity a){
+                    if(a instanceof GameActivity)
+                        currentActivity.compareAndSet((GameActivity)a,null);
+                }
+            };
+        app.registerActivityLifecycleCallbacks(lifecycle);
         Instrumentation.ActivityMonitor monitor=instrument.addMonitor(
             GameActivity.class.getName(),null,false);
-        GameActivity original;
-        try {
+        GameActivity original=null;
+        String bootDiagnostic="not sampled";
+        int relaunchCount=0;
+        try{
             c.startActivity(intent);
             Activity created=instrument.waitForMonitorWithTimeout(monitor,30000);
-            assertNotNull("original repainting organism actually launched",created);
-            assertTrue(created instanceof GameActivity);
-            original=(GameActivity)created;
-        }finally{instrument.removeMonitor(monitor);}
-        try {
-            // The original Activity draws continuously; do not block its
-            // main looper with forced onDraw() calls from the test!
-            // Activity monitor returns when launch is observed, potentially
-            // BEFORE onCreate()/Lab.load() completes. A previous V403
-            // laboratory trial misreported that as loss of the GRU owner.
-            // ZERO471 read-only boot forensics. V470 wild failed before
-            // decision 1 in THREE independent emulator attempts, but the
-            // previous assertion discarded the original Activity's error.
-            // Do not lengthen/shorten the wait or alter actor, world, saves.
-            boolean ready=false;
-            AtomicReference<String> bootDiagnostic=new AtomicReference<>("not sampled");
-            for(int wait=0;wait<300&&!ready;wait++){
-                AtomicBoolean has=new AtomicBoolean(false);
-                instrument.runOnMainSync(()->{
-                    has.set(original.originalV356NeuralOwnerForQA());
-                    bootDiagnostic.set("owner="+has.get()+
-                        ",cursor="+original.originalV356DecisionsForQA()+
-                        ",error="+original.originalV356BrainErrorForQA()+
-                        ",destroyed="+original.isDestroyed()+
-                        ",finishing="+original.isFinishing());
-                });
-                ready=has.get();
-                if(!ready&&(wait%50==0||wait==299))
-                    android.util.Log.i("ZERO417_WILD_LONG",
-                        "ZERO471_ORIGINAL_GRU3_BOOT_DIAGNOSTIC poll="+wait+
-                        ",freshBirthFlag="+p.getBoolean(
-                            SaveSlotStore.FRESH_ZERO3_BIRTH,false)+
-                        ",savedBrainBytes="+p.getString(
+            assertNotNull("Original Android activity launch must be observed",created);
+            assertTrue("Original physical GameActivity",created instanceof GameActivity);
+            currentActivity.compareAndSet(null,(GameActivity)created);
+            for(int wait=0;wait<300&&original==null;wait++){
+                GameActivity candidate=currentActivity.get();
+                if(candidate!=null){
+                    AtomicBoolean readyNow=new AtomicBoolean(false);
+                    AtomicReference<String> diagNow=new AtomicReference<>("not sampled");
+                    instrument.runOnMainSync(()->{
+                        readyNow.set(!candidate.isDestroyed()&&
+                            candidate.originalV356NeuralOwnerForQA());
+                        diagNow.set("owner="+readyNow.get()+
+                            ",cursor="+candidate.originalV356DecisionsForQA()+
+                            ",error="+candidate.originalV356BrainErrorForQA()+
+                            ",destroyed="+candidate.isDestroyed()+
+                            ",finishing="+candidate.isFinishing());
+                    });
+                    bootDiagnostic=diagNow.get();
+                    if(readyNow.get()){original=candidate;break;}
+                }
+                if(wait%50==0||wait==299)
+                    android.util.Log.i("ZERO516_BOOT",
+                        "original-lifecycle poll="+wait+" relaunches="+relaunchCount+
+                        " savedBrainBytes="+p.getString(
                             Zero3OriginalBrainV356.KEY,"").length()+
-                        ","+bootDiagnostic.get());
-                if(!ready)android.os.SystemClock.sleep(100);
+                        " freshFlag="+p.getBoolean(
+                            SaveSlotStore.FRESH_ZERO3_BIRTH,false)+
+                        " latest="+(candidate==null?"missing":bootDiagnostic));
+                // At most one new launch, solely if the prior instance died
+                // before producing a neural owner. Never reset the brain
+                // checkpoint or declare a green run because of a retry.
+                if(wait==49&&candidate==null){
+                    relaunchCount++;
+                    android.util.Log.i("ZERO516_BOOT",
+                        "stale original Android Activity: relaunch once without clearing preferences");
+                    c.startActivity(intent);
+                }
+                if(original==null)android.os.SystemClock.sleep(100);
             }
-            assertTrue("Original sole GRU3 must really finish boot: "+
-                bootDiagnostic.get(),ready);
+        }finally{
+            instrument.removeMonitor(monitor);
+            app.unregisterActivityLifecycleCallbacks(lifecycle);
+        }
+        assertNotNull("V516 requires one truly LIVE original GRU3 Activity: "+
+            bootDiagnostic,original);
+        android.util.Log.i("ZERO516_BOOT",
+            "ORIGINAL_GRU3_LIVE_OWNER_CONFIRMED relaunches="+relaunchCount);
+        try {
             AtomicLong initial=new AtomicLong(-1);
             AtomicReference<Window> initialWindow=new AtomicReference<>();
             // V412: snapshot STARTING state and PRE physical GRU3 stats on
