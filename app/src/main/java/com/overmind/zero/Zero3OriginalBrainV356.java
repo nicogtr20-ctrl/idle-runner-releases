@@ -93,6 +93,13 @@ final class Zero3OriginalBrainV356 {
     boolean postureMotorTransducerEnabledV499(){
         return cortex.postureMotorTransducerV499();
     }
+    void enableOpposedPhysicalGovernorLabV514(int mode){
+        if(pending||!cortex.postureMotorTransducerV499())
+            throw new IllegalStateException("V514 original V499 motor missing");
+        cortex.enableOpposedPhysicalGovernorLabV514(mode);
+    }
+    int physicalGovernorModeV514(){return cortex.physicalGovernorModeV514();}
+
     void enableDeliveredLocalProbeLabV421(){
         if(pending||!localMotorRequestedV400)
             throw new IllegalStateException("ZERO421 requires original V400 at a decision boundary");
