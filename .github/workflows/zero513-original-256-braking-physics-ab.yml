@@ -57,7 +57,8 @@ jobs:
           # not GameActivity's outer persisted episode/session wrapper.
           scene=json.dumps(snapshot,separators=(',',':'))
           saved=dict(reportId=idx['reportId'],brain=checkpoint,
-                     physical_scene_v100=scene)
+                     physical_scene_v100=scene,
+                     motorRecorderCsv=p2['currentZero']['zero3_motor_flight_recorder_v381'])
           out=pathlib.Path('/tmp/zero492-nov07-newborn-readonly.json')
           out.write_text(json.dumps(saved))
           print('ZERO492 exact newborn report=',idx['reportId'],
