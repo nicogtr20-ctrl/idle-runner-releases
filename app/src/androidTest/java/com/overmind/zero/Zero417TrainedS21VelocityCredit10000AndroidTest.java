@@ -94,6 +94,11 @@ public final class Zero417TrainedS21VelocityCredit10000AndroidTest {
     @Test(timeout=5400000)
     public void naturalUnseenPhysicalLivesRecoverUsefulMotorAndEnergyAvoidance()throws Exception {
         Instrumentation instrument=InstrumentationRegistry.getInstrumentation();
+        // ZERO500: this Android instrumentation argument is laboratory-only.
+        // The unmodified V417 baseline still runs when it is absent.
+        final boolean useV499="true".equals(
+            InstrumentationRegistry.getArguments().getString(
+                "zero499_posture_motor","false"));
         Context c=instrument.getTargetContext();
         SharedPreferences p=c.getSharedPreferences(SaveSlotStore.WORKING,Context.MODE_PRIVATE);
         // The user's ACTUAL 2026-10-25 trained V388 33,312-decision GRU3
@@ -262,6 +267,13 @@ public final class Zero417TrainedS21VelocityCredit10000AndroidTest {
                 // V436: only new behavioral variable versus V435. Wider actor-sampled
                 // choices require genuine previously learned, currently visible harm.
                 original.originalV422EnableLearnedHarmCandidatesForQA();
+                if(useV499){
+                    original.originalV499EnablePostureMotorTransducerForQA();
+                    assertTrue("V500 motor must actually be enabled on original owner",
+                        original.originalV499PostureMotorEnabledForQA());
+                    android.util.Log.i("ZERO500_GATE",
+                        "ZERO500_V499_ORIGINAL_10000_ENABLED scenario=TRAINED_S21");
+                }
                 initialWindow.set(new Window(
                     original.originalV406TrueLifetimeMaterialContactsForQA(),
                     original.originalV400LocalMotorDiagnosticsForQA(),
