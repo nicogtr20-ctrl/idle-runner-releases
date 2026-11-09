@@ -1,0 +1,7 @@
+# ZERO518 — genuine trained S21 world vs newborn V517 AB
+
+V517 physical trial of 256 actual neural decisions from **different 4747-decision newborn**: unchanged motor mode14 signed/gross 24.5487%, light lateral correction mode22 25.2484% (+0.6997 percentage points), stronger gains 20.3461%, 17.1839%, 17.5006% — failed preregistered +2 percentage point threshold. Do not merge/promote. Test was fixed after original false failure from accidentally running V513.
+
+The real user **33312-decision trained S21** 10k original GRU3 autonomously fails signed motor progress in V500/V511/V515, and its 170-site shape/ground contacts differ from newborn. Prior 256 recorded newborn A/B removed room solids, so it could not determine learned wall-lock origin. V518 restores original Oct25 S21 33312-GRU, 19452 cortical motor updates, exact recorded 256 neural headings and durations, original saved training room and independent saved free room, including ALL saved solid wall/box objects. Same original physics solver, no world target, and two control arms (production V499 native motor mode0 and previous mode14 mechanical reproduction), four V517 lateral gains. Every mode starts from the same corresponding physical snapshot. 2x6x256 measured actual-body actions.
+
+Failure of >=2-point movement gain gate is a scientific rejection of V517 under S21 physical circumstances. Success is only a lead for subsequent separate autonomous >=10000 trained S21 and wild tests. No production/OTA, neural state, checkpoints or slots changed.
