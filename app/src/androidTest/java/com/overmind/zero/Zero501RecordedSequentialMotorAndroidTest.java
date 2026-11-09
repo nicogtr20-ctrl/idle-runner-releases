@@ -117,6 +117,44 @@ public final class Zero501RecordedSequentialMotorAndroidTest {
                 governor=1f/(1f+Math.max(0f,forward-5f)/8f+
                     Math.max(0f,cross-7f)/8f);
                 break;
+            case 13:case 14:case 15:case 16:case 17:
+                // V507 modes all keep precisely the V503 best 5/5 real
+                // speed governor; ONLY sector geometry differs.
+                drive=.8f;
+                governor=1f/(1f+Math.max(0f,(float)Math.hypot(
+                    body.cvx,body.cvy)-5f)/5f);
+                break;
+            case 18:
+                // V513: retain correct 96-site force normal and 1.75 CH1,
+                // but govern power by REAL forward speed, never suppress
+                // the motor when commanded opposite to current inertia.
+                drive=.8f;
+                governor=1f/(1f+Math.max(0f,forward-5f)/5f);
+                break;
+            case 19:
+                // Suppress excess aligned speed as before; ONLY release
+                // scalar motor governor when real COM reverses intention.
+                drive=.8f;
+                governor=1f/(1f+Math.max(0f,(float)Math.hypot(
+                    body.cvx,body.cvy)-5f)/5f);
+                if(forward<0f)governor=1f;
+                break;
+            case 20:
+                // High physical brake authority when crosswise or opposed;
+                // no new low-level world-space desired direction.
+                drive=.8f;
+                governor=1f/(1f+Math.max(0f,(float)Math.hypot(
+                    body.cvx,body.cvy)-5f)/5f);
+                if(forward<2f)governor=Math.max(.9f,governor);
+                break;
+            case 21:
+                // Mixed: slow high-speed aligned propulsion but avoid
+                // suppressing reversal, blending force instead of jumping.
+                drive=.8f;
+                governor=1f/(1f+Math.max(0f,(float)Math.hypot(
+                    body.cvx,body.cvy)-5f)/5f);
+                if(forward<0f)governor=Math.min(1f,governor*1.8f);
+                break;
             default:throw new IllegalArgumentException("mode "+mode);
         }
         drive*=governor;
@@ -131,18 +169,41 @@ public final class Zero501RecordedSequentialMotorAndroidTest {
             filtered[1]+=(targetY-filtered[1])*alpha;
             targetX=filtered[0];targetY=filtered[1];
         }
+        float handed=SymbioteMatterV1.signedArea(skin)>=0f?1f:-1f;
+        float[] actualNormal=new float[2];
         for(int k=0;k<16;k++){
             int idx=k*4;
-            float dx=0f,dy=0f;
+            float dx=0f,dy=0f,contact=0f;
             for(int j=k*6;j<k*6+6;j++){
-                dx+=skin.x[j]-body.cx;
-                dy+=skin.y[j]-body.cy;
+                if(mode>=13){
+                    // Same actual 96-point force basis the ORIGINAL physical
+                    // solver will use for THIS tick, including concavity
+                    // and the signed polygon winding direction.
+                    SymbioteMatterV1.actuatorDirectionAt(
+                        skin,j,body.cx,body.cy,handed,actualNormal);
+                    dx+=actualNormal[0];
+                    dy+=actualNormal[1];
+                    contact+=skin.touchSense[j];
+                }else{
+                    dx+=skin.x[j]-body.cx;
+                    dy+=skin.y[j]-body.cy;
+                }
             }
             float magnitude=(float)Math.hypot(dx,dy);
             if(magnitude<.01f)continue;
             dx/=magnitude;dy/=magnitude;
             float radial=dx*targetX+dy*targetY;
             float tangential=-dy*targetX+dx*targetY;
+            if(mode==14||mode>=18&&mode<=21)tangential*=1.75f;
+            if(mode==15)tangential*=.50f;
+            if(mode==16||mode==17){
+                // Real previous-frame tissue obstruction, not a guessed
+                // color or target vector. Never assign a new heading.
+                float blocked=limit(contact/6f,0f,1f);
+                float scale=mode==16?.75f:.95f;
+                radial*=1f-blocked*scale;
+                tangential*=1f-blocked*scale;
+            }
             motor[idx]=limit(radial+.12f*motor[idx],-1f,1f);
             motor[idx+1]=limit(tangential+.12f*motor[idx+1],-1f,1f);
             motor[idx+3]=limit(.12f*motor[idx+3],-1f,1f);
