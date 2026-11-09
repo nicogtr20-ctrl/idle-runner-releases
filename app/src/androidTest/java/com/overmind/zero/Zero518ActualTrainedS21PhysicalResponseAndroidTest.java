@@ -24,6 +24,14 @@ public final class Zero518ActualTrainedS21PhysicalResponseAndroidTest {
             JSONObject fixture,
             Zero501RecordedSequentialMotorAndroidTest.Sample[] trace,
             String savedScene,int mode)throws Exception{
+        return replay(fixture,trace,savedScene,mode,false);
+    }
+    // V519: the prior V518 replay missed GameActivity's membrane/solid
+    // surface collision; interior-only physics is NOT the live game.
+    static Zero501RecordedSequentialMotorAndroidTest.Result replay(
+            JSONObject fixture,
+            Zero501RecordedSequentialMotorAndroidTest.Sample[] trace,
+            String savedScene,int mode,boolean fullWall)throws Exception{
         GameSceneSnapshot.Scene scene=GameSceneSnapshot.workingPosture(savedScene);
         assertNotNull("S21 genuine saved room must restore",scene);
         assertNotNull("S21 170-site gel",scene.matter);
@@ -60,11 +68,28 @@ public final class Zero518ActualTrainedS21PhysicalResponseAndroidTest {
                     Zero499PostureMotorTransducer.apply(
                         intent,scene.body,scene.skin,motor,mode);
                 float beforeWork=matter.work;
+                // GameActivity snapshots tissue AND ten physical particles
+                // before gel.step to prevent tunnelling between 60Hz frames.
+                float[] priorSkinX=fullWall?scene.skin.x.clone():null;
+                float[] priorSkinY=fullWall?scene.skin.y.clone():null;
+                float[] priorBodyX=fullWall?scene.body.x.clone():null;
+                float[] priorBodyY=fullWall?scene.body.y.clone():null;
                 matter.step(scene.body,scene.skin,motor,DT);
                 float[] preWorldX=scene.skin.x.clone(),preWorldY=scene.skin.y.clone();
                 Zero387TactileFrame.begin(scene.skin);
+                if(fullWall){
+                    // EXACT live GameActivity TRAINING world membrane CCD.
+                    // V518 previously simulated walls for fluid nodes ONLY.
+                    // This includes the stored 94 real user wall tiles.
+                    TrainingRoomV379.constrain(scene.body,scene.skin,scene.objects,
+                        priorSkinX,priorSkinY,priorBodyX,priorBodyY);
+                    MaterialContactConstraints.reconcile(
+                        scene.body,scene.skin,scene.objects,DT);
+                }
                 SymbioteWorldStepV171.interior(matter,scene.body,scene.skin,
                     scene.room,scene.objects,DT,preWorldX,preWorldY);
+                if(fullWall)GripSurfaceComposition.compose(
+                    scene.skin,scene.room,scene.objects);
                 control.observe(scene.body,DT,
                     Math.max(0f,matter.work-beforeWork),
                     matter.lastMuscleReactionImpulse,false,false);

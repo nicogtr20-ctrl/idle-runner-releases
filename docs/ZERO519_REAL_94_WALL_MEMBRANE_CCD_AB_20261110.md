@@ -1,0 +1,7 @@
+# ZERO519 — V518 replay missed real surface wall collisions
+
+V518 [run 42716832187](https://github.com/nicogtr20-ctrl/idle-runner-releases/actions/runs/42716832187) failed the >=2 percentage point physical gain gate in its first original S21 room. It reported mode0 62.9342% signed/gross, mode14 65.2661%, V517 tested gains from 57.5065% down to 51.5339%. These were real 170-site fluid/material measurements but NOT faithful to the live training room: the replay invoked `SymbioteWorldStepV171.interior` only and **omitted** `TrainingRoomV379.constrain` on the 96 membrane sites and 10 mass nodes, though the saved S21 main scene contains 94 actual wall tiles. GameActivity calls this crucial outer wall CCD BEFORE the interior solver.
+
+V519 adds **just** the missing actual GameActivity training room contact projection, using unchanged PRE gel positions for all membrane and ten body sites and the already present `SymbioteWorldStepV171.interior`, with `Zero387TactileFrame`, `MaterialContactConstraints` and `GripSurfaceComposition`. It compares three motor modes for the same 256 saved original S21 GRU neural intentions with/without that contact law, each from identical saved real wall posture. No motor/control physiology change. Failing V517 remains lab-only, not promoted.
+
+This still remains an open-loop replay of a historical neural flight trace; no evolving 10k GRU policy, real energy-life/death/blue/red, planner or executive acts inside replay. Do not label any replay efficiency as autonomous success. No user saves/12 slots/OTA/APK changed.
