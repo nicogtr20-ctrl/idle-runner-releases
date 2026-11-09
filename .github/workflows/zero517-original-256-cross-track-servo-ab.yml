@@ -70,7 +70,7 @@ jobs:
             sudo tee /etc/udev/rules.d/99-kvm4all.rules
           sudo udevadm control --reload-rules
           sudo udevadm trigger --name-match=kvm
-      - name: Android 4747-body motor four-axis + real 11145 S21 saved wall memory + optical nonharm
+      - name: Genuine 256 neural intentions across unchanged motor and 4 orthogonal COM servo gains
         uses: reactivecircus/android-emulator-runner@v2
         with:
           api-level: 35
@@ -86,7 +86,7 @@ jobs:
             adb shell mkdir -p /sdcard/Android/data/com.overmind.zero.ota/files
             adb push /tmp/zero492-nov07-newborn-readonly.json /sdcard/Android/data/com.overmind.zero.ota/files/zero492-nov07-newborn-readonly.json
             adb logcat -c
-            adb shell am instrument -w -r -e class com.overmind.zero.Zero513ActualOpposedMotorGovernorAndroidTest com.overmind.zero.ota.test/androidx.test.runner.AndroidJUnitRunner 2>&1 | tee "$RUNNER_TEMP/ZERO517_SERVO_TESTS.txt"
+            adb shell am instrument -w -r -e class com.overmind.zero.Zero517MeasuredCrossTrackServoAndroidTest com.overmind.zero.ota.test/androidx.test.runner.AndroidJUnitRunner 2>&1 | tee "$RUNNER_TEMP/ZERO517_SERVO_TESTS.txt"
             adb logcat -d -s ZERO517_SERVO:I > "$RUNNER_TEMP/ZERO517_SERVO_METRICS.txt"
             cat "$RUNNER_TEMP/ZERO517_SERVO_METRICS.txt"
             grep -q "OK (1 test)" "$RUNNER_TEMP/ZERO517_SERVO_TESTS.txt"
