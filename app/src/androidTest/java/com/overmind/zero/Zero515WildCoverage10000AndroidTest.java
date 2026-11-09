@@ -112,7 +112,7 @@ public final class Zero515WildCoverage10000AndroidTest {
         app.registerActivityLifecycleCallbacks(lifecycle);
         Instrumentation.ActivityMonitor monitor=instrument.addMonitor(
             GameActivity.class.getName(),null,false);
-        GameActivity original=null;
+        GameActivity selectedActivity=null;
         String bootDiagnostic="not sampled";
         int relaunchCount=0;
         try{
@@ -121,7 +121,7 @@ public final class Zero515WildCoverage10000AndroidTest {
             assertNotNull("Original Android activity launch must be observed",created);
             assertTrue("Original physical GameActivity",created instanceof GameActivity);
             currentActivity.compareAndSet(null,(GameActivity)created);
-            for(int wait=0;wait<300&&original==null;wait++){
+            for(int wait=0;wait<300&&selectedActivity==null;wait++){
                 GameActivity candidate=currentActivity.get();
                 if(candidate!=null){
                     AtomicBoolean readyNow=new AtomicBoolean(false);
@@ -136,7 +136,7 @@ public final class Zero515WildCoverage10000AndroidTest {
                             ",finishing="+candidate.isFinishing());
                     });
                     bootDiagnostic=diagNow.get();
-                    if(readyNow.get()){original=candidate;break;}
+                    if(readyNow.get()){selectedActivity=candidate;break;}
                 }
                 if(wait%50==0||wait==299)
                     android.util.Log.i("ZERO516_BOOT",
@@ -155,14 +155,15 @@ public final class Zero515WildCoverage10000AndroidTest {
                         "stale original Android Activity: relaunch once without clearing preferences");
                     c.startActivity(intent);
                 }
-                if(original==null)android.os.SystemClock.sleep(100);
+                if(selectedActivity==null)android.os.SystemClock.sleep(100);
             }
         }finally{
             instrument.removeMonitor(monitor);
             app.unregisterActivityLifecycleCallbacks(lifecycle);
         }
         assertNotNull("V516 requires one truly LIVE original GRU3 Activity: "+
-            bootDiagnostic,original);
+            bootDiagnostic,selectedActivity);
+        final GameActivity original=selectedActivity;
         android.util.Log.i("ZERO516_BOOT",
             "ORIGINAL_GRU3_LIVE_OWNER_CONFIRMED relaunches="+relaunchCount);
         try {
