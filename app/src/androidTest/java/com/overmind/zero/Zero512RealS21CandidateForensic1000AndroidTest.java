@@ -434,7 +434,7 @@ public final class Zero512RealS21CandidateForensic1000AndroidTest {
                 original.originalV511VerifiedFeasibilityDiagnosticsForQA());
             assertTrue("Need 1000 original autonomous decisions, not 10k gates",
                 last.decisions-initial.get()>=1000);
-            return;
+            if(last.decisions-initial.get()>=1000)return;
             android.util.Log.i("ZERO417_USER_S21_LONG",
                 "ZERO464_ORIGINAL_LIFE_RESOURCE_AUDIT initialLife="+initialLife.get()+
                 " finalLife="+endLife.get()+
