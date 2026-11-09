@@ -44,6 +44,31 @@ final class Zero499PostureMotorTransducer {
 
     static void apply(Zero3LearningFoundation.MotorIntent intent,
             MotorBrain.Body body,Morphology.Surface skin,float[] motor){
+        apply(intent,body,skin,motor,0);
+    }
+    /** V514 science-only controlled A/B against real opposite and side
+     * momentum. Zero keeps the exact V508 production physics unchanged. */
+    static float measuredGovernorV514(float vx,float vy,float ux,float uy,int mode){
+        if(!Float.isFinite(vx)||!Float.isFinite(vy)||
+           !Float.isFinite(ux)||!Float.isFinite(uy))
+            throw new IllegalArgumentException("V514 nonfinite physical momentum");
+        float speed=(float)Math.hypot(vx,vy);
+        float baseline=1f/(1f+Math.max(0f,speed-SPEED_GOVERNOR_ONSET)/
+            SPEED_GOVERNOR_WIDTH);
+        if(mode==0)return baseline;
+        float forward=vx*ux+vy*uy;
+        switch(mode){
+            case 18:
+                return 1f/(1f+Math.max(0f,forward-SPEED_GOVERNOR_ONSET)/
+                    SPEED_GOVERNOR_WIDTH);
+            case 19: return forward<0f?1f:baseline;
+            case 20: return forward<2f?Math.max(.9f,baseline):baseline;
+            case 21: return forward<0f?Math.min(1f,baseline*1.8f):baseline;
+            default:throw new IllegalArgumentException("V514 unknown measured A/B motor mode");
+        }
+    }
+    static void apply(Zero3LearningFoundation.MotorIntent intent,
+            MotorBrain.Body body,Morphology.Surface skin,float[] motor,int governorModeV514){
         if(intent==null||body==null||skin==null||motor==null||
            motor.length!=SECTORS*CHANNELS)
             throw new IllegalArgumentException("ZERO499 real motor anatomy required");
@@ -59,9 +84,8 @@ final class Zero499PostureMotorTransducer {
         // a direction-relative governor did not bound unwanted sideways
         // inertia. Measure REAL 2D COM speed for a scalar force reduction,
         // retaining the original requested GRU heading unmodified.
-        float speed=(float)Math.hypot(body.cvx,body.cvy);
-        float over=Math.max(0f,speed-SPEED_GOVERNOR_ONSET);
-        float governor=1f/(1f+over/SPEED_GOVERNOR_WIDTH);
+        float governor=measuredGovernorV514(
+            body.cvx,body.cvy,ux,uy,governorModeV514);
         float drive=MAX_DRIVE*clip(2f*effort,0f,1f)*governor;
         // ZERO508: the original material solver applies CH0/CH1 along
         // SymbioteMatterV1.actuatorDirectionAt(), NOT along the radial
