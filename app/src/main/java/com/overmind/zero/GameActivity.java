@@ -129,6 +129,16 @@ public final class GameActivity extends Activity {
         return lab!=null&&lab.brain3!=null&&
             lab.brain3.postureMotorTransducerEnabledV499();
     }
+    void originalV514EnableMeasuredOppositeInertiaGovernorForQA(int mode){
+        if(lab==null||lab.brain3==null||
+           !lab.brain3.realPhysicalMotorContextV412())
+            throw new IllegalStateException("V514 original real material unavailable");
+        lab.brain3.enableOpposedPhysicalGovernorLabV514(mode);
+    }
+    int originalV514MeasuredGovernorModeForQA(){
+        return lab==null||lab.brain3==null?0:
+            lab.brain3.physicalGovernorModeV514();
+    }
     void originalV417EnableMeasuredBrakingCreditForQA(){
         if(lab==null||lab.brain3==null||
            !lab.brain3.realPhysicalMotorContextV412())
