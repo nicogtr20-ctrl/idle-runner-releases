@@ -310,6 +310,16 @@ public final class GameActivity extends Activity {
             throw new IllegalStateException("V510 original real GRU3 body unavailable");
         lab.brain3.enablePhysicalEvidenceFirstChoiceLabV510();
     }
+    /** V515 optional laboratory coverage, ONE original GRU3, real verified impasse only. */
+    void originalV515EnableIndependentImpassCoverageForQA(){
+        if(lab==null||lab.brain3==null||!lab.brain3.realPhysicalMotorContextV412())
+            throw new IllegalStateException("V515 original real GRU3 body unavailable");
+        lab.brain3.enableIndependentImpassCoverageLabV515();
+    }
+    boolean originalV515IndependentImpassCoverageEnabledForQA(){
+        return lab!=null&&lab.brain3!=null&&
+            lab.brain3.independentImpassCoverageEnabledV515();
+    }
     void originalV511EnableVerifiedNegativeRiskFeasibilityForQA(){
         if(lab==null||lab.brain3==null||
            !lab.brain3.realPhysicalMotorContextV412())

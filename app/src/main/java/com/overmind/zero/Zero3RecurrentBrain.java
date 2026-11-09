@@ -29,6 +29,15 @@ public final class Zero3RecurrentBrain {
     // current photons show a wavelength proven harmful by actual contact.
     // Does not issue headings, forces, target vectors or alter checkpoints.
     private boolean learnedHarmCandidateCoverageLabV422;
+    // V515 lab-only: when real train+heldout confirms an actual physical impasse,
+    // expand solely the ORIGINAL actor's unbiased independently sampled choices.
+    // No scripted direction, choice override, reward, force or saved field.
+    private boolean independentImpassCoverageLabV515;
+    void enableIndependentImpassCoverageLabV515(){
+        if(pending||cognition==null)throw new IllegalStateException("V515 original GRU3 decision boundary required");
+        independentImpassCoverageLabV515=true;
+    }
+    boolean independentImpassCoverageEnabledV515(){return independentImpassCoverageLabV515;}
     private long learnedHarmExpandedDecisionsV422;
     void enableMeasuredPassiveCoastOpticalLabV478(){
         if(pending||cognition==null)
@@ -408,7 +417,7 @@ public final class Zero3RecurrentBrain {
         boolean learnedHarmVisibleV422=learnedHarmCandidateCoverageLabV422&&
             cognition!=null&&cognition.hasVisibleLearnedHarmV422(x);
         if(learnedHarmVisibleV422)learnedHarmExpandedDecisionsV422++;
-        float[][] options=new float[cognition==null?1:embodiedImpass?7:
+        float[][] options=new float[cognition==null?1:embodiedImpass?(independentImpassCoverageLabV515?16:7):
             motorCanSteer?(realStall?7:5):learnedHarmVisibleV422?7:3][5];
         float[][] noise=new float[options.length][MOTOR];
         float[][] noiseScale=new float[options.length][MOTOR];

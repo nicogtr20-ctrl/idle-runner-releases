@@ -178,6 +178,13 @@ final class Zero3OriginalBrainV356 {
         if(pending)throw new IllegalStateException("V510 original decision pending");
         brain.enablePhysicalEvidenceFirstChoiceLabV510();
     }
+    void enableIndependentImpassCoverageLabV515(){
+        if(pending)throw new IllegalStateException("V515 original decision pending");
+        brain.enableIndependentImpassCoverageLabV515();
+    }
+    boolean independentImpassCoverageEnabledV515(){
+        return brain.independentImpassCoverageEnabledV515();
+    }
     void enableVerifiedNegativeRiskFeasibilityLabV511(){
         if(pending)throw new IllegalStateException("V511 original decision pending");
         brain.enableVerifiedNegativeRiskFeasibilityLabV511();
