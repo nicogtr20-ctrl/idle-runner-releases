@@ -242,7 +242,10 @@ public final class Zero501RecordedSequentialMotorAndroidTest {
             float sx=scene.body.cx,sy=scene.body.cy;
             for(int k=0;k<recorded.n;k++){
                 float[] act=control.actuate(scene.body,scene.skin,DT);
-                if(mode>=2)mechanicalBodyController(mode,act,
+                if(mode>=22&&mode<=25)
+                    Zero499PostureMotorTransducer.apply(
+                        intent,scene.body,scene.skin,act,mode);
+                else if(mode>=2)mechanicalBodyController(mode,act,
                     scene.body,scene.skin,recorded,filtered);
                 float prev=matter.work;
                 matter.step(scene.body,scene.skin,act,DT);

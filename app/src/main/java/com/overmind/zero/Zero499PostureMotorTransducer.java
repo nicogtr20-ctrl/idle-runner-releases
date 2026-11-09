@@ -55,7 +55,7 @@ final class Zero499PostureMotorTransducer {
         float speed=(float)Math.hypot(vx,vy);
         float baseline=1f/(1f+Math.max(0f,speed-SPEED_GOVERNOR_ONSET)/
             SPEED_GOVERNOR_WIDTH);
-        if(mode==0)return baseline;
+        if(mode==0||(mode>=22&&mode<=25))return baseline;
         float forward=vx*ux+vy*uy;
         switch(mode){
             case 18:
@@ -87,6 +87,26 @@ final class Zero499PostureMotorTransducer {
         float governor=measuredGovernorV514(
             body.cvx,body.cvy,ux,uy,governorModeV514);
         float drive=MAX_DRIVE*clip(2f*effort,0f,1f)*governor;
+        // V517 LAB ONLY: steer the physical actuator's local tendon frame
+        // slightly AGAINST actually measured lateral COM drift. The neural
+        // heading remains unchanged and still defines the forward axis.
+        // This is a bounded lateral velocity-feedback controller, never a
+        // search target, simulated contact reward, or fictitious COM force.
+        // Prior direct 2D velocity-error feedback oscillated the soft tissue.
+        // Therefore restrict the correction to ±~19 degrees without any
+        // axial/reverse acceleration and compare 4 gains with mode 14.
+        if(governorModeV514>=22&&governorModeV514<=25){
+            float signedCross=ux*body.cvy-uy*body.cvx;
+            float gain=governorModeV514==22?.25f:
+                governorModeV514==23?.50f:
+                governorModeV514==24?.80f:1.20f;
+            float steer=clip(-gain*signedCross/
+                (5f+Math.abs(signedCross)),-.35f,.35f);
+            float norm=(float)Math.sqrt(1f+steer*steer);
+            float steerX=(ux-steer*uy)/norm;
+            float steerY=(uy+steer*ux)/norm;
+            ux=steerX;uy=steerY;
+        }
         // ZERO508: the original material solver applies CH0/CH1 along
         // SymbioteMatterV1.actuatorDirectionAt(), NOT along the radial
         // centroid of its six-site cortex sector. A concave living contour
