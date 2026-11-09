@@ -133,6 +133,25 @@ final class Zero384BodyAffordance {
         }
         return -.38f*clip(cost,0,1); // bounded learned feasibility cost, not steering.
     }
+    /**
+     * Live REAL 96-patch surface touch, binned around the actual material
+     * center. No invented map, heading, goal, force, or reward.
+     * A known physical wall pressure is observable before separate motor
+     * direction pairs have learned the same heldout failure.
+     */
+    float liveForwardContactLoadV520(float dx,float dy){
+        if(!Float.isFinite(dx)||!Float.isFinite(dy)||
+           Math.hypot(dx,dy)<.5f)throw new IllegalArgumentException("V520 heading");
+        float norm=(float)Math.hypot(dx,dy),load=0f;
+        for(int side=0;side<BINS;side++){
+            if(touch[side]<.23f)continue;
+            double angle=side*Math.PI/4d;
+            float facing=Math.max(0f,(dx*(float)Math.cos(angle)+
+                dy*(float)Math.sin(angle))/norm);
+            load=Math.max(load,touch[side]*facing*facing);
+        }
+        return clip(load,0f,1f);
+    }
     boolean verifiedImpass(){
         for(int side=0;side<BINS;side++){
             if(touch[side]<.23f)continue;

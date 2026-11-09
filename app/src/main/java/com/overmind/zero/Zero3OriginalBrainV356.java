@@ -185,6 +185,11 @@ final class Zero3OriginalBrainV356 {
     String verifiedFeasibilityDiagnosticsV511(){
         return brain.verifiedFeasibilityDiagnosticsV511();
     }
+    void enableLiveContactFeasibilityLabV520(){
+        if(pending)throw new IllegalStateException("V520 live decision");
+        brain.enableLiveContactFeasibilityLabV520();
+    }
+    String liveContactDiagnosticsV520(){return brain.liveContactDiagnosticsV520();}
     String physicalEvidenceFirstChoiceDiagnosticsV510(){
         return brain.physicalEvidenceFirstDiagnosticsV510();
     }

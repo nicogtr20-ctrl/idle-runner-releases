@@ -320,6 +320,16 @@ public final class GameActivity extends Activity {
         return lab==null||lab.brain3==null?"no-original-brain":
             lab.brain3.verifiedFeasibilityDiagnosticsV511();
     }
+    void originalV520EnableLiveContactFeasibilityForQA(){
+        if(lab==null||lab.brain3==null||
+           !lab.brain3.realPhysicalMotorContextV412())
+            throw new IllegalStateException("V520 real V3 owner missing");
+        lab.brain3.enableLiveContactFeasibilityLabV520();
+    }
+    String originalV520LiveContactDiagnosticsForQA(){
+        return lab==null||lab.brain3==null?"no-original-brain":
+            lab.brain3.liveContactDiagnosticsV520();
+    }
     String originalV510PhysicalChoiceDiagnosticsForQA(){
         return lab==null||lab.brain3==null?"no-original-brain":
             lab.brain3.physicalEvidenceFirstChoiceDiagnosticsV510();

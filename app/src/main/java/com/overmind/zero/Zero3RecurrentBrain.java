@@ -68,6 +68,15 @@ public final class Zero3RecurrentBrain {
         return cognition==null?"no-original-cognition":
             cognition.verifiedFeasibilityDiagnosticsV511();
     }
+    void enableLiveContactFeasibilityLabV520(){
+        if(pending||cognition==null)
+            throw new IllegalStateException("V520 requires GRU boundary");
+        cognition.enableLiveContactFeasibilityLabV520();
+    }
+    String liveContactDiagnosticsV520(){
+        return cognition==null?"no-original-cognition":
+            cognition.liveContactDiagnosticsV520();
+    }
     String physicalEvidenceFirstDiagnosticsV510(){
         return cognition==null?"no-original-cognition":
             cognition.evidenceFirstDiagnosticsV510();
@@ -514,6 +523,8 @@ public final class Zero3RecurrentBrain {
                    (cognition==null||!cognition.plannerBlockedByVerifiedBodyV510(
                        x,options[selected],options[planned]))&&
                    (cognition==null||!cognition.plannerBlockedByVerifiedBodyV511(
+                       x,options[selected],options[planned]))&&
+                   (cognition==null||!cognition.plannerBlockedByLiveContactV520(
                        x,options[selected],options[planned]))){
                     selected=planned;
                     // Planner accepted a new candidate using sampled evidence;

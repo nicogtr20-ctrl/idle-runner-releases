@@ -219,6 +219,42 @@ public final class Zero3CognitionV353 {
     private final Zero511FeasibleChoiceGate.Audit auditedChoicesV511=
         new Zero511FeasibleChoiceGate.Audit();
     private long blockedPlannerRequestsV511,blockedExecutiveCandidatesV511;
+    // Lab V520 only: a currently touched wall exists even if the specific
+    // historical 8x8 V384 (sector, heading) evidence cell is still unknown.
+    private boolean liveContactFeasibilityLabV520,physicalReliefV520;
+    private long plannerVetoesV520,executiveVetoesV520;
+    private final Zero520LiveTactileChoiceGate.Audit liveAuditV520=
+        new Zero520LiveTactileChoiceGate.Audit();
+    void enableLiveContactFeasibilityLabV520(){liveContactFeasibilityLabV520=true;}
+    String liveContactDiagnosticsV520(){
+        return "v520|enabled="+liveContactFeasibilityLabV520+
+            "|assessed="+liveAuditV520.assessed+
+            "|frontContact="+liveAuditV520.frontContact+
+            "|reliefCandidates="+liveAuditV520.reliefCandidates+
+            "|harmVetoes="+liveAuditV520.learnedHarmVetoes+
+            "|physicalRedirects="+liveAuditV520.physicalRedirects+
+            "|plannerVetoes="+plannerVetoesV520+
+            "|executiveVetoes="+executiveVetoesV520;
+    }
+    private boolean blockedByLiveContactV520(float[] obs,float[] original,float[] contender){
+        if(!liveContactFeasibilityLabV520||embodiedV384==null||
+            !embodiedV384.verifiedImpass())return false;
+        float[] load={embodiedV384.liveForwardContactLoadV520(original[0],original[1]),
+            embodiedV384.liveForwardContactLoadV520(contender[0],contender[1])};
+        float[] risk={contactValence.negativeApproachRiskV511(obs,original[0],original[1]),
+            contactValence.negativeApproachRiskV511(obs,contender[0],contender[1])};
+        return Zero520LiveTactileChoiceGate.choose(true,load,risk,1,null)==0;
+    }
+    boolean plannerBlockedByLiveContactV520(float[] obs,float[] original,float[] contender){
+        boolean veto=blockedByLiveContactV520(obs,original,contender);
+        if(veto)plannerVetoesV520++;
+        return veto;
+    }
+    boolean executiveBlockedByLiveContactV520(float[] obs,float[] original,float[] contender){
+        boolean veto=blockedByLiveContactV520(obs,original,contender);
+        if(veto)executiveVetoesV520++;
+        return veto;
+    }
     private boolean lastVerifiedPhysicalReliefV511;
     void enableVerifiedNegativeRiskFeasibilityLabV511(){
         verifiedNegativeRiskFeasibilityLabV511=true;
@@ -295,7 +331,7 @@ public final class Zero3CognitionV353 {
         return Zero510EmbodiedChoiceGate.choose(
             true,costs,optical,valence,1)==0;
     }
-    boolean physicallyRelievedLastChoiceV510(){return lastPhysicalReliefV510||lastVerifiedPhysicalReliefV511;}
+    boolean physicallyRelievedLastChoiceV510(){return lastPhysicalReliefV510||lastVerifiedPhysicalReliefV511||physicalReliefV520;}
     private boolean lastPhysicalReliefV510;
     boolean replayBlockedByVerifiedBodyV510(float[] observation,
             float[] actorChosen,float[] recalled){
@@ -377,6 +413,7 @@ public final class Zero3CognitionV353 {
     int select(float[] observation,float[][] proposals){
         lastPhysicalReliefV510=false;
         lastVerifiedPhysicalReliefV511=false;
+        physicalReliefV520=false;
         // A trusted one-step model is ONE source of evidence. The original
         // controller also demanded REAL, independently heldout movement
         // estimates before allowing light valence to bias a heading. The V3
@@ -519,6 +556,19 @@ public final class Zero3CognitionV353 {
                 chosen=feasible;
                 lastVerifiedPhysicalReliefV511=true;
             }
+        }
+        if(liveContactFeasibilityLabV520&&embodiedV384!=null&&
+           embodiedV384.verifiedImpass()){
+            float[] contact=new float[proposals.length],harm=new float[proposals.length];
+            for(int i=0;i<proposals.length;i++){
+                contact[i]=embodiedV384.liveForwardContactLoadV520(
+                    proposals[i][0],proposals[i][1]);
+                harm[i]=contactValence.negativeApproachRiskV511(
+                    observation,proposals[i][0],proposals[i][1]);
+            }
+            int safer=Zero520LiveTactileChoiceGate.choose(
+                true,contact,harm,chosen,liveAuditV520);
+            if(safer!=chosen){chosen=safer;physicalReliefV520=true;}
         }
         v452ScoreParts=v452Parts;
         v452BestOpticalIndex=v452BestOpt;
