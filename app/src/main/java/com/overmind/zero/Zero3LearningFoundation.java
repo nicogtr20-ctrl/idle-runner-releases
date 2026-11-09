@@ -79,6 +79,15 @@ public final class Zero3LearningFoundation {
             postureMotorTransducerV499=true;
         }
         boolean postureMotorTransducerV499(){return postureMotorTransducerV499;}
+        private int physicalGovernorModeV514;
+        void enableOpposedPhysicalGovernorLabV514(int mode){
+            if(pendingDecision||!postureMotorTransducerV499||
+               mode<18||mode>21)
+                throw new IllegalStateException("V514 requires original V499 at finished decision");
+            physicalGovernorModeV514=mode;
+        }
+        int physicalGovernorModeV514(){return physicalGovernorModeV514;}
+
 
         private boolean measuredProbeCreditLabV397=false;
         // ZERO421: the original 194D/64GRU + 512 synapse local V332 learner
@@ -594,9 +603,10 @@ public final class Zero3LearningFoundation {
                         if(noise[at]!=0f)
                             alternativeOutputV499[at]=unperturbedOutputV499[at];
                     Zero499PostureMotorTransducer.apply(
-                        intention,b,s,alternativeOutputV499);
+                        intention,b,s,alternativeOutputV499,physicalGovernorModeV514);
                 }
-                Zero499PostureMotorTransducer.apply(intention,b,s,output);
+                Zero499PostureMotorTransducer.apply(
+                    intention,b,s,output,physicalGovernorModeV514);
                 if(probing&&v454On&&(measuredProbeCreditLabV397||
                     deliveredLocalCreditLabV421))
                     for(int at=0;at<OUTPUTS;at++)
