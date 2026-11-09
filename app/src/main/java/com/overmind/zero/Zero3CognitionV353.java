@@ -219,6 +219,9 @@ public final class Zero3CognitionV353 {
     private final Zero511FeasibleChoiceGate.Audit auditedChoicesV511=
         new Zero511FeasibleChoiceGate.Audit();
     private long blockedPlannerRequestsV511,blockedExecutiveCandidatesV511;
+    private int blockedCandidateExamplesV512;
+    private String physicalCandidateTraceV512="";
+
     private boolean lastVerifiedPhysicalReliefV511;
     void enableVerifiedNegativeRiskFeasibilityLabV511(){
         verifiedNegativeRiskFeasibilityLabV511=true;
@@ -232,7 +235,8 @@ public final class Zero3CognitionV353 {
             "|harmRejected="+auditedChoicesV511.hazardVetoed+
             "|physicalRedirects="+auditedChoicesV511.changed+
             "|plannerVetoes="+blockedPlannerRequestsV511+
-            "|executiveCandidateVetoes="+blockedExecutiveCandidatesV511;
+            "|executiveCandidateVetoes="+blockedExecutiveCandidatesV511+
+            "|candidateTraceV512="+physicalCandidateTraceV512;
     }
     private boolean blockedByVerifiedBodyV511(float[] observation,
             float[] selected,float[] contender){
@@ -512,6 +516,27 @@ public final class Zero3CognitionV353 {
                 costs[i]=v452Parts[i][3];
                 negativeRisk[i]=contactValence.negativeApproachRiskV511(
                     observation,proposals[i][0],proposals[i][1]);
+            }
+
+            if(costs[chosen]<=Zero511FeasibleChoiceGate.PHYSICALLY_BLOCKED&&
+               blockedCandidateExamplesV512<5){
+                StringBuilder sample=new StringBuilder();
+                sample.append("#").append(blockedCandidateExamplesV512)
+                    .append("(n=").append(proposals.length)
+                    .append(",chosen=").append(chosen)
+                    .append(",verified=").append(embodiedV384.verifiedImpass())
+                    .append(",choices=");
+                for(int h=0;h<proposals.length;h++){
+                    sample.append(h).append(':')
+                        .append(Math.round(proposals[h][0]*100)/100f)
+                        .append(',').append(Math.round(proposals[h][1]*100)/100f)
+                        .append(':').append(Math.round(costs[h]*10000)/10000f)
+                        .append(':').append(Math.round(negativeRisk[h]*10000)/10000f)
+                        .append(';');
+                }
+                sample.append(')');
+                physicalCandidateTraceV512+=sample.toString();
+                blockedCandidateExamplesV512++;
             }
             int feasible=Zero511FeasibleChoiceGate.choose(
                 true,costs,negativeRisk,chosen,auditedChoicesV511);
