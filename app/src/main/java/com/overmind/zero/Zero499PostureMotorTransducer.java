@@ -55,7 +55,7 @@ final class Zero499PostureMotorTransducer {
         float speed=(float)Math.hypot(vx,vy);
         float baseline=1f/(1f+Math.max(0f,speed-SPEED_GOVERNOR_ONSET)/
             SPEED_GOVERNOR_WIDTH);
-        if(mode==0||(mode>=22&&mode<=25))return baseline;
+        if(mode==0||(mode>=22&&mode<=25)||(mode>=31&&mode<=33))return baseline;
         float forward=vx*ux+vy*uy;
         switch(mode){
             case 18:
@@ -143,6 +143,15 @@ final class Zero499PostureMotorTransducer {
             float nx=nxSum/length,ny=nySum/length;
             float radialDesired=nx*ux+ny*uy;
             float tangentialDesired=1.75f*(-ny*ux+nx*uy);
+            // V521 LAB ONLY: direct sign counterfactual of the exact same
+            // living S21 96-site muscle force geometry. A physically correct
+            // force sign cannot be inferred from the neural heading alone:
+            // internal 74-node fluid reactions and floor traction may reverse
+            // the material COM response. Modes are NOT production paths.
+            if(governorModeV514==31||governorModeV514==32)
+                radialDesired=-radialDesired;
+            if(governorModeV514==31||governorModeV514==33)
+                tangentialDesired=-tangentialDesired;
             motor[offset]=clip(drive*radialDesired+
                 RESIDUAL*motor[offset],-1f,1f);
             motor[offset+1]=clip(drive*tangentialDesired+
