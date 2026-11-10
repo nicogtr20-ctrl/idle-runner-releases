@@ -58,7 +58,12 @@ public final class Zero518ActualTrainedS21PhysicalResponseAndroidTest {
             float beforeX=scene.body.cx,beforeY=scene.body.cy;
             for(int frame=0;frame<saved.n;frame++){
                 float[] motor=control.actuate(scene.body,scene.skin,DT);
-                if(mode==14)
+                // V522: -1 is the exact original 512-synapse cortex.
+                // Zero applies the V499 postprocessor, keeping just 12%
+                // of the learned radial/tangential/stiffness muscle output.
+                if(mode==-1){
+                    // No postprocessor; leave every learned muscle unchanged.
+                }else if(mode==14)
                     Zero501RecordedSequentialMotorAndroidTest.mechanicalBodyController(
                         14,motor,scene.body,scene.skin,saved,filtered);
                 else if(mode==0)

@@ -1,0 +1,5 @@
+# ZERO522 original trained cortex vs V499, lab only
+
+The optional V499 low-level motor transducer preserves only 12% of each learned CH0/CH1/CH3 muscle output and replaces the rest by a fixed heading-relative actuator field. Its 512 weights still update but their delivered physical influence is mostly suppressed. V521 compared sign inversions of V499, NOT V499 against truly native cortex. V520 10k wild and trained autonomous tests failed despite physical steering overrides.
+
+Test exact user original trained 33312-decision S21 512-synapse cortex, all 170 material, actual 94 wall tile scene and original independent saved free scene, with exactly the same 256 historically issued GRU headings, real outer wall membrane CCD and inner solver. Mode -1 bypasses V499 and sends complete original learned cortex. Mode0 uses existing V499 without change. No scripted red/blue, movement or learning reward. A green open-loop replay does NOT constitute autonomous success; retain full strict 2x10k wild and trained original Android gates, no OTA until pass.
