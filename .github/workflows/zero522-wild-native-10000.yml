@@ -1,0 +1,45 @@
+name: ZERO522 wild original GRU 10000 full native 512 cortex V499 OFF
+on:
+  push:
+    branches: [lab/zero522-native-cortex-vs-v499-s21-real-10k]
+  workflow_dispatch:
+concurrency:
+  group: zero417-wild-${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+permissions: {contents: read}
+jobs:
+  original-unseen-10000:
+    runs-on: ubuntu-latest
+    timeout-minutes: 105
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with: {distribution: temurin, java-version: '17'}
+      - name: Build native original game and Android instrumentation
+        run: gradle --no-daemon assembleDebug assembleDebugAndroidTest
+      - name: Enable KVM
+        run: |
+          echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' | sudo tee /etc/udev/rules.d/99-kvm4all.rules
+          sudo udevadm control --reload-rules
+          sudo udevadm trigger --name-match=kvm
+      - name: ONE original GRU3 >=10000 unforced decisions with physical sense disambiguation and true red/blue physical touches
+        uses: reactivecircus/android-emulator-runner@v2
+        with:
+          api-level: 35
+          arch: x86_64
+          profile: pixel_6
+          disable-animations: true
+          script: |
+            bash -c 'set -euo pipefail; adb install -r app/build/outputs/apk/debug/app-debug.apk; adb install -r app/build/outputs/apk/androidTest/debug/app-debug-androidTest.apk; adb logcat -c; adb shell am instrument -w -r -e class com.overmind.zero.Zero522WildNativeCortex10000AndroidTest com.overmind.zero.ota.test/androidx.test.runner.AndroidJUnitRunner 2>&1 | tee "$RUNNER_TEMP/ZERO417_ORIGINAL_WILD_10000.txt"; adb logcat -d -s ZERO516_BOOT:I ZERO522_NATIVE:I ZERO520_TACTILE:I ZERO511_FEASIBILITY:I ZERO506_INTEGRATED:I ZERO366_REAL:I ZERO397_AUTONOMY:I ZERO400_CREDIT:I ZERO401_CAUSAL:I ZERO404_HAZARD:I ZERO417_WILD_LONG:I ActivityTaskManager:I AndroidRuntime:E > "$RUNNER_TEMP/ZERO417_ORIGINAL_WILD_10000_metrics.txt"; cat "$RUNNER_TEMP/ZERO417_ORIGINAL_WILD_10000_metrics.txt"; grep -q "REAL_VERIFIED_PHYSICAL_IMPASS_NEGATIVE_HARM_ENABLED" "$RUNNER_TEMP/ZERO417_ORIGINAL_WILD_10000_metrics.txt"; grep -q "ORIGINAL_GRU3_LIVE_OWNER_CONFIRMED" "$RUNNER_TEMP/ZERO417_ORIGINAL_WILD_10000_metrics.txt"; grep -q "V520_CURRENT_REAL_CONTACT_IMPASS_GATE_ENABLED" "$RUNNER_TEMP/ZERO417_ORIGINAL_WILD_10000_metrics.txt"; grep -q "V522_NATIVE_CORTEX_100_PERCENT_DELIVERED_V499_OFF" "$RUNNER_TEMP/ZERO417_ORIGINAL_WILD_10000_metrics.txt"; grep -q "OK (1 test)" "$RUNNER_TEMP/ZERO417_ORIGINAL_WILD_10000.txt"; grep -q "ZERO417_WILD_RED_AVOIDANCE_STRICT_10000=PASS" "$RUNNER_TEMP/ZERO417_ORIGINAL_WILD_10000_metrics.txt"; grep -q "ZERO417_REAR_WALL_RULE" "$RUNNER_TEMP/ZERO417_ORIGINAL_WILD_10000_metrics.txt"; grep -q "ZERO417_WILD_REAL_10000_RESULT" "$RUNNER_TEMP/ZERO417_ORIGINAL_WILD_10000_metrics.txt"; grep -q "ZERO417_WILD_ACTUAL_1000 decision=" "$RUNNER_TEMP/ZERO417_ORIGINAL_WILD_10000_metrics.txt"; grep -q "localWeightUpdates=" "$RUNNER_TEMP/ZERO417_ORIGINAL_WILD_10000_metrics.txt"; ! grep -qE "FAILURES!!!|INSTRUMENTATION_FAILED|Process crashed" "$RUNNER_TEMP/ZERO417_ORIGINAL_WILD_10000.txt"'
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: ZERO522-WILD-NATIVE-REAL-10000-STRICT
+          path: ${{ runner.temp }}/ZERO417_ORIGINAL_WILD_10000*.txt
+          if-no-files-found: warn
+
+# V443 final original Android four-gate SHA: diagnostic-only score eligibility.
+
+# ZERO477 final same-SHA run gate: passive braking mid-bank counterexample + original 2x10000 + CRC; no release.
+
+# ZERO486 exact original 4-gate same-SHA diagnostic: observed-only historical baseline vs matched motor causal oracle. No live credit change.
